@@ -416,10 +416,8 @@ def config(settings):
             resource = r.resource
 
             # Redirect to action plan after create
-            resource.configure(create_next = URL(c = "event",
-                                                 f = "incident",
-                                                 args = ["[id]", "plan"],
-                                                 ),
+            resource.configure(create_next = URL(c="event", f="incident",
+                                                 args = ["[id]", "plan"]),
                                )
 
             if r.method == "create":
@@ -432,12 +430,11 @@ def config(settings):
                     if r.http == "GET":
                         from s3 import s3_truncate
                         rtable = s3db.event_incident_report
-                        incident_report = current.db(rtable.id == incident_report_id) \
-                                                 .select(rtable.name,
-                                                         rtable.incident_type_id,
-                                                         rtable.location_id,
-                                                         limitby = (0, 1),
-                                                         ).first()
+                        incident_report = current.db(rtable.id == incident_report_id).select(rtable.name,
+                                                                                             rtable.incident_type_id,
+                                                                                             rtable.location_id,
+                                                                                             limitby = (0, 1),
+                                                                                             ).first()
                         table = r.table
                         table.name.default = s3_truncate(incident_report.name, 64)
                         table.incident_type_id.default = incident_report.incident_type_id
@@ -445,10 +442,9 @@ def config(settings):
 
                     elif r.http == "POST":
                         def create_onaccept(form):
-                            s3db.event_incident_report_incident.insert(
-                                                        incident_id = form.vars.id,
-                                                        incident_report_id = incident_report_id,
-                                                        )
+                            s3db.event_incident_report_incident.insert(incident_id = form.vars.id,
+                                                                       incident_report_id = incident_report_id,
+                                                                       )
 
                         resource.configure(create_onaccept = create_onaccept,
                                            )
@@ -532,10 +528,8 @@ def config(settings):
                     return False
 
             if r.method == "create"and r.http == "POST":
-                r.resource.configure(create_next = URL(c = "event",
-                                                       f = "scenario",
-                                                       args = ["[id]", "plan"],
-                                                       ),
+                r.resource.configure(create_next = URL(c="event", f="scenario",
+                                                       args = ["[id]", "plan"]),
                                      )
 
             return True
