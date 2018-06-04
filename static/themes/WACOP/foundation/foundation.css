@@ -181,7 +181,7 @@ select {
 /* line 228, ../../foundation/scss/components/_grid.scss */
 .row {
   margin: 0 auto;
-  max-width: 125rem;
+  max-width: 87.5rem;
   width: 100%;
 }
 /* line 237, ../../foundation/scss/components/_global.scss */
@@ -5483,7 +5483,7 @@ ul.pagination li {
   .reveal-modal {
     left: 0;
     margin: 0 auto;
-    max-width: 125rem;
+    max-width: 87.5rem;
     right: 0;
     width: 80%;
   }
@@ -5514,7 +5514,7 @@ ul.pagination li {
   .reveal-modal.tiny {
     left: 0;
     margin: 0 auto;
-    max-width: 125rem;
+    max-width: 87.5rem;
     right: 0;
     width: 30%;
   }
@@ -5524,7 +5524,7 @@ ul.pagination li {
   .reveal-modal.small {
     left: 0;
     margin: 0 auto;
-    max-width: 125rem;
+    max-width: 87.5rem;
     right: 0;
     width: 40%;
   }
@@ -5534,7 +5534,7 @@ ul.pagination li {
   .reveal-modal.medium {
     left: 0;
     margin: 0 auto;
-    max-width: 125rem;
+    max-width: 87.5rem;
     right: 0;
     width: 60%;
   }
@@ -5544,7 +5544,7 @@ ul.pagination li {
   .reveal-modal.large {
     left: 0;
     margin: 0 auto;
-    max-width: 125rem;
+    max-width: 87.5rem;
     right: 0;
     width: 70%;
   }
@@ -5554,7 +5554,7 @@ ul.pagination li {
   .reveal-modal.xlarge {
     left: 0;
     margin: 0 auto;
-    max-width: 125rem;
+    max-width: 87.5rem;
     right: 0;
     width: 95%;
   }
@@ -5574,7 +5574,7 @@ ul.pagination li {
   .reveal-modal.full {
     left: 0;
     margin: 0 auto;
-    max-width: 125rem;
+    max-width: 87.5rem;
     right: 0;
     width: 100%;
   }
@@ -6623,7 +6623,7 @@ meta.foundation-mq-topbar {
   .contain-to-grid .top-bar {
     margin: 0 auto;
     margin-bottom: 0;
-    max-width: 125rem;
+    max-width: 87.5rem;
   }
 
   /* line 536, ../../foundation/scss/components/_top-bar.scss */

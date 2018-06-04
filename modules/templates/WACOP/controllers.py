@@ -1755,12 +1755,12 @@ class event_Profile(custom_WACOP):
             if exists:
                 bookmark = A(ICON("bookmark"),
                              _title=T("Remove Bookmark"),
-                             _class="button radius small bookmark",
+                             _class="bookmark",
                              )
             else:
                 bookmark = A(ICON("bookmark-empty"),
                              _title=T("Add Bookmark"),
-                             _class="button radius small bookmark",
+                             _class="bookmark",
                              )
             bookmark["_data-c"] = "event"
             bookmark["_data-f"] = "event"
@@ -1793,7 +1793,7 @@ class event_Profile(custom_WACOP):
                                           ).as_dict(key="forum_id")
                 share_btn = A(ICON("share"),
                                _href = "#",
-                               _class = "button radius small",
+                               _class = "",
                                _title = T("Share"),
                                )
                 share_btn["_data-dropdown"] = "share_event_dropdown"
@@ -2310,7 +2310,7 @@ class incident_Profile(custom_WACOP):
                                           ).as_dict(key="forum_id")
                 share_btn = A(ICON("share"),
                                _href = "#",
-                               _class = "button radius small",
+                               _class = "",
                                _title = T("Share"),
                                )
                 share_btn["_data-dropdown"] = "share_incident_dropdown"
@@ -2949,7 +2949,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                       ).as_dict(key="forum_id")
             share_btn = A(ICON("share"),
                            _href = "#",
-                           _class = "button radius small",
+                           _class = "",
                            _title = T("Share"),
                            )
             dropdown_id = "share_post_dropdown_%s" % record_id
