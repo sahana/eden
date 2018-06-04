@@ -2727,7 +2727,7 @@ body.ltr .ui-multiselect {
 /* line 156, ../scss/custom/_mixins.scss */
 .filter-form .input-button-wrapper {
   margin: 0 auto;
-  max-width: 125rem;
+  max-width: 87.5rem;
   width: 100%;
 }
 /* line 237, ../../foundation/scss/components/_global.scss */
@@ -2766,7 +2766,7 @@ body.ltr .ui-multiselect {
 /* line 160, ../scss/custom/_mixins.scss */
 .filter-form .calendar-widget-container {
   margin: 0 auto;
-  max-width: 125rem;
+  max-width: 87.5rem;
   width: 100%;
 }
 /* line 237, ../../foundation/scss/components/_global.scss */
