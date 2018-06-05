@@ -301,13 +301,6 @@ def config(settings):
     ])
 
     # -------------------------------------------------------------------------
-    def customise_event_event_resource(r, tablename):
-
-        current.s3db.event_event.name.label = T("Disaster Title")
-
-    settings.customise_event_event_resource = customise_event_event_resource
-
-    # -------------------------------------------------------------------------
     def customise_event_sitrep_resource(r, tablename):
 
         from gluon.storage import Storage
@@ -361,7 +354,7 @@ def config(settings):
 
         s3db = current.s3db
 
-        # Custom Components for Verified
+        # Custom Components
         s3db.add_components(tablename,
                             org_organisation_tag = (# Request Number
                                                     {"name": "req_number",
