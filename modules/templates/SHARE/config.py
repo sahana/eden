@@ -950,6 +950,45 @@ def config(settings):
                      ))
 
     # -------------------------------------------------------------------------
+    def req_need_rheader(r):
+        """
+            Resource Header for Needs
+        """
+
+        if r.representation != "html":
+            # RHeaders only used in interactive views
+            return None
+
+        record = r.record
+        if not record:
+            # RHeaders only used in single-record views
+            return None
+
+        if r.name == "need":
+            tabs = [(T("Basic Details"), None),
+                    (T("Impacts"), "impact"),
+                    (T("Items"), "need_item"),
+                    #(T("Skills"), "need_skill"),
+                    #(T("Tags"), "tag"),
+                    ]
+
+            from s3 import s3_rheader_tabs
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            location_id = r.table.location_id
+            from gluon import DIV, TABLE, TR, TH
+            rheader = DIV(TABLE(TR(TH("%s: " % location_id.label),
+                                   location_id.represent(record.location_id),
+                                   )),
+                          rheader_tabs)
+
+        else:
+            # Not defined, probably using wrong rheader
+            rheader = None
+
+        return rheader
+
+    # -------------------------------------------------------------------------
     def customise_req_need_controller(**attr):
 
         # Custom commit method to create an Activity from a Need
@@ -992,6 +1031,8 @@ def config(settings):
 
             return output
         s3.postp = postp
+
+        attr["rheader"] = req_need_rheader
 
         return attr
 
