@@ -514,7 +514,7 @@ def config(settings):
             demographics[demographic.parameter_id] = {"id": demographic.id,
                                                       "value": demographic.value,
                                                       "value_committed": 0,
-                                                      "value_delivered": 0,
+                                                      "value_reached": 0,
                                                       }
 
         # Lookup which Status means 'Cancelled'
@@ -606,8 +606,8 @@ def config(settings):
             value_requested = demographic["value"]
             value_committed = demographic["value_committed"]
             value_uncommitted = max(value_requested - value_committed, 0)
-            value_delivered = demographic["value_delivered"]
-            if value_delivered >= value_requested:
+            value_reached = demographic["value_reached"]
+            if value_reached >= value_requested:
                 status = 3
             elif value_uncommitted <= 0:
                 status = 2
@@ -618,7 +618,7 @@ def config(settings):
             sappend(status)
             db(ndtable.id == demographic["id"]).update(value_committed = value_committed,
                                                        value_uncommitted = value_uncommitted,
-                                                       value_delivered = value_delivered,
+                                                       value_reached = value_reached,
                                                        )
 
         if 1 in statuses:
