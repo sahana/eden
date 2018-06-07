@@ -212,22 +212,21 @@ class S3StatsModel(S3Model):
         #             )
 
         # Pass names back to global scope (s3.*)
-        return dict(stats_source_superlink = source_superlink,
-                    stats_source_id = source_id,
-                    stats_accuracy = accuracy,
-                    )
+        return {"stats_source_superlink": source_superlink,
+                "stats_source_id": source_id,
+                "stats_accuracy": accuracy,
+                }
 
     # -------------------------------------------------------------------------
     def defaults(self):
         """ Safe defaults if module is disabled """
 
-        return dict(
-            # Needed for doc
-            stats_source_superlink = S3ReusableField("source_id", "integer",
-                                                     readable=False,
-                                                     writable=False,
-                                                     )(),
-            )
+        return {# Needed for doc
+                "stats_source_superlink": S3ReusableField("source_id", "integer",
+                                                          readable = False,
+                                                          writable = False,
+                                                          )(),
+                }
 
 # =============================================================================
 class S3StatsDemographicModel(S3Model):
@@ -258,8 +257,8 @@ class S3StatsDemographicModel(S3Model):
 
         location_id = self.gis_location_id
 
-        stats_parameter_represent = S3Represent(lookup="stats_parameter",
-                                                translate=True)
+        stats_parameter_represent = S3Represent(lookup = "stats_parameter",
+                                                translate = True)
 
         # ---------------------------------------------------------------------
         # Demographic
@@ -538,12 +537,24 @@ class S3StatsDemographicModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(
-            stats_demographic_id = demographic_id,
-            stats_demographic_rebuild_all_aggregates = self.stats_demographic_rebuild_all_aggregates,
-            stats_demographic_update_aggregates = self.stats_demographic_update_aggregates,
-            stats_demographic_update_location_aggregate = self.stats_demographic_update_location_aggregate,
-            )
+        return {"stats_demographic_id": demographic_id,
+                "stats_demographic_rebuild_all_aggregates": self.stats_demographic_rebuild_all_aggregates,
+                "stats_demographic_update_aggregates": self.stats_demographic_update_aggregates,
+                "stats_demographic_update_location_aggregate": self.stats_demographic_update_location_aggregate,
+                }
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """ Safe defaults if module is disabled """
+
+        current.response.s3.crud_strings["stats_demographic"] = \
+            Storage(label_create="Add Demographic")
+
+        return {"stats_demographic_id": S3ReusableField("parameter_id", "integer",
+                                                        readable = False,
+                                                        writable = False,
+                                                        )(),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1332,8 +1343,8 @@ class S3StatsImpactModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return dict(stats_impact_id = impact_id,
-                    )
+        return {"stats_impact_id": impact_id,
+                }
 
 # =============================================================================
 class S3StatsPeopleModel(S3Model):

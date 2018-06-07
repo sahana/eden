@@ -104,6 +104,7 @@ class S3DocumentLibrary(S3Model):
                                org_office = T("Office"),
                                org_facility = T("Facility"),
                                org_group = T("Organization Group"),
+                               req_need = T("Need"),
                                req_req = T("Request"),
                                security_seized_item = T("Seized Item"),
                                # @ToDo: Deprecate
