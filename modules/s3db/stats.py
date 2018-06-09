@@ -56,6 +56,7 @@ class S3StatsModel(S3Model):
     """
 
     names = ("stats_parameter",
+             "stats_parameter_represent",
              "stats_data",
              "stats_source",
              "stats_source_superlink",
@@ -104,6 +105,10 @@ class S3StatsModel(S3Model):
                         [table.instance_type.set_attributes(readable = True),
                          ],
                      )
+
+        parameter_represent = S3Represent(lookup = "stats_parameter",
+                                          translate = True,
+                                          )
 
         # ---------------------------------------------------------------------
         # Super entity: stats_data
@@ -181,7 +186,7 @@ class S3StatsModel(S3Model):
                      )
 
         # For use by Instances or Components
-        source_superlink = super_link("source_id", "stats_source")
+        source_superlink = lambda: super_link("source_id", "stats_source")
 
         # For use by other FKs
         represent = stats_SourceRepresent(show_link = True)
@@ -204,7 +209,7 @@ class S3StatsModel(S3Model):
         #tablename = "stats_source_details"
         #define_table(tablename,
         #             # Component
-        #             source_superlink,
+        #             source_superlink(),
         #             #Field("reliability",
         #             #      label=T("Reliability")),
         #             #Field("review",
@@ -212,22 +217,23 @@ class S3StatsModel(S3Model):
         #             )
 
         # Pass names back to global scope (s3.*)
-        return dict(stats_source_superlink = source_superlink,
-                    stats_source_id = source_id,
-                    stats_accuracy = accuracy,
-                    )
+        return {"stats_source_superlink": source_superlink,
+                "stats_source_id": source_id,
+                "stats_accuracy": accuracy,
+                "stats_parameter_represent": parameter_represent,
+                }
 
     # -------------------------------------------------------------------------
     def defaults(self):
         """ Safe defaults if module is disabled """
 
-        return dict(
-            # Needed for doc
-            stats_source_superlink = S3ReusableField("source_id", "integer",
-                                                     readable=False,
-                                                     writable=False,
-                                                     )(),
-            )
+        return {# Needed for doc
+                "stats_source_superlink": S3ReusableField("source_id", "integer",
+                                                          readable = False,
+                                                          writable = False,
+                                                          ),
+                "stats_parameter_represent": lambda v: "",
+                }
 
 # =============================================================================
 class S3StatsDemographicModel(S3Model):
@@ -251,15 +257,15 @@ class S3StatsDemographicModel(S3Model):
         T = current.T
         db = current.db
 
+        NONE = current.messages["NONE"]
+
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
 
         location_id = self.gis_location_id
-
-        stats_parameter_represent = S3Represent(lookup="stats_parameter",
-                                                translate=True)
+        parameter_represent = self.stats_parameter_represent
 
         # ---------------------------------------------------------------------
         # Demographic
@@ -280,10 +286,10 @@ class S3StatsDemographicModel(S3Model):
                      # Link to the Demographic which is the Total, so that we can calculate percentages
                      Field("total_id", self.stats_parameter,
                            label = T("Total"),
-                           represent = stats_parameter_represent,
+                           represent = parameter_represent,
                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "stats_parameter.parameter_id",
-                                                  stats_parameter_represent,
+                                                  parameter_represent,
                                                   instance_types = ("stats_demographic",),
                                                   sort=True)),
                            ),
@@ -310,19 +316,19 @@ class S3StatsDemographicModel(S3Model):
                   super_entity = "stats_parameter",
                   )
 
-        demographic_id = super_link("parameter_id", "stats_parameter",
-                                    instance_types = ("stats_demographic",),
-                                    label = T("Demographic"),
-                                    represent = stats_parameter_represent,
-                                    readable = True,
-                                    writable = True,
-                                    empty = False,
-                                    comment = S3PopupLink(c = "stats",
-                                                          f = "demographic",
-                                                          vars = {"child": "parameter_id"},
-                                                          title = ADD_DEMOGRAPHIC,
-                                                          ),
-                                    )
+        demographic_id = lambda: super_link("parameter_id", "stats_parameter",
+                                            instance_types = ("stats_demographic",),
+                                            label = T("Demographic"),
+                                            represent = parameter_represent,
+                                            readable = True,
+                                            writable = True,
+                                            empty = False,
+                                            comment = S3PopupLink(c = "stats",
+                                                                  f = "demographic",
+                                                                  vars = {"child": "parameter_id"},
+                                                                  title = ADD_DEMOGRAPHIC,
+                                                                  ),
+                                            )
 
         # ---------------------------------------------------------------------
         # Demographic Data
@@ -333,7 +339,7 @@ class S3StatsDemographicModel(S3Model):
                      super_link("data_id", "stats_data"),
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
-                     demographic_id,
+                     demographic_id(),
                      location_id(
                          requires = IS_LOCATION(),
                          widget = S3LocationAutocompleteWidget(),
@@ -538,12 +544,24 @@ class S3StatsDemographicModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(
-            stats_demographic_id = demographic_id,
-            stats_demographic_rebuild_all_aggregates = self.stats_demographic_rebuild_all_aggregates,
-            stats_demographic_update_aggregates = self.stats_demographic_update_aggregates,
-            stats_demographic_update_location_aggregate = self.stats_demographic_update_location_aggregate,
-            )
+        return {"stats_demographic_id": demographic_id,
+                "stats_demographic_rebuild_all_aggregates": self.stats_demographic_rebuild_all_aggregates,
+                "stats_demographic_update_aggregates": self.stats_demographic_update_aggregates,
+                "stats_demographic_update_location_aggregate": self.stats_demographic_update_location_aggregate,
+                }
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """ Safe defaults if module is disabled """
+
+        current.response.s3.crud_strings["stats_demographic"] = \
+            Storage(label_create="Add Demographic")
+
+        return {"stats_demographic_id": S3ReusableField("parameter_id", "integer",
+                                                        readable = False,
+                                                        writable = False,
+                                                        ),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -598,7 +616,7 @@ class S3StatsDemographicModel(S3Model):
 
         # Fire off a rebuild task
         current.s3task.async("stats_demographic_update_aggregates",
-                             vars = dict(records=records.json()),
+                             vars = {"records": records.json()},
                              timeout = 21600 # 6 hours
                              )
 
@@ -791,7 +809,6 @@ class S3StatsDemographicModel(S3Model):
                                            )
 
             # Step through each period and check that aggr is correct
-            last_data_period = earliest_period
             last_type_agg = False # Whether the type of previous non-copy record was aggr
             last_data_value = None # The value of the previous aggr record
             last_total = None # The value of the previous aggr record for the totals param
@@ -1016,16 +1033,16 @@ class S3StatsDemographicModel(S3Model):
 
         # Now that the time aggregate types have been set up correctly,
         # fire off requests for the location aggregates to be calculated
-        async = current.s3task.async
+        run_async = current.s3task.async
         for (param_id, loc_dict) in parents_data.items():
             total_id = param_total_dict[param_id]
             for (loc_id, (changed_periods, loc_level)) in loc_dict.items():
                 for (start_date, end_date) in changed_periods:
                     s, e = str(start_date), str(end_date)
-                    async("stats_demographic_update_aggregate_location",
-                          args = [loc_level, loc_id, param_id, total_id, s, e],
-                          timeout = 1800 # 30m
-                          )
+                    run_async("stats_demographic_update_aggregate_location",
+                              args = [loc_level, loc_id, param_id, total_id, s, e],
+                              timeout = 1800 # 30m
+                              )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1079,6 +1096,17 @@ class S3StatsDemographicModel(S3Model):
         # Get the most recent aggregate for this location for the total parameter
         #if total_id == "None": # converted to string as async parameter
         #    total_id = None
+        values_total = None
+        if total_id != "None":
+            query = (dtable.parameter_id == total_id)
+            if end_date:
+                query &= (dtable.date <= end_date)
+            total_row = db(query).select(dtable.value,
+                                         limitby = (0, 1),
+                                         orderby = ~dtable.date,
+                                         ).first()
+            if total_row:
+                values_total = total_row.value
 
         # Collect the values, skip duplicate records for the
         # same location => use the most recent one, which is
@@ -1103,8 +1131,11 @@ class S3StatsDemographicModel(S3Model):
         #values_max = max(values)
         #values_avg = float(values_sum) / values_len
 
-        percentage = 100 * values_sum / values_total
-        values_percentage = round(percentage, 3)
+        if values_total:
+            percentage = 100 * values_sum / values_total
+            values_percentage = round(percentage, 3)
+        else:
+            values_percentage = None
 
         #from numpy import median
         #values_med = median(values)
@@ -1119,17 +1150,17 @@ class S3StatsDemographicModel(S3Model):
                 (atable.end_date == end_date)
         exists = db(query).select(atable.id, limitby=(0, 1)).first()
 
-        attr = dict(agg_type = 2, # Location
-                    #reported_count = values_len,
-                    #ward_count = len(child_ids),
-                    #min = values_min,
-                    #max = values_max,
-                    #mean = values_avg,
-                    #median = values_med,
-                    #mad = values_mad,
-                    sum = values_sum,
-                    percentage = values_percentage,
-                    )
+        attr = {"agg_type": 2, # Location
+                #"reported_count": values_len,
+                #"ward_count": len(child_ids),
+                #"min": values_min,
+                #"max": values_max,
+                #"mean": values_avg,
+                #"median": values_med,
+                #"mad": values_mad,
+                "sum": values_sum,
+                "percentage": values_percentage,
+                }
         if exists:
             # Update
             db(query).update(**attr)
@@ -1157,23 +1188,23 @@ def stats_demographic_data_controller():
         return output
 
     # Only viewing is valid
-    vars = request.get_vars
-    if "viewing" not in vars:
+    get_vars = request.get_vars
+    if "viewing" not in get_vars:
         error = current.xml.json_message(False, 400, message="viewing not in vars")
         raise HTTP(400, error)
     else:
-        viewing = vars.viewing
+        viewing = get_vars.viewing
     if "." in viewing:
-        tablename, id = viewing.split(".", 1)
+        tablename, record_id = viewing.split(".", 1)
     else:
         error = current.xml.json_message(False, 400, message="viewing needs a period")
         raise HTTP(400, error)
 
     s3db = current.s3db
     table = s3db[tablename]
-    location_id = current.db(table.id == id).select(table.location_id,
-                                                    limitby=(0, 1)
-                                                    ).first().location_id
+    location_id = current.db(table.id == record_id).select(table.location_id,
+                                                           limitby=(0, 1),
+                                                           ).first().location_id
 
     s3 = current.response.s3
     dtable = s3db.stats_demographic_data
@@ -1257,8 +1288,6 @@ class S3StatsImpactModel(S3Model):
                   super_entity = ("doc_entity", "stats_parameter"),
                   )
 
-        represent = S3Represent(lookup=tablename)
-
         # ---------------------------------------------------------------------
         # Impact
         #
@@ -1332,8 +1361,8 @@ class S3StatsImpactModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return dict(stats_impact_id = impact_id,
-                    )
+        return {"stats_impact_id": impact_id,
+                }
 
 # =============================================================================
 class S3StatsPeopleModel(S3Model):

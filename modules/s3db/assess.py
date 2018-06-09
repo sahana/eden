@@ -792,8 +792,8 @@ class S3AssessBuildingModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(assess_building_rheader = self.assess_building_rheader,
-                   )
+        return {"assess_building_rheader": self.assess_building_rheader,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1199,7 +1199,7 @@ class S3AssessNeedsModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
-                     self.stats_demographic_id,
+                     self.stats_demographic_id(),
                      Field("value", "integer",
                            label = T("Value"),
                            ),

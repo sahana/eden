@@ -923,41 +923,33 @@ $.filterOptionsS3({
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(supply_item_id = supply_item_id,
-                    supply_item_entity_id = item_id,
-                    supply_item_category_id = item_category_id,
-                    supply_item_pack_id = item_pack_id,
-                    supply_item_represent = supply_item_represent,
-                    supply_item_category_represent = item_category_represent,
-                    supply_item_pack_quantity = SupplyItemPackQuantity,
-                    supply_item_add = self.supply_item_add,
-                    supply_item_pack_represent = item_pack_represent,
-                    )
+        return {"supply_item_id": supply_item_id,
+                "supply_item_entity_id": item_id,
+                "supply_item_category_id": item_category_id,
+                "supply_item_pack_id": item_pack_id,
+                "supply_item_represent": supply_item_represent,
+                "supply_item_category_represent": item_category_represent,
+                "supply_item_pack_quantity": SupplyItemPackQuantity,
+                "supply_item_add": self.supply_item_add,
+                "supply_item_pack_represent": item_pack_represent,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
         """ Return safe defaults for names in case the model is disabled """
 
-        supply_item_id = S3ReusableField("item_id", "integer",
-                                         writable=False,
-                                         readable=False)
-        supply_item_category_id = S3ReusableField("item_category_id", "integer",
-                                                  writable=False,
-                                                  readable=False)
-        item_id = S3ReusableField("item_entity_id", "integer",
-                                  writable=False,
-                                  readable=False)
-        item_pack_id = S3ReusableField("item_pack_id", "integer",
-                                       writable=False,
-                                       readable=False)
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
 
-        return dict(supply_item_id = supply_item_id,
-                    supply_item_category_id = supply_item_category_id,
-                    supply_item_entity_id = item_id,
-                    supply_item_pack_id = item_pack_id,
-                    supply_item_pack_quantity = lambda tablename: lambda row: 0,
-                    )
+        return {"supply_item_id": lambda **attr: dummy("item_id"),
+                "supply_item_category_id": lambda **attr: dummy("item_category_id"),
+                "supply_item_entity_id": lambda **attr: dummy("item_entity_id"),
+                "supply_item_pack_id": lambda **attr: dummy("item_pack_id"),
+                "supply_item_pack_quantity": lambda tablename: lambda row: 0,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1238,6 +1230,10 @@ class S3SupplyDistributionModel(S3Model):
 
         A Distribution is an Item (which could be a Kit) distributed to a single Location
         - usually as part of an Activity
+
+        @ToDo: Deprecate this in favour of S3ProjectActivityItemModel?
+               - not based on stats, but simpler as less joins.
+               - could be based on stats if we make all supply_item into stats_parameter instances
     """
 
     names = ("supply_distribution_item",
@@ -1278,8 +1274,8 @@ class S3SupplyDistributionModel(S3Model):
                            label = T("Label"),
                            requires = [IS_LENGTH(128),
                                        IS_NOT_IN_DB(db,
-                                                   "supply_distribution_item.name",
-                                                   ),
+                                                    "supply_distribution_item.name",
+                                                    ),
                                        ],
                            ),
                      *s3_meta_fields())

@@ -672,7 +672,6 @@ class TranslateReadFiles(object):
         else:
             # Handle cases for special files which contain
             # strings belonging to different modules
-            appname = current.request.application
             fileName = os.path.basename(fileName)
             if fileName == "s3menus.py":
                 parseMenu = P.parseMenu
@@ -992,7 +991,7 @@ class Strings(object):
         #    data = {k: v for k, v in data.iteritems() if k != v}
         #except:
         # Python 2.6
-        newdata = {}
+        new_data = {}
         for k, v in data.iteritems():
             if k != v:
                 new_data[k] = v
@@ -1012,7 +1011,6 @@ class Strings(object):
 
         request = current.request
         settings = current.deployment_settings
-        appname = request.application
 
         folder = request.folder
         join = os.path.join
@@ -1211,7 +1209,6 @@ class Strings(object):
         # with untranslated string as the key
         data = {}
 
-        errors = 0
         for f in csvfiles:
             newdata = self.read_csv(f)
             # Test: 2 cols or 3?
@@ -1374,7 +1371,7 @@ class Pootle(object):
             # If user is not admin then overwrite option is not there
             br.form.find_control(name="overwrite").value = ["overwrite"]
             br.form.find_control(name ="upload_to").value = [upload_code]
-            br.form.add_file(open(filename), "text/plain", file_name)
+            br.form.add_file(open(filename), "text/plain", filename)
             br.submit()
         except:
             current.log.error("Error in Uploading form")
@@ -1409,7 +1406,7 @@ class Pootle(object):
             current.log.error("Connection Error")
             return False
 
-        zipf = zipfile.ZipFile(StringIO.StringIO(r.content))
+        zipf = zipfile.ZipFile(StringIO(r.content))
         zipf.extractall()
         file_name_po = "%s.po" % lang_code
         file_name_py = "%s.py" % lang_code
@@ -1495,7 +1492,6 @@ class Pootle(object):
 
         from subprocess import call
         from tempfile import NamedTemporaryFile
-        import sys
 
         # returns pystrings if preference was True else returns postrings
         ret = self.merge_strings(ret[0], ret[1], preference)

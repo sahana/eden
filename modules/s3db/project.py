@@ -31,6 +31,8 @@ from __future__ import division
 
 __all__ = ("S3ProjectModel",
            "S3ProjectActivityModel",
+           "S3ProjectActivityDemographicsModel",
+           "S3ProjectActivityItemModel",
            "S3ProjectActivityTypeModel",
            "S3ProjectActivityPersonModel",
            "S3ProjectActivityOrganisationModel",
@@ -1419,8 +1421,22 @@ class S3ProjectActivityModel(S3Model):
                                     },
                        # Data
                        project_activity_data = "activity_id",
+                       # Demographic
+                       project_activity_demographic = "activity_id",
+                       #stats_demographic = {"link": "project_activity_demographic",
+                       #                     "joinby": "activity_id",
+                       #                     "key": "parameter_id",
+                       #                     "actuate": "hide",
+                       #                     },
                        # Distributions
                        supply_distribution = "activity_id",
+                       # Items
+                       project_activity_item = "activity_id",
+                       #supply_item = {"link": "project_activity_item",
+                       #               "joinby": "activity_id",
+                       #               "key": "item_id",
+                       #               "actuate": "hide",
+                       #               },
                        # Events
                        event_event = {"link": "event_activity",
                                       "joinby": "activity_id",
@@ -1974,6 +1990,117 @@ class S3ProjectActivityOrganisationModel(S3Model):
         return {}
 
 # =============================================================================
+class S3ProjectActivityDemographicsModel(S3Model):
+    """
+        Project Activity Demographics Model
+
+        Activities Target Beneficiaries
+        - alternate, simpler, model to project_beneficiary_activity
+    """
+
+    names = ("project_activity_demographic",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Project Activities <> Demographics Link Table
+        #
+        CREATE = current.response.s3.crud_strings["stats_demographic"].label_create
+
+        tablename = "project_activity_demographic"
+        self.define_table(tablename,
+                          self.project_activity_id(empty = False,
+                                                   # Default:
+                                                   #ondelete = "CASCADE",
+                                                   ),
+                          self.super_link("parameter_id", "stats_parameter",
+                                          instance_types = ("stats_demographic",),
+                                          label = T("Demographic"),
+                                          represent = self.stats_parameter_represent,
+                                          readable = True,
+                                          writable = True,
+                                          empty = False,
+                                          comment = S3PopupLink(c = "stats",
+                                                                f = "demographic",
+                                                                vars = {"child": "parameter_id"},
+                                                                title = CREATE,
+                                                                ),
+                                          ),
+                          Field("target_value", "integer",
+                                label = T("Target Value"),
+                                represent = IS_INT_AMOUNT.represent,
+                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
+                                ),
+                          Field("value", "integer",
+                                label = T("Actual Value"),
+                                represent = IS_INT_AMOUNT.represent,
+                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
+                                ),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("activity_id",
+                                                            "item_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3ProjectActivityItemModel(S3Model):
+    """
+        Project Activity Item Model
+
+        Activities can be used to distribute Items
+        - alternate, simpler, model to supply_distribution / supply_distribution_item
+    """
+
+    names = ("project_activity_item",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Project Activities <> Items Link Table
+        #
+        tablename = "project_activity_item"
+        self.define_table(tablename,
+                          self.project_activity_id(empty = False,
+                                                   # Default:
+                                                   #ondelete = "CASCADE",
+                                                   ),
+                          self.supply_item_id(empty = False,
+                                              # Default:
+                                              #ondelete = "RESTRICT",
+                                              ),
+                          Field("target_value", "integer",
+                                label = T("Target Value"),
+                                represent = IS_INT_AMOUNT.represent,
+                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
+                                ),
+                          Field("value", "integer",
+                                label = T("Actual Value"),
+                                represent = IS_INT_AMOUNT.represent,
+                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
+                                ),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("activity_id",
+                                                            "item_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
 class S3ProjectActivitySectorModel(S3Model):
     """
         Project Activity Sector Model
@@ -2162,8 +2289,7 @@ class S3ProjectBeneficiaryModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
-        stats_parameter_represent = S3Represent(lookup="stats_parameter",
-                                                translate=True)
+        parameter_represent = self.stats_parameter_represent
 
         # ---------------------------------------------------------------------
         # Project Beneficiary Type
@@ -2186,10 +2312,10 @@ class S3ProjectBeneficiaryModel(S3Model):
                      # Link to the Beneficiary Type which is the Total, so that we can calculate percentages
                      Field("total_id", self.stats_parameter,
                            label = T("Total"),
-                           represent = stats_parameter_represent,
+                           represent = parameter_represent,
                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "stats_parameter.parameter_id",
-                                                  stats_parameter_represent,
+                                                  parameter_represent,
                                                   instance_types = ("project_beneficiary_type",),
                                                   sort=True)),
                            ),
@@ -2236,7 +2362,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                                 empty = False,
                                 instance_types = ("project_beneficiary_type",),
                                 label = T("Beneficiary Type"),
-                                represent = stats_parameter_represent,
+                                represent = parameter_represent,
                                 readable = True,
                                 writable = True,
                                 comment = S3PopupLink(c = "project",
@@ -3813,8 +3939,7 @@ class S3ProjectLocationModel(S3Model):
                                 writable = False,
                                 )
 
-        return {"project_location_id": lambda **attr: \
-                                       dummy("project_location_id"),
+        return {"project_location_id": lambda **attr: dummy("project_location_id"),
                 "project_location_represent": lambda v, row=None: "",
                 }
 
@@ -4969,6 +5094,11 @@ class S3ProjectPlanningModel(S3Model):
         # ---------------------------------------------------------------------
         # Activity Data
         # - only used if status_from_activities is False
+        #
+        # @ ToDo: make this a stats_data instance?
+        #         - easier to keep consistent with e.g.
+        #           stats_impact_type parameters
+        #           supply[_distribution]_item parameters
         #
         tablename = "project_activity_data"
         define_table(tablename,

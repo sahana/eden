@@ -12,7 +12,7 @@ def config(settings):
         @ToDo: Setting for single set of Sectors / Sector Leads Nationally
     """
 
-    #T = current.T
+    T = current.T
 
     # PrePopulate data
     settings.base.prepopulate += ("SHARE/LK",)
@@ -26,5 +26,62 @@ def config(settings):
         "USD" : "United States Dollars",
     }
     settings.fin.currency_default = "USD"
+
+    # -------------------------------------------------------------------------
+    def customise_event_event_resource(r, tablename):
+
+        s3db = current.s3db
+
+        s3db.event_event.name.label = T("Disaster Title")
+
+        # Custom Components
+        s3db.add_components(tablename,
+                            event_event_name = (# Sinhala
+                                                {"name": "name_si",
+                                                 "joinby": "event_id",
+                                                 "filterby": {"language": "si",
+                                                              },
+                                                 "multiple": False,
+                                                 },
+                                                # Tamil
+                                                {"name": "name_ta",
+                                                 "joinby": "event_id",
+                                                 "filterby": {"language": "ta",
+                                                              },
+                                                 "multiple": False,
+                                                 },
+                                                ),
+                            )
+
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent
+
+        crud_form = S3SQLCustomForm("name",
+                                    S3SQLInlineComponent("name_si",
+                                                         label = T("Title in Sinhala"),
+                                                         multiple = False,
+                                                         fields = [("", "name_l10n")],
+                                                         ),
+                                    S3SQLInlineComponent("name_ta",
+                                                         label = T("Title in Tamil"),
+                                                         multiple = False,
+                                                         fields = [("", "name_l10n")],
+                                                         ),
+                                    "event_type_id",
+                                    "start_date",
+                                    "closed",
+                                    "end_date",
+                                    S3SQLInlineComponent("event_location",
+                                                         label = T("Locations"),
+                                                         multiple = False,
+                                                         fields = [("", "location_id")],
+                                                         ),
+                                    "comments",
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_event_event_resource = customise_event_event_resource
 
 # END =========================================================================

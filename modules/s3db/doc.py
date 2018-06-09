@@ -104,6 +104,7 @@ class S3DocumentLibrary(S3Model):
                                org_office = T("Office"),
                                org_facility = T("Facility"),
                                org_group = T("Organization Group"),
+                               req_need = T("Need"),
                                req_req = T("Request"),
                                security_seized_item = T("Seized Item"),
                                # @ToDo: Deprecate
@@ -130,7 +131,7 @@ class S3DocumentLibrary(S3Model):
         tablename = "doc_document"
         define_table(tablename,
                      # Instance
-                     self.stats_source_superlink,
+                     self.stats_source_superlink(),
                      # Component not instance
                      super_link(doc_id, "doc_entity"),
                      # @ToDo: Remove since Site Instances are doc entities?

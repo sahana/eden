@@ -1192,7 +1192,7 @@ class S3OrganisationModel(S3Model):
 # =============================================================================
 class S3OrganisationNameModel(S3Model):
     """
-        Location Names model
+        Organsiation Names model
         - local names/acronyms for Organisations
     """
 
