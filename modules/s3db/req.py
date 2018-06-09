@@ -2484,7 +2484,15 @@ class RequestNeedsDemographicsModel(S3Model):
         # ---------------------------------------------------------------------
         # Needs <=> Demographics
         #
-        CREATE = current.response.s3.crud_strings["stats_demographic"].label_create
+        if current.s3db.table("stats_demographic"):
+            title = current.response.s3.crud_strings["stats_demographic"].label_create
+            parameter_id_comment = S3PopupLink(c = "stats",
+                                               f = "demographic",
+                                               vars = {"child": "parameter_id"},
+                                               title = title,
+                                               )
+        else:
+            parameter_id_comment = None
 
         tablename = "req_need_demographic"
         self.define_table(tablename,
@@ -2496,11 +2504,7 @@ class RequestNeedsDemographicsModel(S3Model):
                                           readable = True,
                                           writable = True,
                                           empty = False,
-                                          comment = S3PopupLink(c = "stats",
-                                                                f = "demographic",
-                                                                vars = {"child": "parameter_id"},
-                                                                title = CREATE,
-                                                                ),
+                                          comment = parameter_id_comment,
                                           ),
                           Field("value", "double",
                                 label = T("Number"),

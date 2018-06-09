@@ -2007,7 +2007,15 @@ class S3ProjectActivityDemographicsModel(S3Model):
         # ---------------------------------------------------------------------
         # Project Activities <> Demographics Link Table
         #
-        CREATE = current.response.s3.crud_strings["stats_demographic"].label_create
+        if current.s3db.table("stats_demographic"):
+            title = current.response.s3.crud_strings["stats_demographic"].label_create
+            parameter_id_comment = S3PopupLink(c = "stats",
+                                               f = "demographic",
+                                               vars = {"child": "parameter_id"},
+                                               title = title,
+                                               )
+        else:
+            parameter_id_comment = None
 
         tablename = "project_activity_demographic"
         self.define_table(tablename,
@@ -2022,11 +2030,7 @@ class S3ProjectActivityDemographicsModel(S3Model):
                                           readable = True,
                                           writable = True,
                                           empty = False,
-                                          comment = S3PopupLink(c = "stats",
-                                                                f = "demographic",
-                                                                vars = {"child": "parameter_id"},
-                                                                title = CREATE,
-                                                                ),
+                                          comment = parameter_id_comment,
                                           ),
                           Field("target_value", "integer",
                                 label = T("Target Value"),
@@ -2042,7 +2046,7 @@ class S3ProjectActivityDemographicsModel(S3Model):
 
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ("activity_id",
-                                                            "item_id",
+                                                            "parameter_id",
                                                             ),
                                                  ),
                        )

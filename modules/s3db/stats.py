@@ -554,9 +554,6 @@ class S3StatsDemographicModel(S3Model):
     def defaults(self):
         """ Safe defaults if module is disabled """
 
-        current.response.s3.crud_strings["stats_demographic"] = \
-            Storage(label_create="Add Demographic")
-
         return {"stats_demographic_id": S3ReusableField("parameter_id", "integer",
                                                         readable = False,
                                                         writable = False,
