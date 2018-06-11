@@ -1132,8 +1132,13 @@ def config(settings):
         atable = s3db.project_activity
         activity_id = atable.insert(name = need["req_need.name"],
                                     location_id = need["req_need.location_id"],
-                                    organisation_id = current.auth.user.organisation_id,
                                     )
+        organisation_id = current.auth.user.organisation_id
+        if organisation_id:
+            s3db.project_activity_organisation.insert(activity_id = activity_id,
+                                                      organisation_id = organisation_id,
+                                                      role = 1,
+                                                      )
 
         event_id = need["event_event_need.event_id"]
         if event_id:
