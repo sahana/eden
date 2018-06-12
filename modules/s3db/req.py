@@ -77,12 +77,13 @@ class RequestPriorityStatusModel(S3Model):
              #"req_priority_represent",
              "req_status",
              "req_status_opts",
+             "req_timeframe",
+             #"req_timeframe_opts",
              )
 
     def model(self):
 
         T = current.T
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         # ---------------------------------------------------------------------
         # Request Priority
@@ -96,8 +97,7 @@ class RequestPriorityStatusModel(S3Model):
                                        default = 2,
                                        label = T("Priority"),
                                        #@ToDo: Colour code the priority text - red, orange, green
-                                       represent = lambda opt: \
-                                           req_priority_opts.get(opt, UNKNOWN_OPT),
+                                       represent = S3Represent(options = req_priority_opts),
                                        #represent = self.req_priority_represent,
                                        requires = IS_EMPTY_OR(
                                                        IS_IN_SET(req_priority_opts))
@@ -120,13 +120,32 @@ class RequestPriorityStatusModel(S3Model):
 
         req_status = S3ReusableField("req_status", "integer",
                                      label = T("Request Status"),
+                                     default = REQ_STATUS_NONE,
+                                     represent = S3Represent(options = req_status_opts),
                                      requires = IS_EMPTY_OR(
                                                     IS_IN_SET(req_status_opts,
                                                               zero = None)),
-                                     represent = lambda opt: \
-                                        req_status_opts.get(opt, UNKNOWN_OPT),
-                                     default = REQ_STATUS_NONE,
                                      )
+
+        # ---------------------------------------------------------------------
+        # Request Timeframe
+        #
+        timeframe_opts = {1: T("0-12 hours"),
+                          2: T("12-24 hours"),
+                          3: T("1-2 days"),
+                          4: T("2-4 days"),
+                          5: T("5-7 days"),
+                          6: T(">1 week"),
+                          }
+
+        req_timeframe = S3ReusableField("timeframe", "integer",
+                                        default = 3,
+                                        label = T("Timeframe"),
+                                        represent = S3Represent(options = timeframe_opts),
+                                        requires = IS_EMPTY_OR(
+                                                    IS_IN_SET(timeframe_opts,
+                                                              zero = None)),
+                                        )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -136,6 +155,52 @@ class RequestPriorityStatusModel(S3Model):
                 #"req_priority_represent": self.req_priority_represent,
                 "req_status": req_status,
                 "req_status_opts": req_status_opts,
+                "req_timeframe": req_timeframe,
+                #"req_timeframe_opts": timeframe_opts,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """
+            Safe defaults for model-global names if module is disabled
+
+            @ToDo: DRY by allowing some S3Model classes to be marked as mandatory
+                   - usually for ones without tables like this one
+        """
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Request Timeframe
+        #
+        timeframe_opts = {1: T("0-12 hours"),
+                          2: T("12-24 hours"),
+                          3: T("1-2 days"),
+                          4: T("2-4 days"),
+                          5: T("5-7 days"),
+                          6: T(">1 week"),
+                          }
+
+        req_timeframe = S3ReusableField("timeframe", "integer",
+                                        default = 3,
+                                        label = T("Timeframe"),
+                                        represent = S3Represent(options = timeframe_opts),
+                                        requires = IS_EMPTY_OR(
+                                                    IS_IN_SET(timeframe_opts,
+                                                              zero = None)),
+                                        )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {#"req_priority": req_priority,
+                #"req_priority_opts": req_priority_opts,
+                #"req_priority_represent": self.req_priority_represent,
+                #"req_status": req_status,
+                #"req_status_opts": req_status_opts,
+                "req_timeframe": req_timeframe,
+                #"req_timeframe_opts": timeframe_opts,
                 }
 
     # -------------------------------------------------------------------------
@@ -2506,6 +2571,7 @@ class RequestNeedsDemographicsModel(S3Model):
                                           empty = False,
                                           comment = parameter_id_comment,
                                           ),
+                          self.req_timeframe(),
                           Field("value", "double",
                                 label = T("Number"),
                                 #label = T("Number in Need"),
@@ -2578,21 +2644,27 @@ class RequestNeedsItemsModel(S3Model):
         # ---------------------------------------------------------------------
         # Needs <=> Supply Items
         #
-        item_id = self.supply_item_id # Load normal model
-        CREATE = current.response.s3.crud_strings["supply_item"].label_create
 
         tablename = "req_need_item"
         self.define_table(tablename,
                           self.req_need_id(empty = False),
-                          item_id(comment = S3PopupLink(c = "supply",
-                                                        f = "item",
-                                                        label = CREATE,
-                                                        tooltip = None,
-                                                        vars = {"prefix": "req"},
-                                                        ),
-                                  empty = False,
-                                  widget = None,
-                                  ),
+                          self.supply_item_category_id(),
+                          self.supply_item_id(empty = False,
+                                              # Default:
+                                              #ondelete = "RESTRICT",
+                                              # Filter Item dropdown based on Category
+                                              script = '''
+$.filterOptionsS3({
+ 'trigger':'item_category_id',
+ 'target':'item_id',
+ 'lookupPrefix':'supply',
+ 'lookupResource':'item',
+})''',
+                                              # Don't use Auto-complete
+                                              widget = None,
+                                              ),
+                          self.supply_item_pack_id(),
+                          self.req_timeframe(),
                           Field("quantity", "double",
                                 label = T("Quantity"),
                                 #label = T("Quantity Requested"),

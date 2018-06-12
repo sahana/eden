@@ -466,7 +466,7 @@ def config(settings):
     settings.customise_org_sector_controller = customise_org_sector_controller
 
     # -------------------------------------------------------------------------
-    def project_activity_onaccept(form):
+    def project_activity_postprocess(form):
         """
             Ensure that the Need (if-any) has the correct Status
         """
@@ -489,14 +489,24 @@ def config(settings):
 
         # Read the Need details
         nitable = s3db.req_need_item
-        need_items = db(nitable.need_id == need_id).select(nitable.id,
-                                                           nitable.item_id,
-                                                           nitable.quantity,
-                                                           )
+        iptable = s3db.supply_item_pack
+        query = (nitable.need_id == need_id) & \
+                (nitable.deleted == False) & \
+                (nitable.item_pack_id == iptable.id)
+        need_items = db(query).select(nitable.id,
+                                      nitable.item_id,
+                                      nitable.quantity,
+                                      iptable.quantity,
+                                      )
         items = {}
         for item in need_items:
+            pack_qty = item["supply_item_pack.quantity"]
+            item = item["req_need_item"]
+            quantity = item.quantity
+            if quantity:
+                quantity = quantity * pack_qty
             items[item.item_id] = {"id": item.id,
-                                   "quantity": item.quantity,
+                                   "quantity": quantity or 0,
                                    "quantity_committed": 0,
                                    "quantity_delivered": 0,
                                    }
@@ -511,7 +521,7 @@ def config(settings):
         demographics = {}
         for demographic in need_demographics:
             demographics[demographic.parameter_id] = {"id": demographic.id,
-                                                      "value": demographic.value,
+                                                      "value": demographic.value or 0,
                                                       "value_committed": 0,
                                                       "value_reached": 0,
                                                       }
@@ -531,7 +541,8 @@ def config(settings):
         # Read the details of all Activities linked to this Need
         atable = s3db.project_activity
         query = (natable.need_id == need_id) & \
-                (natable.activity_id == atable.id)
+                (natable.activity_id == atable.id) & \
+                (atable.deleted == False)
         activities = db(query).select(atable.id,
                                       atable.status_id,
                                       )
@@ -541,20 +552,26 @@ def config(settings):
             activity_id = activity.id
             status_id = activity.status_id
             query = (aitable.activity_id == activity_id) & \
-                    (aitable.deleted == False)
+                    (aitable.deleted == False) & \
+                    (aitable.item_pack_id == iptable.id)
             rows = db(query).select(aitable.item_id,
                                     aitable.target_value,
                                     aitable.value,
+                                    iptable.quantity,
                                     )
             for row in rows:
+                pack_qty = row["supply_item_pack.quantity"]
+                row = row["project_activity_item"]
                 item_id = row.item_id
                 if item_id in items:
                     item = items[item_id]
                     if status_id != CANCELLED:
-                        item["quantity_committed"] += row.target_value
+                        target_value = row.target_value
+                        if target_value:
+                            item["quantity_committed"] += target_value * pack_qty
                     value = row.value
                     if value:
-                        item["quantity_delivered"] += value
+                        item["quantity_delivered"] += value * pack_qty
                 else:
                     # Ignore Items in Activity which don't match Need
                     continue
@@ -569,7 +586,9 @@ def config(settings):
                 if parameter_id in demographics:
                     demographic = demographics[parameter_id]
                     if status_id != CANCELLED:
-                        demographic["value_committed"] += row.target_value
+                        target_value = row.target_value
+                        if target_value:
+                            demographic["value_committed"] += target_value
                     value = row.value
                     if value:
                         demographic["value_reached"] += value
@@ -782,6 +801,7 @@ def config(settings):
                                             label = T("Beneficiaries"),
                                             #link = False,
                                             fields = [(T("Type"), "parameter_id"),
+                                                      (T("Timeframe"), "timeframe"),
                                                       (T("Number Planned"), "target_value"),
                                                       (T("Number Reached"), "value"),
                                                       ],
@@ -789,7 +809,10 @@ def config(settings):
                                             ),
                        S3SQLInlineComponent("activity_item",
                                             label = T("Items"),
-                                            fields = [(T("Type"), "item_id"),
+                                            fields = ["item_category_id",
+                                                      "item_id",
+                                                      (T("Unit"), "item_pack_id"),
+                                                      (T("Timeframe"), "timeframe"),
                                                       (T("Number Planned"), "target_value"),
                                                       (T("Number Distributed"), "value"),
                                                       ],
@@ -812,7 +835,8 @@ def config(settings):
                                                    multiple = False,
                                                    ))
 
-        crud_form = S3SQLCustomForm(*crud_fields)
+        crud_form = S3SQLCustomForm(*crud_fields,
+                                    postprocess = project_activity_postprocess)
 
         filter_widgets = [S3OptionsFilter("event.event_type_id"),
                           S3OptionsFilter("event__link.event_id"), # @ToDo: Filter this list dynamically based on Event Type
@@ -849,10 +873,49 @@ def config(settings):
                                       (T("Activity Status"), "status_id"),
                                       "comments",
                                       ],
-                       onaccept = project_activity_onaccept,
                        )
 
     settings.customise_project_activity_resource = customise_project_activity_resource
+
+    # -------------------------------------------------------------------------
+    def customise_project_activity_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_postp = s3.postp
+        def postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.interactive:
+                # Inject the javascript to handle dropdown filtering
+                # - normnally injected through AddResourceLink, but this isn't there in Inline widget
+                # - we also need to turn the trigger & target into dicts
+                s3.jquery_ready.append('''
+$.filterOptionsS3({
+ 'trigger':{'name':'item_category_id'},
+ 'target':{'name':'item_id'},
+ 'lookupPrefix':'supply',
+ 'lookupResource':'item',
+})
+$.filterOptionsS3({
+ 'trigger':{'name':'item_id'},
+ 'target':{'name':'item_pack_id'},
+ 'lookupPrefix':'supply',
+ 'lookupResource':'item_pack',
+ 'msgNoRecords':i18n.no_packs,
+ 'fncPrep':S3.supply.fncPrepItem,
+ 'fncRepresent':S3.supply.fncRepresentItem
+})''')
+
+            return output
+        s3.postp = postp
+
+        return attr
+
+    settings.customise_project_activity_controller = customise_project_activity_controller
 
     # -------------------------------------------------------------------------
     def req_need_postprocess(form):
@@ -983,7 +1046,17 @@ def config(settings):
             table.quantity_delivered.readable = True
             need_item = S3SQLInlineComponent("need_item",
                                              label = T("Items Needed"),
-                                             fields = ["item_id", "quantity", "quantity_committed", "quantity_uncommitted", "quantity_delivered", "priority", "comments"],
+                                             fields = ["item_category_id",
+                                                       "item_id",
+                                                       (T("Unit"), "item_pack_id"),
+                                                       "timeframe",
+                                                       "quantity",
+                                                       "quantity_committed",
+                                                       "quantity_uncommitted",
+                                                       "quantity_delivered",
+                                                       "priority",
+                                                       "comments",
+                                                       ],
                                              )
             table = s3db.req_need_demographic
             table.value.label = T("Number in Need")
@@ -992,17 +1065,35 @@ def config(settings):
             table.value_reached.readable = True
             demographic = S3SQLInlineComponent("need_demographic",
                                                label = T("People Affected"),
-                                               fields = [(T("Type"), "parameter_id"), "value", "value_committed", "value_uncommitted", "value_reached", "comments"],
+                                               fields = [(T("Type"), "parameter_id"),
+                                                         "timeframe",
+                                                         "value",
+                                                         "value_committed",
+                                                         "value_uncommitted",
+                                                         "value_reached",
+                                                         "comments",
+                                                         ],
                                                )
         else:
             # Create
             need_item = S3SQLInlineComponent("need_item",
                                              label = T("Items Needed"),
-                                             fields = ["item_id", "quantity", "priority", "comments"],
+                                             fields = ["item_category_id",
+                                                       "item_id",
+                                                       (T("Unit"), "item_pack_id"),
+                                                       "timeframe",
+                                                       "quantity",
+                                                       "priority",
+                                                       "comments",
+                                                       ],
                                              )
             demographic = S3SQLInlineComponent("need_demographic",
                                                label = T("People Affected"),
-                                               fields = [(T("Type"), "parameter_id"), "value", "comments"],
+                                               fields = [(T("Type"), "parameter_id"),
+                                                         "timeframe",
+                                                         "value",
+                                                         "comments",
+                                                         ],
                                                )
 
         crud_fields = [S3SQLInlineLink("event",
@@ -1157,14 +1248,20 @@ def config(settings):
         nitable = s3db.req_need_item
         query = (nitable.need_id == need_id) & \
                 (nitable.deleted == False)
-        items = db(query).select(nitable.item_id,
+        items = db(query).select(nitable.item_category_id,
+                                 nitable.item_id,
+                                 nitable.item_pack_id,
+                                 nitable.timeframe,
                                  nitable.quantity,
                                  )
         if items:
             iinsert = s3db.project_activity_item.insert
             for item in items:
                 iinsert(activity_id = activity_id,
+                        item_category_id = item.item_category_id,
                         item_id = item.item_id,
+                        item_pack_id = item.item_pack_id,
+                        timeframe = item.timeframe,
                         target_value = item.quantity,
                         )
 
@@ -1172,6 +1269,7 @@ def config(settings):
         query = (ndtable.need_id == need_id) & \
                 (ndtable.deleted == False)
         demographics = db(query).select(ndtable.parameter_id,
+                                        ndtable.timeframe,
                                         ndtable.value,
                                         )
         if demographics:
@@ -1179,6 +1277,7 @@ def config(settings):
             for demographic in demographics:
                 dinsert(activity_id = activity_id,
                         parameter_id = demographic.parameter_id,
+                        timeframe = demographic.timeframe,
                         target_value = demographic.value,
                         )
 
@@ -1260,28 +1359,47 @@ def config(settings):
             if callable(standard_postp):
                 output = standard_postp(r, output)
 
-            if r.interactive and \
-               current.auth.s3_has_permission("create", "project_activity"):
-                if r.id:
-                    # Custom RFooter
-                    from gluon import A
-                    s3.rfooter = A(T("Commit"),
-                                   _href = URL(args=[r.id, "commit"]),
-                                   _class = "action-btn",
-                                   #_id = "commit-btn",
-                                   )
-                    #s3.jquery_ready.append(
+            if r.interactive:
+                # Inject the javascript to handle dropdown filtering
+                # - normnally injected through AddResourceLink, but this isn't there in Inline widget
+                # - we also need to turn the trigger & target into dicts
+                s3.jquery_ready.append('''
+$.filterOptionsS3({
+ 'trigger':{'name':'item_category_id'},
+ 'target':{'name':'item_id'},
+ 'lookupPrefix':'supply',
+ 'lookupResource':'item',
+})
+$.filterOptionsS3({
+ 'trigger':{'name':'item_id'},
+ 'target':{'name':'item_pack_id'},
+ 'lookupPrefix':'supply',
+ 'lookupResource':'item_pack',
+ 'msgNoRecords':i18n.no_packs,
+ 'fncPrep':S3.supply.fncPrepItem,
+ 'fncRepresent':S3.supply.fncRepresentItem
+})''')
+                if current.auth.s3_has_permission("create", "project_activity"):
+                    if r.id:
+                        # Custom RFooter
+                        from gluon import A
+                        s3.rfooter = A(T("Commit"),
+                                       _href = URL(args=[r.id, "commit"]),
+                                       _class = "action-btn",
+                                       #_id = "commit-btn",
+                                       )
+                        #s3.jquery_ready.append(
 #'''S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this need?"))
-                else:
-                    from s3 import S3CRUD, s3_str
-                    # Normal Action Buttons
-                    S3CRUD.action_buttons(r)
-                    # Custom Action Buttons
-                    s3.actions += [{"label": s3_str(T("Commit")),
-                                    "_class": "action-btn",
-                                    "url": URL(args=["[id]", "commit"]),
-                                    }
-                                   ]
+                    else:
+                        from s3 import S3CRUD, s3_str
+                        # Normal Action Buttons
+                        S3CRUD.action_buttons(r)
+                        # Custom Action Buttons
+                        s3.actions += [{"label": s3_str(T("Commit")),
+                                        "_class": "action-btn",
+                                        "url": URL(args=["[id]", "commit"]),
+                                        }
+                                       ]
 
             return output
         s3.postp = postp

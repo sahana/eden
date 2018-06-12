@@ -127,7 +127,6 @@
     <!-- ****************************************************************** -->
     <xsl:template name="ItemCategory">
         <xsl:variable name="category" select="col[@field='Category']/text()"/>
-        <xsl:variable name="category_code" select="col[@field='Category']/text()"/>
         <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
 
         <resource name="supply_item_category">
@@ -185,7 +184,7 @@
             <data field="volume"><xsl:value-of select="col[@field='Volume']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
 	        <xsl:if test="$kit='Y' or $kit='YES' or $kit='T' or $kit='TRUE'">
-	            <data field="kit"><xsl:value-of select="col[@field='Comments']"/></data>
+	            <data field="kit" value="true">True</data>
 	        </xsl:if>
             <!-- Link to Brand -->
             <reference field="brand_id" resource="supply_brand">

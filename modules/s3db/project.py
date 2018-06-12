@@ -697,9 +697,9 @@ class S3ProjectModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(project_project_id = project_id,
-                    project_project_represent = project_represent,
-                    )
+        return {"project_project_id": project_id,
+                "project_project_represent": project_represent,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -710,8 +710,8 @@ class S3ProjectModel(S3Model):
                                 readable = False,
                                 writable = False)
 
-        return dict(project_project_id = lambda **attr: dummy("project_id"),
-                    )
+        return {"project_project_id": lambda **attr: dummy("project_id"),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1528,8 +1528,8 @@ class S3ProjectActivityModel(S3Model):
                       )
 
         # Pass names back to global scope (s3.*)
-        return dict(project_activity_id = activity_id,
-                    )
+        return {"project_activity_id": activity_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1540,8 +1540,8 @@ class S3ProjectActivityModel(S3Model):
                                 readable = False,
                                 writable = False)
 
-        return dict(project_activity_id = lambda **attr: dummy("activity_id"),
-                    )
+        return {"project_activity_id": lambda **attr: dummy("activity_id"),
+                }
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -1827,8 +1827,8 @@ class S3ProjectActivityTypeModel(S3Model):
         )
 
         # Pass names back to global scope (s3.*)
-        return dict(project_activity_type_id = activity_type_id,
-                    )
+        return {"project_activity_type_id": activity_type_id,
+                }
 
 # =============================================================================
 class S3ProjectActivityPersonModel(S3Model):
@@ -2032,6 +2032,7 @@ class S3ProjectActivityDemographicsModel(S3Model):
                                           empty = False,
                                           comment = parameter_id_comment,
                                           ),
+                          self.req_timeframe(),
                           Field("target_value", "integer",
                                 label = T("Target Value"),
                                 represent = IS_INT_AMOUNT.represent,
@@ -2078,10 +2079,23 @@ class S3ProjectActivityItemModel(S3Model):
                                                    # Default:
                                                    #ondelete = "CASCADE",
                                                    ),
+                          self.supply_item_category_id(),
                           self.supply_item_id(empty = False,
                                               # Default:
                                               #ondelete = "RESTRICT",
+                                              # Filter Item dropdown based on Category
+                                              script = '''
+$.filterOptionsS3({
+ 'trigger':'item_category_id',
+ 'target':'item_id',
+ 'lookupPrefix':'supply',
+ 'lookupResource':'item',
+})''',
+                                              # Don't use Auto-complete
+                                              widget = None,
                                               ),
+                          self.supply_item_pack_id(),
+                          self.req_timeframe(),
                           Field("target_value", "integer",
                                 label = T("Target Value"),
                                 represent = IS_INT_AMOUNT.represent,
@@ -3203,8 +3217,8 @@ class S3ProjectHazardModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict(project_hazard_id = hazard_id,
-                    )
+        return {"project_hazard_id": hazard_id,
+                }
 
 # =============================================================================
 class S3ProjectHRModel(S3Model):
@@ -3929,9 +3943,9 @@ class S3ProjectLocationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(project_location_id = project_location_id,
-                    project_location_represent = project_location_represent,
-                    )
+        return {"project_location_id": project_location_id,
+                "project_location_represent": project_location_represent,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5197,18 +5211,18 @@ class S3ProjectPlanningModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return dict(#project_goal_id = goal_id,
-                    project_goal_represent = goal_represent,
-                    #project_outcome_id = outcome_id,
-                    project_outcome_represent = outcome_represent,
-                    #project_output_id = output_id,
-                    project_output_represent = output_represent,
-                    #project_indicator_id = indicator_id,
-                    project_indicator_represent = indicator_represent,
-                    #project_indicator_activity_id = indicator_activity_id,
-                    project_indicator_activity_represent = indicator_activity_represent,
-                    project_planning_status_update = self.project_planning_status_update,
-                    )
+        return {#"project_goal_id": goal_id,
+                "project_goal_represent": goal_represent,
+                #"project_outcome_id": outcome_id,
+                "project_outcome_represent": outcome_represent,
+                #"project_output_id": output_id,
+                "project_output_represent": output_represent,
+                #"project_indicator_id": indicator_id,
+                "project_indicator_represent": indicator_represent,
+                #"project_indicator_activity_id": indicator_activity_id,
+                "project_indicator_activity_represent": indicator_activity_represent,
+                "project_planning_status_update": self.project_planning_status_update,
+                }
 
     # -------------------------------------------------------------------------
     def project_planning_status_update(self, project_id):
@@ -9966,8 +9980,8 @@ class S3ProjectStatusModel(S3Model):
                         )
 
         # Pass names back to global scope (s3.*)
-        return dict(project_status_id = status_id,
-                    )
+        return {"project_status_id": status_id,
+                }
 
 # =============================================================================
 class S3ProjectStrategyModel(S3Model):
@@ -10034,8 +10048,8 @@ class S3ProjectStrategyModel(S3Model):
                         )
 
         # Pass names back to global scope (s3.*)
-        return dict(project_strategy_id = strategy_id,
-                    )
+        return {"project_strategy_id": strategy_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -10046,8 +10060,8 @@ class S3ProjectStrategyModel(S3Model):
                                 readable = False,
                                 writable = False)
 
-        return dict(project_strategy_id = lambda **attr: dummy("strategy_id"),
-                    )
+        return {"project_strategy_id": lambda **attr: dummy("strategy_id"),
+                }
 
 # =============================================================================
 class S3ProjectThemeModel(S3Model):
@@ -10302,8 +10316,8 @@ class S3ProjectThemeModel(S3Model):
         )
 
         # Pass names back to global scope (s3.*)
-        return dict(project_theme_id = theme_id,
-                    )
+        return {"project_theme_id": theme_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -11528,12 +11542,11 @@ class S3ProjectTaskModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(
-            project_task_id = task_id,
-            project_task_active_statuses = project_task_active_statuses,
-            project_task_represent_w_project = project_task_represent_w_project,
-            project_task_project_opts = self.project_task_project_opts
-        )
+        return {"project_task_id": task_id,
+                "project_task_active_statuses": project_task_active_statuses,
+                "project_task_represent_w_project": project_task_represent_w_project,
+                "project_task_project_opts": self.project_task_project_opts,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -11544,9 +11557,9 @@ class S3ProjectTaskModel(S3Model):
                                 readable = False,
                                 writable = False)
 
-        return dict(project_task_id = lambda **attr: dummy("task_id"),
-                    project_task_active_statuses = [],
-                    )
+        return {"project_task_id": lambda **attr: dummy("task_id"),
+                "project_task_active_statuses": [],
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod

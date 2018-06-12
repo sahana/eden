@@ -372,9 +372,8 @@ $.filterOptionsS3({
         define_table(tablename,
                      catalog_id(),
                      # Needed to auto-create a catalog_item
-                     item_category_id(
-                        script = item_category_script
-                     ),
+                     item_category_id(script = item_category_script,
+                                      ),
                      Field("name", length=128, notnull=True,
                            label = T("Name"),
                            requires = [IS_NOT_EMPTY(),
@@ -602,9 +601,8 @@ $.filterOptionsS3({
         tablename = "supply_catalog_item"
         define_table(tablename,
                      catalog_id(),
-                     item_category_id(
-                        script = item_category_script
-                     ),
+                     item_category_id(script = item_category_script,
+                                      ),
                      supply_item_id(script = None), # No Item Pack Filter
                      s3_comments(), # These comments do *not* pull through to an Inventory's Items or a Request's Items
                      *s3_meta_fields())
@@ -2493,22 +2491,24 @@ def supply_item_controller():
             if r.component_name == "inv_item":
                 # Inventory Items need proper accountability so are edited through inv_adj
                 s3db.configure("inv_inv_item",
-                               listadd=False,
-                               deletable=False)
+                               listadd = False,
+                               deletable = False,
+                               )
                 # Filter to just item packs for this Item
-                inv_item_pack_requires = IS_ONE_OF(current.db,
-                                                   "supply_item_pack.id",
-                                                   s3db.supply_item_pack_represent,
-                                                   sort=True,
-                                                   filterby = "item_id",
-                                                   filter_opts = (r.record.id,),
-                                                   )
-                s3db.inv_inv_item.item_pack_id.requires = inv_item_pack_requires
+                s3db.inv_inv_item.item_pack_id.requires = IS_ONE_OF(current.db,
+                                                                    "supply_item_pack.id",
+                                                                    s3db.supply_item_pack_represent,
+                                                                    sort = True,
+                                                                    filterby = "item_id",
+                                                                    filter_opts = (r.record.id,),
+                                                                    )
+
             elif r.component_name == "req_item":
                 # This is a report not a workflow
                 s3db.configure("req_req_item",
-                               listadd=False,
-                               deletable=False)
+                               listadd = False,
+                               deletable = False,
+                               )
 
         # Needs better workflow as no way to add the Kit Items
         # else:

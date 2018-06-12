@@ -1,0 +1,12 @@
+Catalog,Category,Code,Asset
+Default,Kits/Packs,Kits/Packs,False
+Default,Assets/Equipment,Assets/Equipment,True
+Default,Cash Transfers,Cash Transfers,False
+Default,Consumables/Food Items,Consumables/Food,False
+Default,Non-Food Items,Non-Food Items,False
+Default,Skills (Services),Skills/Services,False
+Default,Hygiene Kit Items,Hygiene Kit,False
+Default,Disinfectant Kit Items,Disinfectant Kit,False
+Default,Dignity Kit Items,Dignity Kit,False
+Default,Shelter Repair Kit Items,Shelter Kit,False
+Default,Household NFI Kit Items,Household Kit,False
