@@ -78,7 +78,7 @@ class RequestPriorityStatusModel(S3Model):
              "req_status",
              "req_status_opts",
              "req_timeframe",
-             #"req_timeframe_opts",
+             "req_timeframe_opts",
              )
 
     def model(self):
@@ -128,26 +128,6 @@ class RequestPriorityStatusModel(S3Model):
                                      )
 
         # ---------------------------------------------------------------------
-        # Request Timeframe
-        #
-        timeframe_opts = {1: T("0-12 hours"),
-                          2: T("12-24 hours"),
-                          3: T("1-2 days"),
-                          4: T("2-4 days"),
-                          5: T("5-7 days"),
-                          6: T(">1 week"),
-                          }
-
-        req_timeframe = S3ReusableField("timeframe", "integer",
-                                        default = 3,
-                                        label = T("Timeframe"),
-                                        represent = S3Represent(options = timeframe_opts),
-                                        requires = IS_EMPTY_OR(
-                                                    IS_IN_SET(timeframe_opts,
-                                                              zero = None)),
-                                        )
-
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return {"req_priority": req_priority,
@@ -155,8 +135,6 @@ class RequestPriorityStatusModel(S3Model):
                 #"req_priority_represent": self.req_priority_represent,
                 "req_status": req_status,
                 "req_status_opts": req_status_opts,
-                "req_timeframe": req_timeframe,
-                #"req_timeframe_opts": timeframe_opts,
                 }
 
     # -------------------------------------------------------------------------
@@ -164,16 +142,23 @@ class RequestPriorityStatusModel(S3Model):
     def defaults():
         """
             Safe defaults for model-global names if module is disabled
+        """
 
-            @ToDo: DRY by allowing some S3Model classes to be marked as mandatory
-                   - usually for ones without tables like this one
+        return {#"req_priority": req_priority,
+                #"req_priority_opts": req_priority_opts,
+                #"req_priority_represent": cls.req_priority_represent,
+                #"req_status": req_status,
+                #"req_status_opts": req_status_opts,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def mandatory():
+        """
+            Mandatory s3-global objects
         """
 
         T = current.T
-
-        # ---------------------------------------------------------------------
-        # Request Timeframe
-        #
         timeframe_opts = {1: T("0-12 hours"),
                           2: T("12-24 hours"),
                           3: T("1-2 days"),
@@ -182,25 +167,17 @@ class RequestPriorityStatusModel(S3Model):
                           6: T(">1 week"),
                           }
 
-        req_timeframe = S3ReusableField("timeframe", "integer",
-                                        default = 3,
-                                        label = T("Timeframe"),
-                                        represent = S3Represent(options = timeframe_opts),
-                                        requires = IS_EMPTY_OR(
-                                                    IS_IN_SET(timeframe_opts,
-                                                              zero = None)),
-                                        )
+        timeframe = S3ReusableField("timeframe", "integer",
+                                    default = 3,
+                                    label = T("Timeframe"),
+                                    represent = S3Represent(options = timeframe_opts),
+                                    requires = IS_EMPTY_OR(
+                                                IS_IN_SET(timeframe_opts,
+                                                          zero = None)),
+                                    )
 
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {#"req_priority": req_priority,
-                #"req_priority_opts": req_priority_opts,
-                #"req_priority_represent": self.req_priority_represent,
-                #"req_status": req_status,
-                #"req_status_opts": req_status_opts,
-                "req_timeframe": req_timeframe,
-                #"req_timeframe_opts": timeframe_opts,
+        return {"req_timeframe": timeframe,
+                "req_timeframe_opts": timeframe_opts,
                 }
 
     # -------------------------------------------------------------------------

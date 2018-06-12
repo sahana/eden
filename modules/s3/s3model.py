@@ -106,6 +106,14 @@ class S3Model(object):
             if self.__loaded():
                 return
             self.__lock()
+            try:
+                env = self.mandatory()
+            except Exception:
+                self.__unlock()
+                raise
+            else:
+                if isinstance(env, dict):
+                    response.s3.update(env)
             if module in mandatory_models or \
                current.deployment_settings.has_module(module):
                 try:
@@ -176,6 +184,14 @@ class S3Model(object):
     def __getitem__(self, key):
 
         return self.__getattr__(str(key))
+
+    # -------------------------------------------------------------------------
+    def mandatory(self):
+        """
+            Mandatory objects defined by this model, regardless whether
+            enabled or disabled
+        """
+        return None
 
     # -------------------------------------------------------------------------
     def model(self):
