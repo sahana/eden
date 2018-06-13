@@ -466,26 +466,13 @@ def config(settings):
     settings.customise_org_sector_controller = customise_org_sector_controller
 
     # -------------------------------------------------------------------------
-    def project_activity_postprocess(form):
+    def req_need_status_update(need_id):
         """
-            Ensure that the Need (if-any) has the correct Status
+            Update the Need's fulfilment Status
         """
 
         db = current.db
         s3db = current.s3db
-
-        activity_id = form.vars.id
-
-        # Lookup the Need
-        natable = s3db.req_need_activity
-        need_link = db(natable.activity_id == activity_id).select(natable.need_id,
-                                                                  limitby = (0, 1)
-                                                                  ).first()
-        if not need_link:
-            # No associated Need
-            return
-
-        need_id = need_link.need_id
 
         # Read the Need details
         nitable = s3db.req_need_item
@@ -540,6 +527,7 @@ def config(settings):
 
         # Read the details of all Activities linked to this Need
         atable = s3db.project_activity
+        natable = s3db.req_need_activity
         query = (natable.need_id == need_id) & \
                 (natable.activity_id == atable.id) & \
                 (atable.deleted == False)
@@ -666,6 +654,64 @@ def config(settings):
                                                ).first()
         if need.status != status:
             need.update_record(status = status)
+
+    # -------------------------------------------------------------------------
+    def project_activity_ondelete(row):
+        """
+            Ensure that the Need (if-any) has the correct Status
+        """
+
+        import json
+
+        db = current.db
+        s3db = current.s3db
+
+        activity_id = row.get("id")
+
+        # Lookup the Need
+        need_id = None
+        natable = s3db.req_need_activity
+        deleted_links = db(natable.deleted == True).select(natable.deleted_fk)
+        for link in deleted_links:
+            deleted_fk = json.loads(link.deleted_fk)
+            if activity_id == deleted_fk["activity_id"]:
+                need_id = deleted_fk["need_id"]
+                break
+
+        if not need_id:
+            return
+
+        # Check that the Need hasn't been deleted
+        ntable = s3db.req_need
+        need = db(ntable.id == need_id).select(ntable.deleted,
+                                               limitby = (0, 1)
+                                               ).first()
+
+        if need and not need.deleted:
+            req_need_status_update(need_id)
+
+    # -------------------------------------------------------------------------
+    def project_activity_postprocess(form):
+        """
+            Ensure that the Need (if-any) has the correct Status
+        """
+
+        s3db = current.s3db
+
+        activity_id = form.vars.id
+
+        # Lookup the Need
+        ntable = s3db.req_need
+        natable = s3db.req_need_activity
+        query = (natable.activity_id == activity_id) & \
+                (natable.need_id == ntable.id) & \
+                (ntable.deleted == False)
+        need = current.db(query).select(ntable.id,
+                                        limitby = (0, 1)
+                                        ).first()
+
+        if need:
+            req_need_status_update(need.id)
 
     # -------------------------------------------------------------------------
     def customise_project_activity_resource(r, tablename):
@@ -873,6 +919,7 @@ def config(settings):
                                       (T("Activity Status"), "status_id"),
                                       "comments",
                                       ],
+                       ondelete = project_activity_ondelete,
                        )
 
     settings.customise_project_activity_resource = customise_project_activity_resource
@@ -893,22 +940,7 @@ def config(settings):
                 # Inject the javascript to handle dropdown filtering
                 # - normnally injected through AddResourceLink, but this isn't there in Inline widget
                 # - we also need to turn the trigger & target into dicts
-                s3.jquery_ready.append('''
-$.filterOptionsS3({
- 'trigger':{'name':'item_category_id'},
- 'target':{'name':'item_id'},
- 'lookupPrefix':'supply',
- 'lookupResource':'item',
-})
-$.filterOptionsS3({
- 'trigger':{'name':'item_id'},
- 'target':{'name':'item_pack_id'},
- 'lookupPrefix':'supply',
- 'lookupResource':'item_pack',
- 'msgNoRecords':i18n.no_packs,
- 'fncPrep':S3.supply.fncPrepItem,
- 'fncRepresent':S3.supply.fncRepresentItem
-})''')
+                s3.scripts.append("/%s/static/themes/SHARE/js/supply.js" % r.application)
 
             return output
         s3.postp = postp
@@ -1363,22 +1395,7 @@ $.filterOptionsS3({
                 # Inject the javascript to handle dropdown filtering
                 # - normnally injected through AddResourceLink, but this isn't there in Inline widget
                 # - we also need to turn the trigger & target into dicts
-                s3.jquery_ready.append('''
-$.filterOptionsS3({
- 'trigger':{'name':'item_category_id'},
- 'target':{'name':'item_id'},
- 'lookupPrefix':'supply',
- 'lookupResource':'item',
-})
-$.filterOptionsS3({
- 'trigger':{'name':'item_id'},
- 'target':{'name':'item_pack_id'},
- 'lookupPrefix':'supply',
- 'lookupResource':'item_pack',
- 'msgNoRecords':i18n.no_packs,
- 'fncPrep':S3.supply.fncPrepItem,
- 'fncRepresent':S3.supply.fncRepresentItem
-})''')
+                s3.scripts.append("/%s/static/themes/SHARE/js/supply.js" % r.application)
                 if current.auth.s3_has_permission("create", "project_activity"):
                     if r.id:
                         # Custom RFooter
