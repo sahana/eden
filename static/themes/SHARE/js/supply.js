@@ -1,5 +1,5 @@
 S3.supply.fncRepresentItemT = function(record) {
-    length = 37;
+    length = 32;
     name = record.name;
     if (name.length > length) {
         return name.substring(0, length) + '...';
