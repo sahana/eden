@@ -1,4 +1,6 @@
 First Name,Last Name,Email,Password,Role,Organisation,Link
+Activity,Logger,activity@example.com,eden,ACTIVITY_LOGGER,United Nations Resident Coordinator Office,Staff
+Needs,Logger,needs@example.com,eden,NEEDS_LOGGER,United Nations Resident Coordinator Office,Staff
 ACTED,Admin,acted@example.com,eden,ORG_ADMIN,Agency for Technical Cooperation and Development,Staff
 APAD,Admin,apadsl@example.com,eden,ORG_ADMIN,Asia Pacific Alliance for Disaster Managment,Staff
 CHA,Admin,cha@example.com,eden,ORG_ADMIN,Consortium of Humanitarian Agencies,Staff
@@ -22,7 +24,7 @@ UNDP,Admin,undp@example.com,eden,ORG_ADMIN,United Nations Development Programme,
 UNDSS,Admin,undss@example.com,eden,ORG_ADMIN,United Nations Department of Safety and Security,Staff
 UNFPA,Admin,unfpa@example.com,eden,ORG_ADMIN,United Nations Population Fund,Staff
 UN-Habitat,Admin,habitat@example.com,eden,ORG_ADMIN,United Nations Human Settlements Programme,Staff
-UNHRC,Admin,unhrc@example.com,eden,ORG_ADMIN,The United Nations Refugee Agency,Staff
+UNHCR,Admin,unhcr@example.com,eden,ORG_ADMIN,The United Nations Refugee Agency,Staff
 UNICEF,Admin,unicef@example.com,eden,ORG_ADMIN,United Nations Children Fund,Staff
 UNOPS,Admin,unops@example.com,eden,ORG_ADMIN,The United Nations Office for Project Services,Staff
 UNRCO,Admin,unrco@example.com,eden,ORG_ADMIN,United Nations Resident Coordinator Office,Staff

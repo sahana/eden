@@ -477,7 +477,7 @@ $.filterOptionsS3({
             msg_no_match = T("No Matching Items")
             )
 
-        supply_item_represent = supply_ItemRepresent(show_link=True)
+        supply_item_represent = supply_ItemRepresent(show_link = True)
 
         # Reusable Field
         supply_item_tootip = T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog.")
@@ -488,15 +488,16 @@ $.filterOptionsS3({
             represent = supply_item_represent,
             requires = IS_ONE_OF(db, "supply_item.id",
                                  supply_item_represent,
-                                 sort=True),
+                                 sort = True,
+                                 ),
             sortby = "name",
             widget = S3AutocompleteWidget("supply", "item"),
-            comment=S3PopupLink(c = "supply",
-                                f = "item",
-                                label = ADD_ITEM,
-                                title = T("Item"),
-                                tooltip = supply_item_tootip,
-                                ),
+            comment = S3PopupLink(c = "supply",
+                                  f = "item",
+                                  label = ADD_ITEM,
+                                  title = T("Item"),
+                                  tooltip = supply_item_tootip,
+                                  ),
             )
 
         # ---------------------------------------------------------------------
@@ -589,7 +590,7 @@ $.filterOptionsS3({
         if settings.get_supply_use_alt_name():
             add_components(tablename,
                            # Alternative Items
-                           supply_item_alt="item_id",
+                           supply_item_alt = "item_id",
                            )
 
         # =====================================================================
@@ -676,7 +677,7 @@ $.filterOptionsS3({
         #
         tablename = "supply_item_pack"
         define_table(tablename,
-                     supply_item_id(empty=False),
+                     supply_item_id(empty = False),
                      Field("name", length=128,
                            notnull=True, # Ideally this would reference another table for normalising Pack names
                            default = T("piece"),
@@ -1747,12 +1748,18 @@ class supply_ItemRepresent(S3Represent):
     """ Representation of Supply Items """
 
     def __init__(self,
-                 translate=False,
-                 show_link=False,
-                 show_um=False,
-                 multiple=False):
+                 multiple = False,
+                 show_link = False,
+                 show_um = False,
+                 translate = False,
+                 truncate = None,
+                 ):
 
         self.show_um = show_um
+        if truncate is None:
+            # Default: Truncate unless exporting in XLS format
+            truncate = current.auth.permission.format != "xls"
+        self.truncate = truncate
 
         # Need a custom lookup to join with Brand
         self.lookup_rows = self.custom_lookup_rows
@@ -1827,6 +1834,10 @@ class supply_ItemRepresent(S3Represent):
             um = row["supply_item.um"]
             if um:
                 name = "%s (%s)" % (name, um)
+
+        if self.truncate:
+            name = s3_truncate(name)
+
         return s3_str(name)
 
 # =============================================================================

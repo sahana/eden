@@ -466,26 +466,13 @@ def config(settings):
     settings.customise_org_sector_controller = customise_org_sector_controller
 
     # -------------------------------------------------------------------------
-    def project_activity_postprocess(form):
+    def req_need_status_update(need_id):
         """
-            Ensure that the Need (if-any) has the correct Status
+            Update the Need's fulfilment Status
         """
 
         db = current.db
         s3db = current.s3db
-
-        activity_id = form.vars.id
-
-        # Lookup the Need
-        natable = s3db.req_need_activity
-        need_link = db(natable.activity_id == activity_id).select(natable.need_id,
-                                                                  limitby = (0, 1)
-                                                                  ).first()
-        if not need_link:
-            # No associated Need
-            return
-
-        need_id = need_link.need_id
 
         # Read the Need details
         nitable = s3db.req_need_item
@@ -540,6 +527,7 @@ def config(settings):
 
         # Read the details of all Activities linked to this Need
         atable = s3db.project_activity
+        natable = s3db.req_need_activity
         query = (natable.need_id == need_id) & \
                 (natable.activity_id == atable.id) & \
                 (atable.deleted == False)
@@ -666,6 +654,64 @@ def config(settings):
                                                ).first()
         if need.status != status:
             need.update_record(status = status)
+
+    # -------------------------------------------------------------------------
+    def project_activity_ondelete(row):
+        """
+            Ensure that the Need (if-any) has the correct Status
+        """
+
+        import json
+
+        db = current.db
+        s3db = current.s3db
+
+        activity_id = row.get("id")
+
+        # Lookup the Need
+        need_id = None
+        natable = s3db.req_need_activity
+        deleted_links = db(natable.deleted == True).select(natable.deleted_fk)
+        for link in deleted_links:
+            deleted_fk = json.loads(link.deleted_fk)
+            if activity_id == deleted_fk["activity_id"]:
+                need_id = deleted_fk["need_id"]
+                break
+
+        if not need_id:
+            return
+
+        # Check that the Need hasn't been deleted
+        ntable = s3db.req_need
+        need = db(ntable.id == need_id).select(ntable.deleted,
+                                               limitby = (0, 1)
+                                               ).first()
+
+        if need and not need.deleted:
+            req_need_status_update(need_id)
+
+    # -------------------------------------------------------------------------
+    def project_activity_postprocess(form):
+        """
+            Ensure that the Need (if-any) has the correct Status
+        """
+
+        s3db = current.s3db
+
+        activity_id = form.vars.id
+
+        # Lookup the Need
+        ntable = s3db.req_need
+        natable = s3db.req_need_activity
+        query = (natable.activity_id == activity_id) & \
+                (natable.need_id == ntable.id) & \
+                (ntable.deleted == False)
+        need = current.db(query).select(ntable.id,
+                                        limitby = (0, 1)
+                                        ).first()
+
+        if need:
+            req_need_status_update(need.id)
 
     # -------------------------------------------------------------------------
     def customise_project_activity_resource(r, tablename):
@@ -838,31 +884,39 @@ def config(settings):
         crud_form = S3SQLCustomForm(*crud_fields,
                                     postprocess = project_activity_postprocess)
 
-        filter_widgets = [S3OptionsFilter("event.event_type_id"),
-                          S3OptionsFilter("event__link.event_id"), # @ToDo: Filter this list dynamically based on Event Type
+        filter_widgets = [S3OptionsFilter("agency.organisation_id",
+                                          label = T("Agency"),
+                                          ),
                           S3OptionsFilter("sector_activity.sector_id"),
                           S3LocationFilter("location_id",
                                            # These levels are for SHARE/LK
                                            levels = ("L2", "L3", "L4"),
                                            ),
+                          S3OptionsFilter("event.event_type_id",
+                                          hidden = True,
+                                          ),
+                          # @ToDo: Filter this list dynamically based on Event Type:
+                          S3OptionsFilter("event__link.event_id",
+                                          hidden = True,
+                                          ),
                           S3OptionsFilter("status_id",
                                           cols = 4,
                                           label = T("Status"),
+                                          hidden = True,
                                           ),
                           ]
 
         s3db.configure(tablename,
                        crud_form = crud_form,
                        filter_widgets = filter_widgets,
-                       list_fields = [(T("Disaster"), "event__link.event_id"),
-                                      (T("Agency"), "agency.organisation_id"),
+                       list_fields = [(T("Agency"), "agency.organisation_id"),
                                       (T("Implementing Partner"), "partner.organisation_id"),
-                                      (T("Donor"), "donor.organisation_id"),
                                       (T("District"), "location_id$L1"),
                                       (T("DS Division"), "location_id$L2"),
                                       (T("GN Division"), "location_id$L3"),
                                       (T("Sector"), "sector_activity.sector_id"),
                                       (T("Summary of Activity"), "name"),
+                                      (T("Activity Status"), "status_id"),
                                       (T("Modality"), "modality.value"),
                                       (T("Activity Date (Planned/Start Date)"), "date"),
                                       (T("Activity Date (Completion Date)"), "end_date"),
@@ -870,9 +924,10 @@ def config(settings):
                                       #(T("Total Number of People/HH Targeted"), "activity_data.target_value"),
                                       (T("People / Households"), "activity_demographic.parameter_id"),
                                       (T("Total Number of People/HH Reached"), "activity_demographic.value"),
-                                      (T("Activity Status"), "status_id"),
+                                      (T("Donor"), "donor.organisation_id"),
                                       "comments",
                                       ],
+                       ondelete = project_activity_ondelete,
                        )
 
     settings.customise_project_activity_resource = customise_project_activity_resource
@@ -893,22 +948,7 @@ def config(settings):
                 # Inject the javascript to handle dropdown filtering
                 # - normnally injected through AddResourceLink, but this isn't there in Inline widget
                 # - we also need to turn the trigger & target into dicts
-                s3.jquery_ready.append('''
-$.filterOptionsS3({
- 'trigger':{'name':'item_category_id'},
- 'target':{'name':'item_id'},
- 'lookupPrefix':'supply',
- 'lookupResource':'item',
-})
-$.filterOptionsS3({
- 'trigger':{'name':'item_id'},
- 'target':{'name':'item_pack_id'},
- 'lookupPrefix':'supply',
- 'lookupResource':'item_pack',
- 'msgNoRecords':i18n.no_packs,
- 'fncPrep':S3.supply.fncPrepItem,
- 'fncRepresent':S3.supply.fncRepresentItem
-})''')
+                s3.scripts.append("/%s/static/themes/SHARE/js/supply.js" % r.application)
 
             return output
         s3.postp = postp
@@ -1153,10 +1193,6 @@ $.filterOptionsS3({
                                        label = T("Search"),
                                        comment = T("Search for a Need by Request Number, Item, Location, Summary or Comments"),
                                        ),
-                          S3OptionsFilter("event.event_type_id"),
-                          S3OptionsFilter("event__link.event_id"), # @ToDo: Filter this list dynamically based on Event Type
-                          S3OptionsFilter("sector__link.sector_id"),
-                          S3OptionsFilter("organisation__link.organisation_id"),
                           S3LocationFilter("location_id",
                                            # These levels are for SHARE/LK
                                            levels = ("L2", "L3", "L4"),
@@ -1166,9 +1202,21 @@ $.filterOptionsS3({
                                           cols = 3,
                                           label = T("Status"),
                                           ),
+                          S3OptionsFilter("event.event_type_id",
+                                          hidden = True,
+                                          ),
+                          # @ToDo: Filter this list dynamically based on Event Type:
+                          S3OptionsFilter("event__link.event_id"),
+                          S3OptionsFilter("sector__link.sector_id",
+                                          hidden = True,
+                                          ),
+                          S3OptionsFilter("organisation__link.organisation_id",
+                                          hidden = True,
+                                          ),
                           S3OptionsFilter("verified.value",
                                           cols = 2,
                                           label = T("Verified"),
+                                          hidden = True,
                                           ),
                           ]
 
@@ -1176,19 +1224,19 @@ $.filterOptionsS3({
                        crud_form = crud_form,
                        filter_widgets = filter_widgets,
                        list_fields = [(T("Disaster"), "event__link.event_id"),
+                                      "date",
                                       "organisation__link.organisation_id",
                                       # These levels/Labels are for SHARE/LK
                                       (T("District"), "location_id$L2"),
                                       (T("DS"), "location_id$L3"),
-                                      (T("GN"), "location_id$L4"),
                                       (T("Request Number"), "req_number.value"),
-                                      "date",
-                                      "priority",
-                                      "sector__link.sector_id",
-                                      #"name",
                                       "need_item.item_id",
+                                      "sector__link.sector_id",
+                                      "priority",
+                                      #"name",
                                       (T("Status"), "status"),
                                       (T("Verified"), "verified.value"),
+                                      (T("GN"), "location_id$L4"),
                                       ],
                        )
 
@@ -1363,22 +1411,7 @@ $.filterOptionsS3({
                 # Inject the javascript to handle dropdown filtering
                 # - normnally injected through AddResourceLink, but this isn't there in Inline widget
                 # - we also need to turn the trigger & target into dicts
-                s3.jquery_ready.append('''
-$.filterOptionsS3({
- 'trigger':{'name':'item_category_id'},
- 'target':{'name':'item_id'},
- 'lookupPrefix':'supply',
- 'lookupResource':'item',
-})
-$.filterOptionsS3({
- 'trigger':{'name':'item_id'},
- 'target':{'name':'item_pack_id'},
- 'lookupPrefix':'supply',
- 'lookupResource':'item_pack',
- 'msgNoRecords':i18n.no_packs,
- 'fncPrep':S3.supply.fncPrepItem,
- 'fncRepresent':S3.supply.fncRepresentItem
-})''')
+                s3.scripts.append("/%s/static/themes/SHARE/js/supply.js" % r.application)
                 if current.auth.s3_has_permission("create", "project_activity"):
                     if r.id:
                         # Custom RFooter
