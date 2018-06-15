@@ -104,7 +104,7 @@ class S3Parser(object):
 
 
         channel_id = record.channel_id
-        tags = record.tags
+        tags = record.tags or []
 
         author = record.author
         if author:
