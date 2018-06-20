@@ -792,7 +792,10 @@ class PRPersonModel(S3Model):
                                                 T("Number or Label on the identification tag this person is wearing (if any)."),
                                                 ),
                               ),
-                requires = IS_EMPTY_OR(IS_NOT_ONE_OF(db, "pr_person.pe_label")),
+                requires = IS_EMPTY_OR([IS_LENGTH(128),
+                                        # Uniqueness only required within pr_person:
+                                        IS_NOT_ONE_OF(db, "pr_person.pe_label"),
+                                        ]),
                 ),
             # @ToDo: Remove this field from this core table
             # - remove refs to writing this from this module
