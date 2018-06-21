@@ -877,11 +877,11 @@ def config(settings):
                 from controllers import req_NeedRepresent
                 f = natable.need_id
                 f.represent = req_NeedRepresent()
-                f.writable = False # @ToDo: Currently this hides the widget from Update forms instead of just rendering read-only!
                 crud_fields.append(S3SQLInlineLink("need",
                                                    field = "need_id",
                                                    label = T("Need"),
                                                    multiple = False,
+                                                   readonly = True,
                                                    ))
 
         crud_form = S3SQLCustomForm(*crud_fields,
