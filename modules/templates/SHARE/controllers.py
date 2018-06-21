@@ -212,6 +212,7 @@ class project_ActivityRepresent(S3Represent):
                  ):
 
         self.lookup_rows = self.custom_lookup_rows
+        self.org_represent = current.s3db.org_OrganisationRepresent() # show_link=False
 
         super(project_ActivityRepresent,
               self).__init__(lookup = "project_activity",
@@ -267,7 +268,7 @@ class project_ActivityRepresent(S3Represent):
         # Custom Row (with the Orgs left-joined)
         organisation_id = row["project_activity_organisation.organisation_id"]
         if organisation_id:
-            return current.s3db.project_activity_organisation.organisation_id.represent(organisation_id)
+            return self.org_represent(organisation_id)
         else:
             # Fallback to name
             name = row["project_activity.name"]
