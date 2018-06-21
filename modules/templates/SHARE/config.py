@@ -1182,10 +1182,9 @@ def config(settings):
             natable = s3db.req_need_activity
             need_links = current.db(natable.need_id == r.id).select(natable.activity_id)
             if need_links:
+                from controllers import project_ActivityRepresent
                 f = natable.activity_id
-                f.represent = S3Represent(lookup = "project_activity",
-                                          show_link = True,
-                                          )
+                f.represent = project_ActivityRepresent()
                 f.writable = False # @ToDo: Currently this hides the widget from Update forms instead of just rendering read-only!
                 crud_fields.append(S3SQLInlineLink("activity",
                                                    field = "activity_id",

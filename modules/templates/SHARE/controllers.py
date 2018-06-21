@@ -203,6 +203,80 @@ class dashboard(S3CustomController):
         return output
 
 # =============================================================================
+class project_ActivityRepresent(S3Represent):
+    """ Representation of Activities by Organisation """
+
+    def __init__(self,
+                 show_link = True,
+                 multiple = False,
+                 ):
+
+        self.lookup_rows = self.custom_lookup_rows
+
+        super(project_ActivityRepresent,
+              self).__init__(lookup = "project_activity",
+                             fields = ["project_activity.name",
+                                       "project_activity_organisation.organisation_id",
+                                       ],
+                             show_link = show_link,
+                             multiple = multiple,
+                             )
+
+    # -------------------------------------------------------------------------
+    def custom_lookup_rows(self, key, values, fields=None):
+        """
+            Custom lookup method for activity rows, does a
+            left join with the tag. Parameters
+            key and fields are not used, but are kept for API
+            compatibility reasons.
+
+            @param values: the activity IDs
+        """
+
+        s3db = current.s3db
+        atable = s3db.project_activity
+        aotable = s3db.project_activity_organisation
+
+        left = aotable.on((aotable.activity_id == atable.id) & \
+                          (aotable.role == 1))
+
+        qty = len(values)
+        if qty == 1:
+            query = (atable.id == values[0])
+            limitby = (0, 1)
+        else:
+            query = (atable.id.belongs(values))
+            limitby = (0, qty)
+
+        rows = current.db(query).select(atable.id,
+                                        atable.name,
+                                        aotable.organisation_id,
+                                        left=left,
+                                        limitby=limitby)
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+
+            @param row: the project_activity Row
+        """
+
+        # Custom Row (with the Orgs left-joined)
+        organisation_id = row["project_activity_organisation.organisation_id"]
+        if organisation_id:
+            return current.s3db.project_activity_organisation.organisation_id.represent(organisation_id)
+        else:
+            # Fallback to name
+            name = row["project_activity.name"]
+            if name:
+                return s3_str(name)
+            else:
+                return current.messages["NONE"]
+
+# =============================================================================
 class req_NeedRepresent(S3Represent):
     """ Representation of Needs by Req Number """
 
