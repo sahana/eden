@@ -1170,12 +1170,20 @@ def config(settings):
                        "comments",
                        ]
 
-        if r.id:
+        if r.id and r.resource.tablename == tablename:
             # Read or Update
             req_number = components_get("verified")
             req_number.table.value.writable = False
             crud_fields.insert(2, (T("Request Number"), "req_number.value"))
             crud_fields.insert(-2, "status")
+            natable = s3db.req_need_activity
+            need_links = db(natable.need_id == r.id).select(natable.activity_id)
+            if need_links:
+                natable.activity_id.writable = False # @ToDo: Currently this hides the widget from Update forms instead of just rendering read-only!
+                crud_fields.append(S3SQLInlineLink("activity",
+                                                   field = "activity_id",
+                                                   label = T("Commits"),
+                                                   ))
 
         crud_form = S3SQLCustomForm(*crud_fields,
                                     postprocess = req_need_postprocess)
