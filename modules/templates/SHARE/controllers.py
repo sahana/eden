@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from gluon import *
-from s3 import S3CustomController, S3FilterForm, S3DateFilter, S3OptionsFilter
-
-from gluon import current
+#from gluon import current
 from gluon.storage import Storage
+from s3 import s3_str, \
+               S3CustomController, \
+               S3FilterForm, S3DateFilter, S3OptionsFilter, \
+               S3Represent
+
 
 THEME = "SHARE"
 
@@ -198,5 +201,79 @@ class dashboard(S3CustomController):
         current.response.s3.scripts.append("/%s/static/themes/SHARE/js/homepage.js" % request.application)
 
         return output
+
+# =============================================================================
+class req_NeedRepresent(S3Represent):
+    """ Representation of Needs by Req Number """
+
+    def __init__(self,
+                 show_link = True,
+                 multiple = False,
+                 ):
+
+        self.lookup_rows = self.custom_lookup_rows
+
+        super(req_NeedRepresent,
+              self).__init__(lookup = "req_need",
+                             fields = ["req_need.name",
+                                       "req_need_tag.value",
+                                       ],
+                             show_link = show_link,
+                             multiple = multiple,
+                             )
+
+    # -------------------------------------------------------------------------
+    def custom_lookup_rows(self, key, values, fields=None):
+        """
+            Custom lookup method for need rows, does a
+            left join with the tag. Parameters
+            key and fields are not used, but are kept for API
+            compatibility reasons.
+
+            @param values: the need IDs
+        """
+
+        s3db = current.s3db
+        ntable = s3db.req_need
+        nttable = s3db.req_need_tag
+
+        left = nttable.on((nttable.need_id == ntable.id) & \
+                          (nttable.tag == "req_number"))
+
+        qty = len(values)
+        if qty == 1:
+            query = (ntable.id == values[0])
+            limitby = (0, 1)
+        else:
+            query = (ntable.id.belongs(values))
+            limitby = (0, qty)
+
+        rows = current.db(query).select(ntable.id,
+                                        ntable.name,
+                                        nttable.value,
+                                        left=left,
+                                        limitby=limitby)
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+
+            @param row: the req_need Row
+        """
+
+        # Custom Row (with the tag left-joined)
+        req_number = row["req_need_tag.value"]
+        if req_number:
+            return s3_str(req_number)
+        else:
+            # Fallback to name
+            name = row["req_need.name"]
+            if name:
+                return s3_str(name)
+            else:
+                return current.messages["NONE"]
 
 # END =========================================================================

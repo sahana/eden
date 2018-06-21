@@ -2441,8 +2441,10 @@ class RequestNeedsModel(S3Model):
                             )
 
 
-        # Represent currently only used in Activity form, may need adjusting if used elsewhere
-        represent = S3Represent(lookup = tablename, show_link = True)
+        # NB Only instance of this being used (SHARE) over-rides this to show the req_number
+        represent = S3Represent(lookup = tablename,
+                                show_link = True,
+                                )
         need_id = S3ReusableField("need_id", "reference %s" % tablename,
                                   label = T("Need"),
                                   ondelete = "CASCADE",

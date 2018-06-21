@@ -12619,9 +12619,10 @@ class project_ActivityRepresent(S3Represent):
     """ Representation of Project Activities """
 
     def __init__(self,
-                 translate=False,
-                 show_link=False,
-                 multiple=False):
+                 translate = False,
+                 show_link = False,
+                 multiple = False,
+                 ):
 
         if current.deployment_settings.get_project_projects():
             # Need a custom lookup
@@ -12654,7 +12655,6 @@ class project_ActivityRepresent(S3Represent):
             @param values: the activity IDs
         """
 
-        db = current.db
         s3db = current.s3db
         atable = s3db.project_activity
         ptable = s3db.project_project
@@ -12669,11 +12669,11 @@ class project_ActivityRepresent(S3Represent):
             query = (atable.id.belongs(values))
             limitby = (0, qty)
 
-        rows = db(query).select(atable.id,
-                                atable.name,
-                                ptable.code,
-                                left=left,
-                                limitby=limitby)
+        rows = current.db(query).select(atable.id,
+                                        atable.name,
+                                        ptable.code,
+                                        left=left,
+                                        limitby=limitby)
         self.queries += 1
         return rows
 

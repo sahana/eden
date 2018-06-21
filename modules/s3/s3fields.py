@@ -231,19 +231,19 @@ class S3Represent(object):
     """
 
     def __init__(self,
-                 lookup=None,
-                 key=None,
-                 fields=None,
-                 labels=None,
-                 options=None,
-                 translate=False,
-                 linkto=None,
-                 show_link=False,
-                 multiple=False,
-                 hierarchy=False,
-                 default=None,
-                 none=None,
-                 field_sep=" "
+                 lookup = None,
+                 key = None,
+                 fields = None,
+                 labels = None,
+                 options = None,
+                 translate = False,
+                 linkto = None,
+                 show_link = False,
+                 multiple = False,
+                 hierarchy = False,
+                 default = None,
+                 none = None,
+                 field_sep = " "
                  ):
         """
             Constructor

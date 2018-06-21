@@ -874,7 +874,10 @@ def config(settings):
                                                                limitby = (0, 1)
                                                                ).first()
             if need_link:
-                natable.need_id.writable = False # @ToDo: Currently this hides the widget from Update forms instead of just rendering read-only!
+                from controllers import req_NeedRepresent
+                f = natable.need_id
+                f.represent = req_NeedRepresent()
+                f.writable = False # @ToDo: Currently this hides the widget from Update forms instead of just rendering read-only!
                 crud_fields.append(S3SQLInlineLink("need",
                                                    field = "need_id",
                                                    label = T("Need"),
@@ -1181,7 +1184,7 @@ def config(settings):
             if need_links:
                 f = natable.activity_id
                 f.represent = S3Represent(lookup = "project_activity",
-                                          show_link = True
+                                          show_link = True,
                                           )
                 f.writable = False # @ToDo: Currently this hides the widget from Update forms instead of just rendering read-only!
                 crud_fields.append(S3SQLInlineLink("activity",
