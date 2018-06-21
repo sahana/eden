@@ -6,6 +6,7 @@
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3xml.py
 #
 import json
+import os
 import unittest
 
 from gluon import *
@@ -1003,6 +1004,76 @@ class LookupListRepresentTests(unittest.TestCase):
         assertEqual(elem.get(LLREPR), expected)
 
 # =============================================================================
+class EntityResolverTests(unittest.TestCase):
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        current.auth.override = True
+
+        # XML containing entity with forbidden file access
+        self.forbidden = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE test [ <!ENTITY test SYSTEM "/etc/passwd">]>
+<s3xml>
+    <resource name="org_organisation">
+        <data field="name">SecTestOrg</data>
+        <data field="comments">&test;</data>
+    </resource>
+</s3xml>"""
+
+        # Path to file in local static-folder
+        path = os.path.abspath(os.path.join(current.request.folder,
+                                            "static",
+                                            "formats",
+                                            "xml",
+                                            "commons.xsl",
+                                            ))
+
+        # XML containing entity with permissible file access
+        self.allowed = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE test [ <!ENTITY test SYSTEM "%s">]>
+<s3xml>
+    <resource name="org_organisation">
+        <data field="name">SecTestOrg</data>
+        <data field="comments">&test;</data>
+    </resource>
+</s3xml>""" % path
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.auth.override = False
+
+    # -------------------------------------------------------------------------
+    def testForbiddenFileAccess(self):
+        """ Verify that forbidden file access leads to parser error """
+
+        xml = current.xml
+
+        tree = xml.parse(StringIO(self.forbidden))
+        self.assertEqual(tree, None)
+        self.assertNotEqual(xml.error, None)
+
+    # -------------------------------------------------------------------------
+    def testPermissibleFileAccess(self):
+        """ Verify that permissible file access does not lead to parser error """
+
+        xml = current.xml
+
+        tree = xml.parse(StringIO(self.allowed))
+        self.assertNotEqual(tree, None)
+        self.assertEqual(xml.error, None)
+
+    # -------------------------------------------------------------------------
+    def testImportWithForbiddenFileAccess(self):
+        """ Verify parser error breaks imports with forbidden file access """
+
+        resource = current.s3db.resource("org_organisation")
+
+        with self.assertRaises(SyntaxError):
+            resource.import_xml(StringIO(self.forbidden))
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
@@ -1012,6 +1083,7 @@ if __name__ == "__main__":
         GetFieldOptionsTests,
         S3JSONParsingTests,
         LookupListRepresentTests,
+        EntityResolverTests,
     )
 
 # END ========================================================================
