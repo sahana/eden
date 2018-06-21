@@ -1177,7 +1177,7 @@ def config(settings):
             crud_fields.insert(2, (T("Request Number"), "req_number.value"))
             crud_fields.insert(-2, "status")
             natable = s3db.req_need_activity
-            need_links = db(natable.need_id == r.id).select(natable.activity_id)
+            need_links = current.db(natable.need_id == r.id).select(natable.activity_id)
             if need_links:
                 natable.activity_id.writable = False # @ToDo: Currently this hides the widget from Update forms instead of just rendering read-only!
                 crud_fields.append(S3SQLInlineLink("activity",
