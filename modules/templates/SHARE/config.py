@@ -877,11 +877,13 @@ def config(settings):
                 from controllers import req_NeedRepresent
                 f = natable.need_id
                 f.represent = req_NeedRepresent()
-                f.writable = False # @ToDo: Currently this hides the widget from Update forms instead of just rendering read-only!
+                # This hides the widget from Update forms instead of just rendering read-only!
+                #f.writable = False
                 crud_fields.append(S3SQLInlineLink("need",
                                                    field = "need_id",
                                                    label = T("Need"),
                                                    multiple = False,
+                                                   readonly = True,
                                                    ))
 
         crud_form = S3SQLCustomForm(*crud_fields,
@@ -1185,10 +1187,12 @@ def config(settings):
                 from controllers import project_ActivityRepresent
                 f = natable.activity_id
                 f.represent = project_ActivityRepresent()
-                f.writable = False # @ToDo: Currently this hides the widget from Update forms instead of just rendering read-only!
+                # This hides the widget from Update forms instead of just rendering read-only!
+                #f.writable = False
                 crud_fields.append(S3SQLInlineLink("activity",
                                                    field = "activity_id",
                                                    label = T("Commits"),
+                                                   readonly = True,
                                                    ))
 
         crud_form = S3SQLCustomForm(*crud_fields,
