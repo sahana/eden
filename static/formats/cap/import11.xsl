@@ -1,10 +1,11 @@
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns:cap="urn:oasis:names:tc:emergency:cap:1.2">
+  xmlns:cap="urn:oasis:names:tc:emergency:cap:1.1">
 
     <!-- **********************************************************************
 
          CAP Import Templates for Sahana Eden
+         (identical copy of import.xsl except for cap namespace URI)
 
          Copyright (c) 2011-18 Sahana Software Foundation
 

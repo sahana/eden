@@ -34,15 +34,15 @@ __all__ = ["S3Parser"]
 
 import os
 import urllib2          # Needed for quoting & error handling on fetch
-try:
-    from cStringIO import StringIO    # Faster, where available
-except:
-    from StringIO import StringIO
+#try:
+#    from cStringIO import StringIO    # Faster, where available
+#except ImportError:
+#    from StringIO import StringIO
 
 from gluon import current
-from gluon.tools import fetch
+#from gluon.tools import fetch
 
-from s3.s3parser import S3Parsing
+#from s3.s3parser import S3Parsing
 
 # =============================================================================
 class S3Parser(object):
@@ -103,7 +103,7 @@ class S3Parser(object):
                                                         ).first()
 
 
-        channel_id = record.channel_id
+        #channel_id = record.channel_id
         tags = record.tags or []
 
         author = record.author
@@ -232,152 +232,303 @@ class S3Parser(object):
         return
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def parse_rss_2_cap(message):
+    @classmethod
+    def parse_rss_2_cap(cls, message):
         """
-            Parse RSS Feeds into the CAP Module
+            Parse RSS/Atom feed entries and import their CAP-XML sources
+            as cap_alerts
+
+            @param message: the msg_message Row to parse
+
+            @returns: a reply to the sender (always None here)
         """
 
         db = current.db
         s3db = current.s3db
-        table = s3db.msg_rss
+
         message_id = message.message_id
-        record = db(table.message_id == message_id).select(table.id,
-                                                           table.channel_id,
-                                                           table.title,
-                                                           table.from_address,
-                                                           table.body,
-                                                           table.date,
-                                                           table.location_id,
-                                                           table.author,
-                                                           limitby=(0, 1)
+
+        # Check parsing status for this message
+        stable = s3db.msg_parsing_status
+        query = (stable.message_id == message_id) & \
+                (stable.is_parsed == True)
+        if db(query).select(stable.id, limitby=(0, 1)).first():
+            # Already parsed
+            return None
+
+        # Get the RSS/Atom entry for the message
+        etable = s3db.msg_rss
+        entry = db(etable.message_id == message_id).select(etable.id,
+                                                           etable.channel_id,
+                                                           etable.from_address,
+                                                           #etable.title,
+                                                           #etable.body,
+                                                           #etable.date,
+                                                           #etable.location_id,
+                                                           #etable.author,
+                                                           limitby = (0, 1),
                                                            ).first()
-        if not record:
-            return
+        if not entry:
+            # Not found
+            return None
 
-        pstable = s3db.msg_parsing_status
-        # not adding (pstable.channel_id == record.channel_id) to query
-        # because two channels (http://host.domain/eden/cap/public.rss and
-        # (http://host.domain/eden/cap/alert.rss) may contain common url
-        # eg. http://host.domain/eden/cap/public/xx.cap
-        pquery = (pstable.message_id == message_id)
-        prows = db(pquery).select(pstable.id, pstable.is_parsed)
-        for prow in prows:
-            if prow.is_parsed:
-                return
+        # Get the CAP-XML source for this entry
+        tree, version, error = cls.fetch_cap(entry)
 
-        alert_table = s3db.cap_alert
-        info_table = s3db.cap_info
-
-        # Is this an Update or a Create?
-        # @ToDo: Use guid?
-        # Use Body
-        body = record.body or record.title
-        query = (info_table.description == body)
-        exists = db(query).select(info_table.id,
-                                  limitby=(0, 1)
-                                  ).first()
-
-        author = record.author
-        if author:
-            ptable = s3db.pr_person
-            # https://code.google.com/p/python-nameparser/
-            from nameparser import HumanName
-            name = HumanName(author)
-            first_name = name.first
-            middle_name = name.middle
-            last_name = name.last
-            query = (ptable.first_name == first_name) & \
-                    (ptable.middle_name == middle_name) & \
-                    (ptable.last_name == last_name)
-            pexists = db(query).select(ptable.id,
-                                       limitby=(0, 1)
-                                       ).first()
-            if pexists:
-                person_id = pexists.id
+        if tree:
+            # Version-specific import transformation stylesheet?
+            if version == "cap11":
+                filename = "import11.xsl"
             else:
-                person_id = ptable.insert(first_name = first_name,
-                                          middle_name = middle_name,
-                                          last_name = last_name)
-                s3db.update_super(ptable, dict(id=person_id))
-        else:
-            person_id = None
+                # Default CAP-1.2
+                filename = "import.xsl"
+            stylesheet = os.path.join(current.request.folder,
+                                      "static", "formats", "cap", filename,
+                                      )
 
-        if exists:
-            # @ToDo: Use XSLT
-            info_id = exists.id
-            db(info_table.id == info_id).update(headline = record.title,
-                                                description = body,
-                                                created_on = record.date,
-                                                #location_id = record.location_id,
-                                                #person_id = person_id,
-                                                )
-
-        else:
-            # Embedded link
-            url = record.from_address
-            import_xml = s3db.resource("cap_alert").import_xml
-            stylesheet = os.path.join(current.request.folder, "static", "formats", "cap", "import.xsl")
+            # Import the CAP-XML
+            resource = s3db.resource("cap_alert")
             try:
-                file = fetch(url)
-            except urllib2.HTTPError, e:
-                import base64
-                rss_table = s3db.msg_rss_channel
-                query = (rss_table.channel_id == record.channel_id)
-                channel = db(query).select(rss_table.date,
-                                           rss_table.etag,
-                                           rss_table.url,
-                                           rss_table.username,
-                                           rss_table.password,
-                                           limitby=(0, 1)).first()
-                username = channel.username
-                password = channel.password
-                if e.code == 401 and username and password:
-                    request = urllib2.Request(url)
-                    base64string = base64.encodestring("%s:%s" % (username, password))
-                    request.add_header("Authorization", "Basic %s" % base64string)
-                else:
-                    request = None
-
-                try:
-                    file = urllib2.urlopen(request).read() if request else fetch(url)
-                except urllib2.HTTPError, e:
-                    # Check if there are links to look into
-                    from urlparse import urlparse
-                    ltable = s3db.msg_rss_link
-                    query_ = (ltable.rss_id == record.id) & (ltable.deleted != True)
-                    rows_ = db(query_).select(ltable.type,
-                                              ltable.url)
-                    url_format = "{uri.scheme}://{uri.netloc}/".format
-                    url_domain = url_format(uri=urlparse(url))
-                    for row_ in rows_:
-                        url = row_.url
-                        if url and row_.type == "application/cap+xml" and \
-                           url_domain == url_format(uri=urlparse(url)):
-                            # Same domain, so okey to use same username/pwd combination
-                            if e.code == 401 and username and password:
-                                request = urllib2.Request(url)
-                                request.add_header("Authorization", "Basic %s" % base64string)
-                            else:
-                                request = None
-                            try:
-                                file = urllib2.urlopen(request).read() if request else fetch(url)
-                            except urllib2.HTTPError, e:
-                                current.log.error("Getting content from link failed: %s" % e)
-                            else:
-                                # Import via XSLT
-                                import_xml(StringIO(file), stylesheet=stylesheet, ignore_errors=True)
-                else:
-                    # Import via XSLT
-                    import_xml(StringIO(file), stylesheet=stylesheet, ignore_errors=True)
+                resource.import_xml(tree,
+                                    stylesheet = stylesheet,
+                                    ignore_errors = True,
+                                    )
+            except (IOError, SyntaxError):
+                import sys
+                error = "CAP import error: %s" % sys.exc_info()[1]
             else:
-                # Public Alerts
-                # eg. http://host.domain/eden/cap/public/xx.cap
-                # Import via XSLT
-                import_xml(StringIO(file), stylesheet=stylesheet, ignore_errors=True)
+                if resource.error:
+                    # Import validation error
+                    # NB can access the exact error through resource.error_tree
+                    error = resource.error
+                elif resource.import_count == 0:
+                    # No error, but nothing imported either
+                    error = "No CAP alerts found in source"
+                else:
+                    # Success
+                    error = None
+                    msg = "%s new CAP alerts imported, %s alerts updated" % (
+                            len(resource.import_created),
+                            len(resource.import_updated))
+                    current.log.info(msg)
+
+        if error:
+            # TODO report the error back to the scheduler run,
+            #      so it becomes available in the web GUI
+            current.log.error(error)
 
         # No Reply
-        return
+        return None
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def fetch_cap(cls, entry):
+        """
+            Fetch and parse the CAP-XML source for an RSS/Atom feed entry
+
+            @param entry: the RSS/Atom feed entry (msg_rss Row), containing:
+                          - id
+                          - channel_id
+                          - from_address
+
+            @returns: tuple (tree, version, error)
+                      - tree    = ElementTree of the CAP source
+                      - version = the detected CAP version
+                      - error   = error message if unsuccessful, else None
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get the URLs for all <link>s in this entry which are marked as cap+xml
+        ltable = s3db.msg_rss_link
+        query = (ltable.rss_id == entry.id) & \
+                (ltable.type == "application/cap+xml") & \
+                (ltable.deleted == False)
+        links = db(query).select(ltable.url)
+        urls = [link.url for link in links if link.url]
+
+        # Add the main <link> of the entry (=from_address) as fallback
+        if entry.from_address:
+            urls.append(entry.from_address)
+
+        # Simple domain formatter for URLs
+        from urlparse import urlparse
+        url_format = "{uri.scheme}://{uri.netloc}/".format
+
+        # Get domain/username/password for the channel
+        ctable = s3db.msg_rss_channel
+        query = (ctable.channel_id == entry.channel_id) & \
+                (ctable.deleted == False)
+        channel = db(query).select(ctable.url,
+                                   ctable.username,
+                                   ctable.password,
+                                   limitby = (0, 1),
+                                   ).first()
+        if channel:
+            channel_domain = url_format(uri=urlparse(channel.url))
+            username = channel.username
+            password = channel.password
+        else:
+            channel_domain = None
+            username = password = None
+
+        # Iterate over <link> URLs to find the CAP source
+        errors = []
+        version, tree = None, None
+        for url in urls:
+
+            error = None
+            current.log.debug("Fetching CAP-XML from %s" % url)
+
+            # If same domain as channel, use channel credentials for auth
+            if channel_domain and url_format(uri=urlparse(url)) == channel_domain:
+                opener = cls.opener(url, username=username, password=password)
+            else:
+                opener = cls.opener(url)
+
+            # Fetch the link content
+            try:
+                content = opener.open(url)
+            except urllib2.HTTPError, e:
+                # HTTP status
+                error = "HTTP %s: %s" % (e.code, e.read())
+            except urllib2.URLError, e:
+                # URL Error (network error)
+                error = "CAP source unavailable (%s)" % e.reason
+            except Exception:
+                # Other error (local error)
+                import sys
+                error = sys.exc_info()[1]
+            else:
+                # Try parse
+                tree, version, error = cls.parse_cap(content)
+
+            if tree:
+                # XML source found => proceed to import
+                break
+            elif error:
+                errors.append(error)
+            else:
+                errors.append("Not a valid CAP source: %s" % url)
+
+        return tree, version, error
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def parse_cap(source):
+        """
+            Parse a CAP-XML source and detect the CAP version
+
+            @param source: the CAP-XML source
+
+            @returns: tuple (tree, version, error)
+                      - tree    = ElementTree of the CAP source
+                      - version = the detected CAP version
+                      - error   = error message if parsing failed, else None
+        """
+
+        version = error = None
+
+        xml = current.xml
+
+        # Attempt to parse the source
+        tree = xml.parse(source)
+
+        if not tree:
+            # Capture parser error
+            error = xml.error or "XML parsing failed"
+
+        else:
+            # All supported CAP versions and their namespace URIs
+            namespaces = (("cap11", "urn:oasis:names:tc:emergency:cap:1.1"),
+                          ("cap12", "urn:oasis:names:tc:emergency:cap:1.2"),
+                          )
+
+            # Default
+            version = "cap12"
+
+            root = tree.getroot()
+            for ns, uri in namespaces:
+                if root.xpath("/%s:alert[1]" % ns, namespaces = {ns: uri}):
+                    version = ns
+                    break
+
+        return tree, version, error
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def opener(url,
+               headers=None,
+               username=None,
+               password=None,
+               preemptive_auth=False,
+               proxy=None,
+               ):
+        """
+            Configure a HTTP opener to fetch CAP messages
+
+            @param url: the target URL
+            @param headers: HTTP request headers, list of tuples (header, value)
+            @param username: user name for auth
+            @param password: password for auth
+            @param preemptive_auth: send credentials without waiting for a
+                                    HTTP401 challenge
+            @param proxy: proxy URL (if required)
+
+            @returns: an OpenerDirector instance with proxy and
+                      auth handlers installed
+
+            @example:
+                url = "http://example.com/capfile.xml"
+                opener = self._opener(url, username="user", password="password")
+                content = opener.open(url)
+        """
+
+        # Configure opener headers
+        addheaders = []
+        if headers:
+            addheaders.extend(headers)
+
+        # Configure opener handlers
+        handlers = []
+
+        # Proxy handling
+        if proxy:
+            # Figure out the protocol from the URL
+            url_split = url.split("://", 1)
+            if len(url_split) == 2:
+                protocol = url_split[0]
+            else:
+                protocol = "http"
+            proxy_handler = urllib2.ProxyHandler({protocol: proxy})
+            handlers.append(proxy_handler)
+
+        # Authentication handling
+        if username and password:
+            # Add a 401 handler
+            passwd_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            passwd_manager.add_password(realm = None,
+                                        uri = url,
+                                        user = username,
+                                        passwd = password,
+                                        )
+            auth_handler = urllib2.HTTPBasicAuthHandler(passwd_manager)
+            handlers.append(auth_handler)
+
+        # Create the opener
+        opener = urllib2.build_opener(*handlers)
+
+        # Pre-emptive basic auth
+        if preemptive_auth and username and password:
+            import base64
+            base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
+            addheaders.append(("Authorization", "Basic %s" % base64string))
+
+        if addheaders:
+            opener.addheaders = addheaders
+
+        return opener
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -400,7 +551,7 @@ class S3Parser(object):
         if not record:
             return
 
-        channel_id = record.channel_id
+        #channel_id = record.channel_id
 
         post_table = s3db.cms_post
 
