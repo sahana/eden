@@ -301,9 +301,13 @@ class S3Parser(object):
                     # Import validation error
                     # NB can access the exact error through resource.error_tree
                     error = resource.error
-                elif resource.import_count == 0:
-                    # No error, but nothing imported either
-                    error = "No CAP alerts found in source"
+                else:
+                    error = None
+
+                if resource.import_count == 0:
+                    if not error:
+                        # No error, but nothing imported either
+                        error = "No CAP alerts found in source"
                 else:
                     # Success
                     error = None
@@ -411,6 +415,11 @@ class S3Parser(object):
                 errors.append(error)
             else:
                 errors.append("Not a valid CAP source: %s" % url)
+
+        if errors:
+            error = "\n".join(errors)
+        else:
+            error = None
 
         return tree, version, error
 
