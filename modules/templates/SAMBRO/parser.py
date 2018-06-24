@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
 """ Message Parsing
 
@@ -30,25 +29,16 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Parser"]
+__all__ = ("S3Parser",
+           )
 
-import os
-import urllib2          # Needed for quoting & error handling on fetch
-#try:
-#    from cStringIO import StringIO    # Faster, where available
-#except ImportError:
-#    from StringIO import StringIO
+import urllib2
 
 from gluon import current
-#from gluon.tools import fetch
-
-#from s3.s3parser import S3Parsing
 
 # =============================================================================
 class S3Parser(object):
-    """
-       Message Parsing Template.
-    """
+    """ Message Parsing Template """
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -127,7 +117,7 @@ class S3Parser(object):
                 person_id = ptable.insert(first_name = first_name,
                                           middle_name = middle_name,
                                           last_name = last_name)
-                s3db.update_super(ptable, dict(id=person_id))
+                s3db.update_super(ptable, {"id": person_id})
         else:
             person_id = None
 
@@ -202,7 +192,7 @@ class S3Parser(object):
                                         series_id = series_id,
                                         mci = 1, # This is an imported record, not added natively
                                         )
-            record = dict(id=post_id)
+            record = {"id": post_id}
             s3db.update_super(post_table, record)
 
             # Source link
@@ -274,52 +264,19 @@ class S3Parser(object):
 
         # Get the CAP-XML source for this entry
         tree, version, error = cls.fetch_cap(entry)
+        msg = None
 
         if tree:
-            # Version-specific import transformation stylesheet?
-            if version == "cap11":
-                filename = "import11.xsl"
-            else:
-                # Default CAP-1.2
-                filename = "import.xsl"
-            stylesheet = os.path.join(current.request.folder,
-                                      "static", "formats", "cap", filename,
-                                      )
-
-            # Import the CAP-XML
-            resource = s3db.resource("cap_alert")
-            try:
-                resource.import_xml(tree,
-                                    stylesheet = stylesheet,
-                                    ignore_errors = True,
-                                    )
-            except (IOError, SyntaxError):
-                import sys
-                error = "CAP import error: %s" % sys.exc_info()[1]
-            else:
-                if resource.error:
-                    # Import validation error
-                    # NB can access the exact error through resource.error_tree
-                    error = resource.error
-                else:
-                    error = None
-
-                if resource.import_count == 0:
-                    if not error:
-                        # No error, but nothing imported either
-                        error = "No CAP alerts found in source"
-                else:
-                    # Success
-                    error = None
-                    msg = "%s new CAP alerts imported, %s alerts updated" % (
-                            len(resource.import_created),
-                            len(resource.import_updated))
-                    current.log.info(msg)
+            AlertImporter = s3db.cap_ImportAlert
+            error, msg = AlertImporter.import_cap(tree,
+                                                  version = version,
+                                                  ignore_errors = True,
+                                                  )
 
         if error:
-            # TODO report the error back to the scheduler run,
-            #      so it becomes available in the web GUI
             current.log.error(error)
+        elif msg:
+            current.log.info(msg)
 
         # No Reply
         return None
@@ -343,6 +300,8 @@ class S3Parser(object):
 
         db = current.db
         s3db = current.s3db
+
+        AlertImporter = s3db.cap_ImportAlert
 
         # Get the URLs for all <link>s in this entry which are marked as cap+xml
         ltable = s3db.msg_rss_link
@@ -387,9 +346,9 @@ class S3Parser(object):
 
             # If same domain as channel, use channel credentials for auth
             if channel_domain and url_format(uri=urlparse(url)) == channel_domain:
-                opener = cls.opener(url, username=username, password=password)
+                opener = AlertImporter.opener(url, username=username, password=password)
             else:
-                opener = cls.opener(url)
+                opener = AlertImporter.opener(url)
 
             # Fetch the link content
             try:
@@ -406,7 +365,7 @@ class S3Parser(object):
                 error = sys.exc_info()[1]
             else:
                 # Try parse
-                tree, version, error = cls.parse_cap(content)
+                tree, version, error = AlertImporter.parse_cap(content)
 
             if tree:
                 # XML source found => proceed to import
@@ -422,122 +381,6 @@ class S3Parser(object):
             error = None
 
         return tree, version, error
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def parse_cap(source):
-        """
-            Parse a CAP-XML source and detect the CAP version
-
-            @param source: the CAP-XML source
-
-            @returns: tuple (tree, version, error)
-                      - tree    = ElementTree of the CAP source
-                      - version = the detected CAP version
-                      - error   = error message if parsing failed, else None
-        """
-
-        version = error = None
-
-        xml = current.xml
-
-        # Attempt to parse the source
-        tree = xml.parse(source)
-
-        if not tree:
-            # Capture parser error
-            error = xml.error or "XML parsing failed"
-
-        else:
-            # All supported CAP versions and their namespace URIs
-            namespaces = (("cap11", "urn:oasis:names:tc:emergency:cap:1.1"),
-                          ("cap12", "urn:oasis:names:tc:emergency:cap:1.2"),
-                          )
-
-            # Default
-            version = "cap12"
-
-            root = tree.getroot()
-            for ns, uri in namespaces:
-                if root.xpath("/%s:alert[1]" % ns, namespaces = {ns: uri}):
-                    version = ns
-                    break
-
-        return tree, version, error
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def opener(url,
-               headers=None,
-               username=None,
-               password=None,
-               preemptive_auth=False,
-               proxy=None,
-               ):
-        """
-            Configure a HTTP opener to fetch CAP messages
-
-            @param url: the target URL
-            @param headers: HTTP request headers, list of tuples (header, value)
-            @param username: user name for auth
-            @param password: password for auth
-            @param preemptive_auth: send credentials without waiting for a
-                                    HTTP401 challenge
-            @param proxy: proxy URL (if required)
-
-            @returns: an OpenerDirector instance with proxy and
-                      auth handlers installed
-
-            @example:
-                url = "http://example.com/capfile.xml"
-                opener = self._opener(url, username="user", password="password")
-                content = opener.open(url)
-        """
-
-        # Configure opener headers
-        addheaders = []
-        if headers:
-            addheaders.extend(headers)
-
-        # Configure opener handlers
-        handlers = []
-
-        # Proxy handling
-        if proxy:
-            # Figure out the protocol from the URL
-            url_split = url.split("://", 1)
-            if len(url_split) == 2:
-                protocol = url_split[0]
-            else:
-                protocol = "http"
-            proxy_handler = urllib2.ProxyHandler({protocol: proxy})
-            handlers.append(proxy_handler)
-
-        # Authentication handling
-        if username and password:
-            # Add a 401 handler
-            passwd_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            passwd_manager.add_password(realm = None,
-                                        uri = url,
-                                        user = username,
-                                        passwd = password,
-                                        )
-            auth_handler = urllib2.HTTPBasicAuthHandler(passwd_manager)
-            handlers.append(auth_handler)
-
-        # Create the opener
-        opener = urllib2.build_opener(*handlers)
-
-        # Pre-emptive basic auth
-        if preemptive_auth and username and password:
-            import base64
-            base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
-            addheaders.append(("Authorization", "Basic %s" % base64string))
-
-        if addheaders:
-            opener.addheaders = addheaders
-
-        return opener
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -600,7 +443,7 @@ class S3Parser(object):
                                         series_id = series_id,
                                         mci = 1, # This is an imported record, not added natively
                                         )
-            record = dict(id=post_id)
+            record = {"id": post_id}
             s3db.update_super(post_table, record)
 
         # No Reply

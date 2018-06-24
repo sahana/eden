@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
 """ Messaging API
 
@@ -42,11 +41,11 @@ __all__ = ("S3Msg",
 import base64
 import datetime
 import json
+import os
 import re
 import string
 import urllib
 import urllib2
-import os
 
 try:
     from cStringIO import StringIO    # Faster, where available
@@ -63,7 +62,7 @@ except ImportError:
 from gluon import current, redirect
 from gluon.html import *
 
-from s3codec import S3Codec
+#from s3codec import S3Codec
 from s3crud import S3CRUD
 from s3datetime import s3_decode_iso_datetime
 from s3forms import S3SQLDefaultForm
@@ -80,7 +79,7 @@ TWITTER_MAX_CHARS = 140
 TWITTER_HAS_NEXT_SUFFIX = u' \u2026'
 TWITTER_HAS_PREV_PREFIX = u'\u2026 '
 
-SENDER = re.compile("(.*)\s*\<(.+@.+)\>\s*")
+SENDER = re.compile(r"(.*)\s*\<(.+@.+)\>\s*")
 
 # =============================================================================
 class S3Msg(object):
@@ -199,7 +198,6 @@ class S3Msg(object):
         """
 
         # Deal with missing word separation (thanks Ingmar Hupp)
-        import re
         header = re.sub(r"(=\?.*\?=)(?!$)", r"\1 ", header)
 
         # Decode header
@@ -434,7 +432,7 @@ class S3Msg(object):
             message_id = record["message_id"]
         else:
             # @ToDo
-            raise
+            raise NotImplementedError
 
         # Place the Message in the main OutBox
         table = s3db.msg_outbox
@@ -645,7 +643,7 @@ class S3Msg(object):
             left.append(mailbox.on(mailbox.message_id == outbox.message_id))
         else:
             # @ToDo
-            raise
+            raise NotImplementedError
 
         rows = db(query).select(*fields,
                                 left=left,
@@ -1339,11 +1337,11 @@ class S3Msg(object):
         """
 
         return self.send_by_pe_id(pe_id,
-                                  message,
-                                  "SMS",
-                                  from_address,
-                                  system_generated,
-                                  subject=""
+                                  subject = "",
+                                  message = message,
+                                  contact_method = "SMS",
+                                  from_address = from_address,
+                                  system_generated = system_generated,
                                   )
 
     # -------------------------------------------------------------------------
@@ -1609,7 +1607,9 @@ class S3Msg(object):
             graph = facebook.GraphAPI(c.page_access_token)
             graph.put_object(page_id, "feed", message=text)
         else:
-            graph.put_object(user_id, "feed", message=text)
+            # FIXME user_id does not exist:
+            #graph.put_object(user_id, "feed", message=text)
+            raise NotImplementedError
 
         message_id = log_facebook(text, recipient, channel_id)
 
@@ -2096,12 +2096,12 @@ class S3Msg(object):
                                  request_headers=request_headers,
                                  response_headers=response_headers,
                                  )
-
         if d.bozo:
             # Something doesn't seem right
             S3Msg.update_channel_status(channel_id,
-                                        status=d.bozo_exception.message,
-                                        period=(300, 3600))
+                                        status = "ERROR: %s" % d.bozo_exception.message,
+                                        period = (300, 3600),
+                                        )
             return
 
         # Update ETag/Last-polled
@@ -2396,7 +2396,7 @@ class S3Msg(object):
                 old_status = old_status.status
                 try:
                     old_status = int(old_status)
-                except:
+                except (ValueError, TypeError):
                     new_status = status
                 else:
                     new_status = old_status + int(status[1:])
@@ -2530,7 +2530,6 @@ class S3Msg(object):
         """ Process results of twitter search with KeyGraph."""
 
         import subprocess
-        import os
         import tempfile
 
         db = current.db
@@ -2568,14 +2567,12 @@ class S3Msg(object):
             with their definitions.
         """
 
-        import re
-
         tagdef = S3Msg.tagdef
         tweet = tweet.lower()
-        tweet = re.sub('((www\.[\s]+)|(https?://[^\s]+))', "", tweet)
-        tweet = re.sub('@[^\s]+', "", tweet)
-        tweet = re.sub('[\s]+', " ", tweet)
-        tweet = re.sub(r'#([^\s]+)', lambda m:tagdef(m.group(0)), tweet)
+        tweet = re.sub(r"((www\.[\s]+)|(https?://[^\s]+))", "", tweet)
+        tweet = re.sub(r"@[^\s]+", "", tweet)
+        tweet = re.sub(r"[\s]+", " ", tweet)
+        tweet = re.sub(r"#([^\s]+)", lambda m:tagdef(m.group(0)), tweet)
         tweet = tweet.strip('\'"')
 
         return tweet
