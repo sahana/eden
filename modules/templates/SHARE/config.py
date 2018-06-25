@@ -868,15 +868,17 @@ def config(settings):
                        "comments",
                        ]
 
+        from controllers import req_NeedRepresent
+        natable = s3db.req_need_activity
+        #f = natable.need_id
+        #f.represent = req_NeedRepresent()
+        natable.need_id.represent = req_NeedRepresent()
+
         if r.id and r.resource.tablename == tablename:
-            natable = s3db.req_need_activity
             need_link = db(natable.activity_id == r.id).select(natable.need_id,
                                                                limitby = (0, 1)
                                                                ).first()
             if need_link:
-                from controllers import req_NeedRepresent
-                f = natable.need_id
-                f.represent = req_NeedRepresent()
                 # This hides the widget from Update forms instead of just rendering read-only!
                 #f.writable = False
                 crud_fields.append(S3SQLInlineLink("need",
@@ -930,6 +932,7 @@ def config(settings):
                                       (T("People / Households"), "activity_demographic.parameter_id"),
                                       (T("Total Number of People/HH Reached"), "activity_demographic.value"),
                                       (T("Donor"), "donor.organisation_id"),
+                                      (T("Needs"), "need__link.need_id"),
                                       "comments",
                                       ],
                        ondelete = project_activity_ondelete,
@@ -1175,18 +1178,20 @@ def config(settings):
                        "comments",
                        ]
 
+        from controllers import project_ActivityRepresent
+        natable = s3db.req_need_activity
+        #f = natable.activity_id
+        #f.represent = project_ActivityRepresent()
+        natable.activity_id.represent = project_ActivityRepresent()
+
         if r.id and r.resource.tablename == tablename:
             # Read or Update
             req_number = components_get("verified")
             req_number.table.value.writable = False
             crud_fields.insert(2, (T("Request Number"), "req_number.value"))
             crud_fields.insert(-2, "status")
-            natable = s3db.req_need_activity
             need_links = current.db(natable.need_id == r.id).select(natable.activity_id)
             if need_links:
-                from controllers import project_ActivityRepresent
-                f = natable.activity_id
-                f.represent = project_ActivityRepresent()
                 # This hides the widget from Update forms instead of just rendering read-only!
                 #f.writable = False
                 crud_fields.append(S3SQLInlineLink("activity",
@@ -1253,6 +1258,7 @@ def config(settings):
                                       "priority",
                                       #"name",
                                       (T("Request Number"), "req_number.value"),
+                                      (T("Commits"), "activity__link.activity_id"),
                                       (T("Verified"), "verified.value"),
                                       (T("GN"), "location_id$L4"),
                                       ],
