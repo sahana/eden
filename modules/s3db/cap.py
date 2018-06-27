@@ -1833,75 +1833,97 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
             return
 
         db = current.db
-        atable = db.cap_alert
         itable = db.cap_info
 
-        info = db(itable.id == info_id).select(itable.language,
+        info = db(itable.id == info_id).select(itable.id,
                                                itable.alert_id,
+                                               itable.language,
+                                               itable.web,
                                                itable.event,
                                                itable.event_type_id,
                                                itable.event_code,
                                                itable.audience,
-                                               limitby=(0, 1)).first()
+                                               limitby = (0, 1),
+                                               ).first()
         if info:
             alert_id = info.alert_id
-            set_ = db(itable.id == info_id)
+
+            # Details to update in this info-record:
+            update = {}
+
             if alert_id and cap_alert_is_template(alert_id):
-                set_.update(is_template = True)
+                update["is_template"] = True
+
             if not info.event:
-                set_.update(event = current.db.cap_info.event_type_id.\
-                            represent(info.event_type_id))
-            event_code = info.event_code
-            #parameter = info.parameter
+                update["event"] = itable.event_type_id.represent(info.event_type_id)
+
             # For prepopulating
+            event_code = info.event_code
             if event_code and ("|{" in event_code or "||" in event_code):
-                fstring = json_formatter(event_code)
-                set_.update(event_code = fstring)
+                update["event_code"] = json_formatter(event_code)
+
+            # Unused:
+            #parameter = info.parameter
             #if parameter and ("|{" in parameter or "||" in parameter):
-            #    fstring = json_formatter(parameter)
-            #    set_.update(parameter = fstring)
+            #    update["parameter"] = json_formatter(parameter)
+
             audience = info.audience
             if not audience or audience == current.messages["NONE"]:
-                set_.update(audience = None)
-            if info.language == "en":
-                set_.update(language = "en-US")
+                update["audience"] = None
 
-            row = db(atable.id == alert_id).select(atable.scope, limitby=(0, 1)).first()
-            if row and row.scope == "Public":
-                fn = "public"
+            if info.language == "en":
+                update["language"] = "en-US"
+
+            if not info.web:
+                # Use the local alert URL for "web"
+                atable = current.s3db.cap_alert
+                row = db(atable.id == alert_id).select(atable.scope,
+                                                       limitby = (0, 1),
+                                                       ).first()
+                if row and row.scope == "Public":
+                    fn = "public"
+                else:
+                    fn = "alert"
+                web = "%s%s" % (current.deployment_settings.get_base_public_url(),
+                                URL(c="cap", f=fn, args=[alert_id]),
+                                )
+                update["web"] = web
             else:
-                fn = "alert"
-            web = "%s%s" % (current.deployment_settings.get_base_public_url(),
-                            URL(c="cap", f=fn, args=[alert_id]))
+                web = None
+
             form_vars_get = form_vars.get
-            form_effective = form_vars_get("effective", current.request.now)
+
+            # Defaults for relevance date fields
+            form_effective = form_vars_get("effective", current.request.utcnow)
             form_expires = form_vars_get("expires", cap_expirydate())
             form_onset = form_vars_get("onset", form_effective)
 
-            idata = {"priority"       : form_vars_get("priority", None),
-                     "urgency"        : form_vars_get("urgency", None),
-                     "severity"       : form_vars_get("severity", None),
-                     "certainty"      : form_vars_get("certainty", None),
+            update.update({"effective": form_effective,
+                           "expires": form_expires,
+                           "onset": form_onset,
+                           })
+
+            if update:
+                info.update_record(**update)
+
+            # Sync data in all other info-records of the same alert
+            idata = {"category"       : form_vars_get("category"),
+                     "certainty"      : form_vars_get("certainty"),
                      "effective"      : form_effective,
-                     "onset"          : form_onset,
+                     "event_type_id"  : form_vars_get("event_type_id"),
                      "expires"        : form_expires,
-                     "web"            : web,
-                     "event_type_id"  : form_vars_get("event_type_id", None),
-                     "category"       : form_vars_get("category", None),
-                     "response_type"  : form_vars_get("response_type", None),
+                     "onset"          : form_onset,
+                     "priority"       : form_vars_get("priority"),
+                     "response_type"  : form_vars_get("response_type"),
+                     "severity"       : form_vars_get("severity"),
+                     "urgency"        : form_vars_get("urgency"),
                      }
-            query = (itable.deleted != True) & \
-                    (itable.alert_id == alert_id)
-            rows = db(query).select(itable.id)
-            for row in rows:
-                if int(row.id) == int(info_id):
-                    row.update_record(web=web,
-                                      effective=form_effective,
-                                      expires=form_expires,
-                                      onset=form_onset,
-                                      )
-                else:
-                    row.update_record(**idata)
+            if web:
+                idata["web"] = web
+            query = (itable.alert_id == alert_id) & \
+                    (itable.id != info_id) & \
+                    (itable.deleted == False)
+            db(query).update(**idata)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4279,6 +4301,7 @@ class cap_ImportAlert(S3Method):
             error, msg = self.import_cap(tree,
                                          version = version,
                                          resource = resource,
+                                         url = url,
                                          # TODO Pointless:
                                          #ignore_errors = formvars_get("ignore_errors", False),
                                          )
@@ -4289,7 +4312,7 @@ class cap_ImportAlert(S3Method):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def import_cap(tree, version=None, resource=None, ignore_errors=False):
+    def import_cap(tree, version=None, resource=None, url=None, ignore_errors=False):
         """
             Import a CAP-XML element tree into a cap_alert resource
 
@@ -4297,6 +4320,7 @@ class cap_ImportAlert(S3Method):
             @param version: the detected CAP version (see parse_cap)
             @param resource: the cap_alert resource to import to,
                              will be instantiated if not passed in
+            @param url: the CAP-XML source URL
             @param ignore_errors: skip invalid cap_alert records
 
             TODO ignore_errors gives no benefit because it means to
@@ -4306,6 +4330,7 @@ class cap_ImportAlert(S3Method):
         """
 
         msg = None
+        s3db = current.s3db
 
         # Version-specific import transformation stylesheet?
         if version == "cap11":
@@ -4317,9 +4342,14 @@ class cap_ImportAlert(S3Method):
                                   "static", "formats", "cap", filename,
                                   )
 
+        # Set default for cap_info.web
+        itable = s3db.table("cap_info")
+        field = itable.web
+        field.default = url or None
+
         # Import the CAP-XML
         if resource is None:
-            resource = current.s3db.resource("cap_alert")
+            resource = s3db.resource("cap_alert")
         try:
             resource.import_xml(tree,
                                 stylesheet = stylesheet,

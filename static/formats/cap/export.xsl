@@ -45,7 +45,7 @@
     <!-- ****************************************************************** -->
     <!-- cap_alert -->
     <xsl:template match="resource[@name='cap_alert']">
-    
+
         <alert>
             <identifier>
                 <xsl:value-of select="data[@field='identifier']"/>
@@ -78,7 +78,7 @@
             <msgType>
                 <xsl:value-of select="data[@field='msg_type']"/>
             </msgType>
-            
+
             <xsl:if test="data[@field='source']!=''">
                 <source><xsl:value-of select="data[@field='source']"/></source>
             </xsl:if>
@@ -234,7 +234,16 @@
             </xsl:if>
 
             <xsl:if test="data[@field='web']!=''">
-                <web><xsl:value-of select="concat(data[@field='web'], '/profile')"/></web>
+                <xsl:choose>
+                    <xsl:when test="@mci=1">
+                        <!-- Locally created Alert => append /profile -->
+                        <web><xsl:value-of select="concat(data[@field='web']/text(), '/profile')"/></web>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <!-- Imported Alert => use URL as-is -->
+                        <web><xsl:value-of select="data[@field='web']/text()"/></web>
+                    </xsl:otherwise>
+                </xsl:choose>
             </xsl:if>
 
             <xsl:if test="data[@field='contact']!=''">
@@ -254,7 +263,7 @@
                     <value><xsl:value-of select="reference[@field='priority']"/></value>
                 </parameter>
             </xsl:if>
-            
+
             <xsl:for-each select="../resource[@name='cap_info_parameter'][reference[@field='info_id' and @uuid=$info_uuid]]">
                 <parameter>
                     <valueName>
@@ -321,7 +330,7 @@
             <!-- Include all Resources within this Info & all that are global to the Alert -->
             <xsl:apply-templates select="../resource[@name='cap_resource'][reference[@field='info_id' and @uuid=$uuid]]|
                                          ../resource[@name='cap_resource'][not(reference[@field='info_id'])]"/>
-                                         
+
             <!-- Areas -->
             <!-- Include all Areas within this Info & all that are global to the Alert -->
             <xsl:apply-templates select="../resource[@name='cap_area'][reference[@field='info_id' and @uuid=$uuid]]|
@@ -373,7 +382,7 @@
                     <altitude><xsl:value-of select="$elevation"/></altitude>
                 </xsl:when>
             </xsl:choose>
-            
+
         </area>
     </xsl:template>
 
@@ -381,7 +390,7 @@
     <!-- cap_area_tag -->
     <!-- These are key value pairs used for geocodes. -->
     <xsl:template match="resource[@name='cap_area_tag']">
-    
+
         <geocode>
             <valueName>
                 <xsl:value-of select="data[@field='tag']" />
@@ -427,7 +436,7 @@
             </xsl:when>
         </xsl:choose>
     </xsl:template>
-    
+
     <!-- ****************************************************************** -->
     <xsl:template name="Polygon">
         <xsl:param name="polygon"/>
