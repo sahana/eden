@@ -22,7 +22,8 @@ def config(settings):
 
     # L10n (Localization) settings
     languages = OrderedDict([
-        ("en-US", "English"),
+        ("en-US", "English (US)"),
+        ("es-ES", "Spanish (Spain)"),
     ])
     settings.L10n.languages = languages
 
