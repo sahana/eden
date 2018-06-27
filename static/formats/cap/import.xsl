@@ -32,6 +32,8 @@
     *********************************************************************** -->
     <xsl:output method="xml" indent="yes"/>
 
+    <xsl:include href="../xml/commons.xsl"/>
+
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
@@ -403,71 +405,6 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- Helper to limit a name to 128 chars -->
-    <xsl:template name="Name128">
-
-        <xsl:param name="name"/>
-
-        <xsl:choose>
-            <xsl:when test="string-length($name) > 128">
-                <!-- Truncate -->
-                <xsl:value-of select="concat(substring($name, 0, 124), '...')"/>
-            </xsl:when>
-            <xsl:otherwise>
-                <!-- Use as-is -->
-                <xsl:value-of select="$name"/>
-            </xsl:otherwise>
-        </xsl:choose>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <!-- Helper to represent multiple points in WKT -->
-    <xsl:template name="Points">
-
-        <xsl:param name="points"/>
-
-        <!-- CAP polygon ($points) is a
-             - space-delimited list of comma-separated "lat,lon" pairs, whereas
-             WKT wants a
-             - comma-delimited list of space-separated "lon lat" pairs.
-
-             The Points/Point templates are to transform the former (CAP)
-             into the latter (WKT) format.
-        -->
-
-        <xsl:choose>
-            <xsl:when test="contains($points,' ')">
-                <xsl:call-template name="Point">
-                    <xsl:with-param name="point" select="substring-before($points, ' ')"/>
-                </xsl:call-template>
-                <xsl:text>,</xsl:text>
-                <xsl:call-template name="Points">
-                    <xsl:with-param name="points" select="substring-after($points, ' ')"/>
-                </xsl:call-template>
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:call-template name="Point">
-                    <xsl:with-param name="point" select="$points"/>
-                </xsl:call-template>
-            </xsl:otherwise>
-        </xsl:choose>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <!-- Helper to represent a single point in WKT -->
-    <xsl:template name="Point">
-
-        <xsl:param name="point"/>
-
-        <xsl:variable name="lat" select="substring-before($point, ',')"/>
-        <xsl:variable name="lon" select="substring-after($point, ',')"/>
-        <xsl:value-of select="concat($lon, ' ', $lat)"/>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
     <!-- Area Geocodes -->
     <xsl:template match="cap:geocode">
 
@@ -479,6 +416,21 @@
                 <xsl:value-of select="cap:value" />
             </data>
         </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Language element must be sanitized -->
+    <xsl:template match="cap:language">
+
+        <xsl:variable name="language" select="normalize-space(./text())"/>
+        <xsl:if test="$language!=''">
+            <data field="language">
+                <xsl:call-template name="LanguageTag">
+                    <xsl:with-param name="language" select="$language"/>
+                </xsl:call-template>
+            </data>
+        </xsl:if>
 
     </xsl:template>
 
@@ -555,6 +507,110 @@
                 </data>
             </xsl:if>
         </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Helper to limit a name to 128 chars -->
+    <xsl:template name="Name128">
+
+        <xsl:param name="name"/>
+
+        <xsl:choose>
+            <xsl:when test="string-length($name) > 128">
+                <!-- Truncate -->
+                <xsl:value-of select="concat(substring($name, 0, 124), '...')"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <!-- Use as-is -->
+                <xsl:value-of select="$name"/>
+            </xsl:otherwise>
+        </xsl:choose>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Helper to sanitize cap:language tags -->
+    <xsl:template name="LanguageTag">
+
+        <xsl:param name="language"/>
+
+        <xsl:choose>
+            <xsl:when test="contains($language, '-')">
+
+                <xsl:variable name="variantSubTag" select="substring-after($language, '-')"/>
+                <xsl:choose>
+
+                    <xsl:when test="string-length($variantSubTag)=2">
+                        <!-- ISO3166-alpha2 Country Code => transform to uppercase -->
+                        <xsl:variable name="countryCode">
+                            <xsl:call-template name="uppercase">
+                                <xsl:with-param name="string" select="$variantSubTag"/>
+                            </xsl:call-template>
+                        </xsl:variable>
+                        <xsl:value-of select="concat(substring-before($language, '-'), '-', $countryCode)"/>
+                    </xsl:when>
+
+                    <xsl:otherwise>
+                        <!-- Other exotic language variant sub-tag => drop -->
+                        <xsl:value-of select="substring-before($language, '-')"/>
+                    </xsl:otherwise>
+
+                </xsl:choose>
+            </xsl:when>
+
+            <xsl:otherwise>
+                <!-- Simple ISO639 language code => keep as-is -->
+                <xsl:value-of select="$language"/>
+            </xsl:otherwise>
+
+        </xsl:choose>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Helper to represent multiple points in WKT -->
+    <xsl:template name="Points">
+
+        <xsl:param name="points"/>
+
+        <!-- CAP polygon ($points) is a
+             - space-delimited list of comma-separated "lat,lon" pairs, whereas
+             WKT wants a
+             - comma-delimited list of space-separated "lon lat" pairs.
+
+             The Points/Point templates are to transform the former (CAP)
+             into the latter (WKT) format.
+        -->
+
+        <xsl:choose>
+            <xsl:when test="contains($points,' ')">
+                <xsl:call-template name="Point">
+                    <xsl:with-param name="point" select="substring-before($points, ' ')"/>
+                </xsl:call-template>
+                <xsl:text>,</xsl:text>
+                <xsl:call-template name="Points">
+                    <xsl:with-param name="points" select="substring-after($points, ' ')"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:call-template name="Point">
+                    <xsl:with-param name="point" select="$points"/>
+                </xsl:call-template>
+            </xsl:otherwise>
+        </xsl:choose>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Helper to represent a single point in WKT -->
+    <xsl:template name="Point">
+
+        <xsl:param name="point"/>
+
+        <xsl:variable name="lat" select="substring-before($point, ',')"/>
+        <xsl:variable name="lon" select="substring-after($point, ',')"/>
+        <xsl:value-of select="concat($lon, ' ', $lat)"/>
 
     </xsl:template>
 
