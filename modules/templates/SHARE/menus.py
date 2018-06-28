@@ -18,13 +18,17 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        menu= [MM("Needs", c="req", f="need", m="summary")(
-                #MM("Statistics", m="report"),
-                #MM("Map", m="map"),
-                ),
-               MM("4W", c="project", f="activity", m="summary")(
+        menu= [MM("Needs", link=False)(
                 #MM("Statistics",  m="report"),
                 #MM("Map", m="map"),
+                MM("View", c="req", f="need", m="summary"),
+                MM("Create", c="req", f="need", m="create"),
+                ),
+               MM("4W", link=False)(
+                #MM("Statistics",  m="report"),
+                #MM("Map", m="map"),
+                MM("View", c="project", f="activity", m="summary"),
+                MM("Create", c="project", f="activity", m="create"),
                 ),
                MM("Situational Updates", c="event", f="sitrep"),
                MM("Organizations", c="org", f="organisation")(
@@ -117,30 +121,34 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         #ADMIN = current.session.s3.system_roles.ADMIN
 
-        return M()(
-                    M("Activities", c="project", f="activity", m="summary")(
-                        M("Create", m="create"),
-                        #M("Statistics", m="report"),
-                        #M("Map", m="map"),
-                        #M("Import", m="import", p="create"),
-                    ),
-                )
+        #return M()(
+        #            M("Activities", c="project", f="activity", m="summary")(
+        #                M("Create", m="create"),
+        #                #M("Statistics", m="report"),
+        #                #M("Map", m="map"),
+        #                #M("Import", m="import", p="create"),
+        #            ),
+        #        )
+
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
     def req():
         """ Requests Management """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        #ADMIN = current.session.s3.system_roles.ADMIN
 
-        return M(c="req")(
-                    M("Needs", f="need", m="summary")(
-                        M("Create", m="create"),
-                        #M("Statistics", m="report"),
-                        #M("Map", m="map"),
-                        #M("Import", m="import", p="create"),
-                    ),
-                )
+        #return M(c="req")(
+        #            M("Needs", f="need", m="summary")(
+        #                M("Create", m="create"),
+        #                #M("Statistics", m="report"),
+        #                #M("Map", m="map"),
+        #                #M("Import", m="import", p="create"),
+        #            ),
+        #        )
+
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
