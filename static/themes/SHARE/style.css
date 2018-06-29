@@ -1,0 +1,39 @@
+#home h1 {
+  background: inherit;
+  padding: 0;
+}
+#home h3 {
+  color: #ffffff;
+  font-weight: bolder;
+}
+#about-platform,
+#resources {
+  background: #e1e1e1;
+}
+#active-events,
+#footer {
+  background: #0c9cd0;
+}
+#active-events, 
+#active-events h1 {
+  color: #ffffff;
+}
+#active-events hr {
+  border-top: 2px dashed #ffffff;
+}
+#poweredby a {
+  color: #ffffff;
+}
+.button a {
+  color: #ffffff;
+}
+.top-bar {
+  background: #0c9cd0;
+}
+.top-bar-section ul li:not(.has-form) a:not(.button) {
+  background-color: #0c9cd0;
+}
+.top-bar-section ul.dropdown li:not(.has-form):not(.active) a:not(.button),
+.top-bar-section ul.dropdown li:not(.has-form) a:not(.button) {
+  background-color: #febf00;
+}

@@ -1,12 +1,12 @@
 {{try:}}{{=H2(title)}}{{except:}}{{pass}}
 <div id='summary-common'>
- <div class="row">
-  <div class="columns">
+ <div class='row'>
+  <div class='columns'>
    {{try:}}{{for section in common:}}{{=section}}{{pass}}{{except:}}{{pass}}
   </div>
  </div>
- <div class="row">
-  <div class="medium-9 columns end">
+ <div class='row'>
+  <div class='medium-9 columns end'>
    <div id='filter-form' class='form-container'>
     {{try:}}{{=filter_form}}{{except:}}{{pass}}
    </div>

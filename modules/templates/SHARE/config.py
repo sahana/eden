@@ -25,7 +25,7 @@ def config(settings):
     settings.base.prepopulate += ("SHARE",)
 
     # Theme (folder to use for views/layout.html)
-    #settings.base.theme = "SHARE"
+    settings.base.theme = "SHARE"
 
     # Authentication settings
     # Should users be allowed to register themselves?
@@ -87,6 +87,9 @@ def config(settings):
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 
     settings.security.policy = 6 # Controller, Function, Table ACLs and Entity Realm
+
+    # UI Settings
+    settings.ui.datatables_responsive = False
 
     # -------------------------------------------------------------------------
     # Events
@@ -847,7 +850,7 @@ def config(settings):
                                             label = T("Beneficiaries"),
                                             #link = False,
                                             fields = [(T("Type"), "parameter_id"),
-                                                      (T("Estimated Delivery Time"), "timeframe"),
+                                                      #(T("Estimated Delivery Time"), "timeframe"),
                                                       (T("Number Planned"), "target_value"),
                                                       (T("Number Reached"), "value"),
                                                       ],
@@ -1025,6 +1028,7 @@ def config(settings):
         from gluon import IS_EMPTY_OR, IS_IN_SET, SPAN
 
         from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter, \
+                       S3LocationSelector, \
                        S3Represent, \
                        S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
@@ -1048,6 +1052,8 @@ def config(settings):
         f.requires = IS_EMPTY_OR(IS_IN_SET(req_status_opts, zero = None))
         #f.represent = lambda opt: req_status_opts.get(opt, current.messages.UNKNOWN_OPT)
         f.represent = S3Represent(options = req_status_opts)
+
+        s3db.req_need.location_id.widget = S3LocationSelector(show_map = False)
 
         # Custom Filtered Components
         s3db.add_components(tablename,
@@ -1102,7 +1108,7 @@ def config(settings):
                                                        "quantity_committed",
                                                        "quantity_uncommitted",
                                                        "quantity_delivered",
-                                                       "priority",
+                                                       #(T("Urgency"), "priority"),
                                                        "comments",
                                                        ],
                                              )
@@ -1114,7 +1120,7 @@ def config(settings):
             demographic = S3SQLInlineComponent("need_demographic",
                                                label = T("People Affected"),
                                                fields = [(T("Type"), "parameter_id"),
-                                                         (T("Needed within Timeframe"), "timeframe"),
+                                                         #(T("Needed within Timeframe"), "timeframe"),
                                                          "value",
                                                          "value_committed",
                                                          "value_uncommitted",
@@ -1131,14 +1137,14 @@ def config(settings):
                                                        (T("Unit"), "item_pack_id"),
                                                        (T("Needed within Timeframe"), "timeframe"),
                                                        "quantity",
-                                                       "priority",
+                                                       #(T("Urgency"), "priority"),
                                                        "comments",
                                                        ],
                                              )
             demographic = S3SQLInlineComponent("need_demographic",
                                                label = T("People Affected"),
                                                fields = [(T("Type"), "parameter_id"),
-                                                         (T("Needed within Timeframe"), "timeframe"),
+                                                         #(T("Needed within Timeframe"), "timeframe"),
                                                          "value",
                                                          "comments",
                                                          ],
@@ -1158,7 +1164,7 @@ def config(settings):
                                        ),
                        "location_id",
                        "date",
-                       "priority",
+                       (T("Urgency"), "priority"),
                        S3SQLInlineLink("sector",
                                        field = "sector_id",
                                        filter = False,
@@ -1255,7 +1261,7 @@ def config(settings):
                                       (T("Status"), "status"),
                                       "need_item.item_id",
                                       "sector__link.sector_id",
-                                      "priority",
+                                      (T("Urgency"), "priority"),
                                       #"name",
                                       (T("Request Number"), "req_number.value"),
                                       (T("Commits"), "activity__link.activity_id"),
@@ -1341,7 +1347,7 @@ def config(settings):
         query = (ndtable.need_id == need_id) & \
                 (ndtable.deleted == False)
         demographics = db(query).select(ndtable.parameter_id,
-                                        ndtable.timeframe,
+                                        #ndtable.timeframe,
                                         ndtable.value,
                                         )
         if demographics:
@@ -1349,7 +1355,7 @@ def config(settings):
             for demographic in demographics:
                 dinsert(activity_id = activity_id,
                         parameter_id = demographic.parameter_id,
-                        timeframe = demographic.timeframe,
+                        #timeframe = demographic.timeframe,
                         target_value = demographic.value,
                         )
 

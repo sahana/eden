@@ -21,77 +21,44 @@ class index(S3CustomController):
     def __call__(self):
 
         T = current.T
+
         output = {}
 
-        #------------------------------------------------------------
-        # Allow editing of page content from browser using CMS module
-        if current.deployment_settings.has_module("cms"):
-            system_roles = current.auth.get_system_roles()
-            ADMIN = system_roles.ADMIN in current.session.s3.roles
-            s3db = current.s3db
-            table = s3db.cms_post
-            ltable = s3db.cms_post_module
-            module = "default"
-            resource = "index"
-            query = (ltable.module == module) & \
-                    ((ltable.resource == None) | \
-                     (ltable.resource == resource)) & \
-                    (ltable.post_id == table.id) & \
-                    (table.deleted != True)
-            custom_info = current.db(query).select(table.body,
-                                            table.id,
-                                            limitby=(0, 1)).first()
-            if custom_info:
-                if ADMIN:
-                    custom_info = DIV(XML(custom_info.body),
-                               BR(),
-                               A(current.T("Edit"),
-                                 _href=URL(c="cms", f="post",
-                                           args=[custom_info.id, "update"]),
-                                 _class="action-btn"))
-                else:
-                    custom_info = DIV(XML(custom_info.body))
-            elif ADMIN:
-                if current.response.s3.crud.formstyle == "bootstrap":
-                    _class = "btn"
-                else:
-                    _class = "action-btn"
-                custom_info = A(current.T("Edit"),
-                         _href=URL(c="cms", f="post", args="create",
-                                   vars={"module": module,
-                                         "resource": resource
-                                         }),
-                         _class="%s cms-edit" % _class)
-            else:
-                custom_info = ""
-        else:
-            custom_info = ""
-        output["custom_info"] = custom_info
+        output["active_events"] = DIV(H3("Southwest Monsoon May 2018"),
+                                      P("Water levels of main rivers are currently showing normal levels in many stations. However , one station is at Alert level in Kalu Ganga & Nilwala river falling slowly."),
+                                      HR(),
+                                      H3("Southwest Monsoon May 2018"),
+                                      P("Water levels of main rivers are currently showing normal levels in many stations. However , one station is at Alert level in Kalu Ganga & Nilwala river falling slowly."),
+                                      HR(),
+                                      H3("Southwest Monsoon May 2018"),
+                                      P("Water levels of main rivers are currently showing normal levels in many stations. However , one station is at Alert level in Kalu Ganga & Nilwala river falling slowly."),
+                                      )
 
-        #----------------------
-        # Button to upload 4W data
-        upload_4W_activity_btn = A(T("Upload 4W Activity"),
-                         _href = URL(c="project",
-                                     f="activity",
-                                     args="import",
-                                     ),
-                         _class = "action-btn button small",
-                         )
-        output["upload_4W_activity_btn"] = upload_4W_activity_btn
+        map_btn = A(T("MAP OF CURRENT NEEDS"),
+                    _href = URL(c="default",
+                                f="index",
+                                args="dashboard",
+                                ),
+                    )
 
-        #----------------------
-        # Button to access Dashboard
-        dashboard_btn = A(T("Dashboard"),
-                          _href = URL(c="default",
-                                      f="index",
-                                      args="dashboard",
-                                      ),
-                          _class = "action-btn button small",
-                          )
-        output["dashboard_btn"] = dashboard_btn
+        create_btn = A(T("CREATE A NEED"),
+                       _href = URL(c="req",
+                                   f="need",
+                                   args="create",
+                                   ),
+                       )
+                       
+        output["needs_btn"] = DIV(map_btn,
+                                  " | ",
+                                  create_btn,
+                                  _class = "button round",
+                                  )
 
-        # View title
-        output["title"] = current.deployment_settings.get_system_name()
+        output["about_btn"] = A("%s >" % T("Read More"),
+                                _href = URL(c="default",
+                                            f="about",
+                                            ),
+                                )
 
         self._view(THEME, "index.html")
 
