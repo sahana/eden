@@ -263,13 +263,14 @@ class S3Parser(object):
             return None
 
         # Get the CAP-XML source for this entry
-        tree, version, error = cls.fetch_cap(entry)
+        url, tree, version, error = cls.fetch_cap(entry)
         msg = None
 
         if tree:
             AlertImporter = s3db.cap_ImportAlert
             error, msg = AlertImporter.import_cap(tree,
                                                   version = version,
+                                                  url = url,
                                                   ignore_errors = True,
                                                   )
 
@@ -292,7 +293,8 @@ class S3Parser(object):
                           - channel_id
                           - from_address
 
-            @returns: tuple (tree, version, error)
+            @returns: tuple (url, tree, version, error)
+                      - url     = the URL of the CAP-XML source used
                       - tree    = ElementTree of the CAP source
                       - version = the detected CAP version
                       - error   = error message if unsuccessful, else None
@@ -338,7 +340,7 @@ class S3Parser(object):
 
         # Iterate over <link> URLs to find the CAP source
         errors = []
-        version, tree = None, None
+        cap_url = version = tree = None
         for url in urls:
 
             error = None
@@ -369,6 +371,7 @@ class S3Parser(object):
 
             if tree:
                 # XML source found => proceed to import
+                cap_url = url
                 break
             elif error:
                 errors.append(error)
@@ -380,7 +383,7 @@ class S3Parser(object):
         else:
             error = None
 
-        return tree, version, error
+        return cap_url, tree, version, error
 
     # -------------------------------------------------------------------------
     @staticmethod

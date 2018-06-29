@@ -286,7 +286,9 @@
             <resource name="cap_area">
 
                 <data field="name">
-                    <xsl:value-of select="$areaDesc" />
+                    <xsl:call-template name="Name1024">
+                        <xsl:with-param name="name" select="$areaDesc"/>
+                    </xsl:call-template>
                 </data>
 
                 <xsl:apply-templates select="cap:altitude"/>
@@ -520,6 +522,25 @@
             <xsl:when test="string-length($name) > 128">
                 <!-- Truncate -->
                 <xsl:value-of select="concat(substring($name, 0, 124), '...')"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <!-- Use as-is -->
+                <xsl:value-of select="$name"/>
+            </xsl:otherwise>
+        </xsl:choose>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Helper to limit a name to 1024 chars -->
+    <xsl:template name="Name1024">
+
+        <xsl:param name="name"/>
+
+        <xsl:choose>
+            <xsl:when test="string-length($name) > 1024">
+                <!-- Truncate -->
+                <xsl:value-of select="concat(substring($name, 0, 1020), '...')"/>
             </xsl:when>
             <xsl:otherwise>
                 <!-- Use as-is -->
