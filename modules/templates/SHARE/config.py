@@ -1027,11 +1027,13 @@ def config(settings):
 
         from gluon import IS_EMPTY_OR, IS_IN_SET, SPAN
 
-        from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter, \
+        from s3 import s3_comments_widget, s3_yes_no_represent, \
+                       S3LocationFilter, S3OptionsFilter, S3TextFilter, \
                        S3LocationSelector, \
                        S3Represent, \
                        S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
+        db = current.db
         s3db = current.s3db
 
         req_status_opts = {0: SPAN(T("None"),
@@ -1041,7 +1043,7 @@ def config(settings):
                                    _class = "req_status_partial",
                                    ),
                            2: SPAN(T("Fully Committed"),
-                                   _class = "req_status_complete",
+                                   _class = "req_status_committed",
                                    ),
                            3: SPAN(T("Complete"),
                                    _class = "req_status_complete",
@@ -1053,7 +1055,10 @@ def config(settings):
         #f.represent = lambda opt: req_status_opts.get(opt, current.messages.UNKNOWN_OPT)
         f.represent = S3Represent(options = req_status_opts)
 
-        s3db.req_need.location_id.widget = S3LocationSelector(show_map = False)
+        # These levels are for SHARE/LK
+        s3db.req_need.location_id.widget = S3LocationSelector(levels = ("L1", "L2"),
+                                                              required_levels = ("L1", "L2"),
+                                                              show_map = False)
 
         # Custom Filtered Components
         s3db.add_components(tablename,
@@ -1061,6 +1066,13 @@ def config(settings):
                                             {"name": "req_number",
                                              "joinby": "need_id",
                                              "filterby": {"tag": "req_number",
+                                                          },
+                                             "multiple": False,
+                                             },
+                                            # Issue
+                                            {"name": "issue",
+                                             "joinby": "need_id",
+                                             "filterby": {"tag": "issue",
                                                           },
                                              "multiple": False,
                                              },
@@ -1077,22 +1089,50 @@ def config(settings):
         # Individual settings for specific tag components
         components_get = s3db.resource(tablename).components.get
 
+        issue = components_get("issue")
+        f = issue.table.value
+        f.widget = lambda f, v: \
+            s3_comments_widget(f, v, _placeholder = "e.g. drinking water")
+
         verified = components_get("verified")
         f = verified.table.value
+        f.represent = s3_yes_no_represent
         f.requires = IS_EMPTY_OR(IS_IN_SET((True, False)))
         auth = current.auth
+        user = auth.user
+        if user and user.organisation_id:
+            organisation_id = user.organisation_id
+        else:
+            organisation_id = None
         if auth.s3_has_role("ADMIN"):
             f.default = True
         else:
-            user = auth.user
-            if user and user.organisation_id:
+            if organisation_id:
                 f.default = True
             else:
                 f.default = False
                 f.writable = False
 
-        if r.id:
+        if r.id and r.resource.tablename == tablename:
             # Read or Update
+            create = False
+        else:
+            # Create
+            create = True
+
+        if not create:
+            # Read or Update
+            if organisation_id:
+                org_readonly = True
+            else:
+                otable = s3db.req_need_organisation
+                org_link = db(otable.need_id == r.id).select(otable.organisation_id,
+                                                             limitby = (0, 1)
+                                                             ).first()
+                if org_link:
+                    org_readonly = True
+                else:
+                    org_readonly = False
             table = s3db.req_need_item
             table.quantity.label = T("Quantity Requested")
             table.quantity_committed.readable = True
@@ -1130,6 +1170,7 @@ def config(settings):
                                                )
         else:
             # Create
+            org_readonly = organisation_id is not None
             need_item = S3SQLInlineComponent("need_item",
                                              label = T("Items Needed"),
                                              fields = ["item_category_id",
@@ -1154,17 +1195,19 @@ def config(settings):
                                        field = "event_id",
                                        label = T("Disaster"),
                                        multiple = False,
-                                       #required = True,
+                                       required = True,
                                        ),
                        S3SQLInlineLink("organisation",
                                        field = "organisation_id",
                                        filter = False,
                                        label = T("Organization"),
                                        multiple = False,
+                                       readonly = org_readonly,
+                                       required = not org_readonly,
                                        ),
                        "location_id",
                        "date",
-                       (T("Urgency"), "priority"),
+                       #(T("Urgency"), "priority"),
                        S3SQLInlineLink("sector",
                                        field = "sector_id",
                                        filter = False,
@@ -1172,6 +1215,7 @@ def config(settings):
                                        multiple = False,
                                        ),
                        "name",
+                       (T("Issue"), "issue.value"),
                        demographic,
                        need_item,
                        S3SQLInlineComponent("document",
@@ -1180,7 +1224,7 @@ def config(settings):
                                             # multiple = True has reliability issues in at least Chrome
                                             multiple = False,
                                             ),
-                       (T("Verified"), "verified.value"),
+                       (T("Verified by government official"), "verified.value"),
                        "comments",
                        ]
 
@@ -1190,13 +1234,13 @@ def config(settings):
         #f.represent = project_ActivityRepresent()
         natable.activity_id.represent = project_ActivityRepresent()
 
-        if r.id and r.resource.tablename == tablename:
+        if not create:
             # Read or Update
             req_number = components_get("verified")
             req_number.table.value.writable = False
             crud_fields.insert(2, (T("Request Number"), "req_number.value"))
             crud_fields.insert(-2, "status")
-            need_links = current.db(natable.need_id == r.id).select(natable.activity_id)
+            need_links = db(natable.need_id == r.id).select(natable.activity_id)
             if need_links:
                 # This hides the widget from Update forms instead of just rendering read-only!
                 #f.writable = False
@@ -1214,8 +1258,8 @@ def config(settings):
                                         # These levels are for SHARE/LK
                                         #"location_id$L1",
                                         "location_id$L2",
-                                        "location_id$L3",
-                                        "location_id$L4",
+                                        #"location_id$L3",
+                                        #"location_id$L4",
                                         "name",
                                         "comments",
                                         ],
@@ -1257,7 +1301,7 @@ def config(settings):
                                       "organisation__link.organisation_id",
                                       # These levels/Labels are for SHARE/LK
                                       (T("District"), "location_id$L2"),
-                                      (T("DS"), "location_id$L3"),
+                                      #(T("DS"), "location_id$L3"),
                                       (T("Status"), "status"),
                                       "need_item.item_id",
                                       "sector__link.sector_id",

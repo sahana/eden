@@ -7896,21 +7896,16 @@ def s3_comments_widget(field, value, **attr):
         to be used by the s3.comments() & gis.desc_field Reusable fields
     """
 
-    if "_id" not in attr:
-        _id = "%s_%s" % (field._tablename, field.name)
-    else:
-        _id = attr["_id"]
+    _id = attr.get("_id", "%s_%s" % (field._tablename, field.name))
 
-    if "_name" not in attr:
-        _name = field.name
-    else:
-        _name = attr["_name"]
+    _name = attr.get("_name", field.name)
 
-    return TEXTAREA(_name=_name,
-                    _id=_id,
-                    _class="comments %s" % (field.type),
-                    value=value,
-                    requires=field.requires)
+    return TEXTAREA(_name = _name,
+                    _id = _id,
+                    _class = "comments %s" % (field.type),
+                    _placeholder = attr.get("_placeholder"),
+                    value = value,
+                    requires = field.requires)
 
 # =============================================================================
 def s3_richtext_widget(field, value):

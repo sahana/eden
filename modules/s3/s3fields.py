@@ -1334,7 +1334,12 @@ def s3_comments(name="comments", **attr):
             XML(comments) if comments else current.messages["NONE"]
     if "widget" not in attr:
         from s3widgets import s3_comments_widget
-        attr["widget"] = s3_comments_widget
+        _placeholder = attr.pop("_placeholder", None)
+        if _placeholder:
+            attr["widget"] = lambda f, v: \
+                s3_comments_widget(f, v, _placeholder=_placeholder)
+        else:
+            attr["widget"] = s3_comments_widget
     if "comment" not in attr:
         attr["comment"] = DIV(_class="tooltip",
                               _title="%s|%s" % \
