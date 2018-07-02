@@ -1,0 +1,17 @@
+// ============================================================================
+// THEME-SPECIFIC STYLES AND ELEMENTS
+// ============================================================================
+
+// Sunflower-Spinners
+.inline-throbber {
+  background-image: url(../../img/sunflower_fade_indicator.gif);
+}
+.loading {
+  background: url(../../img/sunflower_spin_throbber.gif) center no-repeat !important;
+}
+.throbber,
+.layer_throbber,
+.map_loader {
+  background-image: url(../../img/sunflower_spin_throbber.gif);
+}
+

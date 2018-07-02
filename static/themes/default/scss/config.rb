@@ -9,7 +9,9 @@
 
 # Require any additional compass plugins here:
 
-# Import path:
+# Import paths:
+add_import_path "."
+#add_import_path "../../default/scss"
 add_import_path "../../foundation/scss/components"
 
 # Paths:
@@ -29,9 +31,22 @@ line_comments = (environment == :production) ? false : true
 # Post-process production versions
 if environment == :production
     on_stylesheet_saved do |f|
-        # Rename into *.min.css and move up one folder
-        FileUtils.mv f, "#{File.dirname(File.dirname(f))}/#{File.basename(f,'.*')}.min.css"
-        # Remove the "prod" folder
-        FileUtils.rm_rf(File.dirname(f))
+        if File.basename(f,'.*') == "theme"
+            # Drop it - gets minified later via css.cfg
+            File.delete(f)
+            # Remove the "prod" folder
+            FileUtils.rm_rf(File.dirname(f))
+        else
+            # Rename into *.min.css and move up one folder
+            FileUtils.mv f, "#{File.dirname(File.dirname(f))}/#{File.basename(f,'.*')}.min.css"
+            # Remove the "prod" folder
+            FileUtils.rm_rf(File.dirname(f))
+        end
+    end
+else
+    on_stylesheet_saved do |f|
+        if File.basename(f,'.*') == "theme"
+            FileUtils.mv f, "#{File.dirname(File.dirname(f))}/#{File.basename(f,'.*')}.css"
+        end
     end
 end

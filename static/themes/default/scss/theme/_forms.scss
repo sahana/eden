@@ -2,7 +2,7 @@
 form {
     font-size: 0.8rem;
     .form-row {
-        margin-top: 0.5rem !important;
+        margin-top: $form_row_spacing !important;
         .button {
             margin-right: 0.5rem;
             i.fa {
@@ -31,6 +31,13 @@ form {
                 line-height: inherit;
             }
         }
+        & > .s3-hierarchy-widget {
+            display: inline-block;
+            vertical-align: middle;
+        }
+    }
+    .jstree-anchor {
+        font-size: 0.9rem;
     }
     label.inline {
         padding: 0;
@@ -92,7 +99,7 @@ form {
                 }
             }
             label {
-                color: $darksteel;
+                color: $form_label_color;
             }
         }
         tr.inline-form {
@@ -122,6 +129,9 @@ form {
         display: inline-block;
         margin-bottom: 1.25rem;
         margin-left: 0;
+        @if $inline_open_add_collapse == true {
+            margin-top: -1.25rem;
+        }
     }
 
     // Login-form on homepage
