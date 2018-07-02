@@ -37,3 +37,7 @@
 .top-bar-section ul.dropdown li:not(.has-form) a:not(.button) {
   background-color: #febf00;
 }
+.req_status_committed {
+  color: lime;
+  font-weight: bold;
+}

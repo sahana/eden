@@ -2380,6 +2380,7 @@ class RequestNeedsModel(S3Model):
                           self.req_priority(),
                           s3_comments("name",
                                       label = T("Summary of Needs"),
+                                      comment = None,
                                       ),
                           self.req_status("status",
                                           label = T("Fulfilment Status"),
