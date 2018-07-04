@@ -109,8 +109,34 @@ meta.foundation-data-attribute-namespace {
   font-size: 0.75rem;
 }
 
-/* Page Sections */
+/* Logged-in User Indicators */
 /* line 80, ../../default/scss/theme/_page.scss */
+.username {
+  color: #666666;
+  padding: 0.5rem 0;
+  padding-right: 0.5rem;
+  font-size: 0.7rem;
+}
+/* line 85, ../../default/scss/theme/_page.scss */
+.username i.icon, .username i.fa {
+  padding-left: 0.2rem;
+  padding-right: 0;
+}
+
+/* line 91, ../../default/scss/theme/_page.scss */
+body.rtl .username {
+  padding-left: 0.5rem;
+  padding-right: 0;
+  float: left;
+}
+/* line 94, ../../default/scss/theme/_page.scss */
+body.rtl .username i.icon, body.rtl .username i.fa {
+  padding-left: 0;
+  padding-right: 0.2rem;
+}
+
+/* Page Sections */
+/* line 103, ../../default/scss/theme/_page.scss */
 .form-container form,
 #datalist-filter-form,
 #datatable-filter-form,
@@ -120,59 +146,59 @@ meta.foundation-data-attribute-namespace {
   border: 1px solid #CCC;
 }
 
-/* line 88, ../../default/scss/theme/_page.scss */
+/* line 111, ../../default/scss/theme/_page.scss */
 .widget-container #list-btn-add {
   margin-bottom: 0;
   position: relative;
   top: 1.0rem;
 }
 
-/* line 93, ../../default/scss/theme/_page.scss */
+/* line 116, ../../default/scss/theme/_page.scss */
 #component {
   float: none;
 }
 
-/* line 96, ../../default/scss/theme/_page.scss */
+/* line 119, ../../default/scss/theme/_page.scss */
 .map_home {
   margin: 0;
   margin-top: 0.5rem;
 }
 
 /* Global Main Content Styles */
-/* line 104, ../../default/scss/theme/_page.scss */
+/* line 127, ../../default/scss/theme/_page.scss */
 #content a.help:link {
   color: #fff;
   text-decoration: none;
   margin-right: 10px;
 }
-/* line 109, ../../default/scss/theme/_page.scss */
+/* line 132, ../../default/scss/theme/_page.scss */
 #content a.help:hover {
   background-color: #336699;
   text-decoration: underline;
 }
-/* line 113, ../../default/scss/theme/_page.scss */
+/* line 136, ../../default/scss/theme/_page.scss */
 #content a.help:visited {
   font-weight: normal;
   color: #666;
 }
-/* line 118, ../../default/scss/theme/_page.scss */
+/* line 141, ../../default/scss/theme/_page.scss */
 #content h1,
 #content h2 {
   font-size: 1.3em;
   font-weight: bolder;
 }
-/* line 127, ../../default/scss/theme/_page.scss */
+/* line 150, ../../default/scss/theme/_page.scss */
 #content h2 {
   margin-top: 10px;
 }
-/* line 133, ../../default/scss/theme/_page.scss */
+/* line 156, ../../default/scss/theme/_page.scss */
 #content h3 {
   font-size: 1.1em;
   padding-bottom: 5px;
 }
 
 /* Footer */
-/* line 140, ../../default/scss/theme/_page.scss */
+/* line 163, ../../default/scss/theme/_page.scss */
 #footer {
   padding-top: 20px;
   border-top: 1px solid #F0F0F0;
@@ -180,12 +206,12 @@ meta.foundation-data-attribute-namespace {
   margin-bottom: 1rem;
 }
 
-/* line 146, ../../default/scss/theme/_page.scss */
+/* line 169, ../../default/scss/theme/_page.scss */
 #poweredby {
   margin-right: 0.5rem;
   text-align: right;
 }
-/* line 149, ../../default/scss/theme/_page.scss */
+/* line 172, ../../default/scss/theme/_page.scss */
 #poweredby a {
   color: #999999;
   text-decoration: none;
@@ -193,7 +219,7 @@ meta.foundation-data-attribute-namespace {
   margin-left: 0.2rem;
 }
 
-/* line 157, ../../default/scss/theme/_page.scss */
+/* line 180, ../../default/scss/theme/_page.scss */
 body.rtl #poweredby {
   text-align: left;
 }
@@ -846,36 +872,86 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 /* line 70, ../../default/scss/theme/_menus.scss */
 .side-nav li.heading {
   margin-top: 0.125rem;
-  /*& > a:not(.button) {
-      padding: 6px 3px 3px 6px;
-  }*/
 }
 /* line 73, ../../default/scss/theme/_menus.scss */
 .side-nav li.heading:not(:first-child) {
   border-top: 1px solid #eaeaea;
 }
-/* line 81, ../../default/scss/theme/_menus.scss */
+/* line 78, ../../default/scss/theme/_menus.scss */
 .side-nav li.active > a:first-child:not(.button) {
   font-weight: bold;
   background-color: #e0e1e2;
 }
-/* line 84, ../../default/scss/theme/_menus.scss */
+/* line 81, ../../default/scss/theme/_menus.scss */
 .side-nav li.active > a:first-child:not(.button):hover {
   color: #008f99;
   background-color: rgba(0, 0, 0, 0.025);
 }
 
-/* line 94, ../../default/scss/theme/_menus.scss */
-.personal-menu-area {
+/* Page Header */
+/* line 92, ../../default/scss/theme/_menus.scss */
+.main-title .org-logo {
+  vertical-align: top;
+  display: inline-block;
+  padding: 0.4rem 0.5rem 0.3rem 0;
+}
+/* line 97, ../../default/scss/theme/_menus.scss */
+.main-title .system-title {
+  display: inline-block;
+}
+/* line 99, ../../default/scss/theme/_menus.scss */
+.main-title .system-title .system-name {
+  color: #333333;
+  margin-bottom: 0;
+}
+/* line 103, ../../default/scss/theme/_menus.scss */
+.main-title .system-title .org-name {
+  color: #999999;
+  margin-bottom: 0.125rem;
+  line-height: 1rem;
+  margin-bottom: 0.5rem;
+}
+/* line 110, ../../default/scss/theme/_menus.scss */
+.main-title .personal-menu-area {
   text-align: right;
 }
-
-/* line 99, ../../default/scss/theme/_menus.scss */
-.about-menu {
-  text-align: left;
+/* line 113, ../../default/scss/theme/_menus.scss */
+.main-title .personal-menu {
+  float: right;
+  clear: right;
+  padding-top: 0;
+  margin-bottom: 0.125rem;
+}
+/* line 118, ../../default/scss/theme/_menus.scss */
+.main-title .personal-menu li a {
+  padding: 0 0.375rem;
+}
+/* line 122, ../../default/scss/theme/_menus.scss */
+.main-title .language-selector {
+  float: right;
+  display: block;
+  margin-top: 0.625rem;
+  margin-bottom: 0.125rem;
 }
 
-/* line 103, ../../default/scss/theme/_menus.scss */
+/* line 131, ../../default/scss/theme/_menus.scss */
+body.rtl .main-title .personal-menu {
+  float: left;
+  clear: left;
+}
+/* line 135, ../../default/scss/theme/_menus.scss */
+body.rtl .main-title .language-selector {
+  float: left;
+}
+
+/* line 141, ../../default/scss/theme/_menus.scss */
+.about-menu {
+  text-align: left;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* line 147, ../../default/scss/theme/_menus.scss */
 body.rtl .about-menu {
   text-align: right;
 }
@@ -1420,111 +1496,45 @@ form.anonymize-form,
   display: inline-block;
 }
 
-/* line 1, ../scss/theme/_misc.scss */
-.org-logo {
-  vertical-align: top;
-  display: inline-block;
-  padding: 0.4rem 0.5rem 0.3rem 0;
+/* Priority Representation */
+/* line 350, ../../default/scss/theme/_widgets.scss */
+.prio {
+  padding: 0 4px;
+  border: 1px solid black;
+  text-align: center;
+  white-space: pre;
+  font-weight: normal;
 }
 
-/* line 6, ../scss/theme/_misc.scss */
-.system-title {
-  display: inline-block;
+/* line 357, ../../default/scss/theme/_widgets.scss */
+.prio-red {
+  color: white;
+  background-color: #d10000;
 }
 
-/* line 9, ../scss/theme/_misc.scss */
-.system-title h5 {
-  color: #333333;
+/* line 361, ../../default/scss/theme/_widgets.scss */
+.prio-blue {
+  color: white;
+  background-color: #10427b;
 }
 
+/* line 365, ../../default/scss/theme/_widgets.scss */
+.prio-lightblue {
+  background-color: #b7ddff;
+}
+
+/* line 368, ../../default/scss/theme/_widgets.scss */
+.prio-grey {
+  background-color: silver;
+}
+
+/* Case Rheader Flags */
 /* line 12, ../scss/theme/_misc.scss */
-.system-title h6 {
-  color: #999999;
-}
-
-/* line 15, ../scss/theme/_misc.scss */
-.system-name {
-  margin-bottom: 0;
-}
-
-/* line 18, ../scss/theme/_misc.scss */
-.system-acronym {
-  font-weight: bold;
-}
-
-/* line 21, ../scss/theme/_misc.scss */
-.org-name {
-  margin-bottom: 0.125rem;
-  line-height: 1rem;
-  margin-bottom: 0.5rem;
-}
-
-/* line 27, ../scss/theme/_misc.scss */
-.personal-menu {
-  float: right;
-  clear: right;
-  padding-top: 0;
-  margin-bottom: 0.125rem;
-}
-/* line 32, ../scss/theme/_misc.scss */
-.personal-menu li a {
-  padding: 0 0.375rem;
-}
-
-/* line 36, ../scss/theme/_misc.scss */
-.language-selector {
-  float: right;
-  display: block;
-  margin-top: 0.625rem;
-  margin-bottom: 0.125rem;
-}
-
-/* line 42, ../scss/theme/_misc.scss */
-.sub-nav.about-menu {
-  margin-left: 0;
-  margin-right: 0;
-}
-
-/* line 46, ../scss/theme/_misc.scss */
-#dashboard > li {
-  display: inline-block;
-}
-
-/* line 49, ../scss/theme/_misc.scss */
-.home-map,
-.home-cms {
-  margin: 1rem 0;
-}
-
-/* line 53, ../scss/theme/_misc.scss */
-.home-map {
-  border: 1px solid #999999;
-}
-
-/* line 56, ../scss/theme/_misc.scss */
-.username {
-  color: #666666;
-  padding: 0.5rem 0;
-  padding-right: 0.5rem;
-  font-size: 0.7rem;
-}
-/* line 61, ../scss/theme/_misc.scss */
-.username i.icon, .username i.fa {
-  padding-left: 0.2rem;
-  padding-right: 0;
-}
-
-/* line 66, ../scss/theme/_misc.scss */
-.event-bottom .username {
-  padding: 0;
-}
-
-/* line 69, ../scss/theme/_misc.scss */
 .overdue {
   color: red;
 }
 
-/* line 72, ../scss/theme/_misc.scss */
+/* line 15, ../scss/theme/_misc.scss */
 .invalid-case {
   border: 1px solid red;
   color: red;
@@ -1536,35 +1546,92 @@ form.anonymize-form,
   text-transform: uppercase;
 }
 
-/* line 82, ../scss/theme/_misc.scss */
+/* Check-in/check-out UI */
+/* line 27, ../scss/theme/_misc.scss */
 .checkpoint-advise {
   background: #fff0f0 none repeat scroll 0 0;
   border: 2px solid red;
   margin-bottom: 1rem;
   padding: 0.6rem;
 }
-/* line 87, ../scss/theme/_misc.scss */
+/* line 32, ../scss/theme/_misc.scss */
 .checkpoint-advise p {
   white-space: pre-wrap;
 }
 
-/* line 91, ../scss/theme/_misc.scss */
+/* line 36, ../scss/theme/_misc.scss */
 .checkpoint-person {
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
 
-/* line 95, ../scss/theme/_misc.scss */
+/* line 40, ../scss/theme/_misc.scss */
+.check-in-warning {
+  color: red;
+  font-weight: bold;
+  margin-left: 0.5rem;
+}
+/* line 44, ../scss/theme/_misc.scss */
+.check-in-warning i {
+  margin-right: 0.3rem;
+}
+
+/* line 48, ../scss/theme/_misc.scss */
+#site_check_in_info__row .controls {
+  width: 100%;
+}
+
+/* line 51, ../scss/theme/_misc.scss */
+#site_check_in_status__row .controls {
+  padding-top: 0.3rem;
+  width: 100%;
+}
+
+/* line 56, ../scss/theme/_misc.scss */
+#check-in-form .status-label {
+  font-size: 0.9rem;
+}
+/* line 59, ../scss/theme/_misc.scss */
+#check-in-form .status-message {
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+/* line 63, ../scss/theme/_misc.scss */
+#check-in-form .person-details {
+  font-size: 1rem;
+}
+
+/* line 67, ../scss/theme/_misc.scss */
+.clear-btn {
+  cursor: pointer;
+}
+/* line 69, ../scss/theme/_misc.scss */
+.clear-btn .fa {
+  color: #b0b0b0;
+}
+
+/* Event Registration UI */
+/* line 75, ../scss/theme/_misc.scss */
+.event-bottom .username {
+  padding: 0;
+}
+
+/* line 78, ../scss/theme/_misc.scss */
 .event-top {
   margin-top: 0.3rem !important;
 }
 
-/* line 98, ../scss/theme/_misc.scss */
+/* line 81, ../scss/theme/_misc.scss */
 .event-type-header {
   text-align: right;
 }
 
-/* line 101, ../scss/theme/_misc.scss */
+/* line 85, ../scss/theme/_misc.scss */
+body.rtl .event-type-header {
+  text-align: left;
+}
+
+/* line 89, ../scss/theme/_misc.scss */
 .event-type-setting {
   color: #afafaf;
   font-size: 0.9rem;
@@ -1572,261 +1639,154 @@ form.anonymize-form,
   vertical-align: text-top;
 }
 
-/* line 107, ../scss/theme/_misc.scss */
+/* line 95, ../scss/theme/_misc.scss */
 .event-type-toggle {
   cursor: pointer;
 }
 
-/* line 110, ../scss/theme/_misc.scss */
-.controls.has-flaginfo,
-.controls.has-details {
-  width: 100%;
-}
-/* line 113, ../scss/theme/_misc.scss */
-.controls.has-flaginfo table,
-.controls.has-details table {
-  width: 100%;
-  border: none;
-}
-
-/* line 118, ../scss/theme/_misc.scss */
-.payment-amount {
-  color: darkgreen;
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-
-/* line 124, ../scss/theme/_misc.scss */
-#payment-form #allowance_date__row,
-#payment-form #allowance_comments__row {
-  display: none;
-}
-
-/* line 129, ../scss/theme/_misc.scss */
-.dashboard-action {
-  margin-bottom: 1.0rem;
-}
-
-/* line 135, ../scss/theme/_misc.scss */
-body.rtl .personal-menu {
-  clear: left;
-  float: left;
-}
-/* line 139, ../scss/theme/_misc.scss */
-body.rtl .language-selector {
-  float: left;
-}
-/* line 142, ../scss/theme/_misc.scss */
-body.rtl .username {
-  padding-left: 0.5rem;
-  padding-right: 0;
-  float: left;
-}
-/* line 145, ../scss/theme/_misc.scss */
-body.rtl .username i.icon, body.rtl .username i.fa {
-  padding-left: 0;
-  padding-right: 0.2rem;
-}
-/* line 151, ../scss/theme/_misc.scss */
-body.rtl .event-type-header {
-  text-align: left;
-}
-
-/* line 157, ../scss/theme/_misc.scss */
+/* line 98, ../scss/theme/_misc.scss */
 .event-registration-blocked {
-  background-color: #FFAAAA;
+  background-color: #ffaaaa;
   color: black;
   padding: 0.2rem 0.5rem;
   margin: 0.2rem 0.6rem;
 }
 
-/* line 163, ../scss/theme/_misc.scss */
+/* line 104, ../scss/theme/_misc.scss */
 .event-type-name {
   font-size: 1.1rem;
   padding: 0.3rem;
 }
 
-/* line 167, ../scss/theme/_misc.scss */
+/* line 108, ../scss/theme/_misc.scss */
 .event-type-name.placeholder {
   font-size: 0.8rem;
   background-color: #fff0f0;
   border: 2px solid red;
 }
 
-/* line 172, ../scss/theme/_misc.scss */
-.check-in-warning {
-  color: red;
-  font-weight: bold;
-  margin-left: 0.5rem;
-}
-/* line 176, ../scss/theme/_misc.scss */
-.check-in-warning i {
-  margin-right: 0.3rem;
-}
-
-/* line 180, ../scss/theme/_misc.scss */
+/* line 113, ../scss/theme/_misc.scss */
 .profile-picture {
-  margin-top: 1rem;
-}
-/* line 182, ../scss/theme/_misc.scss */
-.profile-picture .image-row {
-  margin-bottom: 1rem;
+  margin: 1rem 0;
 }
 
-/* line 188, ../scss/theme/_misc.scss */
-#site_check_in_info__row .controls {
+/* line 116, ../scss/theme/_misc.scss */
+.controls.has-flaginfo,
+.controls.has-details {
   width: 100%;
 }
-
-/* line 191, ../scss/theme/_misc.scss */
-#site_check_in_status__row .controls {
-  padding-top: 0.3rem;
+/* line 119, ../scss/theme/_misc.scss */
+.controls.has-flaginfo table,
+.controls.has-details table {
   width: 100%;
+  border: none;
 }
 
-/* line 196, ../scss/theme/_misc.scss */
-#check-in-form .status-label {
-  font-size: 0.9rem;
-}
-/* line 199, ../scss/theme/_misc.scss */
-#check-in-form .status-message {
-  font-size: 0.9rem;
+/* line 126, ../scss/theme/_misc.scss */
+.payment-amount {
+  color: darkgreen;
+  font-size: 1.2rem;
   font-weight: bold;
 }
-/* line 203, ../scss/theme/_misc.scss */
-#check-in-form .person-details {
-  font-size: 1rem;
+
+/* line 132, ../scss/theme/_misc.scss */
+#payment-form #allowance_date__row,
+#payment-form #allowance_comments__row {
+  display: none;
 }
 
-/* line 207, ../scss/theme/_misc.scss */
-.clear-btn {
-  cursor: pointer;
-}
-/* line 209, ../scss/theme/_misc.scss */
-.clear-btn .fa {
-  color: #B0B0B0;
-}
-
-/* line 215, ../scss/theme/_misc.scss */
+/* line 139, ../scss/theme/_misc.scss */
 #case_event_family__row .controls {
   width: 100%;
 }
 
-/* line 218, ../scss/theme/_misc.scss */
+/* line 142, ../scss/theme/_misc.scss */
 #family-members {
   width: 100%;
   border-collapse: collapse;
 }
-/* line 221, ../scss/theme/_misc.scss */
+/* line 145, ../scss/theme/_misc.scss */
 #family-members div.member-show-picture {
   height: 2.7rem;
 }
-/* line 224, ../scss/theme/_misc.scss */
+/* line 148, ../scss/theme/_misc.scss */
 #family-members .member-id {
   color: #808080;
   font-size: 0.8rem;
   margin-bottom: 0.1rem;
 }
-/* line 229, ../scss/theme/_misc.scss */
+/* line 153, ../scss/theme/_misc.scss */
 #family-members .member-message {
   margin: 0;
   color: #e0767a;
   font-size: 0.8rem;
   font-style: normal;
 }
-/* line 234, ../scss/theme/_misc.scss */
+/* line 158, ../scss/theme/_misc.scss */
 #family-members .member-message .columns {
   padding: 0;
 }
-/* line 239, ../scss/theme/_misc.scss */
+/* line 163, ../scss/theme/_misc.scss */
 #family-members .family-member td {
   border-bottom: 1px solid #e0e0e0;
   background-color: white;
 }
-/* line 243, ../scss/theme/_misc.scss */
+/* line 167, ../scss/theme/_misc.scss */
 #family-members .family-member.member-blocked td {
   background-color: #f6f6f6;
 }
-/* line 245, ../scss/theme/_misc.scss */
+/* line 169, ../scss/theme/_misc.scss */
 #family-members .family-member.member-blocked td .member-id, #family-members .family-member.member-blocked td .member-name {
   color: #b0b0b0;
 }
-/* line 251, ../scss/theme/_misc.scss */
+/* line 175, ../scss/theme/_misc.scss */
 #family-members .family-all td {
   background-color: #f0f8f6;
   color: #505050;
   font-style: italic;
   height: 2.7rem;
 }
-/* line 258, ../scss/theme/_misc.scss */
+/* line 182, ../scss/theme/_misc.scss */
 #family-members button.member-show-picture.showing {
   border: 1px solid black;
 }
 
-/* line 262, ../scss/theme/_misc.scss */
+/* line 186, ../scss/theme/_misc.scss */
 .member-caption {
   padding: 0.2rem 0;
   font-size: 1rem;
 }
 
-/*#sub-defaultaddress table tr td {
-    padding: 0.3rem;
-}*/
-/* line 274, ../scss/theme/_misc.scss */
+/* Dashboard */
+/* line 192, ../scss/theme/_misc.scss */
+.dashboard-action {
+  margin-bottom: 1.0rem;
+}
+
+/* line 196, ../scss/theme/_misc.scss */
 .dbstats td {
   text-align: right;
   padding-right: 2rem;
 }
-/* line 278, ../scss/theme/_misc.scss */
+/* line 200, ../scss/theme/_misc.scss */
 .dbstats tr > td:first-child {
   text-align: left;
   padding-left: 2rem;
 }
-/* line 284, ../scss/theme/_misc.scss */
+/* line 206, ../scss/theme/_misc.scss */
 .dbstats .dbstats-total td:first-child,
 .dbstats .dbstats-extra td:first-child {
   padding-left: 0.7rem;
 }
-/* line 288, ../scss/theme/_misc.scss */
+/* line 210, ../scss/theme/_misc.scss */
 .dbstats .dbstats-total {
   font-weight: bold;
 }
-/* line 291, ../scss/theme/_misc.scss */
+/* line 213, ../scss/theme/_misc.scss */
 .dbstats .dbstats-extra td,
 .dbstats .dbstats-sub td {
   font-style: italic;
   font-size: 0.8rem;
   line-height: 50%;
-  color: #AAA;
-}
-
-/* line 301, ../scss/theme/_misc.scss */
-.prio {
-  padding: 0 4px;
-  border: 1px solid black;
-  text-align: center;
-  white-space: pre;
-  font-weight: normal;
-}
-
-/* line 308, ../scss/theme/_misc.scss */
-.prio-red {
-  color: white;
-  background-color: #D10000;
-}
-
-/* line 312, ../scss/theme/_misc.scss */
-.prio-blue {
-  color: white;
-  background-color: #10427B;
-}
-
-/* line 316, ../scss/theme/_misc.scss */
-.prio-lightblue {
-  background-color: #B7DDFF;
-}
-
-/* line 319, ../scss/theme/_misc.scss */
-.prio-grey {
-  background-color: silver;
+  color: #aaa;
 }

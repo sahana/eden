@@ -87,14 +87,61 @@ $side_bar_divider_color: $side_bar_border_color !default;
     }
 }
 
-// Personal Menu
-.personal-menu-area {
-    text-align: right;
+/* Page Header */
+.main-title {
+    .org-logo {
+        vertical-align: top;
+        display: inline-block;
+        padding: 0.4rem 0.5rem 0.3rem 0;
+    }
+    .system-title {
+        display: inline-block;
+        .system-name {
+            color: #333333;
+            margin-bottom: 0;
+        }
+        .org-name {
+            color: #999999;
+            margin-bottom: 0.125rem;
+            line-height: 1rem;
+            margin-bottom: 0.5rem;
+        }
+    }
+    .personal-menu-area {
+        text-align: right;
+    }
+    .personal-menu {
+        float: right;
+        clear: right;
+        padding-top: 0;
+        margin-bottom: 0.125rem;
+        li a {
+            padding: 0 0.375rem;
+        }
+    }
+    .language-selector {
+        float: right;
+        display: block;
+        margin-top: 0.625rem;
+        margin-bottom: 0.125rem;
+    }
+
+}
+body.rtl .main-title {
+    .personal-menu {
+        float: left;
+        clear: left;
+    }
+    .language-selector {
+        float: left;
+    }
 }
 
-// About Menu
+// About Menu (in footer)
 .about-menu {
     text-align: left;
+    margin-left: 0;
+    margin-right: 0;
 }
 body.rtl {
     .about-menu {

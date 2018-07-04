@@ -126,8 +126,34 @@ meta.foundation-data-attribute-namespace {
   font-size: 0.75rem;
 }
 
-/* Page Sections */
+/* Logged-in User Indicators */
 /* line 80, ../scss/theme/_page.scss */
+.username {
+  color: #666666;
+  padding: 0.5rem 0;
+  padding-right: 0.5rem;
+  font-size: 0.7rem;
+}
+/* line 85, ../scss/theme/_page.scss */
+.username i.icon, .username i.fa {
+  padding-left: 0.2rem;
+  padding-right: 0;
+}
+
+/* line 91, ../scss/theme/_page.scss */
+body.rtl .username {
+  padding-left: 0.5rem;
+  padding-right: 0;
+  float: left;
+}
+/* line 94, ../scss/theme/_page.scss */
+body.rtl .username i.icon, body.rtl .username i.fa {
+  padding-left: 0;
+  padding-right: 0.2rem;
+}
+
+/* Page Sections */
+/* line 103, ../scss/theme/_page.scss */
 .form-container form,
 #datalist-filter-form,
 #datatable-filter-form,
@@ -137,42 +163,42 @@ meta.foundation-data-attribute-namespace {
   border: 1px solid #CCC;
 }
 
-/* line 88, ../scss/theme/_page.scss */
+/* line 111, ../scss/theme/_page.scss */
 .widget-container #list-btn-add {
   margin-bottom: 0;
   position: relative;
   top: 1.0rem;
 }
 
-/* line 93, ../scss/theme/_page.scss */
+/* line 116, ../scss/theme/_page.scss */
 #component {
   float: none;
 }
 
-/* line 96, ../scss/theme/_page.scss */
+/* line 119, ../scss/theme/_page.scss */
 .map_home {
   margin: 0;
   margin-top: 0.5rem;
 }
 
 /* Global Main Content Styles */
-/* line 104, ../scss/theme/_page.scss */
+/* line 127, ../scss/theme/_page.scss */
 #content a.help:link {
   color: #fff;
   text-decoration: none;
   margin-right: 10px;
 }
-/* line 109, ../scss/theme/_page.scss */
+/* line 132, ../scss/theme/_page.scss */
 #content a.help:hover {
   background-color: #336699;
   text-decoration: underline;
 }
-/* line 113, ../scss/theme/_page.scss */
+/* line 136, ../scss/theme/_page.scss */
 #content a.help:visited {
   font-weight: normal;
   color: #666;
 }
-/* line 118, ../scss/theme/_page.scss */
+/* line 141, ../scss/theme/_page.scss */
 #content h1,
 #content h2 {
   font-size: 1.3em;
@@ -180,19 +206,19 @@ meta.foundation-data-attribute-namespace {
   background-color: #F7F8F9;
   padding: 0.35rem;
 }
-/* line 127, ../scss/theme/_page.scss */
+/* line 150, ../scss/theme/_page.scss */
 #content h2 {
   margin-top: 10px;
   padding-left: 0.7rem;
 }
-/* line 133, ../scss/theme/_page.scss */
+/* line 156, ../scss/theme/_page.scss */
 #content h3 {
   font-size: 1.1em;
   padding-bottom: 5px;
 }
 
 /* Footer */
-/* line 140, ../scss/theme/_page.scss */
+/* line 163, ../scss/theme/_page.scss */
 #footer {
   padding-top: 20px;
   border-top: 1px solid #F0F0F0;
@@ -200,12 +226,12 @@ meta.foundation-data-attribute-namespace {
   margin-bottom: 1rem;
 }
 
-/* line 146, ../scss/theme/_page.scss */
+/* line 169, ../scss/theme/_page.scss */
 #poweredby {
   margin-right: 0.5rem;
   text-align: right;
 }
-/* line 149, ../scss/theme/_page.scss */
+/* line 172, ../scss/theme/_page.scss */
 #poweredby a {
   color: #999999;
   text-decoration: none;
@@ -213,7 +239,7 @@ meta.foundation-data-attribute-namespace {
   margin-left: 0.2rem;
 }
 
-/* line 157, ../scss/theme/_page.scss */
+/* line 180, ../scss/theme/_page.scss */
 body.rtl #poweredby {
   text-align: left;
 }
@@ -871,32 +897,81 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 .side-nav li.heading:not(:first-child) {
   border-top: 1px solid #c0c1c2;
 }
-/* line 76, ../scss/theme/_menus.scss */
-.side-nav li.heading > a:not(.button) {
-  padding: 6px 3px 3px 6px;
-}
-/* line 81, ../scss/theme/_menus.scss */
+/* line 78, ../scss/theme/_menus.scss */
 .side-nav li.active > a:first-child:not(.button) {
   font-weight: bold;
   background-color: #e0e1e2;
 }
-/* line 84, ../scss/theme/_menus.scss */
+/* line 81, ../scss/theme/_menus.scss */
 .side-nav li.active > a:first-child:not(.button):hover {
   color: #FFFFFF;
   background-color: #2ba6cb;
 }
 
-/* line 94, ../scss/theme/_menus.scss */
-.personal-menu-area {
+/* Page Header */
+/* line 92, ../scss/theme/_menus.scss */
+.main-title .org-logo {
+  vertical-align: top;
+  display: inline-block;
+  padding: 0.4rem 0.5rem 0.3rem 0;
+}
+/* line 97, ../scss/theme/_menus.scss */
+.main-title .system-title {
+  display: inline-block;
+}
+/* line 99, ../scss/theme/_menus.scss */
+.main-title .system-title .system-name {
+  color: #333333;
+  margin-bottom: 0;
+}
+/* line 103, ../scss/theme/_menus.scss */
+.main-title .system-title .org-name {
+  color: #999999;
+  margin-bottom: 0.125rem;
+  line-height: 1rem;
+  margin-bottom: 0.5rem;
+}
+/* line 110, ../scss/theme/_menus.scss */
+.main-title .personal-menu-area {
   text-align: right;
 }
-
-/* line 99, ../scss/theme/_menus.scss */
-.about-menu {
-  text-align: left;
+/* line 113, ../scss/theme/_menus.scss */
+.main-title .personal-menu {
+  float: right;
+  clear: right;
+  padding-top: 0;
+  margin-bottom: 0.125rem;
+}
+/* line 118, ../scss/theme/_menus.scss */
+.main-title .personal-menu li a {
+  padding: 0 0.375rem;
+}
+/* line 122, ../scss/theme/_menus.scss */
+.main-title .language-selector {
+  float: right;
+  display: block;
+  margin-top: 0.625rem;
+  margin-bottom: 0.125rem;
 }
 
-/* line 103, ../scss/theme/_menus.scss */
+/* line 131, ../scss/theme/_menus.scss */
+body.rtl .main-title .personal-menu {
+  float: left;
+  clear: left;
+}
+/* line 135, ../scss/theme/_menus.scss */
+body.rtl .main-title .language-selector {
+  float: left;
+}
+
+/* line 141, ../scss/theme/_menus.scss */
+.about-menu {
+  text-align: left;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* line 147, ../scss/theme/_menus.scss */
 body.rtl .about-menu {
   text-align: right;
 }
@@ -1211,7 +1286,7 @@ body.rtl .range-filter-widget input.date-filter-input {
 
 /* line 168, ../scss/theme/_widgets.scss */
 table.s3-groupedopts-widget {
-  border: 0;
+  /*     border: 0; TODO make configurable */
   margin-bottom: 0;
 }
 /* line 169, ../scss/theme/_widgets.scss */
@@ -1439,4 +1514,36 @@ form.anonymize-form,
 /* line 345, ../scss/theme/_widgets.scss */
 .s3-anonymize {
   display: inline-block;
+}
+
+/* Priority Representation */
+/* line 350, ../scss/theme/_widgets.scss */
+.prio {
+  padding: 0 4px;
+  border: 1px solid black;
+  text-align: center;
+  white-space: pre;
+  font-weight: normal;
+}
+
+/* line 357, ../scss/theme/_widgets.scss */
+.prio-red {
+  color: white;
+  background-color: #d10000;
+}
+
+/* line 361, ../scss/theme/_widgets.scss */
+.prio-blue {
+  color: white;
+  background-color: #10427b;
+}
+
+/* line 365, ../scss/theme/_widgets.scss */
+.prio-lightblue {
+  background-color: #b7ddff;
+}
+
+/* line 368, ../scss/theme/_widgets.scss */
+.prio-grey {
+  background-color: silver;
 }
