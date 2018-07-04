@@ -1,12 +1,50 @@
-//body {
-//    @include background_size(cover);
-//}
-/* Override widget.css */
-.top-bar.expanded {
-    width: 100%;
+// ============================================================================
+// Styles for Page Sections and Global Elements
+// ============================================================================
+// VARIABLES
+
+// Foundation variables used:
+//$alert-color
+
+// Alerts
+$alert_border_color: #b2b2b2 !default;
+$alert_box_shadow_color: #aaaaa7 !default;
+
+// Render page titles with background color
+$title_background: true !default;
+$title_bgcolor: #F7F8F9 !default;
+
+// Throbber style [sunflower|simple]
+$throbber_style: sunflower !default;
+
+// ============================================================================
+// STYLES
+
+/* Throbber style */
+@if $throbber_style == sunflower {
+    .inline-throbber {
+      background-image: url(../../img/sunflower_fade_indicator.gif);
+    }
+    .throbber,
+    .layer_throbber,
+    .map_loader {
+      background-image: url(../../img/sunflower_spin_throbber.gif);
+    }
+    .loading {
+      background: url(../../img/sunflower_spin_throbber.gif) center no-repeat !important;
+    }
 }
-.map_home {
-    margin: 0;
+
+/* Inline Sahana logo */
+.sahana-logo {
+  background: url(../../img/S3menu_logo.png) left top no-repeat;
+  text-shadow: none;
+  padding: 0;
+  margin-left: 5px;
+  margin-top: 10px;
+  width: 35px;
+  height: 28px;
+  display: inline-block;
 }
 
 /* Alerts */
@@ -25,6 +63,7 @@
     z-index: 98;
     border-radius: 4px;
 }
+
 /* Red indicators */
 .error,
 .expired,
@@ -34,10 +73,10 @@
     font-weight: bold;
 }
 .req_key {
-    font-size: 0.9rem;
+    font-size: 0.75rem;
 }
 
-/* Sections */
+/* Page Sections */
 .form-container form,
 #datalist-filter-form,
 #datatable-filter-form,
@@ -51,8 +90,15 @@
     position: relative;
     top: 1.0rem;
 }
+#component {
+    float: none;
+}
+.map_home {
+    margin: 0;
+    margin-top: 0.5rem;
+}
 
-/* Links should ALWAYS be unvisited */
+/* Global Main Content Styles */
 #content {
     a.help {
         &:link {
@@ -73,19 +119,44 @@
     h2 {
         font-size: 1.3em;
         font-weight: bolder;
-        background: #F7F8F9;
-        padding: 5px 5px 5px 5px;
+        @if $title_background {
+            background-color: $title_bgcolor;
+            padding: 0.35rem;
+        }
     }
     h2 {
         margin-top: 10px;
-        padding-left: 10px;
+        @if $title_background {
+            padding-left: 0.7rem;
+        }
     }
     h3 {
         font-size: 1.1em;
         padding-bottom: 5px;
     }
 }
-#component {
-    float: none;
-    width: auto;
+
+/* Footer */
+#footer {
+    padding-top: 20px;
+    border-top: 1px solid #F0F0F0;
+    margin-top: 20px;
+    margin-bottom: 1rem;
 }
+#poweredby {
+    margin-right: 0.5rem;
+    text-align: right;
+    a {
+        color: #999999;
+        text-decoration: none;
+        font-size: 0.8rem;
+        margin-left: 0.2rem;
+    }
+}
+body.rtl {
+    #poweredby {
+        text-align: left;
+    }
+}
+
+// END ========================================================================

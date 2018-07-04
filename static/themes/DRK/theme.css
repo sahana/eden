@@ -62,19 +62,22 @@ meta.foundation-data-attribute-namespace {
   font-family: false;
 }
 
-/* Override widget.css */
-/* line 5, ../scss/theme/_page.scss */
-.top-bar.expanded {
-  width: 100%;
-}
-
-/* line 8, ../scss/theme/_page.scss */
-.map_home {
-  margin: 0;
+/* Throbber style */
+/* Inline Sahana logo */
+/* line 39, ../../default/scss/theme/_page.scss */
+.sahana-logo {
+  background: url(../../img/S3menu_logo.png) left top no-repeat;
+  text-shadow: none;
+  padding: 0;
+  margin-left: 5px;
+  margin-top: 10px;
+  width: 35px;
+  height: 28px;
+  display: inline-block;
 }
 
 /* Alerts */
-/* line 13, ../scss/theme/_page.scss */
+/* line 51, ../../default/scss/theme/_page.scss */
 .alert.alert-error,
 .alert.alert-info,
 .alert.alert-warning,
@@ -87,12 +90,12 @@ meta.foundation-data-attribute-namespace {
   padding: 8px 35px 8px 14px;
   position: relative;
   width: auto;
-  z-index: 999;
+  z-index: 98;
   border-radius: 4px;
 }
 
 /* Red indicators */
-/* line 29, ../scss/theme/_page.scss */
+/* line 68, ../../default/scss/theme/_page.scss */
 .error,
 .expired,
 .req,
@@ -101,13 +104,13 @@ meta.foundation-data-attribute-namespace {
   font-weight: bold;
 }
 
-/* line 36, ../scss/theme/_page.scss */
+/* line 75, ../../default/scss/theme/_page.scss */
 .req_key {
   font-size: 0.75rem;
 }
 
-/* Sections */
-/* line 41, ../scss/theme/_page.scss */
+/* Page Sections */
+/* line 80, ../../default/scss/theme/_page.scss */
 .form-container form,
 #datalist-filter-form,
 #datatable-filter-form,
@@ -117,112 +120,150 @@ meta.foundation-data-attribute-namespace {
   border: 1px solid #CCC;
 }
 
-/* line 49, ../scss/theme/_page.scss */
+/* line 88, ../../default/scss/theme/_page.scss */
 .widget-container #list-btn-add {
   margin-bottom: 0;
   position: relative;
   top: 1.0rem;
 }
 
-/* Links should ALWAYS be unvisited */
-/* line 58, ../scss/theme/_page.scss */
+/* line 93, ../../default/scss/theme/_page.scss */
+#component {
+  float: none;
+}
+
+/* line 96, ../../default/scss/theme/_page.scss */
+.map_home {
+  margin: 0;
+  margin-top: 0.5rem;
+}
+
+/* Global Main Content Styles */
+/* line 104, ../../default/scss/theme/_page.scss */
 #content a.help:link {
   color: #fff;
   text-decoration: none;
   margin-right: 10px;
 }
-/* line 63, ../scss/theme/_page.scss */
+/* line 109, ../../default/scss/theme/_page.scss */
 #content a.help:hover {
   background-color: #336699;
   text-decoration: underline;
 }
-/* line 67, ../scss/theme/_page.scss */
+/* line 113, ../../default/scss/theme/_page.scss */
 #content a.help:visited {
   font-weight: normal;
   color: #666;
 }
-/* line 72, ../scss/theme/_page.scss */
+/* line 118, ../../default/scss/theme/_page.scss */
 #content h1,
 #content h2 {
   font-size: 1.3em;
   font-weight: bolder;
 }
-/* line 79, ../scss/theme/_page.scss */
+/* line 127, ../../default/scss/theme/_page.scss */
 #content h2 {
   margin-top: 10px;
 }
-/* line 83, ../scss/theme/_page.scss */
+/* line 133, ../../default/scss/theme/_page.scss */
 #content h3 {
   font-size: 1.1em;
   padding-bottom: 5px;
 }
 
+/* Footer */
+/* line 140, ../../default/scss/theme/_page.scss */
+#footer {
+  padding-top: 20px;
+  border-top: 1px solid #F0F0F0;
+  margin-top: 20px;
+  margin-bottom: 1rem;
+}
+
+/* line 146, ../../default/scss/theme/_page.scss */
+#poweredby {
+  margin-right: 0.5rem;
+  text-align: right;
+}
+/* line 149, ../../default/scss/theme/_page.scss */
+#poweredby a {
+  color: #999999;
+  text-decoration: none;
+  font-size: 0.8rem;
+  margin-left: 0.2rem;
+}
+
+/* line 157, ../../default/scss/theme/_page.scss */
+body.rtl #poweredby {
+  text-align: left;
+}
+
 /* General forms */
-/* line 2, ../../default/scss/theme/_forms.scss */
+/* line 22, ../../default/scss/theme/_forms.scss */
 form {
   font-size: 0.8rem;
 }
-/* line 4, ../../default/scss/theme/_forms.scss */
+/* line 24, ../../default/scss/theme/_forms.scss */
 form .form-row {
   margin-top: 0.5rem !important;
 }
-/* line 6, ../../default/scss/theme/_forms.scss */
+/* line 26, ../../default/scss/theme/_forms.scss */
 form .form-row .button {
   margin-right: 0.5rem;
 }
-/* line 8, ../../default/scss/theme/_forms.scss */
+/* line 28, ../../default/scss/theme/_forms.scss */
 form .form-row .button i.fa {
   margin-right: 0.3rem;
 }
-/* line 13, ../../default/scss/theme/_forms.scss */
+/* line 33, ../../default/scss/theme/_forms.scss */
 form .form-row > .columns:first-child {
   overflow: hidden;
 }
-/* line 16, ../../default/scss/theme/_forms.scss */
+/* line 36, ../../default/scss/theme/_forms.scss */
 form .form-row > .columns > label {
   font-weight: bold;
 }
-/* line 20, ../../default/scss/theme/_forms.scss */
+/* line 40, ../../default/scss/theme/_forms.scss */
 form .form-row > a {
   margin-left: 0.625rem;
 }
-/* line 23, ../../default/scss/theme/_forms.scss */
+/* line 43, ../../default/scss/theme/_forms.scss */
 form .form-row select {
   min-width: 4rem;
 }
-/* line 26, ../../default/scss/theme/_forms.scss */
+/* line 46, ../../default/scss/theme/_forms.scss */
 form .form-row .controls span.postfix {
   height: 1.75rem;
   line-height: 1.5rem;
   font-size: 0.8rem;
 }
-/* line 30, ../../default/scss/theme/_forms.scss */
+/* line 50, ../../default/scss/theme/_forms.scss */
 form .form-row .controls span.postfix .fa {
   line-height: inherit;
 }
-/* line 34, ../../default/scss/theme/_forms.scss */
+/* line 54, ../../default/scss/theme/_forms.scss */
 form .form-row > .s3-hierarchy-widget {
   display: inline-block;
   vertical-align: middle;
 }
-/* line 39, ../../default/scss/theme/_forms.scss */
+/* line 59, ../../default/scss/theme/_forms.scss */
 form .jstree-anchor {
   font-size: 0.9rem;
 }
-/* line 42, ../../default/scss/theme/_forms.scss */
+/* line 62, ../../default/scss/theme/_forms.scss */
 form label.inline {
   padding: 0;
 }
-/* line 45, ../../default/scss/theme/_forms.scss */
+/* line 65, ../../default/scss/theme/_forms.scss */
 form .gis_loc_select_btn {
   font-size: 0.8em;
 }
-/* line 47, ../../default/scss/theme/_forms.scss */
+/* line 67, ../../default/scss/theme/_forms.scss */
 form .gis_loc_select_btn i {
   font-size: 1.0em;
   margin-right: 4px;
 }
-/* line 52, ../../default/scss/theme/_forms.scss */
+/* line 72, ../../default/scss/theme/_forms.scss */
 form .error {
   display: block;
   padding: 0.375rem 0.5625rem 0.5625rem;
@@ -233,86 +274,90 @@ form .error {
   background: #c60f13;
   color: white;
 }
-/* line 62, ../../default/scss/theme/_forms.scss */
+/* line 82, ../../default/scss/theme/_forms.scss */
 form .date-clear-btn {
   font-size: 0.75rem;
   margin-left: 0.15rem !important;
 }
-/* line 66, ../../default/scss/theme/_forms.scss */
+/* line 86, ../../default/scss/theme/_forms.scss */
 form .action-lnk {
   font-weight: normal;
   font-size: 0.75rem;
 }
-/* line 72, ../../default/scss/theme/_forms.scss */
+/* line 92, ../../default/scss/theme/_forms.scss */
 form table.embeddedComponent {
   margin-top: 0.125rem;
   margin-bottom: 0.125rem;
   border: 1px solid #dddddd;
   border-collapse: separate;
 }
-/* line 78, ../../default/scss/theme/_forms.scss */
+/* line 98, ../../default/scss/theme/_forms.scss */
 form table.embeddedComponent td {
   border: none;
   padding-bottom: 0.05rem;
   padding-top: 0.15rem;
   vertical-align: top;
 }
-/* line 86, ../../default/scss/theme/_forms.scss */
+/* line 106, ../../default/scss/theme/_forms.scss */
 form table.embeddedComponent.subform-vertical .add-row td, form table.embeddedComponent.subform-vertical .edit-row td {
   border-top: 1px solid #dddddd;
 }
-/* line 88, ../../default/scss/theme/_forms.scss */
+/* line 108, ../../default/scss/theme/_forms.scss */
 form table.embeddedComponent.subform-vertical .add-row td.subform-action, form table.embeddedComponent.subform-vertical .edit-row td.subform-action {
   vertical-align: bottom;
 }
-/* line 95, ../../default/scss/theme/_forms.scss */
+/* line 115, ../../default/scss/theme/_forms.scss */
 form table.embeddedComponent .label-row td {
   border-bottom: 1px solid #dddddd;
 }
-/* line 97, ../../default/scss/theme/_forms.scss */
+/* line 117, ../../default/scss/theme/_forms.scss */
 form table.embeddedComponent .label-row td:empty {
   padding: 0;
 }
-/* line 101, ../../default/scss/theme/_forms.scss */
+/* line 121, ../../default/scss/theme/_forms.scss */
 form table.embeddedComponent .label-row label {
   color: black;
 }
-/* line 106, ../../default/scss/theme/_forms.scss */
+/* line 126, ../../default/scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form input,
 form table.embeddedComponent tr.inline-form .btn.date-clear-btn,
 form table.embeddedComponent tr.inline-form .postfix.calendar-clear-btn {
   margin-top: 0;
 }
-/* line 111, ../../default/scss/theme/_forms.scss */
+/* line 131, ../../default/scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form.single td:only-child {
   padding: 0;
 }
-/* line 113, ../../default/scss/theme/_forms.scss */
+/* line 133, ../../default/scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form.single td:only-child div.form-row {
   padding: 0 0.2rem 0.2rem;
 }
-/* line 117, ../../default/scss/theme/_forms.scss */
+/* line 137, ../../default/scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form select {
   max-width: 18rem;
 }
-/* line 123, ../../default/scss/theme/_forms.scss */
+/* line 140, ../../default/scss/theme/_forms.scss */
+form table.embeddedComponent tr.inline-form .s3_inline_add_resource_link {
+  padding: 0.1rem;
+}
+/* line 146, ../../default/scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form .zoom img,
 form table.embeddedComponent tr.read-row .zoom img {
   max-height: 8rem;
 }
-/* line 128, ../../default/scss/theme/_forms.scss */
+/* line 151, ../../default/scss/theme/_forms.scss */
 form .inline-open-add {
   display: inline-block;
   margin-bottom: 1.25rem;
   margin-left: 0;
 }
-/* line 138, ../../default/scss/theme/_forms.scss */
+/* line 158, ../../default/scss/theme/_forms.scss */
 form.auth_login #submit_record__row {
   white-space: pre;
 }
 
 /* General Widgets */
-/* line 144, ../../default/scss/theme/_forms.scss */
+/* line 164, ../../default/scss/theme/_forms.scss */
 input[type="text"],
 input[type="password"],
 input[type="date"],
@@ -335,7 +380,7 @@ select {
   font-weight: normal;
 }
 
-/* line 165, ../../default/scss/theme/_forms.scss */
+/* line 185, ../../default/scss/theme/_forms.scss */
 input[type="text"],
 input[type="password"],
 input[type="date"],
@@ -354,82 +399,91 @@ select {
   max-width: 100%;
 }
 
-/* line 182, ../../default/scss/theme/_forms.scss */
+/* line 202, ../../default/scss/theme/_forms.scss */
 textarea {
   resize: both;
   max-width: 100%;
 }
 
-/* line 186, ../../default/scss/theme/_forms.scss */
+/* line 206, ../../default/scss/theme/_forms.scss */
 input.datetimepicker {
   max-width: 8rem;
 }
 
-/* line 190, ../../default/scss/theme/_forms.scss */
+/* line 209, ../../default/scss/theme/_forms.scss */
 select {
   padding-right: 1rem !important;
 }
 
 /* Form and Item containers */
-/* line 194, ../../default/scss/theme/_forms.scss */
-#last_update {
+/* line 214, ../../default/scss/theme/_forms.scss */
+#last_update,
+#markDuplicate {
   float: none;
+  clear: none;
+  text-align: right;
 }
 
-/* line 197, ../../default/scss/theme/_forms.scss */
+/* line 221, ../../default/scss/theme/_forms.scss */
+body.rtl #last_update,
+body.rtl #markDuplicate {
+  text-align: left;
+}
+
+/* line 226, ../../default/scss/theme/_forms.scss */
 .form-container,
 .item-container {
   width: auto;
   overflow: inherit;
 }
-/* line 199, ../../default/scss/theme/_forms.scss */
+/* line 228, ../../default/scss/theme/_forms.scss */
 .form-container form,
 .item-container form {
   background: #fefefe;
   padding: 5px 10px;
 }
-/* line 202, ../../default/scss/theme/_forms.scss */
+/* line 231, ../../default/scss/theme/_forms.scss */
 .form-container form tr td,
 .item-container form tr td {
   padding: 0.1875rem;
 }
-/* line 205, ../../default/scss/theme/_forms.scss */
+/* line 234, ../../default/scss/theme/_forms.scss */
 .form-container form .embeddedComponent td,
 .item-container form .embeddedComponent td {
   padding-right: 0.5625rem;
 }
-/* line 211, ../../default/scss/theme/_forms.scss */
+/* line 240, ../../default/scss/theme/_forms.scss */
 .form-container .controls,
 .item-container .controls {
   display: inline-block;
 }
-/* line 213, ../../default/scss/theme/_forms.scss */
+/* line 242, ../../default/scss/theme/_forms.scss */
 .form-container .controls:not(.columns),
 .item-container .controls:not(.columns) {
   max-width: 100%;
 }
 
-/* line 218, ../../default/scss/theme/_forms.scss */
+/* line 247, ../../default/scss/theme/_forms.scss */
 .form-container {
   margin-top: 0.125rem;
   margin-bottom: 0.875rem;
 }
-/* line 222, ../../default/scss/theme/_forms.scss */
+/* line 251, ../../default/scss/theme/_forms.scss */
 .form-container form select,
 .form-container form input.string:not(.date),
 .form-container form textarea {
   margin: 0;
 }
-/* line 227, ../../default/scss/theme/_forms.scss */
+/* line 256, ../../default/scss/theme/_forms.scss */
 .form-container form .ui-multiselect {
   max-width: 100%;
 }
-/* line 231, ../../default/scss/theme/_forms.scss */
+/* line 260, ../../default/scss/theme/_forms.scss */
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.hours):not(.dms-input) {
   width: 20rem !important;
 }
 
-/* line 237, ../../default/scss/theme/_forms.scss */
+/* line 267, ../../default/scss/theme/_forms.scss */
 .item-container .controls {
   background: #fafafa;
   padding: 0.35rem;
@@ -437,24 +491,24 @@ select {
 }
 
 /* Filter Forms & Report Options */
-/* line 247, ../../default/scss/theme/_forms.scss */
+/* line 277, ../../default/scss/theme/_forms.scss */
 .filter-form table tr,
 .filter-form .ui-multiselect,
 .report-options table tr,
 .report-options .ui-multiselect {
   max-width: 60%;
 }
-/* line 251, ../../default/scss/theme/_forms.scss */
+/* line 281, ../../default/scss/theme/_forms.scss */
 .filter-form table.s3-groupedopts-widget,
 .report-options table.s3-groupedopts-widget {
   display: inline-block;
 }
-/* line 254, ../../default/scss/theme/_forms.scss */
+/* line 284, ../../default/scss/theme/_forms.scss */
 .filter-form .inline-tooltip,
 .report-options .inline-tooltip {
   padding-top: 0.2rem;
 }
-/* line 257, ../../default/scss/theme/_forms.scss */
+/* line 287, ../../default/scss/theme/_forms.scss */
 .filter-form label.inline,
 .report-options label.inline {
   line-height: normal;
@@ -462,7 +516,7 @@ select {
 }
 
 /* Login/Registration box */
-/* line 264, ../../default/scss/theme/_forms.scss */
+/* line 294, ../../default/scss/theme/_forms.scss */
 #login_form,
 #register_form,
 #login_box {
@@ -470,13 +524,13 @@ select {
 }
 
 /* Help Popup */
-/* line 271, ../../default/scss/theme/_forms.scss */
+/* line 301, ../../default/scss/theme/_forms.scss */
 .inline-tooltip {
   display: inline-block;
   vertical-align: top;
   padding-left: 0.75rem;
 }
-/* line 275, ../../default/scss/theme/_forms.scss */
+/* line 305, ../../default/scss/theme/_forms.scss */
 .inline-tooltip .tooltip,
 .inline-tooltip .tooltipbody,
 .inline-tooltip .stickytip,
@@ -485,26 +539,26 @@ select {
   padding: 0;
   width: 60px;
 }
-/* line 283, ../../default/scss/theme/_forms.scss */
+/* line 313, ../../default/scss/theme/_forms.scss */
 .inline-tooltip .s3_add_resource_link {
   display: inline-block;
   margin: -3px 0 -3px 5px;
 }
 
 /* Rheader */
-/* line 2, ../../default/scss/theme/_rheader.scss */
+/* line 26, ../../default/scss/theme/_rheader.scss */
 #rheader {
   width: 100%;
 }
-/* line 6, ../../default/scss/theme/_rheader.scss */
+/* line 30, ../../default/scss/theme/_rheader.scss */
 #rheader a.th {
   margin-right: 10px;
 }
-/* line 7, ../../default/scss/theme/_rheader.scss */
+/* line 31, ../../default/scss/theme/_rheader.scss */
 #rheader a.th img {
   height: 60px;
 }
-/* line 12, ../../default/scss/theme/_rheader.scss */
+/* line 36, ../../default/scss/theme/_rheader.scss */
 #rheader .rheader-avatar {
   clear: none;
   display: inline;
@@ -513,19 +567,19 @@ select {
   padding: 0;
   vertical-align: text-top;
 }
-/* line 20, ../../default/scss/theme/_rheader.scss */
+/* line 44, ../../default/scss/theme/_rheader.scss */
 #rheader table {
   display: inline;
   margin-bottom: 10px;
   border: none;
 }
-/* line 24, ../../default/scss/theme/_rheader.scss */
+/* line 48, ../../default/scss/theme/_rheader.scss */
 #rheader table tr {
   background: none;
 }
 
-/* RHeader Tabs */
-/* line 31, ../../default/scss/theme/_rheader.scss */
+/* Rheader Tabs */
+/* line 55, ../../default/scss/theme/_rheader.scss */
 div.tabs {
   display: block;
   clear: none;
@@ -537,7 +591,7 @@ div.tabs {
   text-align: left;
   border-bottom: 1px solid #006A71;
 }
-/* line 47, ../../default/scss/theme/_rheader.scss */
+/* line 71, ../../default/scss/theme/_rheader.scss */
 div.tabs span {
   float: left;
   display: inline;
@@ -546,17 +600,17 @@ div.tabs span {
   padding: 0.1rem 0.3rem 0.1rem;
   border-radius: 3px 3px 0 0;
 }
-/* line 58, ../../default/scss/theme/_rheader.scss */
+/* line 82, ../../default/scss/theme/_rheader.scss */
 div.tabs span a {
   color: #ffffff !important;
   text-decoration: none !important;
   background: transparent !important;
 }
-/* line 62, ../../default/scss/theme/_rheader.scss */
+/* line 86, ../../default/scss/theme/_rheader.scss */
 div.tabs span a:hover {
   background: transparent !important;
 }
-/* line 68, ../../default/scss/theme/_rheader.scss */
+/* line 92, ../../default/scss/theme/_rheader.scss */
 div.tabs span.tab_here {
   font-size: 1rem;
   font-weight: bold;
@@ -569,19 +623,19 @@ div.tabs span.tab_here {
   border-bottom-style: solid;
   border-bottom-color: #ffffff;
 }
-/* line 86, ../../default/scss/theme/_rheader.scss */
+/* line 110, ../../default/scss/theme/_rheader.scss */
 div.tabs span.tab_here:hover {
   background-color: #f1edec;
 }
-/* line 89, ../../default/scss/theme/_rheader.scss */
+/* line 113, ../../default/scss/theme/_rheader.scss */
 div.tabs span.tab_here a {
   color: #666666 !important;
 }
-/* line 91, ../../default/scss/theme/_rheader.scss */
+/* line 115, ../../default/scss/theme/_rheader.scss */
 div.tabs span.tab_here a:hover {
   color: #666666 !important;
 }
-/* line 98, ../../default/scss/theme/_rheader.scss */
+/* line 122, ../../default/scss/theme/_rheader.scss */
 div.tabs span.tab_last, div.tabs span.tab_other {
   font-size: 0.9rem;
   margin: 0.35rem 0.2rem 0 0;
@@ -591,22 +645,22 @@ div.tabs span.tab_last, div.tabs span.tab_other {
   border-width: 0.0625rem 1px 0.0625rem 2px;
   border-style: solid;
 }
-/* line 112, ../../default/scss/theme/_rheader.scss */
+/* line 136, ../../default/scss/theme/_rheader.scss */
 div.tabs span.tab_last:hover, div.tabs span.tab_other:hover {
   background-color: #00555a;
   border-color: #00555a;
 }
-/* line 116, ../../default/scss/theme/_rheader.scss */
+/* line 140, ../../default/scss/theme/_rheader.scss */
 div.tabs span.tab_last a, div.tabs span.tab_other a {
   color: #ffffff !important;
 }
-/* line 118, ../../default/scss/theme/_rheader.scss */
+/* line 142, ../../default/scss/theme/_rheader.scss */
 div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
   color: #ffffff !important;
 }
 
 /* Action buttons */
-/* line 2, ../../default/scss/theme/_buttons.scss */
+/* line 45, ../../default/scss/theme/_buttons.scss */
 .action-btn,
 .delete-btn-ajax,
 .delete-btn,
@@ -620,7 +674,7 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
   text-decoration: none !important;
   display: inline-block;
 }
-/* line 7, ../../default/scss/theme/_buttons.scss */
+/* line 50, ../../default/scss/theme/_buttons.scss */
 .action-btn[disabled], .action-btn[disabled]:hover,
 .delete-btn-ajax[disabled],
 .delete-btn-ajax[disabled]:hover,
@@ -633,13 +687,13 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 }
 
 /* Default action buttons */
-/* line 15, ../../default/scss/theme/_buttons.scss */
+/* line 58, ../../default/scss/theme/_buttons.scss */
 .action-btn,
 .selected-action {
   background-color: #006A71;
   color: white !important;
 }
-/* line 19, ../../default/scss/theme/_buttons.scss */
+/* line 62, ../../default/scss/theme/_buttons.scss */
 .action-btn:hover,
 .selected-action:hover {
   background-color: #00555a;
@@ -647,13 +701,13 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 }
 
 /* Alert-style action buttons (e.g. delete) */
-/* line 26, ../../default/scss/theme/_buttons.scss */
+/* line 69, ../../default/scss/theme/_buttons.scss */
 .delete-btn-ajax,
 .delete-btn {
   background-color: #D92C20;
   color: white !important;
 }
-/* line 30, ../../default/scss/theme/_buttons.scss */
+/* line 73, ../../default/scss/theme/_buttons.scss */
 .delete-btn-ajax:hover,
 .delete-btn:hover {
   background-color: #ae231a !important;
@@ -661,19 +715,19 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 }
 
 /* Cancel button */
-/* line 37, ../../default/scss/theme/_buttons.scss */
+/* line 80, ../../default/scss/theme/_buttons.scss */
 .cancel-form-btn {
   padding: 0.9375rem;
 }
 
-/* line 40, ../../default/scss/theme/_buttons.scss */
+/* line 83, ../../default/scss/theme/_buttons.scss */
 .cancel-form-btn:hover {
   color: white;
   background-color: #006A71;
 }
 
 /* Full screen map button */
-/* line 46, ../../default/scss/theme/_buttons.scss */
+/* line 89, ../../default/scss/theme/_buttons.scss */
 .map_home .gis_fullscreen_map-btn {
   font-weight: normal;
   font-size: 0.8rem;
@@ -681,50 +735,23 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 }
 
 /* Action buttons in datatables */
-/* line 55, ../../default/scss/theme/_buttons.scss */
+/* line 98, ../../default/scss/theme/_buttons.scss */
 .dataTable .action-btn,
 .dataTable .selected-action {
   color: white;
 }
-/* line 59, ../../default/scss/theme/_buttons.scss */
+/* line 102, ../../default/scss/theme/_buttons.scss */
 .dataTable .delete-btn,
 .dataTable .delete-btn-ajax {
   color: white;
 }
-/* line 63, ../../default/scss/theme/_buttons.scss */
+/* line 106, ../../default/scss/theme/_buttons.scss */
 .dataTable td.actions {
   white-space: nowrap;
 }
 
-/* line 68, ../../default/scss/theme/_buttons.scss */
-.action-btn.profile-add-btn {
-  float: right;
-  margin: 0.5rem 0.5rem;
-}
-
-/* Caret */
-/* line 74, ../../default/scss/theme/_buttons.scss */
-.caret {
-  display: inline-block;
-  width: 0;
-  height: 0;
-  vertical-align: top;
-  border-top: 4px solid #000000;
-  border-right: 4px solid transparent;
-  border-left: 4px solid transparent;
-  content: "";
-}
-
-/* Footer */
-/* line 2, ../../default/scss/theme/_footer.scss */
-#footer {
-  text-align: right;
-  padding-top: 20px;
-  border-top: #f0f0f0 1px solid;
-  margin-top: 20px;
-  margin-bottom: 1rem;
-}
-/* line 10, ../../default/scss/theme/_footer.scss */
+/* Debug buttons in footer */
+/* line 113, ../../default/scss/theme/_buttons.scss */
 #footer button.btn {
   font-size: 0.6875rem;
   border: 0;
@@ -739,45 +766,61 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
   color: white;
   background: #dddddd;
 }
-/* line 17, ../../default/scss/theme/_footer.scss */
+/* line 120, ../../default/scss/theme/_buttons.scss */
 #footer button.btn:hover {
   color: white;
   background: #a0a0a0;
 }
 
-/* line 22, ../../default/scss/theme/_footer.scss */
-#poweredby {
-  margin-right: 0.5rem;
-}
-/* line 24, ../../default/scss/theme/_footer.scss */
-#poweredby a {
-  color: #999999;
-  text-decoration: none;
-  font-size: 0.8rem;
-  margin-left: 0.2rem;
+/* Caret */
+/* line 127, ../../default/scss/theme/_buttons.scss */
+.caret {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: top;
+  border-top: 4px solid #000000;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  content: "";
 }
 
 /* Top bar */
-/* line 2, ../../default/scss/theme/_menus.scss */
+/* line 23, ../../default/scss/theme/_menus.scss */
 .top-bar {
   z-index: 1000;
+  /* Menu logo */
 }
-/* line 4, ../../default/scss/theme/_menus.scss */
+/* line 24, ../../default/scss/theme/_menus.scss */
+.top-bar.expanded {
+  width: 100%;
+}
+/* line 29, ../../default/scss/theme/_menus.scss */
+.top-bar .logo {
+  color: white;
+  display: inline-block;
+  font-size: 1.1rem;
+  font-weight: bold;
+  height: 35px;
+  padding: 0.625rem 0.5rem 0 0.7rem;
+  text-transform: uppercase;
+}
+/* line 38, ../../default/scss/theme/_menus.scss */
 .top-bar .menu-toggle input {
   margin-right: 5px;
 }
-/* line 7, ../../default/scss/theme/_menus.scss */
+/* line 41, ../../default/scss/theme/_menus.scss */
 .top-bar li.name {
   padding-top: 0.2rem;
 }
-/* line 10, ../../default/scss/theme/_menus.scss */
+/* line 44, ../../default/scss/theme/_menus.scss */
 .top-bar .home-link {
   font-size: 1.375rem;
   color: white;
   padding: 0.5rem;
 }
 
-/* line 16, ../../default/scss/theme/_menus.scss */
+/* line 50, ../../default/scss/theme/_menus.scss */
 .top-bar-section li.menu-home a {
   font-weight: bold !important;
   font-size: 1.4em !important;
@@ -785,199 +828,193 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 }
 
 /* Side Menu */
-/* line 23, ../../default/scss/theme/_menus.scss */
+/* line 57, ../../default/scss/theme/_menus.scss */
 .sidebar {
-  background: none repeat scroll 0 0 #F3F3F3;
+  background: none repeat scroll 0 0 #f3f3f3;
   margin-top: 10px;
   padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
 }
 
-/* line 29, ../../default/scss/theme/_menus.scss */
+/* line 64, ../../default/scss/theme/_menus.scss */
 .side-nav li {
-  line-height: 1.2;
   list-style-type: none;
   list-style-position: inside;
-  /*  margin: 0;*/
+  line-height: 1.2;
   padding: 0;
 }
-
-/* line 36, ../../default/scss/theme/_menus.scss */
-.side-nav li.heading:not(:first-child) {
-  border-top: 1px solid #EAEAEA;
-}
-
-/* line 39, ../../default/scss/theme/_menus.scss */
+/* line 70, ../../default/scss/theme/_menus.scss */
 .side-nav li.heading {
   margin-top: 0.125rem;
+  /*& > a:not(.button) {
+      padding: 6px 3px 3px 6px;
+  }*/
 }
-
-/* line 42, ../../default/scss/theme/_menus.scss */
+/* line 73, ../../default/scss/theme/_menus.scss */
+.side-nav li.heading:not(:first-child) {
+  border-top: 1px solid #eaeaea;
+}
+/* line 81, ../../default/scss/theme/_menus.scss */
 .side-nav li.active > a:first-child:not(.button) {
   font-weight: bold;
-  color: #444444;
-  background-color: #E0E0E0;
+  background-color: #e0e1e2;
+}
+/* line 84, ../../default/scss/theme/_menus.scss */
+.side-nav li.active > a:first-child:not(.button):hover {
+  color: #008f99;
+  background-color: rgba(0, 0, 0, 0.025);
 }
 
-/* Personal Menu */
-/* line 49, ../../default/scss/theme/_menus.scss */
+/* line 94, ../../default/scss/theme/_menus.scss */
 .personal-menu-area {
   text-align: right;
 }
 
-/* About Menu */
-/* line 54, ../../default/scss/theme/_menus.scss */
+/* line 99, ../../default/scss/theme/_menus.scss */
 .about-menu {
   text-align: left;
 }
 
-/* line 57, ../../default/scss/theme/_menus.scss */
-#poweredby {
-  text-align: right;
-}
-
-/* line 61, ../../default/scss/theme/_menus.scss */
+/* line 103, ../../default/scss/theme/_menus.scss */
 body.rtl .about-menu {
   text-align: right;
 }
-/* line 64, ../../default/scss/theme/_menus.scss */
-body.rtl #poweredby {
-  text-align: left;
-}
 
 /* Datatables */
-/* line 2, ../../default/scss/theme/_tables.scss */
+/* line 27, ../../default/scss/theme/_tables.scss */
+#table-container {
+  margin-bottom: 1.5rem;
+}
+
+/* line 31, ../../default/scss/theme/_tables.scss */
+table.dataTable thead th, table.dataTable th, table.dataTable td {
+  border: 1px solid #cccccc;
+  padding: 0.2em 1.5em 0.2em 0.5em;
+}
+/* line 36, ../../default/scss/theme/_tables.scss */
+table.dataTable thead th, table.dataTable thead td {
+  background-color: #ffffff;
+}
+/* line 41, ../../default/scss/theme/_tables.scss */
+table.dataTable tbody tr.even {
+  background-color: #ffffff;
+}
+/* line 44, ../../default/scss/theme/_tables.scss */
+table.dataTable tbody tr.even td.sorting_1 {
+  background-color: #fafafa;
+}
+/* line 48, ../../default/scss/theme/_tables.scss */
+table.dataTable tbody tr.odd {
+  background-color: #f7f8f9;
+}
+/* line 50, ../../default/scss/theme/_tables.scss */
+table.dataTable tbody tr.odd td {
+  border-color: #cccccc;
+}
+/* line 54, ../../default/scss/theme/_tables.scss */
+table.dataTable tbody tr.odd td.sorting_1 {
+  background-color: #f0f1f2;
+}
+/* line 60, ../../default/scss/theme/_tables.scss */
+table.dataTable tfoot th, table.dataTable tfoot td {
+  background-color: #f7f8f9;
+  border-top: 2px solid #cccccc;
+  padding: 0.5em;
+}
+/* line 68, ../../default/scss/theme/_tables.scss */
+table.dataTable .selected-action {
+  margin: 5px 0 5px;
+}
+/* line 71, ../../default/scss/theme/_tables.scss */
+table.dataTable #bulk_select_options input[type=checkbox] {
+  margin-bottom: 0.2rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+/* line 76, ../../default/scss/theme/_tables.scss */
+table.dataTable input.bulkcheckbox[type=checkbox] {
+  margin-top: 0.2rem;
+}
+/* line 80, ../../default/scss/theme/_tables.scss */
+table.dataTable.dtr-inline.collapsed tbody td:first-child::before, table.dataTable.dtr-inline.collapsed tbody th:first-child::before {
+  top: 6px;
+  background-color: #006A71;
+}
+/* line 85, ../../default/scss/theme/_tables.scss */
+table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child::before, table.dataTable.dtr-inline.collapsed tbody tr.parent th:first-child::before {
+  top: 6px;
+  background-color: #D92C20;
+}
+
+/* line 92, ../../default/scss/theme/_tables.scss */
 .dataTables_length {
   float: left !important;
 }
-/* line 4, ../../default/scss/theme/_tables.scss */
+/* line 94, ../../default/scss/theme/_tables.scss */
 .dataTables_length label {
   font-size: 0.75rem;
   white-space: nowrap;
   margin-right: 10em;
   margin-bottom: 0.3em;
 }
-/* line 10, ../../default/scss/theme/_tables.scss */
+/* line 100, ../../default/scss/theme/_tables.scss */
 .dataTables_length select {
   height: auto;
   padding: 2px;
   font-size: 0.75rem;
 }
 
-/* line 17, ../../default/scss/theme/_tables.scss */
-#table-container {
-  margin-bottom: 1.5rem;
-}
-
-/* line 22, ../../default/scss/theme/_tables.scss */
-table.dataTable thead th, table.dataTable th, table.dataTable td {
-  border: 1px solid #cccccc;
-  padding: 0.2em 1.5em 0.2em 0.5em;
-}
-/* line 27, ../../default/scss/theme/_tables.scss */
-table.dataTable thead th, table.dataTable thead td {
-  background-color: #ffffff;
-}
-/* line 32, ../../default/scss/theme/_tables.scss */
-table.dataTable tbody tr.even {
-  background-color: #ffffff;
-}
-/* line 35, ../../default/scss/theme/_tables.scss */
-table.dataTable tbody tr.even td.sorting_1 {
-  background-color: #fafafa;
-}
-/* line 39, ../../default/scss/theme/_tables.scss */
-table.dataTable tbody tr.odd {
-  background-color: #f7f8f9;
-}
-/* line 41, ../../default/scss/theme/_tables.scss */
-table.dataTable tbody tr.odd td {
-  border-color: #cccccc;
-}
-/* line 45, ../../default/scss/theme/_tables.scss */
-table.dataTable tbody tr.odd td.sorting_1 {
-  background-color: #f0f1f2;
-}
-/* line 51, ../../default/scss/theme/_tables.scss */
-table.dataTable tfoot th, table.dataTable tfoot td {
-  background-color: #f7f8f9;
-  border-top: 2px solid #cccccc;
-  padding: 0.5em;
-}
-/* line 58, ../../default/scss/theme/_tables.scss */
-table.dataTable .selected-action {
-  margin: 5px 0 5px;
-}
-/* line 62, ../../default/scss/theme/_tables.scss */
-table.dataTable.dtr-inline.collapsed tbody td:first-child::before, table.dataTable.dtr-inline.collapsed tbody th:first-child::before {
-  top: 6px;
-  background-color: #006A71;
-}
-/* line 67, ../../default/scss/theme/_tables.scss */
-table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child::before, table.dataTable.dtr-inline.collapsed tbody tr.parent th:first-child::before {
-  top: 6px;
-  background-color: #D92C20;
-}
-
-/* line 73, ../../default/scss/theme/_tables.scss */
-#bulk_select_options input[type=checkbox] {
-  margin-bottom: 0.2rem;
-  margin-right: 0.5rem;
-  vertical-align: middle;
-}
-
-/* line 79, ../../default/scss/theme/_tables.scss */
+/* line 106, ../../default/scss/theme/_tables.scss */
 .dataTables_processing {
   padding: 14px 0 28px;
 }
 
-/* line 82, ../../default/scss/theme/_tables.scss */
+/* line 109, ../../default/scss/theme/_tables.scss */
 .dataTables_filter {
   text-align: left;
   font-size: 0.75rem;
   margin-right: 3rem;
 }
-/* line 86, ../../default/scss/theme/_tables.scss */
+/* line 113, ../../default/scss/theme/_tables.scss */
 .dataTables_filter input[type="search"] {
   margin-left: 0.2rem;
 }
 
-/* line 90, ../../default/scss/theme/_tables.scss */
+/* line 118, ../../default/scss/theme/_tables.scss */
 .dt-export-options {
   float: right;
 }
-/* line 92, ../../default/scss/theme/_tables.scss */
+/* line 120, ../../default/scss/theme/_tables.scss */
 .dt-export-options .list_formats {
   padding-top: 0;
   margin-left: 5px;
 }
-/* line 96, ../../default/scss/theme/_tables.scss */
+/* line 124, ../../default/scss/theme/_tables.scss */
 .dt-export-options .dt-export {
   margin: 0 0.085rem;
 }
 
-/* line 102, ../../default/scss/theme/_tables.scss */
-body.rtl .dt-export-options {
-  float: left;
-}
-/* line 105, ../../default/scss/theme/_tables.scss */
+/* line 129, ../../default/scss/theme/_tables.scss */
+body.rtl .dt-export-options,
 body.rtl .list_formats div {
   float: left;
 }
 
-/* Empty-sections */
-/* line 111, ../../default/scss/theme/_tables.scss */
-.empty {
+/* Empty-sections (both data tables and data lists) */
+/* line 136, ../../default/scss/theme/_tables.scss */
+.empty,
+.dl-empty {
   font-style: italic;
-  font-size: 0.8em;
+  font-size: 0.825rem;
 }
 
 /* jQuery UI widgets */
-/* line 2, ../../default/scss/theme/_widgets.scss */
+/* line 22, ../../default/scss/theme/_widgets.scss */
 .ui-widget-header {
   background: none;
   border: 1px solid #ADA6A0;
 }
-/* line 5, ../../default/scss/theme/_widgets.scss */
+/* line 25, ../../default/scss/theme/_widgets.scss */
 .ui-widget-header a {
   color: #222222 !important;
   border-color: #C7C7C7;
@@ -986,7 +1023,7 @@ body.rtl .list_formats div {
   text-decoration: none !important;
   font-size: 0.7em;
 }
-/* line 14, ../../default/scss/theme/_widgets.scss */
+/* line 34, ../../default/scss/theme/_widgets.scss */
 .ui-widget-header .ui-icon-check,
 .ui-widget-header .ui-icon-closethick {
   background: none;
@@ -994,125 +1031,132 @@ body.rtl .list_formats div {
   width: 0px;
 }
 
-/* line 21, ../../default/scss/theme/_widgets.scss */
+/* line 41, ../../default/scss/theme/_widgets.scss */
 .ui-state-active,
 .ui-widget-content .ui-state-active,
 .ui-widget-header .ui-state-active {
   border-color: #ADA6A0;
 }
 
-/* line 26, ../../default/scss/theme/_widgets.scss */
+/* line 46, ../../default/scss/theme/_widgets.scss */
 .ui-multiselect-checkboxes li label input {
   margin-left: 0.2rem;
   margin-right: 0.3rem;
 }
 
-/* line 30, ../../default/scss/theme/_widgets.scss */
+/* line 50, ../../default/scss/theme/_widgets.scss */
 .ui-widget {
-  font-family: sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
 }
 
-/* line 34, ../../default/scss/theme/_widgets.scss */
+/* List-Add Button */
+/* line 55, ../../default/scss/theme/_widgets.scss */
 #list-btn-add {
   float: right;
-  margin-right: 1.0rem;
+  margin-right: 1rem;
 }
 
-/* line 39, ../../default/scss/theme/_widgets.scss */
+/* line 60, ../../default/scss/theme/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
-  margin-left: 1.0rem;
+  margin-left: 1rem;
   margin-right: 0;
 }
 
 /* Summary tabs */
-/* line 46, ../../default/scss/theme/_widgets.scss */
+/* line 67, ../../default/scss/theme/_widgets.scss */
 .ui-tabs .ui-tabs-panel {
   padding: 0.5em;
 }
 
-/* line 49, ../../default/scss/theme/_widgets.scss */
+/* line 70, ../../default/scss/theme/_widgets.scss */
 #summary-tabs {
   margin-top: 10px;
 }
-/* line 51, ../../default/scss/theme/_widgets.scss */
+/* line 72, ../../default/scss/theme/_widgets.scss */
 #summary-tabs.ui-widget-content {
   background: none;
   border: none;
 }
 
-/* line 57, ../../default/scss/theme/_widgets.scss */
+/* line 78, ../../default/scss/theme/_widgets.scss */
 #summary-tab-headers .ui-tabs-nav {
   border: none;
   margin: 0 10px;
 }
-/* line 61, ../../default/scss/theme/_widgets.scss */
+/* line 82, ../../default/scss/theme/_widgets.scss */
 #summary-tab-headers a {
   border-color: #CCC;
 }
-/* line 64, ../../default/scss/theme/_widgets.scss */
+/* line 85, ../../default/scss/theme/_widgets.scss */
 #summary-tab-headers .ui-tabs-active a {
   border-bottom: 1px solid white;
 }
-/* line 67, ../../default/scss/theme/_widgets.scss */
+/* line 88, ../../default/scss/theme/_widgets.scss */
 #summary-tab-headers li {
   margin-right: 5px;
   box-shadow: none;
 }
 
-/* line 74, ../../default/scss/theme/_widgets.scss */
+/* line 95, ../../default/scss/theme/_widgets.scss */
 #summary-sections .x-panel-body {
   border: none;
   border-radius: 4px;
 }
 
 /* Date picker */
-/* line 81, ../../default/scss/theme/_widgets.scss */
+/* line 102, ../../default/scss/theme/_widgets.scss */
 input.date.hasDatepicker {
   display: inline-block;
 }
 
-/* line 84, ../../default/scss/theme/_widgets.scss */
+/* line 105, ../../default/scss/theme/_widgets.scss */
 .ui-datepicker-trigger {
   background-color: transparent;
   background-image: url("../../img/bootstrap/calendar.gif");
   margin-left: 10px;
 }
 
-/* line 89, ../../default/scss/theme/_widgets.scss */
+/* line 110, ../../default/scss/theme/_widgets.scss */
 .ui-datepicker.ui-widget {
   z-index: 1000 !important;
 }
 
 /* Range filter widgets */
-/* line 94, ../../default/scss/theme/_widgets.scss */
+/* line 115, ../../default/scss/theme/_widgets.scss */
 .range-filter-label label {
   font-size: 1.0em;
 }
 
-/* line 98, ../../default/scss/theme/_widgets.scss */
+/* line 119, ../../default/scss/theme/_widgets.scss */
 .range-filter-widget input.date-filter-input {
   width: auto;
   margin-right: 2px;
 }
-/* line 102, ../../default/scss/theme/_widgets.scss */
+/* line 123, ../../default/scss/theme/_widgets.scss */
+.range-filter-widget button.date-clear-btn {
+  font-size: 0.85em;
+  padding: 0.325em;
+  margin-top: 0.5em;
+}
+/* line 128, ../../default/scss/theme/_widgets.scss */
 .range-filter-widget .postfix.calendar-clear-btn {
   margin-left: -2px;
 }
 
-/* line 106, ../../default/scss/theme/_widgets.scss */
+/* line 132, ../../default/scss/theme/_widgets.scss */
 .btn.date-clear-btn {
   font-size: 0.85em;
   padding: 0.325em;
   margin-top: 0.5em;
 }
 
-/* line 111, ../../default/scss/theme/_widgets.scss */
+/* line 137, ../../default/scss/theme/_widgets.scss */
 .calendar-widget-container {
   white-space: nowrap;
 }
 
-/* line 114, ../../default/scss/theme/_widgets.scss */
+/* line 140, ../../default/scss/theme/_widgets.scss */
 .postfix.calendar-clear-btn {
   cursor: pointer;
   display: inline-block;
@@ -1120,50 +1164,50 @@ input.date.hasDatepicker {
   width: 1.2rem;
   vertical-align: top;
 }
-/* line 116, ../../default/scss/theme/_widgets.scss */
+/* line 142, ../../default/scss/theme/_widgets.scss */
 .postfix.calendar-clear-btn .fa {
   color: #B0B0B0;
 }
 
-/* line 124, ../../default/scss/theme/_widgets.scss */
-body.rtl .range-filter-field {
-  float: right;
-  padding-left: 10px;
-  padding-right: 0;
+/* line 152, ../../default/scss/theme/_widgets.scss */
+body.rtl .range-filter-widget input.date-filter-input {
+  margin-right: 0;
+  margin-left: 2px;
 }
 
 /* GroupedOptions widget */
-/* line 131, ../../default/scss/theme/_widgets.scss */
+/* line 160, ../../default/scss/theme/_widgets.scss */
 .s3-groupedopts-label {
   float: none;
   margin-bottom: 0.3rem;
 }
 
-/* line 135, ../../default/scss/theme/_widgets.scss */
+/* line 164, ../../default/scss/theme/_widgets.scss */
 .s3-groupedopts-widget table {
   margin-left: 0;
   margin-bottom: 0.5rem;
 }
 
-/* line 139, ../../default/scss/theme/_widgets.scss */
+/* line 168, ../../default/scss/theme/_widgets.scss */
 table.s3-groupedopts-widget {
+  /*     border: 0; TODO make configurable */
   margin-bottom: 0;
 }
-/* line 140, ../../default/scss/theme/_widgets.scss */
+/* line 169, ../../default/scss/theme/_widgets.scss */
 table.s3-groupedopts-widget td {
   white-space: nowrap;
 }
-/* line 142, ../../default/scss/theme/_widgets.scss */
+/* line 171, ../../default/scss/theme/_widgets.scss */
 table.s3-groupedopts-widget td input {
   vertical-align: text-top;
 }
-/* line 145, ../../default/scss/theme/_widgets.scss */
+/* line 174, ../../default/scss/theme/_widgets.scss */
 table.s3-groupedopts-widget td label {
   white-space: pre-wrap;
 }
 
 /* ImageCropWidget */
-/* line 153, ../../default/scss/theme/_widgets.scss */
+/* line 183, ../../default/scss/theme/_widgets.scss */
 .imagecrop-btn {
   font-size: 1em;
   margin-left: 0.2em;
@@ -1171,36 +1215,36 @@ table.s3-groupedopts-widget td label {
 }
 
 /* pr_Contacts widgets */
-/* line 160, ../../default/scss/theme/_widgets.scss */
+/* line 190, ../../default/scss/theme/_widgets.scss */
 .pr-contacts-wrapper h3 {
   margin-top: 0.5rem;
   padding-bottom: 0 !important;
 }
 
-/* line 164, ../../default/scss/theme/_widgets.scss */
+/* line 194, ../../default/scss/theme/_widgets.scss */
 .pr-contact-actions {
   margin-bottom: 0.5rem;
 }
 
-/* line 167, ../../default/scss/theme/_widgets.scss */
+/* line 197, ../../default/scss/theme/_widgets.scss */
 .pr-contact,
 .pr-emergency-contact {
   padding: 0.5rem;
 }
 
-/* line 171, ../../default/scss/theme/_widgets.scss */
+/* line 201, ../../default/scss/theme/_widgets.scss */
 .pr-contact-priority,
 .pr-contact-details {
   display: inline-block;
 }
 
-/* line 175, ../../default/scss/theme/_widgets.scss */
+/* line 205, ../../default/scss/theme/_widgets.scss */
 .pr-contact-subtitle {
   font-size: 0.8rem;
   font-style: italic;
 }
 
-/* line 179, ../../default/scss/theme/_widgets.scss */
+/* line 209, ../../default/scss/theme/_widgets.scss */
 .pr-contact-priority {
   border: thin solid #2ba6cb;
   border-radius: 2px;
@@ -1211,92 +1255,114 @@ table.s3-groupedopts-widget td label {
   padding: 0 0.25rem 0.125rem;
   vertical-align: top;
 }
-/* line 188, ../../default/scss/theme/_widgets.scss */
+/* line 218, ../../default/scss/theme/_widgets.scss */
 .pr-contact-priority input[type=submit] {
   color: black;
   line-height: 1.2rem;
   font-size: 0.8rem;
 }
 
-/* Data Lists (including profile) */
-/* line 197, ../../default/scss/theme/_widgets.scss */
+/* Checkboxes Widget */
+/* line 226, ../../default/scss/theme/_widgets.scss */
+.controls .checkboxes-widget-s3 {
+  display: inline-flex;
+}
+
+/* Data Lists TODO move into separate file */
+/* line 232, ../../default/scss/theme/_widgets.scss */
 .dl .dl-header {
   float: none;
   text-align: right;
 }
-/* line 201, ../../default/scss/theme/_widgets.scss */
+/* line 236, ../../default/scss/theme/_widgets.scss */
 .dl .card_1_line {
   height: auto;
 }
-/* line 204, ../../default/scss/theme/_widgets.scss */
+/* line 239, ../../default/scss/theme/_widgets.scss */
 .dl .empty_card-holder {
   text-align: center;
 }
-/* line 207, ../../default/scss/theme/_widgets.scss */
+/* line 242, ../../default/scss/theme/_widgets.scss */
 .dl .dl-row {
   border: 0;
 }
-/* line 210, ../../default/scss/theme/_widgets.scss */
+/* line 245, ../../default/scss/theme/_widgets.scss */
 .dl .dl-1-cols {
   width: 100%;
 }
 
-/* line 215, ../../default/scss/theme/_widgets.scss */
+/* line 250, ../../default/scss/theme/_widgets.scss */
 .dl-item .dropdown .caret {
   margin-left: 0.2rem;
   margin-top: 0.4rem;
 }
-/* line 219, ../../default/scss/theme/_widgets.scss */
+/* line 254, ../../default/scss/theme/_widgets.scss */
 .dl-item .attachments {
   margin-right: 0.2rem;
 }
 
-/* line 223, ../../default/scss/theme/_widgets.scss */
+/* line 258, ../../default/scss/theme/_widgets.scss */
+.card_1_line {
+  margin-bottom: 0;
+  overflow: hidden;
+  height: auto;
+}
+
+/* line 263, ../../default/scss/theme/_widgets.scss */
+.card_1_line, .card_manylines {
+  color: #666;
+  font-size: 0.7rem;
+  padding: 0.05rem;
+}
+
+/* Profile TODO move into separate file */
+/* line 270, ../../default/scss/theme/_widgets.scss */
 h4.profile-sub-header {
   background-color: #EFEFEF;
   padding: 0.1rem 0.3rem;
   font-size: 1.2rem;
 }
 
-/* line 229, ../../default/scss/theme/_widgets.scss */
+/* line 275, ../../default/scss/theme/_widgets.scss */
 .profile-widget .icon-fullscreen {
   float: right;
   position: relative;
   right: 9px;
-  top: 10px;
+  top: 17px;
 }
 
-/* line 236, ../../default/scss/theme/_widgets.scss */
+/* line 281, ../../default/scss/theme/_widgets.scss */
 .profile .dl-header {
   display: none;
 }
 
 /* Comment feeds */
-/* line 241, ../../default/scss/theme/_widgets.scss */
+/* line 286, ../../default/scss/theme/_widgets.scss */
 .comment-box {
   background: none repeat scroll 0 0 #f5f5f5;
 }
 
-/* Iframe Map (Location Represent links) */
-/* line 246, ../../default/scss/theme/_widgets.scss */
+/* Text representation */
+/* line 291, ../../default/scss/theme/_widgets.scss */
+.text-body {
+  white-space: pre-wrap;
+}
+
+/* Iframe Map (Location Represent links) TODO move into page or forms? */
+/* line 296, ../../default/scss/theme/_widgets.scss */
 #close-iframe-map {
   padding: 7px;
   margin-top: 5px;
 }
 
-/* Text representation */
-/* line 252, ../../default/scss/theme/_widgets.scss */
-.text-body {
-  white-space: pre-wrap;
-}
-
-/* line 255, ../../default/scss/theme/_widgets.scss */
+/* Truncated Texts */
+/* line 302, ../../default/scss/theme/_widgets.scss */
 .s3-truncate-more,
 .s3-truncate-less {
   font-style: italic;
 }
 
-/* line 259, ../../default/scss/theme/_widgets.scss */
+/* line 306, ../../default/scss/theme/_widgets.scss */
 .s3-truncate-more:before,
 .s3-truncate-less:before {
   font-style: italic;
@@ -1304,69 +1370,54 @@ h4.profile-sub-header {
 }
 
 /* S3SQLInlineLink read-only list representation */
-/* line 266, ../../default/scss/theme/_widgets.scss */
+/* line 313, ../../default/scss/theme/_widgets.scss */
 ul.s3-inline-link {
   font-size: inherit;
 }
 
 /* AddPersonWidget */
-/* line 271, ../../default/scss/theme/_widgets.scss */
+/* line 318, ../../default/scss/theme/_widgets.scss */
 .box_bottom {
   clear: left;
 }
 
-/* line 274, ../../default/scss/theme/_widgets.scss */
+/* line 321, ../../default/scss/theme/_widgets.scss */
 .ui-menu-item .pe-label {
   font-size: 0.7rem;
   color: #A0A0A0;
   vertical-align: super;
 }
 
-/* AnonymizeWidget */
-/* line 281, ../../default/scss/theme/_widgets.scss */
+/* Anonymize-Widget */
+/* line 328, ../../default/scss/theme/_widgets.scss */
 form.anonymize-form,
 .anonymize-success {
   padding: 1rem;
 }
 
-/* line 285, ../../default/scss/theme/_widgets.scss */
+/* line 332, ../../default/scss/theme/_widgets.scss */
 .anonymize-select,
 .anonymize-confirm {
   margin-left: 1rem;
 }
 
-/* line 289, ../../default/scss/theme/_widgets.scss */
+/* line 336, ../../default/scss/theme/_widgets.scss */
 .anonymize-buttons {
   margin-top: 1rem;
 }
 
-/* line 292, ../../default/scss/theme/_widgets.scss */
+/* line 339, ../../default/scss/theme/_widgets.scss */
 .anonymize-btn {
   background-color: #D92C20;
 }
-/* line 294, ../../default/scss/theme/_widgets.scss */
+/* line 341, ../../default/scss/theme/_widgets.scss */
 .anonymize-btn:hover {
   background-color: #ae231a;
 }
 
-/* line 298, ../../default/scss/theme/_widgets.scss */
+/* line 345, ../../default/scss/theme/_widgets.scss */
 .s3-anonymize {
   display: inline-block;
-}
-
-/* Data lists */
-/* line 303, ../../default/scss/theme/_widgets.scss */
-.card_1_line {
-  margin-bottom: 0;
-  overflow: hidden;
-  height: auto;
-}
-
-/* line 308, ../../default/scss/theme/_widgets.scss */
-.card_1_line, .card_manylines {
-  color: #666;
-  font-size: 0.7rem;
-  padding: 0.05rem;
 }
 
 /* line 1, ../scss/theme/_misc.scss */

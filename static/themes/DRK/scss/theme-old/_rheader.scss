@@ -1,27 +1,3 @@
-// ============================================================================
-// Styles for Resource Headers
-// ============================================================================
-// VARIABLES
-
-// Foundation variables used:
-//$button-bg-color
-//$button-bg-hover
-
-// Active tab
-$rheader_tabs_bgcolor_active: #ffffff !default;
-$rheader_tabs_bgcolor_active_hover: #f1edec !default;
-$rheader_tabs_fgcolor_active: #666666 !default;
-$rheader_tabs_fgcolor_active_hover: #666666 !default;
-
-// Inactive tabs
-$rheader_tabs_bgcolor_inactive: $button-bg-color !default;
-$rheader_tabs_bgcolor_inactive_hover: $button-bg-hover !default;
-$rheader_tabs_fgcolor_inactive: #ffffff !default;
-$rheader_tabs_fgcolor_inactive_hover: #ffffff !default;
-
-// ============================================================================
-// STYLES
-
 /* Rheader */
 #rheader {
     width: 100%;
@@ -51,7 +27,7 @@ $rheader_tabs_fgcolor_inactive_hover: #ffffff !default;
     }
 }
 
-/* Rheader Tabs */
+/* RHeader Tabs */
 div.tabs {
     // Tabs section
     display: block;
@@ -146,5 +122,3 @@ div.tabs {
         }
     }
 }
-
-// END ========================================================================

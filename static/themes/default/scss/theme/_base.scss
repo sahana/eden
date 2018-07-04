@@ -1,5 +1,6 @@
-// THEME variables - defaults
-
+// ============================================================================
+// THEME Imports and Mixins
+// ============================================================================
 // Foundation Settings for the THEME
 @import '../settings';
 
@@ -9,97 +10,28 @@ $include-html-global-classes: false;
 @import "../../foundation/scss/components/global";
 @import "../../foundation/scss/components/forms";
 
-// THEME Variables and Colors
-@import 'theme/variables';
-@import 'theme/colors';
-
-// Imported from Foundation _settings.scss
-//$alert-color
-//$alert-button-bg-hover
-//$button-bg-color
-//$button-bg-hover
-//$primary-color
+// THEME Config
+@import 'theme/config';
 
 // ============================================================================
-// ACTION BUTTONS
+// GLOBAL VARIABLES
 // ============================================================================
-// Action buttons defaults
-$action_btn_bgcolor: $button-bg-color !default;
-$action_btn_bgcolor_hover: $button-bg-hover !default;
-$action_btn_fgcolor: white !default;
-$action_btn_fgcolor_hover: white !default;
 
-// Standard action button
-$action_btn_bgcolor_default: $action_btn_bgcolor !default;
-$action_btn_bgcolor_default_hover: $action_btn_bgcolor_hover !default;
-$action_btn_fgcolor_default: $action_btn_fgcolor !default;
-$action_btn_fgcolor_default_hover: $action_btn_fgcolor_hover !default;
-
-// Debug action button (debug toolbar in footer)
-$action_btn_bgcolor_debug: #dddddd !default;
-$action_btn_bgcolor_debug_hover: #a0a0a0 !default;
-$action_btn_fgcolor_debug: $action_btn_fgcolor !default;
-$action_btn_fgcolor_debug_hover: $action_btn_fgcolor_hover !default;
-
-// Alert action button (e.g. delete-button)
-$action_btn_bgcolor_alert: $alert-color !default;
-$action_btn_bgcolor_alert_hover: $alert-button-bg-hover !default;
-$action_btn_fgcolor_alert: $action_btn_fgcolor !default;
-$action_btn_fgcolor_alert_hover: $action_btn_fgcolor_hover !default;
-
-// Disabled action buttons
-$action_btn_bgcolor_disabled: #c0c0c0 !default;
-$action_btn_fgcolor_disabled: $action_btn_fgcolor_hover !default;
+// -- global variables and their defaults go here --
 
 // ============================================================================
-// ALERTS
+// MIXINS
 // ============================================================================
-$alert_border_color: #b2b2b2 !default;
-$alert_box_shadow_color: #aaaaa7 !default;
+// Tiny button style (e.g. action buttons)
+@mixin tiny_button_style() {
+    font-size: 0.6875rem;
+    border: 0;
+    line-height: 1;
+    margin-bottom: inherit;
+    padding: 0.25rem 0.5rem 0.375rem;
+    cursor: pointer;
+    text-decoration: none !important;
+    display: inline-block;
+}
 
-// ============================================================================
-// DATATABLES
-// ============================================================================
-// Border
-$datatables_border_color: #cccccc !default;
-
-// Even/odd rows background
-$datatables_bgcolor_even: #ffffff !default;
-$datatables_bgcolor_odd: #f7f8f9 !default;
-$datatables_bgcolor_even_highlight: #fafafa !default;
-$datatables_bgcolor_odd_highlight: #f0f1f2 !default;
-
-// Header and footer
-$datatables_bgcolor_foot: #f7f8f9 !default;
-$datatables_bgcolor_head: #ffffff !default;
-
-// ============================================================================
-// FORMS
-// ============================================================================
-$form_container_bgcolor: #fefefe !default;
-$form_error_bgcolor: #c60f13 !default;
-$form_label_color: black !default;
-
-// ============================================================================
-// RHEADER TABS
-// ============================================================================
-// Active tab
-$rheader_tabs_bgcolor_active: #ffffff !default;
-$rheader_tabs_bgcolor_active_hover: #f1edec !default;
-$rheader_tabs_fgcolor_active: #666666 !default;
-$rheader_tabs_fgcolor_active_hover: #666666 !default;
-
-// Inactive tabs
-$rheader_tabs_bgcolor_inactive: $button-bg-color !default;
-$rheader_tabs_bgcolor_inactive_hover: $button-bg-hover !default;
-$rheader_tabs_fgcolor_inactive: #ffffff !default;
-$rheader_tabs_fgcolor_inactive_hover: #ffffff !default;
-
-// ============================================================================
-// OTHER PAGE ELEMENTS
-// ============================================================================
-// Item container
-$item_container_controls_bgcolor: #fafafa !default;
-
-// Comment feeds
-$comments_feed_item_bgcolor: #f5f5f5 !default;
+// END ========================================================================

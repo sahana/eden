@@ -1,32 +1,23 @@
-// ============================================================================
-// Styles for Datatables
-// ============================================================================
-// VARIABLES
-
-// Foundation variables used:
-//$primary-color
-//$alert-color
-
-// Border
-$datatables_border_color: #cccccc !default;
-
-// Even/odd rows background
-$datatables_bgcolor_even: #ffffff !default;
-$datatables_bgcolor_odd: #f7f8f9 !default;
-$datatables_bgcolor_even_highlight: #fafafa !default;
-$datatables_bgcolor_odd_highlight: #f0f1f2 !default;
-
-// Header and footer
-$datatables_bgcolor_foot: #f7f8f9 !default;
-$datatables_bgcolor_head: #ffffff !default;
-
-// ============================================================================
-// STYLES
-
 /* Datatables */
+.dataTables_length {
+    float: left !important;
+    label {
+        font-size: 0.75rem;
+        white-space: nowrap;
+        margin-right: 10em;
+        margin-bottom: 0.3em;
+    }
+    select {
+        height: auto;
+        padding: 2px;
+        font-size: 0.75rem;
+    }
+}
+
 #table-container {
     margin-bottom: 1.5rem;
 }
+
 table.dataTable {
     thead th, th, td {
         border: 1px solid $datatables_border_color;
@@ -64,17 +55,8 @@ table.dataTable {
         }
 
     }
-    // Bulk-select
     .selected-action {
         margin: 5px 0 5px;
-    }
-    #bulk_select_options input[type=checkbox] {
-        margin-bottom: 0.2rem;
-        margin-right: 0.5rem;
-        vertical-align: middle;
-    }
-    input.bulkcheckbox[type=checkbox] {
-        margin-top: 0.2rem;
     }
 
     &.dtr-inline.collapsed tbody td:first-child::before,
@@ -88,21 +70,12 @@ table.dataTable {
         background-color: $alert-color;
     }
 }
-
-.dataTables_length {
-    float: left !important;
-    label {
-        font-size: 0.75rem;
-        white-space: nowrap;
-        margin-right: 10em;
-        margin-bottom: 0.3em;
-    }
-    select {
-        height: auto;
-        padding: 2px;
-        font-size: 0.75rem;
-    }
+#bulk_select_options input[type=checkbox] {
+    margin-bottom: 0.2rem;
+    margin-right: 0.5rem;
+    vertical-align: middle;
 }
+
 .dataTables_processing {
      padding: 14px 0 28px;
 }
@@ -114,7 +87,6 @@ table.dataTable {
         margin-left: 0.2rem;
     }
 }
-
 .dt-export-options {
     float: right;
     .list_formats {
@@ -125,18 +97,18 @@ table.dataTable {
         margin: 0 0.085rem;
     }
 }
+
 body.rtl {
-    .dt-export-options,
+    .dt-export-options {
+        float: left;
+    }
     .list_formats div {
         float: left;
     }
 }
 
-/* Empty-sections (both data tables and data lists) */
-.empty,
-.dl-empty {
+/* Empty-sections */
+.empty {
     font-style: italic;
-    font-size: 0.825rem;
+    font-size: 0.8em;
 }
-
-// END ========================================================================

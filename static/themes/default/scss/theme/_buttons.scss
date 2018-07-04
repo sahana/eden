@@ -1,3 +1,46 @@
+// ============================================================================
+// Styles for Action Buttons
+// ============================================================================
+// VARIABLES
+
+// Foundation variables used:
+//$primary-color
+//$button-bg-color
+//$button-bg-hover
+//$alert-color
+//$alert-button-bg-hover
+
+// Action buttons defaults
+$action_btn_bgcolor: $button-bg-color !default;
+$action_btn_bgcolor_hover: $button-bg-hover !default;
+$action_btn_fgcolor: white !default;
+$action_btn_fgcolor_hover: white !default;
+
+// Standard action button
+$action_btn_bgcolor_default: $action_btn_bgcolor !default;
+$action_btn_bgcolor_default_hover: $action_btn_bgcolor_hover !default;
+$action_btn_fgcolor_default: $action_btn_fgcolor !default;
+$action_btn_fgcolor_default_hover: $action_btn_fgcolor_hover !default;
+
+// Debug action button (debug toolbar in footer)
+$action_btn_bgcolor_debug: #dddddd !default;
+$action_btn_bgcolor_debug_hover: #a0a0a0 !default;
+$action_btn_fgcolor_debug: $action_btn_fgcolor !default;
+$action_btn_fgcolor_debug_hover: $action_btn_fgcolor_hover !default;
+
+// Alert action button (e.g. delete-button)
+$action_btn_bgcolor_alert: $alert-color !default;
+$action_btn_bgcolor_alert_hover: $alert-button-bg-hover !default;
+$action_btn_fgcolor_alert: $action_btn_fgcolor !default;
+$action_btn_fgcolor_alert_hover: $action_btn_fgcolor_hover !default;
+
+// Disabled action buttons
+$action_btn_bgcolor_disabled: #c0c0c0 !default;
+$action_btn_fgcolor_disabled: $action_btn_fgcolor_hover !default;
+
+// ============================================================================
+// STYLES
+
 /* Action buttons */
 .action-btn,
 .delete-btn-ajax,
@@ -65,9 +108,19 @@
     }
 }
 
-.action-btn.profile-add-btn {
-    float: right;
-    margin: 0.5rem 0.5rem;
+/* Debug buttons in footer */
+#footer {
+    button.btn {
+        @include tiny_button_style();
+        margin-left: 2px;
+        margin-right: 2px;
+        color: $action_btn_fgcolor_debug;
+        background: $action_btn_bgcolor_debug;
+    }
+    button.btn:hover {
+        color: $action_btn_fgcolor_debug_hover;
+        background: $action_btn_bgcolor_debug_hover;
+    }
 }
 
 /* Caret */
@@ -81,3 +134,5 @@
   border-left: 4px solid transparent;
   content: "";
 }
+
+// END ========================================================================

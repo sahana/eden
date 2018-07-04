@@ -1,14 +1,3 @@
-// ============================================================================
-// Styles for Theme-specific Elements and Layouts
-// ============================================================================
-// VARIABLES
-
-// -- variables and their defaults go here --
-
-// ============================================================================
-// STYLES
-
-/* Page header */
 .org-logo {
     vertical-align: top;
     display: inline-block;
@@ -35,7 +24,6 @@
     margin-bottom: 0.5rem;
 }
 
-/* Additional menu styles TODO move into _menus.scss? */
 .personal-menu {
     float: right;
     clear: right;
@@ -55,7 +43,6 @@
     margin-left: 0;
     margin-right: 0;
 }
-
 #dashboard > li {
     display: inline-block;
 }
@@ -332,5 +319,3 @@ body.rtl {
 .prio-grey {
     background-color: silver;
 }
-
-// END ========================================================================

@@ -5388,11 +5388,11 @@ ul.pagination li {
 }
 /* line 86, ../../foundation/scss/components/_side-nav.scss */
 .side-nav li a:not(.button):active {
-  color: #FFFFFF;
+  color: #4D4D4D;
 }
 /* line 91, ../../foundation/scss/components/_side-nav.scss */
 .side-nav li.active > a:first-child:not(.button) {
-  color: #FFFFFF;
+  color: #4D4D4D;
   font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
   font-weight: normal;
 }

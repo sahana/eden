@@ -1,6 +1,40 @@
+// ============================================================================
+// Styles for Menus
+// ============================================================================
+// VARIABLES
+
+// Foundation variables used:
+$side-nav-list-type: none !default;
+$side-nav-list-position: inside !default;
+$side-nav-link-color-hover: scale-color($side-nav-link-color, $lightness: 30%) !default;
+$side-nav-link-bg-hover: hsla(0, 0, 0, .025) !default;
+
+// Side menu border and background colors
+// (Foundation side-nav has no background, this is added here)
+$side_bar_bgcolor: #d7d8d9 !default;
+$side_bar_bgcolor_active: #e0e1e2 !default;
+$side_bar_border_color: #c0c1c2 !default;
+$side_bar_divider_color: $side_bar_border_color !default;
+
+// ============================================================================
+// STYLES
+
 /* Top bar */
 .top-bar {
+    &.expanded {
+        width: 100%;
+    }
     z-index: 1000;
+    /* Menu logo */
+    .logo {
+        color: white;
+        display: inline-block;
+        font-size: 1.1rem;
+        font-weight: bold;
+        height: 35px;
+        padding: 0.625rem 0.5rem 0 0.7rem;
+        text-transform: uppercase;
+    }
     .menu-toggle input {
         margin-right: 5px;
     }
@@ -21,47 +55,51 @@
 
 /* Side Menu */
 .sidebar {
-  background: none repeat scroll 0 0 #F3F3F3;
-  margin-top: 10px;
-  padding-top: 0.25rem;
+    background: none repeat scroll 0 0 $side_bar_bgcolor;
+    margin-top: 10px;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+.side-nav {
+    li {
+        list-style-type: $side-nav-list-type;
+        list-style-position: $side-nav-list-position;
+        line-height: 1.2;
+        padding: 0;
+
+        &.heading {
+            margin-top: 0.125rem;
+
+            &:not(:first-child) {
+                border-top: 1px solid $side_bar_divider_color;
+            }
+        }
+        &.active {
+            & > a:first-child:not(.button) {
+                font-weight: bold;
+                background-color: $side_bar_bgcolor_active;
+                &:hover {
+                    color: $side-nav-link-color-hover;
+                    background-color: $side-nav-link-bg-hover;
+                }
+            }
+        }
+    }
 }
 
-.side-nav li {
-  line-height: 1.2;
-  list-style-type: none;
-  list-style-position: inside;
-/*  margin: 0;*/
-  padding: 0;
-}
-.side-nav li.heading:not(:first-child) {
-  border-top: 1px solid #EAEAEA;
-}
-.side-nav li.heading {
-  margin-top: 0.125rem;
-}
-.side-nav li.active > a:first-child:not(.button) {
-  font-weight: bold;
-  color: #444444;
-  background-color: #E0E0E0;
-}
-
-/* Personal Menu */
+// Personal Menu
 .personal-menu-area {
     text-align: right;
 }
 
-/* About Menu */
+// About Menu
 .about-menu {
     text-align: left;
-}
-#poweredby {
-    text-align: right;
 }
 body.rtl {
     .about-menu {
         text-align: right;
     }
-    #poweredby {
-        text-align: left;
-    }
 }
+
+// END ========================================================================
