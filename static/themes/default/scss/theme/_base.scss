@@ -34,4 +34,10 @@ $include-html-global-classes: false;
     display: inline-block;
 }
 
+// Empty-sections (data tables, data lists)
+@mixin empty_section() {
+    font-style: italic;
+    font-size: 0.825rem;
+}
+
 // END ========================================================================

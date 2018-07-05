@@ -402,8 +402,14 @@ form.auth_login #submit_record__row {
   white-space: pre;
 }
 
-/* General Widgets */
+/* S3SQLInlineLink read-only list representation */
 /* line 164, ../scss/theme/_forms.scss */
+ul.s3-inline-link {
+  font-size: inherit;
+}
+
+/* General Widgets */
+/* line 169, ../scss/theme/_forms.scss */
 input[type="text"],
 input[type="password"],
 input[type="date"],
@@ -426,7 +432,7 @@ select {
   font-weight: normal;
 }
 
-/* line 185, ../scss/theme/_forms.scss */
+/* line 190, ../scss/theme/_forms.scss */
 input[type="text"],
 input[type="password"],
 input[type="date"],
@@ -445,24 +451,24 @@ select {
   max-width: 100%;
 }
 
-/* line 202, ../scss/theme/_forms.scss */
+/* line 207, ../scss/theme/_forms.scss */
 textarea {
   resize: both;
   max-width: 100%;
 }
 
-/* line 206, ../scss/theme/_forms.scss */
+/* line 211, ../scss/theme/_forms.scss */
 input.datetimepicker {
   max-width: 8rem;
 }
 
-/* line 209, ../scss/theme/_forms.scss */
+/* line 214, ../scss/theme/_forms.scss */
 select {
   padding-right: 1rem !important;
 }
 
 /* Form and Item containers */
-/* line 214, ../scss/theme/_forms.scss */
+/* line 219, ../scss/theme/_forms.scss */
 #last_update,
 #markDuplicate {
   float: none;
@@ -470,66 +476,66 @@ select {
   text-align: right;
 }
 
-/* line 221, ../scss/theme/_forms.scss */
+/* line 226, ../scss/theme/_forms.scss */
 body.rtl #last_update,
 body.rtl #markDuplicate {
   text-align: left;
 }
 
-/* line 226, ../scss/theme/_forms.scss */
+/* line 231, ../scss/theme/_forms.scss */
 .form-container,
 .item-container {
   width: auto;
   overflow: inherit;
 }
-/* line 228, ../scss/theme/_forms.scss */
+/* line 233, ../scss/theme/_forms.scss */
 .form-container form,
 .item-container form {
   background: #fefefe;
   padding: 5px 10px;
 }
-/* line 231, ../scss/theme/_forms.scss */
+/* line 236, ../scss/theme/_forms.scss */
 .form-container form tr td,
 .item-container form tr td {
   padding: 0.1875rem;
 }
-/* line 234, ../scss/theme/_forms.scss */
+/* line 239, ../scss/theme/_forms.scss */
 .form-container form .embeddedComponent td,
 .item-container form .embeddedComponent td {
   padding-right: 0.5625rem;
 }
-/* line 240, ../scss/theme/_forms.scss */
+/* line 245, ../scss/theme/_forms.scss */
 .form-container .controls,
 .item-container .controls {
   display: inline-block;
 }
-/* line 242, ../scss/theme/_forms.scss */
+/* line 247, ../scss/theme/_forms.scss */
 .form-container .controls:not(.columns),
 .item-container .controls:not(.columns) {
   max-width: 100%;
 }
 
-/* line 247, ../scss/theme/_forms.scss */
+/* line 252, ../scss/theme/_forms.scss */
 .form-container {
   margin-top: 0.125rem;
   margin-bottom: 0.875rem;
 }
-/* line 251, ../scss/theme/_forms.scss */
+/* line 256, ../scss/theme/_forms.scss */
 .form-container form select,
 .form-container form input.string:not(.date),
 .form-container form textarea {
   margin: 0;
 }
-/* line 256, ../scss/theme/_forms.scss */
+/* line 261, ../scss/theme/_forms.scss */
 .form-container form .ui-multiselect {
   max-width: 100%;
 }
-/* line 260, ../scss/theme/_forms.scss */
+/* line 265, ../scss/theme/_forms.scss */
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.hours):not(.dms-input) {
   width: 20rem !important;
 }
 
-/* line 267, ../scss/theme/_forms.scss */
+/* line 272, ../scss/theme/_forms.scss */
 .item-container .controls {
   background: #fafafa;
   padding: 0.35rem;
@@ -537,24 +543,24 @@ body.rtl #markDuplicate {
 }
 
 /* Filter Forms & Report Options */
-/* line 277, ../scss/theme/_forms.scss */
+/* line 282, ../scss/theme/_forms.scss */
 .filter-form table tr,
 .filter-form .ui-multiselect,
 .report-options table tr,
 .report-options .ui-multiselect {
   max-width: 60%;
 }
-/* line 281, ../scss/theme/_forms.scss */
+/* line 286, ../scss/theme/_forms.scss */
 .filter-form table.s3-groupedopts-widget,
 .report-options table.s3-groupedopts-widget {
   display: inline-block;
 }
-/* line 284, ../scss/theme/_forms.scss */
+/* line 289, ../scss/theme/_forms.scss */
 .filter-form .inline-tooltip,
 .report-options .inline-tooltip {
   padding-top: 0.2rem;
 }
-/* line 287, ../scss/theme/_forms.scss */
+/* line 292, ../scss/theme/_forms.scss */
 .filter-form label.inline,
 .report-options label.inline {
   line-height: normal;
@@ -562,7 +568,7 @@ body.rtl #markDuplicate {
 }
 
 /* Login/Registration box */
-/* line 294, ../scss/theme/_forms.scss */
+/* line 299, ../scss/theme/_forms.scss */
 #login_form,
 #register_form,
 #login_box {
@@ -570,13 +576,13 @@ body.rtl #markDuplicate {
 }
 
 /* Help Popup */
-/* line 301, ../scss/theme/_forms.scss */
+/* line 306, ../scss/theme/_forms.scss */
 .inline-tooltip {
   display: inline-block;
   vertical-align: top;
   padding-left: 0.75rem;
 }
-/* line 305, ../scss/theme/_forms.scss */
+/* line 310, ../scss/theme/_forms.scss */
 .inline-tooltip .tooltip,
 .inline-tooltip .tooltipbody,
 .inline-tooltip .stickytip,
@@ -585,7 +591,7 @@ body.rtl #markDuplicate {
   padding: 0;
   width: 60px;
 }
-/* line 313, ../scss/theme/_forms.scss */
+/* line 318, ../scss/theme/_forms.scss */
 .inline-tooltip .s3_add_resource_link {
   display: inline-block;
   margin: -3px 0 -3px 5px;
@@ -1096,12 +1102,100 @@ body.rtl .list_formats div {
   float: left;
 }
 
-/* Empty-sections (both data tables and data lists) */
-/* line 136, ../scss/theme/_tables.scss */
-.empty,
+/* line 134, ../scss/theme/_tables.scss */
+.empty {
+  font-style: italic;
+  font-size: 0.825rem;
+}
+
+/* Data Lists */
+/* line 13, ../scss/theme/_datalists.scss */
+.dl .dl-1-cols {
+  width: 100%;
+}
+/* line 16, ../scss/theme/_datalists.scss */
+.dl .dl-header {
+  float: none;
+  text-align: right;
+}
+/* line 20, ../scss/theme/_datalists.scss */
+.dl .dl-row {
+  border: 0;
+}
+/* line 24, ../scss/theme/_datalists.scss */
+.dl .dl-item .dropdown .caret {
+  margin-left: 0.2rem;
+  margin-top: 0.4rem;
+}
+/* line 28, ../scss/theme/_datalists.scss */
+.dl .dl-item .attachments {
+  margin-right: 0.2rem;
+}
+
+/* line 34, ../scss/theme/_datalists.scss */
+body.rtl .dl .dl-header {
+  text-align: left;
+}
+/* line 38, ../scss/theme/_datalists.scss */
+body.rtl .dl .dl-item .dropdown .caret {
+  margin-left: 0;
+  margin-right: 0.2rem;
+}
+/* line 42, ../scss/theme/_datalists.scss */
+body.rtl .dl .dl-item .attachments {
+  margin-right: 0;
+  margin-left: 0.2rem;
+}
+
+/* line 49, ../scss/theme/_datalists.scss */
 .dl-empty {
   font-style: italic;
   font-size: 0.825rem;
+}
+
+/* line 52, ../scss/theme/_datalists.scss */
+.dl-exports.list_formats {
+  padding: 0;
+}
+
+/* line 55, ../scss/theme/_datalists.scss */
+.card_1_line, .card_manylines {
+  color: #666;
+  font-size: 0.7rem;
+  padding: 0.05rem;
+}
+
+/* line 60, ../scss/theme/_datalists.scss */
+.card_1_line {
+  height: auto;
+  margin-bottom: 0;
+  overflow: hidden;
+}
+
+/* Profile */
+/* line 12, ../scss/theme/_profile.scss */
+h4.profile-sub-header {
+  background-color: #efefef;
+  padding: 0.1rem 0.3rem;
+  font-size: 1.2rem;
+}
+
+/* line 17, ../scss/theme/_profile.scss */
+.profile-widget .icon-fullscreen {
+  float: right;
+  position: relative;
+  right: 9px;
+  top: 17px;
+}
+
+/* line 23, ../scss/theme/_profile.scss */
+.profile .dl-header {
+  display: none;
+}
+
+/* line 26, ../scss/theme/_profile.scss */
+.empty_card-holder {
+  text-align: center;
 }
 
 /* jQuery UI widgets */
@@ -1364,120 +1458,46 @@ table.s3-groupedopts-widget td label {
   display: inline-flex;
 }
 
-/* Data Lists TODO move into separate file */
-/* line 232, ../scss/theme/_widgets.scss */
-.dl .dl-header {
-  float: none;
-  text-align: right;
-}
-/* line 236, ../scss/theme/_widgets.scss */
-.dl .card_1_line {
-  height: auto;
-}
-/* line 239, ../scss/theme/_widgets.scss */
-.dl .empty_card-holder {
-  text-align: center;
-}
-/* line 242, ../scss/theme/_widgets.scss */
-.dl .dl-row {
-  border: 0;
-}
-/* line 245, ../scss/theme/_widgets.scss */
-.dl .dl-1-cols {
-  width: 100%;
-}
-
-/* line 250, ../scss/theme/_widgets.scss */
-.dl-item .dropdown .caret {
-  margin-left: 0.2rem;
-  margin-top: 0.4rem;
-}
-/* line 254, ../scss/theme/_widgets.scss */
-.dl-item .attachments {
-  margin-right: 0.2rem;
-}
-
-/* line 258, ../scss/theme/_widgets.scss */
-.card_1_line {
-  margin-bottom: 0;
-  overflow: hidden;
-  height: auto;
-}
-
-/* line 263, ../scss/theme/_widgets.scss */
-.card_1_line, .card_manylines {
-  color: #666;
-  font-size: 0.7rem;
-  padding: 0.05rem;
-}
-
-/* Profile TODO move into separate file */
-/* line 270, ../scss/theme/_widgets.scss */
-h4.profile-sub-header {
-  background-color: #EFEFEF;
-  padding: 0.1rem 0.3rem;
-  font-size: 1.2rem;
-}
-
-/* line 275, ../scss/theme/_widgets.scss */
-.profile-widget .icon-fullscreen {
-  float: right;
-  position: relative;
-  right: 9px;
-  top: 17px;
-}
-
-/* line 281, ../scss/theme/_widgets.scss */
-.profile .dl-header {
-  display: none;
-}
-
 /* Comment feeds */
-/* line 286, ../scss/theme/_widgets.scss */
+/* line 231, ../scss/theme/_widgets.scss */
 .comment-box {
   background: none repeat scroll 0 0 #f5f5f5;
 }
 
 /* Text representation */
-/* line 291, ../scss/theme/_widgets.scss */
+/* line 236, ../scss/theme/_widgets.scss */
 .text-body {
   white-space: pre-wrap;
 }
 
 /* Iframe Map (Location Represent links) TODO move into page or forms? */
-/* line 296, ../scss/theme/_widgets.scss */
+/* line 241, ../scss/theme/_widgets.scss */
 #close-iframe-map {
   padding: 7px;
   margin-top: 5px;
 }
 
 /* Truncated Texts */
-/* line 302, ../scss/theme/_widgets.scss */
+/* line 247, ../scss/theme/_widgets.scss */
 .s3-truncate-more,
 .s3-truncate-less {
   font-style: italic;
 }
 
-/* line 306, ../scss/theme/_widgets.scss */
+/* line 251, ../scss/theme/_widgets.scss */
 .s3-truncate-more:before,
 .s3-truncate-less:before {
   font-style: italic;
   content: "...";
 }
 
-/* S3SQLInlineLink read-only list representation */
-/* line 313, ../scss/theme/_widgets.scss */
-ul.s3-inline-link {
-  font-size: inherit;
-}
-
 /* AddPersonWidget */
-/* line 318, ../scss/theme/_widgets.scss */
+/* line 258, ../scss/theme/_widgets.scss */
 .box_bottom {
   clear: left;
 }
 
-/* line 321, ../scss/theme/_widgets.scss */
+/* line 261, ../scss/theme/_widgets.scss */
 .ui-menu-item .pe-label {
   font-size: 0.7rem;
   color: #A0A0A0;
@@ -1485,39 +1505,39 @@ ul.s3-inline-link {
 }
 
 /* Anonymize-Widget */
-/* line 328, ../scss/theme/_widgets.scss */
+/* line 268, ../scss/theme/_widgets.scss */
 form.anonymize-form,
 .anonymize-success {
   padding: 1rem;
 }
 
-/* line 332, ../scss/theme/_widgets.scss */
+/* line 272, ../scss/theme/_widgets.scss */
 .anonymize-select,
 .anonymize-confirm {
   margin-left: 1rem;
 }
 
-/* line 336, ../scss/theme/_widgets.scss */
+/* line 276, ../scss/theme/_widgets.scss */
 .anonymize-buttons {
   margin-top: 1rem;
 }
 
-/* line 339, ../scss/theme/_widgets.scss */
+/* line 279, ../scss/theme/_widgets.scss */
 .anonymize-btn {
   background-color: #c60f13;
 }
-/* line 341, ../scss/theme/_widgets.scss */
+/* line 281, ../scss/theme/_widgets.scss */
 .anonymize-btn:hover {
   background-color: #9e0c0f;
 }
 
-/* line 345, ../scss/theme/_widgets.scss */
+/* line 285, ../scss/theme/_widgets.scss */
 .s3-anonymize {
   display: inline-block;
 }
 
 /* Priority Representation */
-/* line 350, ../scss/theme/_widgets.scss */
+/* line 290, ../scss/theme/_widgets.scss */
 .prio {
   padding: 0 4px;
   border: 1px solid black;
@@ -1526,24 +1546,24 @@ form.anonymize-form,
   font-weight: normal;
 }
 
-/* line 357, ../scss/theme/_widgets.scss */
+/* line 297, ../scss/theme/_widgets.scss */
 .prio-red {
   color: white;
   background-color: #d10000;
 }
 
-/* line 361, ../scss/theme/_widgets.scss */
+/* line 301, ../scss/theme/_widgets.scss */
 .prio-blue {
   color: white;
   background-color: #10427b;
 }
 
-/* line 365, ../scss/theme/_widgets.scss */
+/* line 305, ../scss/theme/_widgets.scss */
 .prio-lightblue {
   background-color: #b7ddff;
 }
 
-/* line 368, ../scss/theme/_widgets.scss */
+/* line 308, ../scss/theme/_widgets.scss */
 .prio-grey {
   background-color: silver;
 }

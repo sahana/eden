@@ -131,12 +131,8 @@ body.rtl {
         float: left;
     }
 }
-
-/* Empty-sections (both data tables and data lists) */
-.empty,
-.dl-empty {
-    font-style: italic;
-    font-size: 0.825rem;
+.empty {
+    @include empty_section();
 }
 
 // END ========================================================================

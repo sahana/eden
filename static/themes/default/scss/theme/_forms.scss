@@ -160,6 +160,11 @@ form {
     }
 }
 
+/* S3SQLInlineLink read-only list representation */
+ul.s3-inline-link {
+    font-size: inherit;
+}
+
 /* General Widgets */
 input[type="text"],
 input[type="password"],
