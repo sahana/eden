@@ -92,19 +92,19 @@ $side_bar_divider_color: $side_bar_border_color !default;
     .org-logo {
         vertical-align: top;
         display: inline-block;
-        padding: 0.4rem 0.5rem 0.3rem 0;
+        padding: 0.4rem 0.8rem 0.3rem 0;
     }
     .system-title {
         display: inline-block;
         .system-name {
             color: #333333;
-            margin-bottom: 0;
         }
         .org-name {
             color: #999999;
-            margin-bottom: 0.125rem;
             line-height: 1rem;
-            margin-bottom: 0.5rem;
+        }
+        h5:first-child, h6:first-child {
+            margin: 0.3rem 0 0.125rem;
         }
     }
     .personal-menu-area {
@@ -134,18 +134,6 @@ body.rtl .main-title {
     }
     .language-selector {
         float: left;
-    }
-}
-
-// About Menu (in footer)
-.about-menu {
-    text-align: left;
-    margin-left: 0;
-    margin-right: 0;
-}
-body.rtl {
-    .about-menu {
-        text-align: right;
     }
 }
 

@@ -17,6 +17,12 @@ $title_bgcolor: #F7F8F9 !default;
 // Throbber style [sunflower|simple]
 $throbber_style: sunflower !default;
 
+// Footer
+$footer_bgcolor: transparent !default;
+$footer_fgcolor: #999 !default;
+$footer_min_height: null !default;
+$footer_top_margin: 20px !default;
+
 // ============================================================================
 // STYLES
 
@@ -161,16 +167,20 @@ body.rtl {
 
 /* Footer */
 #footer {
+    background: $footer_bgcolor;
     padding-top: 20px;
+    @if $footer_min_height {
+        min-height: $footer_min_height;
+    }
     border-top: 1px solid #F0F0F0;
-    margin-top: 20px;
+    margin-top: $footer_top_margin;
     margin-bottom: 1rem;
 }
 #poweredby {
     margin-right: 0.5rem;
     text-align: right;
     a {
-        color: #999999;
+        color: $footer_fgcolor;
         text-decoration: none;
         font-size: 0.8rem;
         margin-left: 0.2rem;
@@ -179,6 +189,22 @@ body.rtl {
 body.rtl {
     #poweredby {
         text-align: left;
+    }
+}
+
+// About Menu (in footer)
+.sub-nav.about-menu {
+    color: $footer_fgcolor;
+    a {
+        color: $footer_fgcolor;
+    }
+    text-align: left;
+    margin-left: 0;
+    margin-right: 0;
+}
+body.rtl {
+    .about-menu {
+        text-align: right;
     }
 }
 
