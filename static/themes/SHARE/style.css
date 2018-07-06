@@ -14,12 +14,15 @@
 #footer {
   background: #0c9cd0;
 }
-#active-events, 
+#active-events,
 #active-events h1 {
   color: #ffffff;
 }
 #active-events hr {
   border-top: 2px dashed #ffffff;
+}
+#footer {
+    min-height: 240px;
 }
 #poweredby a {
   color: #ffffff;
@@ -27,6 +30,7 @@
 .button a {
   color: #ffffff;
 }
+/*
 .top-bar {
   background: #0c9cd0;
 }
@@ -37,6 +41,7 @@
 .top-bar-section ul.dropdown li:not(.has-form) a:not(.button) {
   background-color: #febf00;
 }
+*/
 .req_status_committed {
   color: lime;
   font-weight: bold;

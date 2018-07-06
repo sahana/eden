@@ -18,7 +18,7 @@ def config(settings):
     # UI Settings
     settings.ui.menu_logo = URL(c = "static",
                                 f = "themes",
-                                args = ["SHARE", "sharemenulogo.png"],
+                                args = ["SHARE", "img", "sharemenulogo.png"],
                                 )
 
     # PrePopulate data
