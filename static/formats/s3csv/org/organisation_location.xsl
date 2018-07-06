@@ -59,7 +59,6 @@
                          col[@field='L2'], '/',
                          col[@field='L3'], '/',
                          col[@field='L4'])"/>
-
     <xsl:key name="L5" match="row"
              use="concat(col[contains(
                              document('../labels.xml')/labels/column[@name='Country']/match/text(),

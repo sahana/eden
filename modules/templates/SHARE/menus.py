@@ -40,20 +40,20 @@ class S3MainMenu(default.S3MainMenu):
                 #MM("Statistics",  m="report"),
                 #MM("Map", m="map"),
                 MM("View", c="req", f="need", m="summary"),
-                MM("Create", c="req", f="need", m="create"),
+                MM("Create", c="req", f="need", m="create", p="read"),
                 ),
                MM("4W", c="project", f="activity", m="summary")(
                 #MM("Statistics",  m="report"),
                 #MM("Map", m="map"),
                 MM("View", c="project", f="activity", m="summary"),
-                MM("Create", c="project", f="activity", m="create"),
+                MM("Create", c="project", f="activity", m="create", p="read"),
                 ),
                MM("Situational Updates", c="event", f="sitrep"),
                MM("Organizations", c="org", f="organisation")(
                 MM("Offices", c="org", f="office"),
                 MM("Facilities", c="org", f="facility"),
                ),
-               MM("more", link=False)(
+               MM("More", link=False)(
                 MM("Documents", c="doc", f="document"),
                 MM("Disasters", c="event", f="event"),
                 MM("Items", c="supply", f="item"),

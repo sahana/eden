@@ -1,68 +1,68 @@
 Kit,Item,Unit of Measure,Quantity
-Hygiene Kit,Towel,Number,
-Hygiene Kit,Bucket 9L w/Top,Number,
-Hygiene Kit,Water Cup 1L,Number,
-Hygiene Kit,Body Soap 100g,Packet,
-Hygiene Kit,Laundry Soap 120g,Packet,
-Hygiene Kit,Toothbrush-L,Number,
-Hygiene Kit,Toothbrush-S,Number,
-Hygiene Kit,Toothpaste 160g,Tube,
-Hygiene Kit,Hair Comb,Number,
-Hygiene Kit,Razor,Number,
-Hygiene Kit,Sanitary Pads 10pcs w/wings,Packet,
-Hygiene Kit,Nail Clipper-L,Number,
-Hygiene Kit,Nail Clipper-S,Number,
-Hygiene Kit,Underwear for Women,Piece,
-Hygiene Kit,Underwear for Men,Piece,
-Hygiene Kit,Panties for Kids,Piece,
-Disinfectant Kit,Broomstick,Number,
-Disinfectant Kit,Dust pan w/brush,Number,
-Disinfectant Kit,All purpose disinfectant 1L,Bottle,
-Disinfectant Kit,Surface Disinfectant 950ml,Bottle,
-Disinfectant Kit,Toilet cleaning liquid,Bottle,
-Disinfectant Kit,Bucket 11L w/ handle,Number,
-Disinfectant Kit,Wiper,Number,
-Disinfectant Kit,Toilet Brush w/holder,Number,
-Disinfectant Kit,Rubber Gloves,Number,
-Disinfectant Kit,Face Mask,Number,
-Disinfectant Kit,Dustbin (open),Number,
-Disinfectant Kit,Hand washing soap 100g,Packet,
-Disinfectant Kit,Washing powder 1kg,Packet,
-Disinfectant Kit,Dish wash 500ml,Bottle,
-Dignity Kit,Sanitary Pads 10pcs w/wings,Packet,
-Dignity Kit,Mosquito Net,Number,
-Dignity Kit,Box of Matches,Packet,
-Dignity Kit,Cloth 2m,Piece,
-Dignity Kit,Candle,Number,
-Dignity Kit,Hand Towel,Number,
-Dignity Kit,Lantern/Torch,Number,
-Dignity Kit,School uniform 2.5m,Piece,
-Dignity Kit,"Women's Underwear",Piece,
-Dignity Kit,Cloth Pegs,Packet,
-Shelter Kit,CGI Sheets,Number,10
-Shelter Kit,Mammoty/Hoe with handle,Number,1
-Shelter Kit,Hand saw,Number,1
-Shelter Kit,Crowbar,Number,1
-Shelter Kit,Claw hammer,Number,1
-Shelter Kit,Mana Knife/Machete,Number,1
-Shelter Kit,Roofing Nails,Number,0.5
-Shelter Kit,Nails 75mm,Number,0.5
-Shelter Kit,Nails 40mm,Number,0.5
-Shelter Kit,Shears,Number,1
-Shelter Kit,Rope,Coil,1
-Household Kit,Cooking Pot,Number,1
-Household Kit,Saucepans,Number,1
-Household Kit,Plates,Number,5
-Household Kit,Mugs w/handles,Number,5
-Household Kit,Curry Spoon,Number,2
-Household Kit,Rice Spoon,Number,2
-Household Kit,Kitchen Knife,Number,2
-Household Kit,Kerosene Oil Cooker / Stove,Number,1
-Household Kit,Coconut Scraper,Number,1
-Household Kit,Solar Lamp,Number,1
-Household Kit,Torch w/batteries,Number,1
-Household Kit,Bed sheets-double,Number,2
-Household Kit,Bed sheets-single,Number,2
-Household Kit,Pillow cases,Number,4
-Household Kit,Curtain,Number,1
-Household Kit,Mosquito net,Number,2
+Hygiene kit,Towel,Number,
+Hygiene kit,Bucket 9L w/Top,Number,
+Hygiene kit,Water Cup 1L,Number,
+Hygiene kit,Body Soap 100g,Packet,
+Hygiene kit,Laundry Soap 120g,Packet,
+Hygiene kit,Toothbrush-L,Number,
+Hygiene kit,Toothbrush-S,Number,
+Hygiene kit,Toothpaste 160g,Tube,
+Hygiene kit,Hair Comb,Number,
+Hygiene kit,Razor,Number,
+Hygiene kit,Sanitary Pads 10pcs w/wings,Packet,
+Hygiene kit,Nail Clipper-L,Number,
+Hygiene kit,Nail Clipper-S,Number,
+Hygiene kit,Underwear for Women,Piece,
+Hygiene kit,Underwear for Men,Piece,
+Hygiene kit,Panties for Kids,Piece,
+Disinfectant kit,Broomstick,Number,
+Disinfectant kit,Dust pan w/brush,Number,
+Disinfectant kit,All purpose disinfectant 1L,Bottle,
+Disinfectant kit,Surface Disinfectant 950ml,Bottle,
+Disinfectant kit,Toilet cleaning liquid,Bottle,
+Disinfectant kit,Bucket 11L w/ handle,Number,
+Disinfectant kit,Wiper,Number,
+Disinfectant kit,Toilet Brush w/holder,Number,
+Disinfectant kit,Rubber Gloves,Number,
+Disinfectant kit,Face Mask,Number,
+Disinfectant kit,Dustbin (open),Number,
+Disinfectant kit,Hand washing soap 100g,Packet,
+Disinfectant kit,Washing powder 1kg,Packet,
+Disinfectant kit,Dish wash 500ml,Bottle,
+Dignity kit,Sanitary Pads 10pcs w/wings,Packet,
+Dignity kit,Mosquito Net,Number,
+Dignity kit,Box of Matches,Packet,
+Dignity kit,Cloth 2m,Piece,
+Dignity kit,Candle,Number,
+Dignity kit,Hand Towel,Number,
+Dignity kit,Lantern/Torch,Number,
+Dignity kit,School uniform 2.5m,Piece,
+Dignity kit,"Women's Underwear",Piece,
+Dignity kit,Cloth Pegs,Packet,
+Shelter kit,CGI Sheets,Number,10
+Shelter kit,Mammoty/Hoe with handle,Number,1
+Shelter kit,Hand saw,Number,1
+Shelter kit,Crowbar,Number,1
+Shelter kit,Claw hammer,Number,1
+Shelter kit,Mana Knife/Machete,Number,1
+Shelter kit,Roofing Nails,Kg,0.5
+Shelter kit,Nails 75mm,Kg,0.5
+Shelter kit,Nails 40mm,Kg,0.5
+Shelter kit,Shears,Number,1
+Shelter kit,Rope,Coil,1
+Household kit,Cooking Pot,Number,1
+Household kit,Saucepans,Number,1
+Household kit,Plates,Number,5
+Household kit,Mugs w/handles,Number,5
+Household kit,Curry Spoon,Number,2
+Household kit,Rice Spoon,Number,2
+Household kit,Kitchen Knife,Number,2
+Household kit,Kerosene Oil Cooker / Stove,Number,1
+Household kit,Coconut Scraper,Number,1
+Household kit,Solar Lamp,Number,1
+Household kit,Torch w/batteries,Number,1
+Household kit,Bed sheets-double,Number,2
+Household kit,Bed sheets-single,Number,2
+Household kit,Pillow cases,Number,4
+Household kit,Curtain,Number,1
+Household kit,Mosquito net,Number,2

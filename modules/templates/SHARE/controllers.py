@@ -2,12 +2,11 @@
 
 from gluon import *
 #from gluon import current
-from gluon.storage import Storage
+#from gluon.storage import Storage
 from s3 import s3_str, \
                S3CustomController, \
                S3FilterForm, S3DateFilter, S3OptionsFilter, \
                S3Represent
-
 
 THEME = "SHARE"
 
@@ -15,24 +14,60 @@ THEME = "SHARE"
 class index(S3CustomController):
     """
         Custom Home Page
-        - simple CMS with links to Dashboard, etc
     """
 
     def __call__(self):
 
         T = current.T
+        db = current.db
+        s3db = current.s3db
 
         output = {}
 
-        output["active_events"] = DIV(H3("Southwest Monsoon May 2018"),
-                                      P("Water levels of main rivers are currently showing normal levels in many stations. However , one station is at Alert level in Kalu Ganga & Nilwala river falling slowly."),
-                                      HR(),
-                                      H3("Southwest Monsoon May 2018"),
-                                      P("Water levels of main rivers are currently showing normal levels in many stations. However , one station is at Alert level in Kalu Ganga & Nilwala river falling slowly."),
-                                      HR(),
-                                      H3("Southwest Monsoon May 2018"),
-                                      P("Water levels of main rivers are currently showing normal levels in many stations. However , one station is at Alert level in Kalu Ganga & Nilwala river falling slowly."),
-                                      )
+        # Recent Updates
+        etable = s3db.event_event
+        stable = s3db.event_sitrep
+        query = (stable.deleted == False) & \
+                (stable.event_id == etable.id)
+        fields = [etable.name,
+                  stable.date,
+                  stable.summary,
+                  ]
+        language = current.session.s3.language
+        if language != current.deployment_settings.get_L10n_default_language():
+            ntable = s3db.event_event_name
+            left = ntable.on((ntable.event_id == etable.id) & \
+                             (ntable.language == language))
+            fields.append(ntable.name_l10n)
+        else:
+            left = None
+        sitreps = db(query).select(left = left,
+                                   limitby = (0, 3),
+                                   orderby = ~stable.date,
+                                   *fields
+                                   )
+        len_sitreps = len(sitreps)
+        if len_sitreps == 0:
+            from s3 import S3CRUD
+            recent_updates = DIV(S3CRUD.crud_string("event_sitrep",
+                                                    "msg_list_empty"),
+                                 _class="empty")
+        else:
+            recent_updates = DIV()
+            rappend = recent_updates.append
+            count = 0
+            for s in sitreps:
+                count += 1
+                if left:
+                    event_name = s["event_event_name.name_l10n"] or s["event_event.name"]
+                else:
+                    event_name = s["event_event.name"]
+                rappend(H3(event_name))
+                rappend(P(s["event_sitrep.summary"]))
+                if count != len_sitreps:
+                    rappend(HR())
+
+        output["recent_updates"] = recent_updates
 
         map_btn = A(T("MAP OF CURRENT NEEDS"),
                     _href = URL(c="default",

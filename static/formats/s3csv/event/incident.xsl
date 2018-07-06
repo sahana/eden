@@ -42,7 +42,7 @@
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <xsl:key name="events" match="row" use="col[@field='Event']"/>
-    <xsl:key name="orgs" match="row" use="col[@field='Organisation']"/>
+    <xsl:key name="orgs" match="row" use="col[@field='Lead Organisation']"/>
     <xsl:key name="types" match="row" use="col[@field='Type']"/>
 
     <!-- ****************************************************************** -->
@@ -64,7 +64,7 @@
             <!-- Organisations -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('orgs',
-                                                        col[@field='Organisation'])[1])]">
+                                                        col[@field='Lead Organisation'])[1])]">
                 <xsl:call-template name="Organisation"/>
             </xsl:for-each>
 

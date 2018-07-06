@@ -45,9 +45,9 @@ Default,Shelter Repair Kit Items,Shelter Kit,Hand saw,Number,,"40mm blade, Lengt
 Default,Shelter Repair Kit Items,Shelter Kit,Crowbar,Number,,"1200mm (4') long, 16mm-25mm dia strong steel."
 Default,Shelter Repair Kit Items,Shelter Kit,Claw hammer,Number,,0.75 lb (300g-350g). Handle with Dry strong flexible wood
 Default,Shelter Repair Kit Items,Shelter Kit,Mana Knife/Machete,Number,,"Curved blade, 55mm long with wood handle"
-Default,Shelter Repair Kit Items,Shelter Kit,Roofing Nails,Number,,"75mm long (3.0""), Umbrella type, Spiral roll or twisted shank, sealed umbrella type spring head, rubber washer 26mm dia, 2mm thickness"
-Default,Shelter Repair Kit Items,Shelter Kit,Nails 75mm,Number,,"75mm(3"") for wood"
-Default,Shelter Repair Kit Items,Shelter Kit,Nails 40mm,Number,,"40mm(1.5"") for wood"
+Default,Shelter Repair Kit Items,Shelter Kit,Roofing Nails,Kg,,"75mm long (3.0""), Umbrella type, Spiral roll or twisted shank, sealed umbrella type spring head, rubber washer 26mm dia, 2mm thickness"
+Default,Shelter Repair Kit Items,Shelter Kit,Nails 75mm,Kg,,"75mm(3"") for wood"
+Default,Shelter Repair Kit Items,Shelter Kit,Nails 40mm,Kg,,"40mm(1.5"") for wood"
 Default,Shelter Repair Kit Items,Shelter Kit,Shears,Number,,"260mm length, Straight for metal sheet"
 Default,Shelter Repair Kit Items,Shelter Kit,Rope,Coil,,"12mm dia, 30m length"
 Default,Household NFI Kit Items,Household Kit,Cooking Pot,Number,,Aluminium - 6Ltr
