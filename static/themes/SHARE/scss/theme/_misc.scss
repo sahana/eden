@@ -1,0 +1,95 @@
+// ============================================================================
+// Styles for Theme-specific Elements and Layouts
+// ============================================================================
+// VARIABLES
+
+// -- variables and their defaults go here --
+
+// ============================================================================
+// STYLES
+
+#home {
+    h1 {
+        background: transparent;
+        padding: 0;
+    }
+    .button a {
+        color: white;
+    }
+}
+
+#intro {
+    background: url(img/intro.png) center no-repeat !important;
+    min-height: 260px;
+    h1 {
+        color: white;
+        background: transparent;
+    }
+    h1, .button-group {
+        margin-left: 2rem;
+    }
+    h1:first-child, .button-group {
+        margin-top: 2rem;
+    }
+}
+#about-platform {
+    padding: 1rem 2.5rem;
+    text-align: center;
+    background: $secondary-color;
+    img.logo {
+        padding: 0.5rem;
+    }
+}
+#active-events {
+    padding: 1rem 2.5rem;
+    line-height: 1rem;
+    background: $primary-color;
+
+    color: white;
+    h1, h3, p {
+        color: white;
+        margin-bottom: 0.3rem;
+    }
+    h1 {
+        font-size: 1.2rem;
+    }
+    h3 {
+        font-size: 1rem;
+        font-weight: bolder;
+    }
+    p {
+        font-size: 0.8rem;
+    }
+    hr {
+        border-top: 2px dashed white;
+        margin: 0.5rem 0;
+    }
+}
+
+#current-needs {
+    padding: 1rem 2.5rem;
+    text-align: center;
+}
+
+#resources {
+    padding: 1rem 2.5rem;
+    text-align: center;
+    background: $white;
+    ul {
+        list-style-type: none;
+        list-style-position: inside;
+        margin-left: 0;
+    }
+}
+
+#footer {
+    background: #0c9cd0;
+    min-height: 240px;
+    margin-top: 0;
+}
+#poweredby a {
+    color: #ffffff;
+}
+
+
+// END ========================================================================

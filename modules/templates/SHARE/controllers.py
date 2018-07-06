@@ -74,6 +74,7 @@ class index(S3CustomController):
                                 f="index",
                                 args="dashboard",
                                 ),
+                    _class = "small primary button",
                     )
 
         create_btn = A(T("CREATE A NEED"),
@@ -81,12 +82,12 @@ class index(S3CustomController):
                                    f="need",
                                    args="create",
                                    ),
+                       _class = "small primary button",
                        )
-                       
-        output["needs_btn"] = DIV(map_btn,
-                                  " | ",
-                                  create_btn,
-                                  _class = "button round",
+
+        output["needs_btn"] = DIV(SPAN(map_btn),
+                                  SPAN(create_btn),
+                                  _class="button-group radius",
                                   )
 
         output["about_btn"] = A("%s >" % T("Read More"),
