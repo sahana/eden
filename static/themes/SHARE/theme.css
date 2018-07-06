@@ -1596,76 +1596,80 @@ form.anonymize-form,
 #intro h1:first-child, #intro .button-group {
   margin-top: 2rem;
 }
+/* line 34, ../scss/theme/_misc.scss */
+#intro .button-group a {
+  font-weight: bold;
+}
 
-/* line 35, ../scss/theme/_misc.scss */
+/* line 38, ../scss/theme/_misc.scss */
 #about-platform {
   padding: 1rem 2.5rem;
   text-align: center;
   background: #e7e7e7;
 }
-/* line 39, ../scss/theme/_misc.scss */
+/* line 42, ../scss/theme/_misc.scss */
 #about-platform img.logo {
   padding: 0.5rem;
 }
 
-/* line 43, ../scss/theme/_misc.scss */
+/* line 46, ../scss/theme/_misc.scss */
 #active-events {
   padding: 1rem 2.5rem;
   line-height: 1rem;
   background: #0c9cd0;
   color: white;
 }
-/* line 49, ../scss/theme/_misc.scss */
+/* line 52, ../scss/theme/_misc.scss */
 #active-events h1, #active-events h3, #active-events p {
   color: white;
   margin-bottom: 0.3rem;
 }
-/* line 53, ../scss/theme/_misc.scss */
+/* line 56, ../scss/theme/_misc.scss */
 #active-events h1 {
   font-size: 1.2rem;
 }
-/* line 56, ../scss/theme/_misc.scss */
+/* line 59, ../scss/theme/_misc.scss */
 #active-events h3 {
   font-size: 1rem;
   font-weight: bolder;
 }
-/* line 60, ../scss/theme/_misc.scss */
+/* line 63, ../scss/theme/_misc.scss */
 #active-events p {
   font-size: 0.8rem;
 }
-/* line 63, ../scss/theme/_misc.scss */
+/* line 66, ../scss/theme/_misc.scss */
 #active-events hr {
   border-top: 2px dashed white;
   margin: 0.5rem 0;
 }
 
-/* line 69, ../scss/theme/_misc.scss */
+/* line 72, ../scss/theme/_misc.scss */
 #current-needs {
   padding: 1rem 2.5rem;
   text-align: center;
 }
 
-/* line 74, ../scss/theme/_misc.scss */
+/* line 77, ../scss/theme/_misc.scss */
 #resources {
   padding: 1rem 2.5rem;
   text-align: center;
   background: #FFFFFF;
 }
-/* line 78, ../scss/theme/_misc.scss */
+/* line 81, ../scss/theme/_misc.scss */
 #resources ul {
   list-style-type: none;
   list-style-position: inside;
   margin-left: 0;
 }
 
-/* line 85, ../scss/theme/_misc.scss */
+/* line 88, ../scss/theme/_misc.scss */
 #footer {
   background: #0c9cd0;
   min-height: 240px;
   margin-top: 0;
 }
 
-/* line 90, ../scss/theme/_misc.scss */
+/* line 93, ../scss/theme/_misc.scss */
 #poweredby a {
   color: #ffffff;
 }

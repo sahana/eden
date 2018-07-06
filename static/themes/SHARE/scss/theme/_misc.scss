@@ -31,6 +31,9 @@
     h1:first-child, .button-group {
         margin-top: 2rem;
     }
+    .button-group a {
+        font-weight: bold;
+    }
 }
 #about-platform {
     padding: 1rem 2.5rem;
