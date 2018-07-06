@@ -18,7 +18,7 @@
 --> """}}
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 {{# Place favicon.ico and apple-touch-icon.png in the root of your domain and delete these references }}
-<link rel="shortcut icon" href="/{{=appname}}/static/favicon.ico" type="image/x-icon" />
+<link rel="shortcut icon" href="/{{=appname}}/static/themes/{{=theme}}/favicon.ico" type="image/x-icon" />
 {{# <link rel="apple-touch-icon" href="/=appname/static/favicon.png" /> }}
 {{# All JavaScript at the bottom, except for Modernizr which enables HTML5 elements & feature detects }}{{# This kills the map in IE8: VML.js }}
 {{#<script src="/=appname/static/scripts/modernizr.min.js"></script>}}
@@ -52,14 +52,35 @@
 {{else:}}
 <body>
  <header>
-  <div class="fixed">
+  <div class='row main-title'>
+     <div class='large-4 medium-6 columns'>
+      <a href='{{=URL(c="default", f="index")}}'>
+       {{org_menu = current.menu.org.render() if current.menu.org else ("", "")}}
+       <div class="org-logo">{{=org_menu[1]}}</div>
+       <div class="system-title">
+        <h5 class="system-name subheader">{{=T("Relief and Rehabilitation System")}}</h5>
+        <h6 class="org-name">{{=org_menu[0]}}</h6>
+       </div>
+      </a>
+     </div>
+     <div class='large-push-6 large-2 medium-6 columns'>
+       {{=current.menu.lang}}
+     </div>
+     <div class='large-pull-2 large-6 medium-12 columns personal-menu-area'>
+       <div class="username">{{if auth.is_logged_in():}}{{=auth.user.email}}{{else:}}{{=T("anonymous user")}}{{pass}}<i class='fa fa-user'></i></div>
+       {{=current.menu.personal}}
+     </div>
+  </div>
+  <div class='row main-navigation'>
    {{=current.menu.main}}
   </div>
  </header>
  <main role="main" class="main">
-  <div class='row'>
+  <div class='row main-content'>
    {{if current.menu.options is not None:}}
-   <a id='menu-options-toggle' class='tiny secondary button show-for-small' data-status='off' data-off='{{=T("Show Options")}}' data-on='{{=T("Hide Options")}}'>{{=T("Show Options")}}</a>
+   <div class='small-12 columns'>
+    <a id='menu-options-toggle' class='tiny secondary button show-for-small' data-status='off' data-off='{{=T("Show Options")}}' data-on='{{=T("Hide Options")}}'>{{=T("Show Options")}}</a>
+   </div>
    <div class='medium-3 large-2 columns hide-for-small' id='menu-options'>
     {{=current.menu.options}}
    </div>
@@ -80,9 +101,7 @@
     {{include}}
    </div>
   </div>
- </main>
- <footer role="complementary" class="footer">
-  <div class='row' id='footer'>
+  <div id='footer'>
    <div class='medium-12 columns'>
     {{include "../modules/templates/%s/views/footer.html" % response.s3.theme}}
     {{if s3.debug:}}
@@ -92,7 +111,7 @@
     {{pass}}
    </div>
   </div>
- </footer>
+ </main>
 {{pass}}
 {{include "scripts.html"}}
 {{include "foundation.js.html"}}

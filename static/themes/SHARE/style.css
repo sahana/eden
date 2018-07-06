@@ -8,7 +8,21 @@
 }
 #about-platform,
 #resources {
+  padding: 1rem 2.5rem;
+  text-align: center;
   background: #e1e1e1;
+}
+#resources ul {
+  list-style-type: none;
+  list-style-position: inside;
+  margin-left: 0;
+}
+#about-platform img.logo {
+  padding: 0.5rem;
+}
+#active-events {
+  line-height: 1rem;
+  padding: 1rem 2.5rem;
 }
 #active-events,
 #footer {
@@ -20,9 +34,27 @@
 }
 #active-events hr {
   border-top: 2px dashed #ffffff;
+  margin: 0.5rem 0;
+}
+#active-events h1 {
+    font-size: 1.2rem;
+    margin-bottom: 0.3rem;
+}
+#active-events h3 {
+    font-size: 1rem;
+    margin-bottom: 0;
+}
+#active-events p {
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+}
+#current-needs {
+    padding: 1rem 2.5rem;
+    text-align: center;
 }
 #footer {
     min-height: 240px;
+    margin-top: 0;
 }
 #poweredby a {
   color: #ffffff;
@@ -30,18 +62,23 @@
 .button a {
   color: #ffffff;
 }
-/*
-.top-bar {
-  background: #0c9cd0;
+#intro {
+    background: url(img/intro.png) center no-repeat !important;
+    min-height: 260px;
 }
-.top-bar-section ul li:not(.has-form) a:not(.button) {
-  background-color: #0c9cd0;
+#intro h1 {
+    color: white;
+    background: transparent;
 }
-.top-bar-section ul.dropdown li:not(.has-form):not(.active) a:not(.button),
-.top-bar-section ul.dropdown li:not(.has-form) a:not(.button) {
-  background-color: #febf00;
+#intro h1, #intro div {
+    margin-left: 2rem;
 }
-*/
+#intro h1:first-child {
+    margin-top: 2rem;
+}
+#intro div {
+    margin-top: 2rem;
+}
 .req_status_committed {
   color: lime;
   font-weight: bold;

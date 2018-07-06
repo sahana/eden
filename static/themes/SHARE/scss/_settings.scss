@@ -1257,11 +1257,11 @@ $side-nav-divider-color: transparent;
 
 // We use this to control the definition
 // $sub-nav-font-family: $body-font-family;
-// $sub-nav-font-size: rem-calc(14);
+$sub-nav-font-size: rem-calc(12);
 // $sub-nav-font-color: $aluminum;
 // $sub-nav-font-weight: $font-weight-normal;
 // $sub-nav-text-decoration: none;
-// $sub-nav-padding: rem-calc(3 16);
+$sub-nav-padding: rem-calc(2 6);
 // $sub-nav-border-radius: 3px;
 // $sub-nav-font-color-hover: scale-color($sub-nav-font-color, $lightness: -25%);
 
@@ -1275,8 +1275,8 @@ $side-nav-divider-color: transparent;
 // $sub-nav-active-padding: $sub-nav-padding;
 // $sub-nav-active-cursor: default;
 
-// $sub-nav-item-divider: "";
-// $sub-nav-item-divider-margin: rem-calc(12);
+$sub-nav-item-divider: "|";
+$sub-nav-item-divider-margin: rem-calc(6);
 
 // 29. Switch
 // - - - - - - - - - - - - - - - - - - - - - - - - -

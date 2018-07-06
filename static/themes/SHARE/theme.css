@@ -117,7 +117,7 @@ meta.foundation-data-attribute-namespace {
 .expired,
 .req,
 .req_key {
-  color: #da375d;
+  color: #c42648;
   font-weight: bold;
 }
 
@@ -756,13 +756,13 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 /* line 69, ../../default/scss/theme/_buttons.scss */
 .delete-btn-ajax,
 .delete-btn {
-  background-color: #da375d;
+  background-color: #c42648;
   color: white !important;
 }
 /* line 73, ../../default/scss/theme/_buttons.scss */
 .delete-btn-ajax:hover,
 .delete-btn:hover {
-  background-color: #b82245 !important;
+  background-color: #9d1e3a !important;
   color: white !important;
 }
 
@@ -1045,7 +1045,7 @@ table.dataTable.dtr-inline.collapsed tbody td:first-child::before, table.dataTab
 /* line 85, ../../default/scss/theme/_tables.scss */
 table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child::before, table.dataTable.dtr-inline.collapsed tbody tr.parent th:first-child::before {
   top: 6px;
-  background-color: #da375d;
+  background-color: #c42648;
 }
 
 /* line 92, ../../default/scss/theme/_tables.scss */
@@ -1524,11 +1524,11 @@ form.anonymize-form,
 
 /* line 279, ../../default/scss/theme/_widgets.scss */
 .anonymize-btn {
-  background-color: #da375d;
+  background-color: #c42648;
 }
 /* line 281, ../../default/scss/theme/_widgets.scss */
 .anonymize-btn:hover {
-  background-color: #b82245;
+  background-color: #9d1e3a;
 }
 
 /* line 285, ../../default/scss/theme/_widgets.scss */

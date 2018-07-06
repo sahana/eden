@@ -1,31 +1,48 @@
 {{extend "layout.html"}}
 <div id='home'>
  <div class='row'>
+  <div class='small-12 columns' id='intro'>
    <h1>{{=T("A platform that manages")}}</h1>
    <h1>{{=T("RELIEF SUPPLIES & RELATED INFORMATION")}}</h1>
    {{=needs_btn}}
+  </div>
  </div>
- <div class='row'>
-  <div class='medium-6 columns' id='about-platform'>
-   <img alt="Logo" class="logo" src="/eden/static/themes/SHARE/img/sharemenulogo.png">
+ <div class='row' data-equalizer>
+  <div class='medium-6 columns' id='about-platform' data-equalizer-watch>
+   <img alt="Logo" class="logo" src="/{{=appname}}/static/themes/SHARE/img/logo_transparent.png">
    <h1>{{=T("About 'ShaReHub' PLATFORM")}}</h1>
    <p>A real-time humanitarian needs and responses coordination mapping platform used by the Humanitarian Country Team (HCT) during a disaster.</p>
    {{=about_btn}}
   </div>
-  <div class='medium-6 columns' id='active-events'>
+  <div class='medium-6 columns' id='active-events' data-equalizer-watch>
    <h1>{{=T("Active Events")}}</h1>
    {{=active_events}}
   </div>
  </div>
  <div class='row'>
-  <h1>{{=T("Current Needs & Commitments at a glance")}}</h1>
+  <div class='small-12 columns' id='current-needs'>
+   <h1>{{=T("Current Needs & Commitments at a glance")}}</h1>
+   <div class="row">
+     <div class="small-12 medium-4 columns">
+       <img src="/{{=appname}}/static/themes/SHARE/img/homepage_chart_dummy.png"/>
+     </div>
+     <div class="small-12 medium-4 columns">
+       <img src="/{{=appname}}/static/themes/SHARE/img/homepage_chart_dummy.png"/>
+     </div>
+     <div class="small-12 medium-4 columns">
+       <img src="/{{=appname}}/static/themes/SHARE/img/homepage_chart_dummy.png"/>
+     </div>
+   </div>
+  </div>
  </div>
- <div class='row' id='resources'>
-  <h1>{{=T("Resources")}}</h1>
-  <ul>
-   <li><a href='http://www.nbro.gov.lk/index.php?option=com_content&view=article&id=25&Itemid=179&lang=en' target='_blank'>National Building and Research Organisation - Landslide Warnings</a></li>
-   <li><a href='http://www.irrigation.gov.lk/index.php?option=com_gmapfp&view=gmapfp&layout=categorie&catid=126&id_perso=0&Itemid=222&lang=en' target='_blank'>Department of Irrigation - River Water Levels</a></li>
-   <li><a href='http://www.dmc.gov.lk/index.php?option=com_dmcreports&view=reports&Itemid=273&report_type_id=1&lang=en' target='_blank'>Disaster Management Centre - Situation Reports</a></li>
-  </ul>
+ <div class='row'>
+  <div class='small-12 columns' id='resources'>
+   <h1>{{=T("Resources")}}</h1>
+   <ul>
+    <li><a href='http://www.nbro.gov.lk/index.php?option=com_content&view=article&id=25&Itemid=179&lang=en' target='_blank'>National Building and Research Organisation - Landslide Warnings</a></li>
+    <li><a href='http://www.irrigation.gov.lk/index.php?option=com_gmapfp&view=gmapfp&layout=categorie&catid=126&id_perso=0&Itemid=222&lang=en' target='_blank'>Department of Irrigation - River Water Levels</a></li>
+    <li><a href='http://www.dmc.gov.lk/index.php?option=com_dmcreports&view=reports&Itemid=273&report_type_id=1&lang=en' target='_blank'>Disaster Management Centre - Situation Reports</a></li>
+   </ul>
+  </div>
  </div>
 </div>
