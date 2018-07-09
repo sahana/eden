@@ -2892,7 +2892,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         # Reset the layout
         layout.set_columns(None)
 
-        return output
+        return DIV(output, _class="inline-component readonly")
 
     # -------------------------------------------------------------------------
     def accept(self, form, master_id=None, format=None):

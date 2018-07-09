@@ -55,6 +55,9 @@ form {
             display: inline-block;
             vertical-align: middle;
         }
+        .inline-component {
+            overflow: auto;
+        }
     }
     .jstree-anchor {
         font-size: 0.9rem;
