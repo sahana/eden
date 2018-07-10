@@ -117,8 +117,8 @@ $oil            : #333333;
 
 // SHARE Color Theme
 $skyblue        : #0c9cd0;
+$amber          : #fba629;
 $honey          : #ffbe00;
-$brightyellow   : #fed14c;
 $forest         : #6c8c20;
 $grass          : #90c147;
 $darkrose       : #c42648;
@@ -1433,10 +1433,10 @@ $topbar-link-weight: bold;
 // $topbar-link-font-size: rem-calc(13);
 // $topbar-link-hover-lightness: -10%; // Darken by 10%
 // $topbar-link-bg: $topbar-bg;
-$topbar-link-bg-hover: $honey;
+$topbar-link-bg-hover: $amber;
 // $topbar-link-bg-color-hover: $charcoal;
 $topbar-link-bg-active: scale-color($primary-color, $lightness: -10%);
-$topbar-link-bg-active-hover: $honey;
+$topbar-link-bg-active-hover: $amber;
 // $topbar-link-font-family: $body-font-family;
 // $topbar-link-text-transform: none;
 // $topbar-link-padding: ($topbar-height / 3);
@@ -1446,7 +1446,7 @@ $topbar-link-bg-active-hover: $honey;
 // $topbar-button-top: 7px;
 
 // Style the top bar dropdown elements
-$topbar-dropdown-bg: $brightyellow;
+$topbar-dropdown-bg: $honey;
 // $topbar-dropdown-link-color: $white;
 // $topbar-dropdown-link-color-hover: $topbar-link-color-hover;
 $topbar-dropdown-link-bg: $topbar-dropdown-bg;
