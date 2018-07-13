@@ -685,7 +685,7 @@ class S3Config(Storage):
                 if row:
                     organisation_id = row.id
                 else:
-                    organisation_id = table.insert(name = name)
+                    organisation_id = table.insert(name = organisation_id)
         return organisation_id
 
     def get_auth_registration_requests_organisation_group(self):
