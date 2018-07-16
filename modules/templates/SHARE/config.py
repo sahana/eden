@@ -306,6 +306,16 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_event_sitrep_resource(r, tablename):
 
+        from s3 import s3_comments_widget
+
+        table = current.s3db.event_sitrep
+
+        table.name.widget = lambda f, v: \
+            s3_comments_widget(f, v, _placeholder = "Please provide a brief summary of the Situational Update you are submitting.")
+
+        table.comments.widget = lambda f, v: \
+            s3_comments_widget(f, v, _placeholder = "e.g. Any additional relevant information.")
+
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Add Situational Update"),
             title_display = T("HCT Activity and Response Report"),
@@ -719,8 +729,15 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_project_activity_resource(r, tablename):
 
+        from s3 import s3_comments_widget, \
+					   S3LocationFilter, S3OptionsFilter, \
+                       S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+
         db = current.db
         s3db = current.s3db
+
+        s3db.project_activity.comments.widget = lambda f, v: \
+            s3_comments_widget(f, v, _placeholder = "e.g. Items changed/replaced within kits, details on partial committments to a need, any other relevant information.")
 
         # Custom Filtered Components
         s3db.add_components(tablename,
@@ -762,9 +779,6 @@ def config(settings):
                                                     # },
                                                     )
                             )
-
-        from s3 import S3LocationFilter, S3OptionsFilter, \
-                       S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
         # Individual settings for specific tag components
         from gluon import IS_EMPTY_OR, IS_IN_SET
@@ -1050,15 +1064,22 @@ def config(settings):
                                    ),
                            }
 
-        f = s3db.req_need.status
+        table = s3db.req_need
+        f = table.status
         f.requires = IS_EMPTY_OR(IS_IN_SET(req_status_opts, zero = None))
         #f.represent = lambda opt: req_status_opts.get(opt, current.messages.UNKNOWN_OPT)
         f.represent = S3Represent(options = req_status_opts)
 
-        # These levels are for SHARE/LK
-        s3db.req_need.location_id.widget = S3LocationSelector(levels = ("L1", "L2"),
-                                                              required_levels = ("L1", "L2"),
-                                                              show_map = False)
+        table.name.widget = lambda f, v: \
+            s3_comments_widget(f, v, _placeholder = "e.g. 400 families require drinking water in Kegalle DS Division in 1-2 days.")
+
+        table.comments.widget = lambda f, v: \
+            s3_comments_widget(f, v, _placeholder = "e.g. Accessibility issues, additional contacts on the ground (if any), any other relevant information.")
+
+		# These levels are for SHARE/LK
+        table.location_id.widget = S3LocationSelector(levels = ("L1", "L2"),
+                                                      required_levels = ("L1", "L2"),
+                                                      show_map = False)
 
         # Custom Filtered Components
         s3db.add_components(tablename,
@@ -1092,7 +1113,7 @@ def config(settings):
         issue = components_get("issue")
         f = issue.table.value
         f.widget = lambda f, v: \
-            s3_comments_widget(f, v, _placeholder = "e.g. drinking water")
+            s3_comments_widget(f, v, _placeholder = "e.g. Lack of accessibility and contaminated wells due to heavy rainfall.")
 
         verified = components_get("verified")
         f = verified.table.value
@@ -1215,7 +1236,7 @@ def config(settings):
                                        multiple = False,
                                        ),
                        "name",
-                       (T("Issue"), "issue.value"),
+                       (T("Issue/cause"), "issue.value"),
                        demographic,
                        need_item,
                        S3SQLInlineComponent("document",
