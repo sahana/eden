@@ -1545,10 +1545,9 @@ class S3BooleanWidget(BooleanWidget):
         fields = self.fields
         click_to_show = self.click_to_show
 
-        default = dict(
-                        _type="checkbox",
-                        value=value,
-                    )
+        default = {"_type": "checkbox",
+                   "value": value,
+                   }
 
         attr = BooleanWidget._attributes(field, default, **attributes)
 
@@ -4823,11 +4822,12 @@ class S3LocationSelector(S3Selector):
 
         # Lx Dropdowns
         multiselect = settings.get_ui_multiselect_widget()
-        lx_rows = self._lx_selectors(fieldname,
+        lx_rows = self._lx_selectors(field,
+                                     fieldname,
                                      levels,
                                      labels,
-                                     required=required,
                                      multiselect=multiselect,
+                                     required=required,
                                      )
         components.update(lx_rows)
 
@@ -5339,20 +5339,22 @@ class S3LocationSelector(S3Selector):
 
     # -------------------------------------------------------------------------
     def _lx_selectors(self,
+                      field,
                       fieldname,
                       levels,
                       labels,
-                      required=False,
-                      multiselect=False):
+                      multiselect=False,
+                      required=False):
         """
             Render the Lx-dropdowns
 
+            @param field: the field (to construct the HTML Names)
             @param fieldname: the fieldname (to construct the HTML IDs)
             @param levels: tuple of levels in order, like ("L0", "L1", ...)
             @param labels: the labels for the hierarchy levels as dict {level:label}
-            @param required: whether selection is required,
             @param multiselect: Use multiselect-dropdowns (specify "search" to
                                 make the dropdowns searchable)
+            @param required: whether selection is required
 
             @return: a dict of components
                      {name: (label, widget, id, hidden)}
@@ -5372,9 +5374,13 @@ class S3LocationSelector(S3Selector):
         # 1st level is always hidden until populated
         hidden = True
 
+        _fieldname = fieldname.split("%s_" % field.tablename)[1]
+
         #T = current.T
         required_levels = self.required_levels
         for level in levels:
+
+            _name = "%s_%s" % (_fieldname, level)
 
             _id = "%s_%s" % (fieldname, level)
 
@@ -5384,6 +5390,7 @@ class S3LocationSelector(S3Selector):
             #placeholder = T("Select %(level)s") % {"level": label}
             placeholder = ""
             widget = SELECT(OPTION(placeholder, _value=""),
+                            _name = _name,
                             _id = _id,
                             _class = _class,
                             )

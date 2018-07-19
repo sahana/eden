@@ -1897,6 +1897,30 @@ def need():
     return s3_rest_controller(rheader = s3db.req_rheader)
 
 # -----------------------------------------------------------------------------
+def need_line():
+    """
+        RESTful CRUD Controller for Need Lines
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def need_response():
+    """
+        RESTful CRUD Controller for Need Responses (i.e. Activity Groups)
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def need_response_line():
+    """
+        RESTful CRUD Controller for Need Response Lines (i.e. Activities)
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def facility():
     # Open record in this controller after creation
     s3db.configure("org_facility",

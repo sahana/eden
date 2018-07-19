@@ -22,3 +22,19 @@ $.filterOptionsS3({
    'lookupResource': 'item_pack',
    'msgNoRecords': i18n.no_packs
 })
+$.filterOptionsS3({
+   'trigger': 'location_id_L2',
+   'target': {'name': 'coarse_location_id'},
+   'lookupPrefix': 'gis',
+   'lookupResource': 'location',
+   // Level hardcoded for SHARE/LK
+   'lookupURL': S3.Ap.concat('/gis/location.json?location.level=L3&location.parent=')
+})
+$.filterOptionsS3({
+   'trigger': {'name': 'coarse_location_id'},
+   'target': {'name': 'location_id'},
+   'lookupPrefix': 'gis',
+   'lookupResource': 'location',
+   // Level hardcoded for SHARE/LK
+   'lookupURL': S3.Ap.concat('/gis/location.json?location.level=L4&location.parent=')
+})

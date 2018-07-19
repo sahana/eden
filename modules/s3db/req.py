@@ -37,10 +37,14 @@ __all__ = ("RequestPriorityStatusModel",
            "RequestNeedsDemographicsModel",
            "RequestNeedsItemsModel",
            "RequestNeedsSkillsModel",
+           "RequestNeedsLineModel",
            "RequestNeedsOrganisationModel",
            "RequestNeedsSectorModel",
            "RequestNeedsSiteModel",
            "RequestNeedsTagModel",
+           "RequestNeedsResponseModel",
+           "RequestNeedsResponseLineModel",
+           "RequestNeedsResponseOrganisationModel",
            "RequestTagModel",
            "RequestTaskModel",
            "CommitModel",
@@ -2392,14 +2396,14 @@ class RequestNeedsModel(S3Model):
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Add Needs"),
             title_list = T("Needs"),
-            title_display=T("Needs"),
-            title_update=T("Edit Needs"),
+            title_display = T("Needs"),
+            title_update = T("Edit Needs"),
             title_upload = T("Import Needs"),
             label_list_button = T("List Needs"),
-            label_delete_button=T("Delete Needs"),
-            msg_record_created=T("Needs added"),
-            msg_record_modified=T("Needs updated"),
-            msg_record_deleted=T("Needs deleted"),
+            label_delete_button = T("Delete Needs"),
+            msg_record_created = T("Needs added"),
+            msg_record_modified = T("Needs updated"),
+            msg_record_deleted = T("Needs deleted"),
             msg_list_empty = T("No Needs currently registered"),
             )
 
@@ -2436,6 +2440,7 @@ class RequestNeedsModel(S3Model):
                             req_need_demographic = "need_id",
                             req_need_item = "need_id",
                             req_need_skill = "need_id",
+                            req_need_line = "need_id",
                             req_need_tag = {"name": "tag",
                                             "joinby": "need_id",
                                             },
@@ -2767,6 +2772,164 @@ class RequestNeedsSkillsModel(S3Model):
         return {}
 
 # =============================================================================
+class RequestNeedsLineModel(S3Model):
+    """
+        Simple Requests Management System
+        - optional extension to support Demographics & Items within a single Line
+        - used by SHARE/LK
+    """
+
+    names = ("req_need_line",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        if current.s3db.table("stats_demographic"):
+            title = current.response.s3.crud_strings["stats_demographic"].label_create
+            parameter_id_comment = S3PopupLink(c = "stats",
+                                               f = "demographic",
+                                               vars = {"child": "parameter_id"},
+                                               title = title,
+                                               )
+        else:
+            parameter_id_comment = None
+
+        # ---------------------------------------------------------------------
+        # Lines
+        #
+
+        tablename = "req_need_line"
+        self.define_table(tablename,
+                          self.req_need_id(empty = False),
+                          self.req_need_response_line_id(),
+                          # A less precise location for this line
+                          # Here to more easily allow multiple dropdowns within an Inline form
+                          self.gis_location_id("coarse_location_id"),
+                          # A more precise location for this line
+                          self.gis_location_id(),
+                          self.org_sector_id(),
+                          self.super_link("parameter_id", "stats_parameter",
+                                          instance_types = ("stats_demographic",),
+                                          #label = T("Demographic"),
+                                          label = T("People affected"),
+                                          represent = self.stats_parameter_represent,
+                                          readable = True,
+                                          writable = True,
+                                          empty = False,
+                                          comment = parameter_id_comment,
+                                          ),
+                          Field("value", "double",
+                                label = T("Number"),
+                                #label = T("Number in Need"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_NOT_EMPTY(),
+                                ),
+                          Field("value_committed", "double",
+                                label = T("Number Committed"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                # Enable in templates as-required
+                                readable = False,
+                                # Normally set automatically
+                                writable = False,
+                                ),
+                          Field("value_uncommitted", "double",
+                                label = T("Number Uncommitted"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                # Enable in templates as-required
+                                readable = False,
+                                # Normally set automatically
+                                writable = False,
+                                ),
+                          Field("value_reached", "double",
+                                label = T("Number Reached"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                # Enable in templates as-required
+                                readable = False,
+                                # Normally set automatically
+                                writable = False,
+                                ),
+                          self.supply_item_category_id(),
+                          self.supply_item_id(empty = False,
+                                              # Default:
+                                              #ondelete = "RESTRICT",
+                                              # Filter Item dropdown based on Category
+                                              script = '''
+$.filterOptionsS3({
+ 'trigger':'item_category_id',
+ 'target':'item_id',
+ 'lookupPrefix':'supply',
+ 'lookupResource':'item',
+})''',
+                                              # Don't use Auto-complete
+                                              widget = None,
+                                              ),
+                          self.supply_item_pack_id(),
+                          Field("quantity", "double",
+                                label = T("Quantity"),
+                                #label = T("Quantity Requested"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                ),
+                          self.req_timeframe(),
+                          Field("quantity_committed", "double",
+                                label = T("Quantity Committed"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                # Enable in templates as-required
+                                readable = False,
+                                # Normally set automatically
+                                writable = False,
+                                ),
+                          Field("quantity_uncommitted", "double",
+                                label = T("Quantity Uncommitted"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                # Enable in templates as-required
+                                readable = False,
+                                # Normally set automatically
+                                writable = False,
+                                ),
+                          Field("quantity_delivered", "double",
+                                label = T("Quantity Delivered"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                # Enable in templates as-required
+                                readable = False,
+                                # Normally set automatically
+                                writable = False,
+                                ),
+                          #s3_comments(),
+                          self.req_status("status",
+                                          label = T("Fulfilment Status"),
+                                          ),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
 class RequestNeedsOrganisationModel(S3Model):
     """
         Simple Requests Management System
@@ -2937,6 +3100,312 @@ class RequestNeedsTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class RequestNeedsResponseModel(S3Model):
+    """
+        A Response to a Need
+        - a group of Activities
+
+        Used by SHARE/LK
+    """
+
+    names = ("req_need_response",
+             "req_need_response_id",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        # ---------------------------------------------------------------------
+        # Response
+        #
+        tablename = "req_need_response"
+        self.define_table(tablename,
+                          self.super_link("doc_id", "doc_entity"),
+                          self.req_need_id(),
+                          self.gis_location_id(),
+                          s3_date(default = "now"),
+                          s3_comments("name",
+                                      label = T("Summary of Needs/Activities"),
+                                      comment = None,
+                                      ),
+                          s3_comments("contact",
+                                      label = T("Contact Details"),
+                                      ),
+                          s3_comments("address",
+                                      label = T("Delivery Address"),
+                                      ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD strings
+        # Called Activities in SHARE/LK, which is the only usecase
+        #current.response.s3.crud_strings[tablename] = Storage(
+        #    label_create = T("Add Activity Group"),
+        #    title_list = T("Activity Groups"),
+        #    title_display = T("Activity Group"),
+        #    title_update = T("Edit Activity Group"),
+        #    title_upload = T("Import Activity Groups"),
+        #    label_list_button = T("List Activity Groups"),
+        #    label_delete_button = T("Delete Activity Group"),
+        #    msg_record_created = T("Activity Group added"),
+        #    msg_record_modified = T("Activity Group updated"),
+        #    msg_record_deleted = T("Activity Group deleted"),
+        #    msg_list_empty = T("No Activity Groups currently registered"),
+        #    )
+
+        self.configure(tablename,
+                       super_entity = "doc_entity",
+                       )
+
+        # Components
+        self.add_components(tablename,
+                            event_event = {"link": "event_event_need_response",
+                                            "joinby": "need_response_id",
+                                            "key": "event_id",
+                                            "multiple": False,
+                                            },
+                            org_organisation = {"link": "req_need_response_organisation",
+                                                "joinby": "need_response_id",
+                                                "key": "organisation_id",
+                                                "multiple": False,
+                                                },
+                            req_need_response_line = "need_response_id",
+                            )
+
+
+        # NB Only instance of this being used (SHARE) over-rides this to show the req_number
+        represent = S3Represent(lookup = tablename,
+                                show_link = True,
+                                )
+        need_response_id = S3ReusableField("need_response_id", "reference %s" % tablename,
+                                           label = T("Activity Group"),
+                                           ondelete = "CASCADE",
+                                           represent = represent,
+                                           requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "req_need_response.id",
+                                                                  represent,
+                                                                  orderby="req_need_response.date",
+                                                                  sort=True,
+                                                                  )),
+                                           sortby = "date",
+                                           )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"req_need_response_id": need_response_id,
+                }
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+
+        dummy = S3ReusableField("dummy", "string",
+                                readable = False,
+                                writable = False,
+                                )
+
+        return {"req_need_response_id": lambda **attr: dummy("need_response_id"),
+                }
+
+# =============================================================================
+class RequestNeedsResponseLineModel(S3Model):
+    """
+        A Line within a Response to a Need
+        - an Activity
+        Not using the normal Activity model to avoid components of components
+
+        Used by SHARE/LK
+    """
+
+    names = ("req_need_response_line",
+             "req_need_response_line_id",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        modality_opts = {1: T("Cash"),
+                         2: T("In-kind"),
+                         }
+
+        if current.s3db.table("stats_demographic"):
+            title = current.response.s3.crud_strings["stats_demographic"].label_create
+            parameter_id_comment = S3PopupLink(c = "stats",
+                                               f = "demographic",
+                                               vars = {"child": "parameter_id"},
+                                               title = title,
+                                               )
+        else:
+            parameter_id_comment = None
+
+        # ---------------------------------------------------------------------
+        # Response Line
+        #
+        tablename = "req_need_response_line"
+        self.define_table(tablename,
+                          self.req_need_response_id(),
+                          # A less precise location for this line
+                          # Here to more easily allow multiple dropdowns within an Inline form
+                          self.gis_location_id("coarse_location_id"),
+                          # A more precise location for this line
+                          self.gis_location_id(),
+                          self.org_sector_id(),
+                          Field("modality", "integer",
+                                label = T("Modality"),
+                                represent = S3Represent(options = modality_opts),
+                                requires = IS_IN_SET(modality_opts),
+                                ),
+                          s3_date(label = T("Date Planned")),
+                          s3_date("end_date",
+                                  label = T("Date Completed"),
+                                  ),
+                          self.super_link("parameter_id", "stats_parameter",
+                                          instance_types = ("stats_demographic",),
+                                          label = T("Beneficiaries"),
+                                          represent = self.stats_parameter_represent,
+                                          readable = True,
+                                          writable = True,
+                                          empty = False,
+                                          comment = parameter_id_comment,
+                                          ),
+                          Field("value", "double",
+                                label = T("Number Planned"),
+                                #label = T("Number in Need"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_NOT_EMPTY(),
+                                ),
+                          Field("value_reached", "double",
+                                label = T("Number Reached"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                ),
+                          self.supply_item_category_id(),
+                          self.supply_item_id(empty = False,
+                                              # Default:
+                                              #ondelete = "RESTRICT",
+                                              # Filter Item dropdown based on Category
+                                              script = '''
+$.filterOptionsS3({
+ 'trigger':'item_category_id',
+ 'target':'item_id',
+ 'lookupPrefix':'supply',
+ 'lookupResource':'item',
+})''',
+                                              # Don't use Auto-complete
+                                              widget = None,
+                                              ),
+                          self.supply_item_pack_id(),
+                          Field("quantity", "double",
+                                label = T("Quantity Planned"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                ),
+                          Field("quantity_delivered", "double",
+                                label = T("Quantity Delivered"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                ),
+                          self.project_status_id(),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+
+        # NB Only instance of this being used (SHARE) over-rides this to show the Organisation
+        represent = S3Represent(lookup = tablename,
+                                fields = ["comments"],
+                                show_link = True,
+                                )
+        need_response_line_id = S3ReusableField("need_response_line_id", "reference %s" % tablename,
+                                                label = T("Activity"),
+                                                ondelete = "CASCADE",
+                                                represent = represent,
+                                                requires = IS_EMPTY_OR(
+                                                            IS_ONE_OF(db, "req_need_response_line.id",
+                                                                      represent,
+                                                                      orderby="req_need_response_line.date",
+                                                                      sort=True,
+                                                                      )),
+                                                sortby = "date",
+                                                )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"req_need_response_line_id": need_response_line_id,
+                }
+
+# =============================================================================
+class RequestNeedsResponseOrganisationModel(S3Model):
+    """
+        Organisations involved in Activity Groups
+    """
+
+    names = ("req_need_response_organisation",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Activity Groups <=> Organisations
+        #
+        organisation_id = self.org_organisation_id # Load normal model
+        CREATE = current.response.s3.crud_strings["org_organisation"].label_create
+
+        project_organisation_roles = current.deployment_settings.get_project_organisation_roles()
+
+        tablename = "req_need_response_organisation"
+        self.define_table(tablename,
+                          self.req_need_response_id(empty = False),
+                          organisation_id(comment = S3PopupLink(c = "org",
+                                                                f = "organisation",
+                                                                label = CREATE,
+                                                                tooltip = None,
+                                                                vars = {"prefix": "req"},
+                                                                ),
+                                          empty = False,
+                                          ),
+                          Field("role", "integer",
+                                default = 1, # Lead
+                                label = T("Role"),
+                                requires = IS_EMPTY_OR(
+                                            IS_IN_SET(project_organisation_roles)
+                                            ),
+                                represent = lambda opt: \
+                                            project_organisation_roles.get(opt,
+                                                                           NONE)),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary=("need_response_id",
+                                                          "organisation_id",
+                                                          "role",
+                                                          ),
+                                                 ),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
         return {}
 
 # =============================================================================

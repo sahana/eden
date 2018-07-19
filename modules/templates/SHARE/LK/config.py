@@ -18,6 +18,16 @@ def config(settings):
     settings.base.prepopulate += ("SHARE/LK",)
     settings.base.prepopulate_demo += ("SHARE/Demo",)
 
+    # -------------------------------------------------------------------------
+    # L10n (Localization) settings
+    settings.L10n.languages = OrderedDict([
+        ("en-gb", "English"),
+        ("si", "Sinhala"),
+        ("ta", "Tamil"),
+    ])
+    # Default Language
+    settings.L10n.default_language = "en-gb"
+
     # Finance settings
     settings.fin.currencies = {
         #"EUR" : "Euros",

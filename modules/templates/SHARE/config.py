@@ -260,6 +260,7 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
+        # Used just for Statuses
         ("project", Storage(
             name_nice = "Tasks",
             #description = "Tracking of Projects, Activities and Tasks",
@@ -479,6 +480,129 @@ def config(settings):
     settings.customise_org_sector_controller = customise_org_sector_controller
 
     # -------------------------------------------------------------------------
+    def req_need_commit(r, **attr):
+        """
+            Custom method to Commit to a Need by creating an Activity Group
+        """
+
+        # Create Activity Group with values from Need
+        need_id = r.id
+
+        db = current.db
+        s3db = current.s3db
+        ntable = s3db.req_need
+        ntable_id = ntable.id
+        netable = s3db.event_event_need
+        nstable = s3db.req_need_sector
+        left = [netable.on(netable.need_id == ntable_id),
+                nstable.on(nstable.need_id == ntable_id),
+                ]
+        need = db(ntable_id == need_id).select(ntable.name,
+                                               ntable.location_id,
+                                               netable.event_id,
+                                               nstable.sector_id,
+                                               left = left,
+                                               limitby = (0, 1)
+                                               ).first()
+
+        atable = s3db.project_activity
+        activity_id = atable.insert(name = need["req_need.name"],
+                                    location_id = need["req_need.location_id"],
+                                    )
+        organisation_id = current.auth.user.organisation_id
+        if organisation_id:
+            s3db.project_activity_organisation.insert(activity_id = activity_id,
+                                                      organisation_id = organisation_id,
+                                                      role = 1,
+                                                      )
+
+        event_id = need["event_event_need.event_id"]
+        if event_id:
+            aetable = s3db.event_activity
+            aetable.insert(activity_id = activity_id,
+                           event_id = event_id,
+                           )
+
+        sector_id = need["req_need_sector.sector_id"]
+        if sector_id:
+            astable = s3db.project_sector_activity
+            astable.insert(activity_id = activity_id,
+                           sector_id = sector_id,
+                           )
+
+        nitable = s3db.req_need_item
+        query = (nitable.need_id == need_id) & \
+                (nitable.deleted == False)
+        items = db(query).select(nitable.item_category_id,
+                                 nitable.item_id,
+                                 nitable.item_pack_id,
+                                 nitable.timeframe,
+                                 nitable.quantity,
+                                 )
+        if items:
+            iinsert = s3db.project_activity_item.insert
+            for item in items:
+                iinsert(activity_id = activity_id,
+                        item_category_id = item.item_category_id,
+                        item_id = item.item_id,
+                        item_pack_id = item.item_pack_id,
+                        timeframe = item.timeframe,
+                        target_value = item.quantity,
+                        )
+
+        ndtable = s3db.req_need_demographic
+        query = (ndtable.need_id == need_id) & \
+                (ndtable.deleted == False)
+        demographics = db(query).select(ndtable.parameter_id,
+                                        #ndtable.timeframe,
+                                        ndtable.value,
+                                        )
+        if demographics:
+            dinsert = s3db.project_activity_demographic.insert
+            for demographic in demographics:
+                dinsert(activity_id = activity_id,
+                        parameter_id = demographic.parameter_id,
+                        #timeframe = demographic.timeframe,
+                        target_value = demographic.value,
+                        )
+
+        # Link to Need
+        s3db.req_need_activity.insert(activity_id = activity_id,
+                                      need_id = need_id,
+                                      )
+
+        # Update Need to show Fulfilled
+        ntable = s3db.req_need
+        need = current.db(ntable.id == need_id).select(ntable.id,
+                                                       ntable.status,
+                                                       limitby = (0, 1)
+                                                       ).first()
+        if need.status in (0, 1):
+            # Set to Fully Committed
+            need.update_record(status = 2)
+
+        # Redirect to Update
+        from gluon import redirect
+        redirect(URL(c= "project", f="activity",
+                     args = [activity_id, "update"],
+                     ))
+
+    # -------------------------------------------------------------------------
+    def req_need_line_commit(r, **attr):
+        """
+            Custom method to Commit to a Need Line by creating an Activity
+        """
+
+        # Create Activity with values from Need Line
+        need_line_id = r.id
+
+        db = current.db
+        s3db = current.s3db
+
+        #@ToDo: complete
+        return
+
+    # -------------------------------------------------------------------------
     def req_need_status_update(need_id):
         """
             Update the Need's fulfilment Status
@@ -669,320 +793,6 @@ def config(settings):
             need.update_record(status = status)
 
     # -------------------------------------------------------------------------
-    def project_activity_ondelete(row):
-        """
-            Ensure that the Need (if-any) has the correct Status
-        """
-
-        import json
-
-        db = current.db
-        s3db = current.s3db
-
-        activity_id = row.get("id")
-
-        # Lookup the Need
-        need_id = None
-        natable = s3db.req_need_activity
-        deleted_links = db(natable.deleted == True).select(natable.deleted_fk)
-        for link in deleted_links:
-            deleted_fk = json.loads(link.deleted_fk)
-            if activity_id == deleted_fk["activity_id"]:
-                need_id = deleted_fk["need_id"]
-                break
-
-        if not need_id:
-            return
-
-        # Check that the Need hasn't been deleted
-        ntable = s3db.req_need
-        need = db(ntable.id == need_id).select(ntable.deleted,
-                                               limitby = (0, 1)
-                                               ).first()
-
-        if need and not need.deleted:
-            req_need_status_update(need_id)
-
-    # -------------------------------------------------------------------------
-    def project_activity_postprocess(form):
-        """
-            Ensure that the Need (if-any) has the correct Status
-        """
-
-        s3db = current.s3db
-
-        activity_id = form.vars.id
-
-        # Lookup the Need
-        ntable = s3db.req_need
-        natable = s3db.req_need_activity
-        query = (natable.activity_id == activity_id) & \
-                (natable.need_id == ntable.id) & \
-                (ntable.deleted == False)
-        need = current.db(query).select(ntable.id,
-                                        limitby = (0, 1)
-                                        ).first()
-
-        if need:
-            req_need_status_update(need.id)
-
-    # -------------------------------------------------------------------------
-    def customise_project_activity_resource(r, tablename):
-
-        from s3 import s3_comments_widget, \
-					   S3LocationFilter, S3OptionsFilter, \
-                       S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
-
-        db = current.db
-        s3db = current.s3db
-
-        s3db.project_activity.comments.widget = lambda f, v: \
-            s3_comments_widget(f, v, _placeholder = "e.g. Items changed/replaced within kits, details on partial committments to a need, any other relevant information.")
-
-        # Custom Filtered Components
-        s3db.add_components(tablename,
-                            project_activity_organisation = (# Agency
-                                                             {"name": "agency",
-                                                              "joinby": "activity_id",
-                                                              "filterby": {"role": 1,
-                                                                           },
-                                                              #"multiple": False,
-                                                              },
-                                                             # Partners
-                                                             {"name": "partner",
-                                                              "joinby": "activity_id",
-                                                              "filterby": {"role": 2,
-                                                                           },
-                                                              #"multiple": False,
-                                                              },
-                                                             # Donors
-                                                             {"name": "donor",
-                                                              "joinby": "activity_id",
-                                                              "filterby": {"role": 3,
-                                                                           },
-                                                              #"multiple": False,
-                                                              },
-                                                             ),
-                            project_activity_tag = (# Modality
-                                                    {"name": "modality",
-                                                     "joinby": "activity_id",
-                                                     "filterby": {"tag": "modality",
-                                                                  },
-                                                     "multiple": False,
-                                                     },
-                                                    # Number
-                                                    #{"name": "number",
-                                                    # "joinby": "activity_id",
-                                                    # "filterby": {"tag": "number",
-                                                    #              },
-                                                    # "multiple": False,
-                                                    # },
-                                                    )
-                            )
-
-        # Individual settings for specific tag components
-        from gluon import IS_EMPTY_OR, IS_IN_SET
-        components_get = s3db.resource(tablename).components.get
-
-        donor = components_get("donor")
-        donor.table.organisation_id.default = None
-
-        partner = components_get("partner")
-        partner.table.organisation_id.default = None
-
-        modality = components_get("modality")
-        modality.table.value.requires = IS_EMPTY_OR(IS_IN_SET(("Cash", "In-kind")))
-
-        #number = components_get("number")
-        #number.table.value.requires = IS_EMPTY_OR(IS_INT_IN_RANGE())
-
-        #sdtable = s3db.stats_demographic
-        #demographics = db(sdtable.deleted == False).select(sdtable.name)
-        #demographics = [d.name for d in demographics]
-        #s3db.project_activity_data.unit.requires = IS_EMPTY_OR(IS_IN_SET(demographics))
-
-        crud_fields = [S3SQLInlineLink("event",
-                                       field = "event_id",
-                                       label = T("Disaster"),
-                                       multiple = False,
-                                       #required = True,
-                                       ),
-                       S3SQLInlineComponent("agency",
-                                            name = "agency",
-                                            label = T("Agency"),
-                                            fields = [("", "organisation_id"),],
-                                            #multiple = False,
-                                            required = True,
-                                            ),
-                       # @ToDo: MultiSelectWidget is nicer UI but S3SQLInlineLink
-                       #        requires the link*ed* table as component (not the
-                       #        link table as applied here) and linked components
-                       #        cannot currently be filtered by link table fields
-                       #        (=> should solve the latter rather than the former)
-                       # @ToDo: Fix Create Popups
-                       S3SQLInlineComponent("partner",
-                                            name = "partner",
-                                            label = T("Implementing Partner"),
-                                            fields = [("", "organisation_id"),],
-                                            ),
-                       S3SQLInlineComponent("donor",
-                                            name = "donor",
-                                            label = T("Donor"),
-                                            fields = [("", "organisation_id"),],
-                                            ),
-                       "location_id",
-                       S3SQLInlineLink("sector",
-                                       field = "sector_id",
-                                       filter = False,
-                                       label = T("Sector"),
-                                       multiple = False,
-                                       ),
-                       (T("Summary of Activity"), "name"),
-                       S3SQLInlineComponent("modality",
-                                            name = "modality",
-                                            label = T("Modality"),
-                                            fields = [("", "value"),],
-                                            multiple = False,
-                                            ),
-                       #S3SQLInlineComponent("number",
-                       #                     name = "number",
-                       #                     label = T("Number of Items/Kits/Activities"),
-                       #                     fields = [("", "value"),],
-                       #                     multiple = False,
-                       #                     ),
-                       (T("Activity Date (Planned/Start Date)"), "date"),
-                       (T("Activity Date (Completion Date)"), "end_date"),
-                       #S3SQLInlineComponent("activity_data",
-                       #                     label = T("People / Households"),
-                       #                     fields = [(T("Type"), "unit"),
-                       #                               (T("Number Targeted"), "target_value"),
-                       #                               (T("Number Reached"), "value"),
-                       #                               ],
-                       #                     #multiple = False,
-                       #                     ),
-                       S3SQLInlineComponent("activity_demographic",
-                                            label = T("Beneficiaries"),
-                                            #link = False,
-                                            fields = [(T("Type"), "parameter_id"),
-                                                      #(T("Estimated Delivery Time"), "timeframe"),
-                                                      (T("Number Planned"), "target_value"),
-                                                      (T("Number Reached"), "value"),
-                                                      ],
-                                            #multiple = False,
-                                            ),
-                       S3SQLInlineComponent("activity_item",
-                                            label = T("Items"),
-                                            fields = ["item_category_id",
-                                                      "item_id",
-                                                      (T("Unit"), "item_pack_id"),
-                                                      (T("Estimated Delivery Time"), "timeframe"),
-                                                      (T("Number Planned"), "target_value"),
-                                                      (T("Number Distributed"), "value"),
-                                                      ],
-                                            #multiple = False,
-                                            ),
-                       (T("Activity Status"), "status_id"),
-                       "comments",
-                       ]
-
-        from controllers import req_NeedRepresent
-        natable = s3db.req_need_activity
-        #f = natable.need_id
-        #f.represent = req_NeedRepresent()
-        natable.need_id.represent = req_NeedRepresent()
-
-        if r.id and r.resource.tablename == tablename:
-            need_link = db(natable.activity_id == r.id).select(natable.need_id,
-                                                               limitby = (0, 1)
-                                                               ).first()
-            if need_link:
-                # This hides the widget from Update forms instead of just rendering read-only!
-                #f.writable = False
-                crud_fields.append(S3SQLInlineLink("need",
-                                                   field = "need_id",
-                                                   label = T("Need"),
-                                                   multiple = False,
-                                                   readonly = True,
-                                                   ))
-
-        crud_form = S3SQLCustomForm(*crud_fields,
-                                    postprocess = project_activity_postprocess)
-
-        filter_widgets = [S3OptionsFilter("agency.organisation_id",
-                                          label = T("Agency"),
-                                          ),
-                          S3OptionsFilter("sector_activity.sector_id"),
-                          S3LocationFilter("location_id",
-                                           # These levels are for SHARE/LK
-                                           levels = ("L2", "L3", "L4"),
-                                           ),
-                          S3OptionsFilter("event.event_type_id",
-                                          hidden = True,
-                                          ),
-                          # @ToDo: Filter this list dynamically based on Event Type:
-                          S3OptionsFilter("event__link.event_id",
-                                          hidden = True,
-                                          ),
-                          S3OptionsFilter("status_id",
-                                          cols = 4,
-                                          label = T("Status"),
-                                          hidden = True,
-                                          ),
-                          ]
-
-        s3db.configure(tablename,
-                       crud_form = crud_form,
-                       filter_widgets = filter_widgets,
-                       list_fields = [(T("Agency"), "agency.organisation_id"),
-                                      (T("Implementing Partner"), "partner.organisation_id"),
-                                      (T("District"), "location_id$L1"),
-                                      (T("DS Division"), "location_id$L2"),
-                                      (T("GN Division"), "location_id$L3"),
-                                      (T("Sector"), "sector_activity.sector_id"),
-                                      (T("Summary of Activity"), "name"),
-                                      (T("Activity Status"), "status_id"),
-                                      (T("Modality"), "modality.value"),
-                                      (T("Activity Date (Planned/Start Date)"), "date"),
-                                      (T("Activity Date (Completion Date)"), "end_date"),
-                                      #(T("People / Households"), "activity_data.unit"),
-                                      #(T("Total Number of People/HH Targeted"), "activity_data.target_value"),
-                                      (T("People / Households"), "activity_demographic.parameter_id"),
-                                      (T("Total Number of People/HH Reached"), "activity_demographic.value"),
-                                      (T("Donor"), "donor.organisation_id"),
-                                      (T("Needs"), "need__link.need_id"),
-                                      "comments",
-                                      ],
-                       ondelete = project_activity_ondelete,
-                       )
-
-    settings.customise_project_activity_resource = customise_project_activity_resource
-
-    # -------------------------------------------------------------------------
-    def customise_project_activity_controller(**attr):
-
-        s3 = current.response.s3
-
-        # Custom postp
-        standard_postp = s3.postp
-        def postp(r, output):
-            # Call standard postp
-            if callable(standard_postp):
-                output = standard_postp(r, output)
-
-            if r.interactive:
-                # Inject the javascript to handle dropdown filtering
-                # - normnally injected through AddResourceLink, but this isn't there in Inline widget
-                # - we also need to turn the trigger & target into dicts
-                s3.scripts.append("/%s/static/themes/SHARE/js/supply.js" % r.application)
-
-            return output
-        s3.postp = postp
-
-        return attr
-
-    settings.customise_project_activity_controller = customise_project_activity_controller
-
-    # -------------------------------------------------------------------------
     def req_need_postprocess(form):
 
         if form.record:
@@ -1040,10 +850,10 @@ def config(settings):
     def customise_req_need_resource(r, tablename):
 
         from gluon import IS_EMPTY_OR, IS_IN_SET, SPAN
+        from gluon.sqlhtml import BooleanWidget
 
         from s3 import s3_comments_widget, s3_yes_no_represent, \
-                       S3LocationFilter, S3OptionsFilter, S3TextFilter, \
-                       S3LocationSelector, \
+                       S3LocationSelector, S3LocationDropdownWidget, \
                        S3Represent, \
                        S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
@@ -1076,10 +886,18 @@ def config(settings):
         table.comments.widget = lambda f, v: \
             s3_comments_widget(f, v, _placeholder = "e.g. Accessibility issues, additional contacts on the ground (if any), any other relevant information.")
 
-		# These levels are for SHARE/LK
+		# These levels/labels are for SHARE/LK
         table.location_id.widget = S3LocationSelector(levels = ("L1", "L2"),
                                                       required_levels = ("L1", "L2"),
                                                       show_map = False)
+
+        ltable = s3db.req_need_line
+        f = ltable.coarse_location_id
+        f.label = T("Division")
+        f.widget = S3LocationDropdownWidget(level="L3")
+        f = ltable.location_id
+        f.label = T("GN")
+        f.widget = S3LocationDropdownWidget(level="L4")
 
         # Custom Filtered Components
         s3db.add_components(tablename,
@@ -1104,11 +922,34 @@ def config(settings):
                                                           },
                                              "multiple": False,
                                              },
+                                            # Contact
+                                            {"name": "contact",
+                                             "joinby": "need_id",
+                                             "filterby": {"tag": "contact",
+                                                          },
+                                             "multiple": False,
+                                             },
+                                            # Address
+                                            {"name": "address",
+                                             "joinby": "need_id",
+                                             "filterby": {"tag": "address",
+                                                          },
+                                             "multiple": False,
+                                             },
                                             )
                             )
 
         # Individual settings for specific tag components
         components_get = s3db.resource(tablename).components.get
+
+        address = components_get("address")
+        f = address.table.value
+        f.widget = s3_comments_widget
+
+        contact = components_get("contact")
+        f = contact.table.value
+        f.widget = lambda f, v: \
+            s3_comments_widget(f, v, _placeholder = "of person on the ground e.g. GA, DS")
 
         issue = components_get("issue")
         f = issue.table.value
@@ -1119,6 +960,8 @@ def config(settings):
         f = verified.table.value
         f.represent = s3_yes_no_represent
         f.requires = IS_EMPTY_OR(IS_IN_SET((True, False)))
+        #f.widget = BooleanWidget.widget
+
         auth = current.auth
         user = auth.user
         if user and user.organisation_id:
@@ -1154,63 +997,107 @@ def config(settings):
                     org_readonly = True
                 else:
                     org_readonly = False
-            table = s3db.req_need_item
-            table.quantity.label = T("Quantity Requested")
-            table.quantity_committed.readable = True
-            table.quantity_uncommitted.readable = True
-            table.quantity_delivered.readable = True
-            need_item = S3SQLInlineComponent("need_item",
-                                             label = T("Items Needed"),
-                                             fields = ["item_category_id",
-                                                       "item_id",
-                                                       (T("Unit"), "item_pack_id"),
-                                                       (T("Needed within Timeframe"), "timeframe"),
-                                                       "quantity",
-                                                       "quantity_committed",
-                                                       "quantity_uncommitted",
-                                                       "quantity_delivered",
-                                                       #(T("Urgency"), "priority"),
-                                                       "comments",
-                                                       ],
-                                             )
-            table = s3db.req_need_demographic
-            table.value.label = T("Number in Need")
-            table.value_committed.readable = True
-            table.value_uncommitted.readable = True
-            table.value_reached.readable = True
-            demographic = S3SQLInlineComponent("need_demographic",
-                                               label = T("People Affected"),
-                                               fields = [(T("Type"), "parameter_id"),
-                                                         #(T("Needed within Timeframe"), "timeframe"),
-                                                         "value",
-                                                         "value_committed",
-                                                         "value_uncommitted",
-                                                         "value_reached",
-                                                         "comments",
-                                                         ],
-                                               )
+            #table = s3db.req_need_item
+            #table.quantity.label = T("Quantity Requested")
+            #table.quantity_committed.readable = True
+            #table.quantity_uncommitted.readable = True
+            #table.quantity_delivered.readable = True
+            #need_item = S3SQLInlineComponent("need_item",
+            #                                 label = T("Items Needed"),
+            #                                 fields = ["item_category_id",
+            #                                           "item_id",
+            #                                           (T("Unit"), "item_pack_id"),
+            #                                           (T("Needed within Timeframe"), "timeframe"),
+            #                                           "quantity",
+            #                                           "quantity_committed",
+            #                                           "quantity_uncommitted",
+            #                                           "quantity_delivered",
+            #                                           #(T("Urgency"), "priority"),
+            #                                           "comments",
+            #                                           ],
+            #                                 )
+            #table = s3db.req_need_demographic
+            #table.value.label = T("Number in Need")
+            #table.value_committed.readable = True
+            #table.value_uncommitted.readable = True
+            #table.value_reached.readable = True
+            #demographic = S3SQLInlineComponent("need_demographic",
+            #                                   label = T("People Affected"),
+            #                                   fields = [(T("Type"), "parameter_id"),
+            #                                             #(T("Needed within Timeframe"), "timeframe"),
+            #                                             "value",
+            #                                             "value_committed",
+            #                                             "value_uncommitted",
+            #                                             "value_reached",
+            #                                             "comments",
+            #                                             ],
+            #                                   )
+            #ltable.value.label = T("Number in Need")
+            ltable.value_committed.readable = True
+            ltable.value_uncommitted.readable = True
+            ltable.value_reached.readable = True
+            #ltable.quantity.label = T("Quantity Requested")
+            ltable.quantity_committed.readable = True
+            ltable.quantity_uncommitted.readable = True
+            ltable.quantity_delivered.readable = True
+            line = S3SQLInlineComponent("need_line",
+                                        label = "",
+                                        fields = ["coarse_location_id",
+                                                  "location_id",
+                                                  "sector_id",
+                                                  (T("People affected"), "parameter_id"),
+                                                  "value",
+                                                  "value_committed",
+                                                  "value_uncommitted",
+                                                  "value_reached",
+                                                  (T("Item Category"), "item_category_id"),
+                                                  "item_id",
+                                                  (T("Unit"), "item_pack_id"),
+                                                  (T("Item Quantity"), "quantity"),
+                                                  (T("Needed within Timeframe"), "timeframe"),
+                                                  "quantity_committed",
+                                                  "quantity_uncommitted",
+                                                  "quantity_delivered",
+                                                  #"comments",
+                                                  ],
+                                        )
         else:
             # Create
             org_readonly = organisation_id is not None
-            need_item = S3SQLInlineComponent("need_item",
-                                             label = T("Items Needed"),
-                                             fields = ["item_category_id",
-                                                       "item_id",
-                                                       (T("Unit"), "item_pack_id"),
-                                                       (T("Needed within Timeframe"), "timeframe"),
-                                                       "quantity",
-                                                       #(T("Urgency"), "priority"),
-                                                       "comments",
-                                                       ],
-                                             )
-            demographic = S3SQLInlineComponent("need_demographic",
-                                               label = T("People Affected"),
-                                               fields = [(T("Type"), "parameter_id"),
-                                                         #(T("Needed within Timeframe"), "timeframe"),
-                                                         "value",
-                                                         "comments",
-                                                         ],
-                                               )
+            #need_item = S3SQLInlineComponent("need_item",
+            #                                 label = T("Items Needed"),
+            #                                 fields = ["item_category_id",
+            #                                           "item_id",
+            #                                           (T("Unit"), "item_pack_id"),
+            #                                           (T("Needed within Timeframe"), "timeframe"),
+            #                                           "quantity",
+            #                                           #(T("Urgency"), "priority"),
+            #                                           "comments",
+            #                                           ],
+            #                                 )
+            #demographic = S3SQLInlineComponent("need_demographic",
+            #                                   label = T("People Affected"),
+            #                                   fields = [(T("Type"), "parameter_id"),
+            #                                             #(T("Needed within Timeframe"), "timeframe"),
+            #                                             "value",
+            #                                             "comments",
+            #                                             ],
+            #                                   )
+            line = S3SQLInlineComponent("need_line",
+                                        label = "",
+                                        fields = ["coarse_location_id",
+                                                  "location_id",
+                                                  "sector_id",
+                                                  (T("People affected"), "parameter_id"),
+                                                  "value",
+                                                  (T("Item Category"), "item_category_id"),
+                                                  "item_id",
+                                                  (T("Unit"), "item_pack_id"),
+                                                  "quantity",
+                                                  (T("Needed within Timeframe"), "timeframe"),
+                                                  #"comments",
+                                                  ],
+                                        )
 
         crud_fields = [S3SQLInlineLink("event",
                                        field = "event_id",
@@ -1229,16 +1116,18 @@ def config(settings):
                        "location_id",
                        "date",
                        #(T("Urgency"), "priority"),
-                       S3SQLInlineLink("sector",
-                                       field = "sector_id",
-                                       filter = False,
-                                       label = T("Sector"),
-                                       multiple = False,
-                                       ),
+                       # Moved into Lines
+                       #S3SQLInlineLink("sector",
+                       #                field = "sector_id",
+                       #                filter = False,
+                       #                label = T("Sector"),
+                       #                multiple = False,
+                       #                ),
                        "name",
                        (T("Issue/cause"), "issue.value"),
-                       demographic,
-                       need_item,
+                       #demographic,
+                       #need_item,
+                       line,
                        S3SQLInlineComponent("document",
                                             label = T("Attachment"),
                                             fields = [("", "file")],
@@ -1246,6 +1135,8 @@ def config(settings):
                                             multiple = False,
                                             ),
                        (T("Verified by government official"), "verified.value"),
+                       (T("Contact details"), "contact.value"),
+                       (T("Address for delivery/affected people"), "address.value"),
                        "comments",
                        ]
 
@@ -1274,176 +1165,16 @@ def config(settings):
         crud_form = S3SQLCustomForm(*crud_fields,
                                     postprocess = req_need_postprocess)
 
-        filter_widgets = [S3TextFilter(["req_number.value",
-                                        "need_item.item_id$name",
-                                        # These levels are for SHARE/LK
-                                        #"location_id$L1",
-                                        "location_id$L2",
-                                        #"location_id$L3",
-                                        #"location_id$L4",
-                                        "name",
-                                        "comments",
-                                        ],
-                                       label = T("Search"),
-                                       comment = T("Search for a Need by Request Number, Item, Location, Summary or Comments"),
-                                       ),
-                          S3LocationFilter("location_id",
-                                           # These levels are for SHARE/LK
-                                           levels = ("L2", "L3", "L4"),
-                                           ),
-                          S3OptionsFilter("need_item.item_id"),
-                          S3OptionsFilter("status",
-                                          cols = 3,
-                                          label = T("Status"),
-                                          ),
-                          S3OptionsFilter("event.event_type_id",
-                                          hidden = True,
-                                          ),
-                          # @ToDo: Filter this list dynamically based on Event Type:
-                          S3OptionsFilter("event__link.event_id"),
-                          S3OptionsFilter("sector__link.sector_id",
-                                          hidden = True,
-                                          ),
-                          S3OptionsFilter("organisation__link.organisation_id",
-                                          hidden = True,
-                                          ),
-                          S3OptionsFilter("verified.value",
-                                          cols = 2,
-                                          label = T("Verified"),
-                                          hidden = True,
-                                          ),
-                          ]
+        need_line_summary = URL(c="req", f="need_line", args="summary")
 
         s3db.configure(tablename,
+                       create_next = need_line_summary,
+                       delete_next = need_line_summary,
+                       update_next = need_line_summary,
                        crud_form = crud_form,
-                       filter_widgets = filter_widgets,
-                       list_fields = [(T("Disaster"), "event__link.event_id"),
-                                      "date",
-                                      "organisation__link.organisation_id",
-                                      # These levels/Labels are for SHARE/LK
-                                      (T("District"), "location_id$L2"),
-                                      #(T("DS"), "location_id$L3"),
-                                      (T("Status"), "status"),
-                                      "need_item.item_id",
-                                      "sector__link.sector_id",
-                                      (T("Urgency"), "priority"),
-                                      #"name",
-                                      (T("Request Number"), "req_number.value"),
-                                      (T("Commits"), "activity__link.activity_id"),
-                                      (T("Verified"), "verified.value"),
-                                      (T("GN"), "location_id$L4"),
-                                      ],
                        )
 
     settings.customise_req_need_resource = customise_req_need_resource
-
-    # -------------------------------------------------------------------------
-    def req_need_commit(r, **attr):
-        """
-            Custom method to Commit to a Need by creating an Activity
-        """
-
-        # Create Activity with values from Need
-        need_id = r.id
-
-        db = current.db
-        s3db = current.s3db
-        ntable = s3db.req_need
-        ntable_id = ntable.id
-        netable = s3db.event_event_need
-        nstable = s3db.req_need_sector
-        left = [netable.on(netable.need_id == ntable_id),
-                nstable.on(nstable.need_id == ntable_id),
-                ]
-        need = db(ntable_id == need_id).select(ntable.name,
-                                               ntable.location_id,
-                                               netable.event_id,
-                                               nstable.sector_id,
-                                               left = left,
-                                               limitby = (0, 1)
-                                               ).first()
-
-        atable = s3db.project_activity
-        activity_id = atable.insert(name = need["req_need.name"],
-                                    location_id = need["req_need.location_id"],
-                                    )
-        organisation_id = current.auth.user.organisation_id
-        if organisation_id:
-            s3db.project_activity_organisation.insert(activity_id = activity_id,
-                                                      organisation_id = organisation_id,
-                                                      role = 1,
-                                                      )
-
-        event_id = need["event_event_need.event_id"]
-        if event_id:
-            aetable = s3db.event_activity
-            aetable.insert(activity_id = activity_id,
-                           event_id = event_id,
-                           )
-
-        sector_id = need["req_need_sector.sector_id"]
-        if sector_id:
-            astable = s3db.project_sector_activity
-            astable.insert(activity_id = activity_id,
-                           sector_id = sector_id,
-                           )
-
-        nitable = s3db.req_need_item
-        query = (nitable.need_id == need_id) & \
-                (nitable.deleted == False)
-        items = db(query).select(nitable.item_category_id,
-                                 nitable.item_id,
-                                 nitable.item_pack_id,
-                                 nitable.timeframe,
-                                 nitable.quantity,
-                                 )
-        if items:
-            iinsert = s3db.project_activity_item.insert
-            for item in items:
-                iinsert(activity_id = activity_id,
-                        item_category_id = item.item_category_id,
-                        item_id = item.item_id,
-                        item_pack_id = item.item_pack_id,
-                        timeframe = item.timeframe,
-                        target_value = item.quantity,
-                        )
-
-        ndtable = s3db.req_need_demographic
-        query = (ndtable.need_id == need_id) & \
-                (ndtable.deleted == False)
-        demographics = db(query).select(ndtable.parameter_id,
-                                        #ndtable.timeframe,
-                                        ndtable.value,
-                                        )
-        if demographics:
-            dinsert = s3db.project_activity_demographic.insert
-            for demographic in demographics:
-                dinsert(activity_id = activity_id,
-                        parameter_id = demographic.parameter_id,
-                        #timeframe = demographic.timeframe,
-                        target_value = demographic.value,
-                        )
-
-        # Link to Need
-        s3db.req_need_activity.insert(activity_id = activity_id,
-                                      need_id = need_id,
-                                      )
-
-        # Update Need to show Fulfilled
-        ntable = s3db.req_need
-        need = current.db(ntable.id == need_id).select(ntable.id,
-                                                       ntable.status,
-                                                       limitby = (0, 1)
-                                                       ).first()
-        if need.status in (0, 1):
-            # Set to Fully Committed
-            need.update_record(status = 2)
-
-        # Redirect to Update
-        from gluon import redirect
-        redirect(URL(c= "project", f="activity",
-                     args = [activity_id, "update"],
-                     ))
 
     # -------------------------------------------------------------------------
     def req_need_rheader(r):
@@ -1488,7 +1219,18 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_req_need_controller(**attr):
 
-        # Custom commit method to create an Activity from a Need
+        line_id = current.request.get_vars.get("line")
+        if line_id:
+            from gluon import redirect
+            nltable = current.s3db.req_need_line
+            line = current.db(nltable.id == line_id).select(nltable.need_id,
+                                                            limitby = (0, 1)
+                                                            ).first()
+            if line:
+                redirect(URL(args = [line.need_id],
+                             vars = {}))
+
+        # Custom commit method to create an Activity Group from a Need
         current.s3db.set_method("req", "need",
                                 method = "commit",
                                 action = req_need_commit)
@@ -1504,7 +1246,7 @@ def config(settings):
 
             if r.interactive:
                 # Inject the javascript to handle dropdown filtering
-                # - normnally injected through AddResourceLink, but this isn't there in Inline widget
+                # - normally injected through AddResourceLink, but this isn't there in Inline widget
                 # - we also need to turn the trigger & target into dicts
                 s3.scripts.append("/%s/static/themes/SHARE/js/supply.js" % r.application)
                 if current.auth.s3_has_permission("create", "project_activity"):
@@ -1518,16 +1260,6 @@ def config(settings):
                                        )
                         #s3.jquery_ready.append(
 #'''S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this need?"))
-                    else:
-                        from s3 import S3CRUD, s3_str
-                        # Normal Action Buttons
-                        S3CRUD.action_buttons(r)
-                        # Custom Action Buttons
-                        s3.actions += [{"label": s3_str(T("Commit")),
-                                        "_class": "action-btn",
-                                        "url": URL(args=["[id]", "commit"]),
-                                        }
-                                       ]
 
             return output
         s3.postp = postp
@@ -1537,5 +1269,566 @@ def config(settings):
         return attr
 
     settings.customise_req_need_controller = customise_req_need_controller
+
+    # -------------------------------------------------------------------------
+    def customise_req_need_line_controller(**attr):
+
+        from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
+
+        s3db = current.s3db
+
+        # Custom Filtered Components
+        s3db.add_components("req_need",
+                            req_need_tag = (# Req Number
+                                            {"name": "req_number",
+                                             "joinby": "need_id",
+                                             "filterby": {"tag": "req_number",
+                                                          },
+                                             "multiple": False,
+                                             },
+                                            # Verified
+                                            {"name": "verified",
+                                             "joinby": "need_id",
+                                             "filterby": {"tag": "verified",
+                                                          },
+                                             "multiple": False,
+                                             },
+                                            ),
+                            )
+
+        filter_widgets = [S3TextFilter(["need_id$req_number.value",
+                                        "item_id$name",
+                                        # These levels are for SHARE/LK
+                                        #"location_id$L1",
+                                        "location_id$L2",
+                                        #"location_id$L3",
+                                        #"location_id$L4",
+                                        "need_id$name",
+                                        "need_id$comments",
+                                        ],
+                                       label = T("Search"),
+                                       comment = T("Search for a Need by Request Number, Item, Location, Summary or Comments"),
+                                       ),
+                          S3LocationFilter("location_id",
+                                           # These levels are for SHARE/LK
+                                           levels = ("L2", "L3", "L4"),
+                                           ),
+                          S3OptionsFilter("item_id"),
+                          S3OptionsFilter("status",
+                                          cols = 3,
+                                          label = T("Status"),
+                                          ),
+                          S3OptionsFilter("need_id$event.event_type_id",
+                                          hidden = True,
+                                          ),
+                          # @ToDo: Filter this list dynamically based on Event Type:
+                          S3OptionsFilter("need_id$event__link.event_id"),
+                          S3OptionsFilter("sector_id",
+                                          hidden = True,
+                                          ),
+                          S3OptionsFilter("need_id$organisation__link.organisation_id",
+                                          hidden = True,
+                                          ),
+                          S3OptionsFilter("need_id$verified.value",
+                                          cols = 2,
+                                          label = T("Verified"),
+                                          hidden = True,
+                                          ),
+                          ]
+
+        s3db.configure("req_need_line",
+                       filter_widgets = filter_widgets,
+                       # We create a custom Create Button to create a Need not a Need Line
+                       listadd = False,
+                       list_fields = [(T("Status"), "status"),
+                                      (T("Commits"), "need_response_line_id"),
+                                      "need_id$date",
+                                      "need_id$organisation__link.organisation_id",
+                                      # These levels/Labels are for SHARE/LK
+                                      (T("District"), "need_id$location_id$L2"),
+                                      #(T("DS"), "location_id$L3"),
+                                      #(T("GN"), "location_id$L4"),
+                                      "sector_id",
+                                      "parameter_id",
+                                      "item_id",
+                                      "quantity",
+                                      "timeframe",
+                                      (T("Request Number"), "need_id$req_number.value"),
+                                      ],
+                       )
+
+        # Custom commit method to create an Activity from a Need Line
+        s3db.set_method("req", "need_line",
+                        method = "commit",
+                        action = req_need_line_commit)
+
+        s3 = current.response.s3
+
+        s3.crud_strings["req_need_line"] = Storage(
+            #label_create = T("Add Needs"),
+            title_list = T("Needs"),
+            #title_display=T("Needs"),
+            #title_update=T("Edit Needs"),
+            #title_upload = T("Import Needs"),
+            #label_list_button = T("List Needs"),
+            #label_delete_button=T("Delete Needs"),
+            msg_record_created=T("Needs added"),
+            msg_record_modified=T("Needs updated"),
+            msg_record_deleted=T("Needs deleted"),
+            msg_list_empty = T("No Needs currently registered"),
+            )
+
+        # Custom postp
+        standard_postp = s3.postp
+        def postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.interactive:
+                from gluon import A, DIV
+                from s3 import S3CRUD, s3_str
+                # Normal Action Buttons
+                #S3CRUD.action_buttons(r)
+                # Custom Action Buttons
+                auth = current.auth
+                deletable = current.db(auth.s3_accessible_query("delete", "req_need_line")).select(s3db.req_need_line.id)
+                restrict_d = [str(row.id) for row in deletable]
+                s3.actions = [{"label": s3_str(T("Open")),
+                               "_class": "action-btn",
+                               "url": URL(f="need", vars={"line": "[id]"}),
+                               },
+                              {"label": s3_str(T("Delete")),
+                               "_class": "action-btn",
+                               "url": URL(args=["[id]", "delete"]),
+                               "restrict": restrict_d,
+                               },
+                              ]
+                if auth.s3_has_permission("create", "req_need_response"):
+                    s3.actions.append({"label": s3_str(T("Commit")),
+                                       "_class": "action-btn",
+                                       "url": URL(args=["[id]", "commit"]),
+                                       })
+
+                # Custom Create Button
+                add_btn = DIV(DIV(DIV(A(T("Add Needs"),
+                                        _class = "action-btn",
+                                        _href = URL(f="need", args="create"),
+                                        ),
+                                      _id = "list-btn-add",
+                                      ),
+                                  _class = "widget-container",
+                                  ),
+                              _class = "section-container",
+                              )
+                output["common"][0] = add_btn
+
+            return output
+        s3.postp = postp
+
+        return attr
+
+    settings.customise_req_need_line_controller = customise_req_need_line_controller
+
+    # -------------------------------------------------------------------------
+    def req_need_response_ondelete(row):
+        """
+            Ensure that the Need (if-any) has the correct Status
+        """
+
+        import json
+
+        db = current.db
+        s3db = current.s3db
+
+        need_response_id = row.get("id")
+
+        # Lookup the Need
+        need_id = None
+        nrtable = s3db.req_need_response
+        record = db(nrtable.id == need_response_id).select(natable.deleted_fk,
+                                                           limitby = (0, 1)
+                                                           ).first()
+        if not record:
+            return
+
+        deleted_fk = json.loads(record.deleted_fk)
+        need_id = deleted_fk["need_id"]
+
+        if not need_id:
+            return
+
+        # Check that the Need hasn't been deleted
+        ntable = s3db.req_need
+        need = db(ntable.id == need_id).select(ntable.deleted,
+                                               limitby = (0, 1)
+                                               ).first()
+
+        if need and not need.deleted:
+            req_need_status_update(need_id)
+
+    # -------------------------------------------------------------------------
+    def req_need_response_postprocess(form):
+        """
+            Ensure that the Need (if-any) has the correct Status
+
+            @ToDo: Update for remodel
+        """
+
+        s3db = current.s3db
+
+        need_response_id = form.vars.id
+
+        # Lookup the Need
+        ntable = s3db.req_need
+        nrtable = s3db.req_need_response
+        query = (nrtable.id == need_response_id) & \
+                (nrtable.need_id == ntable.id) & \
+                (ntable.deleted == False)
+        need = current.db(query).select(ntable.id,
+                                        limitby = (0, 1)
+                                        ).first()
+
+        if need:
+            req_need_status_update(need.id)
+
+    # -------------------------------------------------------------------------
+    def customise_req_need_response_resource(r, tablename):
+
+        from s3 import s3_comments_widget, \
+					   S3LocationDropdownWidget, S3LocationSelector, \
+                       S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.req_need_response
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Activities"),
+            title_list = T("Activities"),
+            title_display = T("Activites"),
+            title_update = T("Edit Activites"),
+            title_upload = T("Import Activities"),
+            label_list_button = T("List Activities"),
+            label_delete_button = T("Delete Activities"),
+            msg_record_created = T("Activities added"),
+            msg_record_modified = T("Activities updated"),
+            msg_record_deleted = T("Activities deleted"),
+            msg_list_empty = T("No Activities currently registered"),
+            )
+
+        # These levels/labels are for SHARE/LK
+        table.location_id.widget = S3LocationSelector(levels = ("L1", "L2"),
+                                                      required_levels = ("L1", "L2"),
+                                                      show_map = False)
+
+        ltable = s3db.req_need_response_line
+        f = ltable.coarse_location_id
+        f.label = T("Division")
+        f.widget = S3LocationDropdownWidget(level="L3")
+        f = ltable.location_id
+        f.label = T("GN")
+        f.widget = S3LocationDropdownWidget(level="L4")
+
+        table.comments.widget = lambda f, v: \
+            s3_comments_widget(f, v, _placeholder = "e.g. Items changed/replaced within kits, details on partial committments to a need, any other relevant information.")
+
+        # Custom Filtered Components
+        s3db.add_components(tablename,
+                            req_need_response_organisation = (# Agency
+                                                              {"name": "agency",
+                                                               "joinby": "need_response_id",
+                                                               "filterby": {"role": 1,
+                                                                            },
+                                                               #"multiple": False,
+                                                               },
+                                                              # Partners
+                                                              {"name": "partner",
+                                                               "joinby": "need_response_id",
+                                                               "filterby": {"role": 2,
+                                                                            },
+                                                               #"multiple": False,
+                                                               },
+                                                              # Donors
+                                                              {"name": "donor",
+                                                               "joinby": "need_response_id",
+                                                               "filterby": {"role": 3,
+                                                                            },
+                                                               #"multiple": False,
+                                                               },
+                                                              ),
+                            )
+
+        # Individual settings for specific tag components
+        from gluon import IS_EMPTY_OR, IS_IN_SET
+        components_get = s3db.resource(tablename).components.get
+
+        donor = components_get("donor")
+        donor.table.organisation_id.default = None
+
+        partner = components_get("partner")
+        partner.table.organisation_id.default = None
+
+        crud_fields = [S3SQLInlineLink("event",
+                                       field = "event_id",
+                                       label = T("Disaster"),
+                                       multiple = False,
+                                       #required = True,
+                                       ),
+                       S3SQLInlineComponent("agency",
+                                            name = "agency",
+                                            label = T("Organization"),
+                                            fields = [("", "organisation_id"),],
+                                            #multiple = False,
+                                            required = True,
+                                            ),
+                       # @ToDo: MultiSelectWidget is nicer UI but S3SQLInlineLink
+                       #        requires the link*ed* table as component (not the
+                       #        link table as applied here) and linked components
+                       #        cannot currently be filtered by link table fields
+                       #        (=> should solve the latter rather than the former)
+                       # @ToDo: Fix Create Popups
+                       S3SQLInlineComponent("partner",
+                                            name = "partner",
+                                            label = T("Implementing Partner"),
+                                            fields = [("", "organisation_id"),],
+                                            ),
+                       S3SQLInlineComponent("donor",
+                                            name = "donor",
+                                            label = T("Donor"),
+                                            fields = [("", "organisation_id"),],
+                                            ),
+                       "location_id",
+                       (T("Date"), "date"),
+                       (T("Summary of Needs/Activities"), "name"),
+                       S3SQLInlineComponent("need_response_line",
+                                            label = "",
+                                            fields = ["coarse_location_id",
+                                                      "location_id",
+                                                      "sector_id",
+                                                      "modality",
+                                                      (T("Activity Date Planned"), "date"),
+                                                      (T("Activity Date Completed"), "end_date"),
+                                                      (T("Beneficiaries (Type)"), "parameter_id"),
+                                                      (T("Beneficiaries Planned"), "value"),
+                                                      (T("Beneficiaries Reached"), "value_reached"),
+                                                      (T("Item Category"), "item_category_id"),
+                                                      "item_id",
+                                                      (T("Unit"), "item_pack_id"),
+                                                      (T("Quantity Planned"), "quantity"),
+                                                      (T("Quantity Delivered"), "quantity_delivered"),
+                                                      (T("Activity Status"), "status_id"),
+                                                      #"comments",
+                                                      ],
+                                            #multiple = False,
+                                            ),
+                       S3SQLInlineComponent("document",
+                                            label = T("Attachment"),
+                                            fields = [("", "file")],
+                                            # multiple = True has reliability issues in at least Chrome
+                                            multiple = False,
+                                            ),
+                       "contact",
+                       "address",
+                       "comments",
+                       ]
+
+        if r.id and r.resource.tablename == tablename and r.record.need_id:
+            from controllers import req_NeedRepresent
+            f = table.need_id
+            f.represent = req_NeedRepresent()
+            f.writable = False
+            crud_fields.insert(7, "need_id")
+
+        crud_form = S3SQLCustomForm(*crud_fields,
+                                    postprocess = req_need_response_postprocess)
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       ondelete = req_need_response_ondelete,
+                       )
+
+    settings.customise_req_need_response_resource = customise_req_need_response_resource
+
+    # -------------------------------------------------------------------------
+    def customise_req_need_response_controller(**attr):
+
+        line_id = current.request.get_vars.get("line")
+        if line_id:
+            from gluon import redirect
+            nltable = current.s3db.req_need_response_line
+            line = current.db(nltable.id == line_id).select(nltable.need_response_id,
+                                                            limitby = (0, 1)
+                                                            ).first()
+            if line:
+                redirect(URL(args = [line.need_response_id],
+                             vars = {}))
+
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_postp = s3.postp
+        def postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.interactive:
+                # Inject the javascript to handle dropdown filtering
+                # - normally injected through AddResourceLink, but this isn't there in Inline widget
+                # - we also need to turn the trigger & target into dicts
+                s3.scripts.append("/%s/static/themes/SHARE/js/supply.js" % r.application)
+
+            return output
+        s3.postp = postp
+
+        return attr
+
+    settings.customise_req_need_response_controller = customise_req_need_response_controller
+
+    # -------------------------------------------------------------------------
+    def customise_req_need_response_line_controller(**attr):
+
+        from s3 import S3LocationFilter, S3OptionsFilter#, S3TextFilter
+
+        s3db = current.s3db
+
+        # Custom Filtered Components
+        s3db.add_components("req_need_response",
+                            req_need_response_organisation = (# Agency
+                                                              {"name": "agency",
+                                                               "joinby": "need_response_id",
+                                                               "filterby": {"role": 1,
+                                                                            },
+                                                               #"multiple": False,
+                                                               },
+                                                              # Partners
+                                                              {"name": "partner",
+                                                               "joinby": "need_response_id",
+                                                               "filterby": {"role": 2,
+                                                                            },
+                                                               #"multiple": False,
+                                                               },
+                                                              # Donors
+                                                              {"name": "donor",
+                                                               "joinby": "need_response_id",
+                                                               "filterby": {"role": 3,
+                                                                            },
+                                                               #"multiple": False,
+                                                               },
+                                                              ),
+                            )
+
+        filter_widgets = [S3OptionsFilter("need_response_id$agency.organisation_id",
+                                          label = T("Agency"),
+                                          ),
+                          S3OptionsFilter("sector_id"),
+                          S3LocationFilter("location_id",
+                                           # These levels are for SHARE/LK
+                                           levels = ("L2", "L3", "L4"),
+                                           ),
+                          S3OptionsFilter("need_response_id$event.event_type_id",
+                                          hidden = True,
+                                          ),
+                          # @ToDo: Filter this list dynamically based on Event Type:
+                          S3OptionsFilter("need_response_id$event__link.event_id",
+                                          hidden = True,
+                                          ),
+                          S3OptionsFilter("status_id",
+                                          cols = 4,
+                                          label = T("Status"),
+                                          hidden = True,
+                                          ),
+                          ]
+
+        s3db.configure("req_need_response_line",
+                       filter_widgets = filter_widgets,
+                       # We create a custom Create Button to create a Need Response not a Need Response Line
+                       listadd = False,
+                       list_fields = [(T("Disaster"), "need_response_id$event__link.event_id"),
+                                      (T("Organization"), "need_response_id$agency.organisation_id"),
+                                      (T("Implementing Partner"), "need_response_id$partner.organisation_id"),
+                                      (T("Donor"), "need_response_id$donor.organisation_id"),
+                                      # These levels/labels are for SHARE/LK
+                                      (T("District"), "need_response_id$location_id$L1"),
+                                      (T("Division"), "coarse_location_id"),
+                                      (T("GN"), "location_id"),
+                                      (T("Sector"), "sector_id"),
+                                      (T("Item"), "item_id"),
+                                      (T("Items Planned"), "quantity"),
+                                      (T("Items Delivered"), "quantity_reached"),
+                                      (T("Modality"), "modality"),
+                                      (T("Beneficiaries Planned"), "value"),
+                                      (T("Beneficiaries Reached"), "value_reached"),
+                                      (T("Activity Date (Planned"), "date"),
+                                      (T("Activity Status"), "status_id"),
+                                      ],
+                       # @ToDo:
+                       #ondelete = req_need_response_line_ondelete,
+                       )
+
+        s3 = current.response.s3
+
+        s3.crud_strings["req_need_line"] = Storage(
+            #label_create = T("Add Activity"),
+            title_list = T("Activities"),
+            #title_display = T("Activity"),
+            #title_update = T("Edit Activity"),
+            #title_upload = T("Import Activities"),
+            #label_list_button = T("List Activities"),
+            #label_delete_button = T("Delete Activity"),
+            #msg_record_created = T("Activity added"),
+            #msg_record_modified = T("Activity updated"),
+            msg_record_deleted = T("Activity deleted"),
+            msg_list_empty = T("No Activities currently registered"),
+            )
+
+        # Custom postp
+        standard_postp = s3.postp
+        def postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.interactive:
+                from gluon import A, DIV
+                from s3 import S3CRUD, s3_str
+                # Normal Action Buttons
+                #S3CRUD.action_buttons(r)
+                # Custom Action Buttons
+                auth = current.auth
+                deletable = current.db(auth.s3_accessible_query("delete", "req_need_response_line")).select(s3db.req_need_response_line.id)
+                restrict_d = [str(row.id) for row in deletable]
+                s3.actions = [{"label": s3_str(T("Open")),
+                               "_class": "action-btn",
+                               "url": URL(f="need_response", vars={"line": "[id]"}),
+                               },
+                              {"label": s3_str(T("Delete")),
+                               "_class": "action-btn",
+                               "url": URL(args=["[id]", "delete"]),
+                               "restrict": restrict_d,
+                               },
+                              ]
+
+                # Custom Create Button
+                add_btn = DIV(DIV(DIV(A(T("Add Activity"),
+                                        _class = "action-btn",
+                                        _href = URL(f="need_response", args="create"),
+                                        ),
+                                      _id = "list-btn-add",
+                                      ),
+                                  _class = "widget-container",
+                                  ),
+                              _class = "section-container",
+                              )
+                output["common"][0] = add_btn
+
+            return output
+        s3.postp = postp
+
+        return attr
+
+    settings.customise_req_need_response_line_controller = customise_req_need_response_line_controller
 
 # END =========================================================================

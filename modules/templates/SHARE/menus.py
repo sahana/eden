@@ -36,17 +36,17 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        menu= [MM("Needs", c="req", f="need", m="summary")(
+        menu= [MM("Needs", c="req", f="need_line", m="summary")(
                 #MM("Statistics",  m="report"),
                 #MM("Map", m="map"),
-                MM("View", c="req", f="need", m="summary"),
+                MM("View", c="req", f="need_line", m="summary"),
                 MM("Create", c="req", f="need", m="create", p="read"),
                 ),
-               MM("4W", c="project", f="activity", m="summary")(
+               MM("4W", c="req", f="need_response_line", m="summary")(
                 #MM("Statistics",  m="report"),
                 #MM("Map", m="map"),
-                MM("View", c="project", f="activity", m="summary"),
-                MM("Create", c="project", f="activity", m="create", p="read"),
+                MM("View", c="req", f="need_response_line", m="summary"),
+                MM("Create", c="req", f="need_response", m="create", p="read"),
                 ),
                MM("Situational Updates", c="event", f="sitrep"),
                MM("Organizations", c="org", f="organisation")(

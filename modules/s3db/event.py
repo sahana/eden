@@ -47,6 +47,7 @@ __all__ = ("S3EventModel",
            "S3EventImpactModel",
            "S3EventMapModel",
            "S3EventNeedModel",
+           "S3EventNeedResponseModel",
            "S3EventOrganisationModel",
            "S3EventProjectModel",
            "S3EventRequestModel",
@@ -3369,6 +3370,59 @@ class S3EventNeedModel(S3Model):
         #    msg_record_modified = T("Need updated"),
         #    msg_record_deleted = T("Need removed"),
         #    msg_list_empty = T("No Needs currently registered in this Event"))
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3EventNeedResponseModel(S3Model):
+    """
+        Link Events &/or Incidents with Need Responses (Activity Groups)
+    """
+
+    names = ("event_event_need_response",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
+
+        # ---------------------------------------------------------------------
+        # Events <> Impacts
+        #
+
+        tablename = "event_event_need_response"
+        self.define_table(tablename,
+                          self.event_event_id(ondelete = ondelete),
+                          self.event_incident_id(ondelete = "CASCADE"),
+                          self.req_need_response_id(empty = False,
+                                                    ondelete = "CASCADE",
+                                                    ),
+                          *s3_meta_fields())
+
+        # Table configuration
+        self.configure(tablename,
+                       onaccept = lambda form: \
+                        set_event_from_incident(form, "event_event_need_response"),
+                       )
+
+        # Not accessed directly
+        #current.response.s3.crud_strings[tablename] = Storage(
+        #    label_create = T("Add Activity Group"),
+        #    title_display = T("Activity Group Details"),
+        #    title_list = T("Activity Groups"),
+        #    title_update = T("Edit Activity Group"),
+        #    label_list_button = T("List Activity Groups"),
+        #    label_delete_button = T("Delete Activity Group"),
+        #    msg_record_created = T("Activity Group added"),
+        #    msg_record_modified = T("Activity Group updated"),
+        #    msg_record_deleted = T("Activity Group removed"),
+        #    msg_list_empty = T("No Activity Groups currently registered in this Event"))
 
         # Pass names back to global scope (s3.*)
         return {}

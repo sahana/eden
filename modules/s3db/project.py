@@ -36,6 +36,7 @@ __all__ = ("S3ProjectModel",
            "S3ProjectActivityTypeModel",
            "S3ProjectActivityPersonModel",
            "S3ProjectActivityOrganisationModel",
+           "S3ProjectActivityOrganisationGroupModel",
            "S3ProjectActivitySectorModel",
            "S3ProjectActivityTagModel",
            "S3ProjectAnnualBudgetModel",
@@ -1901,22 +1902,15 @@ class S3ProjectActivityOrganisationModel(S3Model):
         Project Activity Organisation Model
 
         This model allows Activities to link to Organisations
-                                           &/or Organisation Groups
         - useful when we don't have the details of the Projects
     """
 
     names = ("project_activity_organisation",
-             "project_activity_group",
              )
 
     def model(self):
 
         T = current.T
-
-        configure = self.configure
-        define_table = self.define_table
-
-        project_activity_id = self.project_activity_id
 
         NONE = current.messages["NONE"]
 
@@ -1926,24 +1920,24 @@ class S3ProjectActivityOrganisationModel(S3Model):
         project_organisation_roles = current.deployment_settings.get_project_organisation_roles()
 
         tablename = "project_activity_organisation"
-        define_table(tablename,
-                     project_activity_id(empty = False,
-                                         # Default:
-                                         #ondelete = "CASCADE",
-                                         ),
-                     self.org_organisation_id(empty = False,
-                                              ondelete = "CASCADE",
-                                              ),
-                     Field("role", "integer",
-                           default = 1, # Lead
-                           label = T("Role"),
-                           requires = IS_EMPTY_OR(
-                                        IS_IN_SET(project_organisation_roles)
-                                      ),
-                           represent = lambda opt: \
-                                        project_organisation_roles.get(opt,
-                                                                       NONE)),
-                     *s3_meta_fields())
+        self.define_table(tablename,
+                          self.project_activity_id(empty = False,
+                                                   # Default:
+                                                   #ondelete = "CASCADE",
+                                                   ),
+                          self.org_organisation_id(empty = False,
+                                                   ondelete = "CASCADE",
+                                                   ),
+                          Field("role", "integer",
+                                default = 1, # Lead
+                                label = T("Role"),
+                                requires = IS_EMPTY_OR(
+                                            IS_IN_SET(project_organisation_roles)
+                                            ),
+                                represent = lambda opt: \
+                                            project_organisation_roles.get(opt,
+                                                                           NONE)),
+                          *s3_meta_fields())
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
@@ -1958,33 +1952,53 @@ class S3ProjectActivityOrganisationModel(S3Model):
             msg_list_empty = T("No Activity Organizations Found")
         )
 
-        configure(tablename,
-                  deduplicate = S3Duplicate(primary = ("activity_id",
-                                                       "organisation_id",
-                                                       ),
-                                            ),
-                  )
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("activity_id",
+                                                            "organisation_id",
+                                                            "role",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3ProjectActivityOrganisationGroupModel(S3Model):
+    """
+        Project Activity Organisation Group Model
+
+        This model allows Activities to link to Organisation Groups
+        - useful when we don't have the details of the Projects
+    """
+
+    names = ("project_activity_group",
+             )
+
+    def model(self):
+
+        T = current.T
 
         # ---------------------------------------------------------------------
         # Activities <> Organisation Groups - Link table
         #
         tablename = "project_activity_group"
-        define_table(tablename,
-                     project_activity_id(empty = False,
-                                         # Default:
-                                         #ondelete = "CASCADE",
-                                         ),
-                     self.org_group_id(empty = False,
-                                       ondelete = "CASCADE",
-                                       ),
-                     *s3_meta_fields())
-
-        configure(tablename,
-                  deduplicate = S3Duplicate(primary = ("activity_id",
-                                                       "group_id",
-                                                       ),
+        self.define_table(tablename,
+                          self.project_activity_id(empty = False,
+                                                   # Default:
+                                                   #ondelete = "CASCADE",
+                                                   ),
+                          self.org_group_id(empty = False,
+                                            ondelete = "CASCADE",
                                             ),
-                  )
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("activity_id",
+                                                            "group_id",
+                                                            ),
+                                                 ),
+                       )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -9981,6 +9995,20 @@ class S3ProjectStatusModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return {"project_status_id": status_id,
+                }
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+
+        dummy = S3ReusableField("dummy", "string",
+                                readable = False,
+                                writable = False,
+                                )
+
+        return {"project_status_id": lambda **attr: dummy("status_id"),
                 }
 
 # =============================================================================
