@@ -3389,9 +3389,8 @@ class RequestNeedsResponseOrganisationModel(S3Model):
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(project_organisation_roles)
                                             ),
-                                represent = lambda opt: \
-                                            project_organisation_roles.get(opt,
-                                                                           NONE)),
+                                represent = S3Represent(options=project_organisation_roles),
+                                ),
                           s3_comments(),
                           *s3_meta_fields())
 
