@@ -88,24 +88,25 @@ def index():
                 page = pname
                 break
 
+    # Module name for custom controllers
+    name = "controllers"
+
     custom = None
     templates = settings.get_template()
+
     if page:
         # Go to a custom page,
         # - args[0] = name of the class in /modules/templates/<template>/controllers.py
         # - other args & vars passed through
-        template_location = settings.get_template_location()
         if not isinstance(templates, (tuple, list)):
             templates = (templates,)
         for template in templates[::-1]:
-            package = "applications.%s.%s.templates.%s" % \
-                        (appname, template_location, template)
-            name = "controllers"
+            package = "applications.%s.modules.templates.%s" % (appname, template)
             try:
                 custom = getattr(__import__(package, fromlist=[name]), name)
             except (ImportError, AttributeError):
                 # No Custom Page available, continue with the default
-                #page = "%s/templates/%s/controllers.py" % (location, template)
+                #page = "modules/templates/%s/controllers.py" % template
                 #current.log.warning("File not loadable",
                 #                    "%s, %s" % (page, sys.exc_info()[1]))
                 continue
@@ -121,15 +122,10 @@ def index():
 
     elif templates != "default":
         # Try a Custom Homepage
-        name = "controllers"
-        template_location = settings.get_template_location()
         if not isinstance(templates, (tuple, list)):
             templates = (templates,)
         for template in templates[::-1]:
-            package = "applications.%s.%s.templates.%s" % \
-                        (appname,
-                         template_location,
-                         template)
+            package = "applications.%s.modules.templates.%s" % (appname, template)
             try:
                 custom = getattr(__import__(package, fromlist=[name]), name)
             except (ImportError, AttributeError):
@@ -635,12 +631,11 @@ def user():
     if templates != "default":
         # Try a Custom View
         folder = request.folder
-        template_location = settings.get_template_location()
         if not isinstance(templates, (tuple, list)):
             templates = (templates,)
         for template in templates[::-1]:
             view = os.path.join(folder,
-                                template_location,
+                                "modules",
                                 "templates",
                                 template,
                                 "views",
@@ -655,12 +650,12 @@ def user():
                 else:
                     break
 
-    return dict(title = title,
-                form = form,
-                login_form = login_form,
-                register_form = register_form,
-                self_registration = self_registration,
-                )
+    return {"title": title,
+            "form": form,
+            "login_form": login_form,
+            "register_form": register_form,
+            "self_registration": self_registration,
+            }
 
 # -----------------------------------------------------------------------------
 def person():
@@ -1394,12 +1389,10 @@ def contact():
     templates = settings.get_template()
     if templates != "default":
         # Try a Custom Controller
-        location = settings.get_template_location()
         if not isinstance(templates, (tuple, list)):
             templates = (templates,)
         for template in templates[::-1]:
-            package = "applications.%s.%s.templates.%s" % \
-                        (appname, location, template)
+            package = "applications.%s.modules.templates.%s" % (appname, template)
             name = "controllers"
             try:
                 custom = getattr(__import__(package, fromlist=[name]), name)
@@ -1414,7 +1407,7 @@ def contact():
         # Try a Custom View
         for template in templates:
             view = os.path.join(request.folder,
-                                location,
+                                "modules",
                                 "templates",
                                 template,
                                 "views",
@@ -1532,13 +1525,12 @@ def _custom_view(filename):
     templates = settings.get_template()
     if templates != "default":
         folder = request.folder
-        template_location = settings.get_template_location()
         if not isinstance(templates, (tuple, list)):
             templates = (templates,)
         for template in templates[::-1]:
             # Try a Custom View
             view = os.path.join(folder,
-                                template_location,
+                                "modules",
                                 "templates",
                                 template,
                                 "views",

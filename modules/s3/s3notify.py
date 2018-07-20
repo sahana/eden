@@ -66,11 +66,11 @@ class S3Notifications(object):
 
         subscriptions = cls._subscriptions(now)
         if subscriptions:
-            async = current.s3task.async
+            run_async = current.s3task.async
             for row in subscriptions:
                 # Create asynchronous notification task.
                 row.update_record(locked=True)
-                async("notify_notify", args=[row.id])
+                run_async("notify_notify", args=[row.id])
             message = "%s notifications scheduled." % len(subscriptions)
         else:
             message = "No notifications to schedule."
@@ -365,9 +365,9 @@ class S3Notifications(object):
         if callable(send_data_fnc):
             send_data = send_data_fnc(resource, data, meta_data)
 
-        # Helper function to find templates from a priority list
+        # Helper function to find message templates from a priority list
         join = lambda *f: os.path.join(current.request.folder, *f)
-        def get_template(path, filenames):
+        def get_msg_template(path, filenames):
             for fn in filenames:
                 filepath = join(path, fn)
                 if os.path.exists(filepath):
@@ -378,7 +378,9 @@ class S3Notifications(object):
             return None
 
         # Render and send the message(s)
-        themes = settings.get_template()
+        templates = settings.get_template()
+        if templates != "default" and not isinstance(templates, (tuple, list)):
+            templates = (templates,)
         prefix = resource.get_config("notify_template", "notify")
 
         send = current.msg.send_by_pe_id
@@ -391,24 +393,21 @@ class S3Notifications(object):
             error = None
 
             # Get the message template
-            template = None
+            msg_template = None
             filenames = ["%s_%s.html" % (prefix, method.lower())]
             if method == "EMAIL" and email_format:
                 filenames.insert(0, "%s_email_%s.html" % (prefix, email_format))
-            if themes != "default":
-                location = settings.get_template_location()
-                if not isinstance(themes, (tuple, list)):
-                    themes = (themes,)
-                for theme in themes[::-1]:
-                    path = join(location, "templates", theme, "views", "msg")
-                    template = get_template(path, filenames)
-                    if template is not None:
+            if templates != "default":
+                for template in templates[::-1]:
+                    path = join("modules", "templates", template, "views", "msg")
+                    msg_template = get_msg_template(path, filenames)
+                    if msg_template is not None:
                         break
-            if template is None:
+            if msg_template is None:
                 path = join("views", "msg")
-                template = get_template(path, filenames)
-            if template is None:
-                template = StringIO(s3_str(current.T("New updates are available.")))
+                msg_template = get_msg_template(path, filenames)
+            if msg_template is None:
+                msg_template = StringIO(s3_str(current.T("New updates are available.")))
 
             # Select contents format
             if method == "EMAIL" and email_format == "html":
@@ -418,12 +417,15 @@ class S3Notifications(object):
 
             # Render the message
             try:
-                message = current.response.render(template, output)
+                message = current.response.render(msg_template, output)
             except:
                 exc_info = sys.exc_info()[:2]
                 error = ("%s: %s" % (exc_info[0].__name__, exc_info[1]))
                 errors.append(error)
                 continue
+            finally:
+                if hasattr(msg_template, "close"):
+                    msg_template.close()
 
             if not message:
                 continue

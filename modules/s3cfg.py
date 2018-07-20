@@ -312,20 +312,6 @@ class S3Config(Storage):
         """
         return self.base.get("template", "default")
 
-    def get_template_location(self):
-
-        return self.base.get("template_location", "modules")
-
-    def exec_template(self, path):
-        """
-            Legacy function, retained for backwards-compatibility with
-            existing 000_config.py instances => modern 000_config.py
-            should just call settings.import_template()
-
-            @todo: deprecate
-        """
-        self.import_template()
-
     def import_template(self, config="config"):
         """
             Import and invoke the template config (new module pattern). Allows
@@ -336,9 +322,6 @@ class S3Config(Storage):
             Configurations will be imported and executed in order of appearance
 
             @param config: name of the config-module
-
-            @todo: remove fallback when migration complete (+giving some
-                   time for downstream projects to adapt)
         """
 
         names = self.get_template()
@@ -355,53 +338,11 @@ class S3Config(Storage):
                 # Import the template
                 template = getattr(__import__(package, fromlist=[config]), config)
             except ImportError:
-                # Legacy template in "private"?
-                if len(names) > 1:
-                    raise SyntaxError("Cascading templates not supported for script pattern")
-                self.execute_template(name)
-                break
+                raise RuntimeError("Template not found: %s" % name)
             else:
                 template.config(self)
 
-        # Store location in response.s3 for compiled views
-        # No longer supported
-        #current.response.s3.template_location = "modules"
-
         return self
-
-    def execute_template(self, name):
-        """
-            Fallback for legacy templates - execute config.py
-        """
-
-        import os
-
-        location = "private"
-        path = os.path.join(current.request.folder,
-                            location,
-                            "templates",
-                            name,
-                            "config.py")
-
-        if os.path.exists(path):
-            # Old-style config.py => deprecation warning (S3Log not available yet)
-            import sys
-            sys.stderr.write("%s/config.py: script pattern deprecated.\n" % name)
-            # Remember the non-standard location
-            # (need to be in response.s3 for compiled views)
-            # No longer supported
-            #current.response.s3.template_location =
-            self.base.template_location = location
-            # Execute config.py
-            from gluon.fileutils import read_file
-            from gluon.restricted import restricted
-            code = read_file(path)
-            restricted(code, layer=path)
-        else:
-            # Nonexistent template
-            # => could be ignored here, but would crash later anyway,
-            #    so exit early with a clear error message
-            raise RuntimeError("Template not found: %s" % name)
 
     # -------------------------------------------------------------------------
     # Theme
