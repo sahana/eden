@@ -436,10 +436,13 @@ class S3Migration(object):
         settings = current.deployment_settings
         s3 = current.response.s3
         s3.views = views = {}
-        s3.theme = theme = settings.get_theme()
+
+        theme = settings.get_theme()
         if theme != "default":
+
             folder = request.folder
-            location = settings.get_template_location()
+            layouts = s3.theme_layouts
+
             exists = os_path.exists
             for view in ["create.html",
                          "dashboard.html",
@@ -459,8 +462,8 @@ class S3Migration(object):
                          #"timeplot.html",
                          "update.html",
                          ]:
-                if exists(join(folder, location, "templates", theme, "views", "_%s" % view)):
-                    views[view] = "../%s/templates/%s/views/_%s" % (location, theme, view)
+                if exists(join(folder, "modules", "templates", layouts, "views", "_%s" % view)):
+                    views[view] = "../modules/templates/%s/views/_%s" % (layouts, view)
 
         def apath(path="", r=None):
             """
