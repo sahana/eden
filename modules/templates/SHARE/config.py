@@ -490,89 +490,67 @@ def config(settings):
 
         db = current.db
         s3db = current.s3db
+
         ntable = s3db.req_need
         ntable_id = ntable.id
         netable = s3db.event_event_need
-        nstable = s3db.req_need_sector
         left = [netable.on(netable.need_id == ntable_id),
-                nstable.on(nstable.need_id == ntable_id),
                 ]
         need = db(ntable_id == need_id).select(ntable.name,
                                                ntable.location_id,
                                                netable.event_id,
-                                               nstable.sector_id,
                                                left = left,
                                                limitby = (0, 1)
                                                ).first()
 
-        atable = s3db.project_activity
-        activity_id = atable.insert(name = need["req_need.name"],
-                                    location_id = need["req_need.location_id"],
-                                    )
+        nrtable = s3db.req_need_response
+        need_response_id = nrtable.insert(need_id = need_id,
+                                          name = need["req_need.name"],
+                                          location_id = need["req_need.location_id"],
+                                          )
         organisation_id = current.auth.user.organisation_id
         if organisation_id:
-            s3db.project_activity_organisation.insert(activity_id = activity_id,
-                                                      organisation_id = organisation_id,
-                                                      role = 1,
-                                                      )
+            s3db.req_need_response_organisation.insert(need_response_id = need_response_id,
+                                                       organisation_id = organisation_id,
+                                                       role = 1,
+                                                       )
 
         event_id = need["event_event_need.event_id"]
         if event_id:
-            aetable = s3db.event_activity
-            aetable.insert(activity_id = activity_id,
+            aetable = s3db.event_event_need_need_response
+            aetable.insert(need_response_id = need_response_id,
                            event_id = event_id,
                            )
 
-        sector_id = need["req_need_sector.sector_id"]
-        if sector_id:
-            astable = s3db.project_sector_activity
-            astable.insert(activity_id = activity_id,
-                           sector_id = sector_id,
-                           )
-
-        nitable = s3db.req_need_item
-        query = (nitable.need_id == need_id) & \
-                (nitable.deleted == False)
-        items = db(query).select(nitable.item_category_id,
-                                 nitable.item_id,
-                                 nitable.item_pack_id,
-                                 nitable.timeframe,
-                                 nitable.quantity,
+        nltable = s3db.req_need_line
+        query = (nltable.need_id == need_id) & \
+                (nltable.deleted == False)
+        lines = db(query).select(nltable.coarse_location_id,
+                                 nltable.location_id,
+                                 nltable.sector_id,
+                                 nltable.parameter_id,
+                                 nltable.value,
+                                 nltable.item_category_id,
+                                 nltable.item_id,
+                                 nltable.item_pack_id,
+                                 nltable.quantity,
                                  )
-        if items:
-            iinsert = s3db.project_activity_item.insert
-            for item in items:
-                iinsert(activity_id = activity_id,
-                        item_category_id = item.item_category_id,
-                        item_id = item.item_id,
-                        item_pack_id = item.item_pack_id,
-                        timeframe = item.timeframe,
-                        target_value = item.quantity,
+        if lines:
+            linsert = s3db.req_need_response_line.insert
+            for line in lines:
+                linsert(need_response_id = need_response_id,
+                        coarse_location_id = line.coarse_location_id,
+                        location_id = line.location_id,
+                        sector_id = line.sector_id,
+                        parameter_id = line.parameter_id,
+                        value = line.value,
+                        item_category_id = line.item_category_id,
+                        item_id = line.item_id,
+                        item_pack_id = line.item_pack_id,
+                        quantity = line.quantity,
                         )
-
-        ndtable = s3db.req_need_demographic
-        query = (ndtable.need_id == need_id) & \
-                (ndtable.deleted == False)
-        demographics = db(query).select(ndtable.parameter_id,
-                                        #ndtable.timeframe,
-                                        ndtable.value,
-                                        )
-        if demographics:
-            dinsert = s3db.project_activity_demographic.insert
-            for demographic in demographics:
-                dinsert(activity_id = activity_id,
-                        parameter_id = demographic.parameter_id,
-                        #timeframe = demographic.timeframe,
-                        target_value = demographic.value,
-                        )
-
-        # Link to Need
-        s3db.req_need_activity.insert(activity_id = activity_id,
-                                      need_id = need_id,
-                                      )
 
         # Update Need to show Fulfilled
-        ntable = s3db.req_need
         need = current.db(ntable.id == need_id).select(ntable.id,
                                                        ntable.status,
                                                        limitby = (0, 1)
@@ -583,8 +561,8 @@ def config(settings):
 
         # Redirect to Update
         from gluon import redirect
-        redirect(URL(c= "project", f="activity",
-                     args = [activity_id, "update"],
+        redirect(URL(c= "req", f="need_response",
+                     args = [need_response_id, "update"],
                      ))
 
     # -------------------------------------------------------------------------
@@ -599,8 +577,80 @@ def config(settings):
         db = current.db
         s3db = current.s3db
 
-        #@ToDo: complete
-        return
+        nltable = s3db.req_need_line
+        query = (nltable.id == need_line_id)
+        line = db(query).select(nltable.need_id,
+                                nltable.coarse_location_id,
+                                nltable.location_id,
+                                nltable.sector_id,
+                                nltable.parameter_id,
+                                nltable.value,
+                                nltable.item_category_id,
+                                nltable.item_id,
+                                nltable.item_pack_id,
+                                nltable.quantity,
+                                limitby = (0, 1)
+                                ).first()
+
+        need_id = line.need_id
+
+        ntable = s3db.req_need
+        ntable_id = ntable.id
+        netable = s3db.event_event_need
+        left = [netable.on(netable.need_id == ntable_id),
+                ]
+        need = db(ntable_id == need_id).select(ntable.name,
+                                               ntable.location_id,
+                                               netable.event_id,
+                                               left = left,
+                                               limitby = (0, 1)
+                                               ).first()
+
+        nrtable = s3db.req_need_response
+        need_response_id = nrtable.insert(need_id = need_id,
+                                          name = need["req_need.name"],
+                                          location_id = need["req_need.location_id"],
+                                          )
+        organisation_id = current.auth.user.organisation_id
+        if organisation_id:
+            s3db.req_need_response_organisation.insert(need_response_id = need_response_id,
+                                                       organisation_id = organisation_id,
+                                                       role = 1,
+                                                       )
+
+        event_id = need["event_event_need.event_id"]
+        if event_id:
+            aetable = s3db.event_event_need_need_response
+            aetable.insert(need_response_id = need_response_id,
+                           event_id = event_id,
+                           )
+
+        s3db.need_response_line.insert(need_response_id = need_response_id,
+                                       coarse_location_id = line.coarse_location_id,
+                                       location_id = line.location_id,
+                                       sector_id = line.sector_id,
+                                       parameter_id = line.parameter_id,
+                                       value = line.value,
+                                       item_category_id = line.item_category_id,
+                                       item_id = line.item_id,
+                                       item_pack_id = line.item_pack_id,
+                                       quantity = line.quantity,
+                                       )
+
+        # Update Need to show Fulfilled
+        need = current.db(ntable.id == need_id).select(ntable.id,
+                                                       ntable.status,
+                                                       limitby = (0, 1)
+                                                       ).first()
+        if need.status == 0:
+            # Set to Partially Committed
+            need.update_record(status = 1)
+
+        # Redirect to Update
+        from gluon import redirect
+        redirect(URL(c= "req", f="need_response",
+                     args = [need_response_id, "update"],
+                     ))
 
     # -------------------------------------------------------------------------
     def req_need_status_update(need_id):
