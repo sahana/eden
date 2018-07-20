@@ -2,7 +2,7 @@
 <div id='home'>
 {{try:}}{{=H2(title)}}{{except:}}{{pass}}
 {{if request.args(0) == "login":}}
- {{include "../modules/templates/%s/views/_login.html" % response.s3.theme}}
+ {{include "../modules/templates/%s/views/_login.html" % response.s3.theme_layouts}}
 {{elif request.args(0) == "register":}}
  {{include "auth/_register.html"}}
 {{else:}}

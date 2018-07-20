@@ -40,6 +40,7 @@ __all__ = ("S3EventModel",
            "S3EventAssetModel",
            "S3EventBookmarkModel",
            "S3EventCMSModel",
+           "S3EventCMSTagModel",
            "S3EventDCModel",
            "S3EventForumModel",
            "S3EventHRModel",
@@ -1043,24 +1044,24 @@ class S3EventTagModel(S3Model):
         # - can be a Triple Store for Semantic Web support
         #
         tablename = "event_event_tag"
-        define_table(tablename,
-                     self.event_event_id(),
-                     # key is a reserved word in MySQL
-                     Field("tag",
-                           label = T("Key"),
-                           ),
-                     Field("value",
-                           label = T("Value"),
-                           ),
-                     s3_comments(),
-                     *s3_meta_fields())
+        self.define_table(tablename,
+                          self.event_event_id(),
+                          # key is a reserved word in MySQL
+                          Field("tag",
+                                label = T("Key"),
+                                ),
+                          Field("value",
+                                label = T("Value"),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
 
-        configure(tablename,
-                  deduplicate = S3Duplicate(primary = ("event_id",
-                                                       "tag",
-                                                       ),
-                                            ),
-                  )
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            "tag",
+                                                            ),
+                                                 ),
+                       )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -2866,6 +2867,40 @@ class S3EventCMSModel(S3Model):
         return {}
 
 # =============================================================================
+class S3EventCMSTagModel(S3Model):
+    """
+        Link (CMS) Tags to Events or Incidents (used in WACOP)
+        - the Incident tags do NOT populate the Event's
+
+        TODO rename into event_cms_tag for clarity (event_tag is easily
+             confused with event_event_tag)?
+    """
+
+    names = ("event_tag",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # Tags
+
+        tablename = "event_tag"
+        self.define_table(tablename,
+                          self.event_event_id(ondelete = "CASCADE",
+                                              ),
+                          self.event_incident_id(ondelete = "CASCADE",
+                                                 ),
+                          self.cms_tag_id(empty = False,
+                                          ondelete = "CASCADE",
+                                          ),
+                          *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
 class S3EventDCModel(S3Model):
     """
         Link Data Collections to Events &/or Incidents
@@ -4412,37 +4447,6 @@ class S3EventSitRepModel(S3Model):
 
         # Link this Table to the Template
         db(db.event_sitrep.id == sitrep_id).update(table_id=table_id)
-
-# =============================================================================
-class S3EventTagModel(S3Model):
-    """
-        Link (CMS) Tags to Events or Incidents
-        - the Incident tags do NOT populate the Event's
-    """
-
-    names = ("event_tag",
-             )
-
-    def model(self):
-
-        #T = current.T
-
-        # ---------------------------------------------------------------------
-        # Tags
-
-        tablename = "event_tag"
-        self.define_table(tablename,
-                          self.event_event_id(ondelete = "CASCADE",
-                                              ),
-                          self.event_incident_id(ondelete = "CASCADE",
-                                                 ),
-                          self.cms_tag_id(empty = False,
-                                          ondelete = "CASCADE",
-                                          ),
-                          *s3_meta_fields())
-
-        # Pass names back to global scope (s3.*)
-        return {}
 
 # =============================================================================
 class S3EventTaskModel(S3Model):

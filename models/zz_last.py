@@ -5,7 +5,8 @@
 """
 
 # Pass Theme to Compiler
-s3.theme = settings.get_theme()
+settings.set_theme()
+
 # Empty dict to store custom CRUD views
 s3.views = {}
 

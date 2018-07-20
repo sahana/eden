@@ -955,19 +955,15 @@ def s3_redirect_default(location="", how=303, client_side=False, headers=None):
 def s3_include_debug_css():
     """
         Generates html to include the css listed in
-            /modules/templates/<template>/css.cfg
+            /modules/templates/<theme>/css.cfg
     """
 
     request = current.request
 
-    settings = current.deployment_settings
-    location = current.response.s3.theme_location
-    theme = settings.get_theme()
-
-    filename = "%s/modules/templates/%s%s/css.cfg" % (request.folder, location, theme)
+    location = current.response.s3.theme_styles
+    filename = "%s/modules/templates/%s/css.cfg" % (request.folder, location)
     if not os.path.isfile(filename):
-        raise HTTP(500, "Theme configuration file missing: modules/templates/%s%s/css.cfg" %
-                        (location, theme))
+        raise HTTP(500, "Theme configuration file missing: modules/templates/%s/css.cfg" % location)
 
     link_template = '<link href="/%s/static/styles/%%s" rel="stylesheet" type="text/css" />' % \
                     request.application

@@ -289,13 +289,9 @@ class S3NavigationItem(object):
 
         # Try to find custom layout in theme
         application = current.request.application
-        settings = current.deployment_settings
-        theme = settings.get_theme()
-        theme_location = current.response.s3.theme_location
-        if theme_location:
-            theme_location = "%s." % theme_location[:-1]
-        package = "applications.%s.modules.templates.%s%s.layouts" % \
-                  (application, theme_location, theme)
+        theme = current.deployment_settings.get_theme_layouts().replace("/", ".")
+        package = "applications.%s.modules.templates.%s.layouts" % \
+                  (application, theme)
         try:
             override = getattr(__import__(package, fromlist=[name]), name)
         except ImportError:

@@ -16,6 +16,7 @@ def config(settings):
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "SAMBRO.NP"
+    settings.base.theme_base = "default"
 
     # Default Language
     settings.L10n.default_language = "ne"

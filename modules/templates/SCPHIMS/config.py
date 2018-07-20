@@ -23,6 +23,7 @@ def config(settings):
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "SCPHIMS"
+    settings.base.theme_base = "default"
     settings.ui.menu_logo = "/%s/static/themes/SCPHIMS/img/logo.png" % current.request.application
 
     # Authentication settings

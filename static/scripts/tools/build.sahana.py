@@ -147,13 +147,10 @@ def docss():
     # -------------------------------------------------------------------------
     # Parse theme's css.cfg and build list of CSS files to merge
     #
-    theme = settings.get_theme()
-    location = current.response.s3.theme_location
-    info("Using theme %s" % theme)
-    if location:
-        css_cfg = os.path.join("..", "..", "..", "modules", "templates", location[:-1], theme, "css.cfg")
-    else:
-        css_cfg = os.path.join("..", "..", "..", "modules", "templates", theme, "css.cfg")
+    theme_styles = settings.get_theme_styles()
+    info("Building theme %s" % theme_styles)
+
+    css_cfg = os.path.join("..", "..", "..", "modules", "templates", theme_styles, "css.cfg")
 
     with open(css_cfg, "r") as f:
         css_paths = f.readlines()
@@ -171,7 +168,7 @@ def docss():
             path = path[5:]
 
             filename = path.split("/")[-1].split(".")[0]
-            sourcePath = os.path.join("..", "..", "..", location, "templates", theme, "scss")
+            sourcePath = os.path.join("..", "..", "..", "modules", "templates", theme_styles, "scss")
             sourceFilename = os.path.join(sourcePath, "%s.scss" % filename)
 
             with open(sourceFilename, "r") as sourceFile:
@@ -199,26 +196,22 @@ def docss():
     info("Writing to %s." % outputFilenameCSS)
     compressCSS(mergedCSS, outputFilenameCSS)
 
-    info("Deleting %s." % outputFilenameCSS)
+    info("Deleting old %s." % outputFilenameCSS)
     try:
-        if location:
-            os.remove("../../themes/%s%s/%s" % (location, theme, outputFilenameCSS))
-        else:
-            os.remove("../../themes/%s/%s" % (theme, outputFilenameCSS))
+        os.remove("../../themes/%s/%s" % (theme_styles, outputFilenameCSS))
     except:
         pass
 
-    info("Moving new %s." % outputFilenameCSS)
-    if location:
-        info("Adjusting url in %s." % outputFilenameCSS)
+    if "/" in theme_styles:
+        # Theme in sub-folder
+        info("Adjusting relative URLs in %s." % outputFilenameCSS)
         with open(outputFilenameCSS, "r+") as outFile:
             css = outFile.readline()
             outFile.seek(0)
             outFile.write(css.replace("../../", "../../../"))
-        new_path = "../../themes/%s%s/%s" % (location, theme, outputFilenameCSS)
-        shutil.move(outputFilenameCSS, new_path)
-    else:
-        shutil.move(outputFilenameCSS, "../../themes/%s/%s" % (theme, outputFilenameCSS))
+
+    info("Moving new %s." % outputFilenameCSS)
+    shutil.move(outputFilenameCSS, "../../themes/%s/%s" % (theme_styles, outputFilenameCSS))
 
     # -------------------------------------------------------------------------
     # Optional CSS builds

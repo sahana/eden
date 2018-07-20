@@ -19,6 +19,7 @@ def config(settings):
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "SAMBRO.AlertHub"
+    settings.base.theme_base = "default"
 
     # L10n (Localization) settings
     languages = OrderedDict([
