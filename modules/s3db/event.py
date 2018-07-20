@@ -944,7 +944,7 @@ class S3EventLocationModel(S3Model):
 
     def model(self):
 
-        T = current.T
+        #T = current.T
 
         # ---------------------------------------------------------------------
         # Event Locations (link table)

@@ -900,7 +900,7 @@ def config(settings):
     def customise_req_need_resource(r, tablename):
 
         from gluon import IS_EMPTY_OR, IS_IN_SET, SPAN
-        from gluon.sqlhtml import BooleanWidget
+        #from gluon.sqlhtml import BooleanWidget
 
         from s3 import s3_comments_widget, s3_yes_no_represent, \
                        S3LocationSelector, S3LocationDropdownWidget, \
@@ -1437,7 +1437,8 @@ def config(settings):
 
             if r.interactive:
                 from gluon import A, DIV
-                from s3 import S3CRUD, s3_str
+                from s3 import s3_str
+                #from s3 import S3CRUD, s3_str
                 # Normal Action Buttons
                 #S3CRUD.action_buttons(r)
                 # Custom Action Buttons
@@ -1496,7 +1497,7 @@ def config(settings):
         # Lookup the Need
         need_id = None
         nrtable = s3db.req_need_response
-        record = db(nrtable.id == need_response_id).select(natable.deleted_fk,
+        record = db(nrtable.id == need_response_id).select(nrtable.deleted_fk,
                                                            limitby = (0, 1)
                                                            ).first()
         if not record:
@@ -1546,10 +1547,10 @@ def config(settings):
     def customise_req_need_response_resource(r, tablename):
 
         from s3 import s3_comments_widget, \
-					   S3LocationDropdownWidget, S3LocationSelector, \
+                       S3LocationDropdownWidget, S3LocationSelector, \
                        S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
-        db = current.db
+        #db = current.db
         s3db = current.s3db
 
         table = s3db.req_need_response
@@ -1611,7 +1612,6 @@ def config(settings):
                             )
 
         # Individual settings for specific tag components
-        from gluon import IS_EMPTY_OR, IS_IN_SET
         components_get = s3db.resource(tablename).components.get
 
         donor = components_get("donor")
@@ -1843,7 +1843,8 @@ def config(settings):
 
             if r.interactive:
                 from gluon import A, DIV
-                from s3 import S3CRUD, s3_str
+                from s3 import s3_str
+                #from s3 import S3CRUD, s3_str
                 # Normal Action Buttons
                 #S3CRUD.action_buttons(r)
                 # Custom Action Buttons

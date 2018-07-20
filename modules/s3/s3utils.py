@@ -314,8 +314,9 @@ def s3_dev_toolbar():
         dbstats.append(TABLE(*[TR(PRE(row[0]), "%.2fms" %
                                       (row[1] * 1000))
                                        for row in v["dbstats"]]))
-        dbtables[k] = dict(defined=v["dbtables"]["defined"] or "[no defined tables]",
-                           lazy=v["dbtables"]["lazy"] or "[no lazy tables]")
+        dbtables[k] = {"defined": v["dbtables"]["defined"] or "[no defined tables]",
+                       "lazy": v["dbtables"]["lazy"] or "[no lazy tables]",
+                       }
 
     u = web2py_uuid()
     backtotop = A("Back to top", _href="#totop-%s" % u)
@@ -380,7 +381,7 @@ def s3_mark_required(fields,
         # @ToDo: DRY this setting with s3.ui.locationselector.js
         label_html = s3_required_label
 
-    labels = dict()
+    labels = {}
 
     # Do we have any required fields?
     _required = False
@@ -633,10 +634,10 @@ def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):
             mname = "%s" % s3_truncate(mname, 24)
             lname = "%s" % s3_truncate(lname, 24, nice=False)
         name_format = current.deployment_settings.get_pr_name_format()
-        name = name_format % dict(first_name=fname,
-                                  middle_name=mname,
-                                  last_name=lname,
-                                  )
+        name = name_format % {"first_name": fname,
+                              "middle_name": mname,
+                              "last_name": lname,
+                              }
         name = name.replace("  ", " ").rstrip()
         if truncate:
             name = s3_truncate(name, 24, nice=False)
@@ -1893,14 +1894,11 @@ class S3CustomController(object):
         """
 
         if "." in template:
-            subfolder, template = template.split(".", 1)
-            view = os.path.join(current.request.folder,
-                                current.deployment_settings.get_template_location(),
-                                "templates", subfolder, template, "views", filename)
-        else:
-            view = os.path.join(current.request.folder,
-                                current.deployment_settings.get_template_location(),
-                                "templates", template, "views", filename)
+            template = os.path.join(*(template.split(".")))
+
+        view = os.path.join(current.request.folder, "modules", "templates",
+                            template, "views", filename)
+
         try:
             # Pass view as file not str to work in compiled mode
             current.response.view = open(view, "rb")

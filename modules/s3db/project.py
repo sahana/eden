@@ -1977,7 +1977,7 @@ class S3ProjectActivityOrganisationGroupModel(S3Model):
 
     def model(self):
 
-        T = current.T
+        #T = current.T
 
         # ---------------------------------------------------------------------
         # Activities <> Organisation Groups - Link table
