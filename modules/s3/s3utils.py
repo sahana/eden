@@ -637,7 +637,7 @@ def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):
         name = name_format % {"first_name": fname,
                               "middle_name": mname,
                               "last_name": lname,
-                                  )
+                              }
         name = name.replace("  ", " ").rstrip()
         if truncate:
             name = s3_truncate(name, 24, nice=False)
