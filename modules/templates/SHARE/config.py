@@ -653,52 +653,40 @@ def config(settings):
                      ))
 
     # -------------------------------------------------------------------------
-    def req_need_status_update(need_id):
+    def req_need_line_status_update(need_line_id):
         """
-            Update the Need's fulfilment Status
+            Update the Need Line's fulfilment Status
         """
 
         db = current.db
         s3db = current.s3db
 
-        # Read the Need details
-        nitable = s3db.req_need_item
+        # Read the Line details
+        nltable = s3db.req_need_line
         iptable = s3db.supply_item_pack
-        query = (nitable.need_id == need_id) & \
-                (nitable.deleted == False) & \
-                (nitable.item_pack_id == iptable.id)
-        need_items = db(query).select(nitable.id,
-                                      nitable.item_id,
-                                      nitable.quantity,
-                                      iptable.quantity,
-                                      )
-        items = {}
-        for item in need_items:
-            pack_qty = item["supply_item_pack.quantity"]
-            item = item["req_need_item"]
-            quantity = item.quantity
-            if quantity:
-                quantity = quantity * pack_qty
-            items[item.item_id] = {"id": item.id,
-                                   "quantity": quantity or 0,
-                                   "quantity_committed": 0,
-                                   "quantity_delivered": 0,
-                                   }
-
-        ndtable = s3db.req_need_demographic
-        query = (ndtable.need_id == need_id) & \
-                (ndtable.deleted == False)
-        need_demographics = db(query).select(ndtable.parameter_id,
-                                             ndtable.id,
-                                             ndtable.value,
-                                             )
-        demographics = {}
-        for demographic in need_demographics:
-            demographics[demographic.parameter_id] = {"id": demographic.id,
-                                                      "value": demographic.value or 0,
-                                                      "value_committed": 0,
-                                                      "value_reached": 0,
-                                                      }
+        query = (nltable.id == need_line_id) & \
+                (nltable.item_pack_id == iptable.id)
+        need_line = db(query).select(nltable.parameter_id,
+                                     nltable.value,
+                                     nltable.item_id,
+                                     nltable.quantity,
+                                     iptable.quantity,
+                                     limitby = (0, 1)
+                                     ).first()
+        need_pack_qty = need_line["supply_item_pack.quantity"]
+        need_line = need_line["req_need_line"]
+        need_parameter_id = need_line.parameter_id
+        need_value = need_line.value or 0
+        need_value_committed = 0
+        need_value_reached = 0
+        need_quantity = need_line.quantity
+        if need_quantity:
+            need_quantity = need_quantity * pack_qty
+        else:
+            need_quantity = 0
+        need_item_id = need_line.item_id
+        need_quantity_committed = 0
+        need_quantity_delivered = 0
 
         # Lookup which Status means 'Cancelled'
         stable = s3db.project_status
@@ -712,135 +700,77 @@ def config(settings):
             current.log.debug("'Cancelled' Status not found")
             CANCELLED = 999999
 
-        # Read the details of all Activities linked to this Need
-        atable = s3db.project_activity
-        natable = s3db.req_need_activity
-        query = (natable.need_id == need_id) & \
-                (natable.activity_id == atable.id) & \
-                (atable.deleted == False)
-        activities = db(query).select(atable.id,
-                                      atable.status_id,
-                                      )
-        aitable = s3db.project_activity_item
-        adtable = s3db.project_activity_demographic
-        for activity in activities:
-            activity_id = activity.id
-            status_id = activity.status_id
-            query = (aitable.activity_id == activity_id) & \
-                    (aitable.deleted == False) & \
-                    (aitable.item_pack_id == iptable.id)
-            rows = db(query).select(aitable.item_id,
-                                    aitable.target_value,
-                                    aitable.value,
-                                    iptable.quantity,
-                                    )
-            for row in rows:
-                pack_qty = row["supply_item_pack.quantity"]
-                row = row["project_activity_item"]
-                item_id = row.item_id
-                if item_id in items:
-                    item = items[item_id]
-                    if status_id != CANCELLED:
-                        target_value = row.target_value
-                        if target_value:
-                            item["quantity_committed"] += target_value * pack_qty
-                    value = row.value
-                    if value:
-                        item["quantity_delivered"] += value * pack_qty
-                else:
-                    # Ignore Items in Activity which don't match Need
-                    continue
-            query = (adtable.activity_id == activity_id) & \
-                    (adtable.deleted == False)
-            rows = db(query).select(adtable.parameter_id,
-                                    adtable.target_value,
-                                    adtable.value,
-                                    )
-            for row in rows:
-                parameter_id = row.parameter_id
-                if parameter_id in demographics:
-                    demographic = demographics[parameter_id]
-                    if status_id != CANCELLED:
-                        target_value = row.target_value
-                        if target_value:
-                            demographic["value_committed"] += target_value
-                    value = row.value
-                    if value:
-                        demographic["value_reached"] += value
-                else:
-                    # Ignore Demographics in Activity which don't match Need
-                    continue
+        # Read the details of all Response Lines linked to this Need Line
+        rltable = s3db.req_need_response_line
+        ltable = s3db.req_need_line_response_line
+        iptable = s3db.supply_item_pack
+        query = (ltable.need_line_id == need_line_id) & \
+                (ltable.need_response_id == rltable.id) & \
+                (rltable.deleted == False)
+        left = iptable.on(rltable.item_pack_id == iptable.id)
+        response_lines = db(query).select(rltable.id,
+                                          rltable.parameter_id,
+                                          rltable.value,
+                                          rltable.value_reached,
+                                          rltable.item_id,
+                                          iptable.quantity,
+                                          rltable.quantity,
+                                          rltable.quantity_delivered,
+                                          rltable.status_id,
+                                          left = left,
+                                          )
+        for line in response_lines:
+            pack_qty = line["supply_item_pack.quantity"]
+            line = line["req_need_response_line"]
+            if line.status_id == CANCELLED:
+                continue
+            if line.parameter_id == need_parameter_id:
+                value = line.value
+                if quantity:
+                    need_value_committed += value
+                value_reached = line.value_reached
+                if value_reached:
+                    need_value_reached += value_reached
+            if line.item_id == need_item_id:
+                quantity = line.quantity
+                if quantity:
+                    need_quantity_committed += quantity * pack_qty
+                quantity_delivered = line.quantity_delivered
+                if quantity_delivered:
+                    need_quantity_delivered += quantity_delivered * pack_qty
 
         # Calculate Need values & Update
-        statuses = []
-        sappend = statuses.append
-        for item_id in items:
-            item = items[item_id]
-            quantity_requested = item["quantity"]
-            quantity_committed = item["quantity_committed"]
-            quantity_uncommitted = max(quantity_requested - quantity_committed, 0)
-            quantity_delivered = item["quantity_delivered"]
-            if quantity_delivered >= quantity_requested:
-                status = 3
-            elif quantity_uncommitted <= 0:
-                status = 2
-            elif quantity_committed > 0:
-                status = 1
-            else:
-                status = 0
-            sappend(status)
-            db(nitable.id == item["id"]).update(quantity_committed = quantity_committed,
-                                                quantity_uncommitted = quantity_uncommitted,
-                                                quantity_delivered = quantity_delivered,
-                                                )
-
-        for parameter_id in demographics:
-            demographic = demographics[parameter_id]
-            value_requested = demographic["value"]
-            value_committed = demographic["value_committed"]
-            value_uncommitted = max(value_requested - value_committed, 0)
-            value_reached = demographic["value_reached"]
-            if value_reached >= value_requested:
-                status = 3
-            elif value_uncommitted <= 0:
-                status = 2
-            elif value_committed > 0:
-                status = 1
-            else:
-                status = 0
-            sappend(status)
-            db(ndtable.id == demographic["id"]).update(value_committed = value_committed,
-                                                       value_uncommitted = value_uncommitted,
-                                                       value_reached = value_reached,
-                                                       )
-
-        if 1 in statuses:
-            # 1 or more items/people are only partially committed
-            status = 1
-        elif 0 in statuses:
-            if 2 in statuses or 3 in statuses:
-                # Some items/people are not committed, but others are
-                status = 1
-            else:
-                # No items/people have been committed
-                status = 0
-        elif 2 in statuses:
-            # All Items/People are Committed, but at least some are not delivered/reached
-            status = 2
-        elif 3 in statuses:
-            # All Items/People are Delivered/Reached
+        value_uncommitted = max(need_value - need_value_committed, 0)
+        quantity_uncommitted = max(need_quantity - need_quantity_committed, 0)
+        if (need_quantity_delivered >= need_quantity) and (need_value_reached >= need_value):
             status = 3
-        else:
-            # No Items/People: assume partial
+        elif (quantity_uncommitted <= 0) and (value_uncommitted <= 0):
+            status = 2
+        elif (need_quantity_committed > 0) or (need_value_committed > 0):
             status = 1
+        else:
+            status = 0
 
-        ntable = s3db.req_need
-        need = db(ntable.id == need_id).select(ntable.id,
-                                               ntable.status,
-                                               limitby = (0, 1)
-                                               ).first()
-        if need.status != status:
-            need.update_record(status = status)
+        db(nltable.id == need_line_id).update(value_committed = need_value_committed,
+                                              value_uncommitted = value_uncommitted,
+                                              value_reached = need_value_reached,
+                                              quantity_committed = need_quantity_committed,
+                                              quantity_uncommitted = quantity_uncommitted,
+                                              quantity_delivered = need_quantity_delivered,
+                                              status = status,
+                                              )
+
+    # -------------------------------------------------------------------------
+    def req_need_status_update(need_id):
+        """
+            Update the Fulfilment Status for all Lines in a Need
+        """
+
+        nltable = current.s3db.req_need_line
+
+        lines = current.db(nltable.need_id == need_id).select(nltable.id)
+        for line in lines:
+            req_need_line_status_update(line.id)
 
     # -------------------------------------------------------------------------
     def req_need_postprocess(form):
@@ -1345,6 +1275,17 @@ def config(settings):
                                              },
                                             ),
                             )
+        
+        s3db.add_components("req_need_response",
+                            req_need_response_organisation = (# Agency
+                                                              {"name": "agency",
+                                                               "joinby": "need_response_id",
+                                                               "filterby": {"role": 1,
+                                                                            },
+                                                               #"multiple": False,
+                                                               },
+                                                              ),
+                            )
 
         filter_widgets = [S3TextFilter(["need_id$req_number.value",
                                         "item_id$name",
@@ -1391,7 +1332,7 @@ def config(settings):
                        # We create a custom Create Button to create a Need not a Need Line
                        listadd = False,
                        list_fields = [(T("Status"), "status"),
-                                      (T("Commits"), "need_response_line_id"),
+                                      (T("Commits"), "need_response_line.need_response_id$agency.organisation_id"),
                                       "need_id$date",
                                       "need_id$organisation__link.organisation_id",
                                       # These levels/Labels are for SHARE/LK
@@ -1435,7 +1376,7 @@ def config(settings):
             if callable(standard_postp):
                 output = standard_postp(r, output)
 
-            if r.interactive:
+            if r.method == "summary":
                 from gluon import A, DIV
                 from s3 import s3_str
                 #from s3 import S3CRUD, s3_str
@@ -1482,66 +1423,25 @@ def config(settings):
     settings.customise_req_need_line_controller = customise_req_need_line_controller
 
     # -------------------------------------------------------------------------
-    def req_need_response_ondelete(row):
-        """
-            Ensure that the Need (if-any) has the correct Status
-        """
-
-        import json
-
-        db = current.db
-        s3db = current.s3db
-
-        need_response_id = row.get("id")
-
-        # Lookup the Need
-        need_id = None
-        nrtable = s3db.req_need_response
-        record = db(nrtable.id == need_response_id).select(nrtable.deleted_fk,
-                                                           limitby = (0, 1)
-                                                           ).first()
-        if not record:
-            return
-
-        deleted_fk = json.loads(record.deleted_fk)
-        need_id = deleted_fk["need_id"]
-
-        if not need_id:
-            return
-
-        # Check that the Need hasn't been deleted
-        ntable = s3db.req_need
-        need = db(ntable.id == need_id).select(ntable.deleted,
-                                               limitby = (0, 1)
-                                               ).first()
-
-        if need and not need.deleted:
-            req_need_status_update(need_id)
-
-    # -------------------------------------------------------------------------
     def req_need_response_postprocess(form):
         """
-            Ensure that the Need (if-any) has the correct Status
-
-            @ToDo: Update for remodel
+            Ensure that the Need Lines (if-any) have the correct Status
         """
 
         s3db = current.s3db
 
         need_response_id = form.vars.id
 
-        # Lookup the Need
-        ntable = s3db.req_need
-        nrtable = s3db.req_need_response
-        query = (nrtable.id == need_response_id) & \
-                (nrtable.need_id == ntable.id) & \
-                (ntable.deleted == False)
-        need = current.db(query).select(ntable.id,
-                                        limitby = (0, 1)
-                                        ).first()
+        # Lookup the Need Lines
+        rltable = s3db.req_need_response_line
+        query = (rltable.need_response_id == need_response_id) & \
+                (rltable.deleted == False)
+        response_lines = current.db(query).select(rltable.need_line_id)
 
-        if need:
-            req_need_status_update(need.id)
+        for line in response_lines:
+            need_line_id = line.need_line_id
+            if need_line_id:
+                req_need_line_status_update(need_line_id)
 
     # -------------------------------------------------------------------------
     def customise_req_need_response_resource(r, tablename):
@@ -1558,8 +1458,8 @@ def config(settings):
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Add Activities"),
             title_list = T("Activities"),
-            title_display = T("Activites"),
-            title_update = T("Edit Activites"),
+            title_display = T("Activities"),
+            title_update = T("Edit Activities"),
             title_upload = T("Import Activities"),
             label_list_button = T("List Activities"),
             label_delete_button = T("Delete Activities"),
@@ -1696,7 +1596,6 @@ def config(settings):
 
         s3db.configure(tablename,
                        crud_form = crud_form,
-                       ondelete = req_need_response_ondelete,
                        )
 
     settings.customise_req_need_response_resource = customise_req_need_response_resource
@@ -1736,6 +1635,51 @@ def config(settings):
         return attr
 
     settings.customise_req_need_response_controller = customise_req_need_response_controller
+
+    # -------------------------------------------------------------------------
+    def req_need_response_line_ondelete(row):
+        """
+            Ensure that the Need Line (if-any) has the correct Status
+        """
+
+        import json
+
+        db = current.db
+        s3db = current.s3db
+
+        response_line_id = row.get("id")
+
+        # Lookup the Need Line
+        rltable = s3db.req_need_response_line
+        record = db(rltable.id == response_line_id).select(rltable.deleted_fk,
+                                                           limitby = (0, 1)
+                                                           ).first()
+        if not record:
+            return
+
+        deleted_fk = json.loads(record.deleted_fk)
+        need_line_id = deleted_fk["need_line_id"]
+
+        if not need_id:
+            return
+
+        # Check that the Need hasn't been deleted
+        ntable = s3db.req_need
+        need = db(ntable.id == need_id).select(ntable.deleted,
+                                               limitby = (0, 1)
+                                               ).first()
+
+        if need and not need.deleted:
+            req_need_status_update(need_id)
+
+    # -------------------------------------------------------------------------
+    def customise_req_need_response_line_resource(r, tablename):
+
+        current.s3db.configure(tablename,
+                               ondelete = req_need_response_line_ondelete,
+                               )
+
+    settings.customise_req_need_response_line_resource = customise_req_need_response_line_resource
 
     # -------------------------------------------------------------------------
     def customise_req_need_response_line_controller(**attr):
@@ -1814,8 +1758,6 @@ def config(settings):
                                       (T("Activity Date (Planned"), "date"),
                                       (T("Activity Status"), "status_id"),
                                       ],
-                       # @ToDo:
-                       #ondelete = req_need_response_line_ondelete,
                        )
 
         s3 = current.response.s3
@@ -1841,7 +1783,7 @@ def config(settings):
             if callable(standard_postp):
                 output = standard_postp(r, output)
 
-            if r.interactive:
+            if r.method == "summary":
                 from gluon import A, DIV
                 from s3 import s3_str
                 #from s3 import S3CRUD, s3_str
