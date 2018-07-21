@@ -503,10 +503,26 @@ def config(settings):
                                                limitby = (0, 1)
                                                ).first()
 
+        nttable = s3db.req_need_tag
+        query = (nttable.need_id == need_id) & \
+                (nttable.tag.belongs(("address", "contact"))) & \
+                (nttable.deleted == False)
+        tags = db(query).select(nttable.tag,
+                                nttable.value,
+                                )
+        contact = address = None
+        for tag in tags:
+            if tag.tag == "address":
+                address = tag.value
+            elif tag.tag == "contact":
+                contact = tag.value
+
         nrtable = s3db.req_need_response
         need_response_id = nrtable.insert(need_id = need_id,
                                           name = need["req_need.name"],
                                           location_id = need["req_need.location_id"],
+                                          contact = contact,
+                                          address = address,
                                           )
         organisation_id = current.auth.user.organisation_id
         if organisation_id:
@@ -623,10 +639,26 @@ def config(settings):
                                                limitby = (0, 1)
                                                ).first()
 
+        nttable = s3db.req_need_tag
+        query = (nttable.need_id == need_id) & \
+                (nttable.tag.belongs(("address", "contact"))) & \
+                (nttable.deleted == False)
+        tags = db(query).select(nttable.tag,
+                                nttable.value,
+                                )
+        contact = address = None
+        for tag in tags:
+            if tag.tag == "address":
+                address = tag.value
+            elif tag.tag == "contact":
+                contact = tag.value
+
         nrtable = s3db.req_need_response
         need_response_id = nrtable.insert(need_id = need_id,
                                           name = need["req_need.name"],
                                           location_id = need["req_need.location_id"],
+                                          contact = contact,
+                                          address = address,
                                           )
         organisation_id = current.auth.user.organisation_id
         if organisation_id:
@@ -691,13 +723,14 @@ def config(settings):
         # Read the Line details
         nltable = s3db.req_need_line
         iptable = s3db.supply_item_pack
-        query = (nltable.id == need_line_id) & \
-                (nltable.item_pack_id == iptable.id)
+        query = (nltable.id == need_line_id)
+        left = iptable.on(nltable.item_pack_id == iptable.id)
         need_line = db(query).select(nltable.parameter_id,
                                      nltable.value,
                                      nltable.item_id,
                                      nltable.quantity,
                                      iptable.quantity,
+                                     left = left,
                                      limitby = (0, 1)
                                      ).first()
         need_pack_qty = need_line["supply_item_pack.quantity"]
