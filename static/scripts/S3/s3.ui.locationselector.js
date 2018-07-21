@@ -390,7 +390,7 @@
                 // Set this dropdown to this value
                 // - this is being set from outside the dropdown, e.g. an
                 //   update form or using a visible default location
-                dropdown.val(id);
+                dropdown.val(id).change();
                 if (dropdown.hasClass('multiselect') && dropdown.multiselect('instance')) {
                     dropdown.multiselect('refresh');
                 }
@@ -461,7 +461,7 @@
                     $(s + ' option').remove('[value != ""]');
                     // @ToDo: Read the full set of options via a new call
                 }
-                $(s).val('');
+                $(s).val('').change();
             }
 
             if (id) {

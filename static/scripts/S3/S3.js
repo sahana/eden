@@ -1362,6 +1362,8 @@ S3.openPopup = function(url, center) {
                 target.multiselect('refresh')
                       .multiselect('disable');
             }
+            // Trigger change-event on target for filter cascades
+            target.change();
             updateAddResourceLink(lookupResource, lookupKey);
             return;
         }
