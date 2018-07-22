@@ -485,7 +485,7 @@ def config(settings):
             Custom method to Commit to a Need by creating an Activity Group
         """
 
-        # Create Activity Group with values from Need
+        # Create Activity Group (Response) with values from Need
         need_id = r.id
 
         db = current.db
@@ -503,10 +503,26 @@ def config(settings):
                                                limitby = (0, 1)
                                                ).first()
 
+        nttable = s3db.req_need_tag
+        query = (nttable.need_id == need_id) & \
+                (nttable.tag.belongs(("address", "contact"))) & \
+                (nttable.deleted == False)
+        tags = db(query).select(nttable.tag,
+                                nttable.value,
+                                )
+        contact = address = None
+        for tag in tags:
+            if tag.tag == "address":
+                address = tag.value
+            elif tag.tag == "contact":
+                contact = tag.value
+
         nrtable = s3db.req_need_response
         need_response_id = nrtable.insert(need_id = need_id,
                                           name = need["req_need.name"],
                                           location_id = need["req_need.location_id"],
+                                          contact = contact,
+                                          address = address,
                                           )
         organisation_id = current.auth.user.organisation_id
         if organisation_id:
@@ -517,7 +533,7 @@ def config(settings):
 
         event_id = need["event_event_need.event_id"]
         if event_id:
-            aetable = s3db.event_event_need_need_response
+            aetable = s3db.event_event_need_response
             aetable.insert(need_response_id = need_response_id,
                            event_id = event_id,
                            )
@@ -525,39 +541,52 @@ def config(settings):
         nltable = s3db.req_need_line
         query = (nltable.need_id == need_id) & \
                 (nltable.deleted == False)
-        lines = db(query).select(nltable.coarse_location_id,
+        lines = db(query).select(nltable.id,
+                                 nltable.coarse_location_id,
                                  nltable.location_id,
                                  nltable.sector_id,
                                  nltable.parameter_id,
                                  nltable.value,
+                                 nltable.value_uncommitted,
                                  nltable.item_category_id,
                                  nltable.item_id,
                                  nltable.item_pack_id,
                                  nltable.quantity,
+                                 nltable.quantity_uncommitted,
+                                 nltable.status,
                                  )
         if lines:
             linsert = s3db.req_need_response_line.insert
             for line in lines:
+                value_uncommitted = line.value_uncommitted
+                if value_uncommitted is None:
+                    # No commitments yet so commit to all
+                    value = line.value
+                else:
+                    # Only commit to the remainder
+                    value = value_uncommitted
+                quantity_uncommitted = line.quantity_uncommitted
+                if quantity_uncommitted is None:
+                    # No commitments yet so commit to all
+                    quantity = line.quantity
+                else:
+                    # Only commit to the remainder
+                    quantity = quantity_uncommitted
+                need_line_id = line.id
                 linsert(need_response_id = need_response_id,
+                        need_line_id = need_line_id,
                         coarse_location_id = line.coarse_location_id,
                         location_id = line.location_id,
                         sector_id = line.sector_id,
                         parameter_id = line.parameter_id,
-                        value = line.value,
+                        value = value,
                         item_category_id = line.item_category_id,
                         item_id = line.item_id,
                         item_pack_id = line.item_pack_id,
-                        quantity = line.quantity,
+                        quantity = quantity,
                         )
-
-        # Update Need to show Fulfilled
-        need = current.db(ntable.id == need_id).select(ntable.id,
-                                                       ntable.status,
-                                                       limitby = (0, 1)
-                                                       ).first()
-        if need.status in (0, 1):
-            # Set to Fully Committed
-            need.update_record(status = 2)
+                # Update Need Line status
+                req_need_line_status_update(need_line_id)
 
         # Redirect to Update
         from gluon import redirect
@@ -579,16 +608,20 @@ def config(settings):
 
         nltable = s3db.req_need_line
         query = (nltable.id == need_line_id)
-        line = db(query).select(nltable.need_id,
+        line = db(query).select(nltable.id,
+                                nltable.need_id,
                                 nltable.coarse_location_id,
                                 nltable.location_id,
                                 nltable.sector_id,
                                 nltable.parameter_id,
                                 nltable.value,
+                                nltable.value_uncommitted,
                                 nltable.item_category_id,
                                 nltable.item_id,
                                 nltable.item_pack_id,
                                 nltable.quantity,
+                                nltable.quantity_uncommitted,
+                                nltable.status,
                                 limitby = (0, 1)
                                 ).first()
 
@@ -606,10 +639,26 @@ def config(settings):
                                                limitby = (0, 1)
                                                ).first()
 
+        nttable = s3db.req_need_tag
+        query = (nttable.need_id == need_id) & \
+                (nttable.tag.belongs(("address", "contact"))) & \
+                (nttable.deleted == False)
+        tags = db(query).select(nttable.tag,
+                                nttable.value,
+                                )
+        contact = address = None
+        for tag in tags:
+            if tag.tag == "address":
+                address = tag.value
+            elif tag.tag == "contact":
+                contact = tag.value
+
         nrtable = s3db.req_need_response
         need_response_id = nrtable.insert(need_id = need_id,
                                           name = need["req_need.name"],
                                           location_id = need["req_need.location_id"],
+                                          contact = contact,
+                                          address = address,
                                           )
         organisation_id = current.auth.user.organisation_id
         if organisation_id:
@@ -620,31 +669,41 @@ def config(settings):
 
         event_id = need["event_event_need.event_id"]
         if event_id:
-            aetable = s3db.event_event_need_need_response
+            aetable = s3db.event_event_need_response
             aetable.insert(need_response_id = need_response_id,
                            event_id = event_id,
                            )
 
-        s3db.need_response_line.insert(need_response_id = need_response_id,
-                                       coarse_location_id = line.coarse_location_id,
-                                       location_id = line.location_id,
-                                       sector_id = line.sector_id,
-                                       parameter_id = line.parameter_id,
-                                       value = line.value,
-                                       item_category_id = line.item_category_id,
-                                       item_id = line.item_id,
-                                       item_pack_id = line.item_pack_id,
-                                       quantity = line.quantity,
-                                       )
+        value_uncommitted = line.value_uncommitted
+        if value_uncommitted is None:
+            # No commitments yet so commit to all
+            value = line.value
+        else:
+            # Only commit to the remainder
+            value = value_uncommitted
+        quantity_uncommitted = line.quantity_uncommitted
+        if quantity_uncommitted is None:
+            # No commitments yet so commit to all
+            quantity = line.quantity
+        else:
+            # Only commit to the remainder
+            quantity = quantity_uncommitted
 
-        # Update Need to show Fulfilled
-        need = current.db(ntable.id == need_id).select(ntable.id,
-                                                       ntable.status,
-                                                       limitby = (0, 1)
-                                                       ).first()
-        if need.status == 0:
-            # Set to Partially Committed
-            need.update_record(status = 1)
+        s3db.req_need_response_line.insert(need_response_id = need_response_id,
+                                           need_line_id = need_line_id,
+                                           coarse_location_id = line.coarse_location_id,
+                                           location_id = line.location_id,
+                                           sector_id = line.sector_id,
+                                           parameter_id = line.parameter_id,
+                                           value = value,
+                                           item_category_id = line.item_category_id,
+                                           item_id = line.item_id,
+                                           item_pack_id = line.item_pack_id,
+                                           quantity = quantity,
+                                           )
+
+        # Update Need Line status
+        req_need_line_status_update(need_line_id)
 
         # Redirect to Update
         from gluon import redirect
@@ -664,13 +723,14 @@ def config(settings):
         # Read the Line details
         nltable = s3db.req_need_line
         iptable = s3db.supply_item_pack
-        query = (nltable.id == need_line_id) & \
-                (nltable.item_pack_id == iptable.id)
+        query = (nltable.id == need_line_id)
+        left = iptable.on(nltable.item_pack_id == iptable.id)
         need_line = db(query).select(nltable.parameter_id,
                                      nltable.value,
                                      nltable.item_id,
                                      nltable.quantity,
                                      iptable.quantity,
+                                     left = left,
                                      limitby = (0, 1)
                                      ).first()
         need_pack_qty = need_line["supply_item_pack.quantity"]
@@ -681,7 +741,7 @@ def config(settings):
         need_value_reached = 0
         need_quantity = need_line.quantity
         if need_quantity:
-            need_quantity = need_quantity * pack_qty
+            need_quantity = need_quantity * need_pack_qty
         else:
             need_quantity = 0
         need_item_id = need_line.item_id
@@ -702,10 +762,8 @@ def config(settings):
 
         # Read the details of all Response Lines linked to this Need Line
         rltable = s3db.req_need_response_line
-        ltable = s3db.req_need_line_response_line
         iptable = s3db.supply_item_pack
-        query = (ltable.need_line_id == need_line_id) & \
-                (ltable.need_response_id == rltable.id) & \
+        query = (rltable.need_line_id == need_line_id) & \
                 (rltable.deleted == False)
         left = iptable.on(rltable.item_pack_id == iptable.id)
         response_lines = db(query).select(rltable.id,
@@ -726,7 +784,7 @@ def config(settings):
                 continue
             if line.parameter_id == need_parameter_id:
                 value = line.value
-                if quantity:
+                if value:
                     need_value_committed += value
                 value_reached = line.value_reached
                 if value_reached:
@@ -759,18 +817,6 @@ def config(settings):
                                               quantity_delivered = need_quantity_delivered,
                                               status = status,
                                               )
-
-    # -------------------------------------------------------------------------
-    def req_need_status_update(need_id):
-        """
-            Update the Fulfilment Status for all Lines in a Need
-        """
-
-        nltable = current.s3db.req_need_line
-
-        lines = current.db(nltable.need_id == need_id).select(nltable.id)
-        for line in lines:
-            req_need_line_status_update(line.id)
 
     # -------------------------------------------------------------------------
     def req_need_postprocess(form):
@@ -1651,26 +1697,26 @@ def config(settings):
 
         # Lookup the Need Line
         rltable = s3db.req_need_response_line
-        record = db(rltable.id == response_line_id).select(rltable.deleted_fk,
-                                                           limitby = (0, 1)
-                                                           ).first()
+        record = db(rltable.id == need_line_id).select(rltable.deleted_fk,
+                                                       limitby = (0, 1)
+                                                       ).first()
         if not record:
             return
 
         deleted_fk = json.loads(record.deleted_fk)
         need_line_id = deleted_fk["need_line_id"]
 
-        if not need_id:
+        if not need_line_id:
             return
 
-        # Check that the Need hasn't been deleted
-        ntable = s3db.req_need
-        need = db(ntable.id == need_id).select(ntable.deleted,
-                                               limitby = (0, 1)
-                                               ).first()
+        # Check that the Need Line hasn't been deleted
+        nltable = s3db.req_need_line
+        need_line = db(nltable.id == need_line_id).select(nltable.deleted,
+                                                          limitby = (0, 1)
+                                                          ).first()
 
-        if need and not need.deleted:
-            req_need_status_update(need_id)
+        if need_line and not need_line.deleted:
+            req_need_line_status_update(need_line_id)
 
     # -------------------------------------------------------------------------
     def customise_req_need_response_line_resource(r, tablename):
@@ -1751,7 +1797,7 @@ def config(settings):
                                       (T("Sector"), "sector_id"),
                                       (T("Item"), "item_id"),
                                       (T("Items Planned"), "quantity"),
-                                      (T("Items Delivered"), "quantity_reached"),
+                                      (T("Items Delivered"), "quantity_delivered"),
                                       (T("Modality"), "modality"),
                                       (T("Beneficiaries Planned"), "value"),
                                       (T("Beneficiaries Reached"), "value_reached"),
