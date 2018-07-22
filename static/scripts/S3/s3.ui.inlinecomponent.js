@@ -1102,7 +1102,7 @@
 
                     // Set the input to the default value
                     defaultValue = defaultField.val();
-                    currentField.val(defaultValue);
+                    currentField.val(defaultValue).change();
 
                     // Refresh widgets
                     if (currentField.attr('type') == 'checkbox') {
