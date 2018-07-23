@@ -114,9 +114,9 @@
             </xsl:if>
 
             <xsl:if test="data[@field='reference']!=''">
-            	<references>
-            		<xsl:value-of select="data[@field='reference']"/>
-            	</references>
+                <references>
+                    <xsl:value-of select="data[@field='reference']"/>
+                </references>
             </xsl:if>
 
             <xsl:if test="data[@field='incidents']!=''">
@@ -145,7 +145,7 @@
             <xsl:if test="data[@field='category']">
                 <xsl:call-template name="split-into-nodes">
                     <xsl:with-param name="string">
-                    	<xsl:value-of select="translate(data[@field='category']/@value, '&quot;][', '')"/>
+                        <xsl:value-of select="translate(data[@field='category']/@value, '&quot;][', '')"/>
                     </xsl:with-param>
                     <xsl:with-param name="node-name">category</xsl:with-param>
                 </xsl:call-template>
@@ -156,22 +156,22 @@
             <xsl:if test="data[@field='response_type']">
                 <xsl:call-template name="split-into-nodes">
                     <xsl:with-param name="string">
-                    	<xsl:value-of select="translate(data[@field='response_type']/@value, '&quot;][', '')"/>
+                        <xsl:value-of select="translate(data[@field='response_type']/@value, '&quot;][', '')"/>
                     </xsl:with-param>
                     <xsl:with-param name="node-name">responseType</xsl:with-param>
                 </xsl:call-template>
             </xsl:if>
 
             <urgency>
-            	<xsl:value-of select="translate(data[@field='urgency']/@value, '&quot;', '')"/>
+                <xsl:value-of select="translate(data[@field='urgency']/@value, '&quot;', '')"/>
             </urgency>
 
             <severity>
-            	<xsl:value-of select="translate(data[@field='severity']/@value, '&quot;', '')"/>
+                <xsl:value-of select="translate(data[@field='severity']/@value, '&quot;', '')"/>
             </severity>
 
             <certainty>
-            	<xsl:value-of select="translate(data[@field='certainty']/@value, '&quot;', '')"/>
+                <xsl:value-of select="translate(data[@field='certainty']/@value, '&quot;', '')"/>
             </certainty>
 
             <xsl:if test="data[@field='audience']!=''">
@@ -250,15 +250,10 @@
                 <contact><xsl:value-of select="data[@field='contact']"/></contact>
             </xsl:if>
 
-            <xsl:if test="reference[@field='event_type_id']!=''">
-            	<parameter>
-                    <valueName>sahana:event type</valueName>
-                    <value><xsl:value-of select="reference[@field='event_type_id']"/></value>
-                </parameter>
-            </xsl:if>
+            <xsl:apply-templates select="reference[@field='event_type_id']"/>
 
             <xsl:if test="reference[@field='priority']!=''">
-            	<parameter>
+                <parameter>
                     <valueName>sahana:warning priority</valueName>
                     <value><xsl:value-of select="reference[@field='priority']"/></value>
                 </parameter>
@@ -300,26 +295,26 @@
                 <valueName>layer:sms</valueName>
                 <value>
                     <xsl:value-of select="translate(../data[@field='status']/@value, '&quot;', '')"/>
-		    <xsl:text>&#160;</xsl:text><xsl:value-of select="translate(../data[@field='msg_type']/@value, '&quot;', '')"/>
+            <xsl:text>&#160;</xsl:text><xsl:value-of select="translate(../data[@field='msg_type']/@value, '&quot;', '')"/>
                     <xsl:text>&#160;for&#160;</xsl:text>
-		    <xsl:value-of select="../resource[@name='cap_area']/data[@field='name']"/>
-		    <xsl:text>&#160;with&#160;</xsl:text>
-		    <xsl:choose>
-		        <xsl:when test="reference[@field='priority']!=''">
-			    <xsl:value-of select="reference[@field='priority']"/>
-			</xsl:when>
-			<xsl:otherwise>
-			    <xsl:text>Unknown</xsl:text>
-			</xsl:otherwise>
-		    </xsl:choose>
-		    <xsl:text>&#160;priority&#160;</xsl:text>
-		    <xsl:value-of select="reference[@field='event_type_id']"/>
-		    <xsl:text>&#160;issued&#160;by&#160;</xsl:text>
-		    <xsl:value-of select="data[@field='sender_name']"/>
-		    <xsl:text>&#160;at&#160;</xsl:text>
-		    <xsl:value-of select="../data[@field='sent']/@value"/>
-		    <xsl:text>&#160;(ID:</xsl:text>
-		    <xsl:value-of select="../data[@field='identifier']"/>
+            <xsl:value-of select="../resource[@name='cap_area']/data[@field='name']"/>
+            <xsl:text>&#160;with&#160;</xsl:text>
+            <xsl:choose>
+                <xsl:when test="reference[@field='priority']!=''">
+                <xsl:value-of select="reference[@field='priority']"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:text>Unknown</xsl:text>
+            </xsl:otherwise>
+            </xsl:choose>
+            <xsl:text>&#160;priority&#160;</xsl:text>
+            <xsl:value-of select="reference[@field='event_type_id']"/>
+            <xsl:text>&#160;issued&#160;by&#160;</xsl:text>
+            <xsl:value-of select="data[@field='sender_name']"/>
+            <xsl:text>&#160;at&#160;</xsl:text>
+            <xsl:value-of select="../data[@field='sent']/@value"/>
+            <xsl:text>&#160;(ID:</xsl:text>
+            <xsl:value-of select="../data[@field='identifier']"/>
                     <xsl:text>)</xsl:text>
                 </value>
             </parameter>
@@ -336,6 +331,20 @@
             <xsl:apply-templates select="../resource[@name='cap_area'][reference[@field='info_id' and @uuid=$uuid]]|
                                          ../resource[@name='cap_area'][not(reference[@field='info_id'])]"/>
         </info>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- cap_info.event_type_id -->
+    <xsl:template match="reference[@field='event_type_id']">
+        <!-- use the unrepresented (=untranslated) name from the event type record if available -->
+        <xsl:variable name="EventTypeUUID" select="@uuid"/>
+        <xsl:variable name="EventTypeName" select="//resource[@name='event_event_type' and @uuid=$EventTypeUUID]/data[@field='name']/text()"/>
+        <xsl:if test="$EventTypeName!=''">
+            <parameter>
+                <valueName>sahana:event type</valueName>
+                <value><xsl:value-of select="$EventTypeName"/></value>
+            </parameter>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -364,10 +373,10 @@
             -->
 
             <xsl:for-each select="../resource[@name='cap_area_tag'][reference[@field='area_id' and @uuid=$area_uuid]]">
-            	<xsl:variable name="tag_uuid">
-            		<xsl:value-of select="@uuid"/>
-            	</xsl:variable>
-            	<xsl:apply-templates select="//resource[@name='cap_area_tag' and @uuid=$tag_uuid]" />
+                <xsl:variable name="tag_uuid">
+                    <xsl:value-of select="@uuid"/>
+                </xsl:variable>
+                <xsl:apply-templates select="//resource[@name='cap_area_tag' and @uuid=$tag_uuid]" />
             </xsl:for-each>
 
             <xsl:choose>
@@ -566,7 +575,7 @@
             </xsl:when>
         </xsl:choose>
     </xsl:template>
-	-->
+    -->
 
     <!-- ****************************************************************** -->
     <!-- cap_resource -->
