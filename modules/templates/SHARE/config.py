@@ -918,11 +918,14 @@ def config(settings):
                                                       show_map = False)
 
         ltable = s3db.req_need_line
+        inline_location_represent = s3db.gis_LocationRepresent(show_link=False)
         f = ltable.coarse_location_id
         f.label = T("Division")
+        f.represent = inline_location_represent
         f.widget = S3LocationDropdownWidget(level="L3")
         f = ltable.location_id
         f.label = T("GN")
+        f.represent = inline_location_represent
         f.widget = S3LocationDropdownWidget(level="L4")
 
         # Custom Filtered Components
