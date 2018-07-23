@@ -878,7 +878,7 @@ def config(settings):
         from gluon import IS_EMPTY_OR, IS_IN_SET, SPAN
         #from gluon.sqlhtml import BooleanWidget
 
-        from s3 import s3_comments_widget, s3_yes_no_represent, \
+        from s3 import s3_comments_widget, \
                        S3LocationSelector, S3LocationDropdownWidget, \
                        S3Represent, \
                        S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
@@ -984,9 +984,11 @@ def config(settings):
 
         verified = components_get("verified")
         f = verified.table.value
-        f.represent = s3_yes_no_represent
-        f.requires = IS_EMPTY_OR(IS_IN_SET((True, False)))
-        #f.widget = BooleanWidget.widget
+        from s3 import S3YesNoTagWidget
+        f.requires = IS_IN_SET(("Y", "N"))
+        f.default = "N"
+        f.represent = lambda v: T("yes") if v == "Y" else T("no")
+        f.widget = S3YesNoTagWidget(on="Y", off="N")
 
         auth = current.auth
         user = auth.user
@@ -1321,7 +1323,7 @@ def config(settings):
                                              },
                                             ),
                             )
-        
+
         s3db.add_components("req_need_response",
                             req_need_response_organisation = (# Agency
                                                               {"name": "agency",
@@ -1697,9 +1699,9 @@ def config(settings):
 
         # Lookup the Need Line
         rltable = s3db.req_need_response_line
-        record = db(rltable.id == need_line_id).select(rltable.deleted_fk,
-                                                       limitby = (0, 1)
-                                                       ).first()
+        record = db(rltable.id == response_line_id).select(rltable.deleted_fk,
+                                                           limitby = (0, 1)
+                                                           ).first()
         if not record:
             return
 

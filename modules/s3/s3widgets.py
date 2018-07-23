@@ -80,6 +80,7 @@ __all__ = ("S3ACLWidget",
            "s3_richtext_widget",
            "search_ac",
            "S3XMLContents",
+           "S3YesNoTagWidget",
            "ICON",
            )
 
@@ -8404,6 +8405,41 @@ class S3QuestionWidget(FormWidget):
                            _value=value)
 
         return (_label, widget, input_id)
+
+# =============================================================================
+class S3YesNoTagWidget(FormWidget):
+    """
+        Simple widget to use a checkbox to toggle a string-type Field
+        between two values (default "Y"|"N").
+
+        NB it is usually better to use a boolean Field with a context-specific
+           representation function for a binary logic like this.
+    """
+
+    def __init__(self, on="Y", off="N"):
+        """
+            Constructor
+
+            @param on: the value of the tag for checkbox=on
+            @param off: the value of the tag for checkbox=off
+        """
+
+        self.on = on
+        self.off = off
+
+    def __call__(self, field, value, **attributes):
+
+        defaults = {"_type": "checkbox",
+                    "value": str(value) == self.on,
+                    "requires": self.requires,
+                    }
+        attr = self._attributes(field, defaults, **attributes)
+        return INPUT(**attr)
+
+    def requires(self, value):
+
+        v = self.on if value == "on" else self.off
+        return v, None
 
 # =============================================================================
 class ICON(I):
