@@ -1,4 +1,6 @@
 Name,Height,Width,Image
+marker_darkorange,34,20,"marker_darkorange.png"
+marker_lime,34,20,"marker_lime.png"
 marker_red,34,20,"marker_red.png"
 airport,40,40,"OCHA/logistics_airport_40px.png"
 assessment,40,40,"OCHA/activity_assessment_40px.png"

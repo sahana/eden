@@ -1,6 +1,7 @@
 uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
 ANONYMOUS,Anonymous,,event,sitrep,,,READ,,,,,
 ANONYMOUS,Anonymous,,,,event_sitrep,,READ,,,,,
+ANONYMOUS,Anonymous,,gis,,,,READ,,,,,
 ANONYMOUS,Anonymous,,org,organisation,,,READ,,,,,
 ANONYMOUS,Anonymous,,org,facility_type,,,NONE,,,,,Hide menu
 ANONYMOUS,Anonymous,,org,organisation_type,,,NONE,,,,,Hide menu
@@ -14,7 +15,6 @@ ANONYMOUS,Anonymous,,req,need_response_line,,,READ,,,,,
 ANONYMOUS,Anonymous,,req,need,,,READ,,,,,
 ANONYMOUS,Anonymous,,req,need_line,,,READ,,,,,
 ANONYMOUS,Anonymous,,supply,item,,,NONE,,,,,Hide menu
-AUTHENTICATED,Authenticated,,gis,,,,READ,,,,,
 AUTHENTICATED,Authenticated,,org,sector,,,READ,,,,,
 AUTHENTICATED,Authenticated,,supply,item,,,READ,,,,,
 AUTHENTICATED,Authenticated,,supply,item_category,,,READ,,,,,

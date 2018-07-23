@@ -91,6 +91,32 @@ def config(settings):
     # UI Settings
     settings.ui.datatables_responsive = False
 
+    settings.ui.summary = (# Gets replaced in postp
+                           # @ToDo: better performance by not including here & placing directly into the view instead
+                           {"common": True,
+                            "name": "add",
+                            "widgets": [{"method": "create"}],
+                            },
+                           #{"common": True,
+                           # "name": "cms",
+                           # "widgets": [{"method": "cms"}]
+                           # },
+                           {"name": "table",
+                            "label": "Table",
+                            "widgets": [{"method": "datatable"}]
+                            },
+                           {"name": "charts",
+                            "label": "Report",
+                            "widgets": [{"method": "report",
+                                         "ajax_init": True}]
+                            },
+                           #{"name": "map",
+                           # "label": "Map",
+                           # "widgets": [{"method": "map",
+                           #              "ajax_init": True}],
+                           # },
+                           )
+
     # -------------------------------------------------------------------------
     # Events
     settings.event.label = "Disaster"
@@ -886,7 +912,7 @@ def config(settings):
         db = current.db
         s3db = current.s3db
 
-        req_status_opts = {0: SPAN(T("None"),
+        req_status_opts = {0: SPAN(T("Outstanding"),
                                    _class = "req_status_none",
                                    ),
                            1: SPAN(T("Partially Committed"),
@@ -920,9 +946,13 @@ def config(settings):
         ltable = s3db.req_need_line
         f = ltable.coarse_location_id
         f.label = T("Division")
+        # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
+        f.represent = S3Represent(lookup = "gis_location")
         f.widget = S3LocationDropdownWidget(level="L3")
         f = ltable.location_id
         f.label = T("GN")
+        # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
+        f.represent = S3Represent(lookup = "gis_location")
         f.widget = S3LocationDropdownWidget(level="L4")
 
         # Custom Filtered Components
@@ -1076,7 +1106,7 @@ def config(settings):
                                                   (T("People affected"), "parameter_id"),
                                                   "value",
                                                   "value_committed",
-                                                  "value_uncommitted",
+                                                  (T("Number Outstanding"), "value_uncommitted"),
                                                   "value_reached",
                                                   (T("Item Category"), "item_category_id"),
                                                   "item_id",
@@ -1084,7 +1114,7 @@ def config(settings):
                                                   (T("Item Quantity"), "quantity"),
                                                   (T("Needed within Timeframe"), "timeframe"),
                                                   "quantity_committed",
-                                                  "quantity_uncommitted",
+                                                  (T("Quantity Outstanding"), "quantity_uncommitted"),
                                                   "quantity_delivered",
                                                   #"comments",
                                                   ],
@@ -1301,7 +1331,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_req_need_line_controller(**attr):
 
-        from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
+        from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter,\
+                       S3Represent
 
         s3db = current.s3db
 
@@ -1334,6 +1365,17 @@ def config(settings):
                                                                },
                                                               ),
                             )
+
+        # Settings for Map Popups
+        table = s3db.req_need_line
+        f = table.coarse_location_id
+        f.label = T("Division")
+        # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
+        f.represent = S3Represent(lookup = "gis_location")
+        f = table.location_id
+        # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
+        f.represent = S3Represent(lookup = "gis_location")
+        f.label = T("GN")
 
         filter_widgets = [S3TextFilter(["need_id$req_number.value",
                                         "item_id$name",
@@ -1394,6 +1436,9 @@ def config(settings):
                                       "timeframe",
                                       (T("Request Number"), "need_id$req_number.value"),
                                       ],
+                       popup_url = URL(c="req", f="need",
+                                       vars = {"line": "[id]"}
+                                       ),
                        )
 
         # Custom commit method to create an Activity from a Need Line
@@ -1432,7 +1477,7 @@ def config(settings):
                 #S3CRUD.action_buttons(r)
                 # Custom Action Buttons
                 auth = current.auth
-                deletable = current.db(auth.s3_accessible_query("delete", "req_need_line")).select(s3db.req_need_line.id)
+                deletable = current.db(auth.s3_accessible_query("delete", "req_need_line")).select(table.id)
                 restrict_d = [str(row.id) for row in deletable]
                 s3.actions = [{"label": s3_str(T("Open")),
                                "_class": "action-btn",
@@ -1496,6 +1541,7 @@ def config(settings):
 
         from s3 import s3_comments_widget, \
                        S3LocationDropdownWidget, S3LocationSelector, \
+                       S3Represent, \
                        S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
         #db = current.db
@@ -1525,9 +1571,13 @@ def config(settings):
         ltable = s3db.req_need_response_line
         f = ltable.coarse_location_id
         f.label = T("Division")
+        # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
+        f.represent = S3Represent(lookup = "gis_location")
         f.widget = S3LocationDropdownWidget(level="L3")
         f = ltable.location_id
         f.label = T("GN")
+        # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
+        f.represent = S3Represent(lookup = "gis_location")
         f.widget = S3LocationDropdownWidget(level="L4")
 
         table.comments.widget = lambda f, v: \
@@ -1723,9 +1773,27 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_req_need_response_line_resource(r, tablename):
 
-        current.s3db.configure(tablename,
-                               ondelete = req_need_response_line_ondelete,
-                               )
+        from s3 import S3Represent
+
+        s3db = current.s3db
+        table = s3db.req_need_response_line
+
+        # Settings for Map Popups
+        f = table.coarse_location_id
+        f.label = T("Division")
+        # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
+        f.represent = S3Represent(lookup = "gis_location")
+        f = table.location_id
+        f.label = T("GN")
+        # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
+        f.represent = S3Represent(lookup = "gis_location")
+
+        s3db.configure(tablename,
+                       ondelete = req_need_response_line_ondelete,
+                       popup_url = URL(c="req", f="need_response",
+                                       vars = {"line": "[id]"}
+                                       ),
+                       )
 
     settings.customise_req_need_response_line_resource = customise_req_need_response_line_resource
 
@@ -1794,8 +1862,8 @@ def config(settings):
                                       (T("Donor"), "need_response_id$donor.organisation_id"),
                                       # These levels/labels are for SHARE/LK
                                       (T("District"), "need_response_id$location_id$L1"),
-                                      (T("Division"), "coarse_location_id"),
-                                      (T("GN"), "location_id"),
+                                      "coarse_location_id",
+                                      "location_id",
                                       (T("Sector"), "sector_id"),
                                       (T("Item"), "item_id"),
                                       (T("Items Planned"), "quantity"),
