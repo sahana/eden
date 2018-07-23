@@ -8414,6 +8414,9 @@ class S3YesNoTagWidget(FormWidget):
 
         NB it is usually better to use a boolean Field with a context-specific
            representation function for a binary logic like this.
+
+        NB make sure the field validator accepts the configured on/off values,
+           e.g. IS_IN_SET(("Y", "N")) (also for consistency with imports)
     """
 
     def __init__(self, on="Y", off="N"):
@@ -8427,7 +8430,15 @@ class S3YesNoTagWidget(FormWidget):
         self.on = on
         self.off = off
 
+    # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
+        """
+            Widget construction
+
+            @param field: the Field
+            @param value: the current (or default) value
+            @param attributes: overrides for default attributes
+        """
 
         defaults = {"_type": "checkbox",
                     "value": str(value) == self.on,
@@ -8436,7 +8447,14 @@ class S3YesNoTagWidget(FormWidget):
         attr = self._attributes(field, defaults, **attributes)
         return INPUT(**attr)
 
+    # -------------------------------------------------------------------------
     def requires(self, value):
+        """
+            Input-validator to convert the checkbox value into the
+            corresponding tag value
+
+            @param value: the checkbox value ("on" if checked)
+        """
 
         v = self.on if value == "on" else self.off
         return v, None
