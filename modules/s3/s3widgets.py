@@ -80,7 +80,7 @@ __all__ = ("S3ACLWidget",
            "s3_richtext_widget",
            "search_ac",
            "S3XMLContents",
-           "S3YesNoTagWidget",
+           "S3TagCheckboxWidget",
            "ICON",
            )
 
@@ -8407,13 +8407,15 @@ class S3QuestionWidget(FormWidget):
         return (_label, widget, input_id)
 
 # =============================================================================
-class S3YesNoTagWidget(FormWidget):
+class S3TagCheckboxWidget(FormWidget):
     """
         Simple widget to use a checkbox to toggle a string-type Field
         between two values (default "Y"|"N").
+        Like an S3BooleanWidget but real Booleans cannot be stored in strings.
+        Designed for use with tag.value
 
         NB it is usually better to use a boolean Field with a context-specific
-           representation function for a binary logic like this.
+           representation function than this.
 
         NB make sure the field validator accepts the configured on/off values,
            e.g. IS_IN_SET(("Y", "N")) (also for consistency with imports)

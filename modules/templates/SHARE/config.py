@@ -984,11 +984,11 @@ def config(settings):
 
         verified = components_get("verified")
         f = verified.table.value
-        from s3 import S3YesNoTagWidget
+        from s3 import S3TagCheckboxWidget
         f.requires = IS_IN_SET(("Y", "N"))
         f.default = "N"
         f.represent = lambda v: T("yes") if v == "Y" else T("no")
-        f.widget = S3YesNoTagWidget(on="Y", off="N")
+        f.widget = S3TagCheckboxWidget(on="Y", off="N")
 
         auth = current.auth
         user = auth.user
