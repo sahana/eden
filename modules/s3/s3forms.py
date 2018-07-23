@@ -2817,7 +2817,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         # Real input: a hidden text field to store the JSON data
         real_input = "%s_%s" % (resource.tablename, field.name)
-        default = {"_type": "text",
+        default = {"_type": "hidden",
                    "_value": value,
                    "requires": lambda v: (v, None),
                    }

@@ -947,12 +947,13 @@ def config(settings):
         f = ltable.coarse_location_id
         f.label = T("Division")
         # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
-        f.represent = S3Represent(lookup = "gis_location")
+        # NB cannot have the JS in link to avoid being blocked by Chrome XSS_AUDITOR
+        location_represent = S3Represent(lookup = "gis_location")
+        f.represent = location_represent
         f.widget = S3LocationDropdownWidget(level="L3")
         f = ltable.location_id
         f.label = T("GN")
-        # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
-        f.represent = S3Represent(lookup = "gis_location")
+        f.represent = location_represent
         f.widget = S3LocationDropdownWidget(level="L4")
 
         # Custom Filtered Components
@@ -1371,10 +1372,12 @@ def config(settings):
         f = table.coarse_location_id
         f.label = T("Division")
         # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
-        f.represent = S3Represent(lookup = "gis_location")
+        # NB cannot have the JS in link to avoid being blocked by Chrome XSS_AUDITOR
+        location_represent = S3Represent(lookup = "gis_location")
+        f.represent = location_represent
         f = table.location_id
         # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
-        f.represent = S3Represent(lookup = "gis_location")
+        f.represent = location_represent
         f.label = T("GN")
 
         filter_widgets = [S3TextFilter(["need_id$req_number.value",
