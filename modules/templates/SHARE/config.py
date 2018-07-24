@@ -1316,7 +1316,7 @@ def config(settings):
 
         from s3 import S3Represent
 
-        req_status_opts = {0: SPAN(T("Outstanding"),
+        req_status_opts = {0: SPAN(T("Uncommitted"),
                                        _class = "req_status_none",
                                        ),
                            1: SPAN(T("Partially Committed"),
