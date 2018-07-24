@@ -5,7 +5,7 @@ from gluon import *
 #from gluon.storage import Storage
 from s3 import s3_str, \
                S3CustomController, \
-               S3FilterForm, S3DateFilter, S3OptionsFilter, \
+               S3FilterForm, S3LocationFilter, S3OptionsFilter, S3TextFilter, \
                S3Represent
 
 THEME = "SHARE"
@@ -70,9 +70,13 @@ class index(S3CustomController):
         output["recent_updates"] = recent_updates
 
         map_btn = A(T("MAP OF CURRENT NEEDS"),
-                    _href = URL(c="default",
-                                f="index",
-                                args="dashboard",
+                    #_href = URL(c="default",
+                    #            f="index",
+                    #            args="dashboard",
+                    #            ),
+                    _href = URL(c="req",
+                                f="need_line",
+                                args="map",
                                 ),
                     _class = "small primary button",
                     )
@@ -119,6 +123,8 @@ class dashboard(S3CustomController):
 
         #------------------------
         # Map to display needs
+        map_id = "default_map"
+
         ftable = s3db.gis_layer_feature
         query = (ftable.controller == "req") & \
                 (ftable.function == "need_line")
@@ -149,51 +155,86 @@ class dashboard(S3CustomController):
 
         # ---------------------------------------------------------------------
         # Display needs list
-        resource = s3db.resource("req_need")
+        resource = s3db.resource("req_need_line")
         #resource.table.commit_status.represent = None
-        list_id = "req_datalist"
-        list_fields = [#"purpose",
-                       "location_id",
-                       "priority",
-                       #"req_ref",
-                       #"site_id",
-                       "date",
-                       ]
+        #list_id = "req_datalist"
+        #list_fields = [#"purpose",
+        #               "location_id",
+        #               #"priority",
+        #               #"req_ref",
+        #               #"site_id",
+        #               "date",
+        #               ]
         # Order with most recent request first
-        orderby = "req_need.date"
-        datalist, numrows = resource.datalist(fields = list_fields,
-                                              limit = None,
-                                              list_id = list_id,
-                                              orderby = orderby,
-                                              )
-        if numrows == 0:
-            current.response.s3.crud_strings["req_need"].msg_no_match = T("No needs at present.")
+        #orderby = "req_need.date"
+        #datalist, numrows = resource.datalist(fields = list_fields,
+        #                                      limit = None,
+        #                                      list_id = list_id,
+        #                                      orderby = orderby,
+        #                                      )
+        #if numrows == 0:
+        #    current.response.s3.crud_strings["req_need"].msg_no_match = T("No needs at present.")
 
-        ajax_url = URL(c="req", f="need", args="datalist.dl",
-                       vars={"list_id": list_id})
+        #ajax_url = URL(c="req", f="need", args="datalist.dl",
+        #               vars={"list_id": list_id})
         #@ToDo: Implement pagination properly
-        output[list_id] = datalist.html(ajaxurl = ajax_url,
-                                        pagesize = 0,
-                                        )
+        #output[list_id] = datalist.html(ajaxurl = ajax_url,
+        #                                pagesize = 0,
+        #                                )
 
         # ----------------------------
         # Filter Form
         # - can we have a single form for both Activities & Needs?
         #
-        filter_widgets = [S3OptionsFilter("priority",
-                                          label=T("Priority"),
-                                          ),
-                          S3DateFilter("date",
-                                       label = T("Date"),
-                                       hide_time=True,
+        filter_widgets = [S3TextFilter([#"need_id$req_number.value",
+                                        "item_id$name",
+                                        # These levels are for SHARE/LK
+                                        #"location_id$L1",
+                                        "location_id$L2",
+                                        #"location_id$L3",
+                                        #"location_id$L4",
+                                        "need_id$name",
+                                        "need_id$comments",
+                                        ],
+                                       label = T("Search"),
+                                       comment = T("Search for a Need by Request Number, Item, Location, Summary or Comments"),
                                        ),
+                          S3LocationFilter("location_id",
+                                           # These levels are for SHARE/LK
+                                           levels = ("L2", "L3", "L4"),
+                                           ),
+                          S3OptionsFilter("item_id"),
+                          S3OptionsFilter("status",
+                                          cols = 3,
+                                          label = T("Status"),
+                                          ),
+                          S3OptionsFilter("need_id$event.event_type_id",
+                                          hidden = True,
+                                          ),
+                          # @ToDo: Filter this list dynamically based on Event Type:
+                          S3OptionsFilter("need_id$event__link.event_id"),
+                          S3OptionsFilter("sector_id",
+                                          hidden = True,
+                                          ),
+                          S3OptionsFilter("need_id$organisation__link.organisation_id",
+                                          hidden = True,
+                                          ),
+                          S3OptionsFilter("need_id$verified.value",
+                                          cols = 2,
+                                          label = T("Verified"),
+                                          hidden = True,
+                                          ),
                           ]
         filter_form = S3FilterForm(filter_widgets,
-                                   ajax=True,
-                                   submit=True,
-                                   url=ajax_url,
+                                   ajax = True,
+                                   submit = True,
+                                   #url = ajax_url,
                                    )
-        output["req_filter_form"] = filter_form.html(resource, request.get_vars, list_id)
+        output["req_filter_form"] = filter_form.html(resource,
+                                                     request.get_vars,
+                                                     #target = "%s %s" % list_id, map_id
+                                                     target = map_id
+                                                     )
 
         # View title
         output["title"] = current.deployment_settings.get_system_name()

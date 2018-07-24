@@ -901,8 +901,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_req_need_resource(r, tablename):
 
-        from gluon import IS_EMPTY_OR, IS_IN_SET, SPAN
-        #from gluon.sqlhtml import BooleanWidget
+        from gluon import IS_IN_SET
 
         from s3 import s3_comments_widget, \
                        S3LocationSelector, S3LocationDropdownWidget, \
@@ -912,26 +911,7 @@ def config(settings):
         db = current.db
         s3db = current.s3db
 
-        req_status_opts = {0: SPAN(T("Outstanding"),
-                                   _class = "req_status_none",
-                                   ),
-                           1: SPAN(T("Partially Committed"),
-                                   _class = "req_status_partial",
-                                   ),
-                           2: SPAN(T("Fully Committed"),
-                                   _class = "req_status_committed",
-                                   ),
-                           3: SPAN(T("Complete"),
-                                   _class = "req_status_complete",
-                                   ),
-                           }
-
         table = s3db.req_need
-        f = table.status
-        f.requires = IS_EMPTY_OR(IS_IN_SET(req_status_opts, zero = None))
-        #f.represent = lambda opt: req_status_opts.get(opt, current.messages.UNKNOWN_OPT)
-        f.represent = S3Represent(options = req_status_opts)
-
         table.name.widget = lambda f, v: \
             s3_comments_widget(f, v, _placeholder = "e.g. 400 families require drinking water in Kegalle DS Division in 1-2 days.")
 
@@ -1330,10 +1310,52 @@ def config(settings):
     settings.customise_req_need_controller = customise_req_need_controller
 
     # -------------------------------------------------------------------------
+    def customise_req_need_line_resource(r, tablename):
+
+        from gluon import IS_EMPTY_OR, IS_IN_SET, SPAN
+
+        from s3 import S3Represent
+
+        req_status_opts = {0: SPAN(T("Outstanding"),
+                                       _class = "req_status_none",
+                                       ),
+                           1: SPAN(T("Partially Committed"),
+                                   _class = "req_status_partial",
+                                   ),
+                           2: SPAN(T("Fully Committed"),
+                                   _class = "req_status_committed",
+                                   ),
+                           3: SPAN(T("Complete"),
+                                   _class = "req_status_complete",
+                                   ),
+                           }
+
+        table = current.s3db.req_need_line
+
+        f = table.status
+        f.requires = IS_EMPTY_OR(IS_IN_SET(req_status_opts, zero = None))
+        f.represent = S3Represent(options = req_status_opts)
+
+        f = table.coarse_location_id
+        f.label = T("Division")
+        # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
+        # NB cannot have the JS in link to avoid being blocked by Chrome XSS_AUDITOR
+        location_represent = S3Represent(lookup = "gis_location")
+        f.represent = location_represent
+        f = table.location_id
+        # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
+        f.represent = location_represent
+
+        if r.representation == "plain":
+            # Settings for Map Popups
+            f.label = T("GN")
+
+    settings.customise_req_need_line_resource = customise_req_need_line_resource
+
+    # -------------------------------------------------------------------------
     def customise_req_need_line_controller(**attr):
 
-        from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter,\
-                       S3Represent
+        from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
 
         s3db = current.s3db
 
@@ -1366,19 +1388,6 @@ def config(settings):
                                                                },
                                                               ),
                             )
-
-        # Settings for Map Popups
-        table = s3db.req_need_line
-        f = table.coarse_location_id
-        f.label = T("Division")
-        # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
-        # NB cannot have the JS in link to avoid being blocked by Chrome XSS_AUDITOR
-        location_represent = S3Represent(lookup = "gis_location")
-        f.represent = location_represent
-        f = table.location_id
-        # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
-        f.represent = location_represent
-        f.label = T("GN")
 
         filter_widgets = [S3TextFilter(["need_id$req_number.value",
                                         "item_id$name",
@@ -1473,14 +1482,16 @@ def config(settings):
                 output = standard_postp(r, output)
 
             if r.method == "summary":
+
                 from gluon import A, DIV
-                from s3 import s3_str
-                #from s3 import S3CRUD, s3_str
+                from s3 import s3_str#, S3CRUD
+
+                auth = current.auth
+
                 # Normal Action Buttons
                 #S3CRUD.action_buttons(r)
                 # Custom Action Buttons
-                auth = current.auth
-                deletable = current.db(auth.s3_accessible_query("delete", "req_need_line")).select(table.id)
+                deletable = current.db(auth.s3_accessible_query("delete", "req_need_line")).select(s3db.req_need_line.id)
                 restrict_d = [str(row.id) for row in deletable]
                 s3.actions = [{"label": s3_str(T("Open")),
                                "_class": "action-btn",
@@ -1524,12 +1535,10 @@ def config(settings):
             Ensure that the Need Lines (if-any) have the correct Status
         """
 
-        s3db = current.s3db
-
         need_response_id = form.vars.id
 
         # Lookup the Need Lines
-        rltable = s3db.req_need_response_line
+        rltable = current.s3db.req_need_response_line
         query = (rltable.need_response_id == need_response_id) & \
                 (rltable.deleted == False)
         response_lines = current.db(query).select(rltable.need_line_id)
@@ -1881,7 +1890,7 @@ def config(settings):
 
         s3 = current.response.s3
 
-        s3.crud_strings["req_need_line"] = Storage(
+        s3.crud_strings["req_need_response_line"] = Storage(
             #label_create = T("Add Activity"),
             title_list = T("Activities"),
             #title_display = T("Activity"),

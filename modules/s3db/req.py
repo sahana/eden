@@ -123,8 +123,8 @@ class RequestPriorityStatusModel(S3Model):
             }
 
         req_status = S3ReusableField("req_status", "integer",
-                                     label = T("Request Status"),
                                      default = REQ_STATUS_NONE,
+                                     label = T("Request Status"),
                                      represent = S3Represent(options = req_status_opts),
                                      requires = IS_EMPTY_OR(
                                                     IS_IN_SET(req_status_opts,
