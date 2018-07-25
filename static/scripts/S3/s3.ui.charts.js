@@ -20,13 +20,18 @@
         /**
          * Default options
          *
-         * @todo document options
+         * @prop {CSS} height - the container height
+         * @prop {Array} colors - array of custom colors
+         * @prop {integer} transition - duration of transition animation in ms
+         * @prop {bool} staggerLabels - stagger X-axis labels (useful if they tend to overlap)
          */
         options: {
 
             height: '280px',
             colors: null,
-            transition: 50
+            transition: 50,
+            staggerLabels: true,
+            valueFormat: ',.0f'
 
         },
 
@@ -35,7 +40,7 @@
          */
         _create: function() {
 
-            var el = $(this.element);
+            //var el = $(this.element);
 
             this.id = uiChartID;
             uiChartID += 1;
@@ -48,7 +53,7 @@
          */
         _init: function() {
 
-            var el = $(this.element);
+            //var el = $(this.element);
 
             this.refresh();
         },
@@ -71,11 +76,14 @@
 
             this._unbindEvents();
 
+            // Adjust the height of the container
             el.empty().css({height: opts.height});
 
+            // Initialize the container
             var container = d3.select(el.get(0)).append('svg').attr('class', 'nv'),
                 chart;
 
+            // Instatiate the diagram
             switch(el.data('type')) {
                 case 'piechart':
                     chart = this._pieChart(container);
@@ -90,6 +98,7 @@
                     break;
             }
 
+            // Fetch the data and update the diagram
             if (chart) {
                 this._getData(function(data) {
                     container.datum(data).call(chart);
@@ -100,6 +109,11 @@
             this._bindEvents();
         },
 
+        /**
+         * Fetch the diagram data (JSON) from the source
+         *
+         * @param {function} callback - the callback to invoke with the data
+         */
         _getData: function(callback) {
 
             var el = $(this.element),
@@ -127,21 +141,30 @@
             }
         },
 
+        /**
+         * Render data as bar chart
+         *
+         * @param {object} container - the D3-enhanced DOM node of the chart container
+         */
         _barChart: function(container) {
 
-            var el = $(this.element),
+            var //el = $(this.element),
                 opts = this.options;
 
             var chart = nv.models.discreteBarChart()
                           .duration(opts.transition)
-                          .x(function(d) { return d.label })
-                          .y(function(d) { return d.value })
-                          .staggerLabels(true)
+                          .x(function(d) { return d.label; })
+                          .y(function(d) { return d.value; })
+                          .staggerLabels(opts.staggerLabels)
                           .showValues(true);
 
             if (opts.colors) {
                 chart.color(opts.colors);
             }
+
+            var valueFormat = d3.format(opts.valueFormat);
+            chart.yAxis.tickFormat(valueFormat);
+            chart.valueFormat(valueFormat);
 
             // Render a bar chart
             nv.addGraph(function() {
@@ -152,6 +175,11 @@
             return chart;
         },
 
+        /**
+         * Render data as multi-bar chart
+         *
+         * @param {object} container - the D3-enhanced DOM node of the chart container
+         */
         _multiBarChart: function(container) {
 
             var el = $(this.element),
@@ -162,13 +190,22 @@
                           .x(function(d) { return d.label; })
                           .y(function(d) { return d.value; })
                           .reduceXTicks(false)
-                          .rotateLabels(0)
-                          .showControls(false)
+                          .staggerLabels(opts.staggerLabels)
                           .stacked(true)
                           .groupSpacing(0.1);
 
-//             chart.xAxis.tickFormat(d3.format(',f'));
-//             chart.yAxis.tickFormat(d3.format(',.1f'));
+            // Hide grouped/stacked switch?
+            if (el.data('controls') == 'off') {
+                chart.showControls(false);
+            }
+
+            // Hide legend?
+            if (el.data('legend') == 'off') {
+                chart.showLegend(false);
+            }
+
+            var valueFormat = d3.format(opts.valueFormat);
+            chart.yAxis.tickFormat(valueFormat);
 
             if (opts.colors) {
                 chart.color(opts.colors);
@@ -184,6 +221,11 @@
 
         },
 
+        /**
+         * Render data as pie chart
+         *
+         * @param {object} container - the D3-enhanced DOM node of the chart container
+         */
         _pieChart: function(container) {
 
             var el = $(this.element),
@@ -191,9 +233,20 @@
 
             var chart = nv.models.pieChart()
                                  .duration(opts.transition)
-                                 .x(function(d) { return d.label })
-                                 .y(function(d) { return d.value })
-                                 .showLabels(true);
+                                 .x(function(d) { return d.label; })
+                                 .y(function(d) { return d.value; })
+                                 .showLabels(true)
+                                 //.labelsOutside(true)
+                                 .showTooltipPercent(true);
+
+            var valueFormat = d3.format(opts.valueFormat);
+            chart.valueFormat(valueFormat);
+
+            // Hide legend?
+            if (el.data('legend') == 'off') {
+                chart.showLegend(false);
+            }
+
             if (opts.colors) {
                 chart.color(opts.colors);
             }
@@ -204,9 +257,7 @@
             });
 
             return chart;
-
         },
-
 
         /**
          * Bind events to generated elements (after refresh)
