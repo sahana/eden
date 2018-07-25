@@ -560,6 +560,35 @@ class S3Report(S3Method):
 
         return output
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inject_d3():
+        """
+            Re-usable helper function to inject D3/NVD3 scripts
+            into the current page
+        """
+
+        appname = current.request.application
+        s3 = current.response.s3
+
+        scripts_append = s3.scripts.append
+        if s3.debug:
+            if s3.cdn:
+                scripts_append("https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.js")
+                # We use a patched v1.8.5 currently, so can't use the CDN version
+                #scripts_append("https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.js")
+            else:
+                scripts_append("/%s/static/scripts/d3/d3.js" % appname)
+            scripts_append("/%s/static/scripts/d3/nv.d3.js" % appname)
+        else:
+            if s3.cdn:
+                scripts_append("https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js")
+                # We use a patched v1.8.5 currently, so can't use the CDN version
+                #scripts_append("https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.min.js")
+            else:
+                scripts_append("/%s/static/scripts/d3/d3.min.js" % appname)
+            scripts_append("/%s/static/scripts/d3/nv.d3.min.js" % appname)
+
 # =============================================================================
 class S3ReportForm(object):
     """ Helper class to render a report form """
@@ -698,30 +727,25 @@ class S3ReportForm(object):
                 opts["collapseTable"] = True
 
         # Scripts
+        S3Report.inject_d3()
         s3 = current.response.s3
         scripts = s3.scripts
         if s3.debug:
-            # @todo: support CDN
-            script = "/%s/static/scripts/d3/d3.js" % appname
-            if script not in scripts:
-                scripts.append(script)
-            script = "/%s/static/scripts/d3/nv.d3.js" % appname
-            if script not in scripts:
-                scripts.append(script)
             script = "/%s/static/scripts/S3/s3.ui.pivottable.js" % appname
             if script not in scripts:
                 scripts.append(script)
         else:
-            script = "/%s/static/scripts/S3/s3.pivotTables.min.js" % appname
+            script = "/%s/static/scripts/S3/s3.ui.pivottable.min.js" % appname
             if script not in scripts:
                 scripts.append(script)
 
+        # Instantiate widget
         script = '''$('#%(widget_id)s').pivottable(%(opts)s)''' % \
-                                        dict(widget_id = widget_id,
-                                             opts = json.dumps(opts,
-                                                               separators=SEPARATORS),
-                                             )
-
+                                        {"widget_id": widget_id,
+                                         "opts": json.dumps(opts,
+                                                            separators=SEPARATORS,
+                                                            ),
+                                         }
         s3.jquery_ready.append(script)
 
         return output

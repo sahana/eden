@@ -1,0 +1,102 @@
+[
+    {
+        "key": "Completed",
+        "values": [
+            {
+                "label": "District 1",
+                "value": 5
+            },
+            {
+                "label": "District 2",
+                "value": 8
+            },
+            {
+                "label": "District 3",
+                "value": 2
+            },
+            {
+                "label": "District 4",
+                "value": 10
+            },
+            {
+                "label": "District 5",
+                "value": 0
+            }
+        ]
+    },
+    {
+        "key": "Uncommitted",
+        "values": [
+            {
+                "label": "District 1",
+                "value": 2
+            },
+            {
+                "label": "District 2",
+                "value": 7
+            },
+            {
+                "label": "District 3",
+                "value": 1
+            },
+            {
+                "label": "District 4",
+                "value": 11
+            },
+            {
+                "label": "District 5",
+                "value": 3
+            }
+        ]
+    },
+    {
+        "key": "Partially Committed",
+        "values": [
+            {
+                "label": "District 1",
+                "value": 4
+            },
+            {
+                "label": "District 2",
+                "value": 9
+            },
+            {
+                "label": "District 3",
+                "value": 11
+            },
+            {
+                "label": "District 4",
+                "value": 1
+            },
+            {
+                "label": "District 5",
+                "value": 6
+            }
+        ]
+    },
+    {
+        "key": "Fully Committed",
+        "values": [
+            {
+                "label": "District 1",
+                "value": 6
+            },
+            {
+                "label": "District 2",
+                "value": 2
+            },
+            {
+                "label": "District 3",
+                "value": 1
+            },
+            {
+                "label": "District 4",
+                "value": 0
+            },
+            {
+                "label": "District 5",
+                "value": 8
+            }
+        ]
+    }
+]

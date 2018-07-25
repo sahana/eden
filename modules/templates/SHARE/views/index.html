@@ -10,22 +10,25 @@
  <div class='row'>
   <div class='small-12 columns' id='current-needs'>
    <h1>{{=T("Current Needs & Commitments at a glance")}}</h1>
-   <div class="row">
-     <div class="small-12 medium-4 columns">
-       <img src="/{{=appname}}/static/themes/SHARE/img/homepage_chart_dummy.png"/>
+   <div class='row'>
+     <div class='small-12 medium-4 columns'>
+       <h6>Needs by Status</h6>
+       <div class='homepage-chart' data-type='piechart' data-source='/{{=appname}}/static/data/SHARE/needs_by_status.json'></div>
      </div>
-     <div class="small-12 medium-4 columns">
-       <img src="/{{=appname}}/static/themes/SHARE/img/homepage_chart_dummy.png"/>
+     <div class='small-12 medium-4 columns'>
+       <h6>Needs by District</h6>
+       <div class='homepage-chart' data-type='multibarchart' data-source='/{{=appname}}/static/data/SHARE/needs_by_district.json'></div>
      </div>
-     <div class="small-12 medium-4 columns">
-       <img src="/{{=appname}}/static/themes/SHARE/img/homepage_chart_dummy.png"/>
+     <div class='small-12 medium-4 columns'>
+       <h6>People Affected</h6>
+       <div class='homepage-chart' data-type='barchart' data-source='/{{=appname}}/static/data/SHARE/people_affected.json'></div>
      </div>
    </div>
   </div>
  </div>
  <div class='row' data-equalizer>
   <div class='medium-6 columns' id='about-platform' data-equalizer-watch>
-   <img alt="Logo" class="logo" src="/{{=appname}}/static/themes/SHARE/img/logo_transparent.png">
+   <img alt='Logo' class='logo' src='/{{=appname}}/static/themes/SHARE/img/logo_transparent.png'>
    <h1>{{=T("About the 'ShaReHub' platform")}}</h1>
    <p>A real-time humanitarian needs and responses coordination mapping platform used by the Humanitarian Country Team (HCT) during a disaster.</p>
    {{=about_btn}}

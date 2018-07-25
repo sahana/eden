@@ -1668,6 +1668,10 @@ form.anonymize-form,
   background: #FFFFFF;
 }
 /* line 81, ../scss/theme/_misc.scss */
+#resources h1 {
+  margin-bottom: 1rem;
+}
+/* line 84, ../scss/theme/_misc.scss */
 #resources ul {
   list-style-type: none;
   list-style-position: inside;

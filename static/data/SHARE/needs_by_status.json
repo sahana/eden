@@ -1,0 +1,18 @@
+[
+  {
+    "label": "Uncommitted",
+    "value" : 13
+  } ,
+  {
+    "label": "Partially Committed",
+    "value" : 45
+  } ,
+  {
+    "label": "Fully Committed",
+    "value" : 16
+  } ,
+  {
+    "label": "Completed",
+    "value" : 34
+  }
+]

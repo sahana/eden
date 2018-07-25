@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import json
+
 from gluon import *
 #from gluon import current
 #from gluon.storage import Storage
@@ -101,6 +103,36 @@ class index(S3CustomController):
                                 )
 
         self._view(THEME, "index.html")
+
+        # Inject D3 scripts
+        from s3 import S3Report
+        S3Report.inject_d3()
+
+        # Inject charts-script
+        appname = current.request.application
+        s3 = current.response.s3
+        scripts = s3.scripts
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.ui.charts.js" % appname
+            if script not in scripts:
+                scripts.append(script)
+        else:
+            script = "/%s/static/scripts/S3/s3.ui.charts.min.js" % appname
+            if script not in scripts:
+                scripts.append(script)
+
+        # Instantiate charts
+        scriptopts = {
+            # Standard SHARE theme color set:
+            "colors": ['#0C9CD0', # blue
+                       '#E03158', # red
+                       '#FBA629', # amber
+                       '#8ABC3F', # green
+                       '#AFB8BF', # grey
+                       ],
+            }
+        script = '''$('.homepage-chart').uiChart(%s)''' % json.dumps(scriptopts)
+        s3.jquery_ready.append(script)
 
         return output
 
