@@ -1310,6 +1310,45 @@ def config(settings):
     settings.customise_req_need_controller = customise_req_need_controller
 
     # -------------------------------------------------------------------------
+    def homepage_stats_update():
+        """
+            Scheduler task to update the data files for the charts
+            on the homepage
+        """
+
+        from controllers import HomepageStatistics
+        HomepageStatistics.update_data()
+
+    settings.tasks.homepage_stats_update = homepage_stats_update
+
+    def req_need_line_update_stats(r, **attr):
+        """
+            Method to manually update the data files for the charts
+            on the homepage; can be run by POSTing an empty request
+            to req/need_line/update_stats, e.g. via:
+
+            <form action='{{=URL(c="req", f="need_line", args=["update_stats"])}}' method='post'>
+                <button type='submit'>{{=T("Update Stats")}}</button>
+            </form>
+
+            (this could e.g. be added to the page footer for ADMINs)
+        """
+
+        if r.http == "POST":
+
+            if not current.auth.s3_has_role("ADMIN"):
+                # No, this is not open for everybody
+                r.unauthorized()
+            else:
+                current.s3task.async("homepage_stats_update")
+                current.session.confirmation = T("Statistics data update started")
+
+                from gluon import redirect
+                redirect(URL(c="req", f="need_line", args=["summary"]))
+        else:
+            r.error("405", current.ERROR.BAD_METHOD)
+
+    # -------------------------------------------------------------------------
     def customise_req_need_line_resource(r, tablename):
 
         from gluon import IS_EMPTY_OR, IS_IN_SET, SPAN
@@ -1349,6 +1388,12 @@ def config(settings):
         if r.representation == "plain":
             # Settings for Map Popups
             f.label = T("GN")
+
+        # Custom method to (manually) update homepage statistics
+        current.s3db.set_method("req", "need_line",
+                                method = "update_stats",
+                                action = req_need_line_update_stats,
+                                )
 
     settings.customise_req_need_line_resource = customise_req_need_line_resource
 

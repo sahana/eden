@@ -556,12 +556,66 @@ class HomepageStatistics(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def affected_people(cls):
+    def people_affected(cls):
         """
             Count total number of affected people by demographic type
         """
 
-        # TODO
-        pass
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.req_need_line
+
+        query = (table.deleted == False)
+        demographic = table.parameter_id
+        represent = demographic.represent
+        total = table.value.sum()
+
+        rows = db(query).select(demographic,
+                                total,
+                                groupby = demographic,
+                                orderby = ~(total),
+                                limitby = (0, 5),
+                                )
+        values = []
+        for row in rows:
+            value = row[total]
+            values.append({"label": s3_str(represent(row[demographic])),
+                           "value": value if value else 0,
+                           })
+
+        return [{"key": s3_str(current.T("People Affected")),
+                 "values": values,
+                 },
+                ]
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def update_data(cls):
+        """
+            Update data files for homepage statistics
+
+            NB requires write-permission for static/data/SHARE folder+files
+        """
+
+        SEPARATORS = (",", ":")
+
+        import os
+        base = os.path.join(current.request.folder, "static", "data", "SHARE")
+
+        path = os.path.join(base, "needs_by_status.json")
+        data = cls.needs_by_status()
+        with open(path, "wb") as outfile:
+            json.dump(data, outfile, separators=SEPARATORS, encoding="utf-8")
+
+        path = os.path.join(base, "needs_by_district.json")
+        data = cls.needs_by_district()
+        with open(path, "wb") as outfile:
+            json.dump(data, outfile, separators=SEPARATORS, encoding="utf-8")
+
+        path = os.path.join(base, "people_affected.json")
+        data = cls.people_affected()
+        with open(path, "wb") as outfile:
+            json.dump(data, outfile, separators=SEPARATORS, encoding="utf-8")
 
 # END =========================================================================
