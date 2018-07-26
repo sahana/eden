@@ -1340,11 +1340,11 @@ def config(settings):
                 # No, this is not open for everybody
                 r.unauthorized()
             else:
-                current.s3task.async("homepage_stats_update")
+                current.s3task.async("settings_task", args=["homepage_stats_update"])
                 current.session.confirmation = T("Statistics data update started")
 
                 from gluon import redirect
-                redirect(URL(c="req", f="need_line", args=["summary"]))
+                redirect(URL(c="default", f="index"))
         else:
             r.error("405", current.ERROR.BAD_METHOD)
 
