@@ -934,7 +934,7 @@ def config(settings):
         f = ltable.location_id
         f.label = T("GN")
         f.represent = location_represent
-        f.widget = S3LocationDropdownWidget(level="L4")
+        f.widget = S3LocationDropdownWidget(level="L4", empty=True)
 
         # Custom Filtered Components
         s3db.add_components(tablename,

@@ -430,4 +430,138 @@ class req_NeedRepresent(S3Represent):
             else:
                 return current.messages["NONE"]
 
+# =============================================================================
+class HomepageStatistics(object):
+    """
+        Data extraction for homepage statistics (charts)
+    """
+
+    # Status labels, color and presentation order (bottom=>top)
+    REQ_STATUS = ((3, "Complete",            "#6c8c20"), # forrest
+                  (2, "Fully Committed",     "#90c147"), # grass
+                  (1, "Partially Committed", "#fba629"), # amber
+                  (0, "Uncommitted",         "#c42648"), # darkrose
+                  )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def needs_by_status(cls):
+        """
+            Count need lines per status
+        """
+
+        T = current.T
+        db = current.db
+
+        # Extract the data
+        table = current.s3db.req_need_line
+        status = table.status
+        number = table.id.count()
+        query = (table.deleted == False)
+        rows = db(query).select(status, number, groupby = status)
+
+        # Build data structure for chart renderer
+        rows = dict((row[status], row[number]) for row in rows)
+        data = []
+        for code, label, color in cls.REQ_STATUS:
+            value = rows.get(code)
+            data.append({"label": s3_str(label),
+                         "value": value if value else 0,
+                         "color": color,
+                         })
+
+        return data
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def needs_by_district(cls):
+        """
+            Count need lines per district and status (top 5 districts)
+        """
+
+        T = current.T
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.req_need_line
+        ntable = s3db.req_need
+
+        left = ntable.on(ntable.id == table.need_id)
+
+        status = table.status
+        number = table.id.count()
+        location = ntable.location_id
+
+        # Get the top-5 locations by number of need lines
+        query = (table.deleted == False) & \
+                (location != None)
+        rows = db(query).select(location,
+                                number,
+                                left = left,
+                                groupby = location,
+                                orderby = ~(number),
+                                limitby = (0, 5),
+                                )
+        locations = [row[location] for row in rows]
+
+        data = []
+        if locations:
+            # Get labels for locations
+            from s3 import S3Represent
+            location_represent = S3Represent(lookup="gis_location", fields=["L2"])
+            location_labels = location_represent.bulk(locations)
+
+            # Count need lines per status and location
+            query = (table.deleted == False) & \
+                    (location.belongs(locations))
+            rows = db(query).select(location,
+                                    status,
+                                    number,
+                                    left = left,
+                                    groupby = (status, location),
+                                    )
+
+            # Group results as {status: {location: number}}
+            per_status = {}
+            for row in rows:
+                row_status = row[status]
+                if row_status in per_status:
+                    per_status[row_status][row[location]] = row[number]
+                else:
+                    per_status[row_status] = {row[location]: row[number]}
+
+            # Build data structure for chart renderer
+            # - every status gives a series
+            # - every district gives a series entry
+            for code, label, color in cls.REQ_STATUS:
+                series = {"key": s3_str(T(label)),
+                          "color": color,
+                          }
+                values = []
+                per_location = per_status.get(code)
+                for location_id in locations:
+                    if per_location:
+                        value = per_location.get(location_id)
+                    else:
+                        value = None
+                    item = {"label": location_labels.get(location_id),
+                            "value": value if value else 0,
+                            }
+                    values.append(item)
+                series["values"] = values
+                data.append(series)
+
+        return data
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def affected_people(cls):
+        """
+            Count total number of affected people by demographic type
+        """
+
+        # TODO
+        pass
+
 # END =========================================================================
