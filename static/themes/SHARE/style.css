@@ -2,3 +2,6 @@
   color: lime;
   font-weight: bold;
 }
+#filter-form.form-container form {
+  background: #0c9cd0;
+}

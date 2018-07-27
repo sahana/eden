@@ -41,6 +41,7 @@ class S3MainMenu(default.S3MainMenu):
                 #MM("Map", m="map"),
                 MM("View", c="req", f="need_line", m="summary"),
                 MM("Create", c="req", f="need", m="create", p="read"),
+                MM("Dashboard", c="req", f="need_line", m="map"),
                 ),
                MM("4W", c="req", f="need_response_line", m="summary")(
                 #MM("Statistics",  m="report"),
