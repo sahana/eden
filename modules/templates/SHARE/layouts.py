@@ -284,7 +284,7 @@ class S3OrgMenuLayout(S3NavigationItem):
         logo = IMG(_src = "/%s/static/themes/SHARE/img/logo_small.png" %
                           current.request.application,
                    _alt = name,
-                   _width=96,
+                   _width = 50,
                    )
 
         # Note: render using current.menu.org.render()[0] + current.menu.org.render()[1]

@@ -2,6 +2,7 @@
   color: lime;
   font-weight: bold;
 }
-#filter-form.form-container form {
+#filter-form.form-container form,
+#filter-form.form-container table {
   background: #b3d9ff;
 }
