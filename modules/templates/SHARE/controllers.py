@@ -595,28 +595,30 @@ class HomepageStatistics(object):
         """
             Update data files for homepage statistics
 
-            NB requires write-permission for static/data/SHARE folder+files
+            NB requires write-permission for static/themes/SHARE/data folder+files
         """
 
         SEPARATORS = (",", ":")
 
         import os
         os_path_join = os.path.join
+        json_dump = json.dump
+
         base = os_path_join(current.request.folder, "static", "themes", "SHARE", "data")
 
         path = os_path_join(base, "needs_by_status.json")
         data = cls.needs_by_status()
-        with open(path, "wb") as outfile:
-            json.dump(data, outfile, separators=SEPARATORS, encoding="utf-8")
+        with open(path, "w") as outfile:
+            json_dump(data, outfile, separators=SEPARATORS, encoding="utf-8")
 
         path = os_path_join(base, "needs_by_district.json")
         data = cls.needs_by_district()
-        with open(path, "wb") as outfile:
-            json.dump(data, outfile, separators=SEPARATORS, encoding="utf-8")
+        with open(path, "w") as outfile:
+            json_dump(data, outfile, separators=SEPARATORS, encoding="utf-8")
 
         path = os_path_join(base, "people_affected.json")
         data = cls.people_affected()
-        with open(path, "wb") as outfile:
-            json.dump(data, outfile, separators=SEPARATORS, encoding="utf-8")
+        with open(path, "w") as outfile:
+            json_dump(data, outfile, separators=SEPARATORS, encoding="utf-8")
 
 # END =========================================================================
