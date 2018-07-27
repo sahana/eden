@@ -601,19 +601,20 @@ class HomepageStatistics(object):
         SEPARATORS = (",", ":")
 
         import os
-        base = os.path.join(current.request.folder, "static", "data", "SHARE")
+        os_path_join = os.path.join
+        base = os_path_join(current.request.folder, "static", "themes", "SHARE", "data")
 
-        path = os.path.join(base, "needs_by_status.json")
+        path = os_path_join(base, "needs_by_status.json")
         data = cls.needs_by_status()
         with open(path, "wb") as outfile:
             json.dump(data, outfile, separators=SEPARATORS, encoding="utf-8")
 
-        path = os.path.join(base, "needs_by_district.json")
+        path = os_path_join(base, "needs_by_district.json")
         data = cls.needs_by_district()
         with open(path, "wb") as outfile:
             json.dump(data, outfile, separators=SEPARATORS, encoding="utf-8")
 
-        path = os.path.join(base, "people_affected.json")
+        path = os_path_join(base, "people_affected.json")
         data = cls.people_affected()
         with open(path, "wb") as outfile:
             json.dump(data, outfile, separators=SEPARATORS, encoding="utf-8")

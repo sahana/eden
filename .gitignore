@@ -12,6 +12,7 @@
 /static/cache/*
 /static/fonts/unifont.ttf
 /static/scripts/tools/compiler.jar
+/static/themes/SHARE/data/*
 /tests/unit/*.pdf
 .DS_Store
 /languages/*.po
