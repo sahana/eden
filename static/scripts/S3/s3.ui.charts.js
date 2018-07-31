@@ -98,18 +98,6 @@
                     break;
             }
 
-            // Fetch the data and update the diagram
-            if (chart) {
-                this._getData(function(data) {
-                    if (data) {
-                        container.datum(data).call(chart);
-                    } else {
-                        container.call(chart);
-                    }
-                    chart.update();
-                });
-            }
-
             this._bindEvents();
         },
 
@@ -133,6 +121,7 @@
                         callback(data);
                     },
                     'error': function(jqXHR, textStatus, errorThrown) {
+                        callback([]);
                         var msg;
                         if (errorThrown == 'UNAUTHORIZED') {
                             msg = i18n.gis_requires_login;
@@ -171,8 +160,12 @@
             chart.valueFormat(valueFormat);
 
             // Render a bar chart
+            var self = this;
             nv.addGraph(function() {
-                container.datum([]).call(chart);
+                self._getData(function(data) {
+                    container.datum(data).call(chart);
+                    chart.update();
+                });
                 nv.utils.windowResize(chart.update);
             });
 
@@ -216,8 +209,12 @@
             }
 
             // Render a multi-bar chart
+            var self = this;
             nv.addGraph(function() {
-                container.datum([]).call(chart);
+                self._getData(function(data) {
+                    container.datum(data).call(chart);
+                    chart.update();
+                });
                 nv.utils.windowResize(chart.update);
             });
 
@@ -255,8 +252,12 @@
                 chart.color(opts.colors);
             }
             // Render a pie chart
+            var self = this;
             nv.addGraph(function() {
-                container.datum([]).call(chart);
+                self._getData(function(data) {
+                    container.datum(data).call(chart);
+                    chart.update();
+                });
                 nv.utils.windowResize(chart.update);
             });
 
