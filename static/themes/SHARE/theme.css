@@ -62,6 +62,7 @@ meta.foundation-data-attribute-namespace {
   font-family: false;
 }
 
+/* $footer_min_height: 240px; */
 /* Throbber style */
 /* line 31, ../../default/scss/theme/_page.scss */
 .inline-throbber {
@@ -222,7 +223,6 @@ body.rtl .username i.icon, body.rtl .username i.fa {
 #footer {
   background: #0c9cd0;
   padding-top: 20px;
-  min-height: 240px;
   border-top: 1px solid #F0F0F0;
   margin-top: 0;
   margin-bottom: 1rem;

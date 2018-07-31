@@ -575,6 +575,7 @@ var S3EnableNavigateAwayConfirm = function() {
 
         // Alerts
         this.alerts = [];
+        this.ignoreStatus = options.ignoreStatus || [];
     }
 
     /**
@@ -677,13 +678,17 @@ var S3EnableNavigateAwayConfirm = function() {
             S3.showAlert(i18n.ajax_500, 'error');
         } else {
             // Other error or server unreachable
-            var responseJSON = jqXHR.responseJSON;
-            if (responseJSON && responseJSON.message) {
-                // A json_message with a specific error text
-                S3.showAlert(responseJSON.message, 'error');
+            if (self.ignoreStatus.indexOf(httpStatus) != -1) {
+                // Status handled by caller => do not display alert
             } else {
-                // HTTP status code only
-                S3.showAlert(i18n.ajax_dwn, 'error');
+                var responseJSON = jqXHR.responseJSON;
+                if (responseJSON && responseJSON.message) {
+                    // A json_message with a specific error text
+                    S3.showAlert(responseJSON.message, 'error');
+                } else {
+                    // HTTP status code only
+                    S3.showAlert(i18n.ajax_dwn, 'error');
+                }
             }
         }
 

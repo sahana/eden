@@ -101,7 +101,11 @@
             // Fetch the data and update the diagram
             if (chart) {
                 this._getData(function(data) {
-                    container.datum(data).call(chart);
+                    if (data) {
+                        container.datum(data).call(chart);
+                    } else {
+                        container.call(chart);
+                    }
                     chart.update();
                 });
             }
@@ -119,12 +123,12 @@
             var el = $(this.element),
                 dataSource = el.data('source');
 
-            // TODO suppress alert for 4xx
             if (dataSource) {
                 $.ajaxS3({
                     'url': dataSource,
                     'dataType': 'json',
                     'type': 'GET',
+                    'ignoreStatus': [404],
                     'success': function(data) {
                         callback(data);
                     },
@@ -168,7 +172,7 @@
 
             // Render a bar chart
             nv.addGraph(function() {
-                container.call(chart);
+                container.datum([]).call(chart);
                 nv.utils.windowResize(chart.update);
             });
 
@@ -213,7 +217,7 @@
 
             // Render a multi-bar chart
             nv.addGraph(function() {
-                container.call(chart);
+                container.datum([]).call(chart);
                 nv.utils.windowResize(chart.update);
             });
 
