@@ -1614,7 +1614,7 @@ form.anonymize-form,
 /* line 21, ../scss/theme/_misc.scss */
 #intro {
   background: url(img/intro.png) left center no-repeat !important;
-  min-height: 260px;
+  min-height: 500px;
 }
 /* line 24, ../scss/theme/_misc.scss */
 #intro h1 {
