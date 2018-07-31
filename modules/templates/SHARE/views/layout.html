@@ -51,7 +51,7 @@
  {{include}}
 {{else:}}
 <body>
- <header>
+ <main role="main" class="main">
   <div class='row main-title'>
      <div class='large-4 medium-6 columns'>
       <a href='{{=URL(c="default", f="index")}}'>
@@ -74,8 +74,6 @@
   <div class='row main-navigation'>
    {{=current.menu.main}}
   </div>
- </header>
- <main role="main" class="main">
   <div class='row main-content'>
    {{if current.menu.options is not None:}}
    <div class='small-12 columns'>
@@ -101,6 +99,8 @@
     {{include}}
    </div>
   </div>
+ </main>
+ <footer>
   <div id='footer'>
    <div class='medium-12 columns'>
     {{include "../modules/templates/%s/views/footer.html" % response.s3.theme_layouts}}
@@ -111,7 +111,7 @@
     {{pass}}
    </div>
   </div>
- </main>
+ </footer>
 {{pass}}
 {{include "scripts.html"}}
 {{include "foundation.js.html"}}
