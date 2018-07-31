@@ -165,8 +165,8 @@
                 self._getData(function(data) {
                     container.datum(data).call(chart);
                     chart.update();
+                    nv.utils.windowResize(chart.update);
                 });
-                nv.utils.windowResize(chart.update);
             });
 
             return chart;
@@ -214,8 +214,8 @@
                 self._getData(function(data) {
                     container.datum(data).call(chart);
                     chart.update();
+                    nv.utils.windowResize(chart.update);
                 });
-                nv.utils.windowResize(chart.update);
             });
 
             return chart;
@@ -257,8 +257,8 @@
                 self._getData(function(data) {
                     container.datum(data).call(chart);
                     chart.update();
+                    nv.utils.windowResize(chart.update);
                 });
-                nv.utils.windowResize(chart.update);
             });
 
             return chart;
