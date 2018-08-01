@@ -2732,8 +2732,11 @@ class S3EntityResolver(etree.Resolver):
 
             if p.scheme in ("", "file"):
 
+                # Translate the URL path into a file system path
+                fspath = os.path.join(*p.path.split("/"))
+
                 # Get the real path of the referenced file
-                path = os.path.realpath(os.path.join(p.netloc, p.path))
+                path = os.path.realpath(os.path.join(p.netloc, fspath))
 
                 # Deny all access outside of app-local static-folder
                 static = os.path.realpath(os.path.join(current.request.folder, "static"))
