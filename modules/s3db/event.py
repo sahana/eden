@@ -4272,6 +4272,7 @@ class S3EventSitRepModel(S3Model):
                                               writable = sitrep_dynamic,
                                               ),
                           s3_comments("summary",
+                                      comment = None,
                                       label = T("Summary"),
                                       #readable = not sitrep_edxl,
                                       #writable = not sitrep_edxl,

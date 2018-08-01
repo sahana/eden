@@ -1089,9 +1089,9 @@ def about():
        settings.get_security_version_info_requires_login() and \
        not auth.s3_logged_in():
 
-        return dict(details = "",
-                    item = item,
-                    )
+        return {"details": "",
+                "item": item,
+                }
 
     import platform
     import string
@@ -1252,11 +1252,9 @@ def about():
                   _class="table-container")
                   )
 
-    response.title = T("About")
-
-    return dict(details = details,
-                item = item,
-                )
+    return {"item": item,
+            "details": details,
+            }
 
 # -----------------------------------------------------------------------------
 def help():

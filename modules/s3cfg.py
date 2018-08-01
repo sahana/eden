@@ -2110,8 +2110,9 @@ class S3Config(Storage):
     def get_ui_label_permalink(self):
         """
             Label for the Permalink on dataTables
+            - set to None to disable
         """
-        return current.T(self.ui.get("label_permalink", "Link to this result"))
+        return self.ui.get("label_permalink", "Link to this result")
 
     def get_ui_label_postcode(self):
         """

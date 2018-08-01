@@ -176,40 +176,51 @@ main {
 
 /* line 124, ../scss/theme/_page.scss */
 .widget-container #list-btn-add {
+  position: relative;
+  top: 0.5rem;
+}
+
+/* line 128, ../scss/theme/_page.scss */
+.widget-container.with-tabs #list-btn-add {
   margin-bottom: 0;
   position: relative;
   top: 1.0rem;
 }
 
-/* line 129, ../scss/theme/_page.scss */
+/* line 133, ../scss/theme/_page.scss */
+#table.section-container:not(.ui-tabs-panel) {
+  padding: 0.5em;
+}
+
+/* line 136, ../scss/theme/_page.scss */
 #component {
   float: none;
 }
 
-/* line 132, ../scss/theme/_page.scss */
+/* line 139, ../scss/theme/_page.scss */
 .map_home {
   margin: 0;
   margin-top: 0.5rem;
 }
 
 /* Global Main Content Styles */
-/* line 140, ../scss/theme/_page.scss */
+/* line 147, ../scss/theme/_page.scss */
 #content a.help:link {
   color: #fff;
   text-decoration: none;
   margin-right: 10px;
 }
-/* line 145, ../scss/theme/_page.scss */
+/* line 152, ../scss/theme/_page.scss */
 #content a.help:hover {
   background-color: #336699;
   text-decoration: underline;
 }
-/* line 149, ../scss/theme/_page.scss */
+/* line 156, ../scss/theme/_page.scss */
 #content a.help:visited {
   font-weight: normal;
   color: #666;
 }
-/* line 154, ../scss/theme/_page.scss */
+/* line 161, ../scss/theme/_page.scss */
 #content h1,
 #content h2 {
   font-size: 1.3em;
@@ -217,30 +228,30 @@ main {
   background-color: #F7F8F9;
   padding: 0.35rem;
 }
-/* line 163, ../scss/theme/_page.scss */
+/* line 170, ../scss/theme/_page.scss */
 #content h2 {
   margin-top: 10px;
   padding-left: 0.7rem;
 }
-/* line 169, ../scss/theme/_page.scss */
+/* line 176, ../scss/theme/_page.scss */
 #content h3 {
   font-size: 1.1em;
   padding-bottom: 5px;
 }
 
 /* Footer */
-/* line 176, ../scss/theme/_page.scss */
+/* line 183, ../scss/theme/_page.scss */
 footer::before {
   height: 60px;
   padding-bottom: 60px;
 }
 
-/* line 180, ../scss/theme/_page.scss */
+/* line 187, ../scss/theme/_page.scss */
 footer {
   margin-top: -60px;
 }
 
-/* line 183, ../scss/theme/_page.scss */
+/* line 190, ../scss/theme/_page.scss */
 #footer {
   background: #0c9cd0;
   padding-top: 0.7rem;
@@ -249,12 +260,12 @@ footer {
   margin-bottom: 1rem;
 }
 
-/* line 193, ../scss/theme/_page.scss */
+/* line 200, ../scss/theme/_page.scss */
 #poweredby {
   margin-right: 0.5rem;
   text-align: right;
 }
-/* line 196, ../scss/theme/_page.scss */
+/* line 203, ../scss/theme/_page.scss */
 #poweredby a {
   color: white;
   text-decoration: none;
@@ -262,24 +273,24 @@ footer {
   margin-left: 0.2rem;
 }
 
-/* line 204, ../scss/theme/_page.scss */
+/* line 211, ../scss/theme/_page.scss */
 body.rtl #poweredby {
   text-align: left;
 }
 
-/* line 210, ../scss/theme/_page.scss */
+/* line 217, ../scss/theme/_page.scss */
 .sub-nav.about-menu {
   color: white;
   text-align: left;
   margin-left: 0;
   margin-right: 0;
 }
-/* line 212, ../scss/theme/_page.scss */
+/* line 219, ../scss/theme/_page.scss */
 .sub-nav.about-menu a {
   color: white;
 }
 
-/* line 220, ../scss/theme/_page.scss */
+/* line 227, ../scss/theme/_page.scss */
 body.rtl .about-menu {
   text-align: right;
 }

@@ -122,9 +122,16 @@ main {
     border: 1px solid #CCC;
 }
 .widget-container #list-btn-add {
+    position: relative;
+    top: 0.5rem;
+}
+.widget-container.with-tabs #list-btn-add {
     margin-bottom: 0;
     position: relative;
     top: 1.0rem;
+}
+#table.section-container:not(.ui-tabs-panel) {
+    padding: 0.5em;
 }
 #component {
     float: none;

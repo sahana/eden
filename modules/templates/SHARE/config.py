@@ -88,33 +88,24 @@ def config(settings):
 
     settings.security.policy = 6 # Controller, Function, Table ACLs and Entity Realm
 
+    # Don't show version info on About page
+    settings.security.version_info = False
+
     # UI Settings
     settings.ui.datatables_responsive = False
 
-    settings.ui.summary = (# Gets replaced in postp
-                           # @ToDo: better performance by not including here & placing directly into the view instead
-                           {"common": True,
+    # Disable permalink
+    settings.ui.label_permalink = None
+
+    # Default summary pages:
+    settings.ui.summary = ({"common": True,
                             "name": "add",
                             "widgets": [{"method": "create"}],
                             },
-                           #{"common": True,
-                           # "name": "cms",
-                           # "widgets": [{"method": "cms"}]
-                           # },
                            {"name": "table",
                             "label": "Table",
-                            "widgets": [{"method": "datatable"}]
+                            "widgets": [{"method": "datatable"}],
                             },
-                           {"name": "charts",
-                            "label": "Report",
-                            "widgets": [{"method": "report",
-                                         "ajax_init": True}]
-                            },
-                           #{"name": "map",
-                           # "label": "Map",
-                           # "widgets": [{"method": "map",
-                           #              "ajax_init": True}],
-                           # },
                            )
 
     # -------------------------------------------------------------------------
@@ -340,6 +331,7 @@ def config(settings):
         table.name.widget = lambda f, v: \
             s3_comments_widget(f, v, _placeholder = "Please provide a brief summary of the Situational Update you are submitting.")
 
+        table.comments.comment = None
         table.comments.widget = lambda f, v: \
             s3_comments_widget(f, v, _placeholder = "e.g. Any additional relevant information.")
 
@@ -846,10 +838,10 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def req_need_postprocess(form):
-
-        if form.record:
-            # Update form
-            return
+        """
+            Set the Realm
+            Set the Request Number
+        """
 
         need_id = form.vars.id
 
@@ -861,10 +853,39 @@ def config(settings):
         org_link = db(notable.need_id == need_id).select(notable.organisation_id,
                                                          limitby = (0, 1),
                                                          ).first()
-        if not org_link:
-            return
+        if org_link:
+            organisation_id = org_link.organisation_id
+        else:
+            # Create the link (form isn't doing so when readonly!)
+            user = current.auth.user
+            if user and user.organisation_id:
+                organisation_id = user.organisation_id
+                if organisation_id:
+                    notable.insert(need_id = need_id,
+                                   organisation_id = organisation_id)
+                else:
+                    # Nothing we can do!
+                    return
+            else:
+                # Nothing we can do!
+                return
 
-        organisation_id = org_link.organisation_id
+        # Lookup Realm
+        otable = s3db.org_organisation
+        org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                      limitby = (0, 1),
+                                                      ).first()
+        realm_entity = org.pe_id
+
+        # Set Realm
+        ntable = s3db.req_need
+        db(ntable.id == need_id).update(realm_entity = realm_entity)
+        nltable = s3db.req_need_line
+        db(nltable.need_id == need_id).update(realm_entity = realm_entity)
+
+        if form.record:
+            # Update form
+            return
 
         # Lookup Request Number format
         ottable = s3db.org_organisation_tag
@@ -887,6 +908,8 @@ def config(settings):
                                 limitby = (0, 1),
                                 orderby = ~nttable.created_on,
                                 ).first()
+
+        # Set Request Number
         if need:
             new_number = int(need.value.split("-", 1)[1]) + 1
             req_number = "%s-%s" % (tag.value, str(new_number).zfill(6))
@@ -915,11 +938,13 @@ def config(settings):
         table.name.widget = lambda f, v: \
             s3_comments_widget(f, v, _placeholder = "e.g. 400 families require drinking water in Kegalle DS Division in 1-2 days.")
 
+        table.comments.comment = None
         table.comments.widget = lambda f, v: \
             s3_comments_widget(f, v, _placeholder = "e.g. Accessibility issues, additional contacts on the ground (if any), any other relevant information.")
 
 		# These levels/labels are for SHARE/LK
-        table.location_id.widget = S3LocationSelector(levels = ("L1", "L2"),
+        table.location_id.widget = S3LocationSelector(hide_lx = False,
+                                                      levels = ("L1", "L2"),
                                                       required_levels = ("L1", "L2"),
                                                       show_map = False)
 
@@ -1028,10 +1053,10 @@ def config(settings):
             if organisation_id:
                 org_readonly = True
             else:
-                otable = s3db.req_need_organisation
-                org_link = db(otable.need_id == r.id).select(otable.organisation_id,
-                                                             limitby = (0, 1)
-                                                             ).first()
+                rotable = s3db.req_need_organisation
+                org_link = db(rotable.need_id == r.id).select(rotable.organisation_id,
+                                                              limitby = (0, 1)
+                                                              ).first()
                 if org_link:
                     org_readonly = True
                 else:
@@ -1404,6 +1429,32 @@ def config(settings):
 
         s3db = current.s3db
 
+        settings.ui.summary = (# Gets replaced in postp
+                               # @ToDo: better performance by not including here & placing directly into the view instead
+                               {"common": True,
+                                "name": "add",
+                                "widgets": [{"method": "create"}],
+                                },
+                               #{"common": True,
+                               # "name": "cms",
+                               # "widgets": [{"method": "cms"}],
+                               # },
+                               {"name": "table",
+                                "label": "Table",
+                                "widgets": [{"method": "datatable"}],
+                                },
+                               {"name": "charts",
+                                "label": "Report",
+                                "widgets": [{"method": "report",
+                                             "ajax_init": True}],
+                                },
+                               #{"name": "map",
+                               # "label": "Map",
+                               # "widgets": [{"method": "map",
+                               #              "ajax_init": True}],
+                               # },
+                               )
+
         # Custom Filtered Components
         s3db.add_components("req_need",
                             req_need_tag = (# Req Number
@@ -1565,7 +1616,7 @@ def config(settings):
                                         ),
                                       _id = "list-btn-add",
                                       ),
-                                  _class = "widget-container",
+                                  _class = "widget-container with-tabs",
                                   ),
                               _class = "section-container",
                               )
@@ -1581,16 +1632,44 @@ def config(settings):
     # -------------------------------------------------------------------------
     def req_need_response_postprocess(form):
         """
+            Set the Realm
             Ensure that the Need Lines (if-any) have the correct Status
         """
 
+        db = current.db
+        s3db = current.s3db
+
         need_response_id = form.vars.id
 
+        # Lookup Organisation
+        nrotable = s3db.req_need_response_organisation
+        query = (nrotable.need_response_id == need_response_id) & \
+                (nrotable.role == 1)
+        org_link = db(query).select(nrotable.organisation_id,
+                                    limitby = (0, 1),
+                                    ).first()
+        if not org_link:
+            return
+
+        organisation_id = org_link.organisation_id
+
+        # Lookup Realm
+        otable = s3db.org_organisation
+        org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                      limitby = (0, 1),
+                                                      ).first()
+        realm_entity = org.pe_id
+
+        # Set Realm
+        nrtable = s3db.req_need_response
+        db(nrtable.id == need_response_id).update(realm_entity = realm_entity)
+        rltable = s3db.req_need_response_line
+        db(rltable.need_response_id == need_response_id).update(realm_entity = realm_entity)
+
         # Lookup the Need Lines
-        rltable = current.s3db.req_need_response_line
         query = (rltable.need_response_id == need_response_id) & \
                 (rltable.deleted == False)
-        response_lines = current.db(query).select(rltable.need_line_id)
+        response_lines = db(query).select(rltable.need_line_id)
 
         for line in response_lines:
             need_line_id = line.need_line_id
@@ -1625,7 +1704,8 @@ def config(settings):
             )
 
         # These levels/labels are for SHARE/LK
-        table.location_id.widget = S3LocationSelector(levels = ("L1", "L2"),
+        table.location_id.widget = S3LocationSelector(hide_lx = False,
+                                                      levels = ("L1", "L2"),
                                                       required_levels = ("L1", "L2"),
                                                       show_map = False)
 
@@ -1641,6 +1721,7 @@ def config(settings):
         f.represent = S3Represent(lookup = "gis_location")
         f.widget = S3LocationDropdownWidget(level="L4")
 
+        table.comments.comment = None
         table.comments.widget = lambda f, v: \
             s3_comments_widget(f, v, _placeholder = "e.g. Items changed/replaced within kits, details on partial committments to a need, any other relevant information.")
 
@@ -1651,7 +1732,7 @@ def config(settings):
                                                                "joinby": "need_response_id",
                                                                "filterby": {"role": 1,
                                                                             },
-                                                               #"multiple": False,
+                                                               "multiple": False,
                                                                },
                                                               # Partners
                                                               {"name": "partner",
@@ -1689,7 +1770,7 @@ def config(settings):
                                             name = "agency",
                                             label = T("Organization"),
                                             fields = [("", "organisation_id"),],
-                                            #multiple = False,
+                                            multiple = False,
                                             required = True,
                                             ),
                        # @ToDo: MultiSelectWidget is nicer UI but S3SQLInlineLink
@@ -1865,6 +1946,32 @@ def config(settings):
 
         s3db = current.s3db
 
+        settings.ui.summary = (# Gets replaced in postp
+                               # @ToDo: better performance by not including here & placing directly into the view instead
+                               {"common": True,
+                                "name": "add",
+                                "widgets": [{"method": "create"}],
+                                },
+                               #{"common": True,
+                               # "name": "cms",
+                               # "widgets": [{"method": "cms"}],
+                               # },
+                               {"name": "table",
+                                "label": "Table",
+                                "widgets": [{"method": "datatable"}],
+                                },
+                               {"name": "charts",
+                                "label": "Report",
+                                "widgets": [{"method": "report",
+                                             "ajax_init": True}],
+                                },
+                               #{"name": "map",
+                               # "label": "Map",
+                               # "widgets": [{"method": "map",
+                               #              "ajax_init": True}],
+                               # },
+                               )
+
         # Custom Filtered Components
         s3db.add_components("req_need_response",
                             req_need_response_organisation = (# Agency
@@ -1998,7 +2105,7 @@ def config(settings):
                                         ),
                                       _id = "list-btn-add",
                                       ),
-                                  _class = "widget-container",
+                                  _class = "widget-container with-tabs",
                                   ),
                               _class = "section-container",
                               )

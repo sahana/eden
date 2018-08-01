@@ -1515,29 +1515,37 @@ S3.search = {};
             }
         }
 
-        // Initialise jQueryUI Tabs
-        $('#summary-tabs').tabs({
-            active: active_tab,
-            activate: function(event, ui) {
-                var newPanel = $(ui.newPanel);
-                // Unhide the section (.ui-tab's display: block overrides anyway but hey ;)
-                newPanel.removeClass('hide');
-                // A New Tab has been selected
-                if (ui.newTab.length) {
-                    // Update the Filter Query URL to show which tab is active
-                    updateFilterSubmitURL(form, 't', $(ui.newTab).index());
+        if (active_tab != undefined) {
+            // Initialise jQueryUI Tabs
+            $('#summary-tabs').tabs({
+                active: active_tab,
+                activate: function(event, ui) {
+                    var newPanel = $(ui.newPanel);
+                    // Unhide the section (.ui-tab's display: block overrides anyway but hey ;)
+                    newPanel.removeClass('hide');
+                    // A New Tab has been selected
+                    if (ui.newTab.length) {
+                        // Update the Filter Query URL to show which tab is active
+                        updateFilterSubmitURL(form, 't', $(ui.newTab).index());
+                    }
+                    unhide_section(form, newPanel);
                 }
-                unhide_section(form, newPanel);
-            }
-        }).css({visibility: 'visible'});
-
-        // Activate not called? Unhide initial section anyway:
-        $('.ui-tabs-panel[aria-hidden="false"]').first()
-                                                .removeClass('hide')
-                                                .find('table.dataTable.display.responsive')
-                                                .each(function() {
-                                                    recalcResponsive(this);
-                                                });
+            }).css({visibility: 'visible'});
+            // Activate not called? Unhide initial section anyway:
+            $('.ui-tabs-panel[aria-hidden="false"]').first()
+                                                    .removeClass('hide')
+                                                    .find('table.dataTable.display.responsive')
+                                                    .each(function() {
+                                                        recalcResponsive(this);
+                                                    });
+        } else {
+            // Unhide initial section anyway:
+            $('#summary-tabs').css({visibility: 'visible'})
+                              .find('table.dataTable.display.responsive')
+                              .each(function() {
+                                recalcResponsive(this);
+                              });
+        }
     };
 
     /**

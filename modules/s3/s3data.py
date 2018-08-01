@@ -504,12 +504,14 @@ class S3DataTable(object):
 
         # Append the permalink (if any)
         if permalink is not None:
-            link = A(settings.get_ui_label_permalink(),
-                     _href=permalink,
-                     _class="permalink")
-            export_options.append(link)
-            if len(icons):
-                export_options.append(" | ")
+            label = settings.get_ui_label_permalink()
+            if label:
+                link = A(T(label),
+                         _href=permalink,
+                         _class="permalink")
+                export_options.append(link)
+                if len(icons):
+                    export_options.append(" | ")
 
         # Append the icons
         export_options.append(icons)

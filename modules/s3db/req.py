@@ -3158,9 +3158,11 @@ class RequestNeedsResponseModel(S3Model):
                                       ),
                           s3_comments("contact",
                                       label = T("Contact Details"),
+                                      comment = None,
                                       ),
                           s3_comments("address",
                                       label = T("Delivery Address"),
+                                      comment = None,
                                       ),
                           s3_comments(),
                           *s3_meta_fields())

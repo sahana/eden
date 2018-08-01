@@ -278,7 +278,11 @@ class S3Summary(S3Method):
             # Render the Sections as Tabs
             script = '''S3.search.summary_tabs("%s",%s,"%s")''' % \
                      (form_id, active_tab, pending)
-            response.s3.jquery_ready.append(script)
+        else:
+            # Unhide initial section
+            script = '''S3.search.summary_tabs("%s")''' % form_id
+            
+        response.s3.jquery_ready.append(script)
 
         if active_map:
             # If there is a map on the active tab then we need to add
