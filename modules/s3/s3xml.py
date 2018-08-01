@@ -2733,7 +2733,7 @@ class S3EntityResolver(etree.Resolver):
             if p.scheme in ("", "file"):
 
                 # Translate the URL path into a file system path
-                fspath = os.path.join(*p.path.split("/"))
+                fspath = os.path.join(*((" " + p.path).split("/"))).lstrip()
 
                 # Get the real path of the referenced file
                 path = os.path.realpath(os.path.join(p.netloc, fspath))
