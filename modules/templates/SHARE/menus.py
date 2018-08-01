@@ -56,6 +56,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Facilities", c="org", f="facility", m="summary"),
                ),
                MM("About", c="default", f="about"),
+               MM("Help", c="default", f="help"),
                MM("More", link=False)(
                 MM("Documents", c="doc", f="document"),
                 MM("Disasters", c="event", f="event"),
