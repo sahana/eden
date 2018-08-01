@@ -2,9 +2,7 @@
 
 import json
 
-from gluon import *
-#from gluon import current
-#from gluon.storage import Storage
+from gluon import current, A, DIV, H3, HR, P, SPAN, URL
 from s3 import s3_str, \
                S3CustomController, \
                S3FilterForm, S3LocationFilter, S3OptionsFilter, S3TextFilter, \
@@ -165,7 +163,7 @@ class dashboard(S3CustomController):
                                          ).first()
         try:
             layer_id = layer.layer_id
-        except:
+        except AttributeError:
             current.log.error("Cannot find Layer for Map")
             layer_id = None
 
@@ -337,7 +335,7 @@ class project_ActivityRepresent(S3Represent):
         return rows
 
     # -------------------------------------------------------------------------
-    def represent_row(self, row):
+    def represent_row(self, row, prefix=None):
         """
             Represent a single Row
 
@@ -411,7 +409,7 @@ class req_NeedRepresent(S3Represent):
         return rows
 
     # -------------------------------------------------------------------------
-    def represent_row(self, row):
+    def represent_row(self, row, prefix=None):
         """
             Represent a single Row
 
@@ -450,7 +448,6 @@ class HomepageStatistics(object):
             Count need lines per status
         """
 
-        T = current.T
         db = current.db
 
         # Extract the data
@@ -468,6 +465,7 @@ class HomepageStatistics(object):
             data.append({"label": s3_str(label),
                          "value": value if value else 0,
                          "color": color,
+                         "filterKey": code,
                          })
 
         return data
@@ -508,7 +506,6 @@ class HomepageStatistics(object):
         data = []
         if locations:
             # Get labels for locations
-            from s3 import S3Represent
             location_represent = S3Represent(lookup="gis_location", fields=["L2"])
             location_labels = location_represent.bulk(locations)
 
@@ -537,6 +534,7 @@ class HomepageStatistics(object):
             for code, label, color in cls.REQ_STATUS:
                 series = {"key": s3_str(T(label)),
                           "color": color,
+                          "filterKey": code,
                           }
                 values = []
                 per_location = per_status.get(code)
@@ -545,8 +543,10 @@ class HomepageStatistics(object):
                         value = per_location.get(location_id)
                     else:
                         value = None
-                    item = {"label": location_labels.get(location_id),
+                    location_label = location_labels.get(location_id)
+                    item = {"label": location_label,
                             "value": value if value else 0,
+                            "filterKey": location_label,
                             }
                     values.append(item)
                 series["values"] = values
@@ -580,8 +580,10 @@ class HomepageStatistics(object):
         values = []
         for row in rows:
             value = row[total]
-            values.append({"label": s3_str(represent(row[demographic])),
+            parameter_id = row[demographic]
+            values.append({"label": s3_str(represent(parameter_id)),
                            "value": value if value else 0,
+                           "filterKey": parameter_id,
                            })
 
         return [{"key": s3_str(current.T("People Affected")),

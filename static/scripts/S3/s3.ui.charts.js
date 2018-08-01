@@ -117,6 +117,9 @@
                     'dataType': 'json',
                     'type': 'GET',
                     'ignoreStatus': [404],
+                    //'headers': {
+                    //    'Cache-Control': 'no-cache, must-revalidate'
+                    //},
                     'success': function(data) {
                         callback(data);
                     },
@@ -141,7 +144,7 @@
          */
         _barChart: function(container) {
 
-            var //el = $(this.element),
+            var el = $(this.element),
                 opts = this.options;
 
             var chart = nv.models.discreteBarChart()
@@ -151,21 +154,48 @@
                           .staggerLabels(opts.staggerLabels)
                           .showValues(true);
 
+            // Set number format
+            var valueFormat = d3.format(opts.valueFormat);
+            chart.yAxis.tickFormat(valueFormat);
+            chart.valueFormat(valueFormat);
+
+            // Set chart default colors
             if (opts.colors) {
                 chart.color(opts.colors);
             }
 
-            var valueFormat = d3.format(opts.valueFormat);
-            chart.yAxis.tickFormat(valueFormat);
-            chart.valueFormat(valueFormat);
+            // Chart-click target
+            var dataURL = el.data('url'),
+                itemAxis = el.data('items');
 
             // Render a bar chart
             var self = this;
             nv.addGraph(function() {
                 self._getData(function(data) {
+
+                    // Update chart with data
                     container.datum(data).call(chart);
                     chart.update();
+
+                    // Resize-handler
                     nv.utils.windowResize(chart.update);
+
+                    // Click-handler
+                    if (dataURL && itemAxis) {
+                        chart.discretebar.dispatch.on('elementClick', function(e) {
+
+                            // Collect filter parameters
+                            var linkParams = {},
+                                filterKey = e.data.filterKey;
+                            linkParams[itemAxis] = filterKey;
+
+                            // Add the filter parameters to the data URL
+                            var linkURL = self._updateURL(dataURL, linkParams);
+
+                            // ...and open it in a new browser tab
+                            window.open(linkURL, '_blank');
+                        });
+                    }
                 });
             });
 
@@ -191,6 +221,10 @@
                           .stacked(true)
                           .groupSpacing(0.1);
 
+            // Set number format
+            var valueFormat = d3.format(opts.valueFormat);
+            chart.yAxis.tickFormat(valueFormat);
+
             // Hide grouped/stacked switch?
             if (el.data('controls') == 'off') {
                 chart.showControls(false);
@@ -201,25 +235,85 @@
                 chart.showLegend(false);
             }
 
-            var valueFormat = d3.format(opts.valueFormat);
-            chart.yAxis.tickFormat(valueFormat);
-
+            // Set chart default colors
             if (opts.colors) {
                 chart.color(opts.colors);
             }
+
+            // Chart-click target
+            var dataURL = el.data('url'),
+                itemAxis = el.data('items');
 
             // Render a multi-bar chart
             var self = this;
             nv.addGraph(function() {
                 self._getData(function(data) {
+
+                    // Update chart with data
                     container.datum(data).call(chart);
                     chart.update();
+
+                    // Resize-handler
                     nv.utils.windowResize(chart.update);
+
+                    // Click-handler
+                    if (dataURL && itemAxis) {
+
+                        var seriesAxis = el.data('series');
+
+                        chart.multibar.dispatch.on('elementClick', function(e) {
+
+                            // Collect filter parameters
+                            var linkParams = {},
+                                filterKey = e.data.filterKey;
+                            linkParams[itemAxis] = filterKey;
+
+                            if (seriesAxis) {
+                                var seriesKey = e.element.parentElement.__data__.filterKey;
+                                linkParams[seriesAxis] = seriesKey;
+                            }
+
+                            // Add the filter parameters to the data URL
+                            var linkURL = self._updateURL(dataURL, linkParams);
+
+                            // ...and open it in a new browser tab
+                            window.open(linkURL, '_blank');
+                        });
+                    }
                 });
             });
 
             return chart;
 
+        },
+
+        /**
+         * Simple URL updater to add filters to the data URL
+         *
+         * @param {string} url - the data URL
+         * @param {object} params - object with filters {selector: value}
+         *
+         * @returns {string} - the updated URL
+         */
+        _updateURL: function(url, params) {
+
+            var anchor = document.createElement('a');
+            anchor.href = url;
+
+            var queries = [];
+            for (var selector in params) {
+                queries.push(encodeURIComponent(selector) + '=' + encodeURIComponent(params[selector]));
+            }
+
+            if (queries.length) {
+                if (anchor.search) {
+                    anchor.search += queries.join('&');
+                } else {
+                    anchor.search = '?' + queries.join('&');
+                }
+            }
+
+            return anchor.href;
         },
 
         /**
@@ -240,6 +334,7 @@
                                  //.labelsOutside(true)
                                  .showTooltipPercent(true);
 
+            // Set number format
             var valueFormat = d3.format(opts.valueFormat);
             chart.valueFormat(valueFormat);
 
@@ -248,16 +343,43 @@
                 chart.showLegend(false);
             }
 
+            // Set chart default colors
             if (opts.colors) {
                 chart.color(opts.colors);
             }
+
+            // Chart-click target
+            var dataURL = el.data('url'),
+                itemAxis = el.data('items');
+
             // Render a pie chart
             var self = this;
             nv.addGraph(function() {
                 self._getData(function(data) {
+
+                    // Update chart with data
                     container.datum(data).call(chart);
                     chart.update();
+
+                    // Resize-handler
                     nv.utils.windowResize(chart.update);
+
+                    // Click-handler
+                    if (dataURL && itemAxis) {
+                        chart.pie.dispatch.on('elementClick', function(e) {
+
+                            // Collect filter parameters
+                            var linkParams = {},
+                                filterKey = e.data.filterKey;
+                            linkParams[itemAxis] = filterKey;
+
+                            // Add the filter parameters to the data URL
+                            var linkURL = self._updateURL(dataURL, linkParams);
+
+                            // ...and open it in a new browser tab
+                            window.open(linkURL, '_blank');
+                        });
+                    }
                 });
             });
 

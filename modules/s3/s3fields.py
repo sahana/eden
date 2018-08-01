@@ -336,6 +336,7 @@ class S3Represent(object):
             (in foreign key representations)
 
             @param row: the row
+            @param prefix: prefix for hierarchical representation
 
             @return: the representation of the Row, or None if there
                      is an error in the Row
