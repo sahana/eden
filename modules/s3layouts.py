@@ -112,21 +112,16 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
                         _class = " ".join(classes)
                         icon = item.opts.icon
                         if icon:
-                            return LI(A(LABEL(ICON(icon), item.label),
-                                        _href=item_url,
-                                        _id=item.attr._id,
-                                        _target=item.attr._target,
-                                        ),
-                                      _class=_class,
-                                      )
+                            label = LABEL(ICON(icon), item.label)
                         else:
-                            return LI(A(item.label,
-                                        _href=item_url,
-                                        _id=item.attr._id,
-                                        _target=item.attr._target,
-                                        ),
-                                      _class=_class,
-                                      )
+                            label = item.label
+                        return LI(A(label,
+                                    _href=item_url,
+                                    _id=item.attr._id,
+                                    _target=item.attr._target,
+                                    ),
+                                  _class=_class,
+                                  )
                     else:
                         # Submenu item
                         if isinstance(item.label, dict):
