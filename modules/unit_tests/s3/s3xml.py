@@ -1021,7 +1021,7 @@ class EntityResolverTests(unittest.TestCase):
     </resource>
 </s3xml>"""
 
-        # Path to file in local static-folder
+        # Absolute path to file in local static-folder
         path = os.path.abspath(os.path.join(current.request.folder,
                                             "static",
                                             "formats",
@@ -1030,7 +1030,26 @@ class EntityResolverTests(unittest.TestCase):
                                             ))
 
         # XML containing entity with permissible file access
-        self.allowed = """<?xml version="1.0" encoding="UTF-8"?>
+        self.abspath = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE test [ <!ENTITY test SYSTEM "%s">]>
+<s3xml>
+    <resource name="org_organisation">
+        <data field="name">SecTestOrg</data>
+        <data field="comments">&test;</data>
+    </resource>
+</s3xml>""" % path
+
+        # Relative path to file in local static-folder
+        path = os.path.join("applications",
+                            current.request.application,
+                            "static",
+                            "formats",
+                            "xml",
+                            "commons.xsl",
+                            )
+
+        # XML containing entity with permissible file access
+        self.relpath = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE test [ <!ENTITY test SYSTEM "%s">]>
 <s3xml>
     <resource name="org_organisation">
@@ -1055,12 +1074,22 @@ class EntityResolverTests(unittest.TestCase):
         self.assertNotEqual(xml.error, None)
 
     # -------------------------------------------------------------------------
-    def testPermissibleFileAccess(self):
+    def testPermissibleAbsolutePathAccess(self):
         """ Verify that permissible file access does not lead to parser error """
 
         xml = current.xml
 
-        tree = xml.parse(StringIO(self.allowed))
+        tree = xml.parse(StringIO(self.abspath))
+        self.assertNotEqual(tree, None)
+        self.assertEqual(xml.error, None)
+
+    # -------------------------------------------------------------------------
+    def testPermissibleRelativePathAccess(self):
+        """ Verify that permissible file access does not lead to parser error """
+
+        xml = current.xml
+
+        tree = xml.parse(StringIO(self.relpath))
         self.assertNotEqual(tree, None)
         self.assertEqual(xml.error, None)
 

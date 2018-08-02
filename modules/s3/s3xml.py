@@ -2732,11 +2732,27 @@ class S3EntityResolver(etree.Resolver):
 
             if p.scheme in ("", "file"):
 
-                # Translate the URL path into a file system path
-                fspath = os.path.join(*((" " + p.path).split("/"))).lstrip()
+                path = p.path.split("/")
 
-                # Get the real path of the referenced file
-                path = os.path.realpath(os.path.join(p.netloc, fspath))
+                # Validate netloc
+                netloc = p.netloc
+                if len(netloc) == 2 and netloc[-1] == ":":
+                    # Windows drive letter
+                    path[0] = netloc
+                elif netloc not in ("", "localhost"):
+                    # File on a different host
+                    raise IOError('Illegal access to network file %s' % system_url)
+
+                # Translate the URL path into a file system path
+                if not path[0] and len(path) > 1:
+                    second = path[1]
+                    if len(second) == 2 and second[-1] == ":":
+                        # Windows drive letter
+                        path = path[1:]
+                    else:
+                        # Absolute path
+                        path[0] = os.path.sep
+                path = os.path.realpath(os.path.join(*path))
 
                 # Deny all access outside of app-local static-folder
                 static = os.path.realpath(os.path.join(current.request.folder, "static"))
