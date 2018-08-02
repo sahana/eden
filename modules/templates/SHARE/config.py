@@ -1597,7 +1597,7 @@ def config(settings):
                                "url": URL(f="need", vars={"line": "[id]"}),
                                },
                               {"label": s3_str(T("Delete")),
-                               "_class": "action-btn",
+                               "_class": "delete-btn",
                                "url": URL(args=["[id]", "delete"]),
                                "restrict": restrict_d,
                                },
@@ -1833,8 +1833,13 @@ def config(settings):
         crud_form = S3SQLCustomForm(*crud_fields,
                                     postprocess = req_need_response_postprocess)
 
+        need_response_line_summary = URL(c="req", f="need_response_line", args="summary")
+
         s3db.configure(tablename,
                        crud_form = crud_form,
+                       create_next = need_response_line_summary,
+                       delete_next = need_response_line_summary,
+                       update_next = need_response_line_summary,
                        )
 
     settings.customise_req_need_response_resource = customise_req_need_response_resource
@@ -1897,7 +1902,7 @@ def config(settings):
             return
 
         deleted_fk = json.loads(record.deleted_fk)
-        need_line_id = deleted_fk["need_line_id"]
+        need_line_id = deleted_fk.get("need_line_id")
 
         if not need_line_id:
             return
@@ -2091,7 +2096,7 @@ def config(settings):
                                "url": URL(f="need_response", vars={"line": "[id]"}),
                                },
                               {"label": s3_str(T("Delete")),
-                               "_class": "action-btn",
+                               "_class": "delete-btn",
                                "url": URL(args=["[id]", "delete"]),
                                "restrict": restrict_d,
                                },

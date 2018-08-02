@@ -2058,7 +2058,7 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
         });
         $("input[type='checkbox'].delete").click(function() {
             if ((this.checked) && (!confirm(i18n.delete_confirmation))) {
-                    this.checked = false;
+                this.checked = false;
             }
         });
 
