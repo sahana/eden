@@ -454,17 +454,14 @@ class S3HomepageMenuLayout(S3NavigationItem):
 
                 icon = item.opts.icon
                 if icon:
-                    return A(LABEL(ICON(icon), item.label),
-                             _class = _class,
-                             _href = item.url(),
-                             _id = _id,
-                             )
+                    label = LABEL(ICON(icon), item.label)
                 else:
-                    return A(LABEL(item.label),
-                             _class = _class,
-                             _href = item.url(),
-                             _id = _id,
-                             )
+                    label = LABEL(item.label)
+                return A(label,
+                         _class = _class,
+                         _href = item.url(),
+                         _id = _id,
+                         )
         else:
             return None
 
