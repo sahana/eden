@@ -1424,7 +1424,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_req_need_line_controller(**attr):
 
-        from s3 import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
+        from s3 import S3DateFilter, S3OptionsFilter, S3TextFilter#, S3LocationFilter
 
         s3db = current.s3db
 
@@ -1497,35 +1497,38 @@ def config(settings):
                                        label = T("Search"),
                                        comment = T("Search for a Need by Request Number, Item, Location, Summary or Comments"),
                                        ),
-                          S3OptionsFilter("status",
-                                          cols = 3,
-                                          label = T("Status"),
-                                          ),
-                          S3DateFilter("date",
-                                       ),
-                          S3OptionsFilter("need_id$organisation__link.organisation_id",
-                                          #hidden = True,
-                                          ),
-                          S3LocationFilter("location_id",
-                                           # These levels are for SHARE/LK
-                                           levels = ("L2", "L3", "L4"),
-                                           ),
-                          S3OptionsFilter("sector_id",
-                                          #hidden = True,
-                                          ),
-                          S3OptionsFilter("parameter_id"),
-                          S3OptionsFilter("item_id"),
-                          S3OptionsFilter("timeframe"),
                           #S3OptionsFilter("need_id$event.event_type_id",
                           #                #hidden = True,
                           #                ),
                           # @ToDo: Filter this list dynamically based on Event Type (if-used):
                           S3OptionsFilter("need_id$event__link.event_id"),
-                          S3OptionsFilter("need_id$verified.value",
-                                          cols = 2,
-                                          label = T("Verified"),
+                          #S3LocationFilter("location_id",
+                          #                 # These levels are for SHARE/LK
+                          #                 levels = ("L2", "L3", "L4"),
+                          #                 ),
+                          S3OptionsFilter("need_id$location_id",
+                                          label = T("District"),
+                                          ),
+                          S3OptionsFilter("need_id$organisation__link.organisation_id",
                                           #hidden = True,
                                           ),
+                          S3OptionsFilter("sector_id",
+                                          #hidden = True,
+                                          ),
+                          S3OptionsFilter("parameter_id"),
+                          S3OptionsFilter("timeframe"),
+                          S3OptionsFilter("item_id"),
+                          S3OptionsFilter("status",
+                                          cols = 3,
+                                          label = T("Status"),
+                                          ),
+                          #S3DateFilter("date",
+                          #             ),
+                          #S3OptionsFilter("need_id$verified.value",
+                          #                cols = 2,
+                          #                label = T("Verified"),
+                          #                #hidden = True,
+                          #                ),
                           ]
 
         s3db.configure("req_need_line",
@@ -1946,7 +1949,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_req_need_response_line_controller(**attr):
 
-        from s3 import S3DateFilter, S3LocationFilter, S3OptionsFilter#, S3TextFilter
+        from s3 import S3DateFilter, S3OptionsFilter#, S3LocationFilter, S3TextFilter
 
         s3db = current.s3db
 
@@ -2002,31 +2005,35 @@ def config(settings):
                                                               ),
                             )
 
-        filter_widgets = [#S3OptionsFilter("need_response_id$event.event_type_id",
+        filter_widgets = [S3OptionsFilter("need_response_id$partner.organisation_id",
+                                          label = T("Organization"),
+                                          ),
+                          #S3OptionsFilter("need_response_id$event.event_type_id",
                           #                #hidden = True,
                           #                ),
                           # @ToDo: Filter this list dynamically based on Event Type (if-used):
                           S3OptionsFilter("need_response_id$event__link.event_id",
                                           #hidden = True,
                                           ),
-                          S3OptionsFilter("need_response_id$partner.organisation_id",
-                                          label = T("Organization"),
-                                          ),
-                          S3OptionsFilter("need_response_id$agency.organisation_id",
-                                          label = T("Partner"),
+                          S3OptionsFilter("sector_id"),
+                          #S3LocationFilter("location_id",
+                          #                 label = T("Location"),
+                          #                 # These levels are for SHARE/LK
+                          #                 levels = ("L2", "L3", "L4"),
+                          #                 ),
+                          S3OptionsFilter("need_response_id$location_id",
+                                          label = T("District"),
                                           ),
                           S3OptionsFilter("need_response_id$donor.organisation_id",
                                           label = T("Donor"),
                                           ),
-                          S3LocationFilter("location_id",
-                                           label = T("Location"),
-										   # These levels are for SHARE/LK
-                                           levels = ("L2", "L3", "L4"),
-                                           ),
-                          S3OptionsFilter("sector_id"),
+                          S3OptionsFilter("need_response_id$agency.organisation_id",
+                                          label = T("Partner"),
+                                          ),
+                          S3OptionsFilter("parameter_id"),
                           S3OptionsFilter("item_id"),
-                          S3OptionsFilter("modality"),
-                          S3DateFilter("date"),
+                          #S3OptionsFilter("modality"),
+                          #S3DateFilter("date"),
                           S3OptionsFilter("status_id",
                                           cols = 4,
                                           label = T("Status"),
