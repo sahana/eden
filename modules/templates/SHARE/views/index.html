@@ -25,6 +25,11 @@
        <div class='homepage-chart' data-type='barchart' data-source='/{{=appname}}/static/themes/SHARE/data/people_affected.json' data-url='/{{=appname}}/req/need_line/summary' data-items='~.parameter_id__belongs'></div>
      </div>
    </div>
+   {{if last_stats_update:}}<div class='row last-stats-update'>
+    <div class='small-12 columns'>
+     <span>{{=last_stats_update}}</span>
+    </div>
+   </div>{{pass}}
   </div>
  </div>
  <div class='row' data-equalizer>

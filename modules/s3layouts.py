@@ -521,15 +521,15 @@ class S3PopupLink(S3NavigationItem):
                 # Fall back to label_update
                 label = S3CRUD.crud_string(t, "label_update")
 
-        return super(S3PopupLink, self).__init__(label,
-                                                 c=c, f=f, t=t,
-                                                 m=m,
-                                                 args=args,
-                                                 vars=vars,
-                                                 info=info,
-                                                 title=title,
-                                                 tooltip=tooltip,
-                                                 mandatory=True)
+        super(S3PopupLink, self).__init__(label,
+                                          c=c, f=f, t=t,
+                                          m=m,
+                                          args=args,
+                                          vars=vars,
+                                          info=info,
+                                          title=title,
+                                          tooltip=tooltip,
+                                          mandatory=True)
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -132,6 +132,13 @@ class index(S3CustomController):
         script = '''$('.homepage-chart').uiChart(%s)''' % json.dumps(scriptopts)
         s3.jquery_ready.append(script)
 
+        # Add last update time of chart data
+        last_update = HomepageStatistics.last_update()
+        if last_update:
+            output["last_stats_update"] = T("Updated on %(date)s") % {"date": last_update}
+        else:
+            output["last_stats_update"] = None
+
         return output
 
 # =============================================================================
@@ -622,5 +629,33 @@ class HomepageStatistics(object):
         data = cls.people_affected()
         with open(path, "w") as outfile:
             json_dump(data, outfile, separators=SEPARATORS, encoding="utf-8")
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def last_update(cls):
+        """
+            Get last update time of homepage stats
+
+            @returns: a date/time string in local format and timezone
+        """
+
+        import datetime, os
+        from s3 import S3DateTime
+
+        # Probe file (probing one is good enough since update_data
+        # writes them all at the same time)
+        filename = os.path.join(current.request.folder,
+                                "static", "themes", "SHARE", "data",
+                                "people_affected.json",
+                                )
+        try:
+            mtime = os.path.getmtime(filename)
+        except OSError:
+            last_update = None
+        else:
+            dt = datetime.datetime.utcfromtimestamp(mtime)
+            last_update = S3DateTime.datetime_represent(dt, utc=True)
+
+        return last_update
 
 # END =========================================================================

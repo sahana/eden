@@ -1709,3 +1709,8 @@ form.anonymize-form,
   list-style-position: inside;
   margin-left: 0;
 }
+
+/* line 91, ../scss/theme/_misc.scss */
+.last-stats-update {
+  font-size: 0.7rem;
+}
