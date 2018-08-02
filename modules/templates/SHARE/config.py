@@ -1313,16 +1313,15 @@ def config(settings):
                 # - normally injected through AddResourceLink, but this isn't there in Inline widget
                 # - we also need to turn the trigger & target into dicts
                 s3.scripts.append("/%s/static/themes/SHARE/js/supply.js" % r.application)
-                if current.auth.s3_has_permission("create", "project_activity"):
-                    if r.id:
-                        # Custom RFooter
-                        from gluon import A
-                        s3.rfooter = A(T("Commit"),
-                                       _href = URL(args=[r.id, "commit"]),
-                                       _class = "action-btn",
-                                       #_id = "commit-btn",
-                                       )
-                        #s3.jquery_ready.append(
+                if r.id and current.auth.s3_has_permission("create", "project_activity"):
+                    # Custom Button
+                    from gluon import A
+                    output["commit"] = A(T("Commit"),
+                                         _href = URL(args=[r.id, "commit"]),
+                                         _class = "action-btn",
+                                         #_id = "commit-btn",
+                                         )
+                    #s3.jquery_ready.append(
 #'''S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this need?"))
 
             return output
