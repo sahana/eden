@@ -62,12 +62,21 @@ class S3MainMenuLayout(S3NavigationItem):
                         if item.selected:
                             classes.append("active")
                         _class = " ".join(classes)
-                        return LI(A(item.label,
-                                    _href=item_url,
-                                    _id=item.attr._id,
-                                    ),
-                                    _class=_class,
-                                    )
+                        icon = item.opts.icon
+                        if icon:
+                            return LI(A(LABEL(ICON(icon), item.label),
+                                        _href=item_url,
+                                        _id=item.attr._id,
+                                        ),
+                                      _class=_class,
+                                      )
+                        else:
+                            return LI(A(item.label,
+                                        _href=item_url,
+                                        _id=item.attr._id,
+                                        ),
+                                      _class=_class,
+                                      )
                     else:
                         # Submenu item
                         if isinstance(item.label, dict):
