@@ -959,7 +959,7 @@ def config(settings):
         f = ltable.location_id
         f.label = T("GN")
         f.represent = location_represent
-        f.widget = S3LocationDropdownWidget(level="L4", empty=True)
+        f.widget = S3LocationDropdownWidget(level="L4")
 
         # Custom Filtered Components
         s3db.add_components(tablename,
@@ -1424,7 +1424,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_req_need_line_controller(**attr):
 
-        from s3 import S3DateFilter, S3OptionsFilter, S3TextFilter#, S3LocationFilter
+        from s3 import S3OptionsFilter, S3TextFilter #, S3DateFilter, S3LocationFilter
 
         s3db = current.s3db
 
@@ -1949,7 +1949,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_req_need_response_line_controller(**attr):
 
-        from s3 import S3DateFilter, S3OptionsFilter#, S3LocationFilter, S3TextFilter
+        from s3 import S3OptionsFilter #, S3DateFilter, S3LocationFilter, S3TextFilter
 
         s3db = current.s3db
 

@@ -111,6 +111,7 @@ from s3datetime import S3Calendar, S3DateTime
 from s3utils import *
 from s3validators import *
 
+DEFAULT = lambda:None
 ogetattr = object.__getattribute__
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
 
@@ -4092,13 +4093,21 @@ class S3LocationAutocompleteWidget(FormWidget):
 class S3LocationDropdownWidget(FormWidget):
     """
         Renders a dropdown for an Lx level of location hierarchy
-
     """
 
-    def __init__(self, level="L0", default=None, empty=False):
-        """ Set Defaults """
+    def __init__(self, level="L0", default=None, validate=False, empty=DEFAULT):
+        """
+            Constructor
+
+            @param level: the Lx-level (as string)
+            @param default: the default location name
+            @param validate: validate input in-widget (special purpose)
+            @param empty: allow selection to be empty
+        """
+
         self.level = level
         self.default = default
+        self.validate = validate
         self.empty = empty
 
     def __call__(self, field, value, **attributes):
@@ -4107,6 +4116,7 @@ class S3LocationDropdownWidget(FormWidget):
         default = self.default
         empty = self.empty
 
+        # Get locations
         s3db = current.s3db
         table = s3db.gis_location
         if level:
@@ -4118,27 +4128,41 @@ class S3LocationDropdownWidget(FormWidget):
         locations = current.db(query).select(table.name,
                                              table.id,
                                              cache=s3db.cache)
+
+        # Build OPTIONs
         opts = []
         for location in locations:
             opts.append(OPTION(location.name, _value=location.id))
             if not value and default and location.name == default:
                 value = location.id
-        locations = locations.as_dict()
+
+        # Widget attributes
         attr = dict(attributes)
         attr["_type"] = "int"
         attr["value"] = value
-        attr_dropdown = OptionsWidget._attributes(field, attr)
-        requires = IS_IN_SET(locations)
-        if empty:
-            requires = IS_EMPTY_OR(requires)
-        attr_dropdown["requires"] = requires
+        attr = OptionsWidget._attributes(field, attr)
 
-        attr_dropdown["represent"] = \
-            lambda id: locations["id"]["name"] or current.messages.UNKNOWN_OPT
+        if self.validate:
+            # Validate widget input to enforce Lx subset
+            # - not normally needed (Field validation should suffice)
+            requires = IS_IN_SET(locations.as_dict())
+            if empty is DEFAULT:
+                # Introspect the field
+                empty = isinstance(field.requires, IS_EMPTY_OR)
+            if empty:
+                requires = IS_EMPTY_OR(requires)
 
-        return TAG[""](SELECT(*opts, **attr_dropdown),
-                       requires=field.requires
-                       )
+            # Skip in-widget validation on POST if inline
+            widget_id = attr.get("_id")
+            if widget_id and widget_id[:4] == "sub_":
+                from s3forms import SKIP_POST_VALIDATION
+                requires = SKIP_POST_VALIDATION(requires)
+
+            widget = TAG[""](SELECT(*opts, **attr), requires = requires)
+        else:
+            widget = SELECT(*opts, **attr)
+
+        return widget
 
 # =============================================================================
 class S3LocationLatLonWidget(FormWidget):
