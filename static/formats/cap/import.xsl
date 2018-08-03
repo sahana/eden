@@ -35,9 +35,20 @@
     <xsl:include href="../xml/commons.xsl"/>
 
     <!-- ****************************************************************** -->
+    <xsl:key name="event_types" match="cap:parameter[normalize-space(cap:valueName/text())='sahana:event type']" use="normalize-space(cap:value/text())"/>
+
+    <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
+
+            <!-- Generate event_event_type from index -->
+            <xsl:for-each select="//cap:parameter[generate-id(.)=generate-id(key('event_types', normalize-space(cap:value/text()))[1])]">
+                <xsl:call-template name="EventType"/>
+            </xsl:for-each>
+
+            <!-- Generate cap_alert -->
             <xsl:apply-templates select="cap:alert"/>
+
         </s3xml>
     </xsl:template>
 
@@ -79,16 +90,6 @@
 
             <xsl:apply-templates select="cap:note"/>
 
-            <!-- @ToDo: disabled, replace with special cap:parameter
-            <xsl:if test="./cap:info/cap:event!=''">
-                <reference field="event_type_id" resource="event_event_type">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="./cap:info/cap:event" />
-                    </xsl:attribute>
-                </reference>
-            </xsl:if>
-            -->
-
             <!-- below two fields are further parsed in python code -->
             <xsl:apply-templates select="cap:references"/>
 
@@ -111,31 +112,7 @@
 
         </resource>
 
-        <!-- disabled, concept unclear
-        <xsl:apply-templates select="./cap:info/cap:event"/>
-        -->
-
     </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <!-- disabled, concept unclear
-    <xsl:template match="cap:event">
-
-        <xsl:variable name="EventTypeName" select="./text()"/>
-
-        <xsl:if test="$EventTypeName!=''">
-            <resource name="event_event_type">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$EventTypeName" />
-                </xsl:attribute>
-                <data field="name">
-                    <xsl:value-of select="$EventTypeName" />
-                </data>
-            </resource>
-        </xsl:if>
-
-    </xsl:template>
-    -->
 
     <!-- ****************************************************************** -->
     <xsl:template match="cap:info">
@@ -154,13 +131,6 @@
             </xsl:if>
 
             <xsl:if test="cap:event!=''">
-                <!-- disabled until fixed
-                <reference field="event_type_id" resource="event_event_type">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="cap:event" />
-                    </xsl:attribute>
-                </reference>
-                -->
                 <data field="event">
                     <xsl:value-of select="cap:event" />
                 </data>
@@ -201,28 +171,6 @@
             <xsl:apply-templates select="cap:web"/>
             <xsl:apply-templates select="cap:contact"/>
 
-            <!-- Replaced by cap_info_parameter component -->
-            <!--
-            <xsl:if test="cap:parameter!=''">
-                <data field="parameter">
-                    <xsl:attribute name="value">
-                        <xsl:text>[</xsl:text>
-                            <xsl:for-each select="cap:parameter">
-                                <xsl:text>{&quot;key&quot;: &quot;</xsl:text>
-                                <xsl:value-of select="cap:valueName"/>
-                                <xsl:text>&quot;, &quot;value&quot;: &quot;</xsl:text>
-                                <xsl:value-of select="cap:value"/>
-                                <xsl:text>&quot;}</xsl:text>
-                                <xsl:if test="position()!=last()">
-                                    <xsl:text>, </xsl:text>
-                                </xsl:if>
-                            </xsl:for-each>
-                        <xsl:text>]</xsl:text>
-                    </xsl:attribute>
-                </data>
-            </xsl:if>
-            -->
-
             <!-- Process sub-elements of cap:info -->
             <xsl:apply-templates select="cap:parameter" />
             <xsl:apply-templates select="cap:resource" />
@@ -235,14 +183,26 @@
     <!-- Alert info parameters -->
     <xsl:template match="cap:parameter">
 
-        <resource name="cap_info_parameter">
-            <data field="name">
-                <xsl:value-of select="normalize-space(cap:valueName)" />
-            </data>
-            <data field="value">
-                <xsl:value-of select="normalize-space(cap:value)" />
-            </data>
-        </resource>
+        <xsl:variable name="Name" select="normalize-space(cap:valueName/text())"/>
+        <xsl:choose>
+            <xsl:when test="$Name='sahana:event type'">
+                <reference field="event_type_id" resource="event_event_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('EVENTTYPE:', normalize-space(cap:value/text()))"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:when>
+            <xsl:otherwise>
+                <resource name="cap_info_parameter">
+                    <data field="name">
+                        <xsl:value-of select="normalize-space(cap:valueName/text())" />
+                    </data>
+                    <data field="value">
+                        <xsl:value-of select="normalize-space(cap:value/text())" />
+                    </data>
+                </resource>
+            </xsl:otherwise>
+        </xsl:choose>
 
     </xsl:template>
 
@@ -633,6 +593,25 @@
         <xsl:variable name="lon" select="substring-after($point, ',')"/>
         <xsl:value-of select="concat($lon, ' ', $lat)"/>
 
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Sahana Event Types -->
+    <xsl:template name="EventType">
+
+        <xsl:variable name="EventType" select="cap:value/text()"/>
+
+        <xsl:if test="$EventType!=''">
+
+            <resource name="event_event_type">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('EVENTTYPE:', $EventType)"/>
+                </xsl:attribute>
+                <data field="name">
+                    <xsl:value-of select="$EventType"/>
+                </data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- END ************************************************************** -->
