@@ -589,9 +589,15 @@
                                     }
                                 }
 
-                                // Auto-select single option?
-                                if (numLocations == 1 && locationID) {
-                                    // Only 1 option so select this one
+                                // Automatic selection of next level location
+                                var previous = that.data['L' + next],
+                                    available = locations.map(function(l) {return l.i;});
+                                if (previous && available.indexOf('' + previous) != -1) {
+                                    // Previously selected value is still available,
+                                    // so select it again
+                                    that._lxSelect(next, previous, refresh);
+                                } else if (numLocations == 1 && locationID) {
+                                    // Only one option available, so select this one
                                     that._lxSelect(next, locationID, refresh);
                                 }
                             }
