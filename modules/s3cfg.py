@@ -929,6 +929,12 @@ class S3Config(Storage):
 
         return self.base.get("allow_testing", True)
 
+    def get_base_allow_repeatability(self):
+        """
+            Allow tests to be repeatable
+        """
+        return self.base.get("allow_repeatability", False)
+
     def get_base_migrate(self):
         """ Whether to allow Web2Py to migrate the SQL database to the new structure """
         return self.base.get("migrate", True)

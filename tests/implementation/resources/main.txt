@@ -30,8 +30,13 @@ Start Browser
 
 Start Testing
     [Documentation]  Starts the test, sets the template global variable
-    ${deployment settings} =  Get Deployment Settings  template
+    ${deployment settings} =  Get Deployment Settings  template  database_string  base_allow_repeatability
+    ${DB INFO}=  Get From Dictionary  ${deployment settings}  database_string
     ${TEMPLATE}=  Get From Dictionary  ${deployment settings}  template
+    ${REPEATABILITY}=  Get From Dictionary  ${deployment settings}  base_allow_repeatability
+    Copy Database  ${DB INFO}  ${REPEATABILITY}
+    Set Global variable  ${DB INFO}
+    Set Global Variable  ${REPEATABILITY}
     Set Global Variable  ${TEMPLATE}
     Run Keyword If  "${HTTP_PROXY}" != "" and "${BROWSER}" == "Firefox"  Start Browser With Proxy
     ...  ELSE  Start Browser
@@ -39,5 +44,6 @@ Start Testing
 
 End Testing
     [Documentation]  Ends the test
+    Restore Original Database  ${DB INFO}  ${REPEATABILITY}
     Logout From Eden
     Close Browser
