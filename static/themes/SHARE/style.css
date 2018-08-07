@@ -15,3 +15,7 @@
   padding-bottom: 6px;
   display: unset;
 }
+.cluster_legend {
+    font-size: 0.7rem;
+    padding-bottom: 0.2rem;
+}

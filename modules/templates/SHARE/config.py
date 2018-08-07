@@ -1428,6 +1428,8 @@ def config(settings):
 
         from s3 import S3Represent
 
+        current.response.s3.crud_strings["req_need_line"]["title_map"] = T("Map of Needs")
+
         req_status_opts = {0: SPAN(T("Uncommitted"),
                                        _class = "req_status_none",
                                        ),
@@ -1976,6 +1978,8 @@ def config(settings):
 
         s3db = current.s3db
         table = s3db.req_need_response_line
+
+        current.response.s3.crud_strings["req_need_response_line"]["title_map"] = T("Map of Activities")
 
         # Settings for Map Popups
         f = table.coarse_location_id
