@@ -389,6 +389,10 @@ def config(settings):
                     query = (FS("id") == adm) | query
                     resource.add_filter(query)
 
+                    # Push the parent to top of the list + alpha-sort
+                    table = resource.table
+                    resource.configure(orderby = (table.level, table.name))
+
             return result
         s3.prep = custom_prep
 

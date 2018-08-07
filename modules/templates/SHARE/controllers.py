@@ -2,7 +2,7 @@
 
 import json
 
-from gluon import current, A, DIV, H3, HR, P, SPAN, URL
+from gluon import current, A, DIV, H3, HR, P, SPAN, URL, XML
 from s3 import s3_str, \
                S3CustomController, \
                S3FilterForm, S3LocationFilter, S3OptionsFilter, S3TextFilter, \
@@ -63,7 +63,7 @@ class index(S3CustomController):
                 else:
                     event_name = s["event_event.name"]
                 rappend(H3(event_name))
-                rappend(P(s["event_sitrep.summary"]))
+                rappend(P(XML(s["event_sitrep.summary"])))
                 if count != len_sitreps:
                     rappend(HR())
 
