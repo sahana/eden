@@ -1730,3 +1730,8 @@ form.anonymize-form,
 .form-container .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
   min-width: 0;
 }
+
+/* line 100, ../scss/theme/_misc.scss */
+#filter-form.mapview {
+  margin-bottom: 1rem;
+}
