@@ -63,6 +63,13 @@
     p {
         font-size: 0.8rem;
     }
+    a {
+        color: #afefef;
+        text-decoration: underline;
+        &:hover {
+            color: #7fefef;
+        }
+    }
     hr {
         border-top: 2px dashed white;
         margin: 0.5rem 0;
