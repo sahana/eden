@@ -326,6 +326,15 @@ def s3_dev_toolbar():
     request.update(vars=current.request.vars,
                    get_vars=current.request.get_vars,
                    post_vars=current.request.post_vars)
+
+    # Filter out sensitive session details
+    def no_sensitives(key):
+        if key in ("hmac_key", "password") or \
+           key[:8] == "_formkey" or \
+           key[-4:] == "_key":
+            return None
+        return key
+
     return DIV(
         #BUTTON("design", _onclick="document.location='%s'" % admin),
         BUTTON("request",
@@ -342,7 +351,7 @@ def s3_dev_toolbar():
             _class="hide", _id="request-%s" % u),
         #DIV(BEAUTIFY(current.response), backtotop,
         #    _class="hide", _id="response-%s" % u),
-        DIV(BEAUTIFY(current.session), backtotop,
+        DIV(BEAUTIFY(current.session, keyfilter=no_sensitives), backtotop,
             _class="hide", _id="session-%s" % u),
         DIV(BEAUTIFY(dbtables), backtotop,
             _class="hide", _id="db-tables-%s" % u),
