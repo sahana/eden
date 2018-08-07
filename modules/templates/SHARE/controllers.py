@@ -27,20 +27,25 @@ class index(S3CustomController):
         # Recent Updates
         etable = s3db.event_event
         stable = s3db.event_sitrep
-        query = (stable.deleted == False) & \
-                (stable.event_id == etable.id)
+        query = (stable.deleted == False)
         fields = [etable.name,
                   stable.date,
+                  stable.name,
                   stable.summary,
                   ]
+
+        left = [etable.on(etable.id == stable.event_id)]
+
         language = current.session.s3.language
         if language != current.deployment_settings.get_L10n_default_language():
             ntable = s3db.event_event_name
-            left = ntable.on((ntable.event_id == etable.id) & \
-                             (ntable.language == language))
+            left.append(ntable.on((ntable.event_id == etable.id) & \
+                                  (ntable.language == language)))
             fields.append(ntable.name_l10n)
+            use_local_event_name = True
         else:
-            left = None
+            use_local_event_name = False
+
         sitreps = db(query).select(left = left,
                                    limitby = (0, 3),
                                    orderby = ~stable.date,
@@ -58,10 +63,12 @@ class index(S3CustomController):
             count = 0
             for s in sitreps:
                 count += 1
-                if left:
+                if use_local_event_name:
                     event_name = s["event_event_name.name_l10n"] or s["event_event.name"]
                 else:
                     event_name = s["event_event.name"]
+                if not event_name:
+                    event_name = s["event_sitrep.name"]
                 rappend(H3(event_name))
                 rappend(P(XML(s["event_sitrep.summary"])))
                 if count != len_sitreps:
