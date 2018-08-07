@@ -349,7 +349,52 @@ def config(settings):
             msg_list_empty = T("No Situational Updates currently registered"))
 
     settings.customise_event_sitrep_resource = customise_event_sitrep_resource
+    # -----------------------------------------------------------------------------
+    def customise_gis_location_controller(**attr):
 
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.representation == "json":
+
+                # Special filter vars to find child locations while
+                # including the parent location in the JSON result:
+                #     adm   => the parent location ID
+                #     l     => the target Lx level for child locations
+                get_vars = r.get_vars
+                adm = get_vars.get("adm")
+                if adm:
+                    from s3 import FS
+                    resource = r.resource
+
+                    # Filter for children of adm
+                    query = FS("parent") == adm
+
+                    # Restrict children to a certain Lx level
+                    level = get_vars.get("l")
+                    if level:
+                        q = FS("level") == level
+                        query = (query & q) if query else q
+
+                    # Always include adm
+                    query = (FS("id") == adm) | query
+                    resource.add_filter(query)
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_gis_location_controller = customise_gis_location_controller
     # -------------------------------------------------------------------------
     def customise_msg_twitter_channel_resource(r, tablename):
 
