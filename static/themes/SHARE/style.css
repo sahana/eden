@@ -4,7 +4,7 @@
 }
 #filter-form.form-container form,
 #filter-form.form-container table {
-  background: #b3d9ff;
+  background-color: #d0e8ff;
 }
 .top-bar-section label {
   color: #fff;
@@ -13,4 +13,5 @@
   line-height: 2.8125rem;
   padding-top: 6px;
   padding-bottom: 6px;
+  display: unset;
 }
