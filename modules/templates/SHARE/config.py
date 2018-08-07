@@ -1569,6 +1569,7 @@ def config(settings):
                           S3OptionsFilter("item_id"),
                           S3OptionsFilter("status",
                                           cols = 3,
+                                          table = False,
                                           label = T("Status"),
                                           ),
                           #S3DateFilter("date",

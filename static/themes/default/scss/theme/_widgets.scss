@@ -178,6 +178,15 @@ table.s3-groupedopts-widget {
 /*     border: 0; TODO make configurable */
     margin-bottom: 0;
 }
+div.s3-groupedopts-widget {
+    .s3-groupedopts-item {
+        display: inline-block;
+        padding-top: 0.15rem;
+    }
+    input.s3-groupedopts-option {
+        margin-top: 0;
+    }
+}
 
 /* ImageCropWidget */
 .imagecrop-btn {

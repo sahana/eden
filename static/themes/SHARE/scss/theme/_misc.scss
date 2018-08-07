@@ -92,4 +92,9 @@
     font-size: 0.7rem;
 }
 
+.filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all,
+.form-container .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+    min-width: 0;
+}
+
 // END ========================================================================

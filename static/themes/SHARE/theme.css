@@ -1440,8 +1440,18 @@ table.s3-groupedopts-widget td label {
   white-space: pre-wrap;
 }
 
+/* line 182, ../../default/scss/theme/_widgets.scss */
+div.s3-groupedopts-widget .s3-groupedopts-item {
+  display: inline-block;
+  padding-top: 0.15rem;
+}
+/* line 186, ../../default/scss/theme/_widgets.scss */
+div.s3-groupedopts-widget input.s3-groupedopts-option {
+  margin-top: 0;
+}
+
 /* ImageCropWidget */
-/* line 183, ../../default/scss/theme/_widgets.scss */
+/* line 192, ../../default/scss/theme/_widgets.scss */
 .imagecrop-btn {
   font-size: 1em;
   margin-left: 0.2em;
@@ -1449,36 +1459,36 @@ table.s3-groupedopts-widget td label {
 }
 
 /* pr_Contacts widgets */
-/* line 190, ../../default/scss/theme/_widgets.scss */
+/* line 199, ../../default/scss/theme/_widgets.scss */
 .pr-contacts-wrapper h3 {
   margin-top: 0.5rem;
   padding-bottom: 0 !important;
 }
 
-/* line 194, ../../default/scss/theme/_widgets.scss */
+/* line 203, ../../default/scss/theme/_widgets.scss */
 .pr-contact-actions {
   margin-bottom: 0.5rem;
 }
 
-/* line 197, ../../default/scss/theme/_widgets.scss */
+/* line 206, ../../default/scss/theme/_widgets.scss */
 .pr-contact,
 .pr-emergency-contact {
   padding: 0.5rem;
 }
 
-/* line 201, ../../default/scss/theme/_widgets.scss */
+/* line 210, ../../default/scss/theme/_widgets.scss */
 .pr-contact-priority,
 .pr-contact-details {
   display: inline-block;
 }
 
-/* line 205, ../../default/scss/theme/_widgets.scss */
+/* line 214, ../../default/scss/theme/_widgets.scss */
 .pr-contact-subtitle {
   font-size: 0.8rem;
   font-style: italic;
 }
 
-/* line 209, ../../default/scss/theme/_widgets.scss */
+/* line 218, ../../default/scss/theme/_widgets.scss */
 .pr-contact-priority {
   border: thin solid #2ba6cb;
   border-radius: 2px;
@@ -1489,7 +1499,7 @@ table.s3-groupedopts-widget td label {
   padding: 0 0.25rem 0.125rem;
   vertical-align: top;
 }
-/* line 218, ../../default/scss/theme/_widgets.scss */
+/* line 227, ../../default/scss/theme/_widgets.scss */
 .pr-contact-priority input[type=submit] {
   color: black;
   line-height: 1.2rem;
@@ -1497,38 +1507,38 @@ table.s3-groupedopts-widget td label {
 }
 
 /* Checkboxes Widget */
-/* line 226, ../../default/scss/theme/_widgets.scss */
+/* line 235, ../../default/scss/theme/_widgets.scss */
 .controls .checkboxes-widget-s3 {
   display: inline-flex;
 }
 
 /* Comment feeds */
-/* line 231, ../../default/scss/theme/_widgets.scss */
+/* line 240, ../../default/scss/theme/_widgets.scss */
 .comment-box {
   background: none repeat scroll 0 0 #f5f5f5;
 }
 
 /* Text representation */
-/* line 236, ../../default/scss/theme/_widgets.scss */
+/* line 245, ../../default/scss/theme/_widgets.scss */
 .text-body {
   white-space: pre-wrap;
 }
 
 /* Iframe Map (Location Represent links) TODO move into page or forms? */
-/* line 241, ../../default/scss/theme/_widgets.scss */
+/* line 250, ../../default/scss/theme/_widgets.scss */
 #close-iframe-map {
   padding: 7px;
   margin-top: 5px;
 }
 
 /* Truncated Texts */
-/* line 247, ../../default/scss/theme/_widgets.scss */
+/* line 256, ../../default/scss/theme/_widgets.scss */
 .s3-truncate-more,
 .s3-truncate-less {
   font-style: italic;
 }
 
-/* line 251, ../../default/scss/theme/_widgets.scss */
+/* line 260, ../../default/scss/theme/_widgets.scss */
 .s3-truncate-more:before,
 .s3-truncate-less:before {
   font-style: italic;
@@ -1536,12 +1546,12 @@ table.s3-groupedopts-widget td label {
 }
 
 /* AddPersonWidget */
-/* line 258, ../../default/scss/theme/_widgets.scss */
+/* line 267, ../../default/scss/theme/_widgets.scss */
 .box_bottom {
   clear: left;
 }
 
-/* line 261, ../../default/scss/theme/_widgets.scss */
+/* line 270, ../../default/scss/theme/_widgets.scss */
 .ui-menu-item .pe-label {
   font-size: 0.7rem;
   color: #A0A0A0;
@@ -1549,39 +1559,39 @@ table.s3-groupedopts-widget td label {
 }
 
 /* Anonymize-Widget */
-/* line 268, ../../default/scss/theme/_widgets.scss */
+/* line 277, ../../default/scss/theme/_widgets.scss */
 form.anonymize-form,
 .anonymize-success {
   padding: 1rem;
 }
 
-/* line 272, ../../default/scss/theme/_widgets.scss */
+/* line 281, ../../default/scss/theme/_widgets.scss */
 .anonymize-select,
 .anonymize-confirm {
   margin-left: 1rem;
 }
 
-/* line 276, ../../default/scss/theme/_widgets.scss */
+/* line 285, ../../default/scss/theme/_widgets.scss */
 .anonymize-buttons {
   margin-top: 1rem;
 }
 
-/* line 279, ../../default/scss/theme/_widgets.scss */
+/* line 288, ../../default/scss/theme/_widgets.scss */
 .anonymize-btn {
   background-color: #c42648;
 }
-/* line 281, ../../default/scss/theme/_widgets.scss */
+/* line 290, ../../default/scss/theme/_widgets.scss */
 .anonymize-btn:hover {
   background-color: #9d1e3a;
 }
 
-/* line 285, ../../default/scss/theme/_widgets.scss */
+/* line 294, ../../default/scss/theme/_widgets.scss */
 .s3-anonymize {
   display: inline-block;
 }
 
 /* Priority Representation */
-/* line 290, ../../default/scss/theme/_widgets.scss */
+/* line 299, ../../default/scss/theme/_widgets.scss */
 .prio {
   padding: 0 4px;
   border: 1px solid black;
@@ -1590,24 +1600,24 @@ form.anonymize-form,
   font-weight: normal;
 }
 
-/* line 297, ../../default/scss/theme/_widgets.scss */
+/* line 306, ../../default/scss/theme/_widgets.scss */
 .prio-red {
   color: white;
   background-color: #d10000;
 }
 
-/* line 301, ../../default/scss/theme/_widgets.scss */
+/* line 310, ../../default/scss/theme/_widgets.scss */
 .prio-blue {
   color: white;
   background-color: #10427b;
 }
 
-/* line 305, ../../default/scss/theme/_widgets.scss */
+/* line 314, ../../default/scss/theme/_widgets.scss */
 .prio-lightblue {
   background-color: #b7ddff;
 }
 
-/* line 308, ../../default/scss/theme/_widgets.scss */
+/* line 317, ../../default/scss/theme/_widgets.scss */
 .prio-grey {
   background-color: silver;
 }
@@ -1713,4 +1723,10 @@ form.anonymize-form,
 /* line 91, ../scss/theme/_misc.scss */
 .last-stats-update {
   font-size: 0.7rem;
+}
+
+/* line 95, ../scss/theme/_misc.scss */
+.filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all,
+.form-container .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+  min-width: 0;
 }
