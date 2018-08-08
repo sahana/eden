@@ -6,15 +6,6 @@
 #filter-form.form-container table {
   background-color: #d0e8ff;
 }
-.top-bar-section label {
-  color: #fff;
-  font-size: 1.4em;
-  font-weight: bold;
-  line-height: 2.8125rem;
-  padding-top: 6px;
-  padding-bottom: 6px;
-  display: unset;
-}
 .cluster_legend {
     font-size: 0.7rem;
     padding-bottom: 0.2rem;
