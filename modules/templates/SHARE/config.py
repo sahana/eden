@@ -1004,11 +1004,11 @@ def config(settings):
         # NB cannot have the JS in link to avoid being blocked by Chrome XSS_AUDITOR
         location_represent = S3Represent(lookup = "gis_location")
         f.represent = location_represent
-        f.widget = S3LocationDropdownWidget(level="L3")
+        f.widget = S3LocationDropdownWidget(level="L3", blank=True)
         f = ltable.location_id
         f.label = T("GN")
         f.represent = location_represent
-        f.widget = S3LocationDropdownWidget(level="L4")
+        f.widget = S3LocationDropdownWidget(level="L4", blank=True)
 
         # Custom Filtered Components
         s3db.add_components(tablename,
@@ -1768,12 +1768,12 @@ def config(settings):
         f.label = T("Division")
         # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
         f.represent = S3Represent(lookup = "gis_location")
-        f.widget = S3LocationDropdownWidget(level="L3")
+        f.widget = S3LocationDropdownWidget(level="L3", blank=True)
         f = ltable.location_id
         f.label = T("GN")
         # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
         f.represent = S3Represent(lookup = "gis_location")
-        f.widget = S3LocationDropdownWidget(level="L4")
+        f.widget = S3LocationDropdownWidget(level="L4", blank=True)
 
         table.comments.comment = None
         table.comments.widget = lambda f, v: \

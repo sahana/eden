@@ -4095,7 +4095,7 @@ class S3LocationDropdownWidget(FormWidget):
         Renders a dropdown for an Lx level of location hierarchy
     """
 
-    def __init__(self, level="L0", default=None, validate=False, empty=DEFAULT):
+    def __init__(self, level="L0", default=None, validate=False, empty=DEFAULT, blank=False):
         """
             Constructor
 
@@ -4103,12 +4103,15 @@ class S3LocationDropdownWidget(FormWidget):
             @param default: the default location name
             @param validate: validate input in-widget (special purpose)
             @param empty: allow selection to be empty
+            @param blank: start without options (e.g. when options are
+                          Ajax-added later by filterOptionsS3)
         """
 
         self.level = level
         self.default = default
         self.validate = validate
         self.empty = empty
+        self.blank = blank
 
     def __call__(self, field, value, **attributes):
 
@@ -4116,10 +4119,13 @@ class S3LocationDropdownWidget(FormWidget):
         default = self.default
         empty = self.empty
 
+        opts = []
         # Get locations
         s3db = current.s3db
         table = s3db.gis_location
-        if level:
+        if self.blank:
+            query = (table.id == value)
+        elif level:
             query = (table.deleted != True) & \
                     (table.level == level)
         else:
@@ -4130,7 +4136,6 @@ class S3LocationDropdownWidget(FormWidget):
                                              cache=s3db.cache)
 
         # Build OPTIONs
-        opts = []
         for location in locations:
             opts.append(OPTION(location.name, _value=location.id))
             if not value and default and location.name == default:
