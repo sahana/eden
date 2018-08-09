@@ -1883,8 +1883,13 @@ def config(settings):
             f.writable = False
             crud_fields.insert(7, "need_id")
 
+        # Post-process to update need status for response line changes
         crud_form = S3SQLCustomForm(*crud_fields,
                                     postprocess = req_need_response_postprocess)
+        # Make sure need status gets also updated when response lines are deleted
+        s3db.configure("req_need_response_line",
+                       ondelete = req_need_response_line_ondelete,
+                       )
 
         need_response_line_summary = URL(c="req", f="need_response_line", args="summary")
 
@@ -2057,7 +2062,7 @@ def config(settings):
                                                               ),
                             )
 
-        filter_widgets = [S3OptionsFilter("need_response_id$partner.organisation_id",
+        filter_widgets = [S3OptionsFilter("need_response_id$agency.organisation_id",
                                           label = T("Organization"),
                                           ),
                           #S3OptionsFilter("need_response_id$event.event_type_id",
@@ -2079,7 +2084,7 @@ def config(settings):
                           S3OptionsFilter("need_response_id$donor.organisation_id",
                                           label = T("Donor"),
                                           ),
-                          S3OptionsFilter("need_response_id$agency.organisation_id",
+                          S3OptionsFilter("need_response_id$partner.organisation_id",
                                           label = T("Partner"),
                                           ),
                           S3OptionsFilter("parameter_id"),

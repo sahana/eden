@@ -2964,51 +2964,54 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     # No changes made to this item - skip
                     continue
 
-                # Get the values
+                delete = item.get("_delete")
                 values = Storage()
                 valid = True
-                for f, d in item.iteritems():
-                    if f[0] != "_" and d and isinstance(d, dict):
 
-                        field = table[f]
-                        widget = field.widget
-                        if not hasattr(field, "type"):
-                            # Virtual Field
-                            continue
-                        elif field.type == "upload":
-                            # Find, rename and store the uploaded file
-                            rowindex = item.get("_index", None)
-                            if rowindex is not None:
-                                filename = self._store_file(table, f, rowindex)
-                                if filename:
-                                    values[f] = filename
-                        elif isinstance(widget, S3Selector):
-                            # Value must be processed by widget post-process
-                            value, error = widget.postprocess(d["value"])
-                            if not error:
-                                values[f] = value
-                            else:
-                                valid = False
-                                break
-                        else:
-                            # Must run through validator again (despite pre-validation)
-                            # in order to post-process widget output properly (e.g. UTC
-                            # offset subtraction)
-                            try:
-                                value, error = s3_validate(table, f, d["value"])
-                            except AttributeError:
+                if not delete:
+                    # Get the values
+                    for f, d in item.iteritems():
+                        if f[0] != "_" and d and isinstance(d, dict):
+
+                            field = table[f]
+                            widget = field.widget
+                            if not hasattr(field, "type"):
+                                # Virtual Field
                                 continue
-                            if not error:
-                                values[f] = value
+                            elif field.type == "upload":
+                                # Find, rename and store the uploaded file
+                                rowindex = item.get("_index", None)
+                                if rowindex is not None:
+                                    filename = self._store_file(table, f, rowindex)
+                                    if filename:
+                                        values[f] = filename
+                            elif isinstance(widget, S3Selector):
+                                # Value must be processed by widget post-process
+                                value, error = widget.postprocess(d["value"])
+                                if not error:
+                                    values[f] = value
+                                else:
+                                    valid = False
+                                    break
                             else:
-                                valid = False
-                                break
+                                # Must run through validator again (despite pre-validation)
+                                # in order to post-process widget output properly (e.g. UTC
+                                # offset subtraction)
+                                try:
+                                    value, error = s3_validate(table, f, d["value"])
+                                except AttributeError:
+                                    continue
+                                if not error:
+                                    values[f] = value
+                                else:
+                                    valid = False
+                                    break
+
                 if not valid:
                     # Skip invalid items
                     continue
 
                 record_id = item.get("_id")
-                delete = item.get("_delete")
 
                 if not record_id:
                     if delete:
