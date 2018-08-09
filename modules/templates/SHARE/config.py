@@ -973,7 +973,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_req_need_resource(r, tablename):
 
-        from gluon import IS_IN_SET
+        from gluon import IS_EMPTY_OR, IS_IN_SET
 
         from s3 import s3_comments_widget, \
                        S3LocationSelector, S3LocationDropdownWidget, \
@@ -1069,11 +1069,11 @@ def config(settings):
 
         verified = components_get("verified")
         f = verified.table.value
-        from s3 import S3TagCheckboxWidget
-        f.requires = IS_IN_SET(("Y", "N"))
-        f.default = "N"
+        f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
         f.represent = lambda v: T("yes") if v == "Y" else T("no")
+        from s3 import S3TagCheckboxWidget
         f.widget = S3TagCheckboxWidget(on="Y", off="N")
+        f.default = "N"
 
         auth = current.auth
         user = auth.user
@@ -1081,14 +1081,10 @@ def config(settings):
             organisation_id = user.organisation_id
         else:
             organisation_id = None
-        if auth.s3_has_role("ADMIN"):
-            f.default = True
+        if auth.s3_has_role("ADMIN") or organisation_id:
+            f.default = "Y"
         else:
-            if organisation_id:
-                f.default = True
-            else:
-                f.default = False
-                f.writable = False
+            f.writable = False
 
         if r.id and r.resource.tablename == tablename:
             # Read or Update
@@ -1261,7 +1257,7 @@ def config(settings):
 
         if not create:
             # Read or Update
-            req_number = components_get("verified")
+            req_number = components_get("req_number")
             req_number.table.value.writable = False
             crud_fields.insert(2, (T("Request Number"), "req_number.value"))
             crud_fields.insert(-2, "status")
