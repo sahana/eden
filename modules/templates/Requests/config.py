@@ -71,6 +71,8 @@ def config(settings):
     settings.req.req_type = ["Stock"]
 
     # Inventory Management
+    # Uncomment if you need a simpler (but less accountable) process for managing stock levels
+    settings.inv.direct_stock_edits = True
     #settings.inv.send_form_name = "Tally Out Sheet"
     #settings.inv.send_short_name = "TOS"
     #settings.inv.send_ref_field_name = "Tally Out Number"
