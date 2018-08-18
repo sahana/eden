@@ -47,8 +47,8 @@ settings.base.template = "default"
 #settings.gis.spatialdb = True
 
 # Base settings
-#settings.base.system_name = T("Sahana Eden Humanitarian Management Platform")
-#settings.base.system_name_short = T("Sahana Eden")
+settings.base.system_name = T("Kerala Rescue - Shelter Management")
+settings.base.system_name_short = T("Kerala Rescue")
 # Set this to the Public URL of the instance
 #settings.base.public_url = "http://127.0.0.1:8000"
 
