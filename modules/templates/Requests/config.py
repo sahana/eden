@@ -26,7 +26,7 @@ def config(settings):
     #settings.base.theme = "Requests"
 
     # Security Policy
-    settings.security.policy = 6 # Warehouse-specific restrictions
+    settings.security.policy = 6 # Site-specific restrictions
     settings.security.map = True
 
     def rgims_realm_entity(table, row):
@@ -56,31 +56,31 @@ def config(settings):
     # Enable this for a UN-style deployment
     settings.ui.cluster = True
     # Enable this to use the label 'Camp' instead of 'Shelter'
-    settings.ui.camp = True
+    #settings.ui.camp = True
 
     # Requests
     settings.req.use_commit = False
-    settings.req.req_form_name = "Request Issue Form"
-    settings.req.req_shortname = "RIS"
+    #settings.req.req_form_name = "Request Issue Form"
+    #settings.req.req_shortname = "RIS"
     # Restrict the type of requests that can be made, valid values in the
     # list are ["Stock", "People", "Other"]. If this is commented out then
     # all types will be valid.
     settings.req.req_type = ["Stock"]
 
     # Inventory Management
-    settings.inv.send_form_name = "Tally Out Sheet"
-    settings.inv.send_short_name = "TOS"
-    settings.inv.send_ref_field_name = "Tally Out Number"
-    settings.inv.recv_form_name = "Acknowledgement Receipt for Donations Received Form"
-    settings.inv.recv_shortname = "ARDR"
-    settings.inv.recv_type = {
-        #0: T("-"),
-        #1: T("Other Warehouse"),
-        32: T("Donation"),
-        33: T("Foreign Donation"),
-        34: T("Local Purchases"),
-        35: T("Confiscated Goods from Bureau Of Customs")
-        }
+    #settings.inv.send_form_name = "Tally Out Sheet"
+    #settings.inv.send_short_name = "TOS"
+    #settings.inv.send_ref_field_name = "Tally Out Number"
+    #settings.inv.recv_form_name = "Acknowledgement Receipt for Donations Received Form"
+    #settings.inv.recv_shortname = "ARDR"
+    #settings.inv.recv_type = {
+    #    #0: T("-"),
+    #    #1: T("Other Warehouse"),
+    #    32: T("Donation"),
+    #    33: T("Foreign Donation"),
+    #    34: T("Local Purchases"),
+    #    35: T("Confiscated Goods from Bureau Of Customs")
+    #    }
 
     # Comment/uncomment modules here to disable/enable them
     settings.modules = OrderedDict([
