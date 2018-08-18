@@ -25,6 +25,9 @@ def config(settings):
     # Theme
     #settings.base.theme = "Requests"
 
+    settings.auth.registration_requests_organisation = True
+    settings.auth.registration_requests_site = True
+
     # Security Policy
     settings.security.policy = 6 # Site-specific restrictions
     settings.security.map = True
