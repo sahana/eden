@@ -381,17 +381,17 @@ def warehouse():
                 read_url = URL(f="warehouse", args=["[id]", "inv_item"])
                 update_url = URL(f="warehouse", args=["[id]", "inv_item"])
                 s3_action_buttons(r,
-                                  read_url=read_url,
-                                  update_url=update_url)
+                                  read_url = read_url,
+                                  update_url = update_url)
         else:
             cname = r.component_name
             if cname == "human_resource":
                 # Modify action button to open staff instead of human_resource
                 read_url = URL(c="hrm", f="staff", args=["[id]"])
                 update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
-                s3_action_buttons(r, read_url=read_url,
-                                  #delete_url=delete_url,
-                                  update_url=update_url)
+                s3_action_buttons(r, read_url = read_url,
+                                  #delete_url = delete_url,
+                                  update_url = update_url)
 
         if "add_btn" in output:
             del output["add_btn"]

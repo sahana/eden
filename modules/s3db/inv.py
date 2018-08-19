@@ -416,8 +416,9 @@ class S3InventoryModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         settings = current.deployment_settings
-        WAREHOUSE = T(settings.get_inv_facility_label())
+        direct_stock_edits = settings.get_inv_direct_stock_edits()
         track_pack_values = settings.get_inv_track_pack_values()
+        WAREHOUSE = T(settings.get_inv_facility_label())
 
         inv_source_type = {0: None,
                            1: T("Donated"),
@@ -463,7 +464,7 @@ class S3InventoryModel(S3Model):
                                 represent = lambda v: \
                                     IS_FLOAT_AMOUNT.represent(v, precision=2),
                                 requires = IS_FLOAT_AMOUNT(minimum=0.0),
-                                writable = False,
+                                writable = direct_stock_edits,
                                 ),
                           Field("bin", length=16,
                                 label = T("Bin"),
@@ -678,7 +679,6 @@ $.filterOptionsS3({
                            ]
 
         # Configuration
-        direct_stock_edits = settings.get_inv_direct_stock_edits()
         self.configure(tablename,
                        # Lock the record so that it can't be meddled with
                        # - unless explicitly told to allow this
