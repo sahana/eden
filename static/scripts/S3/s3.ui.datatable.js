@@ -767,10 +767,8 @@
 
                 } else {
                     // Re-use cacheLastJson with updated draw and data
-                    var json = $.extend(true, {}, cacheLastJson, {
-                        draw: request.draw,
-                        data: cached
-                    });
+                    var json = $.extend(true, {}, cacheLastJson, {draw: request.draw});
+                    json.data = cached;
                     drawCallback(json);
                 }
             };
