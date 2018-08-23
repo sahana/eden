@@ -520,7 +520,7 @@ def s3_datatable_truncate(string, maxlength=40):
         @param string: the string
         @param maxlength: the maximum string length
 
-        @note: the JS click-event will be attached by S3.datatables.js
+        @note: the JS click-event will be attached by s3.ui.datatable.js
     """
 
     # Make sure text is multi-byte-aware before truncating it

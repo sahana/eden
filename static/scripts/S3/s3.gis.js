@@ -322,7 +322,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             'loadend': search_layer_loadend
         });
     };
-    // Pass to Global scope to be called from s3.dataTables.js
+    // Pass to Global scope to be called from s3.dataTables.js (obsolete?)
     S3.gis.search_layer_loadend = search_layer_loadend;
 
     /**
@@ -5120,7 +5120,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             }
         }
     };
-    
+
     // Floating DIV to explain & control
     var addPolygonPanel = function(map_id, control) {
         if (undefined === control) {
@@ -5194,14 +5194,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
         return [lon, lat];
     };*/
-    
+
     // Circle Control to draw circles on the Map
     var addCircleControl = function(map, toolbar, active, config) {
         var draftLayer = map.s3.draftLayer;
         var control = new OpenLayers.Control.DrawFeature(draftLayer, OpenLayers.Handler.RegularPolygon, {
                 handlerOptions: {
                      sides: 1000
-                }, 
+                },
             // custom Callback
             'featureAdded': function(feature) {
                 // Remove previous circle
@@ -5236,10 +5236,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     var radius = new OpenLayers.Geometry.LineString([startPoint, endPoint]);
                     var length = Math.round(radius.getLength()).toString();
                     var lengthMeter = Math.round(radius.getGeodesicLength()).toString();
-                    
+
                     // Get the circumference points on the circle
                     var circumferencePoints = getCircumferencePoints(startX, startY, length);
-                    
+
                     // Prepare the circular string
                     // Enable this once CIRCULARSTRING is fully supported
                     var circularstring = '';
@@ -5249,18 +5249,18 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         if (i == circumferencePoints[0].length-1) {
                             var point = lon.concat(" ", lat);
                         } else {
-                            var point = lon.concat(" ", lat, ",");    
+                            var point = lon.concat(" ", lat, ",");
                         }
                         circularstring = circularstring.concat(point);
                     }
                     var comment = ''.concat('CIRCULARSTRING(', circularstring, ')');
-                    
+
                     // Data mapped to db field
                     // Note the POLYGON wkt is stored in wkt field
                     // we can use once CIRCULARSTRING is fully supported
                     wkt_field.val(WKT);
                     $('#gis_location_lat').val(startY);
-                    $('#gis_location_lon').val(startX); 
+                    $('#gis_location_lon').val(startX);
                     $('#gis_location_radius').val(parseFloat(lengthMeter));
                     $('#gis_location_comments').val(comment);
                 }*/

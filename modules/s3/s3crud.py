@@ -2603,7 +2603,7 @@ class S3CRUD(S3Method):
         if r.representation == "iframe":
             if current.deployment_settings.get_ui_iframe_opens_full():
                 iframe_safe = lambda url: url
-                # This is processed client-side in s3.dataTables.js
+                # This is processed client-side in s3.ui.datatable.js
                 target = {"_target": "_blank"}
             else:
                 iframe_safe = lambda url: s3_set_extension(url, "iframe")

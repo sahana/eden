@@ -399,7 +399,7 @@ def dojs(dogis = False, warnings = True):
         ("dataLists",
          "sahana.js.dataLists.cfg", "s3.dataLists.min.js", None),
         ("dataTables",
-         "sahana.js.dataTables.cfg", "s3.dataTables.min.js", None),
+         "sahana.js.datatable.cfg", "s3.ui.datatable.min.js", None),
         ("dataTables (multi)",
          "sahana.js.dataTables_multi.cfg", "s3.dataTables.multi.min.js", None),
         ("groupedItems",
@@ -496,6 +496,18 @@ def dojs(dogis = False, warnings = True):
         sourceDirectory = "../.."
         configFilename = "sahana.js.vulnerability_gis.cfg"
         outputFilename = "OpenLayers.js"
+        merged = mergejs.run(sourceDirectory,
+                             None,
+                             configFilename)
+        minimized = minimize(merged)
+        with open(outputFilename, "w") as outFile:
+            outFile.write(minimized)
+        move_to(outputFilename, "../../themes/Vulnerability/js")
+
+        info("Compressing Vulnerability Datatables")
+        sourceDirectory = "../.."
+        configFilename = "sahana.js.vulnerability_datatables.cfg"
+        outputFilename = "s3.dataTables.min.js"
         merged = mergejs.run(sourceDirectory,
                              None,
                              configFilename)
