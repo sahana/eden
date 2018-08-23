@@ -753,69 +753,98 @@ table.dataTable tfoot th, table.dataTable tfoot td {
   border-top: 2px solid #cccccc;
   padding: 0.5em;
 }
-/* line 58, ../scss/custom/_tables.scss */
+/* line 59, ../scss/custom/_tables.scss */
 table.dataTable .selected-action {
   margin: 5px 0 5px;
 }
 /* line 62, ../scss/custom/_tables.scss */
+table.dataTable .bulk-select-options {
+  font-size: 0.7rem;
+  font-weight: normal;
+}
+/* line 65, ../scss/custom/_tables.scss */
+table.dataTable .bulk-select-options input[type=checkbox] {
+  margin-bottom: 0.2rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+/* line 71, ../scss/custom/_tables.scss */
+table.dataTable input.bulkcheckbox[type=checkbox] {
+  margin-top: 0.2rem;
+}
+/* line 75, ../scss/custom/_tables.scss */
+table.dataTable .group span.ui-icon {
+  display: inline-block;
+}
+/* line 78, ../scss/custom/_tables.scss */
+table.dataTable .group .group-indent {
+  width: 10px;
+}
+/* line 81, ../scss/custom/_tables.scss */
+table.dataTable .group .group-opened,
+table.dataTable .group .group-closed {
+  padding: 0.2rem;
+}
+/* line 85, ../scss/custom/_tables.scss */
+table.dataTable .group .group-collapse,
+table.dataTable .group .group-expand {
+  cursor: pointer;
+  float: right;
+}
+/* line 92, ../scss/custom/_tables.scss */
 table.dataTable.dtr-inline.collapsed tbody td:first-child::before, table.dataTable.dtr-inline.collapsed tbody th:first-child::before {
   top: 6px;
   background-color: #006A71;
 }
-/* line 67, ../scss/custom/_tables.scss */
+/* line 97, ../scss/custom/_tables.scss */
 table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child::before, table.dataTable.dtr-inline.collapsed tbody tr.parent th:first-child::before {
   top: 6px;
   background-color: #D92C20;
 }
 
-/* line 73, ../scss/custom/_tables.scss */
-.bulk-select-options input[type=checkbox] {
-  margin-bottom: 0.2rem;
-  margin-right: 0.5rem;
-  vertical-align: middle;
-}
-
-/* line 79, ../scss/custom/_tables.scss */
+/* line 103, ../scss/custom/_tables.scss */
 .dataTables_processing {
   padding: 14px 0 28px;
 }
 
-/* line 82, ../scss/custom/_tables.scss */
+/* line 106, ../scss/custom/_tables.scss */
 .dataTables_filter {
   text-align: left;
   font-size: 0.75rem;
   margin-right: 3rem;
 }
-/* line 86, ../scss/custom/_tables.scss */
+/* line 110, ../scss/custom/_tables.scss */
 .dataTables_filter input[type="search"] {
   margin-left: 0.2rem;
 }
 
-/* line 90, ../scss/custom/_tables.scss */
+/* line 114, ../scss/custom/_tables.scss */
 .dt-export-options {
   float: right;
 }
-/* line 92, ../scss/custom/_tables.scss */
+/* line 116, ../scss/custom/_tables.scss */
 .dt-export-options .list_formats {
   padding-top: 0;
   margin-left: 5px;
 }
-/* line 96, ../scss/custom/_tables.scss */
+/* line 120, ../scss/custom/_tables.scss */
 .dt-export-options .dt-export {
   margin: 0 0.085rem;
 }
 
-/* line 102, ../scss/custom/_tables.scss */
-body.rtl .dt-export-options {
+/* line 126, ../scss/custom/_tables.scss */
+body.rtl .dt-export-options,
+body.rtl .list_formats div {
   float: left;
 }
-/* line 105, ../scss/custom/_tables.scss */
-body.rtl .list_formats div {
+/* line 131, ../scss/custom/_tables.scss */
+body.rtl .dataTable .group .group-collapse,
+body.rtl .dataTable .group .group-expand {
   float: left;
 }
 
 /* Empty-sections */
-/* line 111, ../scss/custom/_tables.scss */
+/* line 139, ../scss/custom/_tables.scss */
 .empty {
   font-style: italic;
   font-size: 0.8em;
