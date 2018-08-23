@@ -3,8 +3,9 @@
  {{scripts_append("/%s/static/scripts/jquery.dataTables.foundation.js" % appname)}}
  {{scripts_append("/%s/static/scripts/jquery.dataTables.responsive.js" % appname)}}
  {{scripts_append("/%s/static/scripts/jquery.dataTables.sortFunctions.js" % appname)}}
- {{scripts_append("/%s/static/scripts/S3/s3.dataTables.reloadAjax.js" % appname)}}
- {{scripts_append("/%s/static/scripts/S3/s3.dataTables.js" % appname)}}
+ {{#scripts_append("/%s/static/scripts/S3/s3.dataTables.reloadAjax.js" % appname)}}
+ {{#scripts_append("/%s/static/scripts/S3/s3.dataTables.js" % appname)}}
+ {{scripts_append("/%s/static/scripts/S3/s3.ui.datatable.js" % appname)}}
 {{else:}}{{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.min.js" % appname)}}{{pass}}
 <script type="text/javascript">
 {{=XML(s3base.S3DataTable.i18n())}}
@@ -12,11 +13,6 @@ S3.dataTables={}
 {{if s3.dataTableID:}}{{idlist=[s3.dataTableID] if not isinstance(s3.dataTableID, (tuple, list)) else s3.dataTableID}}
 S3.dataTables.id=[{{=XML(",".join(["'%s'" % id for id in idlist]))}}]{{pass}}
 S3.dataTables.initComplete=function(){{=xmlescape("{")}}{{if s3.dataTable_initComplete:}}{{=XML(s3.dataTable_initComplete)}}{{pass}}{{=xmlescape("}")}}
-{{if s3.actions:}}S3.dataTables.Actions={{=XML(s3.actions)}}
-{{if "_jqclick" in s3.actions[-1]:}}function S3ActionCallBack(event){
- var id=this.id
- {{=XML(s3.actions[-1]["_jqclick"])}}
- event.stopPropagation()
- return false}{{pass}}{{pass}}
+{{if s3.actions:}}S3.dataTables.Actions={{=XML(s3.actions)}}{{pass}}
 </script>
 {{if s3.dataTableMap:}}{{=XML(s3.dataTableMap)}}{{pass}}

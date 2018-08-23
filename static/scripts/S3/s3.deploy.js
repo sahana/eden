@@ -2,5 +2,5 @@
 
 S3.dataTables.initComplete = function() {
     // Move the Deployment Team Select inside the dataTables form
-    $('#bulk_select_options').prev().before($('#deploy_application_organisation_id'));
+    $('#datatable .bulk-select-options').first().prev().before($('#deploy_application_organisation_id'));
 };

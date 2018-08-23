@@ -670,20 +670,20 @@ class S3DataTable(object):
         # will then be parsed by s3.dataTable.js and the values used.
         config = Storage()
         config.id = id
-        _aget = attr.get
-        config.dom = _aget("dt_dom", settings.get_ui_datatables_dom())
-        config.lengthMenu = _aget("dt_lengthMenu",
-                                  [[25, 50, -1],
-                                   [25, 50, s3_str(current.T("All"))]
-                                   ]
-                                  )
-        config.pageLength = _aget("dt_pageLength", s3.ROWSPERPAGE)
-        config.pagination = _aget("dt_pagination", "true")
-        config.pagingType = _aget("dt_pagingType",
-                                  settings.get_ui_datatables_pagingType())
-        config.searching = _aget("dt_searching", "true")
+        attr_get = attr.get
+        config.dom = attr_get("dt_dom", settings.get_ui_datatables_dom())
+        config.lengthMenu = attr_get("dt_lengthMenu",
+                                     [[25, 50, -1],
+                                      [25, 50, s3_str(current.T("All"))]
+                                      ]
+                                     )
+        config.pageLength = attr_get("dt_pageLength", s3.ROWSPERPAGE)
+        config.pagination = attr_get("dt_pagination", "true")
+        config.pagingType = attr_get("dt_pagingType",
+                                     settings.get_ui_datatables_pagingType())
+        config.searching = attr_get("dt_searching", "true")
 
-        ajaxUrl = _aget("dt_ajax_url", None)
+        ajaxUrl = attr_get("dt_ajax_url", None)
         if not ajaxUrl:
             request = current.request
             url = URL(c=request.controller,
@@ -694,24 +694,24 @@ class S3DataTable(object):
             ajaxUrl = s3_set_extension(url, "aadata")
         config.ajaxUrl = ajaxUrl
 
-        config.rowStyles = _aget("dt_styles", [])
+        config.rowStyles = attr_get("dt_styles", [])
 
-        rowActions = _aget("dt_row_actions", s3.actions)
+        rowActions = attr_get("dt_row_actions", s3.actions)
         if rowActions:
             config.rowActions = rowActions
         else:
             config.rowActions = []
-        bulkActions = _aget("dt_bulk_actions", None)
+        bulkActions = attr_get("dt_bulk_actions", None)
         if bulkActions and not isinstance(bulkActions, list):
             bulkActions = [bulkActions]
         config.bulkActions = bulkActions
-        config.bulkCol = bulkCol = _aget("dt_bulk_col", 0)
-        action_col = _aget("dt_action_col", 0)
+        config.bulkCol = bulkCol = attr_get("dt_bulk_col", 0)
+        action_col = attr_get("dt_action_col", 0)
         if bulkActions and bulkCol <= action_col:
             action_col += 1
         config.actionCol = action_col
 
-        group_list = _aget("dt_group", [])
+        group_list = attr_get("dt_group", [])
         if not isinstance(group_list, list):
             group_list = [group_list]
         dt_group = []
@@ -722,9 +722,9 @@ class S3DataTable(object):
                 group -= 1
             dt_group.append([group, "asc"])
         config.group = dt_group
-        config.groupTotals = _aget("dt_group_totals", [])
-        config.groupTitles = _aget("dt_group_titles", [])
-        config.groupSpacing = _aget("dt_group_space", "false")
+        config.groupTotals = attr_get("dt_group_totals", [])
+        config.groupTitles = attr_get("dt_group_titles", [])
+        config.groupSpacing = attr_get("dt_group_space")
         for order in orderby:
             if bulkActions:
                 if bulkCol <= order[0]:
@@ -732,10 +732,10 @@ class S3DataTable(object):
             if action_col > 0 and action_col >= order[0]:
                 order[0] -= 1
         config.order = orderby
-        config.textMaxLength = _aget("dt_text_maximum_len", 80)
-        config.textShrinkLength = _aget("dt_text_condense_len", 75)
-        config.shrinkGroupedRows = _aget("dt_shrink_groups", "false")
-        config.groupIcon = _aget("dt_group_types", [])
+        config.textMaxLength = attr_get("dt_text_maximum_len", 80)
+        config.textShrinkLength = attr_get("dt_text_condense_len", 75)
+        config.shrinkGroupedRows = attr_get("dt_shrink_groups")
+        config.groupIcon = attr_get("dt_group_types", [])
 
         # Wrap the table in a form and add some data in hidden fields
         form = FORM(_class="dt-wrapper")
@@ -744,8 +744,8 @@ class S3DataTable(object):
             # @todo: poor UX with onclick-JS, better to render real
             #        links which can be bookmarked, and then update them
             #        in drawCallback()
-            permalink = _aget("dt_permalink", None)
-            base_url = _aget("dt_base_url", None)
+            permalink = attr_get("dt_permalink", None)
+            base_url = attr_get("dt_base_url", None)
             export_formats = S3DataTable.export_formats(rfields,
                                                         permalink=permalink,
                                                         base_url=base_url)
@@ -773,7 +773,7 @@ class S3DataTable(object):
                               _id="%s_dataTable_bulkMode" % id,
                               _name="mode",
                               _value="Inclusive"))
-            bulk_selected = _aget("dt_bulk_selected", "")
+            bulk_selected = attr_get("dt_bulk_selected", "")
             if isinstance(bulk_selected, list):
                 bulk_selected = ",".join(bulk_selected)
             form.append(INPUT(_type="hidden",
@@ -785,6 +785,11 @@ class S3DataTable(object):
                               _class="dataTable_filterURL",
                               _name="filterURL",
                               _value="%s" % config.ajaxUrl))
+
+        # Form key (CSRF protection for Ajax actions)
+        formkey = attr_get("dt_formkey")
+        if formkey:
+            form["hidden"] = {"_formkey": formkey}
 
         # Set callback?
         initComplete = settings.get_ui_datatables_initComplete()

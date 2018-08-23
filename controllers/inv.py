@@ -190,7 +190,7 @@ def index2():
                                                      },
                                         #dt_text_maximum_len = 10,
                                         #dt_text_condense_len = 8,
-                                        #dt_group_space = "true",
+                                        #dt_group_space = True,
                                         dt_shrink_groups = "accordion",
                                         #dt_shrink_groups = "individual",
                                         )
@@ -637,7 +637,7 @@ def track_movement():
 # -----------------------------------------------------------------------------
 def inv_item_quantity():
     """
-        
+
 
         Access via the .json representation to avoid work rendering menus, etc
     """

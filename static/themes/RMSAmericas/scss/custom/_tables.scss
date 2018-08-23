@@ -59,18 +59,18 @@ table.dataTable {
         margin: 5px 0 5px;
     }
 
-    &.dtr-inline.collapsed tbody td:first-child::before, 
+    &.dtr-inline.collapsed tbody td:first-child::before,
     &.dtr-inline.collapsed tbody th:first-child::before {
         top: 6px;
         background-color: $primary-color;
     }
-    &.dtr-inline.collapsed tbody tr.parent td:first-child::before, 
+    &.dtr-inline.collapsed tbody tr.parent td:first-child::before,
     &.dtr-inline.collapsed tbody tr.parent th:first-child::before {
         top: 6px;
         background-color: $alert-color;
     }
 }
-#bulk_select_options input[type=checkbox] {
+.bulk-select-options input[type=checkbox] {
     margin-bottom: 0.2rem;
     margin-right: 0.5rem;
     vertical-align: middle;
@@ -85,7 +85,7 @@ table.dataTable {
     margin-right: 3rem;
     input[type="search"] {
         margin-left: 0.2rem;
-    }    
+    }
 }
 .dt-export-options {
     float: right;

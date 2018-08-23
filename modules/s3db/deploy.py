@@ -1471,10 +1471,9 @@ def deploy_mission_response_count(row):
     except AttributeError:
         return 0
 
-    db = current.db
-    table = db.deploy_response
+    table = current.s3db.deploy_response
     count = table.id.count()
-    row = db(table.mission_id == mission_id).select(count).first()
+    row = current.db(table.mission_id == mission_id).select(count).first()
     if row:
         return row[count]
     else:

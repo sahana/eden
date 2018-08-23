@@ -1,14 +1,38 @@
 /**
- * jQuery UI Widget for ...
+ * Script to apply the jQuery DataTables plugin, implementing:
  *
- * @copyright 2016 (c) Sahana Software Foundation
+ *   - server-side pagination including page caching (pipeline)
+ *   - Ajax-reloading
+ *   - filtering and sorting
+ *   - configurable per-row actions
+ *   - multi-selection of table rows for bulk-actions
+ *   - simple grouping of rows with collapse/expand feature
+ *
+ * Server-side script in modules/s3/s3data.py.
+ *
+ * @copyright 2018 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+
  * requires jQuery UI 1.10 widget factory
  *
- * TODO update title
- * TODO describe global vars/functions dependencies
+ * Global variables/functions:
+ *
+ * - uses/applies:
+ *
+ *   - S3.datatables                   - global object for datatables configuration
+ *   - S3.datatables.id                - global array of DOM-ids of data tables
+ *   - S3.dataTables.initComplete      - global callback function (optional)
+ *   - S3.dataTables.Actions           - global array of per-row actions
+ *
+ *   - $.searchDownloadS3              - provided by s3.filter.js, used for exports
+ *   - S3.Utf8.decode                  - provided by S3.js
+ *   - S3.addModals                    - provided by S3.js
+ *
+ * - provides:
+ *
+ *   - S3.dataTables.initDataTable     - not implemented, used by vulnerability TODO
+ *   - S3.dataTables.accordionRow      - not implemented, used by vulnerability TODO
  */
 (function($, undefined) {
 
@@ -16,11 +40,12 @@
 
     var dataTableS3ID = 0;
 
+    // ------------------------------------------------------------------------
+    // HELPER FUNCTIONS
+
     /**
-     * HELPER FUNCTION
-     *
      * Array search function that allows implicit type coercion
-     * (comparison with ==, unlike indexOf which uses ===)
+     * (i.e. comparison with ==, unlike indexOf which uses ===)
      *
      * @param {mixed} item - the item to search for
      * @param {Array} arr - the array to search through
@@ -39,8 +64,6 @@
     };
 
     /**
-     * HELPER FUNCTION
-     *
      * TODO docstring, improve
      */
     var appendUrlQuery = function(url, extension, query) {
@@ -62,8 +85,6 @@
     };
 
     /**
-     * HELPER FUNCTION
-     *
      * TODO docstring, improve
      */
     var updateUrlQuery = function(target, source) {
@@ -96,6 +117,9 @@
         }
         return rurlvars.length ? tquery[0] + '?' + rurlvars.join('&') : tquery[0];
     };
+
+    // ------------------------------------------------------------------------
+    // PIPELINE CACHE
 
     /**
      * Discontiguous Data Table Cache (DDTC)
@@ -224,10 +248,16 @@
         this.availableRecords = -1;
     };
 
+    // ------------------------------------------------------------------------
+    // UI WIDGET
+
     /**
      * dataTableS3
      */
     $.widget('s3.dataTableS3', {
+
+        // --------------------------------------------------------------------
+        // WIDGET METHODS
 
         /**
          * Default options
@@ -293,7 +323,8 @@
             var serverSide = true,
                 processing = true,
                 fnAjax = null;
-            if (tableConfig.pagination == 'true') { // TODO Why is this a string and not a boolean? (It's JSON anyway)
+            // FIXME Why is this a string and not a boolean? (It's JSON anyway)
+            if (tableConfig.pagination == 'true') {
                 // Server-side Pagination
                 this.ajaxUrl = tableConfig.ajaxUrl;
                 fnAjax = this._pipeline({cache: this._initCache()});
@@ -418,84 +449,10 @@
             return tableConfig;
         },
 
-        /**
-         * TODO docstring
-         */
-        _initCache: function() {
-
-            var initial = $(this.selector + '_dataTable_cache'),
-                cache;
-
-            if (initial.length > 0) {
-                cache = JSON.parse(initial.val());
-            } else {
-                cache = {};
-            }
-
-            this.pipelineCache = cache;
-            return cache;
-        },
+        // --------------------------------------------------------------------
+        // PIPELINE
 
         /**
-         * TODO docstring
-         */
-        _renderBulkActions: function() {
-
-            var tableConfig = this.tableConfig,
-                bulkActions = tableConfig.bulkActions;
-
-            if (bulkActions) {
-
-                // Generate submit-buttons for bulk-actions
-                var bulkActionControls = $('<div class="dataTable-action">');
-                bulkActions.forEach(function(bulkAction) {
-
-                    var name,
-                        value,
-                        cls;
-
-                    if (bulkAction.constructor === Array) {
-                        value = bulkAction[0];
-                        name = bulkAction[1];
-                        if (bulkAction.length > 2) {
-                            cls = bulkAction[2];
-                        }
-                    } else {
-                        name = bulkAction;
-                        value = bulkAction;
-                    }
-
-                    var bulkActionSubmit = $('<input type="submit" class="selected-action">').attr({
-                        id: name + '-selected-action',
-                        name: name,
-                        value: value
-                    }).appendTo(bulkActionControls);
-
-                    if (cls) {
-                        bulkActionSubmit.addClass(cls);
-                    }
-                });
-                this.bulkActionControls = bulkActionControls;
-
-                // Determine which rows had been selected previously
-                var selected = JSON.parse($(this.selector + '_dataTable_bulkSelection').val());
-                if (selected === null) {
-                    selected = [];
-                }
-                this.selectedRows = selected;
-
-                // Determine selection mode
-                if ($(this.selector + '_dataTable_bulkSelectAll').val()) {
-                    this.selectionMode = 'Exclusive';
-                } else {
-                    this.selectionMode = 'Inclusive';
-                }
-            }
-        },
-
-        /**
-         * PIPELINE FUNCTION
-         *
          * Pipelining function for DataTables. To be used for the `ajax` option of DataTables
          * original version from http://datatables.net/examples/server_side/pipeline.html
          * TODO docstring
@@ -775,6 +732,27 @@
         },
 
         /**
+         * TODO docstring
+         */
+        _initCache: function() {
+
+            var initial = $(this.selector + '_dataTable_cache'),
+                cache;
+
+            if (initial.length > 0) {
+                cache = JSON.parse(initial.val());
+            } else {
+                cache = {};
+            }
+
+            this.pipelineCache = cache;
+            return cache;
+        },
+
+        // --------------------------------------------------------------------
+        // DATATABLE CALLBACKS
+
+        /**
          * Get the header callback function
          */
         _headerCallback: function() {
@@ -915,9 +893,6 @@
                     }
                 }
 
-                // TODO
-//                 bindButtons(tableIdx, tableConfig, fnActionCallBacks);
-
                 // Grouped Rows
                 // - configured as array of [[groupingColumnIndex, 'asc'|'desc'], ...]
                 var tableConfig = self.tableConfig,
@@ -955,6 +930,9 @@
                 }
             };
         },
+
+        // --------------------------------------------------------------------
+        // CELL CONTENTS HELPERS
 
         /**
          * Render an action button (used by rowCallback)
@@ -1005,17 +983,12 @@
 
             var re = /%5Bid%5D/g;
             if (action._onclick) {
+                // Onclick-script
                 var oc = action._onclick.replace(re, recordId);
                 button = '<a class="' + c + '" onclick="' + oc + disabled + '">' + label + '</a>';
 
-            } else if (action._jqclick) {
-                // TODO
-//                 if (S3ActionCallBack !== undefined) {
-//                     fnActionCallBacks.push([recordId, S3ActionCallBack]);
-//                 }
-                button = '<span class="' + c + '" id="' + recordId + '">' + label + '</span>';
-
             } else if (action.url) {
+                // Hyperlink
                 var url = action.url.replace(re, recordId),
                     target = action._target || '';
                 if (target) {
@@ -1024,6 +997,7 @@
                 button = '<a db_id="'+ recordId + '" class="' + c + '" href="' + url + '" title="' + title + '"' + target + disabled + '>' + label + '</a>';
 
             } else {
+                // External click-event handler
                 var ajaxURL = action._ajaxurl || '';
                 if (ajaxURL) {
                     ajaxURL = ' data-url="' + ajaxURL + '"';
@@ -1063,27 +1037,67 @@
             }
         },
 
+        // --------------------------------------------------------------------
+        // BULK ACTION METHODS
+
         /**
-         * DRAW CALLBACK SUBFUNCTION
-         *
          * TODO docstring
-         * TODO move inline?
-         * Bind the row action and the bulk action buttons to their callback function
          */
-//         _bindButtons: function(tableIdx, tableConfig, fnActionCallBacks) {
+        _renderBulkActions: function() {
 
-//             if (tableConfig.rowActions.length > 0) {
-//                 for (var i=0; i < fnActionCallBacks.length; i++){
-//                     var currentID = '#' + fnActionCallBacks[i][0];
-//                     $(currentID).unbind('click')
-//                                 .bind('click', fnActionCallBacks[i][1]);
-//                 }
-//             }
-//         },
+            var tableConfig = this.tableConfig,
+                bulkActions = tableConfig.bulkActions;
+
+            if (bulkActions) {
+
+                // Generate submit-buttons for bulk-actions
+                var bulkActionControls = $('<div class="dataTable-action">');
+                bulkActions.forEach(function(bulkAction) {
+
+                    var name,
+                        value,
+                        cls;
+
+                    if (bulkAction.constructor === Array) {
+                        value = bulkAction[0];
+                        name = bulkAction[1];
+                        if (bulkAction.length > 2) {
+                            cls = bulkAction[2];
+                        }
+                    } else {
+                        name = bulkAction;
+                        value = bulkAction;
+                    }
+
+                    var bulkActionSubmit = $('<input type="submit" class="selected-action">').attr({
+                        id: name + '-selected-action',
+                        name: name,
+                        value: value
+                    }).appendTo(bulkActionControls);
+
+                    if (cls) {
+                        bulkActionSubmit.addClass(cls);
+                    }
+                });
+                this.bulkActionControls = bulkActionControls;
+
+                // Determine which rows had been selected previously
+                var selected = JSON.parse($(this.selector + '_dataTable_bulkSelection').val());
+                if (selected === null) {
+                    selected = [];
+                }
+                this.selectedRows = selected;
+
+                // Determine selection mode
+                if ($(this.selector + '_dataTable_bulkSelectAll').val()) {
+                    this.selectionMode = 'Exclusive';
+                } else {
+                    this.selectionMode = 'Inclusive';
+                }
+            }
+        },
 
         /**
-         * BULK ACTIONS FUNCTION
-         *
          * TODO docstring
          * Show which rows have been selected for a bulk select action
          */
@@ -1180,8 +1194,6 @@
         },
 
         /**
-         * BULK ACTIONS FUNCTION
-         *
          * TODO docstring
          */
         _bulkSelectRow: function() {
@@ -1206,8 +1218,6 @@
         },
 
         /**
-         * BULK ACTIONS FUNCTION
-         *
          * TODO docstring
          */
         _bulkSelectAll: function() {
@@ -1228,211 +1238,8 @@
             };
         },
 
-        /**
-         * GROUPED ROWS FUNCTION
-         *
-         * TODO docstring
-         */
-        _expandGroup: function(row) {
-
-            // Get group and level from this row
-            var level = row.data('level'),
-                group = row.data('group');
-
-            // Show all immediate child rows
-            row.siblings('tr.xgroup_' + level + '_' + group).show();
-
-            // Switch icons
-            $('.group-expand, .group-closed', row).hide();
-            $('.group-collapse, .group-opened', row).show();
-        },
-
-        /**
-         * GROUPED ROWS FUNCTION
-         *
-         * TODO docstring
-         */
-        _collapseGroup: function(row) {
-
-            // Get group and level from this row
-            var level = row.data('level'),
-                group = row.data('group'),
-                self = this;
-
-            // Collapse sub-groups and hide all immediate child rows
-            row.siblings('tr.xgroup_' + level + '_' + group).each(function() {
-                var $this = $(this);
-                if ($this.hasClass('group')) {
-                    self._collapseGroup($this);
-                }
-                $this.hide();
-            });
-
-            // Switch icons
-            $('.group-expand, .group-closed', row).show();
-            $('.group-collapse, .group-opened', row).hide();
-        },
-
-        /**
-         * GROUPED ROWS FUNCTION
-         *
-         * TODO docstring
-         */
-        _toggleGroup: function(row, visibility) {
-
-            var tableConfig = this.tableConfig;
-
-            switch(tableConfig.shrinkGroupedRows) {
-
-                case 'individual':
-                    if (visibility) {
-                        this._expandGroup(row);
-                    } else {
-                        this._collapseGroup(row);
-                    }
-                    break;
-
-                case 'accordion':
-                    if (visibility) {
-
-                        // Expand this group
-                        this._expandGroup(row);
-
-                        // Collapse all sibling groups at the same level
-                        var level = row.data('level'),
-                            siblingClass = '.level_' + level,
-                            parentGroup = row.data('parentGroup');
-                        if (parentGroup) {
-                            siblingClass += '.xgroup_' + row.data('parentLevel') + '_' + parentGroup;
-                        }
-                        var self = this;
-                        row.siblings('tr.group' + siblingClass).each(function() {
-                            self._collapseGroup($(this));
-                        });
-
-                    } else {
-                        this._collapseGroup(row);
-                    }
-                    break;
-                default:
-                    // do nothing
-                    break;
-            }
-        },
-
-
-        /**
-         * GROUPED ROWS FUNCTION
-         *
-         * TODO docstring
-         * Helper function to add the new group row
-         */
-        _insertGroupHeader: function(row,
-                                     groupTitle,
-                                     level,
-                                     group,
-                                     parentGroup,
-                                     iColspan,
-                                     groupTotals,
-                                     groupPrefix,
-                                     addIcons,
-                                     append) {
-
-            var tableConfig = this.tableConfig;
-
-            // Create the group header row
-            var nGroup = $('<tr class="group">').data({level: '' + level, group: '' + group})
-                                                .addClass('level_' + level);
-
-            // Add parent level and group (if any)
-            var collapsable = tableConfig.shrinkGroupedRows;
-
-            if (parentGroup) {
-                var parentLevel = '' + (level - 1);
-                nGroup.addClass('xgroup_' + parentLevel + '_' + parentGroup)
-                      .data({parentLevel: parentLevel, parentGroup: parentGroup});
-                if (collapsable) {
-                    nGroup.addClass('collapsable');
-                }
-            }
-
-            // Create a full-width cell
-            var nCell = $('<td>').attr('colspan', iColspan).appendTo(nGroup);
-
-            // Add an indentation of the grouping depth
-            for (var lvl=1; lvl < level; lvl++) {
-                $('<span class="group-indent">').appendTo(nCell);
-            }
-
-            // Add open/closed indicators
-            if (level > 1) {
-                $('<span class="ui-icon ui-icon-triangle-1-e group-closed">').appendTo(nCell);
-                $('<span class="ui-icon ui-icon-triangle-1-s group-opened">').hide().appendTo(nCell);
-            }
-
-            // Add the subtotal counts (if provided)
-            var groupCount = '';
-            // Not !== as we want to catch undefined as well as null
-            if (groupTotals[groupTitle] != null) {
-                groupCount = ' (' + groupTotals[groupTitle] + ')';
-            } else {
-                var index = groupPrefix + groupTitle;
-                if (groupTotals[index] != null) {
-                    groupCount = ' (' + groupTotals[index] + ')';
-                }
-            }
-
-            // Construct the group header text
-            nCell.append(groupTitle + groupCount);
-
-            // Add open/close-icons (arrows on the right)
-            if (collapsable && addIcons) {
-
-                var expandIcons = tableConfig.groupIcon,
-                    expandIconType;
-                if (expandIcons.length >= level) {
-                    expandIconType = expandIcons[level - 1];
-                } else {
-                    expandIconType = 'icon';
-                }
-
-                var expandIcon = $('<span class="group-expand">').appendTo(nCell),
-                    collapseIcon = $('<span class="group-collapse">').hide().appendTo(nCell);
-
-                if (expandIconType == 'text') {
-                    expandIcon.text('→');
-                    collapseIcon.text('↓');
-                } else if (expandIconType == 'icon') {
-                    expandIcon.addClass('ui-icon ui-icon-arrowthick-1-e');
-                    collapseIcon.addClass('ui-icon ui-icon-arrowthick-1-s');
-                }
-            }
-
-            // Insert the group header row before/after the passed-in row
-            if (append) {
-                nGroup.insertAfter(row);
-            } else {
-                nGroup.insertBefore(row);
-            }
-
-            // Insert a spacer if this header follows a group of the same level
-            if (tableConfig.groupSpacing) {
-                var prevHeader = nGroup.prevAll('tr.group').first();
-                if (prevHeader.length) {
-                    var prevLevel = prevHeader.data('level');
-                    if (prevLevel == level) {
-                        var prevGroup = prevHeader.data('group'),
-                            emptyCell = $('<td>').attr('colspan', iColspan),
-                            spacerRow = $('<tr class="spacer">').append(emptyCell);
-                        if (collapsable) {
-                            spacerRow.addClass('collapsable');
-                        }
-                        spacerRow.addClass('xgroup_' + level + '_' + prevGroup)
-                                 .insertBefore(nGroup);
-                    }
-                }
-            }
-        },
+        // --------------------------------------------------------------------
+        // GROUPED ROWS
 
         /**
          * GROUPED ROWS FUNCTION
@@ -1557,6 +1364,206 @@
                 group++;
             }
         },
+
+        /**
+         * TODO docstring
+         * Helper function to add the new group row
+         */
+        _insertGroupHeader: function(row,
+                                     groupTitle,
+                                     level,
+                                     group,
+                                     parentGroup,
+                                     iColspan,
+                                     groupTotals,
+                                     groupPrefix,
+                                     addIcons,
+                                     append) {
+
+            var tableConfig = this.tableConfig;
+
+            // Create the group header row
+            var nGroup = $('<tr class="group">').data({level: '' + level, group: '' + group})
+                                                .addClass('level_' + level);
+
+            // Add parent level and group (if any)
+            var collapsable = tableConfig.shrinkGroupedRows;
+
+            if (parentGroup) {
+                var parentLevel = '' + (level - 1);
+                nGroup.addClass('xgroup_' + parentLevel + '_' + parentGroup)
+                      .data({parentLevel: parentLevel, parentGroup: parentGroup});
+                if (collapsable) {
+                    nGroup.addClass('collapsable');
+                }
+            }
+
+            // Create a full-width cell
+            var nCell = $('<td>').attr('colspan', iColspan).appendTo(nGroup);
+
+            // Add an indentation of the grouping depth
+            for (var lvl=1; lvl < level; lvl++) {
+                $('<span class="group-indent">').appendTo(nCell);
+            }
+
+            // Add open/closed indicators
+            if (level > 1) {
+                $('<span class="ui-icon ui-icon-triangle-1-e group-closed">').appendTo(nCell);
+                $('<span class="ui-icon ui-icon-triangle-1-s group-opened">').hide().appendTo(nCell);
+            }
+
+            // Add the subtotal counts (if provided)
+            var groupCount = '';
+            // Not !== as we want to catch undefined as well as null
+            if (groupTotals[groupTitle] != null) {
+                groupCount = ' (' + groupTotals[groupTitle] + ')';
+            } else {
+                var index = groupPrefix + groupTitle;
+                if (groupTotals[index] != null) {
+                    groupCount = ' (' + groupTotals[index] + ')';
+                }
+            }
+
+            // Construct the group header text
+            nCell.append(groupTitle + groupCount);
+
+            // Add open/close-icons (arrows on the right)
+            if (collapsable && addIcons) {
+
+                var expandIcons = tableConfig.groupIcon,
+                    expandIconType;
+                if (expandIcons.length >= level) {
+                    expandIconType = expandIcons[level - 1];
+                } else {
+                    expandIconType = 'icon';
+                }
+
+                var expandIcon = $('<span class="group-expand">').appendTo(nCell),
+                    collapseIcon = $('<span class="group-collapse">').hide().appendTo(nCell);
+
+                if (expandIconType == 'text') {
+                    expandIcon.text('→');
+                    collapseIcon.text('↓');
+                } else if (expandIconType == 'icon') {
+                    expandIcon.addClass('ui-icon ui-icon-arrowthick-1-e');
+                    collapseIcon.addClass('ui-icon ui-icon-arrowthick-1-s');
+                }
+            }
+
+            // Insert the group header row before/after the passed-in row
+            if (append) {
+                nGroup.insertAfter(row);
+            } else {
+                nGroup.insertBefore(row);
+            }
+
+            // Insert a spacer if this header follows a group of the same level
+            if (tableConfig.groupSpacing) {
+                var prevHeader = nGroup.prevAll('tr.group').first();
+                if (prevHeader.length) {
+                    var prevLevel = prevHeader.data('level');
+                    if (prevLevel == level) {
+                        var prevGroup = prevHeader.data('group'),
+                            emptyCell = $('<td>').attr('colspan', iColspan),
+                            spacerRow = $('<tr class="spacer">').append(emptyCell);
+                        if (collapsable) {
+                            spacerRow.addClass('collapsable');
+                        }
+                        spacerRow.addClass('xgroup_' + level + '_' + prevGroup)
+                                 .insertBefore(nGroup);
+                    }
+                }
+            }
+        },
+
+        /**
+         * TODO docstring
+         */
+        _toggleGroup: function(row, visibility) {
+
+            var tableConfig = this.tableConfig;
+
+            switch(tableConfig.shrinkGroupedRows) {
+
+                case 'individual':
+                    if (visibility) {
+                        this._expandGroup(row);
+                    } else {
+                        this._collapseGroup(row);
+                    }
+                    break;
+
+                case 'accordion':
+                    if (visibility) {
+
+                        // Expand this group
+                        this._expandGroup(row);
+
+                        // Collapse all sibling groups at the same level
+                        var level = row.data('level'),
+                            siblingClass = '.level_' + level,
+                            parentGroup = row.data('parentGroup');
+                        if (parentGroup) {
+                            siblingClass += '.xgroup_' + row.data('parentLevel') + '_' + parentGroup;
+                        }
+                        var self = this;
+                        row.siblings('tr.group' + siblingClass).each(function() {
+                            self._collapseGroup($(this));
+                        });
+
+                    } else {
+                        this._collapseGroup(row);
+                    }
+                    break;
+                default:
+                    // do nothing
+                    break;
+            }
+        },
+
+        /**
+         * TODO docstring
+         */
+        _expandGroup: function(row) {
+
+            // Get group and level from this row
+            var level = row.data('level'),
+                group = row.data('group');
+
+            // Show all immediate child rows
+            row.siblings('tr.xgroup_' + level + '_' + group).show();
+
+            // Switch icons
+            $('.group-expand, .group-closed', row).hide();
+            $('.group-collapse, .group-opened', row).show();
+        },
+
+        /**
+         * TODO docstring
+         */
+        _collapseGroup: function(row) {
+
+            // Get group and level from this row
+            var level = row.data('level'),
+                group = row.data('group'),
+                self = this;
+
+            // Collapse sub-groups and hide all immediate child rows
+            row.siblings('tr.xgroup_' + level + '_' + group).each(function() {
+                var $this = $(this);
+                if ($this.hasClass('group')) {
+                    self._collapseGroup($this);
+                }
+                $this.hide();
+            });
+
+            // Switch icons
+            $('.group-expand, .group-closed', row).show();
+            $('.group-collapse, .group-opened', row).hide();
+        },
+
+        // --------------------------------------------------------------------
+        // EVENT HANDLING
 
         /**
          * Bind events to generated elements (after refresh)
@@ -1691,9 +1698,10 @@
         }
     });
 
+    // ------------------------------------------------------------------------
+    // DATATABLE API EXTENSIONS
+
     /**
-     * PIPELINE FUNCTION
-     *
      * Register an API method that will empty the pipelined data, forcing an Ajax
      * fetch on the next draw (i.e. `table.clearPipeline().draw()`)
      */
@@ -1704,9 +1712,49 @@
         });
     });
 
+    /**
+     * Simple plugin to Ajax-refresh a datatable. This also allows to
+     * change the sAjaxSource URL for that table (e.g. in order to
+     * update URL filters). Use e.g. in a onclick-handler like:
+     * dt = $('#<list_id>').dataTable();
+     * dt.fnReloadAjax(<new URL>);
+     */
+    $.fn.dataTableExt.oApi.fnReloadAjax = function(oSettings, sNewSource) {
+
+        if ( sNewSource != 'undefined' && sNewSource != null ) {
+            // sNewSource is a string containing the new Ajax-URL for
+            // this instance, so override the previous setting
+            oSettings.sAjaxSource = sNewSource;
+        }
+
+        // Show the "Processing..." box
+        this.oApi._fnProcessingDisplay( oSettings, true );
+
+        // Call ajax with empty request to trigger the pipeline
+        // script, clear the table cache and run the following
+        // callback:
+        var self = this;
+        oSettings.ajax({}, function(/* json */) {
+
+            // Clear the table
+            self.oApi._fnClearTable(oSettings);
+
+            // Trigger the pipeline script again (this time without callback),
+            // in  order to re-load the table data from the server:
+            self.fnDraw();
+
+        }, oSettings );
+    };
+
+    // ------------------------------------------------------------------------
+    // GLOBAL FUNCTIONS
+
     // TODO Make methods available for vulnerability/s3.report.js
 //     S3.dataTables.initDataTable = initDataTable;
 //     S3.dataTables.accordionRow = accordionRow;
+
+    // ------------------------------------------------------------------------
+    // DOCUMENT-READY
 
     // Actions when document ready
     $(document).ready(function() {
@@ -1721,5 +1769,7 @@
             }
         }
     });
+
+    // END --------------------------------------------------------------------
 
 })(jQuery);

@@ -887,11 +887,14 @@ class S3Importer(S3Method):
                                    limit=None)["rows"]
             return (upload_id, select_list, rows)
 
-        s3.actions = [dict(label=str(self.messages.item_show_details),
-                           _class="action-btn",
-                           _jqclick="$('.importItem.'+id).toggle();",
-                           ),
+        # Toggle-button for item details
+        s3.actions = [{"label": str(self.messages.item_show_details),
+                       "_class": "action-btn toggle-item",
+                       },
                       ]
+        s3.jquery_ready.append('''
+$('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(this).attr('db_id')).toggle();})''')
+
         output = self._dataTable(["id", "element", "error"],
                                  #sort_by = [[1, "asc"]],
                                  represent=represent,
@@ -1310,7 +1313,7 @@ class S3Importer(S3Method):
         # Build the datatable
         rfields = resource.resolve_selectors(list_fields)[0]
         dt = S3DataTable(rfields, rows, orderby=orderby)
-        datatable_id = "s3import_1"
+        datatable_id = "import-items"
         if representation == "aadata":
             # Ajax callback
             output = dt.json(totalrows,
@@ -1354,7 +1357,7 @@ class S3Importer(S3Method):
         table = db[tablename]
 
         output = DIV()
-        details = TABLE(_class="importItem %s" % item_id)
+        details = TABLE(_class="importItem item-%s" % item_id)
         header, rows = self._add_item_details(element.findall("data"), table)
         if header is not None:
             output.append(header)
@@ -1379,7 +1382,7 @@ class S3Importer(S3Method):
             # At this stage we don't have anything to display to see if we can
             # find something to show. This could be the case when a table being
             # imported is a resolver for a many to many relationship
-            refdetail = TABLE(_class="importItem %s" % item_id)
+            refdetail = TABLE(_class="importItem item-%s" % item_id)
             references = element.findall("reference")
             for reference in references:
                 tuid = reference.get("tuid")
@@ -1388,7 +1391,7 @@ class S3Importer(S3Method):
             output.append(refdetail)
         else:
             output.append(details)
-        return str(output)
+        return output
 
     # -------------------------------------------------------------------------
     @staticmethod

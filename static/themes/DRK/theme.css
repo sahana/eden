@@ -1019,81 +1019,86 @@ table.dataTable .selected-action {
   margin: 5px 0 5px;
 }
 /* line 71, ../../default/scss/theme/_tables.scss */
-table.dataTable #bulk_select_options input[type=checkbox] {
+table.dataTable .bulk-select-options {
+  font-size: 0.7rem;
+  font-weight: normal;
+}
+/* line 74, ../../default/scss/theme/_tables.scss */
+table.dataTable .bulk-select-options input[type=checkbox] {
   margin-bottom: 0.2rem;
   margin-right: 0.5rem;
   vertical-align: middle;
 }
-/* line 76, ../../default/scss/theme/_tables.scss */
+/* line 80, ../../default/scss/theme/_tables.scss */
 table.dataTable input.bulkcheckbox[type=checkbox] {
   margin-top: 0.2rem;
 }
-/* line 80, ../../default/scss/theme/_tables.scss */
+/* line 84, ../../default/scss/theme/_tables.scss */
 table.dataTable.dtr-inline.collapsed tbody td:first-child::before, table.dataTable.dtr-inline.collapsed tbody th:first-child::before {
   top: 6px;
   background-color: #006A71;
 }
-/* line 85, ../../default/scss/theme/_tables.scss */
+/* line 89, ../../default/scss/theme/_tables.scss */
 table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child::before, table.dataTable.dtr-inline.collapsed tbody tr.parent th:first-child::before {
   top: 6px;
   background-color: #D92C20;
 }
 
-/* line 92, ../../default/scss/theme/_tables.scss */
+/* line 96, ../../default/scss/theme/_tables.scss */
 .dataTables_length {
   float: left !important;
 }
-/* line 94, ../../default/scss/theme/_tables.scss */
+/* line 98, ../../default/scss/theme/_tables.scss */
 .dataTables_length label {
   font-size: 0.75rem;
   white-space: nowrap;
   margin-right: 10em;
   margin-bottom: 0.3em;
 }
-/* line 100, ../../default/scss/theme/_tables.scss */
+/* line 104, ../../default/scss/theme/_tables.scss */
 .dataTables_length select {
   height: auto;
   padding: 2px;
   font-size: 0.75rem;
 }
 
-/* line 106, ../../default/scss/theme/_tables.scss */
+/* line 110, ../../default/scss/theme/_tables.scss */
 .dataTables_processing {
   padding: 14px 0 28px;
 }
 
-/* line 109, ../../default/scss/theme/_tables.scss */
+/* line 113, ../../default/scss/theme/_tables.scss */
 .dataTables_filter {
   text-align: left;
   font-size: 0.75rem;
   margin-right: 3rem;
 }
-/* line 113, ../../default/scss/theme/_tables.scss */
+/* line 117, ../../default/scss/theme/_tables.scss */
 .dataTables_filter input[type="search"] {
   margin-left: 0.2rem;
 }
 
-/* line 118, ../../default/scss/theme/_tables.scss */
+/* line 122, ../../default/scss/theme/_tables.scss */
 .dt-export-options {
   float: right;
 }
-/* line 120, ../../default/scss/theme/_tables.scss */
+/* line 124, ../../default/scss/theme/_tables.scss */
 .dt-export-options .list_formats {
   padding-top: 0;
   margin-left: 5px;
 }
-/* line 124, ../../default/scss/theme/_tables.scss */
+/* line 128, ../../default/scss/theme/_tables.scss */
 .dt-export-options .dt-export {
   margin: 0 0.085rem;
 }
 
-/* line 129, ../../default/scss/theme/_tables.scss */
+/* line 133, ../../default/scss/theme/_tables.scss */
 body.rtl .dt-export-options,
 body.rtl .list_formats div {
   float: left;
 }
 
-/* line 134, ../../default/scss/theme/_tables.scss */
+/* line 138, ../../default/scss/theme/_tables.scss */
 .empty {
   font-style: italic;
   font-size: 0.825rem;
