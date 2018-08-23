@@ -846,9 +846,9 @@ class S3DataTable(object):
                 for field in flist:
                     # Insert a checkbox for bulk select
                     if field == "BULK":
-                        tr.append(TD(INPUT(_id="select%s" % row[flist[action_col]],
-                                           _type="checkbox",
+                        tr.append(TD(INPUT(_type="checkbox",
                                            _class="bulkcheckbox",
+                                           data = {"dbid": row[flist[action_col]]},
                                            )))
                     else:
                         tr.append(TD(row[field]))
@@ -904,8 +904,8 @@ class S3DataTable(object):
             details = []
             for field in flist:
                 if field == "BULK":
-                    details.append("<INPUT id='select%s' type='checkbox' class='bulkcheckbox'>" % \
-                        row[flist[action_col]])
+                    details.append("<INPUT type='checkbox' class='bulkcheckbox' data-dbid='%s'>" % \
+                                   row[flist[action_col]])
                 else:
                     details.append(s3_unicode(row[field]))
             aadata.append(details)

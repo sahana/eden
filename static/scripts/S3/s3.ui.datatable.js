@@ -262,7 +262,11 @@
         /**
          * Default options
          *
-         * TODO document options
+         * @property {boolean} destroy - destroy any existing table matching
+         *                               the selector and replace with the new
+         *                               options
+         * @property {boolean} deselectedIndicator - show the number of de-selected
+         *                                           records in exclusion-mode (bulk-select)
          */
         options: {
             destroy: false,
@@ -398,7 +402,9 @@
         },
 
         /**
-         * TODO docstring
+         * Parse the table configuration JSON from hidden field (#*_configurations)
+         *
+         * @returns {object} - the table configuration
          */
         _parseConfig: function() {
 
@@ -453,9 +459,11 @@
         // PIPELINE
 
         /**
-         * Pipelining function for DataTables. To be used for the `ajax` option of DataTables
-         * original version from http://datatables.net/examples/server_side/pipeline.html
-         * TODO docstring
+         * Get the pipelines function to Ajax-load data from server, called
+         * during refresh to configure the "ajax" option of the dataTable
+         * instance
+         *
+         * @param {object} opts - the pipeline options
          */
         _pipeline: function(opts) {
 
@@ -491,7 +499,11 @@
                 }
             }
 
-            // The pipeline function
+            /**
+             * Pipelining function for DataTables. To be used for the `ajax` option
+             * of DataTables, original version from:
+             * - http://datatables.net/examples/server_side/pipeline.html
+             */
             var self = this;
             return function(request, drawCallback, settings) {
 
@@ -732,7 +744,9 @@
         },
 
         /**
-         * TODO docstring
+         * Read the initial cache contents (JSON) from hidden field (#*_dataTable_cache)
+         *
+         * @returns {object} - the initial cache to pass to the pipeline in refresh()
          */
         _initCache: function() {
 
@@ -839,7 +853,7 @@
             /**
              * Callback function per draw
              *
-             * TODO document params
+             * @param {object} oSettings - the dataTable table info object
              */
             return function(oSettings) {
 
@@ -937,9 +951,20 @@
         /**
          * Render an action button (used by rowCallback)
          *
-         * @param {integer|string} recordId - the record ID of the row (to construct URLs)
-         * @param {object} action - the action configuration
-         * TODO describe configuration options
+         * @param {integer|string} recordId - the record ID of the row, used to construct URLs
+         * @param {object} action - the action configuration:
+         * @property {Array} action.restrict - Render the button only for these record IDs
+         * @property {Array} action.exclude - Do not render the action button for these record IDs
+         * @property {string} action._class - the CSS class to use for the button
+         * @property {string} action.label - the label for the button
+         * @property {string} action.icon - the CSS class for the icon to be placed on the button
+         * @property {string} action.url - alternative to icon, render this image on the button
+         * @property {boolean} action._disabled - disable the button initially
+         * @property {string} action.url - render the button as hyperlink to this URL
+         * @property {string} action.onclick - alternatively, on-click script for the button
+         * @property {string} action._ajaxURL - if neither url nor onclick, render this ajaxURL
+         *                                      as data-url attribute for use by external scripts
+         *                                      (mandatory for Ajax-delete with dt-ajax-delete class)
          *
          * @returns {string} - the action button HTML
          */
@@ -1009,7 +1034,11 @@
         },
 
         /**
-         * TODO docstring (used by rowCallback)
+         * Render a truncated version of any cell contents that exceeds the
+         * configured maximum text length, as well as controls to expand/collapse
+         *
+         * @param {jQuery} row - the table row
+         * @param {Array} data - the row data
          */
         _truncateCellContents: function(row, data) {
 
@@ -1041,7 +1070,8 @@
         // BULK ACTION METHODS
 
         /**
-         * TODO docstring
+         * Render the bulk action controls (action buttons) and determine
+         * previously selected rows and selection mode
          */
         _renderBulkActions: function() {
 
@@ -1098,8 +1128,11 @@
         },
 
         /**
-         * TODO docstring
-         * Show which rows have been selected for a bulk select action
+         * Manage selection/de-selection of a row for bulk-actions
+         *
+         * @param {jQuery} row - the row to select/deselect
+         * @param {integer} index - the index of the clicked row in the
+         *                          currently selected rows
          */
         _bulkSelect: function(row, index) {
 
@@ -1194,7 +1227,7 @@
         },
 
         /**
-         * TODO docstring
+         * Click-event handler for the select-checkbox per row
          */
         _bulkSelectRow: function() {
 
@@ -1202,7 +1235,8 @@
 
             return function(/* event */) {
 
-                var id = this.id.substr(6),
+                var $this = $(this),
+                    id = $this.data('dbid'),
                     rows = self.selectedRows;
 
                 var posn = inList(id, rows);
@@ -1213,12 +1247,12 @@
                     rows.splice(posn, 1);
                     posn = -1; // toggle selection class
                 }
-                self._bulkSelect($(this).closest('tr'), posn);
+                self._bulkSelect($this.closest('tr'), posn);
             };
         },
 
         /**
-         * TODO docstring
+         * Click-event handler for the Select-all checkbox
          */
         _bulkSelectAll: function() {
 
