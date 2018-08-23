@@ -64,58 +64,64 @@
     };
 
     /**
-     * TODO docstring, improve
+     * Append a format extension and query string to a URL
+     *
+     * @param {string} url - the URL
+     * @param {string} extension - the format extension (e.g. 'json')
+     * @param {string} query - the query string (e.g. 'var=1&f=2')
+     *
+     * @returns {string} - a new URL
      */
     var appendUrlQuery = function(url, extension, query) {
 
-        var parts = url.split('?'),
-            q = '';
-        var newurl = parts[0] + '.' + extension;
-        if (parts.length > 1) {
-            if (query) {
-                q = '&' + query;
-            }
-            return (newurl + '?' + parts[1] + q);
-        } else {
-            if (query) {
-                q = '?' + query;
-            }
-            return (newurl + q);
+        var parts = url.split('?');
+
+        if (extension) {
+            parts[0] += '.' + extension;
         }
+        if (query) {
+            if (parts.length > 1) {
+                parts[1] += '&' + query;
+            } else {
+                parts.push(query);
+            }
+        }
+        return parts.join('?');
     };
 
     /**
-     * TODO docstring, improve
+     * Update a URL with filter expressions from another URL, retaining
+     * all non-filter query parts, used to update the permalink URL with
+     * the latest Ajax-URL filters
+     *
+     * @param {string} target - the URL to update
+     * @param {string} source - the URL containing the filter expressions
+     *
+     * @returns {string} - a new string with the updated URL
      */
     var updateUrlQuery = function(target, source) {
 
-        var tquery = target.split('?'),
-            squery = source.split('?');
+        var urlFilters = function(k) {
+            return k.indexOf('.') != -1 || k[0] == '(';
+        };
+        var otherParams = function(k) {
+            return !urlFilters(k) && k[0] != 'w';
+        };
 
-        var turlvars = tquery.length > 1 ? tquery[1].split('&') : [],
-            surlvars = squery.length > 1 ? squery[1].split('&') : [],
-            rurlvars = [],
-            i, k, len, q;
+        var extractFrom = function(query, f) {
+            return query && query.split('&').filter(function(item) {
+                var q = item.split('=');
+                return q.length > 1 && f(decodeURIComponent(q[0]));
+            }) || [];
+        };
 
-        for (i=0, len=turlvars.length; i<len; i++) {
-            q = turlvars[i].split('=');
-            if (q.length > 1) {
-                k = decodeURIComponent(q[0]);
-                if (k.indexOf('.') == -1 && k[0] != '(' && k[0] != 'w') {
-                    rurlvars.push(turlvars[i]);
-                }
-            }
-        }
-        for (i=0, len=surlvars.length; i<len; i++) {
-            q = surlvars[i].split('=');
-            if (q.length > 1) {
-                k = decodeURIComponent(q[0]);
-                if (k.indexOf('.') != -1 || k[0] == '(') {
-                    rurlvars.push(surlvars[i]);
-                }
-            }
-        }
-        return rurlvars.length ? tquery[0] + '?' + rurlvars.join('&') : tquery[0];
+        var tparts = target.split('?'),
+            sparts = source.split('?'),
+            urlVars = extractFrom(tparts[1], otherParams);
+
+        tparts[1] = urlVars.concat(extractFrom(sparts[1], urlFilters)).join('&');
+
+        return tparts.join('?');
     };
 
     // ------------------------------------------------------------------------
@@ -1648,7 +1654,7 @@
                     }
                     url = appendUrlQuery(url, extension, args);
                 } else {
-                    url = appendUrlQuery(url, extension, '');
+                    url = appendUrlQuery(url, extension);
                 }
                 // Use $.searchS3Download if available, otherwise (e.g. custom
                 // page without s3.filter.js) fall back to window.open:
