@@ -1040,6 +1040,57 @@
         },
 
         /**
+         * Generic click-event handler for Ajax action buttons that need to interact
+         * with the server:
+         *
+         *  - asks the user to confirm the intended action (optional)
+         *  - sends a POST request to the configured Ajax-URL (replacing [id] placeholder)
+         *  - reloads the table if the POST request succeeds
+         *
+         * @param {string} confirmation - the confirmation question to ask (optional)
+         *
+         * Used internally for Ajax-delete buttons (.dt-ajax-delete), but can
+         * also be configured for other button classes by external scripts like:
+         *
+         *      var dt = $('#datatable-id');
+         *      dt.on('click', '.button-class', dt.dataTableS3('ajaxAction', 'Are you sure?'));
+         */
+        ajaxAction: function(confirmation) {
+
+            var el = $(this.element);
+
+            return function(event) {
+
+                event.stopPropagation();
+                event.preventDefault();
+
+                if (!confirmation || confirm(confirmation)) {
+                    var $this = $(this),
+                        recordID = $this.attr('db_id'),
+                        ajaxURL = $this.data('url'),
+                        data = {},
+                        formKey = el.closest('.dt-wrapper').find('input[name="_formkey"]').first().val();
+
+                    if (formKey !== undefined) {
+                        data._formkey = formKey;
+                    }
+
+                    if (ajaxURL && recordID) {
+                        $.ajaxS3({
+                            'url': ajaxURL.replace(/%5Bid%5D/g, recordID),
+                            'type': 'POST',
+                            'dataType': 'json',
+                            'data': data,
+                            'success': function(/* data */) {
+                                el.dataTable().fnReloadAjax();
+                            }
+                        });
+                    }
+                }
+            };
+        },
+
+        /**
          * Render a truncated version of any cell contents that exceeds the
          * configured maximum text length, as well as controls to expand/collapse
          *
@@ -1603,6 +1654,67 @@
         },
 
         // --------------------------------------------------------------------
+        // Export
+
+        /**
+         * Click-event handler for export format options
+         */
+        _exportFormat: function() {
+
+            var el = $(this.element),
+                self = this;
+
+            return function(/* event */) {
+
+                var oSetting = el.dataTable().fnSettings(),
+                    url = $(this).data('url'),
+                    extension = $(this).data('extension');
+
+                // NB url already has filters (s3.filter.js/updateFormatURLs)
+
+                if (oSetting) {
+
+                    var args = 'id=' + self.tableid,
+                        sSearch = oSetting.oPreviousSearch.sSearch,
+                        aaSort = oSetting.aaSorting,
+                        aaSortFixed = oSetting.aaSortingFixed,
+                        aoColumns = oSetting.aoColumns;
+
+                    if (sSearch) {
+                        args += '&sSearch=' + sSearch + '&iColumns=' + aoColumns.length;
+                    }
+                    if (aaSortFixed !== null) {
+                        aaSort = aaSortFixed.concat(aaSort);
+                    }
+                    aoColumns.forEach(function(column, i) {
+                        if (!column.bSortable) {
+                            args += '&bSortable_' + i + '=false';
+                        }
+                    });
+                    args += '&iSortingCols=' + aaSort.length;
+                    aaSort.forEach(function(sorting, i) {
+                        args += '&iSortCol_' + i + '=' + aaSort[i][0] +
+                                '&sSortDir_' + i + '=' + aaSort[i][1];
+                    });
+
+                    url = appendUrlQuery(url, extension, args);
+
+                } else {
+
+                    url = appendUrlQuery(url, extension);
+                }
+
+                // Use $.searchS3Download if available, otherwise (e.g. custom
+                // page without s3.filter.js) fall back to window.open:
+                if ($.searchDownloadS3 !== undefined) {
+                    $.searchDownloadS3(url, '_blank');
+                } else {
+                    window.open(url);
+                }
+            };
+        },
+
+        // --------------------------------------------------------------------
         // EVENT HANDLING
 
         /**
@@ -1621,81 +1733,11 @@
             });
 
             // Export formats
-            el.closest('.dt-wrapper').find('.dt-export').on('click' + ns, function() {
-
-                // TODO move into separate function
-                var tableid = el.attr('id'),
-                    oSetting = el.dataTable().fnSettings(),
-                    url = $(this).data('url'),
-                    extension = $(this).data('extension');
-
-                if (oSetting) {
-                    var args = 'id=' + tableid,
-                        serverFilterArgs = $('#' + tableid + '_dataTable_filter'),
-                        sFilter = serverFilterArgs.val();
-                    if (sFilter !== undefined && sFilter !== '') {
-                        args += '&sFilter=' + sFilter;
-                    }
-                    args += '&sSearch=' + oSetting.oPreviousSearch.sSearch;
-                    var columns = oSetting.aoColumns,
-                        i, len;
-                    for (i=0, len=columns.length; i < len; i++) {
-                        if (!columns[i].bSortable) {
-                            args += '&bSortable_' + i + '=false';
-                        }
-                    }
-                    var aaSort = oSetting.aaSortingFixed !== null ?
-                                 oSetting.aaSortingFixed.concat(oSetting.aaSorting) :
-                                 oSetting.aaSorting.slice();
-                    args += '&iSortingCols=' + aaSort.length;
-                    for (i=0, len=aaSort.length; i < len; i++) {
-                        args += '&iSortCol_' + i + '=' + aaSort[i][0];
-                        args += '&sSortDir_' + i + '=' + aaSort[i][1];
-                    }
-                    url = appendUrlQuery(url, extension, args);
-                } else {
-                    url = appendUrlQuery(url, extension);
-                }
-                // Use $.searchS3Download if available, otherwise (e.g. custom
-                // page without s3.filter.js) fall back to window.open:
-                if ($.searchDownloadS3 !== undefined) {
-                    $.searchDownloadS3(url, '_blank');
-                } else {
-                    window.open(url);
-                }
-            });
+            el.closest('.dt-wrapper').find('.dt-export')
+                                     .on('click' + ns, this._exportFormat());
 
             // Ajax-delete
-            el.on('click' + ns, '.dt-ajax-delete', function(e) {
-
-                // TODO move into separate function
-                e.stopPropagation();
-                if (confirm(i18n.delete_confirmation)) {
-                    var $this = $(this),
-                        db_id = $this.attr('db_id'),
-                        ajaxURL = $this.data('url'),
-                        data = {},
-                        formKey = el.closest('.dt-wrapper').find('input[name="_formkey"]').first().val();
-                    if (formKey !== undefined) {
-                        data._formkey = formKey;
-                    }
-                    if (ajaxURL && db_id) {
-                        ajaxURL = ajaxURL.replace(/%5Bid%5D/g, db_id);
-                    }
-                    $.ajaxS3({
-                        'url': ajaxURL,
-                        'type': 'POST',
-                        'dataType': 'json',
-                        'data': data,
-                        'success': function(/* data */) {
-                            el.dataTable().fnReloadAjax();
-                        }
-                    });
-                } else {
-                    e.preventDefault();
-                    return false;
-                }
-            });
+            el.on('click' + ns, '.dt-ajax-delete', this.ajaxAction(i18n.delete_confirmation));
 
             // Group Expand/Collapse
             el.on('click' + ns, '.group-collapse, .group-expand', function() {
