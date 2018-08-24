@@ -390,7 +390,7 @@
                 // Set this dropdown to this value
                 // - this is being set from outside the dropdown, e.g. an
                 //   update form or using a visible default location
-                dropdown.val(id).change();
+                dropdown.val(id).trigger('change', 'implicit');
                 if (dropdown.hasClass('multiselect') && dropdown.multiselect('instance')) {
                     dropdown.multiselect('refresh');
                 }
@@ -461,7 +461,7 @@
                     $(s + ' option').remove('[value != ""]');
                     // @ToDo: Read the full set of options via a new call
                 }
-                $(s).val('').change();
+                $(s).val('').trigger('change', 'implicit');
             }
 
             if (id) {
@@ -614,8 +614,12 @@
 
         /**
          * Update the data dict from all inputs
+         *
+         * @param {boolean} mapInput - data collection triggered by map input
+         *                             (must trigger an explicit change-event
+         *                             to enable navigate-away-confirm)
          */
-        _collectData: function() {
+        _collectData: function(mapInput) {
 
             var data = this.data,
                 selector = '#' + this.fieldname,
@@ -661,7 +665,7 @@
 
             if (this.fieldname.slice(0, 4) == 'sub_') {
                 // This is an S3SQLInlineComponent => trigger change event
-                this.input.change();
+                this.input.trigger('change', mapInput && 'user' || 'implicit');
             }
         },
 
@@ -1312,7 +1316,7 @@
                             // Store the fact that we've now added Marker manually
                             realInput.data('manually_geocoded', true);
                             // Serialize the data dict
-                            self._collectData();
+                            self._collectData(true);
                             // Remove all errors
                             self._removeErrors();
 

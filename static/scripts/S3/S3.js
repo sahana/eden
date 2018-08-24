@@ -504,11 +504,22 @@ S3.maxLength = {
 };
 
 // ============================================================================
-// Code to warn on exit without saving
-var S3SetNavigateAwayConfirm = function() {
-    window.onbeforeunload = function() {
-        return i18n.unsaved_changes;
-    };
+/**
+ * Activate warning on exit without saving form data
+ *
+ * @param {Event} event - the event triggering the activation
+ * @param {string} trigger - event parameter indicating the trigger
+ *
+ * Use element.trigger('change', 'implicit') instead of element.change()
+ * to prevent activation if the event must be triggered for other reasons
+ * than user input
+ */
+var S3SetNavigateAwayConfirm = function(event, trigger) {
+    if (trigger !== 'implicit') {
+        window.onbeforeunload = function() {
+            return i18n.unsaved_changes;
+        };
+    }
 };
 
 var S3ClearNavigateAwayConfirm = function() {
@@ -521,13 +532,13 @@ var S3EnableNavigateAwayConfirm = function() {
             // If there are errors, ensure the unsaved form is still protected
             S3SetNavigateAwayConfirm();
         }
-        var form = 'form:not(form.filter-form)',
-            input = 'input:not(input[id=gis_location_advanced_checkbox])',
-            select = 'select';
-        $(form + ' ' + input).keypress(S3SetNavigateAwayConfirm);
-        $(form + ' ' + input).change(S3SetNavigateAwayConfirm);
-        $(form + ' ' + select).change(S3SetNavigateAwayConfirm);
-        $('form').submit(S3ClearNavigateAwayConfirm);
+        var form = $('form:not(form.filter-form)'),
+            input = 'input:not(input[id=gis_location_advanced_checkbox])';
+
+        $(input, form).keypress(S3SetNavigateAwayConfirm);
+        $(input, form).change(S3SetNavigateAwayConfirm);
+        $('select', form).change(S3SetNavigateAwayConfirm);
+        form.submit(S3ClearNavigateAwayConfirm);
     });
 };
 

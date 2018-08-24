@@ -674,7 +674,7 @@ def config(settings):
                     if r.method == "report":
 
                         # Custom Report Options
-                        facts = ((T("Number of Clients"), "count(pe_label)"),
+                        facts = ((T("Number of Clients"), "count(id)"),
                                  (T("Number of Actions"), "count(case_activity.response_action.id)"),
                                  )
                         axes = ("gender",
@@ -1403,7 +1403,7 @@ def config(settings):
 
             # Custom Report Options
             facts = ((T("Number of Activities"), "count(id)"),
-                     (T("Number of Clients"), "count(person_id$pe_label)"),
+                     (T("Number of Clients"), "count(person_id)"),
                      )
             axes = ("person_id$gender",
                     "person_id$person_details.nationality",
@@ -2004,7 +2004,7 @@ def config(settings):
         if is_report:
 
             # Custom Report Options
-            facts = ((T("Number of Clients"), "count(case_activity_id$person_id$pe_label)"),
+            facts = ((T("Number of Clients"), "count(case_activity_id$person_id)"),
                      (T("Hours (Average)"), "avg(hours)"),
                      (T("Hours (Total)"), "sum(hours)"),
                      (T("Number of Actions"), "count(id)"),
