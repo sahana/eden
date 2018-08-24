@@ -496,13 +496,10 @@
 
             // Initialize cache
             var cacheCombined = new DDTCache();
-            if (cacheLastJson && cacheLower != -1 && cacheUpper !== null) {
+            if (cacheLastJson && cacheLower != -1) {
                 var availableRecords = cacheLastJson.recordsFiltered ||
-                                       cacheLastJson.recordsTotal,
-                    recordsProvided = cacheUpper - cacheLower;
-                if (recordsProvided && availableRecords) {
-                    cacheCombined.store(cacheLower, cacheLastJson.data, availableRecords);
-                }
+                                       cacheLastJson.recordsTotal;
+                cacheCombined.store(cacheLower, cacheLastJson.data, availableRecords);
             }
 
             /**
