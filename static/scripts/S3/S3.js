@@ -532,11 +532,10 @@ var S3EnableNavigateAwayConfirm = function() {
             // If there are errors, ensure the unsaved form is still protected
             S3SetNavigateAwayConfirm();
         }
-        var form = $('form:not(form.filter-form)'),
-            input = 'input:not(input[id=gis_location_advanced_checkbox])';
+        var form = $('form:not(.filter-form)');
 
-        $(input, form).keypress(S3SetNavigateAwayConfirm);
-        $(input, form).change(S3SetNavigateAwayConfirm);
+        $('input', form).keypress(S3SetNavigateAwayConfirm)
+                        .change(S3SetNavigateAwayConfirm);
         $('select', form).change(S3SetNavigateAwayConfirm);
         form.submit(S3ClearNavigateAwayConfirm);
     });
