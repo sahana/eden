@@ -247,7 +247,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
             my_cases = None
             my_actions = None
-            all_cases = M("Current Cases", c=("dvr", "pr"), f="person",
+            all_cases = M("Current Cases", c=("dvr", "pr"), f="person", t="dvr_case",
                           vars = {"closed": "0"})(
                             M("Create Case", m="create", t="pr_person", p="create"),
                             # FIXME crashing (incorrect join order in S3GIS):
@@ -256,7 +256,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("Actions", f="response_action"),
                             )
 
-            all_activities = M("Activities", f="case_activity")(
+            all_activities = M("Activities", f="case_activity", t="dvr_case_activity")(
                                 M("Emergencies", vars = {"~.priority": "0"}),
                                 M(follow_ups_label, f="due_followups"),
                                 M("All Activities"),
@@ -271,15 +271,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Overview"),
                         ),
                     M("Statistics", c="dvr", link=False)(
-                        M("Actions", f="response_action", m="report"),
-                        M("Activities", f="case_activity", m="report"),
-                        M("Cases", f="person", m="report", vars={"closed": "0"}),
+                        M("Actions", f="response_action", t="dvr_response_action", m="report"),
+                        M("Activities", f="case_activity", t="dvr_case_activity", m="report"),
+                        M("Cases", f="person", m="report", t="dvr_case", vars={"closed": "0"}),
                         ),
                     M("Archive", link=False)(
-                        M("Closed Cases", f="person",
+                        M("Closed Cases", f="person", t="dvr_case",
                           vars={"closed": "1"},
                           ),
-                        M("Invalid Cases", f="person",
+                        M("Invalid Cases", f="person", t="dvr_case",
                           restrict = (ADMIN, ORG_ADMIN),
                           vars={"archived": "1"},
                           ),

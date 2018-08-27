@@ -295,3 +295,8 @@ TRACING,Tracing Service,,,,pr_person_details,READ,,,,,
 TRACING,Tracing Service,,,,pr_person_tag,READ,,,,,
 TRACING,Tracing Service,,,,project_project,NONE,,,,,
 TRACING,Tracing Service,,,,project_task,CREATE|READ|UPDATE|DELETE,,,,,
+STAFF,Staff Member,,dvr,person,,READ,,,,,Staff members can see records of their org in case views
+STAFF,Staff Member,,,,hrm_human_resource,NONE,READ,,,,Staff members can see their own HR record
+STAFF,Staff Member,,,,dvr_response_theme,READ,,,,,Staff members can see the response themes of their organisation
+STAFF,Staff Member,,dvr,case_activity,,READ,,,,,Staff members can see records of their org in case activity views
+STAFF,Staff Member,,dvr,response_action,,READ,,,,,Staff members can see records of their org in response action views

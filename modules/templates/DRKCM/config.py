@@ -604,6 +604,39 @@ def config(settings):
                                     )
 
     # -------------------------------------------------------------------------
+    def case_default_org():
+        """
+            Determine the default organisation for new cases
+        """
+
+        auth = current.auth
+        realms = auth.permission.permitted_realms("dvr_case", "create")
+
+        if realms is None:
+            # User can create cases for any org
+            orgs = []
+            multiple_orgs = True
+        else:
+            otable = current.s3db.org_organisation
+            query = (otable.pe_id.belongs(realms)) & \
+                    (otable.deleted == False)
+            rows = current.db(query).select(otable.id)
+            orgs = [row.id for row in rows]
+            multiple_orgs = len(rows) > 1
+
+        if multiple_orgs:
+            # User can create cases for multiple orgs
+            user_org = auth.user.organisation_id if auth.user else None
+            if user_org and user_org in orgs:
+                return user_org
+        elif orgs:
+            # User can create cases for exactly one org
+            return orgs[0]
+
+        # No default, must choose
+        return None
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
         s3 = current.response.s3
@@ -714,10 +747,7 @@ def config(settings):
                         # Default organisation
                         ctable = s3db.dvr_case
                         field = ctable.organisation_id
-                        field.comment = None
-                        user_org = auth.user.organisation_id if auth.user else None
-                        if user_org:
-                            field.default = user_org
+                        field.default = case_default_org()
 
                         # Organisation is required
                         requires = field.requires
@@ -1286,20 +1316,26 @@ def config(settings):
         get_vars = r.get_vars
         if r.function == "group_membership" and "viewing" in get_vars:
 
-            # Creating a case file for a new family member
-            # => default to same organisation as primary case
-            try:
-                vtablename, record_id = get_vars["viewing"].split(".")
-            except ValueError:
-                vtablename, record_id = None, None
-
-            if vtablename == "pr_person":
-                query = (ctable.person_id == record_id)
-                row = current.db(query).select(ctable.organisation_id,
-                                               limitby = (0, 1),
-                                               ).first()
-                if row:
-                    ctable.organisation_id.default = row.organisation_id
+            # New cases created on family tab inherit organisation_id
+            # and human_resource_id from master case:
+            viewing = r.get_vars.get("viewing")
+            if viewing and viewing[:10] == "pr_person.":
+                try:
+                    vid = int(viewing[10:])
+                except ValueError:
+                    pass
+                else:
+                    ctable = s3db.dvr_case
+                    query = (ctable.person_id == vid) & \
+                            (ctable.archived == False) & \
+                            (ctable.deleted == False)
+                    case = current.db(query).select(ctable.organisation_id,
+                                                    ctable.human_resource_id,
+                                                    limitby = (0, 1),
+                                                    ).first()
+                    if case:
+                        ctable.organisation_id.default = case.organisation_id
+                        ctable.human_resource_id.default = case.human_resource_id
 
         # Custom onaccept to update realm-entity of the
         # beneficiary and case activities of this case
@@ -1448,39 +1484,64 @@ def config(settings):
                                                       show_link = True,
                                                       )
 
-            # Customise sector
-            field = table.sector_id
-            field.comment = None
-            root_org = auth.root_org()
-            if root_org and not auth.s3_has_roles("ADMIN", "ORG_GROUP_ADMIN"):
+            # If looking at a particular case, get the person_id
+            if r.tablename == "pr_person":
+                person_id = r.record.id if r.record else None
+            elif r.tablename == "dvr_case_activity":
+                person_id = r.record.person_id if r.record else None
+            else:
+                person_id = None
 
-                # Look up the sectors of the root org
-                db = current.db
+            db = current.db
+
+            # Get the root org of the case org
+            if person_id:
+                ctable = s3db.dvr_case
+                otable = s3db.org_organisation
+                left = otable.on(otable.id == ctable.organisation_id)
+                query = (ctable.person_id == person_id) & \
+                        (ctable.archived == False) & \
+                        (ctable.deleted == False)
+                row = db(query).select(otable.root_organisation,
+                                       left = left,
+                                       limitby = (0, 1),
+                                       orderby = ~ctable.modified_on,
+                                       ).first()
+                case_root_org = row.root_organisation if row else None
+            else:
+                case_root_org = None
+
+            # Limit the sector selection to the case root org's sectors
+            if case_root_org:
                 ltable = s3db.org_sector_organisation
-                query = (ltable.organisation_id == root_org) & \
+                query = (ltable.organisation_id == case_root_org) & \
                         (ltable.deleted == False)
                 rows = db(query).select(ltable.sector_id)
                 sector_ids = set(row.sector_id for row in rows)
+            else:
+                sector_ids = set()
 
-                # Include the sector_id of the current record (if any)
-                record = None
-                component = r.component
-                if not component:
-                    if r.tablename == "dvr_case_activity":
-                        record = r.record
-                elif component.tablename == "dvr_case_activity" and r.component_id:
-                    query = table.id == r.component_id
-                    record = db(query).select(table.sector_id,
-                                              limitby = (0, 1),
-                                              ).first()
-                if record and record.sector_id:
-                    sector_ids.add(record.sector_id)
+            # Include the sector_id of the current record (if any)
+            record = None
+            component = r.component
+            if not component:
+                if r.tablename == "dvr_case_activity":
+                    record = r.record
+            elif component.tablename == "dvr_case_activity" and r.component_id:
+                query = table.id == r.component_id
+                record = db(query).select(table.sector_id,
+                                          limitby = (0, 1),
+                                          ).first()
+            if record and record.sector_id:
+                sector_ids.add(record.sector_id)
 
-                # Limit the sector selection
-                subset = db(s3db.org_sector.id.belongs(sector_ids))
-                field.requires = IS_EMPTY_OR(IS_ONE_OF(subset, "org_sector.id",
-                                                       field.represent,
-                                                       ))
+            # Configure sector_id
+            field = table.sector_id
+            field.comment = None
+            subset = db(s3db.org_sector.id.belongs(sector_ids))
+            field.requires = IS_EMPTY_OR(IS_ONE_OF(subset, "org_sector.id",
+                                                   field.represent,
+                                                   ))
 
             # Show subject field
             field = table.subject
@@ -1553,32 +1614,15 @@ def config(settings):
             field.default = human_resource_id
             field.widget = field.comment = None
 
-            # If the user has no root org, then filter the themes
-            # selector by the root org of the case organisation
-            # (otherwise ADMINs see irrelevant themes in the list)
-            if not root_org and r.tablename == "pr_person" and r.record:
-
-                # Get the root_organisation of the case org
-                ctable = s3db.dvr_case
-                otable = s3db.org_organisation
-                left = otable.on(otable.id == ctable.organisation_id)
-                query = (ctable.person_id == r.record.id) & \
-                        (ctable.deleted == False)
-                row = current.db(query).select(otable.root_organisation,
-                                               left = left,
-                                               limitby = (0, 1),
-                                               orderby = ~ctable.modified_on,
-                                               ).first()
-
-                # Set filter for response_theme_ids.requires
-                if row:
-                    requires = rtable.response_theme_ids.requires
-                    if isinstance(requires, IS_EMPTY_OR):
-                        requires = requires.other
-                    if hasattr(requires, "set_filter"):
-                        requires.set_filter(filterby = "organisation_id",
-                                            filter_opts = (row.root_organisation,),
-                                            )
+            # Filter themes-options to themes of the case root org
+            if case_root_org and r.tablename == "pr_person" and r.record:
+                requires = rtable.response_theme_ids.requires
+                if isinstance(requires, IS_EMPTY_OR):
+                    requires = requires.other
+                if hasattr(requires, "set_filter"):
+                    requires.set_filter(filterby = "organisation_id",
+                                        filter_opts = (case_root_org,),
+                                        )
 
             # Inline-updates
             utable = current.s3db.dvr_case_activity_update
@@ -1985,7 +2029,8 @@ def config(settings):
 
         # Custom format for case activity representation
         field = table.case_activity_id
-        fmt = "%(pe_label)s %(last_name)s, %(first_name)s"
+        #fmt = "%(pe_label)s %(last_name)s, %(first_name)s"
+        fmt = "%(last_name)s, %(first_name)s"
         field.represent = s3db.dvr_CaseActivityRepresent(fmt = fmt,
                                                          show_link = True,
                                                          )
@@ -2110,6 +2155,21 @@ def config(settings):
             s3db.configure("dvr_response_action",
                            filter_widgets = filter_widgets,
                            )
+
+            if r.tablename == "dvr_response_action":
+                list_fields = [(T("ID"), "case_activity_id$person_id$pe_label"),
+                               "case_activity_id",
+                               "response_theme_ids",
+                               "comments",
+                               "human_resource_id",
+                               "date_due",
+                               "date",
+                               "hours",
+                               "status_id",
+                               ]
+                s3db.configure("dvr_response_action",
+                               list_fields = list_fields,
+                               )
 
     settings.customise_dvr_response_action_resource = customise_dvr_response_action_resource
 

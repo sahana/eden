@@ -5865,11 +5865,13 @@ class dvr_CaseActivityRepresent(S3Represent):
             @param row: the Row
         """
 
-        beneficiary = row.pr_person
+        beneficiary = dict(row.pr_person)
 
-        repr_str = self.fmt % beneficiary
+        # Do not show "None" for no label
+        if beneficiary.get("pe_label") is None:
+            beneficiary["pe_label"] = ""
 
-        return repr_str
+        return self.fmt % beneficiary
 
     # -------------------------------------------------------------------------
     def link(self, k, v, row=None):
