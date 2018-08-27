@@ -43,7 +43,7 @@ class S3MainMenu(default.S3MainMenu):
            auth.s3_has_role("CASE_MANAGEMENT"):
             case_vars["mine"] = "1"
 
-        return [MM("Cases", c=("dvr", "pr"), f="person", vars=case_vars),
+        return [MM("Cases", c=("dvr", "pr"), f="person", t="dvr_case", vars=case_vars),
                 MM("Case Consulting", c="dvr", f="index",
                    check = lambda this: not this.preceding()[-1].check_permission(),
                    ),

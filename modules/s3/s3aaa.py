@@ -2531,11 +2531,16 @@ $.filterOptionsS3({
 
         # Add User to required registration roles
         entity_roles = deployment_settings.get_auth_registration_roles()
+        link_user_to = user.link_user_to or utable.link_user_to.default
         if entity_roles:
             gtable = settings.table_group
             get_pe_id = s3db.pr_get_pe_id
-            for entity in entity_roles.keys():
-                roles = entity_roles[entity]
+            for entity, roles in entity_roles.items():
+
+                if entity is None and \
+                   not organisation_id or "staff" not in link_user_to:
+                    # No default realm => do not assign default realm roles
+                    continue
 
                 # Get User's Organisation or Site pe_id
                 if entity in ("organisation_id", "org_group_id", "site_id"):

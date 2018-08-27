@@ -41,9 +41,13 @@ def config(settings):
     settings.auth.registration_organisation_link_create = False
 
     settings.auth.registration_link_user_to = {"staff": T("Staff"),
-                                               "volunteer": T("Volunteer"),
+                                               #"volunteer": T("Volunteer"),
                                                }
-    settings.auth.registration_link_user_to_default = "staff"
+    # Don't show alternatives, just default
+    settings.auth.registration_link_user_to_default = ["staff"]
+
+    # Assign all new users the STAFF role for their default realm
+    settings.auth.registration_roles = {None: ("STAFF",)}
 
     # Disable password-retrieval feature
     settings.auth.password_retrieval = False

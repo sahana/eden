@@ -117,6 +117,8 @@ def user():
     link_user_to = settings.get_auth_registration_link_user_to()
     if link_user_to and len(link_user_to) > 1 and settings.get_auth_show_link():
         lappend("link_user_to")
+        table.link_user_to.represent = lambda v: ", ".join([s3_str(link_user_to_opts[opt]) for opt in v]) \
+                                                 if v else current.messages["NONE"]
     lappend((T("Registration"), "created_on"))
     table.created_on.represent = s3base.S3DateTime.date_represent
     lappend((T("Roles"), "membership.group_id"))
