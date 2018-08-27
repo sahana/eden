@@ -1330,17 +1330,14 @@
         // GROUPED ROWS
 
         /**
-         * GROUPED ROWS FUNCTION
-         *
          * Group the rows in the current table (by inserting group headers)
          *
          * @param {object} oSettings - the dataTable settings
-         * @param {string} selector - the selector of the table
-         * @param {integer} tableIdx - the index of the table
-         *
          * @param {integer} groupColumn - the index of the colum that will be grouped
+         * @param {Array} groupTitles - the group titles
          * @param {Array} groupTotals - (optional) the totals to be used for each group
-         *
+         * @param {Array} prefixID - indices of columns to use to construct
+         *                           the group totals access key
          * @param {integer} level - the level of this group, starting at 1
          */
         _renderGroups: function(oSettings,
@@ -1454,8 +1451,21 @@
         },
 
         /**
-         * TODO docstring
-         * Helper function to add the new group row
+         * Insert a group header before (or after) a data row; DRY utility function
+         * used by _renderGroups()
+         *
+         * @param {jQuery} row - the data row
+         * @param {string} groupTitle - the title to use for the group header
+         * @param {integer} level - the grouping level (counting from 1)
+         * @param {integer} group - index of the group within the level (counting from 1)
+         * @param {integer} parentGroup - index of the parent group within the previous level
+         * @param {integer} iColspan - number of columns in the table (=colspan of the header)
+         * @param {object} groupTotals - dict of group totals
+         * @param {string} groupPrefix - prefix for the access key for the group totals
+         * @param {boolean} addIcons - add collapse/expand icons to the header
+         * @param {boolean} append - insert the header after the row rather than before it;
+         *                           used to add additional groups at the end for which there
+         *                           are no data rows
          */
         _insertGroupHeader: function(row,
                                      groupTitle,
@@ -1565,13 +1575,14 @@
         },
 
         /**
-         * TODO docstring
+         * Expand/collapse a group
+         *
+         * @param {jQuery} row - the header row of the group
+         * @param {boolean} visibility - true to expand, false to collapse the group
          */
         _toggleGroup: function(row, visibility) {
 
-            var tableConfig = this.tableConfig;
-
-            switch(tableConfig.shrinkGroupedRows) {
+            switch(this.tableConfig.shrinkGroupedRows) {
 
                 case 'individual':
                     if (visibility) {
@@ -1610,7 +1621,9 @@
         },
 
         /**
-         * TODO docstring
+         * Expand a group
+         *
+         * @param {jQuery} row - the header row of the group
          */
         _expandGroup: function(row) {
 
@@ -1627,7 +1640,9 @@
         },
 
         /**
-         * TODO docstring
+         * Collapse a group
+         *
+         * @param {jQuery} row - the header row of the group
          */
         _collapseGroup: function(row) {
 
