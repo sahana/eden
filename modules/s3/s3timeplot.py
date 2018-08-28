@@ -1319,12 +1319,8 @@ class S3TimeSeries(object):
                        datetime.timedelta(days = day-1)
 
         # ISO datetime
-        try:
-            dt = s3_decode_iso_datetime(str(timestr))
-        except ValueError:
-            return start
-        else:
-            return s3_utc(dt)
+        dt = s3_decode_iso_datetime(str(timestr))
+        return s3_utc(dt)
 
 # =============================================================================
 class S3TimeSeriesEvent(object):

@@ -1537,7 +1537,9 @@ def s3_decode_iso_datetime(dtstr):
     """
 
     # Default seconds/microseconds=zero
-    DEFAULT = datetime.datetime.utcnow().replace(second = 0,
+    DEFAULT = datetime.datetime.utcnow().replace(hour = 8,
+                                                 minute = 0,
+                                                 second = 0,
                                                  microsecond = 0,
                                                  )
 
