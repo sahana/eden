@@ -1095,7 +1095,10 @@ class S3DateFilter(S3RangeFilter):
                     # URL filter or filter default come as string in
                     # Gregorian calendar and ISO format => convert into
                     # a datetime
-                    dt = s3_decode_iso_datetime(value)
+                    try:
+                        dt = s3_decode_iso_datetime(value)
+                    except ValueError:
+                        dt = None
                 else:
                     # Assume datetime
                     dt = value

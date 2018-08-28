@@ -51,7 +51,7 @@ from gluon.storage import Storage
 from s3codec import S3Codec
 from s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
 from s3fields import S3RepresentLazy
-from s3utils import s3_get_foreign_key, s3_unicode, s3_strip_markup, s3_validate, s3_represent_value
+from s3utils import s3_get_foreign_key, s3_represent_value, s3_str, s3_strip_markup, s3_unicode, s3_validate
 
 ogetattr = object.__getattribute__
 
@@ -1383,15 +1383,16 @@ class S3XML(S3Codec):
         value = None
 
         try:
-            dt = s3_decode_iso_datetime(str(dtstr))
-            value = s3_utc(dt)
-        except:
+            dt = s3_decode_iso_datetime(s3_str(dtstr))
+        except ValueError:
             error = sys.exc_info()[1]
-        if error is None:
+        else:
+            value = s3_utc(dt)
             if field_type == "date":
                 value = value.date()
             elif field_type == "time":
                 value = value.time()
+
         return (value, error)
 
     # -------------------------------------------------------------------------

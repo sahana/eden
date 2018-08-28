@@ -2070,18 +2070,14 @@ class S3TypeConverter(object):
                     dt = datetime.datetime(y, m, d, hh, mm, ss)
                 # Validate and convert to UTC (assuming local timezone)
                 from s3validators import IS_UTC_DATETIME
-                dt, error = IS_UTC_DATETIME()(dt)
+                validator = IS_UTC_DATETIME()
+                dt, error = validator(dt)
                 if error:
                     # dateutil as last resort
                     # NB: this can process ISOFORMAT with time zone specifier,
                     #     returning a timezone-aware datetime, which is then
                     #     properly converted by IS_UTC_DATETIME
-                    try:
-                        dt = s3_decode_iso_datetime(b)
-                    except:
-                        raise ValueError
-                    else:
-                        dt, error = IS_UTC_DATETIME()(dt)
+                    dt, error = validator(s3_decode_iso_datetime(b))
             return dt
         else:
             raise TypeError

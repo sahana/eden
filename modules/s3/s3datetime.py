@@ -1524,14 +1524,16 @@ def s3_format_datetime(dt=None, dtfmt=None):
 #
 def s3_decode_iso_datetime(dtstr):
     """
-        Convert date/time string in ISO-8601 format into a
-        datetime object
+        Convert date/time string in ISO-8601 format into a datetime object
 
-        @note: this routine is named "iso" for consistency reasons,
-                but can actually read a broad variety of datetime
-                formats, but may raise a ValueError where not
+        @note: this has "iso" in its name for consistency reasons,
+               but can actually read a variety of formats
 
         @param dtstr: the date/time string
+
+        @returns: a timezone-aware datetime.datetime object
+
+        @raises: ValueError if the string cannot be parsed
     """
 
     # Default seconds/microseconds=zero
@@ -1539,17 +1541,14 @@ def s3_decode_iso_datetime(dtstr):
                                                  microsecond = 0,
                                                  )
 
-    dt = dateutil.parser.parse(dtstr, default=DEFAULT)
+    try:
+        dt = dateutil.parser.parse(dtstr, default=DEFAULT)
+    except (AttributeError, TypeError, ValueError):
+        raise ValueError("Invalid date/time string: %s (%s)" % (dtstr, type(dtstr)))
+
     if dt.tzinfo is None:
-        try:
-            dt = dateutil.parser.parse(dtstr + " +0000",
-                                       default = DEFAULT,
-                                       )
-        except ValueError:
-            # time part missing?
-            dt = dateutil.parser.parse(dtstr + " 00:00:00 +0000",
-                                       default = DEFAULT,
-                                       )
+        dt = dt.replace(tzinfo=dateutil.tz.tzutc())
+
     return dt
 
 #--------------------------------------------------------------------------
