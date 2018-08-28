@@ -2238,25 +2238,31 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
         """
 
         language_codes = self.language_codes()
+
         if self._select:
             language_codes_dict = dict(language_codes)
             if self.translate:
                 T = current.T
-                items = [(k, T(v)) for k, v in self._select.items()
-                            if k in language_codes_dict]
+                items = ((k, T(v)) for k, v in self._select.items()
+                                   if k in language_codes_dict)
             else:
-                items = [(k, v) for k, v in self._select.items()
-                            if k in language_codes_dict]
+                items = ((k, v) for k, v in self._select.items()
+                                if k in language_codes_dict)
         else:
             if self.translate:
                 T = current.T
-                items = [(k, T(v)) for k, v in self.language_codes()]
+                items = ((k, T(v)) for k, v in language_codes)
             else:
-                items = self.language_codes()
+                items = language_codes
+
         if self.sort:
-            items.sort(options_sorter)
+            items = sorted(items, key=lambda s: s3_unicode(s[1]).lower())
+        else:
+            items = list(items)
+
         if zero and not self.zero is None and not self.multiple:
             items.insert(0, ("", self.zero))
+
         return items
 
     # -------------------------------------------------------------------------
@@ -2995,13 +3001,14 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                 ]
 
         settings = current.deployment_settings
+
         l10n_languages = settings.get_L10n_languages()
         lang += l10n_languages.items()
-        lang = list(set(lang)) # Remove duplicates
+
         extra_codes = settings.get_L10n_extra_codes()
         if extra_codes:
             lang += extra_codes
 
-        return lang
+        return list(set(lang)) # Remove duplicates
 
 # END =========================================================================
