@@ -35,7 +35,7 @@ $action_btn_fgcolor_alert: $action_btn_fgcolor !default;
 $action_btn_fgcolor_alert_hover: $action_btn_fgcolor_hover !default;
 
 // Disabled action buttons
-$action_btn_bgcolor_disabled: #c0c0c0 !default;
+$action_btn_bgcolor_disabled: rgba(192,192,192,0.25) !default;
 $action_btn_fgcolor_disabled: $action_btn_fgcolor_hover !default;
 
 // ============================================================================

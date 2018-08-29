@@ -54,7 +54,7 @@
 //$action_btn_fgcolor_alert_hover: $action_btn_fgcolor_hover;
 
 // Disabled action buttons
-//$action_btn_bgcolor_disabled: #c0c0c0;
+//$action_btn_bgcolor_disabled: rgba(192,192,192,0.25);
 //$action_btn_fgcolor_disabled: $action_btn_fgcolor_hover;
 
 // ============================================================================
@@ -110,4 +110,10 @@
 // Throbber style [sunflower|simple]
 //$throbber_style: sunflower;
 
-// ============================================================================
+// Footer
+//$footer_bgcolor: transparent;
+//$footer_fgcolor: #999;
+//$footer_min_height: null;
+//$footer_top_margin: 20px;
+
+// END ============================================================================
