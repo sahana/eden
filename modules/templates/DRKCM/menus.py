@@ -100,7 +100,7 @@ class S3MainMenu(default.S3MainMenu):
         """ Personal Menu """
 
         auth = current.auth
-        s3 = current.response.s3
+        #s3 = current.response.s3
         settings = current.deployment_settings
 
         ADMIN = current.auth.get_system_roles().ADMIN
@@ -189,6 +189,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def dvr():
         """ DVR / Disaster Victim Registry """
 
+        T = current.T
         auth = current.auth
 
         sysroles = auth.get_system_roles()
@@ -199,75 +200,56 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         due_followups = current.s3db.dvr_due_followups
 
+        all_due_followups = due_followups() or "0"
+
         human_resource_id = auth.s3_logged_in_human_resource()
         if human_resource_id and auth.s3_has_role("CASE_MANAGEMENT"):
 
-            due_followups = due_followups(human_resource_id = human_resource_id) or "0"
-            follow_ups_label = "%s (%s)" % (current.T("Due Follow-ups"),
-                                            due_followups,
-                                            )
+            my_due_followups = due_followups(human_resource_id = human_resource_id) or "0"
+            my_due_followups_label = "%s (%s)" % (T("Due Follow-ups"), my_due_followups)
 
-            my_cases = M("My Cases", c=("dvr", "pr"), f="person",
-                         vars = {"closed": "0", "mine": "1"})(
-                            M("Create Case", m="create", t="pr_person", p="create"),
-                            # FIXME crashing (incorrect join order in S3GIS):
-                            #M("Map", f="person", m="map",
-                            #  vars = {"closed": "0", "mine": "1"},
-                            #  ),
-                            M("Activities", f="case_activity",
-                              vars = {"mine": "1"},
-                              ),
-                            M(follow_ups_label, f="due_followups",
-                              vars = {"mine": "1"},
-                              ),
-                            )
+            all_due_followups_label = "%s (%s)" % (T("All Follow-ups"), all_due_followups)
 
-            my_actions = M("Actions", c="dvr", f="response_action")(
-                            M("Assigned to me", vars = {"mine": "a"}),
-                            M("Managed by me", vars = {"mine": "r"}),
-                            )
-
-            all_cases = M("Current Cases", c=("dvr", "pr"), f="person",
-                          vars = {"closed": "0"})(
-                            #M("Create Case", m="create", t="pr_person", p="create"),
-                            M("All Cases", vars = {}),
-                            #M("Actions", f="response_action"),
-                            )
-
-            all_activities = M("Activities", f="case_activity")(
-                                M("Emergencies", vars = {"~.priority": "0"}),
-                                M("All Activities"),
-                                )
-
+            menu = M(c="dvr")(
+                    M("My Cases", c=("dvr", "pr"), f="person", t="dvr_case",
+                      vars = {"closed": "0", "mine": "1"})(
+                        M("Create Case", m="create", t="pr_person", p="create"),
+                        M("My Activities", c="dvr", f="case_activity",
+                          vars = {"mine": "1"}),
+                        M(my_due_followups_label, c="dvr", f="due_followups",
+                          vars = {"mine": 1}),
+                        ),
+                    M("Actions", c="dvr", f="response_action", t="dvr_response_action")(
+                        M("Assigned to me", vars = {"mine": "a"}),
+                        M("Managed by me", vars = {"mine": "r"}),
+                        ),
+                    M("Overviews", c=("dvr", "pr"), link=False)(
+                        M("Current Cases", f="person", t="dvr_case", vars = {"closed": "0"}),
+                        M("All Cases", f="person", t="dvr_case"),
+                        M("All Activities", f="case_activity", t="dvr_case_activity"),
+                        M(all_due_followups_label, f="due_followups"),
+                        M("Emergencies", f="case_activity", vars = {"~.priority": "0"}),
+                        M("All Actions", f="response_action"),
+                        ),
+                    )
         else:
-            due_followups = due_followups() or "0"
-            follow_ups_label = "%s (%s)" % (current.T("Due Follow-ups"),
-                                            due_followups,
-                                            )
+            all_due_followups_label = "%s (%s)" % (T("Due Follow-ups"), all_due_followups)
 
-            my_cases = None
-            my_actions = None
-            all_cases = M("Current Cases", c=("dvr", "pr"), f="person", t="dvr_case",
-                          vars = {"closed": "0"})(
-                            M("Create Case", m="create", t="pr_person", p="create"),
-                            # FIXME crashing (incorrect join order in S3GIS):
-                            #M("Map", f="person", m="map", vars = {"closed": "0"}),
-                            M("All Cases", vars = {}),
-                            M("Actions", f="response_action"),
-                            )
+            menu = M(c="dvr")(
+                    M("Current Cases", c=("dvr", "pr"), f="person", t="dvr_case",
+                      vars = {"closed": "0"})(
+                        M("Create Case", m="create", t="pr_person", p="create"),
+                        M("All Cases", vars = {}),
+                        M("Actions", f="response_action"),
+                        ),
+                    M("Activities", f="case_activity")(
+                        M("Emergencies", f="case_activity", vars = {"~.priority": "0"}),
+                        M(all_due_followups_label, f="due_followups"),
+                        M("All Activities"),
+                        ),
+                    )
 
-            all_activities = M("Activities", f="case_activity", t="dvr_case_activity")(
-                                M("Emergencies", vars = {"~.priority": "0"}),
-                                M(follow_ups_label, f="due_followups"),
-                                M("All Activities"),
-                                )
-
-        return M(c="dvr")(
-                    my_cases,
-                    my_actions,
-                    all_cases,
-                    all_activities,
-                    M("Appointments", f="case_appointment")(
+        return menu(M("Appointments", f="case_appointment")(
                         M("Overview"),
                         ),
                     M("Statistics", c="dvr", link=False)(
