@@ -1876,6 +1876,11 @@ def config(settings):
                                "status_id",
                                ]
 
+                # Person responsible filter and list_field
+                if not r.get_vars.get("mine"):
+                    filter_widgets.insert(2, S3OptionsFilter("human_resource_id"))
+                    list_fields.insert(5, "human_resource_id")
+
                 # Reconfigure table
                 resource.configure(filter_widgets = filter_widgets,
                                    list_fields = list_fields,
