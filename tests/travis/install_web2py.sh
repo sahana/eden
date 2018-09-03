@@ -15,8 +15,8 @@ apt-get -q install python-psycopg2
 echo "downloading and installing web2py"
 echo "================================="
 
-# Use web2py-2.16.1-stable
-WEB2PY_COMMIT=7035398
+# Use web2py-2.17.1-stable
+WEB2PY_COMMIT=285013a
 
 cd ../..
 git clone --recursive git://github.com/web2py/web2py.git
