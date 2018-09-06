@@ -3303,20 +3303,16 @@ class RequestNeedsResponseLineModel(S3Model):
                                           #empty = False,
                                           comment = parameter_id_comment,
                                           ),
-                          Field("value", "double",
+                          Field("value", "integer",
                                 label = T("Number Planned"),
                                 #label = T("Number in Need"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
-                                requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                represent = IS_INT_AMOUNT.represent,
+                                requires = IS_INT_IN_RANGE(0, None),
                                 ),
-                          Field("value_reached", "double",
+                          Field("value_reached", "integer",
                                 label = T("Number Reached"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
-                                requires = IS_EMPTY_OR(
-                                            IS_FLOAT_AMOUNT(minimum=1.0)),
+                                represent = IS_INT_AMOUNT.represent,
+                                requires = IS_INT_IN_RANGE(0, None),
                                 ),
                           self.supply_item_category_id(),
                           self.supply_item_id(# Default:

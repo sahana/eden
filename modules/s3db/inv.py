@@ -945,12 +945,13 @@ class S3InventoryTrackingLabels(S3Model):
         # Overwrite the label until we have a better way to do this
         itn_label = T("CTN")
 
-        settings = current.deployment_settings
-        return dict(inv_tracking_status_labels = tracking_status,
-                    inv_shipment_status_labels = shipment_status,
-                    inv_itn_label = itn_label,
-                    inv_item_status_opts = settings.get_inv_item_status()
-                    )
+        inv_item_status_opts = current.deployment_settings.get_inv_item_status()
+
+        return {"inv_tracking_status_labels": tracking_status,
+                "inv_shipment_status_labels": shipment_status,
+                "inv_itn_label": itn_label,
+                "inv_item_status_opts": inv_item_status_opts,
+                }
 
     # -------------------------------------------------------------------------
     def defaults(self):
