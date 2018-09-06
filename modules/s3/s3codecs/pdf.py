@@ -224,22 +224,23 @@ class S3RL_PDF(S3Codec):
             redirect(URL(extension=""))
 
         # Settings
-        r = self.r = attr.get("request", None)
-        self.list_fields = attr.get("list_fields")
-        self.pdf_groupby = attr.get("pdf_groupby")
-        self.pdf_orderby = attr.get("pdf_orderby")
-        self.pdf_hide_comments = attr.get("pdf_hide_comments")
-        self.table_autogrow = attr.get("pdf_table_autogrow")
-        self.pdf_header_padding = attr.get("pdf_header_padding", 0)
-        self.pdf_footer_padding = attr.get("pdf_footer_padding", 0)
+        attr_get = attr.get
+        r = self.r = attr_get("request", None)
+        self.list_fields = attr_get("list_fields")
+        self.pdf_groupby = attr_get("pdf_groupby")
+        self.pdf_orderby = attr_get("pdf_orderby")
+        self.pdf_hide_comments = attr_get("pdf_hide_comments")
+        self.table_autogrow = attr_get("pdf_table_autogrow")
+        self.pdf_header_padding = attr_get("pdf_header_padding", 0)
+        self.pdf_footer_padding = attr_get("pdf_footer_padding", 0)
 
         # Get the title & filename
         now = current.request.now.isoformat()[:19].replace("T", " ")
-        title = attr.get("pdf_title")
+        title = attr_get("pdf_title")
         if title is None:
             title = "Report"
         docTitle = "%s %s" % (title, now)
-        filename = attr.get("pdf_filename")
+        filename = attr_get("pdf_filename")
         if filename is None:
             if not isinstance(title, str):
                 # Must be str not unicode
@@ -251,20 +252,21 @@ class S3RL_PDF(S3Codec):
         self.filename = filename
 
         # Get the Doc Template
-        paper_size = attr.get("paper_size")
-        pdf_paper_alignment = attr.get("pdf_paper_alignment", "Portrait")
-        doc = EdenDocTemplate(title=docTitle,
+        paper_size = attr_get("paper_size")
+        paper_alignment = attr_get("pdf_paper_alignment",
+                                   current.deployment_settings.get_pdf_paper_alignment())
+        doc = EdenDocTemplate(title = docTitle,
                               paper_size = paper_size,
-                              paper_alignment = pdf_paper_alignment)
+                              paper_alignment = paper_alignment)
 
         # HTML styles
-        pdf_html_styles = attr.get("pdf_html_styles")
+        pdf_html_styles = attr_get("pdf_html_styles")
 
         # Get the header
         header_flowable = None
-        header = attr.get("pdf_header")
+        header = attr_get("pdf_header")
         if not header:
-            header = attr.get("rheader")
+            header = attr_get("rheader")
         if header:
             header_flowable = self.get_html_flowable(header,
                                                      doc.printable_width,
@@ -275,9 +277,9 @@ class S3RL_PDF(S3Codec):
 
         # Get the footer
         footer_flowable = None
-        footer = attr.get("pdf_footer")
+        footer = attr_get("pdf_footer")
         if not footer:
-            footer = attr.get("rfooter")
+            footer = attr_get("rfooter")
         if footer:
             footer_flowable = self.get_html_flowable(footer,
                                                      doc.printable_width,
@@ -293,8 +295,8 @@ class S3RL_PDF(S3Codec):
 
         doc.calc_body_size(header_flowable, footer_flowable)
 
-        callback = attr.get("pdf_callback")
-        pdf_componentname = attr.get("pdf_componentname", None)
+        callback = attr_get("pdf_callback")
+        pdf_componentname = attr_get("pdf_componentname", None)
         if callback:
             # Get the document body from the callback
             body_flowable = self.get_html_flowable(callback(r),
@@ -312,7 +314,7 @@ class S3RL_PDF(S3Codec):
             if component:
                 body_flowable = self.get_resource_flowable(component, doc)
 
-        elif r.component or attr.get("method", "list") != "read":
+        elif r.component or attr_get("method", "list") != "read":
             # Use the requested resource
             body_flowable = self.get_resource_flowable(resource, doc)
 
@@ -526,15 +528,15 @@ class EdenDocTemplate(BaseDocTemplate):
         """
 
         self._calc()    # in case we changed margins sizes etc
-        self.height = self.pagesize[PDF_HEIGHT]
-        self.width = self.pagesize[PDF_WIDTH]
-        self.printable_width = self.width - \
-                               self.leftMargin - \
-                               self.rightMargin - \
-                               self.insideMargin
-        self.printable_height = self.height - \
-                                self.topMargin - \
-                                self.bottomMargin
+        #self.height = self.pagesize[PDF_HEIGHT]
+        #self.width = self.pagesize[PDF_WIDTH]
+        #self.printable_width = self.width - \
+        #                       self.leftMargin - \
+        #                       self.rightMargin - \
+        #                       self.insideMargin
+        #self.printable_height = self.height - \
+        #                        self.topMargin - \
+        #                        self.bottomMargin
         header_size = self.get_flowable_size(header_flowable)
         footer_size = self.get_flowable_size(footer_flowable)
         self.header_height = header_size[PDF_HEIGHT]
@@ -582,20 +584,20 @@ class EdenDocTemplate(BaseDocTemplate):
                                        pagesize = self.pagesize
                                        )
         # @todo set these page templates up
-        #self.evenPage = PageTemplate(id="even",
-        #                             frames=frame_list,
-        #                             onPage=self.onEvenPage,
-        #                             pagesize=self.pagesize
+        #self.evenPage = PageTemplate(id = "even",
+        #                             frames = frame_list,
+        #                             onPage = self.onEvenPage,
+        #                             pagesize = self.pagesize
         #                             )
-        #self.oddPage = PageTemplate(id="odd",
-        #                            frames=frame_list,
-        #                            onPage=self.onOddPage,
-        #                            pagesize=self.pagesize
+        #self.oddPage = PageTemplate(id = "odd",
+        #                            frames = frame_list,
+        #                            onPage = self.onOddPage,
+        #                            pagesize = self.pagesize
         #                            )
-        self.landscapePage = PageTemplate(id="Landscape",
+        self.landscapePage = PageTemplate(id = "Landscape",
                                           frames = [body_frame,],
-                                          onPage=self.add_page_decorators,
-                                          pagesize=landscape(self.pagesize)
+                                          onPage = self.add_page_decorators,
+                                          pagesize = landscape(self.pagesize)
                                           )
         if self.defaultPage == "Landscape":
             self.addPageTemplates(self.landscapePage)

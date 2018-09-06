@@ -1477,6 +1477,8 @@ def config(settings):
 
         s3db = current.s3db
 
+        settings.base.paper_alignment = "Landscape"
+
         settings.ui.summary = (# Gets replaced in postp
                                # @ToDo: better performance by not including here & placing directly into the view instead
                                {"common": True,
@@ -2009,6 +2011,8 @@ def config(settings):
         from s3 import S3OptionsFilter #, S3DateFilter, S3LocationFilter, S3TextFilter
 
         s3db = current.s3db
+
+        settings.base.paper_alignment = "Landscape"
 
         settings.ui.summary = (# Gets replaced in postp
                                # @ToDo: better performance by not including here & placing directly into the view instead

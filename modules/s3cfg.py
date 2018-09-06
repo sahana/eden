@@ -1815,6 +1815,14 @@ class S3Config(Storage):
     def get_paper_size(self):
         return self.base.get("paper_size", "A4")
 
+    def get_pdf_paper_alignment(self):
+        """
+            PDF Paper Alignment:
+                * Portrait (default)
+                * Landscape
+        """
+        return self.base.get("paper_alignment", "Portrait")
+
     def get_pdf_bidi(self):
         """
             Whether to enable BiDi support for PDF exports
