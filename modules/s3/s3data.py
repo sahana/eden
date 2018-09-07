@@ -644,6 +644,8 @@ class S3DataTable(object):
                                "alert" : [2,10,13]}
                    dt_text_maximum_len: The maximum length of text before it is condensed
                    dt_text_condense_len: The length displayed text is condensed down to
+                   dt_double_scroll: Render double scroll bars (top+bottom), only available
+                                     with settings.ui.datatables_responsive=False
                    dt_shrink_groups: If set then the rows within a group will be hidden
                                      two types are supported, 'individual' and 'accordion'
                    dt_group_types: The type of indicator for groups that can be 'shrunk'
