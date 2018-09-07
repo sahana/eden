@@ -656,6 +656,7 @@ class S3DataTable(object):
 
         from gluon.serializers import json as jsons
 
+        request = current.request
         s3 = current.response.s3
         settings = current.deployment_settings
 
@@ -685,7 +686,6 @@ class S3DataTable(object):
 
         ajaxUrl = attr_get("dt_ajax_url", None)
         if not ajaxUrl:
-            request = current.request
             url = URL(c=request.controller,
                       f=request.function,
                       args=request.args,
@@ -736,6 +736,17 @@ class S3DataTable(object):
         config.textShrinkLength = attr_get("dt_text_condense_len", 75)
         config.shrinkGroupedRows = attr_get("dt_shrink_groups")
         config.groupIcon = attr_get("dt_group_types", [])
+
+        # Activate double scroll and inject jQuery plugin
+        if not settings.get_ui_datatables_responsive():
+            double_scroll = attr.get("dt_double_scroll")
+            if double_scroll is None:
+               double_scroll = settings.get_ui_datatables_double_scroll()
+            if double_scroll:
+                script = "/%s/static/scripts/jquery.doubleScroll.js" % request.application
+                if script not in s3.scripts:
+                    s3.scripts.append(script)
+                html.add_class("doublescroll")
 
         # Wrap the table in a form and add some data in hidden fields
         form = FORM(_class="dt-wrapper")
@@ -854,6 +865,7 @@ class S3DataTable(object):
                         tr.append(TD(row[field]))
                 body.append(tr)
         table = TABLE([header, body], _id=id, _class="dataTable display")
+
         if current.deployment_settings.get_ui_datatables_responsive():
             table.add_class("responsive")
         return table

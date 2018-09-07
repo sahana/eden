@@ -1424,15 +1424,30 @@ S3.search = {};
     S3.search.setup_hidden_widget = setup_hidden_widget;
 
     /**
-     * Helper method to trigger re-calculation of column width in
-     * responsive data tables after unhiding them
+     * Helper method to
+     *
+     * - re-calculate the column width in responsive data tables, or
+     * - adjust the top scrollbar width in non-responsive data tables
+     *
+     * ...after unhiding them on a summary tab
      *
      * @param {jQuery} datatable - the datatable
      */
     var recalcResponsive = function(datatable) {
-        var dt = $(datatable).DataTable();
-        if (dt && dt.responsive) {
-            dt.responsive.recalc();
+
+        var dt = $(datatable);
+
+        if (dt.hasClass('responsive')) {
+            var instance = dt.DataTable();
+            if (instance && instance.responsive) {
+                instance.responsive.recalc();
+            }
+        } else if (dt.hasClass('doublescroll')) {
+            try {
+                dt.dataTableS3('doubleScroll');
+            } catch(e) {
+                // pass
+            }
         }
     };
 
@@ -1479,7 +1494,7 @@ S3.search = {};
             updatePendingTargets(form);
         }
         // Setup any Responsive dataTables
-        section.find('table.dataTable.display.responsive')
+        section.find('table.dataTable.display')
                .each(function() {
             recalcResponsive(this);
         });
@@ -1534,14 +1549,14 @@ S3.search = {};
             // Activate not called? Unhide initial section anyway:
             $('.ui-tabs-panel[aria-hidden="false"]').first()
                                                     .removeClass('hide')
-                                                    .find('table.dataTable.display.responsive')
+                                                    .find('table.dataTable.display')
                                                     .each(function() {
                                                         recalcResponsive(this);
                                                     });
         } else {
             // Unhide initial section anyway:
             $('#summary-tabs').css({visibility: 'visible'})
-                              .find('table.dataTable.display.responsive')
+                              .find('table.dataTable.display')
                               .each(function() {
                                 recalcResponsive(this);
                               });

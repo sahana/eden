@@ -93,6 +93,7 @@ def config(settings):
 
     # UI Settings
     settings.ui.datatables_responsive = False
+    settings.ui.datatables_double_scroll = True
 
     # Disable permalink
     settings.ui.label_permalink = None

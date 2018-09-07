@@ -1970,9 +1970,14 @@ class S3Config(Storage):
         return self.ui.get("datatables_pagingType", "full_numbers")
 
     def get_ui_datatables_responsive(self):
-        """ Whether dataTables should be responsive when resized """
+        """ Make data tables responsive (auto-collapsing columns when too wide) """
 
         return self.ui.get("datatables_responsive", True)
+
+    def get_ui_datatables_double_scroll(self):
+        """ Render double scroll bars (top+bottom) for non-responsive data tables """
+
+        return self.ui.get("datatables_double_scroll", False)
 
     def get_ui_default_cancel_button(self):
         """

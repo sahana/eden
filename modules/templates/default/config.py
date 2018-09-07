@@ -456,6 +456,8 @@ def config(settings):
     #settings.ui.default_cancel_button = True
     # Uncomment to disable responsive behavior of datatables
     #settings.ui.datatables_responsive = False
+    # Uncomment to enable double scroll bars on non-responsive datatables
+    #settings.ui.datatables_double_scroll = True
     # Uncomment to modify the label of the Permalink
     #settings.ui.label_permalink = "Permalink"
     # Uncomment to modify the main menu logo
