@@ -745,7 +745,10 @@ class S3DataTable(object):
             if double_scroll is None:
                double_scroll = settings.get_ui_datatables_double_scroll()
             if double_scroll:
-                script = "/%s/static/scripts/jquery.doubleScroll.js" % request.application
+                if s3.debug:
+                    script = "/%s/static/scripts/jquery.doubleScroll.js" % request.application
+                else:
+                    script = "/%s/static/scripts/jquery.doubleScroll.min.js" % request.application
                 if script not in s3.scripts:
                     s3.scripts.append(script)
                 html.add_class("doublescroll")
