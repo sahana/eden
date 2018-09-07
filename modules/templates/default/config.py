@@ -223,8 +223,10 @@ def config(settings):
     #settings.fin.currency_writable = False # False currently breaks things
 
     # PDF settings
-    # Default page size for reports (defaults to A4)
-    #settings.base.paper_size = T("Letter")
+    # Default page size (defaults to A4)
+    #settings.base.pdf_size = "Letter"
+    # Default page orientation (defaults to "Auto" to auto-adapt for wide tables)
+    #settings.base.pdf_orientation = "Landscape"
     # Location of Logo used in pdfs headers
     #settings.ui.pdf_logo = "static/img/mylogo.png"
 

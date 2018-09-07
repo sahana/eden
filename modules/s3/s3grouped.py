@@ -652,7 +652,7 @@ class S3GroupedItemsTable(object):
                         pdf_footer = pdf_footer,
                         pdf_callback = lambda r: self.html(),
                         pdf_table_autogrow = "B",
-                        pdf_paper_alignment = "Landscape",
+                        pdf_orientation = "Landscape",
                         pdf_html_styles = styles,
                         pdf_filename = filename,
                         )

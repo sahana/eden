@@ -210,7 +210,7 @@ class S3RL_PDF(S3Codec):
                                           H - Horizontal
                                           V - Vertical
                                           B - Both
-            @keyword pdf_paper_alignment: Portrait (default) or Landscape
+            @keyword pdf_orientation: Portrait (default) or Landscape
             @keyword use_colour:      True to add colour to the cells. default False
 
             @keyword pdf_html_styles: styles for S3html2pdf (dict)
@@ -252,12 +252,14 @@ class S3RL_PDF(S3Codec):
         self.filename = filename
 
         # Get the Doc Template
-        paper_size = attr_get("paper_size")
-        paper_alignment = attr_get("pdf_paper_alignment",
-                                   current.deployment_settings.get_pdf_paper_alignment())
+        size = attr_get("pdf_size")
+        orientation = attr_get("pdf_orientation")
+        if not orientation:
+            orientation = current.deployment_settings.get_pdf_orientation()
         doc = EdenDocTemplate(title = docTitle,
-                              paper_size = paper_size,
-                              paper_alignment = paper_alignment)
+                              size = size,
+                              orientation = orientation,
+                              )
 
         # HTML styles
         pdf_html_styles = attr_get("pdf_html_styles")
@@ -444,21 +446,33 @@ class EdenDocTemplate(BaseDocTemplate):
                            0.5 * inch,  # bottom
                            0.3 * inch), # right
                  margin_inside = 0.0 * inch, # used for odd even pages
-                 paper_size = None,
-                 paper_alignment = "Portrait"):
+                 size = None,
+                 orientation = "Auto",
+                 ):
         """
             Set up the standard page templates
         """
 
         self.output = StringIO()
-        self.defaultPage = paper_alignment
-        if paper_size:
-            self.paper_size = paper_size
+
+        if orientation == "Auto":
+            # Start with "Portrait", allow later adjustment
+            self.page_orientation = "Portrait"
+            self.auto_orientation = True
         else:
-            if current.deployment_settings.get_paper_size() == "Letter":
-                self.paper_size = LETTER
-            else:
-                self.paper_size = A4
+            # Fixed page orientation
+            self.page_orientation = orientation
+            self.auto_orientation = False
+
+        if not size:
+            size = current.deployment_settings.get_pdf_size()
+        if size == "Letter":
+            self.paper_size = LETTER
+        elif size == "A4" or not isinstance(size, tuple):
+            self.paper_size = A4
+        else:
+            self.paper_size = size
+
         self.topMargin = margin[0]
         self.leftMargin = margin[1]
         self.bottomMargin = margin[2]
@@ -503,10 +517,11 @@ class EdenDocTemplate(BaseDocTemplate):
     # -------------------------------------------------------------------------
     def _calc(self):
 
-        if self.defaultPage == "Landscape":
+        if self.page_orientation == "Landscape":
             self.pagesize = landscape(self.paper_size)
         else:
             self.pagesize = portrait(self.paper_size)
+
         BaseDocTemplate._calc(self)
         self.height = self.pagesize[PDF_HEIGHT]
         self.width = self.pagesize[PDF_WIDTH]
@@ -599,7 +614,7 @@ class EdenDocTemplate(BaseDocTemplate):
                                           onPage = self.add_page_decorators,
                                           pagesize = landscape(self.pagesize)
                                           )
-        if self.defaultPage == "Landscape":
+        if self.page_orientation == "Landscape":
             self.addPageTemplates(self.landscapePage)
         else:
             self.addPageTemplates(self.normalPage)
@@ -715,7 +730,8 @@ class S3PDFTable(object):
         """
             Method to create a table object
 
-            @param document: A S3PDF object
+            @param document: the EdenDocTemplate instance in which the table
+                             shall be rendered
             @param raw_data: A list of rows
             @param rfields: A list of field selectors
             @param groupby: A field name that is to be used as a sub-group
@@ -724,23 +740,24 @@ class S3PDFTable(object):
             @param hide_comments: Any comment field will be hidden
         """
 
-        if current.deployment_settings.get_paper_size() == "Letter":
-            self.paper_size = LETTER
-        else:
-            self.paper_size = A4
+        # The main document
+        self.pdf = document
+
+        # A temp document to test and adjust table size
+        orientation = "Auto" if document.auto_orientation else document.page_orientation
+        self.tempDoc = EdenDocTemplate(orientation = orientation,
+                                       size = document.paper_size,
+                                       )
 
         # Fonts
         self.font_name = None
         self.font_name_bold = None
         set_fonts(self)
 
-        # Right-to-Left
-        rtl = current.response.s3.rtl
-
-        self.pdf = document
         # @todo: Change the code to use raw_data directly rather than this
         #        conversion to an ordered list of values
         self.rfields = rfields
+        rtl = current.response.s3.rtl
         rdata = []
         rappend = rdata.append
         for row in raw_data:
@@ -791,13 +808,7 @@ class S3PDFTable(object):
         self.colWidths = []
         self.newColWidth = [] # @todo: remove this (but see presentation)
         self.rowHeights = []
-        # Temp document to test the table size, default to A4 portrait
-        # @todo: use custom template
-        # @todo: set pagesize for pdf component not whole document
-        self.tempDoc = EdenDocTemplate()
-        #self.tempDoc.setPageTemplates(self.pdf.pageHeader,
-        #                              self.pdf.pageFooter)
-        #self.tempDoc.pagesize = portrait(self.paper_size)
+
         # Set up style constants
         self.headerColour = Color(0.73, 0.76, 1)
         self.oddColour = Color(0.92, 0.92, 1)
@@ -1042,47 +1053,64 @@ class S3PDFTable(object):
     # -------------------------------------------------------------------------
     def tweakDoc(self, table):
         """
-            Internally used method to adjust the table so that it will fit
-            into the available space on the page.
+            Adjust table and/or document so as to make the table fit inside
+            the printable width
 
-            @return: True if it is able to perform minor adjustments and have
-            the table fit in the page. False means that the table will need to
-            be split across the columns.
+            @return: True if successful, False otherwise
         """
 
-        tableWidth = 0
+        col_widths = table._colWidths
+        table_width = sum(col_widths)
 
-        for colWidth in table._colWidths:
-            tableWidth += colWidth
-        colWidths = table._colWidths
+        main_document = self.pdf
+        temp_document = self.tempDoc
 
-        if tableWidth > self.tempDoc.printable_width:
-            # self.pdf.setMargins(0.5*inch, 0.5*inch)
-            # First massage any comment column by putting it in a paragraph
-            colNo = 0
-            for label in self.labels:
-                # Wrap comments in a paragraph
-                if label.lower() == "comments":
-                    currentWidth = table._colWidths[colNo]
-                    if currentWidth > self.MIN_COMMENT_COL_WIDTH:
-                        for i in range(1, len(self.data)): # skip the heading
-                            try:
-                                comments = self.data[i][colNo]
-                                if comments:
-                                    comments = self.pdf.addParagraph(comments, append=False)
-                                    self.data[i][colNo] = comments
-                            except IndexError:
-                                pass
-                        colWidths[colNo] = self.MIN_COMMENT_COL_WIDTH
-                        tableWidth += self.MIN_COMMENT_COL_WIDTH - currentWidth
-                colNo += 1
+        if table_width > temp_document.printable_width:
+            # Table too wide for page => try adjusting
 
-            if not self.minorTweaks(tableWidth, colWidths):
-                self.tempDoc.defaultPage = "Landscape"
-                self.tempDoc._calc()
-                self.pdf.defaultPage = "Landscape"
-                self.pdf._calc()
-                return self.minorTweaks(tableWidth, colWidths)
+            # Adjust contents
+            data = self.data
+            min_width = self.MIN_COMMENT_COL_WIDTH
+            paragraph = main_document.addParagraph
+            for i, label in enumerate(self.labels):
+
+                # Wrap "Comments" in paragraphs to make text wrap
+                # @todo: consider doing this for any column
+                # @todo: requires row height management when splitting table!
+                if label.lower() == "comments" and col_widths[i] > min_width:
+                    for row in data[1:]:
+                        try:
+                            comments = row[i]
+                        except IndexError:
+                            pass
+                        else:
+                            if comments:
+                                row[i] = paragraph(comments, append=False)
+                    # Enforce min_width for this column
+                    col_widths[i] = min_width
+
+            table_width = sum(col_widths)
+
+            # Adjust margins and font-size
+            tweak = self.minorTweaks
+            if not tweak(table_width, col_widths):
+
+                if main_document.page_orientation == "Portrait" and \
+                   main_document.auto_orientation:
+
+                    # Switch to Landscape
+                    temp_document.page_orientation = \
+                    main_document.page_orientation = "Landscape"
+
+                    # Re-calculate page size and margins
+                    temp_document._calc()
+                    main_document._calc()
+
+                    # Tweak again
+                    return tweak(table_width, col_widths)
+                else:
+                    return False
+
         return True
 
     # -------------------------------------------------------------------------

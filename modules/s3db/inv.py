@@ -2647,7 +2647,7 @@ $.filterOptionsS3({
                         pdf_hide_comments = True,
                         pdf_header_padding = 12,
                         pdf_footer = inv_send_pdf_footer,
-                        pdf_paper_alignment = "Landscape",
+                        pdf_orientation = "Landscape",
                         pdf_table_autogrow = "B",
                         **attr
                         )
@@ -2799,7 +2799,7 @@ $.filterOptionsS3({
                         pdf_header_padding = 12,
                         pdf_footer = inv_recv_pdf_footer,
                         pdf_table_autogrow = "B",
-                        pdf_paper_alignment = "Landscape",
+                        pdf_orientation = "Landscape",
                         **attr
                         )
 

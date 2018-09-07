@@ -343,7 +343,7 @@ class S3PDF(S3Method):
         else:
             content_disposition = "attachment"
 
-        if settings.get_paper_size() == "Letter":
+        if settings.get_pdf_size() == "Letter":
             self.paper_size = LETTER
         else:
             self.paper_size = A4
@@ -2931,7 +2931,7 @@ class S3PDF(S3Method):
                 self.topMargin = 20
                 self.bottomMargin = 20
                 settings = current.deployment_settings
-                if settings.get_paper_size() == "Letter":
+                if settings.get_pdf_size() == "Letter":
                     self.paper_size = LETTER
                 else:
                     self.paper_size = A4
@@ -3312,7 +3312,7 @@ if reportLabImported:
         def __init__(self, lineThickness):
             Flowable.__init__(self)
             self.lineThickness = 1
-            if current.deployment_settings.get_paper_size() == "Letter":
+            if current.deployment_settings.get_pdf_size() == "Letter":
                 self.paper_size = LETTER
             else:
                 self.paper_size = A4
@@ -3342,7 +3342,7 @@ if reportLabImported:
             self.numBoxes = numBoxes
             self.fontsize = 10
             self.etreeElem = etreeElem
-            if current.deployment_settings.get_paper_size() == "Letter":
+            if current.deployment_settings.get_pdf_size() == "Letter":
                 self.paper_size = LETTER
             else:
                 self.paper_size = A4
@@ -3407,7 +3407,7 @@ if reportLabImported:
             self.sideLength = 15
             self.fontsize = 10
             self.etreeElem = etreeElem
-            if current.deployment_settings.get_paper_size() == "Letter":
+            if current.deployment_settings.get_pdf_size() == "Letter":
                 self.paper_size = LETTER
             else:
                 self.paper_size = A4
@@ -3514,7 +3514,7 @@ if reportLabImported:
             self.sideLength = 15
             self.fontsize = 10
             self.etreeElem = etreeElem
-            if current.deployment_settings.get_paper_size() == "Letter":
+            if current.deployment_settings.get_pdf_size() == "Letter":
                 self.paper_size = LETTER
             else:
                 self.paper_size = A4
@@ -3633,7 +3633,7 @@ if reportLabImported:
             self.labels = labels
             self.text = labels[0]
             self.values = values
-            if current.deployment_settings.get_paper_size() == "Letter":
+            if current.deployment_settings.get_pdf_size() == "Letter":
                 self.paper_size = LETTER
             else:
                 self.paper_size = A4
@@ -3720,7 +3720,7 @@ if reportLabImported:
             self.text = text
             self.fontsize = 6
             self.spaceAfter = 2
-            if current.deployment_settings.get_paper_size() == "Letter":
+            if current.deployment_settings.get_pdf_size() == "Letter":
                 self.paper_size = LETTER
             else:
                 self.paper_size = A4

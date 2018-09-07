@@ -97,8 +97,8 @@ def config(settings):
     settings.ui.label_postcode = "ZIP Code"
 
     settings.msg.require_international_phone_numbers = False
-    # PDF to Letter
-    settings.base.paper_size = T("Letter")
+    # PDF default size Letter
+    settings.base.pdf_size = "Letter"
 
     # Uncomment this to Translate CMS Series Names
     # - we want this on when running s3translate but off in normal usage as we use the English names to lookup icons in render_posts
@@ -312,7 +312,7 @@ def config(settings):
 
         db = current.db
         s3db = current.s3db
-        table = s3db.cms_post                      
+        table = s3db.cms_post
         table.priority.readable = table.priority.writable = True
         table.series_id.readable = table.series_id.writable = True
         table.status_id.readable = table.status_id.writable = True
@@ -328,7 +328,7 @@ def config(settings):
                 # No sidebar menu
                 current.menu.options = None
                 return
-                
+
             # Custom Form
             from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
@@ -2163,7 +2163,7 @@ def config(settings):
                     filterby = dict(field = "forum_id",
                                     options = forum_ids,
                                     )
-                    
+
                 crud_fields.insert(-1,
                                    S3SQLInlineComponent("task_forum",
                                                         name = "forum",
@@ -2199,9 +2199,9 @@ def config(settings):
                                                     multiple = False,
                                                     filterby = filterby,
                                                     ))
-            
+
         crud_form = S3SQLCustomForm(*crud_fields)
-                                    
+
         # Filters
         project_task_priority_opts = settings.get_project_task_priority_opts()
         project_task_status_opts = settings.get_project_task_status_opts()
@@ -2493,7 +2493,7 @@ def event_team_rheader(group_id,
                             ),
                       rheader_tabs)
     return rheader
-    
+
 # =============================================================================
 def pr_group_rheader(r):
     """

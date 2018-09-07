@@ -590,7 +590,7 @@ def inv_item():
     output = s3_rest_controller(#csv_extra_fields = [dict(label="Organisation",
                                 #                         field=s3db.org_organisation_id(comment=None))
                                 #                    ],
-                                pdf_paper_alignment = "Landscape",
+                                pdf_orientation = "Landscape",
                                 pdf_table_autogrow = "B",
                                 pdf_groupby = "site_id, item_id",
                                 pdf_orderby = "expiry_date, supply_org_id",

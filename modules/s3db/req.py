@@ -1184,7 +1184,7 @@ $.filterOptionsS3({
                         pdf_header_padding = 12,
                         #pdf_footer = inv_recv_pdf_footer,
                         pdf_table_autogrow = "B",
-                        pdf_paper_alignment = "Landscape",
+                        pdf_orientation = "Landscape",
                         **attr
                         )
 

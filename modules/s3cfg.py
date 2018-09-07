@@ -1812,23 +1812,30 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # PDF settings
     #
-    def get_paper_size(self):
-        return self.base.get("paper_size", "A4")
-
-    def get_pdf_paper_alignment(self):
+    def get_pdf_size(self):
         """
-            PDF Paper Alignment:
-                * Portrait (default)
+            PDF default page size
+                * "A4"
+                * "Letter"
+                * or a tuple (width, height) in points (1 inch = 72 points)
+                  => pre-defined tuples in reportlab.lib.pagesizes
+        """
+        return self.base.get("pdf_size", "A4")
+
+    def get_pdf_orientation(self):
+        """
+            PDF default page orientation
+                * Auto (Portrait if possible, Landscape for wide tables)
+                * Portrait
                 * Landscape
         """
-        return self.base.get("paper_alignment", "Portrait")
+        return self.base.get("pdf_orientation", "Auto")
 
     def get_pdf_bidi(self):
         """
-            Whether to enable BiDi support for PDF exports
-            - without this RTL text will be LTR
-
-            Defaults to off to enhance performance
+            Enable BiDi support for PDF exports
+                - without this RTL text will be LTR
+                - default off to enhance performance
         """
         return self.__lazy("L10n", "pdf_bidi", False)
 

@@ -1477,7 +1477,7 @@ def config(settings):
 
         s3db = current.s3db
 
-        settings.base.paper_alignment = "Landscape"
+        settings.base.pdf_orientation = "Landscape"
 
         settings.ui.summary = (# Gets replaced in postp
                                # @ToDo: better performance by not including here & placing directly into the view instead
@@ -2012,7 +2012,7 @@ def config(settings):
 
         s3db = current.s3db
 
-        settings.base.paper_alignment = "Landscape"
+        settings.base.pdf_orientation = "Landscape"
 
         settings.ui.summary = (# Gets replaced in postp
                                # @ToDo: better performance by not including here & placing directly into the view instead

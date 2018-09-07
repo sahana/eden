@@ -61,8 +61,8 @@ def config(settings):
         "news": "icon-news",
     }
 
-    # PDF to Letter
-    settings.base.paper_size = T("Letter")
+    # PDF default size Letter
+    settings.base.pdf_size = "Letter"
 
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
