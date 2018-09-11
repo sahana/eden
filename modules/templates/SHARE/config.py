@@ -1358,7 +1358,7 @@ def config(settings):
                 # Inject the javascript to handle dropdown filtering
                 # - normally injected through AddResourceLink, but this isn't there in Inline widget
                 # - we also need to turn the trigger & target into dicts
-                s3.scripts.append("/%s/static/themes/SHARE/js/need_response_line.js" % r.application)
+                s3.scripts.append("/%s/static/themes/SHARE/js/need.js" % r.application)
 
                 if r.id and isinstance(output, dict) and \
                    current.auth.s3_has_permission("create", "project_activity"):
