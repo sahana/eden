@@ -25,23 +25,6 @@
       'lookupResource' :'item_pack',
       'msgNoRecords': i18n.no_packs
     })
-    $.filterOptionsS3({
-      'trigger': {'alias': 'need_response_line', 'name': 'item_category_id'},
-      'target': {'alias': 'need_response_line', 'name': 'item_id'},
-      'scope': 'row',
-      'lookupPrefix': 'supply',
-      'lookupResource': 'item',
-      //'fncPrep': S3.supply.fncPrepItem,
-      'fncRepresent': S3.supply.fncRepresentItemT
-    })
-    $.filterOptionsS3({
-      'trigger': {'alias':'need_response_line','name':'item_id'},
-      'target': {'alias':'need_response_line','name':'item_pack_id'},
-      'scope': 'row',
-      'lookupPrefix': 'supply',
-      'lookupResource' :'item_pack',
-      'msgNoRecords': i18n.no_packs
-    })
 
     var fncRepresentLocation = function(level) {
         // Represent location as Lx name rather than name
@@ -59,18 +42,8 @@
       'fncRepresent': fncRepresentLocation('L3')
     })
     $.filterOptionsS3({
-      'trigger': {'alias': 'need_response_line', 'name': 'coarse_location_id'},
-      'target': {'alias': 'need_response_line', 'name': 'location_id'},
-      'scope': 'row',
-      'lookupPrefix': 'gis',
-      'lookupResource': 'location',
-      // Level hardcoded for SHARE/LK
-      'lookupURL': S3.Ap.concat('/gis/location.json?l=L4&adm='),
-      'fncRepresent': fncRepresentLocation('L4')
-    })
-    $.filterOptionsS3({
-      'trigger': {'alias': 'need_response_line', 'name': 'coarse_location_id'},
-      'target': {'alias': 'need_response_line', 'name': 'location_id'},
+      'trigger': {'alias': 'need_line', 'name': 'coarse_location_id'},
+      'target': {'alias': 'need_line', 'name': 'location_id'},
       'scope': 'row',
       'lookupPrefix': 'gis',
       'lookupResource': 'location',
