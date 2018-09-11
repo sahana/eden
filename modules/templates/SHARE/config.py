@@ -1224,7 +1224,7 @@ def config(settings):
                                        required = not org_readonly,
                                        ),
                        "location_id",
-                       "date",
+                       (T("Date entered"), "date"),
                        #(T("Urgency"), "priority"),
                        # Moved into Lines
                        #S3SQLInlineLink("sector",
@@ -1845,7 +1845,7 @@ def config(settings):
                                             fields = [("", "organisation_id"),],
                                             ),
                        "location_id",
-                       (T("Date"), "date"),
+                       (T("Date entered"), "date"),
                        (T("Summary of Needs/Activities"), "name"),
                        S3SQLInlineComponent("need_response_line",
                                             label = "",
