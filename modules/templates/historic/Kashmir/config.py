@@ -34,7 +34,7 @@ def config(settings):
 
     # Ensure that Users have Staff records in their Org
     settings.auth.registration_link_user_to = {"staff": T("Staff")}
-    settings.auth.registration_link_user_to_default = "staff"
+    settings.auth.registration_link_user_to_default = ["staff"]
 
     # Configure frontpage request email address
     #settings.frontpage.request_email = "athewaas.requests@revivekashmir.org"

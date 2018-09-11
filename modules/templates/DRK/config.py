@@ -42,7 +42,7 @@ def config(settings):
     settings.auth.registration_link_user_to = {"staff": T("Staff"),
                                                "volunteer": T("Volunteer"),
                                                }
-    #settings.auth.registration_link_user_to_default = "staff"
+    #settings.auth.registration_link_user_to_default = ["staff"]
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"

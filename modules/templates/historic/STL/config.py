@@ -43,7 +43,7 @@ def config(settings):
     settings.auth.admin_sees_organisation = True
     settings.auth.registration_organisation_default = "Support To Life"
     settings.auth.registration_link_user_to = ["staff"]
-    settings.auth.registration_link_user_to_default = "staff"
+    settings.auth.registration_link_user_to_default = ["staff"]
 
     # Password retrieval disabled
     settings.auth.password_retrieval = False

@@ -71,7 +71,7 @@ def config(settings):
                                                #"member": T("Member")
                                                }
     # This hides the options from the UI
-    #settings.auth.registration_link_user_to_default = "volunteer"
+    #settings.auth.registration_link_user_to_default = ["volunteer"]
 
     #settings.auth.record_approval = True
 

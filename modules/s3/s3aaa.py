@@ -2531,7 +2531,7 @@ $.filterOptionsS3({
 
         # Add User to required registration roles
         entity_roles = deployment_settings.get_auth_registration_roles()
-        link_user_to = user.link_user_to or utable.link_user_to.default
+        link_user_to = user.link_user_to or utable.link_user_to.default or []
         if entity_roles:
             gtable = settings.table_group
             get_pe_id = s3db.pr_get_pe_id

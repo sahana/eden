@@ -662,6 +662,7 @@ class S3Config(Storage):
             * Staff
             * Volunteer
             * Member
+            Should be an iterable.
         """
         return self.auth.get("registration_link_user_to_default")
 
