@@ -1589,7 +1589,7 @@ def config(settings):
                        # We create a custom Create Button to create a Need not a Need Line
                        listadd = False,
                        list_fields = [(T("Status"), "status"),
-                                      (T("Commits"), "need_response_line.need_response_id$agency.organisation_id"),
+                                      (T("Orgs. committing response"), "need_response_line.need_response_id$agency.organisation_id"),
                                       "need_id$date",
                                       "need_id$organisation__link.organisation_id",
                                       # These levels/Labels are for SHARE/LK

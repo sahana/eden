@@ -3411,18 +3411,17 @@ def geoexplorer():
 
     # http://eden.sahanafoundation.org/wiki/BluePrintGISPrinting
     print_service = settings.get_gis_print_service()
-
     geoserver_url = settings.get_gis_geoserver_url()
 
     response.title = "GeoExplorer"
-    return dict(
-                #config=gis.get_config(),
-                bing_key=bing_key,
-                google_key=google_key,
-                yahoo_key=yahoo_key,
-                print_service=print_service,
-                geoserver_url=geoserver_url
-               )
+
+    return {#"config": gis.get_config(),
+            "bing_key": bing_key,
+            "google_key": google_key,
+            "yahoo_key": yahoo_key,
+            "print_service": print_service,
+            "geoserver_url": geoserver_url,
+            }
 
 # -----------------------------------------------------------------------------
 def about():
