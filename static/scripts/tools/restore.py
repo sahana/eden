@@ -461,12 +461,17 @@ def main(argv):
     auth.override = True
 
     deleted = S3Deleted(tablename, record_id)
-    deleted.restore()
+    success = deleted.restore()
 
-    current.db.commit()
     auth.override = False
-
     sys.stderr.write("\n")
+
+    if success:
+        current.db.commit()
+        return 0
+    else:
+        current.db.rollback()
+        return -1
 
 if __name__ == "__main__":
 
