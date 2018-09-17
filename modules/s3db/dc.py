@@ -1569,7 +1569,7 @@ class dc_TargetReport(S3Method):
                    (original is project_SummaryReport)
         """
 
-        from s3.s3codecs.pdf import EdenDocTemplate, S3RL_PDF
+        from s3.codecs.pdf import EdenDocTemplate, S3RL_PDF
 
         T = current.T
         table = r.table

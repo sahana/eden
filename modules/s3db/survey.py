@@ -1627,7 +1627,7 @@ class S3SurveySeriesModel(S3Model):
                             question_ids.append(str(question.question_id))
                 items = buildCompletedList(series_id, question_ids)
                 if r.representation == "xls":
-                    from ..s3.s3codecs.xls import S3XLS
+                    from ..s3.codecs.xls import S3XLS
                     exporter = S3XLS()
                     return exporter.encode(items,
                                            title=crud_strings.title_selected,

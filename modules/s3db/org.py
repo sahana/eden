@@ -8277,7 +8277,7 @@ class org_CapacityReport(S3Method):
         try:
             import xlwt
         except ImportError:
-            from s3.s3codecs import S3XLS
+            from s3.codecs.xls import S3XLS
             if current.auth.permission.format in S3Request.INTERACTIVE_FORMATS:
                 current.session.error = S3XLS.ERROR.XLWT_ERROR
                 redirect(URL(extension=""))

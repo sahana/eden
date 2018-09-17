@@ -8252,7 +8252,7 @@ class project_SummaryReport(S3Method):
             -the actual report
         """
 
-        from s3.s3codecs.pdf import EdenDocTemplate, S3RL_PDF
+        from s3.codecs.pdf import EdenDocTemplate, S3RL_PDF
 
         T = current.T
         db = current.db
@@ -9006,7 +9006,7 @@ class project_IndicatorSummaryReport(S3Method):
             XLS Representation
         """
 
-        from s3.s3codecs import S3XLS
+        from s3.codecs.xls import S3XLS
 
         try:
             import xlwt
