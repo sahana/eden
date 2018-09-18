@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-    S3Codec to produce printable ID cards
+    S3Codec to produce printable data cards (e.g. ID cards)
 
     @copyright: 2018 (c) Sahana Software Foundation
     @license: MIT
@@ -28,7 +28,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3IDCard",
+__all__ = ("S3PDFCard",
            )
 
 try:
@@ -48,39 +48,49 @@ except ImportError:
 from gluon import current, HTTP
 
 from ..s3codec import S3Codec
+from ..s3resource import S3Resource
+from ..s3utils import s3_str
 
+CREDITCARD = (153, 243) # Default format for cards (in points)
 # =============================================================================
-class S3IDCard(S3Codec):
+class S3PDFCard(S3Codec):
     """
-        Codec to produce printable ID cards
+        Codec to produce printable data cards (e.g. ID cards)
     """
 
-    def __init__(self):
-        """
-            Constructor
-
-            TODO implement
-
-            Parameters needed:
-                - card size (default to 153x243 points)
-                - page size and orientation (default to card size)
-                - margins (should default)
-                - spacing (should default)
-                - fields to extract, or an external data extraction method
-                - labels, or an external getter
-                - designs for front and back (or just front)
-                - other options
-        """
-
-        pass
-
-    # -------------------------------------------------------------------------
     def encode(self, resource, **attr):
         """
-            API Method to encode an ElementTree into the target format,
-            to be implemented by the subclass
+            API Method to encode a resource as cards
 
             @param resource: the S3Resource
+            @param attr: additional encoding parameters (see below)
+
+            @keyword fields: the fields to extract from resource,
+                             - a list of field selectors, or
+                             - a callable that extracts the data and returns
+                               them as an array [{fieldname: representation, ...}, ...],
+                             - defaults to list_fields of the resource
+            @keyword orderby: orderby-expression for data extraction
+            @keyword labels: the labels for the fields,
+                             - a dict {colname: label}, or
+                             - a callable that produces it,
+                             - defaults to the labels of list_fields
+            @keyword layout: the layout (a S3PDFCardLayout subclass, overrides
+                             the resource pdf_card_layout setting)
+            @keyword pagesize: the PDF page size,
+                               - a string "A4" or "Letter", or
+                               - a tuple (width, height), in points
+                               - defaults to the layout's card size
+            @keyword margins: the page margins,
+                              - a tuple (N, E, S, W), in points, or
+                              - a single number, in points
+                              - will be computed if omitted
+            @keyword spacing: the spacing between cards,
+                              - a tuple (H, V), in points, or
+                              - a single number, in points
+                              - defaults to 18 points in both directions
+            @keyword title: the document title,
+                            - defaults to title_list crud string of the resource
 
             @return: a handle to the output
         """
@@ -89,98 +99,166 @@ class S3IDCard(S3Codec):
             # FIXME is this the correct handling of a dependency failure?
             raise HTTP(503, "Python ReportLab library not installed")
 
-        # 1. Extract the data               TODO
+        # Do we operate on a S3Resource?
+        is_resource = isinstance(resource, S3Resource)
 
-        # If we have a list of fields
-        #   => use Resource.select
-        # else:
-        #   => call the getter
+        # The card layout
+        layout = attr.get("layout")
+        if layout is None and is_resource:
+            layout = resource.get_config("pdf_card_layout")
+        if layout is None:
+            layout = S3PDFCardLayout
+
+        # Card (and hence page) orientation
+        orientation = layout.orientation
+        if orientation == "Landscape":
+            orientation = landscape
+        else:
+            orientation = portrait
+
+        # Card and page size
+        cardsize = orientation(layout.cardsize)
+        pagesize = attr.get("pagesize")
+        if pagesize == "A4":
+            pagesize = A4
+        elif pagesize == "Letter":
+            pagesize = LETTER
+        elif not isinstance(pagesize, (tuple, list)):
+            pagesize = cardsize
+        pagesize = orientation(pagesize)
+
+        # Extract the data
+        fields = attr.get("fields")
+        if callable(fields):
+            # External getter => call with resource, returns the data items
+            data = None
+            items = fields(resource)
+        elif is_resource:
+            # Extract the data items from the resource
+            if not isinstance(fields, (tuple, list)):
+                fields = resource.list_fields()
+            data = self.extract(resource, fields, orderby=attr.get("orderby"))
+            items = data.rows
+        else:
+            # The data items have been passed-in in place of the resource
+            data = None
+            items = resource
 
         # Get the labels
-        # => can be a getter
-        # => can be a dict
-        # => default to labels in rfields-attribute of data returned from extract
-        # => fall back to no labels (empty dict)
+        labels = attr.get("labels")
+        if callable(labels):
+            labels = labels(resource)
+        elif not isinstance(labels, dict):
+            if data and hasattr(data, "rfields"):
+                # Collect the labels from rfields
+                rfields = data.rfields
+                labels = {rfield.colname: rfield.label for rfield in rfields}
+            else:
+                labels = {}
 
-        # Initialize the output stream
+
+        # Document title
+        title = attr.get("title")
+        if not title and is_resource:
+            crud_strings = current.response.s3.crud_strings[resource.tablename]
+            if crud_strings:
+                title = crud_strings["title_list"]
+
+        # Instantiate the doc template
+        doc = S3PDFCardTemplate(pagesize,
+                                cardsize,
+                                margins = attr.get("margins"),
+                                spacing = attr.get("spacing"),
+                                title = title,
+                                )
+
+        # Produce the flowables
+        flowables = self.get_flowables(layout,
+                                       resource,
+                                       items,
+                                       labels = labels,
+                                       cards_per_page = doc.cards_per_page,
+                                       )
+
+        # Build the doc
         output_stream = StringIO()
-
-        # 3. Instantiate the doc template   TODO
-        size = (153, 243)
-        doc = S3IDCardDocTemplate(size, (153,243)) #, margins=(0, 0, 0, 0), spacing=(0,0))
-
-        # 4. Produce the flowables          TODO
-        flowables = self.get_flowables([None,
-                                        None,
-                                        None,
-                                        None,
-                                        None,
-                                        ],
-                                        labels = {},
-                                        # TODO pass in doc.cards_per_page
-                                        cards_per_row = doc.cards_per_row,
-                                        rows_per_page = doc.rows_per_page,
-                                        )
-
-        # 5. Build the doc                  TODO
         doc.build(flowables,
-                  #output_stream,
-                  "test.pdf",
-                  #canvasmaker=canvas.Canvas,
+                  output_stream,
+                  #canvasmaker=canvas.Canvas,   # is default
                   )
 
         return output_stream
 
     # -------------------------------------------------------------------------
-    def get_flowables(self, items, labels, cards_per_row=1, rows_per_page=1):
-        # TODO docstring
-        # TODO pass in doc to extract cards_per_page
+    def extract(self, resource, fields, orderby=None):
+        """
+            Extract the data items from the given resource
 
-        cards_per_page = rows_per_page * cards_per_row
-        number_of_batches = int(len(items) / cards_per_page) + 1
+            @param resource: the resource (a filtered S3Resource)
+            @param fields: the fields to extract (array of field selectors)
+            @param orderby: the orderby-expression
 
+            @returns: an S3ResourceData instance
+        """
+
+        return resource.select(fields,
+                               represent = True,
+                               show_links = False,
+                               raw_data = True,
+                               orderby = orderby,
+                               )
+
+    # -------------------------------------------------------------------------
+    def get_flowables(self, layout, resource, items, labels=None, cards_per_page=1):
+        """
+            Get the Flowable-instances for the data items
+
+            @param layout: the S3PDFCardLayout subclass implementing the
+                           card layout
+            @param resource: the resource
+            @param items: the data items
+            @param labels: the field labels
+            @param cards_per_page: the number of cards per page
+        """
+
+        # Determine the number of pages
+        number_of_pages = int(len(items) / cards_per_page) + 1
+        multiple = cards_per_page > 1
+
+        # Generate the pages
         flowables = []
         append = flowables.append
-        for i in range(number_of_batches):
+        for i in range(number_of_pages):
 
+            # Get the items for the current page
             batch = items[i * cards_per_page:(i+1) * cards_per_page]
             if not batch:
                 continue
 
+            # Add the flowables for the card fronts to the page
             append(NextPageTemplate("Front"))
             if i > 0:
                 append(PageBreak())
             for item in batch:
-                # TODO parametrize front-flowable class
-                append(S3IDCardFlowable(item))
+                append(layout(resource, item, multiple=multiple))
 
-            # TODO make conditional (single/double-sided)
-            append(NextPageTemplate("Back"))
-            append(PageBreak())
-            for item in batch:
-                # TODO parametrize back-flowable class
-                append(S3IDCardFlowable(item, backside=True))
+            if layout.doublesided:
+                # Add the flowables for the backsides on a new page
+                append(NextPageTemplate("Back"))
+                append(PageBreak())
+                for item in batch:
+                    append(layout(resource,
+                                  item,
+                                  multiple = multiple,
+                                  backside = True,
+                                  ))
 
         return flowables
 
-    # -------------------------------------------------------------------------
-    def decode(self, resource, source, **attr):
-        """
-            API Method to decode a source into an ElementTree, to be
-            implemented by the subclass
-            TODO fix docstring, explain this function
-
-            @param resource: the S3Resource
-            @param source: the source
-
-            @return: an S3XML ElementTree
-        """
-        return current.xml.tree()
-
 # =============================================================================
-class S3IDCardDocTemplate(BaseDocTemplate):
+class S3PDFCardTemplate(BaseDocTemplate):
     """
-        Document Template for ID cards
+        Document Template for data cards
     """
 
     def __init__(self,
@@ -188,30 +266,61 @@ class S3IDCardDocTemplate(BaseDocTemplate):
                  cardsize,
                  margins = None,
                  spacing = None,
+                 title = None,
                  ):
         """
             Constructor
 
-            @param pagesize: the page size, tuple (width, height) in points
-            @param cardsize: the card size, tuple (width, height) in points
-            @param margins: the page margins, tuple (N, E, S, W) in points
-            @param spacing: the spacing between cards, tuple (H, V) in points
+            @param pagesize: the page size, tuple (w, h)
+            @param cardsize: the card size, tuple (w, h)
+            @param margins: the page margins, tuple (N, E, S, W)
+            @param spacing: the spacing between cards, tuple (H, V)
+            @param title: the document title
+
+            - all sizes in points (72 points per inch)
         """
 
+        # Spacing between cards
         if spacing is None:
             spacing = (18, 18)
         elif not isinstance(spacing, (tuple, list)):
             spacing = (spacing, spacing)
 
+        # Page margins
         if margins is None:
             margins = self.compute_margins(pagesize, cardsize, spacing)
         elif not isinstance(margins, (tuple, list)):
             margins = (margins, margins, margins, margins)
 
+        # Cards per row, rows per page and cards per page
+        pagewidth, pageheight = pagesize
+        cardwidth, cardheight = cardsize
+
+        number_of_cards = self.number_of_cards
+
+        cards_per_row = number_of_cards(pagewidth,
+                                        cardwidth,
+                                        (margins[1], margins[3]),
+                                        spacing[0],
+                                        )
+
+        rows_per_page = number_of_cards(pageheight,
+                                        cardheight,
+                                        (margins[0], margins[2]),
+                                        spacing[1],
+                                        )
+
+        self.cards_per_row = cards_per_row
+        self.rows_per_page = rows_per_page
+        self.cards_per_page = rows_per_page * cards_per_row
+
+        # Generate page templates
         pages = self.page_layouts(pagesize, cardsize, margins, spacing)
 
-        # TODO compute cards per page
+        if title is None:
+            title = current.T("Items")
 
+        # Call super-constructor
         BaseDocTemplate.__init__(self,
                                  None,
                                  pagesize = pagesize,
@@ -220,6 +329,7 @@ class S3IDCardDocTemplate(BaseDocTemplate):
                                  rightMargin = margins[1],
                                  bottomMargin = margins[2],
                                  leftMargin = margins[3],
+                                 title = s3_str(title),
                                  )
 
     # -------------------------------------------------------------------------
@@ -243,108 +353,125 @@ class S3IDCardDocTemplate(BaseDocTemplate):
     # -------------------------------------------------------------------------
     def compute_margins(self, pagesize, cardsize, spacing):
         """
-            TODO docstring
-            TODO validate + improve
+            Calculate default margins
+
+            @param pagesize: the page size, tuple (w, h)
+            @param cardsize: the card size, tuple (w, h)
+            @param spacing: spacing between cards, tuple (h, v)
         """
 
+        cardwidth, cardheight = cardsize
+        pagewidth, pageheight = pagesize
+        spacing_h, spacing_v = spacing
+
+        # Calculate number of cards with minimal margins
         number_of_cards = self.number_of_cards
-        numh = number_of_cards(pagesize[0], cardsize[0], (18, 18), spacing[0])
-        numv = number_of_cards(pagesize[1], cardsize[1], (12, 12), spacing[1])
+        numh = number_of_cards(pagewidth, cardwidth, (18, 18), spacing_h)
+        numv = number_of_cards(pageheight, cardheight, (12, 12), spacing_v)
 
-        wh = (numh - 1) * (cardsize[0] + spacing[0]) + cardsize[0]
-        wv = (numv - 1) * (cardsize[1] + spacing[1]) + cardsize[1]
+        # Compute total width/height of as many cards
+        width = (numh - 1) * (cardwidth + spacing_h) + cardwidth
+        height = (numv - 1) * (cardheight + spacing_v) + cardheight
 
-        mh = (pagesize[0] - wh) / 2
-        mv = (pagesize[1] - wv) / 2
+        # Compute the actual margins, centering the cards on the page
+        margin_h = (pagewidth - width) / 2
+        margin_v = (pageheight - height) / 2
 
-        return (mv, mh, mv, mh)
+        return (margin_v, margin_h, margin_v, margin_h)
 
     # -------------------------------------------------------------------------
     def page_layouts(self, pagesize, cardsize, margins, spacing):
         """
-            TODO implement this
+            Generate page templates for front/back sides of cards
 
-            Create a set of page layouts ["Front", "Back"]
+            @param pagesize: the page size, tuple (w, h)
+            @param cardsize: the card size, tuple (w, h)
+            @param margins: the page margins, tuple (N, E, S, W)
+            @param spacing: the spacing between cards, tuple (H, V)
 
+            - all sizes in points (72 points per inch)
         """
 
         pagewidth, pageheight = pagesize
         cardwidth, cardheight = cardsize
 
-        number_of_cards = self.number_of_cards
-
-        cards_per_row = number_of_cards(pagewidth, cardwidth, (margins[1], margins[3]), spacing[0])
-        self.cards_per_row = cards_per_row
-
-        rows_per_page = number_of_cards(pageheight, cardheight, (margins[0], margins[2]), spacing[1])
-        self.rows_per_page = rows_per_page
-
         topmargin, leftmargin = margins[0], margins[3]
 
         hspacing, vspacing = spacing
 
+        # Y-position (from page bottom) of first card row
         y0 = pageheight - topmargin - cardheight
 
-        fframes = []
-        fx0 = leftmargin
+        # X-position of first card in a row
+        # - front from the left, back from the right
+        # - actual page width differs between printers, so we may need
+        #   to add a parameter to account for this horizontal shift (TODO)
+        x0_front = leftmargin
+        x0_back = pagewidth - leftmargin - cardwidth # + hshift
 
-        bframes = []
-        bx0 = pagewidth - leftmargin - cardwidth # + hshift
+        fframes, bframes = [], []
+        for i in range(self.rows_per_page):
 
-        for i in range(rows_per_page):
-
+            # Y-position of current row
             y = y0 - i * (vspacing + cardheight)
 
-            for j in range(cards_per_row):
+            # Add frames for cards in this row
+            for j in range(self.cards_per_row):
 
                 # Front
-                fframes.append(Frame(fx0 + j * (cardwidth + hspacing),
+                fframes.append(Frame(x0_front + j * (cardwidth + hspacing),
                                      y,
                                      cardwidth,
                                      cardheight,
-                                     leftPadding = 0,
-                                     bottomPadding = 0,
-                                     rightPadding = 0,
                                      topPadding = 0,
+                                     rightPadding = 0,
+                                     bottomPadding = 0,
+                                     leftPadding = 0,
                                      ))
 
                 # Back
-                bframes.append(Frame(bx0 - j * (cardwidth + hspacing),
+                bframes.append(Frame(x0_back - j * (cardwidth + hspacing),
                                      y,
                                      cardwidth,
                                      cardheight,
-                                     leftPadding = 0,
-                                     bottomPadding = 0,
-                                     rightPadding = 0,
                                      topPadding = 0,
+                                     rightPadding = 0,
+                                     bottomPadding = 0,
+                                     leftPadding = 0,
                                      ))
 
-        return [PageTemplate(id="Front",
-                             frames = fframes,
-                             ),
-                PageTemplate(id="Back",
-                             frames = bframes,
-                             ),
+        # Generate and return the page templates
+        return [PageTemplate(id="Front", frames = fframes),
+                PageTemplate(id="Back", frames = bframes),
                 ]
 
 # =============================================================================
-class S3IDCardFlowable(Flowable):
+class S3PDFCardLayout(Flowable):
     """
-        Flowable-class for ID Cards (one side)
+        Flowable base class for data cards, to be subclassed per use-case;
+        subclasses should implement the draw()-method to render a data item.
     """
 
-    def __init__(self, item, labels=None, backside=False):
+    # Card layout parameters (subclasses can override this)
+    cardsize = CREDITCARD
+    orientation = "Portrait"
+    doublesided = True
+
+    def __init__(self, resource, item, labels=None, backside=False, multiple=False):
         """
             Constructor
 
             @param item: the data item
             @param labels: the field labels
             @param backside: this instance should render a card backside
-
-            TODO add parameter to indicate whether there are multiple
-                 cards on a page
+            @param multiple: there are multiple cards per page
         """
 
+        Flowable.__init__(self)
+
+        self.width, self.height = self.cardsize
+
+        self.resource = resource
         self.item = item
 
         if labels is None:
@@ -352,113 +479,62 @@ class S3IDCardFlowable(Flowable):
         else:
             self.labels = labels
 
-        self.canv = None
-        self.x = 0
-        self.y = 0
-
         self.backside = backside
-
-        # TODO call super-constructor
-
-    # -------------------------------------------------------------------------
-    def drawOn(self, canvas, x, y, **attr):
-        """
-            Prepare and render this flowable
-
-            @param canvas: the canvas
-            @param x: the origin of the frame (from left of page)
-            @param y: the origin of the frame (from bottom of page)
-
-            TODO fix parameter list to match prototype
-        """
-
-        # Remember canvas and position
-        self.canv = canvas
-        self.x = x
-        self.y = y
-
-        # Call draw
-        self.draw()
+        self.multiple = multiple
 
     # -------------------------------------------------------------------------
     def draw(self):
         """
-            Draw this flowable (called by drawOn)
+            Draw the card (one side), to be implemented by subclass
 
-            TODO: implement this
+            Instance attributes (NB draw-function should not modify them):
+            - self.canv...............the canvas (provides the drawing methods)
+            - self.resource...........the resource
+            - self.item...............the data item (dict)
+            - self.labels.............the field labels (dict)
+            - self.backside...........this instance should render the backside
+                                      of a card
+            - self.multiple...........there are multiple cards per page
+            - self.width..............the width of the card (in points)
+            - self.height.............the height of the card (in points)
+
+            NB Canvas coordinates are relative to the lower left corner of the
+               card's frame, drawing must not overshoot self.width/self.height
         """
 
         c = self.canv
-        if c is None:
-            return
 
-        x = self.x
-        y = self.y
+        w = self.width
+        h = self.height
 
-        cardsize = self.cardsize
-        w = cardsize[0]
-        h = cardsize[1]
+        c.setDash(1, 2)
+        self.draw_outline()
 
-        # TODO Remove this
-        self.draw_outline(x, y, w, h)
-
-        x = x + w / 2
-        y = y + h / 2
+        x = w / 2
+        y = h / 2
 
         c.setFont("Helvetica", 12)
         c.drawCentredString(x, y, "Back" if self.backside else "Front")
 
-        # TODO render item.id if it has one
+        resource = self.resource
+        if isinstance(resource, S3Resource):
+            # Render the record ID if available
+            item = self.item
+            pid = str(resource._id)
+            if pid in item:
+                c.setFont("Helvetica", 8)
+                c.drawCentredString(x, y - 10, "Record #%s" % item[pid])
 
     # -------------------------------------------------------------------------
-    def draw_outline(self, x, y, w, h, on=1, off=2):
+    def draw_outline(self):
         """
-            TODO docstring
+            Helper function to draw the outline of the card, useful as cutting
+            line when there are multiple cards per page
         """
 
         c = self.canv
 
         c.setLineWidth(1)
-        c.setDash(on, off)
-        c.lines([[x, y, x + w, y],
-                 [x + w, y, x + w, y + h],
-                 [x + w, y + h, x, y + h],
-                 [x, y + h, x, y],
-                 ])
-
-    # -------------------------------------------------------------------------
-    def wrap(self, availWidth, availHeight):
-        """
-            Predict the width/height of this flowable, called by rendering
-            process (before drawOn)
-
-            @param availWidth: the available width in the current frame
-            @param availHeight: the available height in the current frame
-
-            @returns: the width/height of the flowable
-        """
-
-        # Remember the frame dimensions
-        # TODO initialize in constructor
-        self.cardsize = (availWidth, availHeight)
-
-        # ID card flowables use up the entire frame
-        return (availWidth, availHeight)
-
-    # -------------------------------------------------------------------------
-    def split(self, availWidth, availHeight):
-        """
-            Split this flowable across frames, called by rendering process
-            if the predicted size of the flowable exceeds the size of the
-            current frame
-
-            @param availWidth: the available width in the current frame
-            @param availHeight: the available height in the current frame
-
-            @returns: a list of flowables for the next frame
-        """
-
-        # ID card flowables do not split
-        return []
+        c.rect(0, 0, self.width, self.height)
 
 # END =========================================================================

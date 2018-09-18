@@ -51,7 +51,7 @@ class S3Codec(object):
               "shp": "S3SHP",
               "svg": "S3SVG",
               "xls": "S3XLS",
-              "card": "S3IDCard",
+              "card": "S3PDFCard",
               }
 
     # -------------------------------------------------------------------------
@@ -81,29 +81,28 @@ class S3Codec(object):
     # -------------------------------------------------------------------------
     # API
     #--------------------------------------------------------------------------
-
-    def decode(self, resource, source, **attr):
-        """
-            API Method to decode a source into an ElementTree, to be
-            implemented by the subclass
-
-            @param resource: the S3Resource
-            @param source: the source
-
-            @return: an S3XML ElementTree
-        """
-        raise NotImplementedError
-
     def encode(self, resource, **attr):
         """
-            API Method to encode an ElementTree into the target format,
-            to be implemented by the subclass
+            API Method to encode a resource in the target format,
+            to be implemented by the subclass (mandatory)
 
             @param resource: the S3Resource
 
             @return: a handle to the output
         """
         raise NotImplementedError
+
+    def decode(self, resource, source, **attr):
+        """
+            API Method to decode a source into an S3XML ElementTree,
+            to be implemented by the subclass (if the class does decode)
+
+            @param resource: the S3Resource
+            @param source: the source
+
+            @return: an S3XML ElementTree
+        """
+        return current.xml.tree()
 
     # -------------------------------------------------------------------------
     # Utilities
