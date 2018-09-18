@@ -17,8 +17,8 @@ def config(settings):
     settings.gis.countries.append("SC")
 
     # L10n (Localization) settings
-    #settings.L10n.languages["fr"] = "French"
-    #settings.L10n.languages["crs"] = "Seychellois Creole"
+    settings.L10n.languages["fr"] = "French"
+    settings.L10n.languages["crs"] = "Seychellois Creole"
     # Default Language (put this in custom template if-required)
     #settings.L10n.default_language = "crs"
     # Default timezone for users
