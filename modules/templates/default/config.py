@@ -135,6 +135,7 @@ def config(settings):
     settings.L10n.languages = OrderedDict([
         ("ar", "Arabic"),
         ("bs", "Bosnian"),
+        #("crs", "Seychellois Creole"),
         #("dv", "Divehi"), # Maldives
         #("dz", "Dzongkha"), # Bhutan
         ("en", "English"),
