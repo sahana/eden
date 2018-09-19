@@ -39,7 +39,7 @@ except ImportError:
 try:
     from reportlab.lib.pagesizes import A4, LETTER, landscape, portrait
     from reportlab.platypus import BaseDocTemplate, PageTemplate, Flowable, \
-                                   Frame, NextPageTemplate, PageBreak
+                                   Frame, NextPageTemplate, PageBreak, Image
     REPORTLAB = True
 except ImportError:
     BaseDocTemplate = object
@@ -524,6 +524,155 @@ class S3PDFCardLayout(Flowable):
             if pid in item:
                 c.setFont("Helvetica", 8)
                 c.drawCentredString(x, y - 10, "Record #%s" % item[pid])
+
+    # -------------------------------------------------------------------------
+    def draw_barcode(self,
+                     code,
+                     x,
+                     y,
+                     bctype="code39",
+                     encoder_args=None,
+                     write_text=False,
+                     height=12,
+                     halign=None,
+                     valign=None,
+                     ):
+        """
+            Helper function to render a barcode
+            - requires pyBarcode (try installing with "pip install pyBarcode")
+
+            @param code: the string to encode
+            @param x: drawing position
+            @param y: drawing position
+            @param bctype: the barcode type
+            @param encoder_args: keyword arguments for the barcode generator (dict)
+            @param write_text: render the code as text under the barcode
+            @param height: the height of the barcode (in points),
+                           not including the text
+            @param halign: horizontal alignment ("left"|"center"|"right"), default left
+            @param valign: vertical alignment ("top"|"middle"|"bottom"), default bottom
+        """
+
+        try:
+            import barcode
+            from barcode.errors import BarcodeError
+            from barcode.writer import ImageWriter
+        except ImportError:
+            current.log.error("Barcode generation failed: pyBarcode not installed")
+            return
+
+        # Generate the barcode as PNG
+        writer = ImageWriter()
+        if encoder_args is None:
+            # Default encoder args (NB type-dependent)
+            if bctype == "code39":
+                encoder_args = {"add_checksum": False}
+            else:
+                encoder_args = {}
+        try:
+            encoder = barcode.get_barcode_class(bctype)
+            bcode = encoder(code, writer=writer, **encoder_args)
+        except (BarcodeError, TypeError):
+            import sys
+            current.log.error("Barcode generation failed: %s" % sys.exc_info()[1])
+            return
+
+        # Write the barcode to a StringIO
+        buf = StringIO()
+        bcode.write(buf, options = {"module_width": 0.2,
+                                    "module_height": height / 72.0 * 25.4,
+                                    "quiet_zone": 2,
+                                    "write_text": write_text,
+                                    "font_size": 7,
+                                    "text_distance": 0.8,
+                                    "dpi": 144,
+                                    })
+
+        # Convert size
+        self.draw_image(buf, x, y, scale=0.5, halign=halign, valign=valign)
+
+    # -------------------------------------------------------------------------
+    def draw_image(self,
+                   img,
+                   x,
+                   y,
+                   width=None,
+                   height=None,
+                   proportional=True,
+                   scale=None,
+                   halign=None,
+                   valign=None,
+                   ):
+        """
+            Helper function to draw an image
+            - requires PIL (required for ReportLab image handling anyway)
+
+            @param img: the image (filename or StringIO buffer)
+            @param x: drawing position
+            @param y: drawing position
+            @param width: the target width of the image (in points)
+            @param height: the target height of the image (in points)
+            @param proportional: keep image proportions when scaling to width/height
+            @param scale: scale the image by this factor (overrides width/height)
+            @param halign: horizontal alignment ("left"|"center"|"right"), default left
+            @param valign: vertical alignment ("top"|"middle"|"bottom"), default bottom
+        """
+
+        if hasattr(img, "seek"):
+            is_buffer = True
+            img.seek(0)
+        else:
+            is_buffer = False
+
+        try:
+            from PIL import Image as pImage
+        except ImportError:
+            current.log.error("Image rendering failed: PIL not installed")
+            return
+
+        pimg = pImage.open(img)
+        img_size = pimg.size
+
+        if not img_size[0] or not img_size[1]:
+            # This image has at least one dimension of zero
+            return
+
+        # Compute drawing width/height
+        if scale:
+            width = img_size[0] * scale
+            height = img_size[1] * scale
+        elif width and height:
+            if proportional:
+                scale = min(float(width)/img_size[0], float(height)/img_size[1])
+                width = img_size[0] * scale
+                height = img_size[1] * scale
+        elif width:
+            height = img_size[1] * (float(width) / img_size[0])
+        elif height:
+            width = img_size[0] * (float(height) / img_size[1])
+
+        # Generate the flowable
+        if is_buffer:
+            img.seek(0)
+        flowable = Image(img, width=width, height=height)
+
+        # Compute drawing position from alignment options
+        hshift = vshift = 0
+        if halign == "right":
+            hshift = width
+        elif halign == "center":
+            hshift = width / 2.0
+
+        if valign == "top":
+            vshift = height
+        elif valign == "middle":
+            vshift = height / 2.0
+
+        # Draw the image
+        c = self.canv
+        c.saveState()
+        flowable.drawOn(c, x - hshift, y - vshift)
+        c.restoreState()
 
     # -------------------------------------------------------------------------
     def draw_outline(self):
