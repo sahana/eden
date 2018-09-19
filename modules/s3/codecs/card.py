@@ -39,10 +39,13 @@ except ImportError:
 try:
     from reportlab.lib.pagesizes import A4, LETTER, landscape, portrait
     from reportlab.platypus import BaseDocTemplate, PageTemplate, Flowable, \
-                                   Frame, NextPageTemplate, PageBreak, Image
+                                   Frame, NextPageTemplate, PageBreak
+    from reportlab.lib.utils import ImageReader
+    from reportlab.graphics.barcode import code39, code128
     REPORTLAB = True
 except ImportError:
     BaseDocTemplate = object
+    Flowable = object
     REPORTLAB = False
 
 from gluon import current, HTTP
@@ -527,69 +530,52 @@ class S3PDFCardLayout(Flowable):
 
     # -------------------------------------------------------------------------
     def draw_barcode(self,
-                     code,
+                     value,
                      x,
                      y,
-                     bctype="code39",
-                     encoder_args=None,
-                     write_text=False,
+                     bctype="code128",
                      height=12,
                      halign=None,
                      valign=None,
                      ):
         """
             Helper function to render a barcode
-            - requires pyBarcode (try installing with "pip install pyBarcode")
 
-            @param code: the string to encode
+            @param value: the string to encode
             @param x: drawing position
             @param y: drawing position
             @param bctype: the barcode type
-            @param encoder_args: keyword arguments for the barcode generator (dict)
-            @param write_text: render the code as text under the barcode
-            @param height: the height of the barcode (in points),
-                           not including the text
+            @param height: the height of the barcode (in points)
             @param halign: horizontal alignment ("left"|"center"|"right"), default left
             @param valign: vertical alignment ("top"|"middle"|"bottom"), default bottom
         """
 
-        try:
-            import barcode
-            from barcode.errors import BarcodeError
-            from barcode.writer import ImageWriter
-        except ImportError:
-            current.log.error("Barcode generation failed: pyBarcode not installed")
-            return
+        # For arbitrary alphanumeric values, these would be the most
+        # commonly used symbologies:
+        types = {"code39": code39.Standard39,
+                 "code128": code128.Code128,
+                 }
 
-        # Generate the barcode as PNG
-        writer = ImageWriter()
-        if encoder_args is None:
-            # Default encoder args (NB type-dependent)
-            if bctype == "code39":
-                encoder_args = {"add_checksum": False}
-            else:
-                encoder_args = {}
-        try:
-            encoder = barcode.get_barcode_class(bctype)
-            bcode = encoder(code, writer=writer, **encoder_args)
-        except (BarcodeError, TypeError):
-            import sys
-            current.log.error("Barcode generation failed: %s" % sys.exc_info()[1])
-            return
+        encode = types.get(bctype)
+        if not encode:
+            raise RuntimeError("Barcode type %s not supported" % bctype)
+        else:
+            barcode = encode(value, barHeight=height)
 
-        # Write the barcode to a StringIO
-        buf = StringIO()
-        bcode.write(buf, options = {"module_width": 0.2,
-                                    "module_height": height / 72.0 * 25.4,
-                                    "quiet_zone": 2,
-                                    "write_text": write_text,
-                                    "font_size": 7,
-                                    "text_distance": 0.8,
-                                    "dpi": 144,
-                                    })
+        width, height = barcode.width, barcode.height
 
-        # Convert size
-        self.draw_image(buf, x, y, scale=0.5, halign=halign, valign=valign)
+        hshift = vshift = 0
+        if halign == "right":
+            hshift = width
+        elif halign == "center":
+            hshift = width / 2.0
+
+        if valign == "top":
+            vshift = height
+        elif valign == "middle":
+            vshift = height / 2.0
+
+        barcode.drawOn(self.canv, x - hshift, y - vshift)
 
     # -------------------------------------------------------------------------
     def draw_image(self,
@@ -643,18 +629,16 @@ class S3PDFCardLayout(Flowable):
             height = img_size[1] * scale
         elif width and height:
             if proportional:
-                scale = min(float(width)/img_size[0], float(height)/img_size[1])
+                scale = min(float(width) / img_size[0], float(height) / img_size[1])
                 width = img_size[0] * scale
                 height = img_size[1] * scale
         elif width:
             height = img_size[1] * (float(width) / img_size[0])
         elif height:
             width = img_size[0] * (float(height) / img_size[1])
-
-        # Generate the flowable
-        if is_buffer:
-            img.seek(0)
-        flowable = Image(img, width=width, height=height)
+        else:
+            width = img_size[0]
+            height = img_size[1]
 
         # Compute drawing position from alignment options
         hshift = vshift = 0
@@ -669,10 +653,19 @@ class S3PDFCardLayout(Flowable):
             vshift = height / 2.0
 
         # Draw the image
+        if is_buffer:
+            img.seek(0)
+        ir = ImageReader(img)
+
         c = self.canv
-        c.saveState()
-        flowable.drawOn(c, x - hshift, y - vshift)
-        c.restoreState()
+        c.drawImage(ir,
+                    x - hshift,
+                    y - vshift,
+                    width = width,
+                    height = height,
+                    preserveAspectRatio = proportional,
+                    mask = "auto",
+                    )
 
     # -------------------------------------------------------------------------
     def draw_outline(self):
