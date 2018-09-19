@@ -338,6 +338,10 @@ class S3HRModel(S3Model):
             sortby = "name",
             comment = S3PopupLink(c = "vol" if group == "volunteer" else "hrm",
                                   f = "job_title",
+                                  # Add this for usecases where this is no special controller for an options lookup
+                                  #vars = {"prefix": "hrm",
+                                  #        "parent": "human_resource",
+                                  #        },
                                   label = label_create,
                                   title = label,
                                   tooltip = tooltip,

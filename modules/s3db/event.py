@@ -3808,6 +3808,10 @@ class S3EventScenarioHRModel(S3Model):
                                                                       )),
                                                 comment = S3PopupLink(c = "hrm",
                                                                       f = "job_title",
+                                                                      # No special controller so need this for an options lookup
+                                                                      vars = {"prefix": "hrm",
+                                                                              "parent": "human_resource",
+                                                                              },
                                                                       label = T("Create Position"),
                                                                       title = T("Position"),
                                                                       tooltip = T("The person's position in this incident"),
