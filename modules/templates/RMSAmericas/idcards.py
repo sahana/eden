@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import os
+
 from dateutil.relativedelta import relativedelta
 
 from reportlab.lib.colors import HexColor
@@ -60,18 +62,46 @@ class IDCardLayout(S3PDFCardLayout):
             @returns: a dict with common data
         """
 
-        # TODO look up all org logos
+        db = current.db
+        s3db = current.s3db
 
-        # TODO look up all profile pictures
+        defaultpath = os.path.join(current.request.folder, 'uploads')
 
-        return {}
+        # Get all root organisations
+        root_orgs = set(item["_row"]["org_organisation.root_organisation"]
+                        for item in items)
+
+        # Look up all logos
+        otable = s3db.org_organisation
+        query = (otable.id.belongs(root_orgs))
+        rows = db(query).select(otable.id, otable.logo)
+
+        field = otable.logo
+        path = field.uploadfolder if field.uploadfolder else defaultpath
+        logos = {row.id: os.path.join(path, row.logo) for row in rows if row.logo}
+
+        # Get all PE IDs
+        pe_ids = set(item["_row"]["pr_person.pe_id"] for item in items)
+
+        # Look up all profile pictures
+        itable = s3db.pr_image
+        query = (itable.pe_id.belongs(pe_ids)) & \
+                (itable.profile == True) & \
+                (itable.deleted == False)
+        rows = db(query).select(itable.pe_id, itable.image)
+
+        field = itable.image
+        path = field.uploadfolder if field.uploadfolder else defaultpath
+        pictures = {row.pe_id: os.path.join(path, row.image) for row in rows if row.image}
+
+        return {"logos": logos,
+                "pictures": pictures,
+                }
 
     # -------------------------------------------------------------------------
     def draw(self):
         """
-            TODO cleanup docstring
-
-            Draw the card (one side), to be implemented by subclass
+            Draw the card (one side)
 
             Instance attributes (NB draw-function should not modify them):
             - self.canv...............the canvas (provides the drawing methods)
@@ -91,24 +121,20 @@ class IDCardLayout(S3PDFCardLayout):
         T = current.T
 
         c = self.canv
-
         w = self.width
         #h = self.height
+        common = self.common
 
         orange = HexColor(0xEE4229)
 
         item = self.item
         raw = item["_row"]
 
-        root_org = raw["org_organisation.root_organisation"]
         # Get the org logo
-        # TODO look up in bulk
-        otable = current.s3db.org_organisation
-        query = (otable.id == root_org)
-        row = current.db(query).select(otable.logo, limitby=(0,1)).first()
-        if row and row.logo:
-            import os
-            logo = os.path.join(otable.logo.uploadfolder, row.logo)
+        logos = common.get("logos")
+        if logos:
+            root_org = raw["org_organisation.root_organisation"]
+            logo = logos.get(root_org)
         else:
             logo = None
 
@@ -124,41 +150,45 @@ class IDCardLayout(S3PDFCardLayout):
             RIGHT = w * 3 / 4 - 5
 
             # Vertical alignments
-            TOP = 165
-            UPPER = [134, 114, 98]
+            TOP = 200
             LOWER = [76, 58, 40]
             BOTTOM = 16
 
             # Org Logo
             if logo:
-                self.draw_image(logo, LEFT, TOP, width=60, height=60, halign="center")
+                self.draw_image(logo, LEFT, TOP, width=60, height=60, valign="middle", halign="center")
 
             # Get the profile picture
-            # TODO look up in bulk
-            itable = current.s3db.pr_image
-            query = (itable.pe_id == raw["pr_person.pe_id"]) & \
-                    (itable.profile == True)
-            row = current.db(query).select(itable.image, limitby=(0, 1)).first()
-            if row and row.image:
-                picture = itable.image.retrieve(row.image)[-1]
-                self.draw_image(picture, RIGHT, TOP, width=60, height=60, halign="center")
+            pictures = common.get("pictures")
+            if pictures:
+                picture = pictures.get(raw["pr_person.pe_id"])
+                if picture:
+                    self.draw_image(picture, RIGHT, TOP, width=60, height=60, valign="middle", halign="center")
+
+            # Center fields in reverse order so that vertical positions
+            # can be adjusted for very long and hence wrapping strings
+            y = 98
+
+            # Organisation/Branch
+            org_name = s3_str(item.get("org_organisation.name"))
+            aH = draw_value(CENTER, y, org_name, height=16, size=8)
+            draw_label(CENTER, y, "hrm_human_resource.organisation_id")
+
+            # Job Title
+            y += aH + 12
+            job_title = s3_str(item.get("hrm_human_resource.job_title_id"))
+            aH = draw_value(CENTER, y, job_title, height=16, size=8)
+            draw_label(CENTER, y, "hrm_human_resource.job_title_id")
 
             # Name
+            y += aH + 12
             name = s3_format_fullname(fname = raw["pr_person.first_name"],
                                       mname = raw["pr_person.middle_name"],
                                       lname = raw["pr_person.last_name"],
                                       truncate = False,
                                       )
-            draw_value(CENTER, UPPER[0], name, size=10)
-            draw_label(CENTER, UPPER[0], None, T("Name"))
-
-            # Job Title
-            draw_field(CENTER, UPPER[1], "hrm_human_resource.job_title_id", size=8)
-            draw_label(CENTER, UPPER[1], "hrm_human_resource.job_title_id")
-
-            # Organisation/Branch
-            draw_field(CENTER, UPPER[2], "org_organisation.name", size=8)
-            draw_label(CENTER, UPPER[2], "hrm_human_resource.organisation_id")
+            draw_value(CENTER, y, name, height=24, size=10)
+            draw_label(CENTER, y, None, T("Name"))
 
             # IDs
             draw_field(LEFT, LOWER[0], "pr_national_id_identity.value")
@@ -206,7 +236,7 @@ class IDCardLayout(S3PDFCardLayout):
             CENTER = w / 2
 
             # Vertical alignments
-            TOP = 170
+            TOP = 200
             BOTTOM = 16
 
             # TODO Mission statement
@@ -222,7 +252,7 @@ class IDCardLayout(S3PDFCardLayout):
 
             # Graphics
             if logo:
-                self.draw_image(logo, CENTER, TOP, width=60, height=60, halign="center")
+                self.draw_image(logo, CENTER, TOP, width=60, height=60, valign="middle", halign="center")
             c.setFillColor(orange)
             c.rect(0, 0, w, 10, fill=1, stroke=0)
 
@@ -262,18 +292,28 @@ class IDCardLayout(S3PDFCardLayout):
             @param height: the maximum available height (points)
             @param size: the font size (points)
             @param bold: use bold font
+
+            @returns: the actual height of the text element drawn
         """
 
         styleSheet = getSampleStyleSheet()
         style = styleSheet["Normal"]
         style.fontName = BOLD if bold else NORMAL
         style.fontSize = size
+        style.leading = size
         style.alignment = TA_CENTER
 
         para = Paragraph(value, style)
-        # TODO verify that para does not need to split?
-        para.wrap(width, height)
+        aH = para.wrap(width, height)[1]
+
+        while(aH > height and style.fontSize > 4):
+            # Reduce font size to make fit
+            style.fontSize -= 1
+            style.leading = style.fontSize
+            aH = para.wrap(width, height)[1]
+
         para.drawOn(self.canv, x - para.width / 2, y)
+        return aH
 
     # -------------------------------------------------------------------------
     def draw_label(self, x, y, colname, default=""):
@@ -294,6 +334,6 @@ class IDCardLayout(S3PDFCardLayout):
 
         c = self.canv
         c.setFont(NORMAL, 5)
-        c.drawCentredString(x, y - 6, s3_str(label))
+        c.drawCentredString(x, y - 7, s3_str(label))
 
 # END =========================================================================
