@@ -188,12 +188,12 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
-        ("req", Storage(
-            name_nice = "Requests",
-            #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-            restricted = True,
-            module_type = 10,
-        )),
+        #("req", Storage(
+        #    name_nice = "Requests",
+        #    #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+        #    restricted = True,
+        #    module_type = 10,
+        #)),
         ("project", Storage(
             name_nice = "Tasks",
             #description = "Tracking of Projects, Activities and Tasks",
@@ -246,7 +246,7 @@ def config(settings):
         record = r.record
         if record and r.representation == "html":
 
-            from gluon import DIV, TABLE, TR, TH
+            from gluon import A, DIV, TABLE, TR, TH
             from s3 import s3_rheader_tabs
 
             name = r.name
@@ -263,7 +263,9 @@ def config(settings):
 
                 rheader_tabs = s3_rheader_tabs(r, tabs)
 
+                record_id = r.id
                 incident_type_id = record.incident_type_id
+
                 # Dropdown of Scenarios to select
                 stable = current.s3db.event_scenario
                 query = (stable.incident_type_id == incident_type_id) & \
@@ -271,10 +273,10 @@ def config(settings):
                 scenarios = current.db(query).select(stable.id,
                                                      stable.name,
                                                      )
-                if len(scenarios):
+                if len(scenarios) and r.method != "event":
                     from gluon import SELECT, OPTION
                     dropdown = SELECT(_id="scenarios")
-                    dropdown["_data-incident_id"] = r.id
+                    dropdown["_data-incident_id"] = record_id
                     dappend = dropdown.append
                     dappend(OPTION(T("Select Scenario")))
                     for s in scenarios:
@@ -298,6 +300,18 @@ def config(settings):
                     closed = TH(T("CLOSED"))
                 else:
                     closed = TH()
+
+                if record.event_id or r.method == "event":
+                    event = ""
+                else:
+                    event = A(T("Assign to Event"),
+                                _href = URL(c = "event",
+                                            f = "incident",
+                                            args = [record_id, "event"],
+                                            ),
+                                _class = "action-btn"
+                                )
+
                 table = r.table
                 rheader = DIV(TABLE(TR(exercise),
                                     TR(TH("%s: " % table.name.label),
@@ -320,6 +334,32 @@ def config(settings):
                                        table.date.represent(record.date),
                                        ),
                                     TR(closed),
+                                    event,
+                                    ), rheader_tabs)
+
+            elif name == "event":
+                # Events Controller
+                tabs = [(T("Event Details"), None),
+                        (T("Incidents"), "incident"),
+                        (T("Documents"), "document"),
+                        (T("Photos"), "image"),
+                        ]
+
+                rheader_tabs = s3_rheader_tabs(r, tabs)
+
+                table = r.table
+                rheader = DIV(TABLE(TR(TH("%s: " % table.event_type_id.label),
+                                       table.event_type_id.represent(record.event_type_id),
+                                       ),
+                                    TR(TH("%s: " % table.name.label),
+                                       record.name,
+                                       ),
+                                    TR(TH("%s: " % table.start_date.label),
+                                       table.start_date.represent(record.start_date),
+                                       ),
+                                    TR(TH("%s: " % table.comments.label),
+                                       record.comments,
+                                       ),
                                     ), rheader_tabs)
 
             elif name == "scenario":
@@ -347,6 +387,19 @@ def config(settings):
                                     ), rheader_tabs)
 
         return rheader
+
+    # -------------------------------------------------------------------------
+    def customise_event_event_controller(**attr):
+
+        #s3 = current.response.s3
+
+        # No sidebar menu
+        #current.menu.options = None
+        attr["rheader"] = event_rheader
+
+        return attr
+
+    settings.customise_event_event_controller = customise_event_event_controller
 
     # -------------------------------------------------------------------------
     def customise_event_incident_report_controller(**attr):

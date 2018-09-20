@@ -522,9 +522,12 @@ class S3Migration(object):
         # Import the new ACLs
         from s3 import S3BulkImporter
         bi = S3BulkImporter()
-        template = current.deployment_settings.get_template()
-        filename = os.path.join(current.request.folder, "modules", "templates", template, "auth_roles.csv")
-        bi.import_role(filename)
+        templates = current.deployment_settings.get_template()
+        if not isinstance(templates, list):
+            templates = [templates]
+        for t in templates:
+            filename = os.path.join(current.request.folder, "modules", "templates", t, "auth_roles.csv")
+            bi.import_role(filename)
         current.db.commit()
 
     # -------------------------------------------------------------------------

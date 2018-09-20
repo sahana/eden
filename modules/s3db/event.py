@@ -65,6 +65,7 @@ __all__ = ("S3EventModel",
            #"event_ActionPlan",
            #"event_ScenarioActionPlan",
            #"event_ApplyScenario",
+           #"event_EventAssignMethod",
            #"event_IncidentAssignMethod",
            "event_notification_dispatcher",
            "event_event_list_layout",
@@ -1382,6 +1383,10 @@ class S3IncidentModel(S3Model):
         set_method("event", "incident",
                    method = "assign",
                    action = self.pr_AssignMethod(component="human_resource"))
+
+        set_method("event", "incident",
+                   method = "event",
+                   action = event_EventAssignMethod())
 
         set_method("event", "incident",
                    method = "dispatch",
@@ -3803,6 +3808,10 @@ class S3EventScenarioHRModel(S3Model):
                                                                       )),
                                                 comment = S3PopupLink(c = "hrm",
                                                                       f = "job_title",
+                                                                      # No special controller so need this for an options lookup
+                                                                      vars = {"prefix": "hrm",
+                                                                              "parent": "human_resource",
+                                                                              },
                                                                       label = T("Create Position"),
                                                                       title = T("Position"),
                                                                       tooltip = T("The person's position in this incident"),
@@ -5004,6 +5013,400 @@ class event_ApplyScenario(S3Method):
         output = current.xml.json_message(True, 200, current.T("Scenario Applied"))
         current.response.headers["Content-Type"] = "application/json"
         return output
+
+# =============================================================================
+class event_EventAssignMethod(S3Method):
+    """
+        Custom Method to allow things to be assigned to an Event
+        e.g. Incident
+    """
+
+    def __init__(self, component=None, next_tab=None
+                 ):
+        """
+            @param component: the Component in which to create records
+            @param next_tab: the component/method to redirect to after assigning
+        """
+
+        self.component = component
+        if next_tab:
+            self.next_tab = next_tab
+        else:
+            self.next_tab = component
+
+    def apply_method(self, r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        if self.component:
+            try:
+                component = r.resource.components[self.component]
+            except KeyError:
+                current.log.error("Invalid Component!")
+                raise
+
+            if component.link:
+                component = component.link
+
+            tablename = component.tablename
+
+            # Requires permission to create component
+            authorised = current.auth.s3_has_permission("create", tablename)
+            if not authorised:
+                r.unauthorised()
+
+        else:
+            component = None
+            record_id = r.id
+            resource = r.resource
+            tablename = resource.tablename
+            # Requires permission to update record
+            authorised = current.auth.s3_has_permission("update", tablename, record_id)
+            if not authorised:
+                r.unauthorised()
+
+        #settings = current.deployment_settings
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db[tablename]
+        if component:
+            fkey = component.fkey
+            record = r.record
+            if fkey in record:
+                # SuperKey
+                record_id = record[fkey]
+            else:
+                record_id = r.id
+
+        get_vars = r.get_vars
+        response = current.response
+
+        if r.http == "POST":
+            added = 0
+            post_vars = r.post_vars
+            if all([n in post_vars for n in ("assign", "selected", "mode")]):
+
+                selected = post_vars.selected
+                if selected:
+                    selected = selected.split(",")
+                else:
+                    selected = []
+
+                # Handle exclusion filter
+                if post_vars.mode == "Exclusive":
+                    if "filterURL" in post_vars:
+                        filters = S3URLQuery.parse_url(post_vars.filterURL)
+                    else:
+                        filters = None
+                    query = ~(FS("id").belongs(selected))
+                    eresource = s3db.resource("event_event",
+                                              alias = self.component,
+                                              filter=query, vars=filters)
+                    rows = eresource.select(["id"], as_rows=True)
+                    selected = [str(row.id) for row in rows]
+
+                if component:
+                    # Prevent multiple entries in the link table
+                    query = (table.event_id.belongs(selected)) & \
+                            (table[fkey] == record_id) & \
+                            (table.deleted != True)
+                    rows = db(query).select(table.id)
+                    rows = dict((row.id, row) for row in rows)
+                    onaccept = component.get_config("create_onaccept",
+                                                    component.get_config("onaccept", None))
+                else:
+                    onaccept = resource.get_config("update_onaccept",
+                                                   resource.get_config("onaccept", None))
+                for event_id in selected:
+                    try:
+                        e_id = int(event_id.strip())
+                    except ValueError:
+                        continue
+                    if component and e_id not in rows:
+                        link = Storage(event_id = event_id)
+                        link[fkey] = record_id
+                        _id = table.insert(**link)
+                        if onaccept:
+                            link["id"] = _id
+                            form = Storage(vars=link)
+                            onaccept(form)
+                        added += 1
+                    else:
+                        db(table.id == record_id).update(event_id = event_id)
+                        if onaccept:
+                            form = Storage(vars = r.record)
+                            onaccept(form)
+                        added -= 1
+
+            if r.representation == "popup":
+                # Don't redirect, so we retain popup extension & so close popup
+                response.confirmation = T("%(number)s assigned") % \
+                                            {"number": added}
+                return {}
+            else:
+                if added < 0:
+                    # No component
+                    response.confirmation = T("Assigned")
+                    redirect(URL(r.controller, r.function,
+                                 args=r.id, vars={}))
+                current.session.confirmation = T("%(number)s assigned") % \
+                                                    {"number": added}
+                if added > 0:
+                    redirect(URL(args=[r.id, self.next_tab], vars={}))
+                else:
+                    redirect(URL(args=r.args, vars={}))
+
+        elif r.http == "GET":
+
+            # Filter widgets
+            location_defaults = {}
+            if tablename == "event_incident":
+               location_id = r.record.location_id
+               if location_id:
+                   gtable = s3db.gis_location
+                   location = db(gtable.id == location_id).select(gtable.level,
+                                                                  gtable.name,
+                                                                  gtable.parent,
+                                                                  limitby = (0, 1),
+                                                                  ).first()
+                   level = location.level
+                   if level:
+                       location_defaults["event_location.location_id$%s__belongs" % level] = location.name
+                   parent = location.parent
+                   if parent:
+                       location = db(gtable.id == parent).select(gtable.level,
+                                                                 gtable.name,
+                                                                 gtable.parent,
+                                                                 limitby = (0, 1),
+                                                                 ).first()
+                       location_defaults["event_location.location_id$%s__belongs" % location.level] = location.name
+                       parent = location.parent
+                       if parent:
+                           location = db(gtable.id == parent).select(gtable.level,
+                                                                     gtable.name,
+                                                                     gtable.parent,
+                                                                     limitby = (0, 1),
+                                                                     ).first()
+                           location_defaults["event_location.location_id$%s__belongs" % location.level] = location.name
+                           parent = location.parent
+                           if parent:
+                               location = db(gtable.id == parent).select(gtable.level,
+                                                                         gtable.name,
+                                                                         gtable.parent,
+                                                                         limitby = (0, 1),
+                                                                         ).first()
+                               location_defaults["event_location.location_id$%s__belongs" % location.level] = location.name
+                               parent = location.parent
+                               if parent:
+                                   location = db(gtable.id == parent).select(gtable.level,
+                                                                             gtable.name,
+                                                                             gtable.parent,
+                                                                             limitby = (0, 1),
+                                                                             ).first()
+                                   location_defaults["event_location.location_id$%s__belongs" % location.level] = location.name
+                                   parent = location.parent
+                                   if parent:
+                                       location = db(gtable.id == parent).select(gtable.level,
+                                                                                 gtable.name,
+                                                                                 gtable.parent,
+                                                                                 limitby = (0, 1),
+                                                                                 ).first()
+                                       location_defaults["location.location_id$%s__belongs" % location.level] = location.name
+
+            # Which levels of Hierarchy are we using?
+            levels = current.gis.get_relevant_hierarchy_levels()
+
+            filter_widgets = [S3LocationFilter("event_location.location_id",
+                                               default = location_defaults,
+                                               levels = levels,
+                                               label = T("Location"),
+                                               ),
+                              # @ToDo: Filter for events which are open within a date range
+                              #S3DateFilter("start_date",
+                              #             label = None,
+                              #             hide_time = True,
+                              #             input_labels = {"ge": "From", "le": "To"}
+                              #             ),
+                              S3OptionsFilter("closed",
+                                              label = T("Status"),
+                                              options = OrderedDict([(False, T("Open")),
+                                                                     (True, T("Closed")),
+                                                                     ]),
+                                              cols = 2,
+                                              default = False,
+                                              sort = False,
+                                              ),
+                              ]
+
+            # List fields
+            list_fields = ["id",
+                           "name",
+                           "start_date",
+                           "event_location.location_id",
+                           ]
+
+            # Data table
+            resource = s3db.resource("event_event",
+                                     alias=r.component.alias if r.component else None,
+                                     vars=get_vars)
+            totalrows = resource.count()
+            if "pageLength" in get_vars:
+                display_length = get_vars["pageLength"]
+                if display_length == "None":
+                    display_length = None
+                else:
+                    display_length = int(display_length)
+            else:
+                display_length = 25
+            if display_length:
+                limit = 4 * display_length
+            else:
+                limit = None
+            filter_, orderby, left = resource.datatable_filter(list_fields,
+                                                               get_vars)
+            resource.add_filter(filter_)
+
+            if component:
+                # Hide incidents already in the link table
+                etable = db.event_event
+                query = (table[fkey] == record_id) & \
+                        (table.deleted != True)
+                rows = db(query).select(table.event_id)
+                already = [row.event_id for row in rows]
+                filter_ = (~etable.id.belongs(already))
+                resource.add_filter(filter_)
+
+            # Allow customise_ to influence
+            #s3 = response.s3
+            #if s3.filter:
+            #    resource.add_filter(s3.filter)
+
+            dt_id = "datatable"
+
+            # Bulk actions
+            dt_bulk_actions = [(T("Assign"), "assign")]
+
+            if r.representation in ("html", "popup"):
+                # Page load
+                resource.configure(deletable = False)
+
+                profile_url = URL(c = "event",
+                                  f = "event",
+                                  # @ToDo: Popup (add class="s3_modal"
+                                  #args = ["[id]", "profile.popup"])
+                                  args = ["[id]", "profile"])
+                S3CRUD.action_buttons(r,
+                                      deletable = False,
+                                      read_url = profile_url,
+                                      update_url = profile_url)
+                response.s3.no_formats = True
+
+                # Filter form
+                if filter_widgets:
+
+                    # Where to retrieve filtered data from:
+                    submit_url_vars = resource.crud._remove_filters(r.get_vars)
+                    filter_submit_url = r.url(vars=submit_url_vars)
+
+                    # Default Filters (before selecting data!)
+                    resource.configure(filter_widgets=filter_widgets)
+                    # @ToDo: This is currently not working
+                    # - filter shows this option, but the resource isn't filtered
+                    #S3FilterForm.apply_filter_defaults(r, resource)
+
+                    # Where to retrieve updated filter options from:
+                    filter_ajax_url = URL(c = "event",
+                                          f = "event",
+                                          args=["filter.options"],
+                                          vars={})
+
+                    get_config = resource.get_config
+                    filter_clear = get_config("filter_clear", True)
+                    filter_formstyle = get_config("filter_formstyle", None)
+                    filter_submit = get_config("filter_submit", True)
+                    filter_form = S3FilterForm(filter_widgets,
+                                               clear=filter_clear,
+                                               formstyle=filter_formstyle,
+                                               submit=filter_submit,
+                                               ajax=True,
+                                               url=filter_submit_url,
+                                               ajaxurl=filter_ajax_url,
+                                               _class="filter-form",
+                                               _id="datatable-filter-form",
+                                               )
+                    fresource = current.s3db.resource(resource.tablename)
+                    alias = r.component.alias if r.component else None
+                    ff = filter_form.html(fresource,
+                                          r.get_vars,
+                                          target="datatable",
+                                          alias=alias)
+                else:
+                    ff = ""
+
+                # Data table (items)
+                data = resource.select(list_fields,
+                                       start=0,
+                                       limit=limit,
+                                       orderby=orderby,
+                                       left=left,
+                                       count=True,
+                                       represent=True)
+                filteredrows = data["numrows"]
+                dt = S3DataTable(data["rfields"], data["rows"])
+
+                items = dt.html(totalrows,
+                                filteredrows,
+                                dt_id,
+                                dt_ajax_url=r.url(representation="aadata"),
+                                dt_bulk_actions=dt_bulk_actions,
+                                dt_pageLength=display_length,
+                                dt_pagination="true",
+                                dt_searching="false",
+                                )
+
+                response.view = "list_filter.html"
+
+                return {"items": items,
+                        "title": T("Assign to Event"),
+                        "list_filter_form": ff,
+                        }
+
+            elif r.representation == "aadata":
+                # Ajax refresh
+                if "draw" in get_vars:
+                    echo = int(get_vars.draw)
+                else:
+                    echo = None
+
+                data = resource.select(list_fields,
+                                       start=0,
+                                       limit=limit,
+                                       orderby=orderby,
+                                       left=left,
+                                       count=True,
+                                       represent=True)
+                filteredrows = data["numrows"]
+                dt = S3DataTable(data["rfields"], data["rows"])
+
+                items = dt.json(totalrows,
+                                filteredrows,
+                                dt_id,
+                                echo,
+                                dt_bulk_actions=dt_bulk_actions)
+                response.headers["Content-Type"] = "application/json"
+                return items
+
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 class event_IncidentAssignMethod(S3Method):
