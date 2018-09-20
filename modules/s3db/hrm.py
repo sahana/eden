@@ -756,7 +756,7 @@ class S3HRModel(S3Model):
                                                   },
                            )
 
-        if group in ("volunteer", None):
+        if group in ("volunteer", None) or mix_staff:
             add_components(tablename,
                            # Programmes
                            hrm_programme_hours = {"link": "pr_person",
@@ -8027,7 +8027,6 @@ def hrm_person_controller(**attr):
                 s3db.configure("hrm_training",
                                list_fields = list_fields,
                                )
-
         return True
     s3.prep = prep
 
