@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from dateutil.relativedelta import relativedelta
+
 from reportlab.lib.colors import HexColor
 from reportlab.platypus import Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
@@ -18,9 +20,51 @@ BOLD = "Helvetica-Bold"
 class IDCardLayout(S3PDFCardLayout):
     """
         Layout for printable volunteer/staff ID cards
-
-        TODO implement lookup-method
     """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def fields(cls, resource):
+        """
+            The layout-specific list of fields to look up from the resource
+
+            @param resource: the resource
+
+            @returns: list of field selectors
+        """
+
+        return ["id",
+                "person_id$pe_id",
+                "person_id$first_name",
+                "person_id$middle_name",
+                "person_id$last_name",
+                "person_id$physical_description.blood_type",
+                "person_id$physical_description.allergic",
+                "person_id$national_id.value",
+                "job_title_id",
+                "code",
+                "organisation_id",
+                "organisation_id$name",
+                "organisation_id$root_organisation",
+                ]
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def lookup(cls, resource, items):
+        """
+            Look up layout-specific common data for all cards
+
+            @param resource: the resource
+            @param items: the items
+
+            @returns: a dict with common data
+        """
+
+        # TODO look up all org logos
+
+        # TODO look up all profile pictures
+
+        return {}
 
     # -------------------------------------------------------------------------
     def draw(self):
@@ -44,14 +88,12 @@ class IDCardLayout(S3PDFCardLayout):
                card's frame, drawing must not overshoot self.width/self.height
         """
 
+        T = current.T
+
         c = self.canv
 
-        # TODO do this only when self.multiple and only on front-size
-        c.setDash(1, 2)
-        self.draw_outline()
-
         w = self.width
-        h = self.height
+        #h = self.height
 
         orange = HexColor(0xEE4229)
 
@@ -76,6 +118,21 @@ class IDCardLayout(S3PDFCardLayout):
             draw_value = self.draw_value
             draw_label = self.draw_label
 
+            # Horizontal alignments
+            LEFT = w / 4 - 5
+            CENTER = w / 2 - 5
+            RIGHT = w * 3 / 4 - 5
+
+            # Vertical alignments
+            TOP = 165
+            UPPER = [134, 114, 98]
+            LOWER = [76, 58, 40]
+            BOTTOM = 16
+
+            # Org Logo
+            if logo:
+                self.draw_image(logo, LEFT, TOP, width=60, height=60, halign="center")
+
             # Get the profile picture
             # TODO look up in bulk
             itable = current.s3db.pr_image
@@ -84,9 +141,7 @@ class IDCardLayout(S3PDFCardLayout):
             row = current.db(query).select(itable.image, limitby=(0, 1)).first()
             if row and row.image:
                 picture = itable.image.retrieve(row.image)[-1]
-                self.draw_image(picture, w * 3 / 4, 165, width=60, height=60, halign="center")
-
-            x = w / 2
+                self.draw_image(picture, RIGHT, TOP, width=60, height=60, halign="center")
 
             # Name
             name = s3_format_fullname(fname = raw["pr_person.first_name"],
@@ -94,82 +149,66 @@ class IDCardLayout(S3PDFCardLayout):
                                       lname = raw["pr_person.last_name"],
                                       truncate = False,
                                       )
-            draw_value(x, 134, name, size=10)
-            draw_label(x, 134, None, current.T("Name"))
+            draw_value(CENTER, UPPER[0], name, size=10)
+            draw_label(CENTER, UPPER[0], None, T("Name"))
 
             # Job Title
-            draw_field(x, 114, "hrm_human_resource.job_title_id", size=8)
-            draw_label(x, 114, "hrm_human_resource.job_title_id")
+            draw_field(CENTER, UPPER[1], "hrm_human_resource.job_title_id", size=8)
+            draw_label(CENTER, UPPER[1], "hrm_human_resource.job_title_id")
 
-            # Site (or Branch?)
-            # TODO is this the right field? (or should it be branch?)
-            draw_field(x, 98, "hrm_human_resource.site_id", size=8)
-            draw_label(x, 98, "hrm_human_resource.site_id")
+            # Organisation/Branch
+            draw_field(CENTER, UPPER[2], "org_organisation.name", size=8)
+            draw_label(CENTER, UPPER[2], "hrm_human_resource.organisation_id")
 
-            x = w/4
+            # IDs
+            draw_field(LEFT, LOWER[0], "pr_national_id_identity.value")
+            draw_label(LEFT, LOWER[0], None, T("ID"))
+            # TODO only volunteers can have this? (Adjust label by HR type?)
+            draw_field(RIGHT, LOWER[0], "hrm_human_resource.code")
+            draw_label(RIGHT, LOWER[0], None, T("Volunteer ID"))
 
-            # ID (?)
-            # TODO identify field
-            # TODO use draw_* helpers
+            # Medical Details
+            draw_field(LEFT, LOWER[1], "pr_physical_description.blood_type")
+            draw_label(LEFT, LOWER[1], None, T("Blood Type"))
+            draw_field(RIGHT, LOWER[1], "pr_physical_description.allergic")
+            draw_label(RIGHT, LOWER[1], None, T("Allergic"))
+
+            # Issuing/Expirey Dates
+            # TODO adjust interval per org (org_idcard)
+            today = current.request.now.date()
+            format_date = current.calendar.format_date
+            issued_on = format_date(today)
+            expires_on = format_date(today + relativedelta(months=24))
+
             c.setFont(BOLD, 7)
-            c.drawCentredString(x, 76, "1-234-567")
-            c.setFont(NORMAL, 5)
-            c.drawCentredString(x, 70, "Identificación")
-
-            # Blood Type
-            # TODO identify field
-            # TODO use draw_* helpers
+            c.drawCentredString(LEFT, LOWER[2], issued_on)
+            draw_label(LEFT, LOWER[2], None, T("Issued on"))
             c.setFont(BOLD, 7)
-            c.drawCentredString(x, 58, "O Positivo")
-            c.setFont(NORMAL, 5)
-            c.drawCentredString(x, 52, "Tipo de Sangre")
-
-            # Issuing Date
-            # TODO identify field (use today's date)
-            # TODO use draw_* helpers
-            c.setFont(BOLD, 7)
-            c.drawCentredString(x, 40, "21-Marzo-2018")
-            c.setFont(NORMAL, 5)
-            c.drawCentredString(x, 34, "Expedido")
-
-            x = w*3/4
-
-            # Volunteer ID
-            # TODO only volunteers can have this
-            # TODO adjust label?
-            draw_field(x, 76, "hrm_human_resource.code")
-            draw_label(x, 76, "hrm_human_resource.code")
-
-            # Allergic
-            # TODO identify field
-            # TODO use draw_* helpers
-            c.setFont(BOLD, 7)
-            c.drawCentredString(x, 58, "No")
-            c.setFont(NORMAL, 5)
-            c.drawCentredString(x, 52, "Alergico")
-
-            # Expiration date
-            # TODO identify field (lookup interval from org_idcard, then compute)
-            # TODO use draw_* helpers
-            c.setFont(BOLD, 7)
-            c.drawCentredString(x, 40, "21-Marzo-2020")
-            c.setFont(NORMAL, 5)
-            c.drawCentredString(x, 34, "Expira")
+            c.drawCentredString(RIGHT, LOWER[2], expires_on)
+            draw_label(RIGHT, LOWER[2], None, T("Expires on"))
 
             # Barcode
-            # TODO DRY with backside
             code = raw["hrm_human_resource.code"]
             if code:
-                self.draw_barcode(s3_str(code), w / 2, 16, height=12, halign="center")
+                self.draw_barcode(s3_str(code), CENTER, BOTTOM, height=12, halign="center")
 
             # Graphics
-            if logo:
-                self.draw_image(logo, w / 4, 165, width=60, height=60, halign="center")
             c.setFillColor(orange)
             c.rect(0, 0, w, 12, fill=1, stroke=0)
             c.rect(w - 12, 0, 12, 154, fill=1, stroke=0)
 
+            # Add a utting line with multiple cards per page
+            if self.multiple:
+                c.setDash(1, 2)
+                self.draw_outline()
         else:
+            # Horizontal alignments
+            CENTER = w / 2
+
+            # Vertical alignments
+            TOP = 170
+            BOTTOM = 16
+
             # TODO Mission statement
 
             # TODO IFRC membership statement
@@ -177,14 +216,13 @@ class IDCardLayout(S3PDFCardLayout):
             # TODO Signature and caption
 
             # Barcode
-            # TODO DRY with backsize
             code = raw["hrm_human_resource.code"]
             if code:
-                self.draw_barcode(s3_str(code), w / 2, 16, height=12, halign="center")
+                self.draw_barcode(s3_str(code), CENTER, BOTTOM, height=12, halign="center")
 
             # Graphics
             if logo:
-                self.draw_image(logo, w / 2, 170, width=60, height=60, halign="center")
+                self.draw_image(logo, CENTER, TOP, width=60, height=60, halign="center")
             c.setFillColor(orange)
             c.rect(0, 0, w, 10, fill=1, stroke=0)
 

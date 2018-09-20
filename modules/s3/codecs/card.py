@@ -65,21 +65,19 @@ class S3PDFCard(S3Codec):
         """
             API Method to encode a resource as cards
 
-            @param resource: the S3Resource
+            @param resource: the S3Resource, or
+                             - the data items as list [{fieldname: representation, ...}, ...], or
+                             - a callable that produces such a list of items
             @param attr: additional encoding parameters (see below)
 
-            @keyword fields: the fields to extract from resource,
-                             - a list of field selectors, or
-                             - a callable that extracts the data and returns
-                               them as an array [{fieldname: representation, ...}, ...],
-                             - defaults to list_fields of the resource
-            @keyword orderby: orderby-expression for data extraction
+            @keyword layout: the layout (a S3PDFCardLayout subclass, overrides
+                             the resource's pdf_card_layout setting
+            @keyword orderby: orderby-expression for data extraction, overrides
+                              the resource's orderby setting
             @keyword labels: the labels for the fields,
                              - a dict {colname: label}, or
                              - a callable that produces it,
-                             - defaults to the labels of list_fields
-            @keyword layout: the layout (a S3PDFCardLayout subclass, overrides
-                             the resource pdf_card_layout setting)
+                             - defaults to the labels of the extracted fields
             @keyword pagesize: the PDF page size,
                                - a string "A4" or "Letter", or
                                - a tuple (width, height), in points
@@ -131,17 +129,15 @@ class S3PDFCard(S3Codec):
         pagesize = orientation(pagesize)
 
         # Extract the data
-        fields = attr.get("fields")
-        if callable(fields):
-            # External getter => call with resource, returns the data items
-            data = None
-            items = fields(resource)
-        elif is_resource:
+        if is_resource:
             # Extract the data items from the resource
-            if not isinstance(fields, (tuple, list)):
-                fields = resource.list_fields()
+            fields = layout.fields(resource)
             data = self.extract(resource, fields, orderby=attr.get("orderby"))
             items = data.rows
+        elif callable(resource):
+            # External getter => call with resource, returns the data items
+            data = None
+            items = resource()
         else:
             # The data items have been passed-in in place of the resource
             data = None
@@ -204,6 +200,11 @@ class S3PDFCard(S3Codec):
             @returns: an S3ResourceData instance
         """
 
+        if orderby is None:
+            orderby = resource.get_config("orderby")
+        if orderby is None:
+            orderby = resource._id
+
         return resource.select(fields,
                                represent = True,
                                show_links = False,
@@ -232,6 +233,9 @@ class S3PDFCard(S3Codec):
         number_of_pages = int(len(items) / cards_per_page) + 1
         multiple = cards_per_page > 1
 
+        # Look up common data
+        common = layout.lookup(resource, items)
+
         # Generate the pages
         flowables = []
         append = flowables.append
@@ -250,6 +254,7 @@ class S3PDFCard(S3Codec):
                 append(layout(resource,
                               item,
                               labels = labels,
+                              common = common,
                               multiple = multiple,
                               ))
 
@@ -261,6 +266,7 @@ class S3PDFCard(S3Codec):
                     append(layout(resource,
                                   item,
                                   labels = labels,
+                                  common = common,
                                   multiple = multiple,
                                   backside = True,
                                   ))
@@ -469,12 +475,21 @@ class S3PDFCardLayout(Flowable):
     orientation = "Portrait"
     doublesided = True
 
-    def __init__(self, resource, item, labels=None, backside=False, multiple=False):
+    def __init__(self,
+                 resource,
+                 item,
+                 labels=None,
+                 common=None,
+                 backside=False,
+                 multiple=False,
+                 ):
         """
             Constructor
 
+            @param resource: the resource
             @param item: the data item
             @param labels: the field labels
+            @param common: common data for all cards
             @param backside: this instance should render a card backside
             @param multiple: there are multiple cards per page
         """
@@ -486,10 +501,8 @@ class S3PDFCardLayout(Flowable):
         self.resource = resource
         self.item = item
 
-        if labels is None:
-            self.labels = {}
-        else:
-            self.labels = labels
+        self.labels = labels if labels is not None else {}
+        self.common = common if common is not None else {}
 
         self.backside = backside
         self.multiple = multiple
@@ -536,6 +549,35 @@ class S3PDFCardLayout(Flowable):
             if pid in item:
                 c.setFont("Helvetica", 8)
                 c.drawCentredString(x, y - 10, "Record #%s" % item[pid])
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def fields(cls, resource):
+        """
+            Get the fields to look up from the resource, can be overridden
+            in subclasses (as the field list is usually layout-specific)
+
+            @param resource: the resource
+
+            @returns: list of field selectors
+        """
+
+        return resource.list_fields()
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def lookup(cls, resource, items):
+        """
+            Look up common data for all cards
+
+            @param resource: the resource
+            @param items: the items
+
+            @returns: a dict with common data for all cards, will be
+                      passed to the individual flowables
+        """
+
+        return {}
 
     # -------------------------------------------------------------------------
     def draw_barcode(self,
