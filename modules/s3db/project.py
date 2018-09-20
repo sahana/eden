@@ -10845,10 +10845,10 @@ class S3ProjectTaskModel(S3Model):
                                        ]
                            ),
                      Field("description", "text",
-                           label = T("Detailed Description/URL"),
+                           label = T("Detailed Description"),
                            comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Detailed Description/URL"),
-                                                           T("Please provide as much detail as you can, including the URL(s) where the bug occurs or you'd like the new feature to go."))),
+                                         _title="%s|%s" % (T("Detailed Description"),
+                                                           T("Please provide as much detail as you can, including any URL(s) for more information."))),
                            ),
                      self.org_site_id(),
                      self.gis_location_id(
@@ -10864,6 +10864,9 @@ class S3ProjectTaskModel(S3Model):
                            label = T("Source Link"),
                            represent = s3_url_represent,
                            requires = IS_EMPTY_OR(IS_URL()),
+                           # Can be enabled & labelled within a Template as-required
+                           readable = False,
+                           writable = False
                            ),
                      Field("priority", "integer",
                            default = 3,
