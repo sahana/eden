@@ -657,4 +657,18 @@ def config(settings):
 
     settings.customise_hrm_job_title_resource = customise_hrm_job_title_resource
 
+    # -------------------------------------------------------------------------
+    # Projects
+    # -------------------------------------------------------------------------
+
+    # -------------------------------------------------------------------------
+    def customise_project_task_resource(r, tablename):
+
+        # No need to see log time: KISS
+        current.s3db.configure(tablename,
+                               crud_form = None,
+                               )
+
+    settings.customise_project_task_resource = customise_project_task_resource
+
 # END =========================================================================
