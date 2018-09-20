@@ -220,7 +220,11 @@ class IDCardLayout(S3PDFCardLayout):
             # Barcode
             code = raw["hrm_human_resource.code"]
             if code:
-                self.draw_barcode(s3_str(code), CENTER, BOTTOM, height=12, halign="center")
+                self.draw_barcode(s3_str(code), CENTER, BOTTOM,
+                                  height = 12,
+                                  halign = "center",
+                                  maxwidth = w - 15,
+                                  )
 
             # Graphics
             c.setFillColor(orange)
@@ -239,6 +243,12 @@ class IDCardLayout(S3PDFCardLayout):
             TOP = 200
             BOTTOM = 16
 
+            # TESTING
+            root_org = item["org_organisation.root_organisation"]
+            code = raw["hrm_human_resource.code"]
+            pattern = "O:%s//ID:%s" % (root_org, code)
+            self.draw_qrcode(pattern, CENTER, 100, size=45, halign="center")
+
             # TODO Mission statement
 
             # TODO IFRC membership statement
@@ -248,7 +258,11 @@ class IDCardLayout(S3PDFCardLayout):
             # Barcode
             code = raw["hrm_human_resource.code"]
             if code:
-                self.draw_barcode(s3_str(code), CENTER, BOTTOM, height=12, halign="center")
+                self.draw_barcode(s3_str(code), CENTER, BOTTOM,
+                                  height = 12,
+                                  halign = "center",
+                                  maxwidth = w - 15
+                                  )
 
             # Graphics
             if logo:

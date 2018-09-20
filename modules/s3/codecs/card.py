@@ -41,7 +41,9 @@ try:
     from reportlab.platypus import BaseDocTemplate, PageTemplate, Flowable, \
                                    Frame, NextPageTemplate, PageBreak
     from reportlab.lib.utils import ImageReader
-    from reportlab.graphics.barcode import code39, code128
+    from reportlab.graphics import renderPDF
+    from reportlab.graphics.barcode import code39, code128, qr
+    from reportlab.graphics.shapes import Drawing
     REPORTLAB = True
 except ImportError:
     BaseDocTemplate = object
@@ -586,8 +588,10 @@ class S3PDFCardLayout(Flowable):
                      y,
                      bctype="code128",
                      height=12,
+                     barwidth=0.85,
                      halign=None,
                      valign=None,
+                     maxwidth=None,
                      ):
         """
             Helper function to render a barcode
@@ -597,8 +601,14 @@ class S3PDFCardLayout(Flowable):
             @param y: drawing position
             @param bctype: the barcode type
             @param height: the height of the barcode (in points)
+            @param barwidth: the default width of the smallest bar
             @param halign: horizontal alignment ("left"|"center"|"right"), default left
             @param valign: vertical alignment ("top"|"middle"|"bottom"), default bottom
+            @param maxwidth: the maximum total width, if specified, the barcode will
+                             not be rendered if it would exceed this width even with
+                             the minimum possible bar width
+
+            @return: True if successful, otherwise False
         """
 
         # For arbitrary alphanumeric values, these would be the most
@@ -611,9 +621,28 @@ class S3PDFCardLayout(Flowable):
         if not encode:
             raise RuntimeError("Barcode type %s not supported" % bctype)
         else:
-            barcode = encode(value, barHeight=height)
+            qz = 12 * barwidth
+            barcode = encode(value,
+                             barHeight = height,
+                             barWidth = barwidth,
+                             lquiet = qz,
+                             rquiet = qz,
+                             )
 
         width, height = barcode.width, barcode.height
+        if maxwidth and width > maxwidth:
+            # Try to adjust the bar width
+            bw = max(float(maxwidth) / width * barwidth, encode.barWidth)
+            qz = 12 * bw
+            barcode = encode(value,
+                             barHeight = height,
+                             barWidth = bw,
+                             lquiet = qz,
+                             rquiet = qz,
+                             )
+            width = barcode.width
+            if width > maxwidth:
+                return False
 
         hshift = vshift = 0
         if halign == "right":
@@ -627,6 +656,43 @@ class S3PDFCardLayout(Flowable):
             vshift = height / 2.0
 
         barcode.drawOn(self.canv, x - hshift, y - vshift)
+        return True
+
+    # -------------------------------------------------------------------------
+    def draw_qrcode(self, value, x, y, size=40, halign=None, valign=None):
+        """
+            Helper function to draw a QR code
+
+            @param value: the string to encode
+            @param x: drawing position
+            @param y: drawing position
+            @param size: the size (edge length) of the QR code
+            @param halign: horizontal alignment ("left"|"center"|"right"), default left
+            @param valign: vertical alignment ("top"|"middle"|"bottom"), default bottom
+        """
+
+        qr_code = qr.QrCodeWidget(value)
+
+        bounds = qr_code.getBounds()
+        w = bounds[2] - bounds[0]
+        h = bounds[3] - bounds[1]
+
+        transform = [float(size) / w, 0, 0, float(size) / h, 0, 0]
+        d = Drawing(size, size, transform=transform)
+        d.add(qr_code)
+
+        hshift = vshift = 0
+        if halign == "right":
+            hshift = size
+        elif halign == "center":
+            hshift = float(size) / 2.0
+
+        if valign == "top":
+            vshift = size
+        elif valign == "middle":
+            vshift = float(size) / 2.0
+
+        renderPDF.draw(d, self.canv, x - hshift, y - vshift)
 
     # -------------------------------------------------------------------------
     def draw_image(self,
