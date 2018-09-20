@@ -224,6 +224,10 @@ class S3PDFCard(S3Codec):
             @param cards_per_page: the number of cards per page
         """
 
+        if not len(items):
+            # Need at least one flowable even to produce an empty doc
+            return [PageBreak()]
+
         # Determine the number of pages
         number_of_pages = int(len(items) / cards_per_page) + 1
         multiple = cards_per_page > 1
@@ -243,7 +247,11 @@ class S3PDFCard(S3Codec):
             if i > 0:
                 append(PageBreak())
             for item in batch:
-                append(layout(resource, item, multiple=multiple))
+                append(layout(resource,
+                              item,
+                              labels = labels,
+                              multiple = multiple,
+                              ))
 
             if layout.doublesided:
                 # Add the flowables for the backsides on a new page
@@ -252,6 +260,7 @@ class S3PDFCard(S3Codec):
                 for item in batch:
                     append(layout(resource,
                                   item,
+                                  labels = labels,
                                   multiple = multiple,
                                   backside = True,
                                   ))
@@ -677,6 +686,6 @@ class S3PDFCardLayout(Flowable):
         c = self.canv
 
         c.setLineWidth(1)
-        c.rect(0, 0, self.width, self.height)
+        c.rect(-1, -1, self.width + 2, self.height + 2)
 
 # END =========================================================================
