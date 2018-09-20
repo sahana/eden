@@ -26,6 +26,9 @@
  <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
 {{include "foundation.css.html"}}
+{{for sheet in s3.stylesheets:}}
+ <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{pass}}
 {{if s3.debug:}}{{=s3base.s3_include_debug_css()}}{{else:}}
  {{# Built by /static/scripts/tools/build.sahana.py }}
  <link href="/{{=appname}}/static/themes/{{=theme_styles}}/eden.min.css" rel="stylesheet" type="text/css" />
