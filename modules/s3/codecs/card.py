@@ -188,6 +188,7 @@ class S3PDFCard(S3Codec):
                   #canvasmaker=canvas.Canvas,   # is default
                   )
 
+        output_stream.seek(0)
         return output_stream
 
     # -------------------------------------------------------------------------

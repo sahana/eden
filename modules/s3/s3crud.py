@@ -45,6 +45,7 @@ except ImportError:
 
 from gluon import current, redirect, HTTP, URL, \
                   A, DIV, FORM, INPUT, TABLE, TD, TR, XML
+from gluon.contenttype import contenttype
 from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
@@ -812,6 +813,21 @@ class S3CRUD(S3Method):
 
             output = exporter(resource, tooltip=tooltip)
 
+        elif representation == "card":
+
+            if not resource.get_config("pdf_card_layout"):
+                # This format is not supported for this resource
+                r.error(415, current.ERROR.BAD_FORMAT)
+
+            pagesize = resource.get_config("pdf_card_pagesize")
+            output = S3Exporter().pdfcard(resource,
+                                          pagesize = pagesize,
+                                          )
+
+            disposition = "attachment; filename=\"%s_card.pdf\"" % resource.name
+            response.headers["Content-Type"] = contenttype(".pdf")
+            response.headers["Content-disposition"] = disposition
+
         else:
             r.error(415, current.ERROR.BAD_FORMAT)
 
@@ -1381,6 +1397,23 @@ class S3CRUD(S3Method):
                 return S3Notifications.send(r, resource)
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
+
+        elif representation == "card":
+            if not resource.get_config("pdf_card_layout"):
+                # This format is not supported for this resource
+                r.error(415, current.ERROR.BAD_FORMAT)
+
+            pagesize = resource.get_config("pdf_card_pagesize")
+            output = S3Exporter().pdfcard(resource,
+                                          pagesize = pagesize,
+                                          )
+
+            response = current.response
+            disposition = "attachment; filename=\"%s_cards.pdf\"" % resource.name
+            response.headers["Content-Type"] = contenttype(".pdf")
+            response.headers["Content-disposition"] = disposition
+
+            return output
 
         else:
             r.error(415, current.ERROR.BAD_FORMAT)

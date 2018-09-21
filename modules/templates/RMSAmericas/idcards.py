@@ -314,7 +314,7 @@ class IDCardLayout(S3PDFCardLayout):
         style = styleSheet["Normal"]
         style.fontName = BOLD if bold else NORMAL
         style.fontSize = size
-        style.leading = size
+        style.leading = size + 2
         style.alignment = TA_CENTER
 
         para = Paragraph(value, style)
@@ -323,7 +323,8 @@ class IDCardLayout(S3PDFCardLayout):
         while(aH > height and style.fontSize > 4):
             # Reduce font size to make fit
             style.fontSize -= 1
-            style.leading = style.fontSize
+            style.leading = style.fontSize + 2
+            para = Paragraph(value, style)
             aH = para.wrap(width, height)[1]
 
         para.drawOn(self.canv, x - para.width / 2, y)
@@ -348,6 +349,6 @@ class IDCardLayout(S3PDFCardLayout):
 
         c = self.canv
         c.setFont(NORMAL, 5)
-        c.drawCentredString(x, y - 7, s3_str(label))
+        c.drawCentredString(x, y - 6, s3_str(label))
 
 # END =========================================================================

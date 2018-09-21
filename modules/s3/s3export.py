@@ -34,7 +34,6 @@
 __all__ = ("S3Exporter",)
 
 from gluon import current
-from gluon.storage import Storage
 
 from s3codec import S3Codec
 
@@ -114,7 +113,7 @@ class S3Exporter(object):
             if type(tooltip) is list:
                 tooltip = tooltip[-1]
             import re
-            match = re.match("(\w+)\((\w+),(\w+)\)", tooltip)
+            match = re.match(r"(\w+)\((\w+),(\w+)\)", tooltip)
             if match:
                 function_name, kname, vname = match.groups()
                 # Try to resolve the function name
@@ -219,6 +218,12 @@ class S3Exporter(object):
 
         codec = S3Codec.get_codec("pdf").encode
         return codec(*args, **kwargs)
+
+    # -------------------------------------------------------------------------
+    def pdfcard(self, *args, **kwargs):
+
+        codec = S3Codec.get_codec("card")
+        return codec.encode(*args, **kwargs)
 
     # -------------------------------------------------------------------------
     def shp(self, *args, **kwargs):

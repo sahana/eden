@@ -892,7 +892,7 @@ def config(settings):
                                                           limitby=(0, 1),
                                                           cache = s3db.cache,
                                                           ).first().id
-        except:
+        except AttributeError:
             # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
             return
 
@@ -1031,35 +1031,35 @@ def config(settings):
             return {}
 
     # -------------------------------------------------------------------------
-    def user_org_and_children_default_filter(selector, tablename=None):
-        """
-            Default filter for organisation_id:
-            * Use the user's organisation if logged-in and associated with an
-              organisation.
-        """
+    #def user_org_and_children_default_filter(selector, tablename=None):
+    #    """
+    #        Default filter for organisation_id:
+    #        * Use the user's organisation if logged-in and associated with an
+    #          organisation.
+    #    """
 
-        auth = current.auth
-        user_org_id = auth.is_logged_in() and auth.user.organisation_id
-        if user_org_id:
-            db = current.db
-            s3db = current.s3db
-            otable = s3db.org_organisation
-            org = db(otable.id == user_org_id).select(otable.pe_id,
-                                                      limitby=(0, 1)
-                                                      ).first()
-            if org:
-                pe_id = org.pe_id
-                pe_ids = s3db.pr_get_descendants((pe_id,),
-                                                 entity_types=("org_organisation",))
-                rows = db(otable.pe_id.belongs(pe_ids)).select(otable.id)
-                ids = [row.id for row in rows]
-                ids.append(user_org_id)
-                return ids
-            else:
-                return user_org_id
-        else:
-            # no default
-            return {}
+    #    auth = current.auth
+    #    user_org_id = auth.is_logged_in() and auth.user.organisation_id
+    #    if user_org_id:
+    #        db = current.db
+    #        s3db = current.s3db
+    #        otable = s3db.org_organisation
+    #        org = db(otable.id == user_org_id).select(otable.pe_id,
+    #                                                  limitby=(0, 1)
+    #                                                  ).first()
+    #        if org:
+    #            pe_id = org.pe_id
+    #            pe_ids = s3db.pr_get_descendants((pe_id,),
+    #                                             entity_types=("org_organisation",))
+    #            rows = db(otable.pe_id.belongs(pe_ids)).select(otable.id)
+    #            ids = [row.id for row in rows]
+    #            ids.append(user_org_id)
+    #            return ids
+    #        else:
+    #            return user_org_id
+    #    else:
+    #        # no default
+    #        return {}
 
     # -------------------------------------------------------------------------
     def customise_auth_user_controller(**attr):
@@ -1170,32 +1170,32 @@ def config(settings):
                                     "event_type_id",
                                     )
 
-        from s3 import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
-        filter_widgets = [S3TextFilter(["name",
-                                        "event_type_id$name",
-                                        "location_id",
-                                        ],
-                                       label=T("Search")
-                                       ),
-                          S3LocationFilter("location_id",
-                                           label=COUNTRY,
-                                           widget="multiselect",
-                                           levels=["L0"],
-                                           hidden=True
-                                           ),
-                          S3OptionsFilter("event_type_id",
-                                          widget="multiselect",
-                                          hidden=True
-                                          ),
-                          #S3OptionsFilter("status",
-                          #                options=s3db.deploy_mission_status_opts,
-                          #                hidden=True
-                          #                ),
-                          S3DateFilter("date",
-                                       hide_time=True,
-                                       hidden=True
-                                       ),
-                          ]
+        #from s3 import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
+        #filter_widgets = [S3TextFilter(["name",
+        #                                "event_type_id$name",
+        #                                "location_id",
+        #                                ],
+        #                               label=T("Search")
+        #                               ),
+        #                  S3LocationFilter("location_id",
+        #                                   label=COUNTRY,
+        #                                   widget="multiselect",
+        #                                   levels=["L0"],
+        #                                   hidden=True
+        #                                   ),
+        #                  S3OptionsFilter("event_type_id",
+        #                                  widget="multiselect",
+        #                                  hidden=True
+        #                                  ),
+        #                  #S3OptionsFilter("status",
+        #                  #                options=s3db.deploy_mission_status_opts,
+        #                  #                hidden=True
+        #                  #                ),
+        #                  S3DateFilter("date",
+        #                               hide_time=True,
+        #                               hidden=True
+        #                               ),
+        #                  ]
 
         list_fields = ["name",
                        "date",
@@ -1242,14 +1242,16 @@ def config(settings):
                                 "training_assistant",
                                 )):
             # Only show this Center's Certificates
-            organisation_id == auth.user.organisation_id
-            current.response.s3.filter = (table.organisation_id == organisation_id) | (table.organisation_id == None)
+            organisation_id = auth.user.organisation_id
+            current.response.s3.filter = (table.organisation_id == organisation_id) | \
+                                         (table.organisation_id == None)
             # Default to this Training Center
             table.organisation_id.default = organisation_id
         else:
             # See NS Certificates
-            organisation_id == auth.root_org()
-            current.response.s3.filter = (table.organisation_id == organisation_id) | (table.organisation_id == None)
+            organisation_id = auth.root_org()
+            current.response.s3.filter = (table.organisation_id == organisation_id) | \
+                                         (table.organisation_id == None)
             # Default to this NS
             table.organisation_id.default = organisation_id
         return attr
@@ -1281,7 +1283,7 @@ def config(settings):
     def customise_hrm_course_resource(r, tablename):
 
         from gluon import IS_EMPTY_OR, IS_NOT_IN_DB
-        from s3 import IS_ONE_OF, S3SQLCustomForm#, S3SQLInlineLink
+        from s3 import S3SQLCustomForm
 
         db = current.db
         auth = current.auth
@@ -1362,21 +1364,21 @@ def config(settings):
     #settings.customise_hrm_department_controller = customise_hrm_department_controller
 
     # -------------------------------------------------------------------------
-    def emergency_contact_represent(row):
-        """
-            Representation of Emergency Contacts (S3Represent label renderer)
+    #def emergency_contact_represent(row):
+    #    """
+    #        Representation of Emergency Contacts (S3Represent label renderer)
 
-            @param row: the row
-        """
+    #        @param row: the row
+    #    """
 
-        items = [row["pr_contact_emergency.name"]]
-        relationship = row["pr_contact_emergency.relationship"]
-        if relationship:
-            items.append(" (%s)" % relationship)
-        phone_number = row["pr_contact_emergency.phone"]
-        if phone_number:
-            items.append(": %s" % phone_number)
-        return "".join(items)
+    #    items = [row["pr_contact_emergency.name"]]
+    #    relationship = row["pr_contact_emergency.relationship"]
+    #    if relationship:
+    #        items.append(" (%s)" % relationship)
+    #    phone_number = row["pr_contact_emergency.phone"]
+    #    if phone_number:
+    #        items.append(": %s" % phone_number)
+    #    return "".join(items)
 
     # -------------------------------------------------------------------------
     def customise_hrm_home():
@@ -1425,9 +1427,10 @@ def config(settings):
         from gluon import CRYPT
         N = 8
         password = "".join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(N))
-        crypted, error = CRYPT(key=current.auth.settings.hmac_key,
-                               min_length=settings.get_auth_password_min_length(),
-                               digest_alg="sha512")(password)
+        crypted = CRYPT(key = current.auth.settings.hmac_key,
+                        min_length = settings.get_auth_password_min_length(),
+                        digest_alg = "sha512",
+                        )(password)[0]
         return password, crypted
 
     # -------------------------------------------------------------------------
@@ -1461,7 +1464,7 @@ def config(settings):
                                                ).first()
             try:
                 organisation_id = hr.organisation_id
-            except:
+            except AttributeError:
                 # Nothing we can do!
                 current.log.warning("Cannot create user for HR %s as cannot find HR record" % hr_id)
                 return
@@ -1497,7 +1500,7 @@ def config(settings):
                                                    ).first()
             try:
                 person_id = hr.person_id
-            except:
+            except AttributeError:
                 current.log.warning("Cannot create user for HR %s as cannot find HR record" % hr_id)
                 return
 
@@ -1510,7 +1513,7 @@ def config(settings):
                                                    ).first()
         try:
             pe_id = person.pe_id
-        except:
+        except AttributeError:
             # Nothing we can do!
             return
 
@@ -1522,7 +1525,7 @@ def config(settings):
                                    ).first()
         try:
             email = contact.value
-        except:
+        except AttributeError:
             # Nothing we can do!
             hr_id = form_vars.get("id")
             current.log.warning("Cannot create user for HR %s as cannot find Email" % hr_id)
@@ -1544,7 +1547,7 @@ def config(settings):
                                                    ).first()
             try:
                 hr_type = str(hr.type)
-            except:
+            except AttributeError:
                 # Nothing we can do!
                 current.log.warning("Cannot create user for HR %s as cannot find HR record" % hr_id)
                 return
@@ -1678,15 +1681,11 @@ Thank you"""
                 # Organisation cannot be an NS/Branch
                 # Lookup organisation_type_id for Red Cross
                 ttable = s3db.org_organisation_type
-                try:
-                    type_ids = db(ttable.name.belongs((RED_CROSS, "Training Center"))).select(ttable.id,
-                                                                                              limitby=(0, 2),
-                                                                                              cache = s3db.cache,
-                                                                                              )
-                except:
-                    # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
-                    pass
-                else:
+                type_ids = db(ttable.name.belongs((RED_CROSS, "Training Center"))).select(ttable.id,
+                                                                                          limitby=(0, 2),
+                                                                                          cache = s3db.cache,
+                                                                                          )
+                if type_ids:
                     from s3 import IS_ONE_OF
                     ltable = db.org_organisation_organisation_type
                     rows = db(ltable.organisation_type_id.belongs(type_ids)).select(ltable.organisation_id)
@@ -1730,6 +1729,14 @@ Thank you"""
                     resource.add_filter(FS("organisation_id$organisation_type.name") == RED_CROSS)
                     resource.configure(create_onaccept = hrm_human_resource_create_onaccept,
                                        form_postp = add_language,
+                                       )
+
+                if r.representation == "card":
+                    # Configure ID card layout
+                    # TODO limit this function to certain user roles
+                    from templates.RMSAmericas.idcards import IDCardLayout
+                    resource.configure(pdf_card_layout = IDCardLayout,
+                                       #pdf_card_pagesize = "A4",
                                        )
 
             if not auth.s3_has_role("ADMIN") and \
@@ -2019,7 +2026,7 @@ Thank you"""
                                                      limitby=(0, 1)).first()
         try:
             course_id = record.course_id
-        except:
+        except AttributeError:
             current.log.error("Cannot find Training record")
             return
 
@@ -2031,7 +2038,7 @@ Thank you"""
                                                                       ).first()
         try:
             rit_course_id = row.id
-        except:
+        except AttributeError:
             current.log.error("Cannot find RIT Course: Prepop not done?")
             return
 
@@ -2051,7 +2058,7 @@ Thank you"""
                                                       ).first()
         try:
             human_resource_id = hr.id
-        except:
+        except AttributeError:
             current.log.error("Cannot find Human Resource record")
             return
 
@@ -2189,8 +2196,8 @@ Thank you"""
             TC = True
             # Filter Trainings to just those done by this Reference Center
             from s3 import FS
-            filter = FS("~.training_event_id$organisation_id") == auth.user.organisation_id
-            s3.filter = filter
+            query = FS("~.training_event_id$organisation_id") == auth.user.organisation_id
+            s3.filter = query
         else:
             TC = False
 
@@ -2237,7 +2244,7 @@ Thank you"""
 
         s3db.hrm_certification.number.label = T("Registration Number")
 
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3TextFilter, S3OptionsFilter, S3DateFilter
+        from s3 import S3SQLCustomForm, S3TextFilter, S3OptionsFilter, S3DateFilter
 
         if r.function == "person":
             crud_form = S3SQLCustomForm("course_id",
@@ -2301,7 +2308,7 @@ Thank you"""
     # -------------------------------------------------------------------------
     def customise_hrm_training_event_resource(r, tablename):
 
-        from s3 import IS_ONE_OF, S3Represent, S3SQLCustomForm, S3SQLInlineComponent
+        from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineComponent
 
         db = current.db
         auth = current.auth
@@ -2331,7 +2338,7 @@ Thank you"""
                 type_id = db(ttable.name == "Training Center").select(ttable.id,
                                                                       limitby=(0, 1),
                                                                       ).first().id
-            except:
+            except AttributeError:
                 # No/incorrect prepop done - skip (e.g. testing impacts of CSS changes in this theme)
                 pass
             else:
@@ -2358,7 +2365,6 @@ Thank you"""
 
         # Hours are Optional
         from gluon import IS_EMPTY_OR
-        requires = table.hours.requires
         table.hours.requires = IS_EMPTY_OR(table.hours)
 
         #site_represent = S3Represent(lookup = "org_site")
@@ -2438,7 +2444,7 @@ Thank you"""
         def callback(r):
 
             from gluon.html import DIV, TABLE, TD, TH, TR
-        
+
             rtable = s3db.hrm_training_event_report
 
             date_represent = rtable.date.represent
@@ -2553,8 +2559,8 @@ Thank you"""
                auth.s3_has_roles(("training_coordinator", "training_assistant")):
             # Filter People to just those trained by this Reference Center
             from s3 import FS
-            filter = FS("~.organisation_id") == auth.user.organisation_id
-            s3.filter = filter
+            query = FS("~.organisation_id") == auth.user.organisation_id
+            s3.filter = query
 
         s3db.set_method("hrm", "training_event",
                         method = "report_pdf_export",
@@ -2954,7 +2960,7 @@ Thank you"""
         list_fields = s3db.get_config("inv_warehouse", "list_fields")
         try:
             list_fields.remove("warehouse_type_id")
-        except:
+        except ValueError:
             # Already removed
             pass
 
@@ -3092,7 +3098,7 @@ Thank you"""
                                 # Strip Type from list_fields
                                 try:
                                     list_fields.remove("organisation_organisation_type.organisation_type_id")
-                                except:
+                                except ValueError:
                                     # Already removed
                                     pass
                                 type_label = ""
@@ -3196,7 +3202,7 @@ Thank you"""
         #if current.auth.root_org_name() in ("Honduran Red Cross",
         #                                    "Paraguayan Red Cross",
         #                                    ):
-            # Location Hierarchy loaded: Leave things as they are since we have the 
+            # Location Hierarchy loaded: Leave things as they are since we have the
         #   pass
         #else:
         s3db = current.s3db
@@ -3257,8 +3263,6 @@ Thank you"""
 
         s3 = current.response.s3
 
-        type_filter = current.request.get_vars.get("organisation_type.name")
-
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
@@ -3276,9 +3280,9 @@ Thank you"""
                     # Filter people to just those Trained by this Reference Center or Staff of this Reference Center
                     from s3 import FS
                     organisation_id = auth.user.organisation_id
-                    filter = (FS("training.training_event_id$organisation_id") == organisation_id) | \
-                             (FS("user.organisation_id") == organisation_id)
-                    s3.filter = filter
+                    query = (FS("training.training_event_id$organisation_id") == organisation_id) | \
+                            (FS("user.organisation_id") == organisation_id)
+                    s3.filter = query
 
             return result
         s3.prep = custom_prep
@@ -3376,7 +3380,7 @@ Thank you"""
                 #s3db.configure("hrm_human_resource",
                 #               create_onaccept = hrm_human_resource_create_onaccept,
                 #               )
-                pass
+
             elif method =="record" or component_name == "human_resource":
                 table = s3db.hrm_human_resource
                 if EXTERNAL:
@@ -3386,15 +3390,11 @@ Thank you"""
                     # Organisation cannot be an NS/Branch
                     # Lookup organisation_type_id for Red Cross
                     ttable = s3db.org_organisation_type
-                    try:
-                        type_ids = db(ttable.name.belongs((RED_CROSS, "Training Center"))).select(ttable.id,
-                                                                                                  limitby=(0, 2),
-                                                                                                  cache = s3db.cache,
-                                                                                                  )
-                    except:
-                        # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
-                        pass
-                    else:
+                    type_ids = db(ttable.name.belongs((RED_CROSS, "Training Center"))).select(ttable.id,
+                                                                                              limitby=(0, 2),
+                                                                                              cache = s3db.cache,
+                                                                                              )
+                    if type_ids:
                         from s3 import IS_ONE_OF
                         ltable = db.org_organisation_organisation_type
                         rows = db(ltable.organisation_type_id.belongs(type_ids)).select(ltable.organisation_id)
@@ -4086,103 +4086,103 @@ Thank you"""
     settings.customise_project_project_controller = customise_project_project_controller
 
     # -------------------------------------------------------------------------
-    def customise_project_beneficiary_resource(r, tablename):
-        """
-            Link Project Beneficiaries to Activity Type
-        """
+    #def customise_project_beneficiary_resource(r, tablename):
+    #    """
+    #        Link Project Beneficiaries to Activity Type
+    #    """
 
-        if r.interactive and r.component:
-            if r.tablename == "project_project":
-                # We are a component of the Project
-                project_id = r.id
-            elif r.tablename == "project_location":
-                # We are a component of the Project Location
-                project_id = r.record.project_id
-            else:
-                # Unknown!
-                return
+    #    if r.interactive and r.component:
+    #        if r.tablename == "project_project":
+    #            # We are a component of the Project
+    #            project_id = r.id
+    #        elif r.tablename == "project_location":
+    #            # We are a component of the Project Location
+    #            project_id = r.record.project_id
+    #        else:
+    #            # Unknown!
+    #            return
 
-            db = current.db
-            s3db = current.s3db
+    #        db = current.db
+    #        s3db = current.s3db
 
-            # Filter Activity Type by Sector
-            ltable = s3db.project_sector_project
-            rows = db(ltable.project_id == project_id).select(ltable.sector_id)
-            sectors = [row.sector_id for row in rows]
-            ltable = s3db.project_activity_type_sector
-            rows = db(ltable.sector_id.belongs(sectors)).select(ltable.activity_type_id)
-            filteropts = [row.activity_type_id for row in rows]
+    #        # Filter Activity Type by Sector
+    #        ltable = s3db.project_sector_project
+    #        rows = db(ltable.project_id == project_id).select(ltable.sector_id)
+    #        sectors = [row.sector_id for row in rows]
+    #        ltable = s3db.project_activity_type_sector
+    #        rows = db(ltable.sector_id.belongs(sectors)).select(ltable.activity_type_id)
+    #        filteropts = [row.activity_type_id for row in rows]
 
-            def postprocess(form):
-                # Update project_location.activity_type
-                beneficiary_id = form.vars.get("id", None)
-                table = db.project_beneficiary
-                row = db(table.id == beneficiary_id).select(table.project_location_id,
-                                                            limitby = (0, 1)
-                                                            ).first()
-                if not row:
-                    return
-                project_location_id = row.project_location_id
-                if not project_location_id:
-                    return
-                ltable = db.project_beneficiary_activity_type
-                row = db(ltable.beneficiary_id == beneficiary_id).select(ltable.activity_type_id,
-                                                                         limitby = (0, 1)
-                                                                         ).first()
-                if not row:
-                    return
-                activity_type_id = row.activity_type_id
-                ltable = s3db.project_activity_type_location
-                query = (ltable.project_location_id == project_location_id) & \
-                        (ltable.activity_type_id == activity_type_id)
-                exists = db(query).select(ltable.id,
-                                          limitby = (0, 1)
-                                          ).first()
-                if not exists:
-                    ltable.insert(project_location_id = project_location_id,
-                                  activity_type_id = activity_type_id,
-                                  )
+    #        def postprocess(form):
+    #            # Update project_location.activity_type
+    #            beneficiary_id = form.vars.get("id", None)
+    #            table = db.project_beneficiary
+    #            row = db(table.id == beneficiary_id).select(table.project_location_id,
+    #                                                        limitby = (0, 1)
+    #                                                        ).first()
+    #            if not row:
+    #                return
+    #            project_location_id = row.project_location_id
+    #            if not project_location_id:
+    #                return
+    #            ltable = db.project_beneficiary_activity_type
+    #            row = db(ltable.beneficiary_id == beneficiary_id).select(ltable.activity_type_id,
+    #                                                                     limitby = (0, 1)
+    #                                                                     ).first()
+    #            if not row:
+    #                return
+    #            activity_type_id = row.activity_type_id
+    #            ltable = s3db.project_activity_type_location
+    #            query = (ltable.project_location_id == project_location_id) & \
+    #                    (ltable.activity_type_id == activity_type_id)
+    #            exists = db(query).select(ltable.id,
+    #                                      limitby = (0, 1)
+    #                                      ).first()
+    #            if not exists:
+    #                ltable.insert(project_location_id = project_location_id,
+    #                              activity_type_id = activity_type_id,
+    #                              )
 
-            from s3 import S3SQLCustomForm, S3SQLInlineLink
-            crud_form = S3SQLCustomForm(#"project_id",
-                                        "project_location_id",
-                                        S3SQLInlineLink("activity_type",
-                                                        field = "activity_type_id",
-                                                        filterby = "id",
-                                                        options = filteropts,
-                                                        label = T("Activity Type"),
-                                                        multiple = False,
-                                                        ),
-                                        "parameter_id",
-                                        "value",
-                                        "target_value",
-                                        "date",
-                                        "end_date",
-                                        "comments",
-                                        postprocess = postprocess,
-                                        )
+    #        from s3 import S3SQLCustomForm, S3SQLInlineLink
+    #        crud_form = S3SQLCustomForm(#"project_id",
+    #                                    "project_location_id",
+    #                                    S3SQLInlineLink("activity_type",
+    #                                                    field = "activity_type_id",
+    #                                                    filterby = "id",
+    #                                                    options = filteropts,
+    #                                                    label = T("Activity Type"),
+    #                                                    multiple = False,
+    #                                                    ),
+    #                                    "parameter_id",
+    #                                    "value",
+    #                                    "target_value",
+    #                                    "date",
+    #                                    "end_date",
+    #                                    "comments",
+    #                                    postprocess = postprocess,
+    #                                    )
 
-            s3db.configure(tablename,
-                           crud_form = crud_form,
-                           )
+    #        s3db.configure(tablename,
+    #                       crud_form = crud_form,
+    #                       )
 
-        elif not r.component:
-            # Report
-            from s3 import S3OptionsFilter
-            resource = r.resource
-            filter_widgets = resource.get_config("filter_widgets")
-            filter_widgets.insert(1,
-                S3OptionsFilter("beneficiary_activity_type.activity_type_id",
-                                label = T("Activity Type"),
-                                ))
-            report_options = resource.get_config("report_options")
-            report_options.rows.append("beneficiary_activity_type.activity_type_id")
-            # Same object so would be added twice
-            #report_options.cols.append("beneficiary_activity_type.activity_type_id")
+    #    elif not r.component:
+    #        # Report
+    #        from s3 import S3OptionsFilter
+    #        resource = r.resource
+    #        filter_widgets = resource.get_config("filter_widgets")
+    #        filter_widgets.insert(1,
+    #            S3OptionsFilter("beneficiary_activity_type.activity_type_id",
+    #                            label = T("Activity Type"),
+    #                            ))
+    #        report_options = resource.get_config("report_options")
+    #        report_options.rows.append("beneficiary_activity_type.activity_type_id")
+    #        # Same object so would be added twice
+    #        #report_options.cols.append("beneficiary_activity_type.activity_type_id")
 
-            resource.configure(filter_widgets = filter_widgets,
-                               report_options = report_options,
-                               )
+    #        resource.configure(filter_widgets = filter_widgets,
+    #                           report_options = report_options,
+    #                           )
 
     # Only used for activity_types which aren't used by HNRC
     #settings.customise_project_beneficiary_resource = customise_project_beneficiary_resource
@@ -4364,7 +4364,7 @@ Thank you"""
         list_fields = s3db.get_config("req_req", "list_fields")
         try:
             list_fields.remove((T("Drivers"), "drivers"))
-        except:
+        except ValueError:
             # Already removed
             pass
 
@@ -4499,6 +4499,8 @@ class PrintableShipmentForm(S3Method):
 
         row = data.rows[0]
         labels = dict((rfield.colname, rfield.label) for rfield in data.rfields)
+        def row_(left, right):
+            return cls._header_row(left, right, row=row, labels=labels)
 
         from gluon import DIV, H2, H4, TABLE, TD, TH, TR, P
 
@@ -4512,8 +4514,6 @@ class PrintableShipmentForm(S3Method):
         title = H2(T("Logistics Requisition"))
 
         # Waybill details
-        row_ = lambda left, right, row=row, labels=labels: \
-                      cls._header_row(left, right, row=row, labels=labels)
         dtable = TABLE(
                     TR(TD(DIV(logo, H4(name)), _colspan = 2),
                        TD(DIV(title), _colspan = 2),
@@ -4541,7 +4541,7 @@ class PrintableShipmentForm(S3Method):
         """
 
         T = current.T
-        from gluon import TABLE, TD, TH, TR
+        from gluon import TABLE, TH, TR
 
         return TABLE(TR(TH("&nbsp;"),
                         TH(T("Name")),
@@ -4679,6 +4679,8 @@ class PrintableShipmentForm(S3Method):
 
         row = data.rows[0]
         labels = dict((rfield.colname, rfield.label) for rfield in data.rfields)
+        def row_(left, right):
+            return cls._header_row(left, right, row=row, labels=labels)
 
         from gluon import DIV, H2, H4, TABLE, TD, TH, TR, P
 
@@ -4692,8 +4694,6 @@ class PrintableShipmentForm(S3Method):
         title = H2(T("Waybill"))
 
         # Waybill details
-        row_ = lambda left, right, row=row, labels=labels: \
-                      cls._header_row(left, right, row=row, labels=labels)
         dtable = TABLE(
                     TR(TD(DIV(logo, H4(name)), _colspan = 2),
                        TD(DIV(title), _colspan = 2),
@@ -4847,6 +4847,8 @@ class PrintableShipmentForm(S3Method):
 
         row = data.rows[0]
         labels = dict((rfield.colname, rfield.label) for rfield in data.rfields)
+        def row_(left, right):
+            return cls._header_row(left, right, row=row, labels=labels)
 
         from gluon import DIV, H2, H4, TABLE, TD, TH, TR, P
 
@@ -4860,8 +4862,6 @@ class PrintableShipmentForm(S3Method):
         title = H2(T("Goods Received Note"))
 
         # GRN details
-        row_ = lambda left, right, row=row, labels=labels: \
-                      cls._header_row(left, right, row=row, labels=labels)
         dtable = TABLE(TR(TD(DIV(logo, H4(name)), _colspan = 2),
                           TD(DIV(title), _colspan = 2),
                           ),
