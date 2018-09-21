@@ -2358,7 +2358,7 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
                         width: 500,
                         height: 300,
                         close: function() {
-                            self.css({visibility: 'hidden'});
+                            self.attr('src', '').remove();
                         }
                     }).css({
                         visibility: 'visible',
@@ -2369,7 +2369,7 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
                 alert(message);
             });
 
-            iframe.src = $(this).data('ajax_url');
+            iframe.src = url;
             return false;
         });
     });
