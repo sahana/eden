@@ -297,7 +297,7 @@ class IDCardLayout(S3PDFCardLayout):
                         path = os.path.join(current.request.folder, 'uploads')
                     self.draw_image(os.path.join(path, signature),
                                     CENTER,
-                                    MIDDLE - 15,
+                                    MIDDLE - 25,
                                     height = 40,
                                     width = 60,
                                     valign = "middle",
@@ -308,7 +308,7 @@ class IDCardLayout(S3PDFCardLayout):
                 signature_text = config.get("signature_text")
                 if signature_text:
                     draw_value(CENTER,
-                               MIDDLE - (45 if signature else 25),
+                               MIDDLE - (50 if signature else 25),
                                signature_text,
                                height = 20,
                                size = 5,

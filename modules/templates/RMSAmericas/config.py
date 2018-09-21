@@ -3532,6 +3532,10 @@ Thank you"""
                 s3.jquery_ready.append('''S3.showHidden('%s',%s,'%s')''' % \
                     ("allergic", json.dumps(["allergies"], separators=SEPARATORS), "pr_physical_description"))
 
+            if not EXTERNAL:
+                # TODO limit this function to certain user roles
+                settings.hrm.id_cards = True
+
             return True
         s3.prep = custom_prep
 

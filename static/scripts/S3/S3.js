@@ -2306,6 +2306,72 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
                 });
             }
         });
+
+        /**
+         * Click-handler for s3-download-buttons:
+         *
+         * - any action item with a class 's3-download-button' and
+         *   a 'url' data property (data-url)
+         *
+         * - for download of server-generated attachments, e.g. XLS or PDF
+         *
+         * - downloads the target document in a hidden iframe, which, if
+         *   the file is sent with content-disposition "attachment", will
+         *   only open the file dialog and nothing else
+         *
+         * - if this fails, the response will be opened in a modal dialog
+         *   (JSON messages will be handled with a simple alert-box, though)
+         */
+        $('.s3-download-button').on('click', function(e) {
+
+            // Do nothing else
+            e.preventDefault();
+            e.stopPropagation();
+
+            var url = $(this).data('url');
+            if (!url) {
+                return;
+            }
+
+            // Re-use it if it already exists
+            var iframe = document.getElementById("s3-download");
+            if (iframe == null) {
+               iframe = document.createElement('iframe');
+               iframe.id = "s3-download";
+               iframe.style.visibility = 'hidden';
+               document.body.appendChild(iframe);
+            }
+
+            $('#s3-download').off('load').on('load', function() {
+                // This event is only fired when contents was loaded into the
+                // hidden iframe rather than downloaded as attachment, which
+                // should only happen if there was some kind of error
+                var message,
+                    self = $(this);
+                try {
+                    // Try to parse the JSON message
+                    message = JSON.parse(this.contentDocument.body.textContent).message;
+                } catch(e) {
+                    // No JSON message => show iframe contents as-is in a modal
+                    self.dialog({
+                        title: 'Download failed',
+                        width: 500,
+                        height: 300,
+                        close: function() {
+                            self.css({visibility: 'hidden'});
+                        }
+                    }).css({
+                        visibility: 'visible',
+                        width: '100%'
+                    });
+                    return;
+                }
+                alert(message);
+            });
+
+            iframe.src = $(this).data('ajax_url');
+            return false;
+        });
     });
 
 }());

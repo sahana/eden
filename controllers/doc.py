@@ -311,4 +311,9 @@ def ck_delete():
     filepath = os.path.join(request.folder, "uploads", filename)
     os.unlink(filepath)
 
+# -----------------------------------------------------------------------------
+def card_config():
+
+    return s3_rest_controller()
+
 # END =========================================================================

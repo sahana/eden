@@ -6504,23 +6504,32 @@ def hrm_rheader(r, tabs=None, profile=False):
                             row3,
                             row4,
                             )
-                service_record = DIV(A(T("Service Record"),
-                                       _href = URL(c = "vol",
-                                                   f = "human_resource",
-                                                   args = [hr, "form"]
-                                                   ),
-                                       _id = "service_record",
-                                       _class = "action-btn"
-                                      ),
-                                    # @ToDo: Move to CSS
-                                    _style="margin-bottom:10px"
-                                    )
+                service_record = A(T("Service Record"),
+                                   _href = URL(c = "vol",
+                                               f = "human_resource",
+                                               args = [hr, "form"]
+                                               ),
+                                   _id = "service_record",
+                                   _class = "action-btn"
+                                   )
                 if vol_experience == "both" and not use_cv:
                     experience_tab2 = (T("Experience"), "experience")
             elif vol_experience == "experience" and not use_cv:
                 experience_tab = (T("Experience"), "experience")
         elif settings.get_hrm_staff_experience() == "experience" and not use_cv:
             experience_tab = (T("Experience"), "experience")
+
+        if settings.get_hrm_id_cards():
+            card_button = A(T("ID Card"),
+                            data = {"url": URL(f = "human_resource",
+                                               args = ["%s.card" % hr]
+                                               ),
+                                    },
+                            _class = "action-btn s3-download-button",
+                            _script = "alert('here')",
+                            )
+        else:
+            card_button = ""
 
         if settings.get_hrm_use_certificates() and not use_cv:
             certificates_tab = (T("Certificates"), "certification")
@@ -6724,7 +6733,12 @@ def hrm_rheader(r, tabs=None, profile=False):
             if user_id:
                 tabs.append((T("Roles"), "roles"))
         rheader_tabs = s3_rheader_tabs(r, tabs)
-        rheader = DIV(service_record,
+        rheader_btns = DIV(service_record, card_button,
+                           # @ToDo: Move to CSS
+                           _style="margin-bottom:10px",
+                           _class="rheader-btns",
+                           )
+        rheader = DIV(rheader_btns,
                       A(s3_avatar_represent(record_id,
                                             "pr_person",
                                             _class="rheader-avatar"),

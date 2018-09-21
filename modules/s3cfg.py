@@ -3615,6 +3615,12 @@ class S3Config(Storage):
         """
         return self.__lazy("hrm", "event_types", default=False)
 
+    def get_hrm_id_cards(self):
+        """
+            Show buttons to download printable ID cards for staff/volunteers
+        """
+        return self.__lazy("hrm", "id_cards", default=False)
+
     def get_hrm_job_title_deploy(self):
         """
             Whether the 'deploy' Job Title type should be used

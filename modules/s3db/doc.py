@@ -792,7 +792,6 @@ class S3DataCardModel(S3Model):
         # Card Types
         #
         card_types = {"VOLID": T("Volunteer ID Card"),
-                      "OTHER": T("Other Card"),
                       }
 
         # ---------------------------------------------------------------------
@@ -848,6 +847,12 @@ class S3DataCardModel(S3Model):
                                 ),
                           s3_comments(),
                           *s3_meta_fields())
+
+        # Table configuration
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary=("organisation_id", "card_type"),
+                                                 ),
+                       )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
