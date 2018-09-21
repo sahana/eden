@@ -814,8 +814,8 @@ class S3DataCardModel(S3Model):
                                 represent = S3Represent(options = card_types),
                                 ),
                           # Card Feature Configurations:
-                          Field("mission_statement", "text",
-                                label = T("Mission Statement"),
+                          Field("authority_statement", "text",
+                                label = T("Authority Statement"),
                                 represent = s3_text_represent,
                                 widget = s3_comments_widget,
                                 ),

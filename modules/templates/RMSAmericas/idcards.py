@@ -80,6 +80,19 @@ class IDCardLayout(S3PDFCardLayout):
         path = field.uploadfolder if field.uploadfolder else defaultpath
         logos = {row.id: os.path.join(path, row.logo) for row in rows if row.logo}
 
+        # Look up VOLID card configs for all root orgs
+        ctable = s3db.doc_card_config
+        query = (ctable.card_type == "VOLID") & \
+                (ctable.organisation_id.belongs(root_orgs)) & \
+                (ctable.deleted == False)
+        configs = db(query).select(ctable.organisation_id,
+                                   ctable.authority_statement,
+                                   ctable.org_statement,
+                                   ctable.signature,
+                                   ctable.signature_text,
+                                   ctable.validity_period,
+                                   ).as_dict(key="organisation_id")
+
         # Get all PE IDs
         pe_ids = set(item["_row"]["pr_person.pe_id"] for item in items)
 
@@ -96,6 +109,7 @@ class IDCardLayout(S3PDFCardLayout):
 
         return {"logos": logos,
                 "pictures": pictures,
+                "configs": configs,
                 }
 
     # -------------------------------------------------------------------------
@@ -130,19 +144,27 @@ class IDCardLayout(S3PDFCardLayout):
         item = self.item
         raw = item["_row"]
 
+        root_org = raw["org_organisation.root_organisation"]
+
         # Get the org logo
         logos = common.get("logos")
         if logos:
-            root_org = raw["org_organisation.root_organisation"]
             logo = logos.get(root_org)
         else:
             logo = None
 
-        if not self.backside:
+        # Get the root org's card configuration
+        configs = common.get("configs")
+        if configs:
+            config = configs.get(root_org)
+        else:
+            config = None
 
-            draw_field = self.draw_field
-            draw_value = self.draw_value
-            draw_label = self.draw_label
+        draw_field = self.draw_field
+        draw_value = self.draw_value
+        draw_label = self.draw_label
+
+        if not self.backside:
 
             # Horizontal alignments
             LEFT = w / 4 - 5
@@ -204,11 +226,11 @@ class IDCardLayout(S3PDFCardLayout):
             draw_label(RIGHT, LOWER[1], None, T("Allergic"))
 
             # Issuing/Expirey Dates
-            # TODO adjust interval per org (org_idcard)
+            vp = config.get("validity_period", 24) if config else 24
             today = current.request.now.date()
             format_date = current.calendar.format_date
             issued_on = format_date(today)
-            expires_on = format_date(today + relativedelta(months=24))
+            expires_on = format_date(today + relativedelta(months=vp))
 
             c.setFont(BOLD, 7)
             c.drawCentredString(LEFT, LOWER[2], issued_on)
@@ -241,19 +263,57 @@ class IDCardLayout(S3PDFCardLayout):
 
             # Vertical alignments
             TOP = 200
+            MIDDLE = 85
             BOTTOM = 16
 
-            # TESTING
-            root_org = item["org_organisation.root_organisation"]
-            code = raw["hrm_human_resource.code"]
-            pattern = "O:%s//ID:%s" % (root_org, code)
-            self.draw_qrcode(pattern, CENTER, 100, size=45, halign="center")
+            if config:
+                # Organisation Statement
+                org_statement = config.get("org_statement")
+                if org_statement:
+                    aH = draw_value(CENTER,
+                                    MIDDLE,
+                                    org_statement,
+                                    height = 40,
+                                    size = 6,
+                                    )
 
-            # TODO Mission statement
+                # Authority Statement
+                authority_statement = config.get("authority_statement")
+                if authority_statement:
+                    draw_value(CENTER,
+                               MIDDLE + aH + 10,
+                               authority_statement,
+                               height = 40,
+                               size = 7,
+                               bold = False,
+                               )
 
-            # TODO IFRC membership statement
+                # Signature
+                signature = config.get("signature")
+                if signature:
+                    field = current.s3db.doc_card_config.signature
+                    path = field.uploadfolder
+                    if not path:
+                        path = os.path.join(current.request.folder, 'uploads')
+                    self.draw_image(os.path.join(path, signature),
+                                    CENTER,
+                                    MIDDLE - 15,
+                                    height = 40,
+                                    width = 60,
+                                    valign = "middle",
+                                    halign = "center",
+                                    )
 
-            # TODO Signature and caption
+                # Signature Text
+                signature_text = config.get("signature_text")
+                if signature_text:
+                    draw_value(CENTER,
+                               MIDDLE - (45 if signature else 25),
+                               signature_text,
+                               height = 20,
+                               size = 5,
+                               bold = False,
+                               )
 
             # Barcode
             code = raw["hrm_human_resource.code"]
@@ -309,6 +369,9 @@ class IDCardLayout(S3PDFCardLayout):
 
             @returns: the actual height of the text element drawn
         """
+
+        # Preserve line breaks by replacing them with <br/> tags
+        value = value.strip("\n").replace('\n','<br />\n')
 
         styleSheet = getSampleStyleSheet()
         style = styleSheet["Normal"]
