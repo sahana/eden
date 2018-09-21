@@ -29,6 +29,7 @@
 
 __all__ = ("S3DocumentLibrary",
            "S3CKEditorModel",
+           "S3DataCardModel",
            "doc_image_represent",
            "doc_document_list_layout",
            )
@@ -764,5 +765,168 @@ class S3CKEditorModel(S3Model):
                 return "pdf"
             else:
                 return "other"
+
+# =============================================================================
+class S3DataCardModel(S3Model):
+    """
+        Model to manage context-specific features of printable
+        data cards (S3PDFCard)
+    """
+
+    names = ("doc_card_config",
+             "doc_card_types",
+             "doc_update_card_type_requires",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        #db = current.db
+        s3 = current.response.s3
+
+        #define_table = self.define_table
+        crud_strings = s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Card Types
+        #
+        card_types = {"VOLID": T("Volunteer ID Card"),
+                      "OTHER": T("Other Card"),
+                      }
+
+        # ---------------------------------------------------------------------
+        # Card Configuration
+        #
+        uploadfolder = os.path.join(current.request.folder, "uploads", "signatures")
+
+        tablename = "doc_card_config"
+        self.define_table(tablename,
+                          # Context links (e.g. Organisation):
+                          self.org_organisation_id(),
+                          # Card Type:
+                          Field("card_type",
+                                label = T("Card Type"),
+                                requires = IS_IN_SET(card_types,
+                                                     sort = True,
+                                                     zero = None,
+                                                     ),
+                                represent = S3Represent(options = card_types),
+                                ),
+                          # Card Feature Configurations:
+                          Field("mission_statement", "text",
+                                label = T("Mission Statement"),
+                                represent = s3_text_represent,
+                                widget = s3_comments_widget,
+                                ),
+                          Field("org_statement", "text",
+                                label = T("Organization Statement"),
+                                represent = s3_text_represent,
+                                widget = s3_comments_widget,
+                                ),
+                          Field("signature", "upload",
+                                label = T("Signature"),
+                                autodelete = True,
+                                length = current.MAX_FILENAME_LENGTH,
+                                represent = doc_image_represent,
+                                requires = IS_EMPTY_OR(IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)),
+                                                       # Distingish from prepop
+                                                       null = "",
+                                                       ),
+                                uploadfolder = uploadfolder,
+                                ),
+                          Field("signature_text", "text",
+                                label = T("Signature Text"),
+                                represent = s3_text_represent,
+                                widget = s3_comments_widget,
+                                ),
+                          Field("validity_period", "integer",
+                                default = 12,
+                                label = T("Validity Period (Months)"),
+                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0)),
+                                represent = lambda v: (T("%(months)s months") % {"months": v}) if v else "-",
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Card Configuration"),
+            title_display = T("Card Configuration Details"),
+            title_list = T("Card Configuration"),
+            title_update = T("Edit Card Configuration"),
+            label_list_button = T("List Card Configurations"),
+            label_delete_button = T("Delete Card Configuration"),
+            msg_record_created = T("Card Configuration created"),
+            msg_record_modified = T("Card Configuration updated"),
+            msg_record_deleted = T("Card Configuration deleted"),
+            msg_list_empty = T("No Card Configuration currently registered"),
+        )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"doc_card_types": card_types,
+                "doc_update_card_type_requires": self.update_card_type_requires,
+                }
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def defaults(cls):
+        """ Safe defaults for names in case the module is disabled """
+
+        #dummy = S3ReusableField("dummy_id", "integer",
+        #                        readable = False,
+        #                        writable = False,
+        #                        )
+
+        return {"doc_card_types": {},
+                "doc_update_card_type_requires": cls.update_card_type_requires,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def update_card_type_requires(record_id, organisation_id):
+        """
+            Make sure each card type can be defined only once per org
+
+            @param record_id: the current doc_card_config record ID
+                              (when currently editing a record)
+            @param organisation_id: the organisation record ID
+        """
+
+        s3db = current.s3db
+
+        # Find out which card types are already configured for this org
+        table = s3db.doc_card_config
+        query = (table.organisation_id == organisation_id) & \
+                (table.deleted == False)
+        rows = current.db(query).select(table.id,
+                                        table.card_type,
+                                        )
+        this = None
+        defined = set()
+        for row in rows:
+            if str(row.id) == str(record_id):
+                this = row.card_type
+            defined.add(row.card_type)
+
+        # Determine which card types can still be configured
+        card_types = {k: v for (k, v) in s3db.doc_card_types.items()
+                           if k == this or k not in defined}
+
+        # Limit selection to these card types
+        table.card_type.requires = IS_IN_SET(card_types,
+                                             sort = True,
+                                             zero = None,
+                                             )
+        if not card_types:
+            # No further card types can be configured
+            s3db.configure("doc_card_config",
+                           insertable = False,
+                           )
+        elif this and card_types.keys() == [this]:
+            # All other types are already configured => can't change this
+            table.card_type.writable = False
 
 # END =========================================================================

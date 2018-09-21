@@ -650,6 +650,7 @@ class S3OrganisationModel(S3Model):
                        # Documents
                        doc_document = "organisation_id",
                        doc_image = "organisation_id",
+                       doc_card_config = "organisation_id",
                        # Groups
                        org_group = {"link": "org_group_membership",
                                     "joinby": "organisation_id",
@@ -6825,6 +6826,9 @@ def org_organisation_controller():
                     s3db.configure("project_project",
                                    create_next = None,
                                    )
+
+                elif cname == "card_config":
+                    s3db.doc_update_card_type_requires(r.component_id, r.id)
 
         return True
     s3.prep = prep

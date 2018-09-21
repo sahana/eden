@@ -181,6 +181,11 @@ h4.profile-sub-header {
     background: none repeat scroll 0 0 $comments_feed_item_bgcolor;
 }
 
+/* Text representation */
+.text-body {
+    white-space: pre-wrap;
+}
+
 /* Iframe Map (Location Represent links) */
 #close-iframe-map {
     padding: 7px;
