@@ -3686,6 +3686,7 @@ class S3EventScenarioModel(S3Model):
                           ]
 
         self.configure(tablename,
+                       create_next = URL(args = ["[id]", "plan"]),
                        deduplicate = S3Duplicate(),
                        filter_widgets = filter_widgets,
                        )
@@ -3741,6 +3742,16 @@ class S3EventScenarioAssetModel(S3Model):
                                                                    ),
                                               script = None, # No Item Pack Filter
                                               widget = None,
+                                              comment = S3PopupLink(c = "supply",
+                                                                    f = "item",
+                                                                    # No special controller so need this for an options lookup
+                                                                    vars = {"prefix": "asset",
+                                                                            "parent": "asset",
+                                                                            },
+                                                                    label = T("Create Item"),
+                                                                    title = T("Item"),
+                                                                    #tooltip = supply_item_tooltip,
+                                                                    ),
                                               ),
                           # Optional: Assign specific Asset
                           # @ToDo: Filter widget based on Type
