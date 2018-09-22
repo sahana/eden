@@ -2529,6 +2529,20 @@ def supply_item_controller():
                 # field.default = True
                 # field.readable = field.writable = False
 
+        elif r.get_vars.get("caller") in ("event_asset_item_id", "event_scenario_asset_item_id"):
+            # Category is mandatory
+            f = s3db.supply_item.item_category_id
+            f.requires = f.requires.other
+            # Need to tell Item Category controller that new categories must be 'Can be Assets'
+            ADD_ITEM_CATEGORY = s3.crud_strings["supply_item_category"].label_create
+            f.comment = S3PopupLink(c = "supply",
+                                    f = "item_category",
+                                    vars = {"assets": 1},
+                                    label = ADD_ITEM_CATEGORY,
+                                    title = current.T("Item Category"),
+                                    tooltip = ADD_ITEM_CATEGORY,
+                                    )
+
         elif r.representation == "xls":
             # Use full Category names in XLS output
             s3db.supply_item.item_category_id.represent = \

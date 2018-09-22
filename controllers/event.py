@@ -264,6 +264,37 @@ def incident_report():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def job_title():
+    """ Job Titles Controller """
+
+    def prep(r):
+        if r.representation == "xls":
+            # Export format should match Import format
+            current.messages["NONE"] = ""
+            table = s3db.hrm_job_title
+            table.organisation_id.represent = \
+                s3db.org_OrganisationRepresent(acronym=False,
+                                               parent=False)
+            table.organisation_id.label = None
+            table.type.label = None
+            table.comments.label = None
+            table.comments.represent = lambda v: v or ""
+        elif r.get_vars.get("caller") in ("event_human_resource_job_title_id", "event_scenario_human_resource_job_title_id"):
+            # Default / Hide type
+            f = s3db.hrm_job_title.type
+            f.default = 4 # Deployment
+            f.readable = f.writable = False
+        return True
+    s3.prep = prep
+
+    s3.filter = FS("type").belongs((4,))
+
+    if not auth.s3_has_role(ADMIN):
+        s3.filter &= auth.filter_by_root_org(s3db.hrm_job_title)
+
+    return s3_rest_controller("hrm")
+
+# -----------------------------------------------------------------------------
 def scenario():
     """
         RESTful CRUD controller

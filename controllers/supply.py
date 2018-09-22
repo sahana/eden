@@ -92,6 +92,17 @@ def item():
 def item_category():
     """ RESTful CRUD controller """
 
+    def prep(r):
+        if r.get_vars.get("assets") == "1":
+            # Category must be one that supports Assets
+            f = s3db.supply_item_category.can_be_asset
+            # Default anyway
+            #f.default = True
+            f.readable = f.writable = False
+
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
