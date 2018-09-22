@@ -1181,9 +1181,16 @@ class S3IncidentModel(S3Model):
                        "comments",
                        ]
 
+        report_fields = ["date",
+                         "name",
+                         "incident_type_id",
+                         "exercise",
+                         "closed",
+                         ]
+
         for level in levels:
             lfield = "location_id$%s" % level
-            #report_fields.append(lfield)
+            report_fields.append(lfield)
             text_fields.append(lfield)
             list_fields.append(lfield)
 
@@ -1268,6 +1275,16 @@ class S3IncidentModel(S3Model):
                        list_layout = event_incident_list_layout,
                        # Most recent Incident first
                        orderby = "event_incident.date desc",
+                       report_options = Storage(rows = report_fields,
+                                                cols = report_fields,
+                                                fact = report_fields,
+                                                defaults = Storage(
+                                                    rows = "location_id$%s" % levels[0],
+                                                    cols = "closed",
+                                                    fact = (T("Number of Incidents"), "count(name)"),
+                                                    totals = True,
+                                                    ),
+                                                ),
                        super_entity = "doc_entity",
                        update_onaccept = self.incident_update_onaccept,
                        )
