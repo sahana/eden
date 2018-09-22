@@ -394,6 +394,11 @@ def job_title():
             table.type.label = None
             table.comments.label = None
             table.comments.represent = lambda v: v or ""
+        elif r.get_vars.get("caller") in ("event_human_resource_job_title_id", "event_scenario_human_resource_job_title_id"):
+            # Default / Hide type
+            f = s3db.hrm_job_title.type
+            f.default = 4 # Deployment
+            f.readable = f.writable = False
         return True
     s3.prep = prep
 
