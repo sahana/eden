@@ -2708,6 +2708,16 @@ class S3EventAssetModel(S3Model):
                                                                    ),
                                               script = None, # No Item Pack Filter
                                               widget = None,
+                                              comment = S3PopupLink(c = "supply",
+                                                                    f = "item",
+                                                                    # No special controller so need this for an options lookup
+                                                                    vars = {"prefix": "asset",
+                                                                            "parent": "asset",
+                                                                            },
+                                                                    label = T("Create Item Type"),
+                                                                    title = T("Item"),
+                                                                    #tooltip = supply_item_tooltip,
+                                                                    ),
                                               ),
                           # Optional: Assign specific Asset
                           # @ToDo: Filter widget based on Type
@@ -3748,7 +3758,7 @@ class S3EventScenarioAssetModel(S3Model):
                                                                     vars = {"prefix": "asset",
                                                                             "parent": "asset",
                                                                             },
-                                                                    label = T("Create Item"),
+                                                                    label = T("Create Item Type"),
                                                                     title = T("Item"),
                                                                     #tooltip = supply_item_tooltip,
                                                                     ),
