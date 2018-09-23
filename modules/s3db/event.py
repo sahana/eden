@@ -4642,7 +4642,6 @@ class event_ActionPlan(S3Method):
                     if deletable is None:
                         deletable = True
                     if editable:
-                        # HR Manager
                         actions = [{"label": T("Open"),
                                     "url": r.url(component=component,
                                                  component_id="[id]",
@@ -4652,7 +4651,6 @@ class event_ActionPlan(S3Method):
                                     },
                                    ]
                     else:
-                        # Typically the User's personal profile
                         actions = [{"label": T("Open"),
                                     "url": r.url(component=component,
                                                  component_id="[id]",
@@ -4664,6 +4662,49 @@ class event_ActionPlan(S3Method):
                     if deletable:
                         actions.append({"label": T("Delete"),
                                         "_ajaxurl": r.url(component=component,
+                                                          component_id="[id]",
+                                                          method="delete.json",
+                                                          ),
+                                        "_class": "action-btn delete-btn-ajax dt-ajax-delete",
+                                        })
+                    return actions
+                return row_actions
+
+            def dt_row_actions_task():
+                def row_actions(r, list_id):
+                    editable = get_config("project_task", "editable")
+                    if editable is None:
+                        editable = True
+                    deletable = get_config("event_task", "deletable")
+                    if deletable is None:
+                        deletable = True
+                    if editable:
+                        actions = [{"label": T("Open"),
+                                    "url": URL(c="project",
+                                               f="task",
+                                               args="update.popup",
+                                               vars={"incident.id": "[id]",
+                                                     "refresh": list_id,
+                                                     },
+                                               ),
+                                    "_class": "action-btn edit s3_modal",
+                                    },
+                                   ]
+                    else:
+                        actions = [{"label": T("Open"),
+                                    "url": URL(c="project",
+                                               f="task",
+                                               args="read.popup",
+                                               vars={"incident.id": "[id]",
+                                                     "refresh": list_id,
+                                                     },
+                                               ),
+                                    "_class": "action-btn edit s3_modal",
+                                    },
+                                   ]
+                    if deletable:
+                        actions.append({"label": T("Delete"),
+                                        "_ajaxurl": r.url(component="incident_task",
                                                           component_id="[id]",
                                                           method="delete.json",
                                                           ),
@@ -4684,7 +4725,7 @@ class event_ActionPlan(S3Method):
             widget = {"label": "Tasks",
                       "label_create": "Add Task",
                       "type": "datatable",
-                      "actions": dt_row_actions("incident_task", tablename),
+                      "actions": dt_row_actions_task(),
                       "tablename": tablename,
                       "context": "incident",
                       "create_controller": "event",
