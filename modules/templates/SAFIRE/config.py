@@ -667,6 +667,13 @@ def config(settings):
         # No need to see log time: KISS
         current.s3db.configure(tablename,
                                crud_form = None,
+                               # In event_ActionPlan()
+                               #list_fields = ["priority",
+                               #               "name",
+                               #               "pe_id",
+                               #               "status_id",
+                               #               "date_due",
+                               #               ],
                                )
 
     settings.customise_project_task_resource = customise_project_task_resource

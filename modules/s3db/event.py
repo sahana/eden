@@ -4693,6 +4693,7 @@ class event_ActionPlan(S3Method):
                       #"pagesize": None, # all records
                       "list_fields": ["task_id$priority",
                                       "task_id$name",
+                                      "task_id$pe_id",
                                       "task_id$status",
                                       "task_id$date_due",
                                       ],
