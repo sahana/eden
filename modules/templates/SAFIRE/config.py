@@ -476,24 +476,43 @@ def config(settings):
     def event_incident_create_onaccept(form):
         """
             Automate Level based on Type, Zone (intersect from Location) & Severity
+            @ToDo: Move this to SAFIRE\SC
         """
 
+        db = current.db
+        s3db = current.s3db
+
         form_vars_get = form.vars.get
+        incident_id = form_vars_get("id")
 
         # If Incident Type is Chemical then level must be > 2
         level = form_vars_get("level")
         if level and int(level) < 3:
             incident_type_id = form_vars_get("incident_type_id")
-            db = current.db
-            s3db = current.s3db
             ittable = s3db.event_incident_type
             incident_type = db(ittable.id == incident_type_id).select(ittable.name,
                                                                       limitby = (0,1)
                                                                       ).first().name
             if incident_type == "Chemical Hazard":
                 itable = s3db.event_incident
-                db(itable.id == form_vars_get("id")).update(level = 3)
-                current.response.warning = T("Chemical Hazard Incident so level raised to 3")
+                db(itable.id == incident_id).update(level = 3)
+                current.response.warning = T("Chemical Hazard Incident so Level raised to 3")
+
+        # Alert Lead Agency
+        # @ToDo: This should use a new on-call org KV tag
+        organisation_id = form_vars_get("organisation_id")
+        if organisation_id:
+            otable = s3db.org_organisation
+            org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                          limitby = (0, 1)
+                                                          ).first()
+            current.msg.send_by_pe_id(org.pe_id,
+                                      subject = "",
+                                      message = "You have been assigned an Incident: %s%s" % (settings.get_base_public_url(),
+                                                                                              URL(c="event", f= "incident",
+                                                                                                  args = incident_id),
+                                                                                              ),
+                                      contact_method = "SMS")
 
     # -------------------------------------------------------------------------
     def customise_event_incident_resource(r, tablename):
