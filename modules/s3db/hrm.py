@@ -6307,11 +6307,20 @@ def hrm_rheader(r, tabs=None, profile=False):
         htable = s3db.hrm_human_resource
         settings = current.deployment_settings
         get_vars = r.get_vars
+
         hr = get_vars.get("human_resource.id", None)
         if hr:
             name = s3db.hrm_human_resource_represent(int(hr))
         else:
+            # Look up HR record ID (required for link URL construction)
+            # @ToDo handle multiple HR records (which one are we looking at?)
+            query = (htable.person_id == record_id) & \
+                    (htable.deleted == False)
+            hr = db(query).select(htable.id, limitby=(0, 1)).first()
+            if hr:
+                hr = hr.id
             name = s3_fullname(record)
+
         group = get_vars.get("group", None)
         if group is None:
             controller = r.controller
@@ -6426,13 +6435,6 @@ def hrm_rheader(r, tabs=None, profile=False):
 
                 vol_active = settings.get_hrm_vol_active()
                 if vol_active:
-                    if not hr:
-                        # @ToDo: Handle multiple active HR records
-                        query = (htable.person_id == record_id) & \
-                                (htable.deleted == False)
-                        hr = db(query).select(htable.id, limitby=(0, 1)).first()
-                        if hr:
-                            hr = hr.id
                     if hr:
                         dtable = s3db.vol_details
                         row = db(dtable.human_resource_id == hr).select(dtable.active,

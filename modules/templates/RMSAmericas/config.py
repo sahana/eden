@@ -578,6 +578,9 @@ def config(settings):
     settings.hrm.vol_active = hrm_vol_active
     settings.hrm.vol_active_tooltip = "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year"
 
+    # Roles which are permitted to export ID cards
+    ID_CARD_EXPORT_ROLES = ("ORG_ADMIN", "hr_manager", "hr_assistant")
+
     # -------------------------------------------------------------------------
     # RIT
     settings.deploy.team_label = "RIT"
@@ -1731,13 +1734,11 @@ Thank you"""
                                        form_postp = add_language,
                                        )
 
-                if r.representation == "card":
+                if r.representation == "card" and \
+                   auth.s3_has_roles(ID_CARD_EXPORT_ROLES):
                     # Configure ID card layout
-                    # TODO limit this function to certain user roles
                     from templates.RMSAmericas.idcards import IDCardLayout
-                    resource.configure(pdf_card_layout = IDCardLayout,
-                                       #pdf_card_pagesize = "A4",
-                                       )
+                    resource.configure(pdf_card_layout = IDCardLayout)
 
             if not auth.s3_has_role("ADMIN") and \
                    auth.s3_has_roles(("training_coordinator", "training_assistant")):
@@ -3536,8 +3537,9 @@ Thank you"""
                 s3.jquery_ready.append('''S3.showHidden('%s',%s,'%s')''' % \
                     ("allergic", json.dumps(["allergies"], separators=SEPARATORS), "pr_physical_description"))
 
-            if not EXTERNAL:
-                # TODO limit this function to certain user roles
+            if not EXTERNAL and \
+               auth.s3_has_roles(ID_CARD_EXPORT_ROLES):
+                # Show button to export ID card
                 settings.hrm.id_cards = True
 
             return True

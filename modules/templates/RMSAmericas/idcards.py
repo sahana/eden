@@ -80,8 +80,15 @@ class IDCardLayout(S3PDFCardLayout):
         path = field.uploadfolder if field.uploadfolder else defaultpath
         logos = {row.id: os.path.join(path, row.logo) for row in rows if row.logo}
 
-        # Look up VOLID card configs for all root orgs
+        # Get localized root organisation names
         ctable = s3db.doc_card_config
+        represent = ctable.organisation_id.represent
+        if represent.bulk:
+            root_org_names = represent.bulk(list(root_orgs), show_link=False)
+        else:
+            root_org_names = None
+
+        # Look up VOLID card configs for all root orgs
         query = (ctable.card_type == "VOLID") & \
                 (ctable.organisation_id.belongs(root_orgs)) & \
                 (ctable.deleted == False)
@@ -110,6 +117,7 @@ class IDCardLayout(S3PDFCardLayout):
         return {"logos": logos,
                 "pictures": pictures,
                 "configs": configs,
+                "root_org_names": root_org_names,
                 }
 
     # -------------------------------------------------------------------------
@@ -160,6 +168,11 @@ class IDCardLayout(S3PDFCardLayout):
         else:
             config = None
 
+        # Get the localized root org name
+        org_names = common.get("root_org_names")
+        if org_names:
+            root_org_name = org_names.get(root_org)
+
         draw_field = self.draw_field
         draw_value = self.draw_value
         draw_label = self.draw_label
@@ -178,14 +191,31 @@ class IDCardLayout(S3PDFCardLayout):
 
             # Org Logo
             if logo:
-                self.draw_image(logo, LEFT, TOP, width=60, height=60, valign="middle", halign="center")
+                self.draw_image(logo, LEFT, TOP,
+                                width = 55,
+                                height = 55,
+                                valign = "middle",
+                                halign = "center",
+                                )
+            elif root_org_name:
+                draw_value(LEFT, TOP, root_org_name,
+                           width = 55,
+                           height = 55,
+                           size = 10,
+                           valign = "middle",
+                           )
 
             # Get the profile picture
             pictures = common.get("pictures")
             if pictures:
                 picture = pictures.get(raw["pr_person.pe_id"])
                 if picture:
-                    self.draw_image(picture, RIGHT, TOP, width=60, height=60, valign="middle", halign="center")
+                    self.draw_image(picture, RIGHT, TOP,
+                                    width = 60,
+                                    height = 55,
+                                    valign = "middle",
+                                    halign = "center",
+                                    )
 
             # Center fields in reverse order so that vertical positions
             # can be adjusted for very long and hence wrapping strings
@@ -353,7 +383,7 @@ class IDCardLayout(S3PDFCardLayout):
             c.drawCentredString(x, y, s3_str(value))
 
     # -------------------------------------------------------------------------
-    def draw_value(self, x, y, value, width=120, height=40, size=7, bold=True):
+    def draw_value(self, x, y, value, width=120, height=40, size=7, bold=True, valign=None):
         """
             Helper function to draw a centered text above position (x, y);
             allows the text to wrap if it would otherwise exceed the given
@@ -366,31 +396,41 @@ class IDCardLayout(S3PDFCardLayout):
             @param height: the maximum available height (points)
             @param size: the font size (points)
             @param bold: use bold font
+            @param valign: vertical alignment ("top"|"middle"|"bottom"),
+                           default "bottom"
 
             @returns: the actual height of the text element drawn
         """
 
         # Preserve line breaks by replacing them with <br/> tags
-        value = value.strip("\n").replace('\n','<br />\n')
+        value = s3_str(value).strip("\n").replace('\n','<br />\n')
 
         styleSheet = getSampleStyleSheet()
         style = styleSheet["Normal"]
         style.fontName = BOLD if bold else NORMAL
         style.fontSize = size
         style.leading = size + 2
+        style.splitLongWords = False
         style.alignment = TA_CENTER
 
         para = Paragraph(value, style)
-        aH = para.wrap(width, height)[1]
+        aW, aH = para.wrap(width, height)
 
-        while(aH > height and style.fontSize > 4):
+        while((aH > height or aW > width) and style.fontSize > 4):
             # Reduce font size to make fit
             style.fontSize -= 1
             style.leading = style.fontSize + 2
             para = Paragraph(value, style)
-            aH = para.wrap(width, height)[1]
+            aW, aH = para.wrap(width, height)
 
-        para.drawOn(self.canv, x - para.width / 2, y)
+        if valign == "top":
+            vshift = aH
+        elif valign == "middle":
+            vshift = aH / 2.0
+        else:
+            vshift = 0
+
+        para.drawOn(self.canv, x - para.width / 2, y - vshift)
         return aH
 
     # -------------------------------------------------------------------------
