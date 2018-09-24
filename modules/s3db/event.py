@@ -5248,57 +5248,57 @@ class event_EventAssignMethod(S3Method):
             # Filter widgets
             location_defaults = {}
             if tablename == "event_incident":
-               location_id = r.record.location_id
-               if location_id:
-                   gtable = s3db.gis_location
-                   location = db(gtable.id == location_id).select(gtable.level,
+                location_id = r.record.location_id
+                if location_id:
+                    gtable = s3db.gis_location
+                    location = db(gtable.id == location_id).select(gtable.level,
+                                                                   gtable.name,
+                                                                   gtable.parent,
+                                                                   limitby = (0, 1),
+                                                                   ).first()
+                    level = location.level
+                    if level:
+                        location_defaults["event_location.location_id$%s__belongs" % level] = location.name
+                    parent = location.parent
+                    if parent:
+                        location = db(gtable.id == parent).select(gtable.level,
                                                                   gtable.name,
                                                                   gtable.parent,
                                                                   limitby = (0, 1),
                                                                   ).first()
-                   level = location.level
-                   if level:
-                       location_defaults["event_location.location_id$%s__belongs" % level] = location.name
-                   parent = location.parent
-                   if parent:
-                       location = db(gtable.id == parent).select(gtable.level,
-                                                                 gtable.name,
-                                                                 gtable.parent,
-                                                                 limitby = (0, 1),
-                                                                 ).first()
-                       location_defaults["event_location.location_id$%s__belongs" % location.level] = location.name
-                       parent = location.parent
-                       if parent:
-                           location = db(gtable.id == parent).select(gtable.level,
-                                                                     gtable.name,
-                                                                     gtable.parent,
-                                                                     limitby = (0, 1),
-                                                                     ).first()
-                           location_defaults["event_location.location_id$%s__belongs" % location.level] = location.name
-                           parent = location.parent
-                           if parent:
-                               location = db(gtable.id == parent).select(gtable.level,
-                                                                         gtable.name,
-                                                                         gtable.parent,
-                                                                         limitby = (0, 1),
-                                                                         ).first()
-                               location_defaults["event_location.location_id$%s__belongs" % location.level] = location.name
-                               parent = location.parent
-                               if parent:
-                                   location = db(gtable.id == parent).select(gtable.level,
-                                                                             gtable.name,
-                                                                             gtable.parent,
-                                                                             limitby = (0, 1),
-                                                                             ).first()
-                                   location_defaults["event_location.location_id$%s__belongs" % location.level] = location.name
-                                   parent = location.parent
-                                   if parent:
-                                       location = db(gtable.id == parent).select(gtable.level,
-                                                                                 gtable.name,
-                                                                                 gtable.parent,
-                                                                                 limitby = (0, 1),
-                                                                                 ).first()
-                                       location_defaults["location.location_id$%s__belongs" % location.level] = location.name
+                        location_defaults["event_location.location_id$%s__belongs" % location.level] = location.name
+                        parent = location.parent
+                        if parent:
+                            location = db(gtable.id == parent).select(gtable.level,
+                                                                      gtable.name,
+                                                                      gtable.parent,
+                                                                      limitby = (0, 1),
+                                                                      ).first()
+                            location_defaults["event_location.location_id$%s__belongs" % location.level] = location.name
+                            parent = location.parent
+                            if parent:
+                                location = db(gtable.id == parent).select(gtable.level,
+                                                                          gtable.name,
+                                                                          gtable.parent,
+                                                                          limitby = (0, 1),
+                                                                          ).first()
+                                location_defaults["event_location.location_id$%s__belongs" % location.level] = location.name
+                                parent = location.parent
+                                if parent:
+                                    location = db(gtable.id == parent).select(gtable.level,
+                                                                              gtable.name,
+                                                                              gtable.parent,
+                                                                              limitby = (0, 1),
+                                                                              ).first()
+                                    location_defaults["event_location.location_id$%s__belongs" % location.level] = location.name
+                                    parent = location.parent
+                                    if parent:
+                                        location = db(gtable.id == parent).select(gtable.level,
+                                                                                  gtable.name,
+                                                                                  gtable.parent,
+                                                                                  limitby = (0, 1),
+                                                                                  ).first()
+                                        location_defaults["location.location_id$%s__belongs" % location.level] = location.name
 
             # Which levels of Hierarchy are we using?
             levels = current.gis.get_relevant_hierarchy_levels()
