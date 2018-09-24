@@ -155,6 +155,21 @@ def incident():
                     #s3.crud.submit_button = T("Add")
                     s3.crud_labels["DELETE"] = T("Remove")
 
+                    if cname == "asset":
+                        # Filter Assets by Item Type
+                        script = '''
+var fncRepresentAsset = function(record) {
+ return record.number;
+}
+$.filterOptionsS3({
+ 'trigger': 'item_id',
+ 'target': 'asset_id',
+ 'lookupPrefix': 'asset',
+ 'lookupResource': 'asset',
+ 'fncRepresent': fncRepresentAsset
+})'''
+                        s3.jquery_ready.append(script)
+
                     # Default Event in the link to that of the Incident
                     ltable = s3db.table("event_%s" % cname)
                     if ltable:
