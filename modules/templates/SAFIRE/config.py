@@ -34,7 +34,7 @@ def config(settings):
     #settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
     #settings.auth.registration_requires_approval = True
-    #settings.auth.registration_requests_organisation = True
+    settings.auth.registration_requests_organisation = True
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
@@ -138,12 +138,12 @@ def config(settings):
             restricted = True,
             module_type = 2,
         )),
-        #("vol", Storage(
-        #    name_nice = T("Volunteers"),
-        #    #description = "Human Resources Management",
-        #    restricted = True,
-        #    module_type = 2,
-        #)),
+        ("vol", Storage(
+            name_nice = T("Volunteers"),
+            #description = "Human Resources Management",
+            restricted = True,
+            module_type = 2,
+        )),
         ("cms", Storage(
           name_nice = "Content Management",
           #description = "Content Management System",
@@ -169,12 +169,12 @@ def config(settings):
             restricted = True,
             module_type = None, # Not displayed
         )),
-        #("inv", Storage(
-        #    name_nice = T("Warehouses"),
-        #    #description = "Receiving and Sending Items",
-        #    restricted = True,
-        #    module_type = 4
-        #)),
+        ("inv", Storage(
+            name_nice = T("Warehouses"),
+            #description = "Receiving and Sending Items",
+            restricted = True,
+            module_type = 4
+        )),
         ("asset", Storage(
             name_nice = "Assets",
             #description = "Recording and Assigning Assets",
@@ -200,12 +200,12 @@ def config(settings):
             restricted = True,
             module_type = 2
         )),
-        #("cr", Storage(
-        #    name_nice = T("Shelters"),
-        #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
-        #    restricted = True,
-        #    module_type = 10
-        #)),
+        ("cr", Storage(
+            name_nice = T("Shelters"),
+            #description = "Tracks the location, capacity and breakdown of victims in Shelters",
+            restricted = True,
+            module_type = 10
+        )),
         #("hms", Storage(
         #    name_nice = T("Hospitals"),
         #    #description = "Helps to monitor status of hospitals",
@@ -241,6 +241,12 @@ def config(settings):
     # CMS
     # -------------------------------------------------------------------------
     settings.cms.richtext = True
+    
+    # -------------------------------------------------------------------------
+    # Organisations
+    # -------------------------------------------------------------------------
+    settings.org.documents_tab = True
+    settings.org.projects_tab = False
 
     # -------------------------------------------------------------------------
     # Events
@@ -325,13 +331,23 @@ def config(settings):
                                     TR(TH("%s: " % table.incident_type_id.label),
                                        table.incident_type_id.represent(incident_type_id),
                                        ),
+                                    TR(TH("%s: " % table.location_id.label),
+                                       table.location_id.represent(record.location_id),
+                                       ),
+                                    # @ToDo: Add Zone
+                                    TR(TH("%s: " % table.severity.label),
+                                       table.severity.represent(record.severity),
+                                       ),
+                                    TR(TH("%s: " % table.level.label),
+                                       table.level.represent(record.level),
+                                       ),
+                                    TR(TH("%s: " % table.organisation_id.label),
+                                       table.organisation_id.represent(record.organisation_id),
+                                       ),
                                     TR(TH("%s: " % table.person_id.label),
                                        table.person_id.represent(record.person_id),
                                        ),
                                     scenarios,
-                                    TR(TH("%s: " % table.location_id.label),
-                                       table.location_id.represent(record.location_id),
-                                       ),
                                     TR(TH("%s: " % table.comments.label),
                                        record.comments,
                                        ),
@@ -457,6 +473,51 @@ def config(settings):
     settings.customise_event_incident_report_controller = customise_event_incident_report_controller
 
     # -------------------------------------------------------------------------
+    def event_incident_create_onaccept(form):
+        """
+            Automate Level based on Type, Zone (intersect from Location) & Severity
+        """
+
+        form_vars_get = form.vars.get
+
+        # If Incident Type is Chemical then level must be > 2
+        level = form_vars_get("level")
+        if level and int(level) < 3:
+            incident_type_id = form_vars_get("incident_type_id")
+            db = current.db
+            s3db = current.s3db
+            ittable = s3db.event_incident_type
+            incident_type = db(ittable.id == incident_type_id).select(ittable.name,
+                                                                      limitby = (0,1)
+                                                                      ).first().name
+            if incident_type == "Chemical Hazard":
+                itable = s3db.event_incident
+                db(itable.id == form_vars_get("id")).update(level = 3)
+                current.response.warning = T("Chemical Hazard Incident so level raised to 3")
+
+    # -------------------------------------------------------------------------
+    def customise_event_incident_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.event_incident
+        f = table.severity
+        f.readable = f.writable = True
+        f = table.level
+        f.readable = f.writable = True
+        f = table.organisation_id
+        f.readable = f.writable = True
+        f.label = T("Lead Response Organization")
+
+        if r.interactive:
+            s3db.add_custom_callback(tablename,
+                                     "create_onaccept",
+                                     event_incident_create_onaccept,
+                                     )
+
+    settings.customise_event_incident_resource = customise_event_incident_resource
+
+    # -------------------------------------------------------------------------
     def customise_event_incident_controller(**attr):
 
         s3db = current.s3db
@@ -544,6 +605,15 @@ def config(settings):
             msg_list_empty = T("No Equipment currently registered for this incident"))
 
     settings.customise_event_asset_resource = customise_event_asset_resource
+
+    # -------------------------------------------------------------------------
+    def event_human_resource_onaccept(form):
+        """
+            @ToDo: Send Person a Notification when they are assigned to an Incident
+                - @ToDo: Add field to the table to keep track of which user has been notified so we can update & notify or not accordingly
+        """
+
+        form_vars_get = form.vars.get
 
     # -------------------------------------------------------------------------
     def customise_event_human_resource_resource(r, tablename):
@@ -665,6 +735,15 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Projects
     # -------------------------------------------------------------------------
+
+    # -------------------------------------------------------------------------
+    def project_task_onaccept(form):
+        """
+            @ToDo: Send Person a Notification when they are assigned to a Task
+                - @ToDo: Add field to the table to keep track of which user has been notified so we can update & notify or not accordingly
+        """
+
+        form_vars_get = form.vars.get
 
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):

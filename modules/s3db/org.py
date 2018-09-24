@@ -6386,10 +6386,11 @@ def org_rheader(r, tabs=None):
                         facilities,
                         (T("Staff & Volunteers"), "human_resource"),
                         (T("Assets"), "asset"),
-                        (T("Projects"), "project"),
                         #(T("Tasks"), "task"),
                         ]
                 append_tab = tabs.append
+                if settings.get_org_projects_tab():
+                    append_tab((T("Projects"), "project"))
                 if settings.get_org_tags():
                     append_tab((T("Tags"), "tag"))
                 if settings.get_org_resources_tab():
@@ -6398,6 +6399,8 @@ def org_rheader(r, tabs=None):
                     append_tab((T("Needs"), "needs"))
                 if settings.get_org_service_locations():
                     append_tab((T("Service Locations"), "service_location"))
+                if settings.get_org_documents_tab():
+                    append_tab((T("Documents"), "document"))
                 if settings.get_org_pdf_card_configs():
                     append_tab((T("Cards"), "card_config"))
                 # Org Role Manager always last

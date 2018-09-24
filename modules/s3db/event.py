@@ -1100,6 +1100,21 @@ class S3IncidentModel(S3Model):
         #  They can be Exercises or real Incidents.
         #  They can be instantiated from Scenario Templates.
         #
+
+        level_opts = {1 : T("Level 1"),
+                      2 : T("Level 2"),
+                      3 : T("Level 3"),
+                      4 : T("Level 4"),
+                      5 : T("Level 5"),
+                      }
+
+        severity_opts = {1 : T("1: Low"),
+                         2 : T("2: Medium"),
+                         3 : T("3: High"),
+                         4 : T("4: Severe"),
+                         5 : T("5: Catastrophic"),
+                         }
+
         tablename = "event_incident"
         self.define_table(tablename,
                           self.super_link("doc_id", "doc_entity"),
@@ -1140,14 +1155,34 @@ class S3IncidentModel(S3Model):
                                 label = T("Closed"),
                                 represent = s3_yes_no_represent,
                                 ),
-                          # Enable this field in templates if-required
+                          self.gis_location_id(),
+                          Field("severity", "integer",
+                                label = T("Severity"),
+                                requires = IS_EMPTY_OR(
+                                            IS_IN_SET(severity_opts)
+                                            ),
+                                represent = S3Represent(options = severity_opts),
+                                # Enable this field in templates if-required
+                                readable = False,
+                                writable = False,
+                                ),
+                          Field("level", "integer",
+                                label = T("Level"),
+                                requires = IS_EMPTY_OR(
+                                            IS_IN_SET(level_opts)
+                                            ),
+                                represent = S3Represent(options = level_opts),
+                                # Enable this field in templates if-required
+                                readable = False,
+                                writable = False,
+                                ),
                           self.org_organisation_id(label = T("Lead Organization"), # Lead Responder
+                                                   # Enable this field in templates if-required
                                                    readable = False,
                                                    writable = False,
                                                    ),
                           self.pr_person_id(label = T("Incident Commander"),
                                             ),
-                          self.gis_location_id(),
                           s3_comments(),
                           *s3_meta_fields())
 

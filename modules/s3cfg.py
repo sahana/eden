@@ -4302,6 +4302,12 @@ class S3Config(Storage):
         """
         return self.__lazy("org", "pdf_card_configs", default=False)
 
+    def get_org_documents_tab(self):
+        """
+            Whether to show a Tab for Documents
+        """
+        return self.org.get("documents_tab", False)
+
     def get_org_needs_tab(self):
         """
             Whether to show a Tab for Organisation Needs
@@ -4313,6 +4319,12 @@ class S3Config(Storage):
             Whether to show a Tab for Offices
         """
         return self.org.get("offices_tab", True)
+
+    def get_org_projects_tab(self):
+        """
+            Whether to show a Tab for Projects
+        """
+        return self.org.get("projects_tab", True) # Will be hidden anyway if Projects module disabled
 
     def get_org_regions(self):
         """

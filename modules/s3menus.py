@@ -1545,6 +1545,7 @@ class S3OptionsMenu(object):
         ADMIN = current.session.s3.system_roles.ADMIN
         SECTORS = "Clusters" if settings.get_ui_label_cluster() \
                              else "Sectors"
+        use_sectors = lambda i: settings.get_org_sector()
         stats = lambda i: settings.has_module("stats")
 
         return M(c="org")(
@@ -1578,7 +1579,8 @@ class S3OptionsMenu(object):
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
-                    M(SECTORS, f="sector", restrict=[ADMIN])(
+                    M(SECTORS, f="sector", check=use_sectors,
+                      restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
                     M("Resource Types", f="resource_type",
