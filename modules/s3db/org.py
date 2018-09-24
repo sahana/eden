@@ -6398,6 +6398,8 @@ def org_rheader(r, tabs=None):
                     append_tab((T("Needs"), "needs"))
                 if settings.get_org_service_locations():
                     append_tab((T("Service Locations"), "service_location"))
+                if settings.get_org_pdf_card_configs():
+                    append_tab((T("Cards"), "card_config"))
                 # Org Role Manager always last
                 append_tab((T("User Roles"), "roles"))
 

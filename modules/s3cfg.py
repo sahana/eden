@@ -4296,6 +4296,12 @@ class S3Config(Storage):
         """
         return self.org.get("group_team_represent", False)
 
+    def get_org_pdf_card_configs(self):
+        """
+            Show a tab in organisation rheader to manage PDF card configurations
+        """
+        return self.__lazy("org", "pdf_card_configs", default=False)
+
     def get_org_needs_tab(self):
         """
             Whether to show a Tab for Organisation Needs

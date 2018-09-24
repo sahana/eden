@@ -3192,6 +3192,10 @@ Thank you"""
                 tabs.insert(1, (T("Local Names"), "name"))
             attr["rheader"] = lambda r: current.s3db.org_rheader(r, tabs=tabs)
 
+        else:
+            # Enable tab for PDF card configurations
+            settings.org.pdf_card_configs = True
+
         return attr
 
     settings.customise_org_organisation_controller = customise_org_organisation_controller
