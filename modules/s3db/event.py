@@ -5133,6 +5133,7 @@ class event_ActionPlan(S3Method):
             profile_widgets.append(widget)
 
             tablename = "event_human_resource"
+            s3db.event_human_resource.person_id.represent = s3db.pr_PersonRepresentContact()
             r.customise_resource(tablename)
             widget = {# Use CRUD Strings (easier to customise)
                       #"label": "Human Resources",
