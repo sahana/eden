@@ -708,6 +708,7 @@ def config(settings):
             # Update
             record = form.record
             if record: # Not True for a record merger
+                from gluon import Field
                 changed = {}
                 for var in form_vars:
                     vvar = form_vars[var]
