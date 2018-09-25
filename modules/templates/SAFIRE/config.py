@@ -249,6 +249,11 @@ def config(settings):
     settings.org.projects_tab = False
 
     # -------------------------------------------------------------------------
+    # Shelters
+    # -------------------------------------------------------------------------
+    settings.cr.people_registration = False
+
+    # -------------------------------------------------------------------------
     # Events
     # -------------------------------------------------------------------------
     def event_rheader(r):
@@ -675,7 +680,8 @@ def config(settings):
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Add Person"),
             title_display = T("Person Details"),
-            title_list = T("Personnel"),
+            #title_list = T("Personnel"),
+            title_list = T("Responders"),
             title_update = T("Edit Person"),
             label_list_button = T("List Personnel"),
             label_delete_button = T("Remove Person from this incident"),
@@ -743,7 +749,8 @@ def config(settings):
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Add Person"),
             title_display = T("Person Details"),
-            title_list = T("Personnel"),
+            #title_list = T("Personnel"),
+            title_list = T("Responders"),
             title_update = T("Edit Person"),
             label_list_button = T("List Personnel"),
             label_delete_button = T("Remove Person from this incident"),
@@ -793,17 +800,22 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
 
+        s3db = current.s3db
+
+        f = s3db.project_task.source
+        f.readable = f.writable = False
+
         # No need to see log time: KISS
-        current.s3db.configure(tablename,
-                               crud_form = None,
-                               # In event_ActionPlan()
-                               #list_fields = ["priority",
-                               #               "name",
-                               #               "pe_id",
-                               #               "status_id",
-                               #               "date_due",
-                               #               ],
-                               )
+        s3db.configure(tablename,
+                       crud_form = None,
+                       # In event_ActionPlan()
+                       #list_fields = ["priority",
+                       #               "name",
+                       #               "pe_id",
+                       #               "status_id",
+                       #               "date_due",
+                       #               ],
+                       )
 
     settings.customise_project_task_resource = customise_project_task_resource
 

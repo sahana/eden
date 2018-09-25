@@ -4974,6 +4974,7 @@ class event_ActionPlan(S3Method):
             profile_widgets.append(widget)
 
             tablename = "event_human_resource"
+            r.customise_resource(tablename)
             widget = {# Use CRUD Strings (easier to customise)
                       #"label": "Human Resources",
                       #"label_create": "Add Human Resource",
