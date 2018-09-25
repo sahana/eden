@@ -359,8 +359,9 @@ def config(settings):
                                     ), rheader_tabs)
 
             elif name == "incident_report":
+                record_id = r.id
                 ltable = current.s3db.event_incident_report_incident
-                query = (ltable.incident_report_id == r.id)
+                query = (ltable.incident_report_id == record_id)
                 link = current.db(query).select(ltable.incident_id,
                                                 limitby = (0, 1)
                                                 ).first()
@@ -371,6 +372,15 @@ def config(settings):
                                            represent(link.incident_id),
                                            ),
                                         ))
+                else:
+                    rheader = DIV(A(T("Assign to Incident"),
+                                    _href = URL(c = "event",
+                                                f = "incident_report",
+                                                args = [record_id, "assign"],
+                                                ),
+                                    _class = "action-btn"
+                                    ))
+                    
 
             elif name == "event":
                 tabs = [(T("Event Details"), None),

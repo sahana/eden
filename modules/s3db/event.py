@@ -2595,7 +2595,7 @@ class S3IncidentLogModel(S3Model):
                              form_vars.name,
                              form_vars.comments or "")
 
-            current.msg.send_by_pe_id(pe_id, subject, message)
+            current.msg.send_by_pe_id(pe_id, subject, message, contact_method="SMS")
 
 # =============================================================================
 class S3IncidentTypeModel(S3Model):
@@ -5829,7 +5829,7 @@ class event_IncidentAssignMethod(S3Method):
                                                     {"number": added}
                 if added > 0:
                     redirect(URL(c="event", f="incident",
-                                 args=[r.id, self.next_tab],
+                                 args=[incident_id, self.next_tab],
                                  vars={},
                                  ))
                 else:
