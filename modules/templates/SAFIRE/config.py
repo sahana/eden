@@ -262,13 +262,13 @@ def config(settings):
 
             name = r.name
             if name == "incident":
-                # Incident Controller
                 tabs = [(T("Incident Details"), None),
                         #(T("Tasks"), "task"),
                         #(T("Human Resources"), "human_resource"),
                         #(T("Equipment"), "asset"),
                         (T("Action Plan"), "plan"),
                         (T("Incident Reports"), "incident_report"),
+                        (T("Logs"), "log"),
                         (T("Situation Reports"), "sitrep"),
                         ]
 
@@ -358,8 +358,21 @@ def config(settings):
                                     event,
                                     ), rheader_tabs)
 
+            elif name == "incident_report":
+                ltable = current.s3db.event_incident_report_incident
+                query = (ltable.incident_report_id == r.id)
+                link = current.db(query).select(ltable.incident_id,
+                                                limitby = (0, 1)
+                                                ).first()
+                if link:
+                    from s3 import S3Represent
+                    represent = S3Represent(lookup="event_incident", show_link=True)
+                    rheader = DIV(TABLE(TR(TH("%s: " % ltable.incident_id.label),
+                                           represent(link.incident_id),
+                                           ),
+                                        ))
+
             elif name == "event":
-                # Events Controller
                 tabs = [(T("Event Details"), None),
                         (T("Incidents"), "incident"),
                         (T("Documents"), "document"),
@@ -384,7 +397,6 @@ def config(settings):
                                     ), rheader_tabs)
 
             elif name == "scenario":
-                # Scenarios Controller
                 tabs = [(T("Scenario Details"), None),
                         #(T("Tasks"), "task"),
                         #(T("Human Resources"), "human_resource"),
@@ -467,6 +479,8 @@ def config(settings):
                                           vars={"incident_report_id": req_args[0]},
                                           ),
                                 )
+        else:
+            attr["rheader"] = event_rheader
 
         return attr
 
@@ -584,8 +598,10 @@ def config(settings):
                                                                        incident_report_id = incident_report_id,
                                                                        )
 
-                        resource.configure(create_onaccept = create_onaccept,
-                                           )
+                        s3db.add_custom_callback("event_incident",
+                                                 "create_onaccept",
+                                                 create_onaccept,
+                                                 )
             return True
         s3.prep = custom_prep
 

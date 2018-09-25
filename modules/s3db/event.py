@@ -32,6 +32,7 @@ __all__ = ("S3EventModel",
            "S3EventNameModel",
            "S3EventTagModel",
            "S3IncidentModel",
+           "S3IncidentLogModel",
            "S3IncidentReportModel",
            "S3IncidentReportOrganisationGroupModel",
            "S3IncidentTypeModel",
@@ -1346,6 +1347,9 @@ class S3IncidentModel(S3Model):
                             event_bookmark = "incident_id",
                             event_tag = "incident_id",  # cms_tag
                             event_human_resource = "incident_id",
+                            event_incident_log = {"name": "log",
+                                                  "joinby": "incident_id",
+                                                  },
                             event_incident_report = {"link": "event_incident_report_incident",
                                                      "joinby": "incident_id",
                                                      "key": "incident_report_id",
@@ -1466,20 +1470,24 @@ class S3IncidentModel(S3Model):
     @staticmethod
     def incident_create_onaccept(form):
         """
-            When an Incident is instantiated, populate defaults
+            When an Incident is instantiated:
+             - populate defaults
+             - add Log Entry
         """
 
+        s3db = current.s3db
+
         form_vars = form.vars
-        person_id = form_vars.get("person_id")
+        form_vars_get = form_vars.get
+        incident_id = form_vars_get("id")
+        person_id = form_vars_get("person_id")
 
         if person_id:
             # Add the Incident Commander as an event_human_resource
-            incident_id = form_vars.get("id")
             data = {"incident_id": incident_id,
                     "person_id": person_id,
-                    "start_date": form_vars.get("date"),
+                    "start_date": form_vars_get("date"),
                     }
-            s3db = current.s3db
             jtable = s3db.hrm_job_title
             job_title = current.db(jtable.name == "Incident Commander").select(jtable.id,
                                                                                limitby = (0, 1)
@@ -1488,12 +1496,16 @@ class S3IncidentModel(S3Model):
                 data["job_title_id"] = job_title.id
             s3db.event_human_resource.insert(**data)
 
-        #closed = form_vars.get("closed", False)
+        s3db.event_incident_log.insert(incident_id = incident_id,
+                                       name = "Incident Created",
+                                       )
+
+        #closed = form_vars_get("closed", False)
 
         #if incident_id and not closed:
         #    # Set the Incident in the session
         #    current.session.s3.incident = incident_id
-        #event = form_vars.get("event_id")
+        #event = form_vars_get("event_id")
         #if event and not closed:
         #    # Set the Event in the session
         #    current.session.s3.event = event
@@ -1502,7 +1514,7 @@ class S3IncidentModel(S3Model):
         #db = current.db
         #ctable = s3db.gis_config
         #mapconfig = None
-        #scenario = form_vars.get("scenario_id")
+        #scenario = form_vars_get("scenario_id")
         #if scenario:
         #    # We have been instantiated from a Scenario, so
         #    # copy all resources from the Scenario to the Incident
@@ -1590,17 +1602,19 @@ class S3IncidentModel(S3Model):
             When an Incident is updated
              - set correct event_id for all relevant components
              - check for closure
+             - add Log Entry
         """
 
         db = current.db
         s3db = current.s3db
 
         form_vars = form.vars
-        incident_id = form_vars.get("id")
+        form_vars_get = form_vars.get
+        incident_id = form_vars_get("id")
 
-        person_id = form_vars.get("person_id", False)
-        closed = form_vars.get("closed", False)
-        event_id = form_vars.get("event_id", False)
+        person_id = form_vars_get("person_id", False)
+        closed = form_vars_get("closed", False)
+        event_id = form_vars_get("event_id", False)
         if person_id is False or event_id is False or closed is False:
             # Read the record
             itable = s3db.event_incident
@@ -1702,6 +1716,50 @@ class S3IncidentModel(S3Model):
             rows = db(ltable.incident_id == incident_id).select(ltable.post_id)
             for row in rows:
                 db(table.id == row.post_id).update(expired=True)
+
+        # Add Log Entry
+        changed = {}
+        record = form.record
+        if record: # Not True for a record merger
+            table = db.event_incident
+            for var in form_vars:
+                vvar = form_vars[var]
+                if isinstance(vvar, Field):
+                    # modified_by/modified_on
+                    continue
+                rvar = record.get(var, "NOT_PRESENT")
+                if rvar != "NOT_PRESENT" and vvar != rvar:
+                    f = table[var]
+                    type_ = f.type
+                    if type_ == "integer" or \
+                       type_.startswith("reference"):
+                        if vvar:
+                            vvar = int(vvar)
+                        if vvar == rvar:
+                            continue
+                    represent = table[var].represent
+                    if represent:
+                        if hasattr(represent, "show_link"):
+                            represent.show_link = False
+                    else:
+                        represent = lambda o: o
+                    if rvar:
+                        changed[var] = "%s changed from %s to %s" % \
+                            (f.label, represent(rvar), represent(vvar))
+                    else:
+                        changed[var] = "%s changed to %s" % \
+                            (f.label, represent(vvar))
+
+        if changed:
+            table = s3db.event_incident_log
+            text = []
+            for var in changed:
+                text.append(changed[var])
+            text = "\n".join(text)
+            table.insert(incident_id = incident_id,
+                         name = "Incident Updated",
+                         comments = text,
+                         )
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -2127,7 +2185,8 @@ class S3IncidentReportModel(S3Model):
         # Custom Methods
         self.set_method("event", "incident_report",
                         method = "assign",
-                        action = event_IncidentAssignMethod(component="incident_report_incident"))
+                        action = event_IncidentAssignMethod(component = "incident_report_incident",
+                                                            next_tab = "incident_report"))
 
         # Components
         self.add_components(tablename,
@@ -2439,6 +2498,106 @@ class S3IncidentReportOrganisationGroupModel(S3Model):
         return {}
 
 # =============================================================================
+class S3IncidentLogModel(S3Model):
+    """
+        Incident Logs
+            - record of all changes
+            - manual updates with ability to notify 
+    """
+
+    names = ("event_incident_log",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Incident Logs
+        #
+        tablename = "event_incident_log"
+        self.define_table(tablename,
+                          self.event_incident_id(),
+                          Field("name", notnull=True,
+                                label = T("Name"),
+                                ),
+                          self.super_link("pe_id", "pr_pentity",
+                                          label = T("Notify"),
+                                          filterby = "instance_type",
+                                          filter_opts = ("pr_person",),
+                                          represent = self.pr_PersonEntityRepresent(show_label = False,
+                                                                                    show_type = False),
+                                          readable = True,
+                                          writable = True,
+                                          ),
+                          s3_comments(),
+                          *s3_meta_fields(),
+                          on_define = lambda table: \
+                            [table.created_by.set_attributes(represent = s3_auth_user_represent_name),
+                             table.created_on.set_attributes(represent = S3DateTime.datetime_represent),
+                             ]
+                          )
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Log Entry"),
+            title_display = T("Log Entry Details"),
+            title_list = T("Log Entries"),
+            #title_update = T("Edit Log Entry"),
+            #title_upload = T("Import Log Entries"),
+            label_list_button = T("List Log Entries"),
+            #label_delete_button = T("Delete Log Entry"),
+            msg_record_created = T("Log Entry added"),
+            #msg_record_modified = T("Log Entry updated"),
+            #msg_record_deleted = T("Log Entry removed"),
+            msg_list_empty = T("No Log Entries currently registered")
+            )
+
+        self.configure(tablename,
+                       create_onaccept = self.event_incident_log_create_onaccept,
+                       deletable = False,
+                       editable = False,
+                       list_fields = [(T("Date"), "created_on"),
+                                      (T("Organization"), "created_by$organisation_id"),
+                                      (T("By"), "created_by"),
+                                      "name",
+                                      "comments",
+                                      ],
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event_incident_log_create_onaccept(form):
+        """
+            Send notification
+        """
+
+        # Notify Assignee
+        form_vars = form.vars
+
+        pe_id = form_vars.pe_id
+        if not pe_id:
+            # Not assigned to anyone
+            return
+
+        settings = current.deployment_settings
+
+        if settings.has_module("msg"):
+            # Notify assignee
+            subject = "%s: Incident Log Notification" % settings.get_system_name_short()
+            url = "%s%s" % (settings.get_base_public_url(),
+                            URL(c="event", f="incident", args=[form_vars.incident_id, "log", form_vars.id]))
+
+            message = "You have been notified of a new Log entry:\n\n%s\n\n%s\n\n%s" % \
+                            (url,
+                             form_vars.name,
+                             form_vars.comments or "")
+
+            current.msg.send_by_pe_id(pe_id, subject, message)
+
+# =============================================================================
 class S3IncidentTypeModel(S3Model):
     """
         Incident Types
@@ -2712,6 +2871,11 @@ class S3EventAssetModel(S3Model):
 
         T = current.T
 
+        status_opts = {1: T("Available"),
+                       2: T("Assigned"),
+                       3: T("En Route"),
+                       }
+
         if settings.get_event_cascade_delete_incidents():
             ondelete = "CASCADE"
         else:
@@ -2758,6 +2922,14 @@ class S3EventAssetModel(S3Model):
                           # @ToDo: Filter widget based on Type
                           self.asset_asset_id(ondelete = "RESTRICT",
                                               ),
+                          Field("status", "integer",
+                                label = T("Status"),
+                                represent = lambda opt: \
+                                    status_opts.get(opt) or current.messages.UNKNOWN_OPT,
+                                requires = IS_EMPTY_OR(
+                                            IS_IN_SET(status_opts),
+                                            ),
+                                ),
                           s3_datetime("start_date",
                                       label = T("Start Date"),
                                       widget = "date",
@@ -3095,6 +3267,11 @@ class S3EventHRModel(S3Model):
             # Dummy field - probably this model not being used but others from Event are
             job_title_represent = None
 
+        status_opts = {1: T("Available"),
+                       2: T("Assigned"),
+                       3: T("En Route"),
+                       }
+
         # ---------------------------------------------------------------------
         # Positions required &, if they are filled, then who is filling them
         # - NB If the Person filling a Role changes then a new record should be created with a new start_date/end_date
@@ -3135,6 +3312,14 @@ class S3EventHRModel(S3Model):
                                                 ),
                           self.pr_person_id(ondelete = "RESTRICT"),
                           # reportsToAgency in EDXL-SitRep: person_id$human_resource.organisation_id
+                          Field("status", "integer",
+                                label = T("Status"),
+                                represent = lambda opt: \
+                                    status_opts.get(opt) or current.messages.UNKNOWN_OPT,
+                                requires = IS_EMPTY_OR(
+                                            IS_IN_SET(status_opts),
+                                            ),
+                                ),
                           s3_datetime("start_date",
                                       label = T("Start Date"),
                                       widget = "date",
@@ -3164,6 +3349,7 @@ class S3EventHRModel(S3Model):
         list_fields = [#"incident_id", # Not being dropped in component view
                        "job_title_id",
                        "person_id",
+                       "status",
                        "start_date",
                        "end_date",
                        ]
@@ -4817,6 +5003,7 @@ class event_ActionPlan(S3Method):
                       #"pagesize": None, # all records
                       "list_fields": ["item_id",
                                       "asset_id",
+                                      "status",
                                       "start_date",
                                       "end_date",
                                       ],
@@ -5641,7 +5828,10 @@ class event_IncidentAssignMethod(S3Method):
                 current.session.confirmation = T("%(number)s assigned") % \
                                                     {"number": added}
                 if added > 0:
-                    redirect(URL(args=[r.id, self.next_tab], vars={}))
+                    redirect(URL(c="event", f="incident",
+                                 args=[r.id, self.next_tab],
+                                 vars={},
+                                 ))
                 else:
                     redirect(URL(args=r.args, vars={}))
 

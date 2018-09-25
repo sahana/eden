@@ -60,7 +60,6 @@ __all__ = ("S3ProjectModel",
            "S3ProjectTaskModel",
            "S3ProjectTaskForumModel",
            "S3ProjectTaskHRMModel",
-           "S3ProjectTaskIReportModel",
            "S3ProjectWindowModel",
            "project_ActivityRepresent",
            "project_activity_year_options",
@@ -4192,16 +4191,16 @@ class S3ProjectOrganisationModel(S3Model):
             & update the realm_entity.
         """
 
-        formvars = form.vars
+        form_vars = form.vars
 
-        if str(formvars.role) == \
+        if str(form_vars.role) == \
              str(current.deployment_settings.get_project_organisation_lead_role()):
 
             # Read the record
             # (safer than relying on vars which might be missing on component tabs)
             db = current.db
             ltable = db.project_organisation
-            record = db(ltable.id == formvars.id).select(ltable.project_id,
+            record = db(ltable.id == form_vars.id).select(ltable.project_id,
                                                          ltable.organisation_id,
                                                          limitby = (0, 1),
                                                          ).first()
@@ -11681,14 +11680,14 @@ class S3ProjectTaskModel(S3Model):
     def project_task_onvalidation(form):
         """ Task form validation """
 
-        formvars = form.vars
-        if str(formvars.status) == "3" and not formvars.pe_id:
+        form_vars = form.vars
+        if str(form_vars.status) == "3" and not form_vars.pe_id:
             form.errors.pe_id = \
                 current.T("Status 'assigned' requires the %(fieldname)s to not be blank") % \
                     dict(fieldname=current.db.project_task.pe_id.label)
-        elif formvars.pe_id and str(formvars.status) == "2":
+        elif form_vars.pe_id and str(form_vars.status) == "2":
             # Set the Status to 'Assigned' if left at default 'New'
-            formvars.status = 3
+            form_vars.status = 3
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -12185,74 +12184,6 @@ class S3ProjectTaskHRMModel(S3Model):
         return {}
 
 # =============================================================================
-class S3ProjectTaskIReportModel(S3Model):
-    """
-        Project Task IReport Model
-
-        This class holds the table used to link Tasks with Incident Reports.
-        @ToDo: Deprecate as we link to Incidents instead: S3EventTaskModel
-    """
-
-    names = ("project_task_ireport",)
-
-    def model(self):
-
-        # Link Tasks <-> Incident Reports
-        #
-        tablename = "project_task_ireport"
-        self.define_table(tablename,
-                          self.project_task_id(empty = False,
-                                               ondelete = "CASCADE",
-                                               ),
-                          self.irs_ireport_id(empty = False,
-                                              ondelete = "CASCADE",
-                                              ),
-                          *s3_meta_fields())
-
-        self.configure(tablename,
-                       onaccept=self.task_ireport_onaccept)
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def task_ireport_onaccept(form):
-        """
-            When a Task is linked to an IReport, then populate the location_id
-        """
-
-        formvars = form.vars
-        ireport_id = formvars.ireport_id
-        task_id = formvars.task_id
-
-        db = current.db
-
-        # Check if we already have a Location for the Task
-        table = db.project_task
-        query = (table.id == task_id)
-        record = db(query).select(table.location_id,
-                                  limitby=(0, 1)).first()
-        if not record or record.location_id:
-            return
-
-        # Find the Incident Location
-        itable = db.irs_ireport
-        query = (itable.id == ireport_id)
-        record = db(query).select(itable.location_id,
-                                  limitby=(0, 1)).first()
-        if not record or not record.location_id:
-            return
-
-        location_id = record.location_id
-
-        # Update the Task
-        query = (table.id == task_id)
-        db(query).update(location_id=location_id)
-
-# =============================================================================
 class S3ProjectWindowModel(S3Model):
     """
         Project Window Model
@@ -12496,10 +12427,10 @@ def task_notify(form):
         If the task is assigned to someone then notify them
     """
 
-    formvars = form.vars
+    form_vars = form.vars
     record = form.record
 
-    pe_id = formvars.pe_id
+    pe_id = form_vars.pe_id
     if not pe_id:
         # Not assigned to anyone
         return
@@ -12509,7 +12440,7 @@ def task_notify(form):
         # Don't notify the user when they assign themselves tasks
         return
 
-    status = formvars.status
+    status = form_vars.status
     if status is not None:
         status = int(status)
     else:
@@ -12531,9 +12462,9 @@ def task_notify(form):
             # Notify assignee
             subject = "%s: Task assigned to you" % settings.get_system_name_short()
             url = "%s%s" % (settings.get_base_public_url(),
-                            URL(c="project", f="task", args=[formvars.id]))
+                            URL(c="project", f="task", args=[form_vars.id]))
 
-            priority = formvars.priority
+            priority = form_vars.priority
             if priority is not None:
                 priority = current.s3db.project_task.priority.represent(int(priority))
             else:
@@ -12542,8 +12473,8 @@ def task_notify(form):
             message = "You have been assigned a Task:\n\n%s\n\n%s\n\n%s\n\n%s" % \
                             (url,
                              "%s priority" % priority,
-                             formvars.name,
-                             formvars.description or "")
+                             form_vars.name,
+                             form_vars.description or "")
 
             current.msg.send_by_pe_id(pe_id, subject, message)
 
