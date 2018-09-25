@@ -72,6 +72,7 @@ __all__ = ("S3EventModel",
            "event_event_list_layout",
            "event_incident_list_layout",
            "event_rheader",
+           "event_set_event_from_incident",
            )
 
 from gluon import *
@@ -2871,6 +2872,7 @@ class S3EventAssetModel(S3Model):
 
         T = current.T
 
+        # SAFIRE\SC
         status_opts = {1: T("Requested"),
                        2: T("Assigned"),
                        3: T("Dispatched (out)"),
@@ -3345,6 +3347,7 @@ class S3EventHRModel(S3Model):
             # Dummy field - probably this model not being used but others from Event are
             job_title_represent = None
 
+        # SAFIRE\SC
         status_opts = {1: T("Requested"),
                        2: T("Assigned"),
                        3: T("Standby"),
@@ -4980,8 +4983,8 @@ def set_event_from_incident(form, tablename):
         if incident:
             db(table.id == record_id).update(event_id = incident.event_id)
 
-
-
+# Alias
+event_set_event_from_incident = set_event_from_incident
 # =============================================================================
 # Custom Resource Methods
 

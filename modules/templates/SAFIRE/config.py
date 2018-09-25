@@ -663,18 +663,110 @@ def config(settings):
     settings.customise_event_asset_resource = customise_event_asset_resource
 
     # -------------------------------------------------------------------------
-    def event_human_resource_onaccept(form):
+    def event_human_resource_onaccept(form, create=True):
         """
-            @ToDo: Send Person a Notification when they are assigned to an Incident
-                - @ToDo: Add field to the table to keep track of which user has been notified so we can update & notify or not accordingly
+            When a Position is assigned to an Incident:
+             - set_event_from_incident
+             - add Log Entry
+             - send Notification
         """
 
-        form_vars_get = form.vars.get
+        db = current.db
+        s3db = current.s3db
+
+        s3db.event_set_event_from_incident(form, "event_human_resource")
+
+        table = s3db.event_human_resource
+
+        form_vars = form.vars
+        form_vars_get = form_vars.get
+        link_id = form_vars_get("id")
+        incident_id = form_vars_get("incident_id")
+        if not incident_id:
+            link = db(table.id == link_id).select(table.incident_id,
+                                                  limitby = (0, 1)
+                                                  ).first()
+            incident_id = link.incident_id
+
+        pe_id = None
+        if create:
+            person_id = form_vars_get("person_id")
+            if person_id:
+                ptable = s3db.pr_person
+                person = db(ptable.id == person_id).select(ptable.pe_id,
+                                                           limitby = (0, 1)
+                                                           ).first()
+                pe_id = person.pe_id
+
+            job_title_id = form_vars_get("job_title_id")
+            if job_title_id:
+                s3db.event_incident_log.insert(incident_id = incident_id,
+                                               name = "Person Requested",
+                                               comments = s3db.event_human_resource.job_title_id.represent(job_title_id),
+                                               )
+        else:
+            # Update
+            record = form.record
+            if record: # Not True for a record merger
+                changed = {}
+                for var in form_vars:
+                    vvar = form_vars[var]
+                    if isinstance(vvar, Field):
+                        # modified_by/modified_on
+                        continue
+                    rvar = record.get(var, "NOT_PRESENT")
+                    if rvar != "NOT_PRESENT" and vvar != rvar:
+                        f = table[var]
+                        if var == "pe_id":
+                            pe_id = vvar
+                        type_ = f.type
+                        if type_ == "integer" or \
+                           type_.startswith("reference"):
+                            if vvar:
+                                vvar = int(vvar)
+                            if vvar == rvar:
+                                continue
+                        represent = table[var].represent
+                        if represent:
+                            if hasattr(represent, "show_link"):
+                                represent.show_link = False
+                        else:
+                            represent = lambda o: o
+                        if rvar:
+                            changed[var] = "%s changed from %s to %s" % \
+                                (f.label, represent(rvar), represent(vvar))
+                        else:
+                            changed[var] = "%s changed to %s" % \
+                                (f.label, represent(vvar))
+
+                if changed:
+                    table = s3db.event_incident_log
+                    text = []
+                    for var in changed:
+                        text.append(changed[var])
+                    text = "\n".join(text)
+                    table.insert(incident_id = incident_id,
+                                 #name = "Person Assigned",
+                                 name = "Person Request Updated",
+                                 comments = text,
+                                 )
+
+        if pe_id:
+            # Notify Assignee
+            current.msg.send_by_pe_id(pe_id,
+                                      subject = "",
+                                      message = "You have been assigned to an Incident: %s%s" % \
+                                        (settings.get_base_public_url(),
+                                         URL(c="event", f= "incident",
+                                             args = [incident_id, "human_resource", link_id]),
+                                             ),
+                                      contact_method = "SMS")
 
     # -------------------------------------------------------------------------
     def customise_event_human_resource_resource(r, tablename):
 
-        table = current.s3db.event_human_resource
+        s3db = current.s3db
+        table = s3db.event_human_resource
         # DateTime
         from gluon import IS_EMPTY_OR
         from s3 import IS_UTC_DATETIME, S3CalendarWidget, S3DateTime
@@ -695,6 +787,13 @@ def config(settings):
             msg_record_modified = T("Person updated"),
             msg_record_deleted = T("Person removed"),
             msg_list_empty = T("No Persons currently registered for this incident"))
+
+        s3db.configure(tablename,
+                       # Deliberately over-rides
+                       create_onaccept = event_human_resource_onaccept,
+                       update_onaccept = lambda form:
+                            event_human_resource_onaccept(form, create=False),
+                       )
 
     settings.customise_event_human_resource_resource = customise_event_human_resource_resource
 
@@ -797,8 +896,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     def project_task_onaccept(form, create=True):
         """
-            @ToDo: Send Person a Notification when they are assigned to a Task
-                - @ToDo: Add field to the table to keep track of which user has been notified so we can update & notify or not accordingly
+            Send Person a Notification when they are assigned to a Task
+            Log changes in Incident Log
         """
 
         s3db = current.s3db
@@ -806,65 +905,82 @@ def config(settings):
 
         form_vars = form.vars
         form_vars_get = form_vars.get
-        link = current.db(ltable.task_id == form_vars_get("id")).select(ltable.incident_id,
-                                                                        limitby = (0, 1)
-                                                                        ).first()
+        task_id = form_vars_get("id")
+        link = current.db(ltable.task_id == task_id).select(ltable.incident_id,
+                                                            limitby = (0, 1)
+                                                            ).first()
         incident_id = link.incident_id
 
         if create:
+            pe_id = form_vars_get("pe_id")
+            # Log
             name = form_vars_get("name")
             if name:
                 s3db.event_incident_log.insert(incident_id = incident_id,
                                                name = "Task Created",
                                                comments = name,
                                                )
-            return
 
-        # Update
-        record = form.record
-        if record: # Not True for a record merger
-            from gluon import Field
-            table = s3db.project_task
-            changed = {}
-            for var in form_vars:
-                vvar = form_vars[var]
-                if isinstance(vvar, Field):
-                    # modified_by/modified_on
-                    continue
-                rvar = record.get(var, "NOT_PRESENT")
-                if rvar != "NOT_PRESENT" and vvar != rvar:
-                    f = table[var]
-                    type_ = f.type
-                    if type_ == "integer" or \
-                       type_.startswith("reference"):
-                        if vvar:
-                            vvar = int(vvar)
-                        if vvar == rvar:
-                            continue
-                    represent = table[var].represent
-                    if represent:
-                        if hasattr(represent, "show_link"):
-                            represent.show_link = False
-                    else:
-                        represent = lambda o: o
-                    if rvar:
-                        changed[var] = "%s changed from %s to %s" % \
-                            (f.label, represent(rvar), represent(vvar))
-                    else:
-                        changed[var] = "%s changed to %s" % \
-                            (f.label, represent(vvar))
+        else:
+            # Update
+            pe_id = None
+            record = form.record
+            if record: # Not True for a record merger
+                from gluon import Field
+                table = s3db.project_task
+                changed = {}
+                for var in form_vars:
+                    vvar = form_vars[var]
+                    if isinstance(vvar, Field):
+                        # modified_by/modified_on
+                        continue
+                    if var == "pe_id":
+                        pe_id = vvar
+                    rvar = record.get(var, "NOT_PRESENT")
+                    if rvar != "NOT_PRESENT" and vvar != rvar:
+                        f = table[var]
+                        type_ = f.type
+                        if type_ == "integer" or \
+                           type_.startswith("reference"):
+                            if vvar:
+                                vvar = int(vvar)
+                            if vvar == rvar:
+                                continue
+                        represent = table[var].represent
+                        if represent:
+                            if hasattr(represent, "show_link"):
+                                represent.show_link = False
+                        else:
+                            represent = lambda o: o
+                        if rvar:
+                            changed[var] = "%s changed from %s to %s" % \
+                                (f.label, represent(rvar), represent(vvar))
+                        else:
+                            changed[var] = "%s changed to %s" % \
+                                (f.label, represent(vvar))
 
-            if changed:
-                table = s3db.event_incident_log
-                text = []
-                for var in changed:
-                    text.append(changed[var])
-                text = "\n".join(text)
-                table.insert(incident_id = incident_id,
-                             name = "Task Updated",
-                             comments = text,
-                             )
+                if changed:
+                    table = s3db.event_incident_log
+                    text = []
+                    for var in changed:
+                        text.append(changed[var])
+                    text = "\n".join(text)
+                    table.insert(incident_id = incident_id,
+                                 name = "Task Updated",
+                                 comments = text,
+                                 )
 
+        if pe_id:
+            # Notify Assignee
+            current.msg.send_by_pe_id(pe_id,
+                                      subject = "",
+                                      message = "You have been assigned a Task: %s%s" % \
+                                        (settings.get_base_public_url(),
+                                         URL(c="event", f= "incident",
+                                             args = [incident_id, "task", task_id]),
+                                             ),
+                                      contact_method = "SMS")
+            
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
 
