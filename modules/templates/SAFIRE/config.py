@@ -188,24 +188,30 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
-        #("req", Storage(
-        #    name_nice = "Requests",
-        #    #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+        #("budget", Storage(
+        #    name_nice = T("Budgets"),
+        #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
         #    restricted = True,
-        #    module_type = 10,
+        #    module_type = 10
         #)),
-        ("project", Storage(
-            name_nice = "Tasks",
-            #description = "Tracking of Projects, Activities and Tasks",
-            restricted = True,
-            module_type = 2
-        )),
         ("cr", Storage(
             name_nice = T("Shelters"),
             #description = "Tracks the location, capacity and breakdown of victims in Shelters",
             restricted = True,
             module_type = 10
         )),
+        ("project", Storage(
+            name_nice = "Tasks",
+            #description = "Tracking of Projects, Activities and Tasks",
+            restricted = True,
+            module_type = 2
+        )),
+        #("req", Storage(
+        #    name_nice = "Requests",
+        #    #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+        #    restricted = True,
+        #    module_type = 10,
+        #)),
         #("hms", Storage(
         #    name_nice = T("Hospitals"),
         #    #description = "Helps to monitor status of hospitals",
@@ -789,13 +795,75 @@ def config(settings):
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
-    def project_task_onaccept(form):
+    def project_task_onaccept(form, create=True):
         """
             @ToDo: Send Person a Notification when they are assigned to a Task
                 - @ToDo: Add field to the table to keep track of which user has been notified so we can update & notify or not accordingly
         """
 
-        form_vars_get = form.vars.get
+        s3db = current.s3db
+        ltable = s3db.event_task
+
+        form_vars = form.vars
+        form_vars_get = form_vars.get
+        link = current.db(ltable.task_id == form_vars_get("id")).select(ltable.incident_id,
+                                                                        limitby = (0, 1)
+                                                                        ).first()
+        incident_id = link.incident_id
+
+        if create:
+            name = form_vars_get("name")
+            if name:
+                s3db.event_incident_log.insert(incident_id = incident_id,
+                                               name = "Task Created",
+                                               comments = name,
+                                               )
+            return
+
+        # Update
+        record = form.record
+        if record: # Not True for a record merger
+            from gluon import Field
+            table = s3db.project_task
+            changed = {}
+            for var in form_vars:
+                vvar = form_vars[var]
+                if isinstance(vvar, Field):
+                    # modified_by/modified_on
+                    continue
+                rvar = record.get(var, "NOT_PRESENT")
+                if rvar != "NOT_PRESENT" and vvar != rvar:
+                    f = table[var]
+                    type_ = f.type
+                    if type_ == "integer" or \
+                       type_.startswith("reference"):
+                        if vvar:
+                            vvar = int(vvar)
+                        if vvar == rvar:
+                            continue
+                    represent = table[var].represent
+                    if represent:
+                        if hasattr(represent, "show_link"):
+                            represent.show_link = False
+                    else:
+                        represent = lambda o: o
+                    if rvar:
+                        changed[var] = "%s changed from %s to %s" % \
+                            (f.label, represent(rvar), represent(vvar))
+                    else:
+                        changed[var] = "%s changed to %s" % \
+                            (f.label, represent(vvar))
+
+            if changed:
+                table = s3db.event_incident_log
+                text = []
+                for var in changed:
+                    text.append(changed[var])
+                text = "\n".join(text)
+                table.insert(incident_id = incident_id,
+                             name = "Task Updated",
+                             comments = text,
+                             )
 
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
@@ -805,9 +873,11 @@ def config(settings):
         f = s3db.project_task.source
         f.readable = f.writable = False
 
-        # No need to see log time: KISS
         s3db.configure(tablename,
+                       # No need to see time log: KISS
                        crud_form = None,
+                       # NB We deliberatly over-ride the default one
+                       create_onaccept = project_task_onaccept,
                        # In event_ActionPlan()
                        #list_fields = ["priority",
                        #               "name",
@@ -815,6 +885,8 @@ def config(settings):
                        #               "status_id",
                        #               "date_due",
                        #               ],
+                       update_onaccept = lambda form:
+                                            project_task_onaccept(form, create=False),
                        )
 
     settings.customise_project_task_resource = customise_project_task_resource

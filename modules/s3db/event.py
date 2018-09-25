@@ -1718,9 +1718,9 @@ class S3IncidentModel(S3Model):
                 db(table.id == row.post_id).update(expired=True)
 
         # Add Log Entry
-        changed = {}
         record = form.record
         if record: # Not True for a record merger
+            changed = {}
             table = db.event_incident
             for var in form_vars:
                 vvar = form_vars[var]
@@ -1750,16 +1750,16 @@ class S3IncidentModel(S3Model):
                         changed[var] = "%s changed to %s" % \
                             (f.label, represent(vvar))
 
-        if changed:
-            table = s3db.event_incident_log
-            text = []
-            for var in changed:
-                text.append(changed[var])
-            text = "\n".join(text)
-            table.insert(incident_id = incident_id,
-                         name = "Incident Updated",
-                         comments = text,
-                         )
+            if changed:
+                table = s3db.event_incident_log
+                text = []
+                for var in changed:
+                    text.append(changed[var])
+                text = "\n".join(text)
+                table.insert(incident_id = incident_id,
+                             name = "Incident Updated",
+                             comments = text,
+                             )
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -2871,9 +2871,10 @@ class S3EventAssetModel(S3Model):
 
         T = current.T
 
-        status_opts = {1: T("Available"),
+        status_opts = {1: T("Requested"),
                        2: T("Assigned"),
-                       3: T("En Route"),
+                       3: T("Dispatched (out)"),
+                       4: T("Returned (in)"),
                        }
 
         if settings.get_event_cascade_delete_incidents():
@@ -2976,6 +2977,7 @@ class S3EventAssetModel(S3Model):
         self.configure(tablename,
                        context = {"incident": "incident_id",
                                   },
+                       create_onaccept = self.event_asset_onaccept,
                        crud_form = crud_form,
                        deduplicate = S3Duplicate(primary = ("incident_id",
                                                             "item_id",
@@ -2990,13 +2992,89 @@ class S3EventAssetModel(S3Model):
                                       "allocation.end_date",
                                       "allocation.daily_cost",
                                       ],
-                       onaccept = lambda form: \
-                            set_event_from_incident(form, "event_asset"),
+                       update_onaccept = lambda form:
+                                            self.event_asset_onaccept(form, create=False),
                        super_entity = "budget_cost_item",
                        )
 
         # Pass names back to global scope (s3.*)
         return {}
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def event_asset_onaccept(form, create=True):
+        """
+            When an Asset is assigned to an Incident:
+             - set_event_from_incident
+             - add Log Entry
+        """
+
+        set_event_from_incident(form, "event_asset")
+
+        s3db = current.s3db
+        table = s3db.event_asset
+
+        form_vars = form.vars
+        form_vars_get = form_vars.get
+        incident_id = form_vars_get("incident_id")
+        if not incident_id:
+            link = current.db(table.id == form_vars_get("id")).select(table.incident_id,
+                                                                      limitby = (0, 1)
+                                                                      ).first()
+            incident_id = link.incident_id
+
+        if create:
+            item_id = form_vars_get("item_id")
+            if item_id:
+                s3db.event_incident_log.insert(incident_id = incident_id,
+                                               name = "Item Requested",
+                                               comments = s3db.event_asset.item_id.represent(item_id),
+                                               )
+            return
+
+        # Update
+        record = form.record
+        if record: # Not True for a record merger
+            changed = {}
+            for var in form_vars:
+                vvar = form_vars[var]
+                if isinstance(vvar, Field):
+                    # modified_by/modified_on
+                    continue
+                rvar = record.get(var, "NOT_PRESENT")
+                if rvar != "NOT_PRESENT" and vvar != rvar:
+                    f = table[var]
+                    type_ = f.type
+                    if type_ == "integer" or \
+                       type_.startswith("reference"):
+                        if vvar:
+                            vvar = int(vvar)
+                        if vvar == rvar:
+                            continue
+                    represent = table[var].represent
+                    if represent:
+                        if hasattr(represent, "show_link"):
+                            represent.show_link = False
+                    else:
+                        represent = lambda o: o
+                    if rvar:
+                        changed[var] = "%s changed from %s to %s" % \
+                            (f.label, represent(rvar), represent(vvar))
+                    else:
+                        changed[var] = "%s changed to %s" % \
+                            (f.label, represent(vvar))
+
+            if changed:
+                table = s3db.event_incident_log
+                text = []
+                for var in changed:
+                    text.append(changed[var])
+                text = "\n".join(text)
+                table.insert(incident_id = incident_id,
+                             #name = "Item Assigned",
+                             name = "Item Request Updated",
+                             comments = text,
+                             )
 
 # =============================================================================
 class S3EventBookmarkModel(S3Model):
@@ -3267,9 +3345,13 @@ class S3EventHRModel(S3Model):
             # Dummy field - probably this model not being used but others from Event are
             job_title_represent = None
 
-        status_opts = {1: T("Available"),
+        status_opts = {1: T("Requested"),
                        2: T("Assigned"),
-                       3: T("En Route"),
+                       3: T("Standby"),
+                       4: T("Mobilized (staged)"),
+                       5: T("In Action"),
+                       6: T("Demobilize"),
+                       7: T("Stand-down"),
                        }
 
         # ---------------------------------------------------------------------
@@ -3381,6 +3463,7 @@ class S3EventHRModel(S3Model):
         self.configure(tablename,
                        context = {"incident": "incident_id",
                                   },
+                       create_onaccept = self.event_human_resource_onaccept,
                        crud_form = crud_form,
                        deduplicate = S3Duplicate(primary = ("incident_id",
                                                             "job_title_id",
@@ -3390,13 +3473,89 @@ class S3EventHRModel(S3Model):
                                                             ),
                                                  ),
                        list_fields = list_fields,
-                       onaccept = lambda form: \
-                        set_event_from_incident(form, "event_human_resource"),
+                       update_onaccept = lambda form:
+                                            self.event_human_resource_onaccept(form, create=False),
                        super_entity = "budget_cost_item",
                        )
 
         # Pass names back to global scope (s3.*)
         return {}
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def event_human_resource_onaccept(form, create=True):
+        """
+            When a Position is assigned to an Incident:
+             - set_event_from_incident
+             - add Log Entry
+        """
+
+        set_event_from_incident(form, "event_human_resource")
+
+        s3db = current.s3db
+        table = s3db.event_human_resource
+
+        form_vars = form.vars
+        form_vars_get = form_vars.get
+        incident_id = form_vars_get("incident_id")
+        if not incident_id:
+            link = current.db(table.id == form_vars_get("id")).select(table.incident_id,
+                                                                      limitby = (0, 1)
+                                                                      ).first()
+            incident_id = link.incident_id
+
+        if create:
+            job_title_id = form_vars_get("job_title_id")
+            if job_title_id:
+                s3db.event_incident_log.insert(incident_id = incident_id,
+                                               name = "Person Requested",
+                                               comments = s3db.event_human_resource.job_title_id.represent(job_title_id),
+                                               )
+            return
+
+        # Update
+        record = form.record
+        if record: # Not True for a record merger
+            changed = {}
+            for var in form_vars:
+                vvar = form_vars[var]
+                if isinstance(vvar, Field):
+                    # modified_by/modified_on
+                    continue
+                rvar = record.get(var, "NOT_PRESENT")
+                if rvar != "NOT_PRESENT" and vvar != rvar:
+                    f = table[var]
+                    type_ = f.type
+                    if type_ == "integer" or \
+                       type_.startswith("reference"):
+                        if vvar:
+                            vvar = int(vvar)
+                        if vvar == rvar:
+                            continue
+                    represent = table[var].represent
+                    if represent:
+                        if hasattr(represent, "show_link"):
+                            represent.show_link = False
+                    else:
+                        represent = lambda o: o
+                    if rvar:
+                        changed[var] = "%s changed from %s to %s" % \
+                            (f.label, represent(rvar), represent(vvar))
+                    else:
+                        changed[var] = "%s changed to %s" % \
+                            (f.label, represent(vvar))
+
+            if changed:
+                table = s3db.event_incident_log
+                text = []
+                for var in changed:
+                    text.append(changed[var])
+                text = "\n".join(text)
+                table.insert(incident_id = incident_id,
+                             #name = "Person Assigned",
+                             name = "Person Request Updated",
+                             comments = text,
+                             )
 
 # =============================================================================
 class S3EventTeamModel(S3Model):

@@ -11713,15 +11713,15 @@ class S3ProjectTaskModel(S3Model):
 
         ltp = db.project_task_project
 
-        post_vars = current.request.post_vars
-        project_id = post_vars.get("project_id")
+        post_vars_get = current.request.post_vars.get
+        project_id = post_vars_get("project_id")
         if project_id:
             # Create Link to Project
             ltp.insert(task_id = task_id,
                        project_id = project_id,
                        )
 
-        activity_id = post_vars.get("activity_id")
+        activity_id = post_vars_get("activity_id")
         if activity_id:
             # Create Link to Activity
             lta = db.project_task_activity
@@ -11729,7 +11729,7 @@ class S3ProjectTaskModel(S3Model):
                        activity_id = activity_id,
                        )
 
-        milestone_id = post_vars.get("milestone_id")
+        milestone_id = post_vars_get("milestone_id")
         if milestone_id:
             # Create Link to Milestone
             ltable = db.project_task_milestone
@@ -11774,8 +11774,8 @@ class S3ProjectTaskModel(S3Model):
 
         table = db.project_task
 
-        changed = {}
         if record: # Not True for a record merger
+            changed = {}
             for var in form_vars:
                 vvar = form_vars[var]
                 if isinstance(vvar, Field):
@@ -11800,14 +11800,14 @@ class S3ProjectTaskModel(S3Model):
                         changed[var] = "%s changed to %s" % \
                             (table[var].label, represent(vvar))
 
-        if changed:
-            table = db.project_comment
-            text = s3_auth_user_represent(current.auth.user.id)
-            for var in changed:
-                text = "%s\n%s" % (text, changed[var])
-            table.insert(task_id = task_id,
-                         body = text,
-                         )
+            if changed:
+                table = db.project_comment
+                text = s3_auth_user_represent(current.auth.user.id)
+                for var in changed:
+                    text = "%s\n%s" % (text, changed[var])
+                table.insert(task_id = task_id,
+                             body = text,
+                             )
 
         post_vars = current.request.post_vars
         if "project_id" in post_vars:
