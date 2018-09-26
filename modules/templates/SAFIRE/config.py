@@ -971,6 +971,10 @@ def config(settings):
         link = current.db(ltable.task_id == task_id).select(ltable.incident_id,
                                                             limitby = (0, 1)
                                                             ).first()
+        if not link:
+            # Must be a Scenario
+            return
+
         incident_id = link.incident_id
 
         if create:
