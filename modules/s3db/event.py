@@ -5936,6 +5936,8 @@ class event_IncidentAssignMethod(S3Method):
         else:
             self.next_tab = component
 
+        self.next = None
+
     def apply_method(self, r, **attr):
         """
             Apply method.
@@ -5980,8 +5982,8 @@ class event_IncidentAssignMethod(S3Method):
 
         if r.http == "POST":
 
-            last_assigned = None
-            added = 0
+            assigned = []
+            added = assigned.append
 
             post_vars = r.post_vars
             if all([n in post_vars for n in ("assign", "selected", "mode")]):
@@ -6031,27 +6033,29 @@ class event_IncidentAssignMethod(S3Method):
                         link["id"] = link_id
                         onaccept(table, link)
 
-                        last_assigned = i_id
-                        added += 1
+                        added(incident_id)
 
+            response.confirmation = T("%(number)s assigned") % {"number": added}
             if r.representation == "popup":
                 # Don't redirect, so we retain popup extension & so close popup
-                response.confirmation = T("%(number)s assigned") % \
-                                            {"number": added}
-                return {}
+                pass
             else:
-                current.session.confirmation = T("%(number)s assigned") % \
-                                                    {"number": added}
-                if added > 0 and last_assigned:
-                    # FIXME: should we really redirect if we have assigned
-                    # to more than one incident?
-                    # => arbitrary last_assigned => confusing UX
-                    redirect(URL(c="event", f="incident",
-                                 args=[last_assigned, self.next_tab],
-                                 vars={},
-                                 ))
+                added = len(assigned)
+                if added == 0:
+                    self.next = URL(args=r.args, vars={})
+
+                elif added == 1:
+                    self.next = URL(c="event", f="incident",
+                                    args = [assigned[0], self.next_tab],
+                                    vars = {},
+                                    )
+
                 else:
-                    redirect(URL(args=r.args, vars={}))
+                    self.next = URL(c="event", f="incident",
+                                    args = [],
+                                    vars = {"~.id__belongs": ",".join(assigned)},
+                                    )
+            return {}
 
         elif r.http == "GET":
 
