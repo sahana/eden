@@ -4033,6 +4033,7 @@ class S3EventScenarioModel(S3Model):
                                             "actuate": "replace",
                                             "autodelete": True,
                                             },
+                            event_scenario_task = "scenario_id",
                             # People
                             event_scenario_human_resource = {"name": "human_resource",
                                                              "joinby": "scenario_id",
@@ -5250,7 +5251,6 @@ class event_ScenarioActionPlan(S3Method):
                     if deletable is None:
                         deletable = True
                     if editable:
-                        # HR Manager
                         actions = [{"label": T("Open"),
                                     "url": r.url(component=component,
                                                  component_id="[id]",
@@ -5260,7 +5260,6 @@ class event_ScenarioActionPlan(S3Method):
                                     },
                                    ]
                     else:
-                        # Typically the User's personal profile
                         actions = [{"label": T("Open"),
                                     "url": r.url(component=component,
                                                  component_id="[id]",
@@ -5280,6 +5279,49 @@ class event_ScenarioActionPlan(S3Method):
                     return actions
                 return row_actions
 
+            def dt_row_actions_task():
+                def row_actions(r, list_id):
+                    editable = get_config("project_task", "editable")
+                    if editable is None:
+                        editable = True
+                    deletable = get_config("event_scenario_task", "deletable")
+                    if deletable is None:
+                        deletable = True
+                    if editable:
+                        actions = [{"label": T("Open"),
+                                    "url": URL(c="project",
+                                               f="task",
+                                               args="update.popup",
+                                               vars={"scenario.id": "[id]",
+                                                     "refresh": list_id,
+                                                     },
+                                               ),
+                                    "_class": "action-btn edit s3_modal",
+                                    },
+                                   ]
+                    else:
+                        actions = [{"label": T("Open"),
+                                    "url": URL(c="project",
+                                               f="task",
+                                               args="read.popup",
+                                               vars={"scenario.id": "[id]",
+                                                     "refresh": list_id,
+                                                     },
+                                               ),
+                                    "_class": "action-btn edit s3_modal",
+                                    },
+                                   ]
+                    if deletable:
+                        actions.append({"label": T("Delete"),
+                                        "_ajaxurl": r.url(component="scenario_task",
+                                                          component_id="[id]",
+                                                          method="delete.json",
+                                                          ),
+                                        "_class": "action-btn delete-btn-ajax dt-ajax-delete",
+                                        })
+                    return actions
+                return row_actions
+
             profile_widgets = []
             form = self.form
             if form:
@@ -5289,24 +5331,24 @@ class event_ScenarioActionPlan(S3Method):
                     profile_widgets.append(form)
 
             tablename = "event_scenario_task"
-            widget = dict(label = "Tasks",
-                          label_create = "Add Task",
-                          type = "datatable",
-                          actions = dt_row_actions("task", tablename),
-                          tablename = tablename,
-                          context = "scenario",
-                          create_controller = "event",
-                          create_function = "scenario",
-                          create_component = "task",
-                          #pagesize = None, # all records
-                          list_fields = ["task_id$priority",
-                                         "task_id$name",
-                                         #"task_id$status",
-                                         #"task_id$date_due",
-                                         "task_id$comments",
-                                         ],
+            widget = {"label": "Tasks",
+                      "label_create": "Add Task",
+                      "type": "datatable",
+                      "actions": dt_row_actions_task(),
+                      "tablename": tablename,
+                      "context": "scenario",
+                      "create_controller": "event",
+                      "create_function": "scenario",
+                      "create_component": "task",
+                      #"pagesize": None, # all records
+                      "list_fields": ["task_id$priority",
+                                      "task_id$name",
+                                      #"task_id$status",
+                                      #"task_id$date_due",
+                                      "task_id$comments",
+                                      ],
 
-                          )
+                      }
             profile_widgets.append(widget)
 
             tablename = "event_scenario_human_resource"
