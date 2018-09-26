@@ -779,8 +779,8 @@ def config(settings):
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Add Person"),
             title_display = T("Person Details"),
-            #title_list = T("Personnel"),
-            title_list = T("Responders"),
+            title_list = T("Personnel"),
+            #title_list = T("Responders"),
             title_update = T("Edit Person"),
             label_list_button = T("List Personnel"),
             label_delete_button = T("Remove Person from this incident"),
@@ -855,8 +855,8 @@ def config(settings):
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Add Person"),
             title_display = T("Person Details"),
-            #title_list = T("Personnel"),
-            title_list = T("Responders"),
+            title_list = T("Personnel"),
+            #title_list = T("Responders"),
             title_update = T("Edit Person"),
             label_list_button = T("List Personnel"),
             label_delete_button = T("Remove Person from this incident"),
