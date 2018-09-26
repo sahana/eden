@@ -2521,16 +2521,17 @@ class S3IncidentLogModel(S3Model):
         self.define_table(tablename,
                           self.event_incident_id(),
                           Field("name", notnull=True,
-                                label = T("Name"),
+                                label = T("Short Description"),
                                 ),
                           self.super_link("pe_id", "pr_pentity",
                                           label = T("Notify"),
                                           filterby = "instance_type",
-                                          filter_opts = ("pr_person",),
+                                          filter_opts = ("pr_person", "org_organisation"),
                                           represent = self.pr_PersonEntityRepresent(show_label = False,
                                                                                     show_type = False),
                                           readable = True,
                                           writable = True,
+                                          comment = T("You can send an SMS notification to a Person or Organization On-Duty Number"),
                                           ),
                           s3_comments(),
                           *s3_meta_fields(),
@@ -4011,6 +4012,12 @@ class S3EventScenarioModel(S3Model):
         #
         tablename = "event_scenario"
         self.define_table(tablename,
+                          # Mandatory Incident Type
+                          self.event_incident_type_id(empty = False),
+                          # Optional Organisation
+                          self.org_organisation_id(),
+                          # Optional Location
+                          self.gis_location_id(),
                           Field("name", notnull=True,
                                 length=64,    # Mayon compatiblity
                                 label = T("Name"),
@@ -4018,12 +4025,6 @@ class S3EventScenarioModel(S3Model):
                                             IS_LENGTH(64)
                                             ],
                                 ),
-                          # Mandatory Incident Type
-                          self.event_incident_type_id(empty = False),
-                          # Optional Organisation
-                          self.org_organisation_id(),
-                          # Optional Location
-                          self.gis_location_id(),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -4051,6 +4052,10 @@ class S3EventScenarioModel(S3Model):
                                             "autodelete": True,
                                             },
                             event_scenario_task = "scenario_id",
+                            # Organisations
+                            event_scenario_organisation = {"name": "organisation",
+                                                           "joinby": "scenario_id",
+                                                           },
                             # People
                             event_scenario_human_resource = {"name": "human_resource",
                                                              "joinby": "scenario_id",
@@ -5188,12 +5193,13 @@ class event_ActionPlan(S3Method):
                 return row_actions
 
             profile_widgets = []
+            pwappend = profile_widgets.append
             form = self.form
             if form:
                 if callable(form):
                     form = form(r)
                 if form is not None:
-                    profile_widgets.append(form)
+                    pwappend(form)
 
             tablename = "event_task"
             widget = {"label": "Tasks",
@@ -5214,7 +5220,26 @@ class event_ActionPlan(S3Method):
                                       ],
 
                       }
-            profile_widgets.append(widget)
+            pwappend(widget)
+
+            tablename = "event_organisation"
+            r.customise_resource(tablename)
+            widget = {# Use CRUD Strings (easier to customise)
+                      #"label": "Organizations",
+                      #"label_create": "Add Organization",
+                      "type": "datatable",
+                      "actions": dt_row_actions("organisation", tablename),
+                      "tablename": tablename,
+                      "context": "incident",
+                      "create_controller": "event",
+                      "create_function": "incident",
+                      "create_component": "organisation",
+                      #"pagesize": None, # all records
+                      "list_fields": ["organisation_id",
+                                      "comments",
+                                      ],
+                      }
+            pwappend(widget)
 
             tablename = "event_human_resource"
             s3db.event_human_resource.person_id.represent = s3db.pr_PersonRepresentContact()
@@ -5231,7 +5256,7 @@ class event_ActionPlan(S3Method):
                       "create_component": "human_resource",
                       #"pagesize": None, # all records
                       }
-            profile_widgets.append(widget)
+            pwappend(widget)
 
             tablename = "event_asset"
             r.customise_resource(tablename)
@@ -5253,7 +5278,7 @@ class event_ActionPlan(S3Method):
                                       "end_date",
                                       ],
                       }
-            profile_widgets.append(widget)
+            pwappend(widget)
 
             tablename = r.tablename
 
@@ -5298,6 +5323,7 @@ class event_ScenarioActionPlan(S3Method):
     """
         Custom profile page with multiple DataTables:
             * Tasks
+            * Organisations
             * People
             * Assets
     """
@@ -5412,12 +5438,13 @@ class event_ScenarioActionPlan(S3Method):
                 return row_actions
 
             profile_widgets = []
+            pwappend = profile_widgets.append
             form = self.form
             if form:
                 if callable(form):
                     form = form(r)
                 if form is not None:
-                    profile_widgets.append(form)
+                    pwappend(form)
 
             tablename = "event_scenario_task"
             widget = {"label": "Tasks",
@@ -5438,7 +5465,25 @@ class event_ScenarioActionPlan(S3Method):
                                       ],
 
                       }
-            profile_widgets.append(widget)
+            pwappend(widget)
+
+            tablename = "event_scenario_organisation"
+            widget = {"label": "Organizations",
+                      "label_create": "Add Organization",
+                      "type": "datatable",
+                      "actions": dt_row_actions("organisation", tablename),
+                      "tablename": tablename,
+                      "context": "scenario",
+                      "create_controller": "event",
+                      "create_function": "scenario",
+                      "create_component": "organisation",
+                      #"pagesize": None, # all records
+                      "list_fields": ["organisation_id",
+                                      "comments",
+                                      ],
+
+                      }
+            pwappend(widget)
 
             tablename = "event_scenario_human_resource"
             widget = dict(# Use CRUD Strings (easier to customise)
@@ -5459,7 +5504,7 @@ class event_ScenarioActionPlan(S3Method):
                                          "comments",
                                          ],
                           )
-            profile_widgets.append(widget)
+            pwappend(widget)
 
             tablename = "event_scenario_asset"
             r.customise_resource(tablename)
@@ -5481,7 +5526,7 @@ class event_ScenarioActionPlan(S3Method):
                                          "comments",
                                          ],
                           )
-            profile_widgets.append(widget)
+            pwappend(widget)
 
             tablename = r.tablename
 
@@ -5588,6 +5633,21 @@ class event_ApplyScenario(S3Method):
                         error = "onaccept failed: %s" % str(onaccept)
                         current.log.error(error)
                         raise
+
+        # Organisations
+        sltable = s3db.event_scenario_organisation
+        query = (sltable.scenario_id == scenario_id)
+        orgs = db(query).select(sltable.organisation_id,
+                                sltable.comments,
+                                )
+        if len(orgs):
+            iltable = s3db.event_organisation
+            linsert = iltable.insert
+            for o in orgs:
+                linsert(incident_id = incident_id,
+                        organisation_id = o.organisation_id,
+                        comments = o.comments,
+                        )
 
         # Human Resources
         sltable = s3db.event_scenario_human_resource

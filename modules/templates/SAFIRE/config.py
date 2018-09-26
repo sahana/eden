@@ -310,7 +310,7 @@ def config(settings):
                     script = "/%s/static/themes/SAFIRE/js/incident_profile.js" % r.application
                     if script not in s3.scripts:
                         s3.scripts.append(script)
-                        s3.js_global.append('''i18n.scenarioConfirm="%s"''' % T("Populate Incident with Tasks, Positions and Equipment from the Scenario?"))
+                        s3.js_global.append('''i18n.scenarioConfirm="%s"''' % T("Populate Incident with Tasks, Organizations, Positions and Equipment from the Scenario?"))
                 else:
                     scenarios = ""
 
@@ -430,6 +430,12 @@ def config(settings):
                 table = r.table
                 rheader = DIV(TABLE(TR(TH("%s: " % table.incident_type_id.label),
                                        table.incident_type_id.represent(record.incident_type_id),
+                                       ),
+                                    TR(TH("%s: " % table.organisation_id.label),
+                                       table.organisation_id.represent(record.organisation_id),
+                                       ),
+                                    TR(TH("%s: " % table.location_id.label),
+                                       table.location_id.represent(record.location_id),
                                        ),
                                     TR(TH("%s: " % table.name.label),
                                        record.name,

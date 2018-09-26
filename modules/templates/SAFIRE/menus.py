@@ -18,7 +18,7 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        menu= [MM("Incident Reports", c="event", f="incident_report"),
+        menu= [MM("Call Logs", c="event", f="incident_report"),
                MM("Incidents", c="event", f="incident", m="summary"),
                MM("Scenarios", c="event", f="scenario"),
                MM("more", link=False)(
