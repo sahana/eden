@@ -2874,9 +2874,9 @@ class S3EventAssetModel(S3Model):
 
         # SAFIRE\SC
         status_opts = {1: T("Requested"),
-                       2: T("Assigned"),
-                       3: T("Dispatched (out)"),
-                       4: T("Returned (in)"),
+                       2: T("Reserved"),
+                       3: T("Checked out"),
+                       4: T("Returned"),
                        }
 
         if settings.get_event_cascade_delete_incidents():

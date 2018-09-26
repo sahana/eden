@@ -534,20 +534,20 @@ def config(settings):
                 current.response.warning = T("Chemical Hazard Incident so Level raised to 3")
 
         # Alert Lead Agency
-        # @ToDo: This should use a new on-call org KV tag
         organisation_id = form_vars_get("organisation_id")
         if organisation_id:
-            otable = s3db.org_organisation
-            org = db(otable.id == organisation_id).select(otable.pe_id,
-                                                          limitby = (0, 1)
-                                                          ).first()
-            current.msg.send_by_pe_id(org.pe_id,
-                                      subject = "",
-                                      message = "You have been assigned an Incident: %s%s" % (settings.get_base_public_url(),
-                                                                                              URL(c="event", f= "incident",
-                                                                                                  args = incident_id),
-                                                                                              ),
-                                      contact_method = "SMS")
+            otable = s3db.org_organisation_tag
+            query = (otable.organisation_id == organisation_id) & \
+                    (otable.tag == "duty")
+            duty = db(query).select(otable.value,
+                                    limitby = (0, 1)
+                                    ).first()
+            if duty:
+                current.msg.send_sms_via_api(duty.value,
+                    "You have been assigned an Incident: %s%s" % (settings.get_base_public_url(),
+                                                                  URL(c="event", f= "incident",
+                                                                      args = incident_id),
+                                                                  ))
 
     # -------------------------------------------------------------------------
     def customise_event_incident_resource(r, tablename):
@@ -889,6 +889,67 @@ def config(settings):
             msg_list_empty = T("No Positions currently registered"))
 
     settings.customise_hrm_job_title_resource = customise_hrm_job_title_resource
+
+    # -------------------------------------------------------------------------
+    # Organisations
+    # -------------------------------------------------------------------------
+
+    # -------------------------------------------------------------------------
+    def customise_org_organisation_resource(r, tablename):
+
+        s3db = current.s3db
+
+        # Custom Components
+        s3db.add_components(tablename,
+                            org_organisation_tag = (# On-call Duty Number
+                                                    {"name": "duty",
+                                                     "joinby": "organisation_id",
+                                                     "filterby": {"tag": "duty",
+                                                                  },
+                                                     "multiple": False,
+                                                     },
+                                                    ),
+                            )
+
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink, \
+                       IS_EMPTY_OR, IS_PHONE_NUMBER_MULTI, S3PhoneWidget, s3_phone_represent
+
+        # Individual settings for specific tag components
+        components_get = s3db.resource(tablename).components.get
+
+        duty = components_get("duty")
+        f = duty.table.value
+        f.represent = s3_phone_represent,
+        f.requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI())
+        f.widget = S3PhoneWidget()
+
+        crud_form = S3SQLCustomForm("name",
+                                    "acronym",
+                                    S3SQLInlineLink("organisation_type",
+                                                    field = "organisation_type_id",
+                                                    # Default 10 options just triggers which adds unnecessary complexity to a commonly-used form & commonly an early one (create Org when registering)
+                                                    filter = False,
+                                                    label = T("Type"),
+                                                    multiple = False,
+                                                    widget = "multiselect",
+                                                    ),
+                                    "country",
+                                    (T("Reception Phone #"), "phone"),
+                                    S3SQLInlineComponent("duty",
+                                                         label = T("On-call Duty Number"),
+                                                         fields = [("", "value")],
+                                                         multiple = False,
+                                                         ),
+                                    "website",
+                                    "logo",
+                                    "comments",
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_org_organisation_resource = customise_org_organisation_resource
 
     # -------------------------------------------------------------------------
     # Projects
