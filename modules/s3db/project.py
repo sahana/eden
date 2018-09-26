@@ -11154,6 +11154,7 @@ class S3ProjectTaskModel(S3Model):
                              "location": "location_id",
                              # Assignee instead?
                              "organisation": "created_by$organisation_id",
+                             "scenario": "scenario.scenario_id",
                              },
                   copyable = True,
                   #create_next = URL(f="task", args=["[id]"]),
@@ -11238,6 +11239,9 @@ class S3ProjectTaskModel(S3Model):
                        event_task = {"name": "incident",
                                      "joinby": "task_id",
                                      },
+                       event_scenario_task = {"name": "scenario",
+                                              "joinby": "task_id",
+                                              },
                        # Forums
                        project_task_forum = "task_id",
                        # Milestones
