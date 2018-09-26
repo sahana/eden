@@ -2504,7 +2504,7 @@ class S3IncidentLogModel(S3Model):
     """
         Incident Logs
             - record of all changes
-            - manual updates with ability to notify 
+            - manual updates with ability to notify
     """
 
     names = ("event_incident_log",
@@ -6041,6 +6041,8 @@ class event_IncidentAssignMethod(S3Method):
         else:
             self.next_tab = component
 
+        self.next = None
+
     def apply_method(self, r, **attr):
         """
             Apply method.
@@ -6084,7 +6086,10 @@ class event_IncidentAssignMethod(S3Method):
         response = current.response
 
         if r.http == "POST":
-            added = 0
+
+            assigned = []
+            added = assigned.append
+
             post_vars = r.post_vars
             if all([n in post_vars for n in ("assign", "selected", "mode")]):
 
@@ -6110,41 +6115,52 @@ class event_IncidentAssignMethod(S3Method):
                 # Prevent multiple entries in the link table
                 query = (table.incident_id.belongs(selected)) & \
                         (table[fkey] == record_id) & \
-                        (table.deleted != True)
-                rows = db(query).select(table.id)
-                rows = dict((row.id, row) for row in rows)
-                onaccept = component.get_config("create_onaccept",
-                                                component.get_config("onaccept", None))
+                        (table.deleted == False)
+                rows = db(query).select(table.incident_id).as_dict(key="incident_id")
+
+                onaccept = s3db.onaccept
+                set_record_owner = current.auth.s3_set_record_owner
+
                 for incident_id in selected:
+
                     try:
-                        i_id = int(incident_id.strip())
+                        i_id = long(incident_id.strip())
                     except ValueError:
                         continue
-                    if i_id not in rows:
-                        link = Storage(incident_id = incident_id)
-                        link[fkey] = record_id
-                        _id = table.insert(**link)
-                        if onaccept:
-                            link["id"] = _id
-                            form = Storage(vars=link)
-                            onaccept(form)
-                        added += 1
 
+                    if i_id not in rows:
+                        link = {"incident_id": i_id,
+                                fkey: record_id,
+                                }
+                        link_id = table.insert(**link)
+                        set_record_owner(table, link_id)
+
+                        link["id"] = link_id
+                        onaccept(table, link)
+
+                        added(incident_id)
+
+            response.confirmation = T("%(number)s assigned") % {"number": added}
             if r.representation == "popup":
                 # Don't redirect, so we retain popup extension & so close popup
-                response.confirmation = T("%(number)s assigned") % \
-                                            {"number": added}
-                return {}
+                pass
             else:
-                current.session.confirmation = T("%(number)s assigned") % \
-                                                    {"number": added}
-                if added > 0:
-                    redirect(URL(c="event", f="incident",
-                                 args=[incident_id, self.next_tab],
-                                 vars={},
-                                 ))
+                added = len(assigned)
+                if added == 0:
+                    self.next = URL(args=r.args, vars={})
+
+                elif added == 1:
+                    self.next = URL(c="event", f="incident",
+                                    args = [assigned[0], self.next_tab],
+                                    vars = {},
+                                    )
+
                 else:
-                    redirect(URL(args=r.args, vars={}))
+                    self.next = URL(c="event", f="incident",
+                                    args = [],
+                                    vars = {"~.id__belongs": ",".join(assigned)},
+                                    )
+            return {}
 
         elif r.http == "GET":
 
