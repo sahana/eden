@@ -780,7 +780,6 @@ def config(settings):
             label_create = T("Add Person"),
             title_display = T("Person Details"),
             title_list = T("Personnel"),
-            #title_list = T("Responders"),
             title_update = T("Edit Person"),
             label_list_button = T("List Personnel"),
             label_delete_button = T("Remove Person from this incident"),
@@ -856,7 +855,6 @@ def config(settings):
             label_create = T("Add Person"),
             title_display = T("Person Details"),
             title_list = T("Personnel"),
-            #title_list = T("Responders"),
             title_update = T("Edit Person"),
             label_list_button = T("List Personnel"),
             label_delete_button = T("Remove Person from this incident"),
@@ -962,17 +960,26 @@ def config(settings):
             Log changes in Incident Log
         """
 
+        if current.request.function == "scenario":
+            # Must be a Scenario
+            # - don't Log
+            # - don't send Notification
+            return
+
+        db = current.db
         s3db = current.s3db
         ltable = s3db.event_task
 
         form_vars = form.vars
         form_vars_get = form_vars.get
         task_id = form_vars_get("id")
-        link = current.db(ltable.task_id == task_id).select(ltable.incident_id,
-                                                            limitby = (0, 1)
-                                                            ).first()
+        link = db(ltable.task_id == task_id).select(ltable.incident_id,
+                                                    limitby = (0, 1)
+                                                    ).first()
         if not link:
-            # Must be a Scenario
+            # Not attached to an Incident
+            # - don't Log
+            # - don't send Notification
             return
 
         incident_id = link.incident_id
@@ -1038,14 +1045,29 @@ def config(settings):
 
         if pe_id:
             # Notify Assignee
-            current.msg.send_by_pe_id(pe_id,
-                                      subject = "",
-                                      message = "You have been assigned a Task: %s%s" % \
-                                        (settings.get_base_public_url(),
-                                         URL(c="event", f= "incident",
-                                             args = [incident_id, "task", task_id]),
-                                             ),
-                                      contact_method = "SMS")
+            message = "You have been assigned a Task: %s%s" % \
+                        (settings.get_base_public_url(),
+                         URL(c="event", f= "incident",
+                             args = [incident_id, "task", task_id]),
+                             )
+            instance_type = s3db.pr_instance_type(pe_id)
+            if instance_type == "org_organisation":
+                otable = s3db.org_organisation
+                ottable = s3db.org_organisation_tag
+                query = (otable.pe_id == pe_id) & \
+                        (ottable.organisation_id == otable.id) & \
+                        (ottable.tag == "duty")
+                duty = db(query).select(ottable.value,
+                                        limitby = (0, 1)
+                                        ).first()
+                if duty:
+                    current.msg.send_sms_via_api(duty.value,
+                                                 message)
+            else:
+                current.msg.send_by_pe_id(pe_id,
+                                          subject = "",
+                                          message = message,
+                                          contact_method = "SMS")
             
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):

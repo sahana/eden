@@ -57,6 +57,7 @@ __all__ = ("S3EventModel",
            "S3EventScenarioModel",
            "S3EventScenarioAssetModel",
            "S3EventScenarioHRModel",
+           "S3EventScenarioOrganisationModel",
            "S3EventScenarioTaskModel",
            "S3EventSiteModel",
            "S3EventShelterModel",
@@ -3395,7 +3396,18 @@ class S3EventHRModel(S3Model):
                                                                       tooltip = T("The person's position in this incident"),
                                                                       ),
                                                 ),
-                          self.pr_person_id(ondelete = "RESTRICT"),
+                          self.pr_person_id(ondelete = "RESTRICT",
+                                            comment = S3PopupLink(c = "pr",
+                                                                  f = "person",
+                                                                  # No special controller so need this for an options lookup
+                                                                  vars = {"prefix": "hrm",
+                                                                          "parent": "human_resource",
+                                                                          },
+                                                                  label = T("Create Person"),
+                                                                  title = T("Person"),
+                                                                  tooltip = T("The specific individual assigned to this position for this incident. Type the first few characters of one of the Person's names."),
+                                                                  ),
+                                            ),
                           # reportsToAgency in EDXL-SitRep: person_id$human_resource.organisation_id
                           Field("status", "integer",
                                 label = T("Status"),
@@ -3999,7 +4011,6 @@ class S3EventScenarioModel(S3Model):
         #
         tablename = "event_scenario"
         self.define_table(tablename,
-                          self.event_incident_type_id(),
                           Field("name", notnull=True,
                                 length=64,    # Mayon compatiblity
                                 label = T("Name"),
@@ -4007,6 +4018,12 @@ class S3EventScenarioModel(S3Model):
                                             IS_LENGTH(64)
                                             ],
                                 ),
+                          # Mandatory Incident Type
+                          self.event_incident_type_id(empty = False),
+                          # Optional Organisation
+                          self.org_organisation_id(),
+                          # Optional Location
+                          self.gis_location_id(),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -4150,6 +4167,7 @@ class S3EventScenarioAssetModel(S3Model):
                           # Optional: Assign specific Asset
                           # @ToDo: Filter widget based on Type
                           self.asset_asset_id(ondelete = "RESTRICT",
+                                              comment = T("Only assign a specific item if there are no alternatives"),
                                               ),
                           # @ToDo: Have a T+x time into Response for Start/End
                           #s3_datetime("start_date",
@@ -4213,7 +4231,7 @@ class S3EventScenarioHRModel(S3Model):
             job_title_represent = None
 
         # ---------------------------------------------------------------------
-        # Positions required &, potentially, then who would nromally fill them
+        # Positions required &, potentially, then who would normally fill them
         #
 
         tablename = "event_scenario_human_resource"
@@ -4239,7 +4257,18 @@ class S3EventScenarioHRModel(S3Model):
                                                                       tooltip = T("The person's position in this incident"),
                                                                       ),
                                                 ),
-                          self.pr_person_id(ondelete = "RESTRICT"),
+                          self.pr_person_id(ondelete = "RESTRICT",
+                                            comment = S3PopupLink(c = "pr",
+                                                                  f = "person",
+                                                                  # No special controller so need this for an options lookup
+                                                                  vars = {"prefix": "hrm",
+                                                                          "parent": "human_resource",
+                                                                          },
+                                                                  label = T("Create Person"),
+                                                                  title = T("Person"),
+                                                                  tooltip = T("The specific individual assigned to this position for this scenario. Not generally used, only use if there are no alternatives. Type the first few characters of one of the Person's names."),
+                                                                  ),
+                                            ),
                           # @ToDo: Have a T+x time into Response for Start/End
                           #s3_datetime("start_date",
                           #            label = T("Start Date"),
@@ -4273,6 +4302,57 @@ class S3EventScenarioHRModel(S3Model):
                        deduplicate = S3Duplicate(primary = ("scenario_id",
                                                             "job_title_id",
                                                             "person_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3EventScenarioOrganisationModel(S3Model):
+    """
+        Link Scenarios to Organisations
+    """
+
+    names = ("event_scenario_organisation",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Organisations assigned to a Scenario
+        #
+
+        tablename = "event_scenario_organisation"
+        self.define_table(tablename,
+                          self.event_scenario_id(ondelete = "CASCADE",
+                                                 ),
+                          self.org_organisation_id(ondelete = "RESTRICT",
+                                                   empty = False,
+                                                   ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Assign Organization"),
+            title_display = T("Organization Details"),
+            title_list = T("Assigned Organizations"),
+            title_update = T("Edit Organization"),
+            label_list_button = T("List Assigned Organizations"),
+            label_delete_button = T("Remove Organization from this scenario"),
+            msg_record_created = T("Organization assigned"),
+            msg_record_modified = T("Organization Assignment updated"),
+            msg_record_deleted = T("Organization unassigned"),
+            msg_list_empty = T("No Organizations currently assigned to this scenario"))
+
+        self.configure(tablename,
+                       context = {"scenario": "scenario_id",
+                                  },
+                       deduplicate = S3Duplicate(primary = ("scenario_id",
+                                                            "organisation_id",
                                                             ),
                                                  ),
                        )
@@ -5178,13 +5258,16 @@ class event_ActionPlan(S3Method):
             tablename = r.tablename
 
             if r.representation == "html":
+                html = True
                 response = current.response
+                s3 = response.s3
                 # Maintain normal rheader for consistency
                 rheader = attr["rheader"]
-                profile_header = TAG[""](H2(response.s3.crud_strings["event_incident"].title_display),
+                profile_header = TAG[""](H2(s3.crud_strings["event_incident"].title_display),
                                          DIV(rheader(r), _id="rheader"),
                                          )
             else:
+                html = False
                 profile_header = None
 
             s3db.configure(tablename,
@@ -5197,8 +5280,14 @@ class event_ActionPlan(S3Method):
             profile.tablename = tablename
             profile.request = r
             output = profile.profile(r, **attr)
-            if r.representation == "html":
+            if html:
                 output["title"] = response.title = T("Action Plan")
+                # Refresh page every 15 seconds
+                s3.jquery_ready.append('''
+function timedRefresh(timeoutPeriod){
+ setTimeout("location.reload(true);",timeoutPeriod);
+}
+window.onload = timedRefresh(15000);''')
             return output
 
         else:
@@ -5468,6 +5557,7 @@ class event_ApplyScenario(S3Method):
         query = (sltable.scenario_id == scenario_id) & \
                 (sltable.task_id == ttable.id)
         tasks = db(query).select(ttable.name,
+                                 ttable.pe_id,
                                  ttable.priority,
                                  ttable.comments,
                                  )
@@ -5475,14 +5565,29 @@ class event_ApplyScenario(S3Method):
             iltable = s3db.event_task
             tinsert = ttable.insert
             linsert = iltable.insert
+            r.customise_resource("project_task")
+            onaccept = s3db.get_config("project_task", "create_onaccept")
             for t in tasks:
-                task_id = tinsert(name = t.name,
-                                  priority = t.priority,
-                                  comments = t.comments,
-                                  )
+                record = {"name" : t.name,
+                          "pe_id" : t.pe_id,
+                          "priority" : t.priority,
+                          "comments" : t.comments,
+                          }
+                task_id = tinsert(**record)
+                record["id"] = task_id
                 linsert(incident_id = incident_id,
                         task_id = task_id,
                         )
+                if onaccept:
+                    form = Storage(vars = record)
+                    # Execute onaccept
+                    from gluon.tools import callback
+                    try:
+                        callback(onaccept, form, tablename="project_task")
+                    except:
+                        error = "onaccept failed: %s" % str(onaccept)
+                        current.log.error(error)
+                        raise
 
         # Human Resources
         sltable = s3db.event_scenario_human_resource

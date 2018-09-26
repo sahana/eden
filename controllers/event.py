@@ -178,9 +178,10 @@ $.filterOptionsS3({
                         f.readable = f.writable = False
                         if cname in ("asset", "human_resource"):
                             # DateTime
+                            datetime_represent = s3base.S3DateTime.datetime_represent
                             for f in (ltable.start_date, ltable.end_date):
                                 f.requires = IS_EMPTY_OR(IS_UTC_DATETIME())
-                                f.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+                                f.represent = lambda dt: datetime_represent(dt, utc=True)
                                 f.widget = S3CalendarWidget(timepicker = True)
 
                 elif cname == "incident_asset":
@@ -199,9 +200,10 @@ $.filterOptionsS3({
                     f.default = r.record.event_id
                     f.readable = f.writable = False
                     # DateTime
+                    datetime_represent = s3base.S3DateTime.datetime_represent
                     for f in (ltable.start_date, ltable.end_date):
                         f.requires = IS_EMPTY_OR(IS_UTC_DATETIME())
-                        f.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+                        f.represent = lambda dt: datetime_represent(dt, utc=True)
                         f.widget = S3CalendarWidget(timepicker = True)
 
             elif r.method not in ("read", "update"):
