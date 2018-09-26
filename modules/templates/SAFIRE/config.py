@@ -247,7 +247,7 @@ def config(settings):
     # CMS
     # -------------------------------------------------------------------------
     settings.cms.richtext = True
-    
+
     # -------------------------------------------------------------------------
     # Organisations
     # -------------------------------------------------------------------------
@@ -391,7 +391,7 @@ def config(settings):
                                                 ),
                                     _class = "action-btn"
                                     ))
-                    
+
 
             elif name == "event":
                 tabs = [(T("Event Details"), None),
@@ -511,7 +511,7 @@ def config(settings):
     def event_incident_create_onaccept(form):
         """
             Automate Level based on Type, Zone (intersect from Location) & Severity
-            @ToDo: Move this to SAFIRE\SC
+            @ToDo: Move this to SAFIRE/SC
         """
 
         db = current.db
@@ -708,7 +708,7 @@ def config(settings):
             # Update
             record = form.record
             if record: # Not True for a record merger
-                from gluon import Field
+                from s3dal import Field
                 changed = {}
                 for var in form_vars:
                     vvar = form_vars[var]
@@ -992,7 +992,7 @@ def config(settings):
             pe_id = None
             record = form.record
             if record: # Not True for a record merger
-                from gluon import Field
+                from s3dal import Field
                 table = s3db.project_task
                 changed = {}
                 for var in form_vars:
@@ -1046,7 +1046,7 @@ def config(settings):
                                              args = [incident_id, "task", task_id]),
                                              ),
                                       contact_method = "SMS")
-            
+
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
 
