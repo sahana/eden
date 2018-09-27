@@ -912,6 +912,7 @@ def config(settings):
     # HRM
     # -------------------------------------------------------------------------
     settings.hrm.job_title_deploy = True
+    settings.hrm.org_dependent_job_titles = True
 
     # -------------------------------------------------------------------------
     # Organisations

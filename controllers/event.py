@@ -303,14 +303,17 @@ def job_title():
         f.default = 4 # Deployment
         f.readable = f.writable = False
 
+        # Positions are never org-specific
+        f = table.organisation_id
+        f.readable = f.writable = False
+
         if r.representation == "xls":
             # Export format should match Import format
             current.messages["NONE"] = ""
-            table.organisation_id.represent = \
-                s3db.org_OrganisationRepresent(acronym=False,
-                                               parent=False)
-            table.organisation_id.label = None
-            table.type.label = None
+            #f.represent = \
+            #    s3db.org_OrganisationRepresent(acronym=False,
+            #                                   parent=False)
+            #f.label = None
             table.comments.label = None
             table.comments.represent = lambda v: v or ""
         return True
@@ -319,7 +322,7 @@ def job_title():
     s3.filter = FS("type").belongs((4,))
 
     if not auth.s3_has_role(ADMIN):
-        s3.filter &= auth.filter_by_root_org(s3db.hrm_job_title)
+        s3.filter &= auth.filter_by_root_org(table)
 
     return s3_rest_controller("hrm")
 
