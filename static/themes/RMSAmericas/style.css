@@ -825,26 +825,43 @@ table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child::before, tab
 /* line 116, ../scss/custom/_tables.scss */
 .dt-export-options .list_formats {
   padding-top: 0;
-  margin-left: 5px;
+  margin-left: 0.25rem;
 }
 /* line 120, ../scss/custom/_tables.scss */
 .dt-export-options .dt-export {
-  margin: 0 0.085rem;
+  margin: 0 0.125rem;
+}
+/* line 123, ../scss/custom/_tables.scss */
+.dt-export-options .permalink {
+  margin-right: 0.25rem;
+  color: #006A71;
 }
 
-/* line 126, ../scss/custom/_tables.scss */
+/* line 130, ../scss/custom/_tables.scss */
 body.rtl .dt-export-options,
 body.rtl .list_formats div {
   float: left;
 }
-/* line 131, ../scss/custom/_tables.scss */
+/* line 133, ../scss/custom/_tables.scss */
+body.rtl .dt-export-options .list_formats,
+body.rtl .list_formats div .list_formats {
+  margin-left: 0;
+  margin-right: 0.25rem;
+}
+/* line 137, ../scss/custom/_tables.scss */
+body.rtl .dt-export-options .permalink,
+body.rtl .list_formats div .permalink {
+  margin-right: 0;
+  margin-left: 0.25rem;
+}
+/* line 143, ../scss/custom/_tables.scss */
 body.rtl .dataTable .group .group-collapse,
 body.rtl .dataTable .group .group-expand {
   float: left;
 }
 
 /* Empty-sections */
-/* line 139, ../scss/custom/_tables.scss */
+/* line 151, ../scss/custom/_tables.scss */
 .empty {
   font-style: italic;
   font-size: 0.8em;

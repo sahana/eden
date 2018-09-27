@@ -479,6 +479,25 @@ class S3DataTable(object):
             append_icon = icons.append
             for fmt in export_formats:
 
+                # CSS classes and on-hover title
+                title = None
+                if isinstance(fmt, tuple):
+                    if len(fmt) >= 3:
+                        title = fmt[2]
+                    fmt, css = fmt[:2] if len(fmt) >= 2 else (fmt[0], "")
+                else:
+                    css = ""
+
+                class_ = "dt-export export_%s" % fmt
+                if css:
+                    class_ = "%s %s" % (class_, css)
+
+                if title is None:
+                    if fmt == "map":
+                        title = T("Show on Map")
+                    else:
+                        title = EXPORT % dict(format=fmt.upper())
+
                 # Export format URL
                 if fmt in default_formats:
                     url = formats.get(fmt, default_url)
@@ -487,14 +506,8 @@ class S3DataTable(object):
                 if not url:
                     continue
 
-                # Onhover title for the icon
-                if fmt == "map":
-                    title = T("Show on Map")
-                else:
-                    title = EXPORT % dict(format=fmt.upper())
-
-                append_icon(DIV(_class="dt-export export_%s" % fmt,
-                                _title=title,
+                append_icon(DIV(_class = class_,
+                                _title = title,
                                 data = {"url": url,
                                         "extension": fmt,
                                         },
@@ -743,7 +756,7 @@ class S3DataTable(object):
         if not settings.get_ui_datatables_responsive():
             double_scroll = attr.get("dt_double_scroll")
             if double_scroll is None:
-               double_scroll = settings.get_ui_datatables_double_scroll()
+                double_scroll = settings.get_ui_datatables_double_scroll()
             if double_scroll:
                 if s3.debug:
                     script = "/%s/static/scripts/jquery.doubleScroll.js" % request.application

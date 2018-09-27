@@ -1734,11 +1734,20 @@ Thank you"""
                                        form_postp = add_language,
                                        )
 
-                if r.representation == "card" and \
-                   auth.s3_has_roles(ID_CARD_EXPORT_ROLES):
-                    # Configure ID card layout
-                    from templates.RMSAmericas.idcards import IDCardLayout
-                    resource.configure(pdf_card_layout = IDCardLayout)
+                if auth.s3_has_roles(ID_CARD_EXPORT_ROLES):
+                    if r.representation == "card":
+                        # Configure ID card layout
+                        from templates.RMSAmericas.idcards import IDCardLayout
+                        resource.configure(pdf_card_layout = IDCardLayout)
+
+                    if not r.id and not r.component:
+                        # Add export-icon for ID cards
+                        export_formats = list(settings.get_ui_export_formats())
+                        export_formats.append(("card", "fa fa-id-card", T("Export ID Cards")))
+                        settings.ui.export_formats = export_formats
+
+                        # Configure export-URL for ID cards
+                        s3.formats["card"] = r.url(method="")
 
             if not auth.s3_has_role("ADMIN") and \
                    auth.s3_has_roles(("training_coordinator", "training_assistant")):

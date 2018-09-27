@@ -2050,7 +2050,10 @@ class S3Config(Storage):
     def get_ui_export_formats(self):
         """
             Which export formats should we display?
-            - specify a list of export formats to restrict
+            - specify a list of export formats to restrict/override
+            - each list item can be
+              * a string with the format extension
+              * a tuple (extension, css-class[, onhover-title])
         """
         return self.ui.get("export_formats",
                            ("cap", "have", "kml", "map", "pdf", "rss", "xls", "xml"))

@@ -115,10 +115,14 @@ table.dataTable {
     float: right;
     .list_formats {
         padding-top: 0;
-        margin-left: 5px;
+        margin-left: 0.25rem;
     }
     .dt-export {
-        margin: 0 0.085rem;
+        margin: 0 0.125rem;
+    }
+    .permalink {
+        margin-right: 0.25rem;
+        color: $primary-color;
     }
 }
 
@@ -126,6 +130,14 @@ body.rtl {
     .dt-export-options,
     .list_formats div {
         float: left;
+        .list_formats {
+            margin-left: 0;
+            margin-right: 0.25rem;
+        }
+        .permalink {
+            margin-right: 0;
+            margin-left: 0.25rem;
+        }
     }
     .dataTable .group {
         .group-collapse,
