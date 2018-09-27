@@ -4071,6 +4071,7 @@ class S3EventScenarioModel(S3Model):
         #
         tablename = "event_scenario"
         self.define_table(tablename,
+                          self.super_link("doc_id", "doc_entity"),
                           # Mandatory Incident Type
                           self.event_incident_type_id(empty = False),
                           # Optional Organisation
@@ -4084,6 +4085,11 @@ class S3EventScenarioModel(S3Model):
                                             IS_LENGTH(64)
                                             ],
                                 ),
+                          s3_comments("action_plan",
+                                      comment = None,
+                                      label = T("Standard Operating Procedure"),
+                                      widget = s3_richtext_widget,
+                                      ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -4164,6 +4170,7 @@ class S3EventScenarioModel(S3Model):
                        create_next = URL(args = ["[id]", "plan"]),
                        deduplicate = S3Duplicate(),
                        filter_widgets = filter_widgets,
+                       super_entity = "doc_entity",
                        )
 
         self.set_method("event", "scenario",
@@ -5406,6 +5413,19 @@ class event_ScenarioActionPlan(S3Method):
                          or a callable to produce such a widget config
         """
 
+        if not form:
+            form = {"type": "form",
+                    "tablename": "event_scenario",
+                    "sqlform": S3SQLCustomForm("action_plan",
+                                               S3SQLInlineComponent(
+                                                "document",
+                                                name = "document",
+                                                label = current.T("Attachments"),
+                                                fields = [("", "file")],
+                                                ),
+                                               ),
+                    }
+
         self.form = form
 
     # -------------------------------------------------------------------------
@@ -5509,12 +5529,6 @@ class event_ScenarioActionPlan(S3Method):
 
             profile_widgets = []
             pwappend = profile_widgets.append
-            form = self.form
-            if form:
-                if callable(form):
-                    form = form(r)
-                if form is not None:
-                    pwappend(form)
 
             tablename = "event_scenario_task"
             widget = {"label": "Tasks",
@@ -5597,6 +5611,13 @@ class event_ScenarioActionPlan(S3Method):
                                          ],
                           )
             pwappend(widget)
+
+            form = self.form
+            if form:
+                if callable(form):
+                    form = form(r)
+                if form is not None:
+                    pwappend(form)
 
             tablename = r.tablename
 

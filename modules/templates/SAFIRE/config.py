@@ -853,6 +853,10 @@ def config(settings):
                 result = standard_prep(r)
                 if not result:
                     return False
+            
+            if r.method != "plan":
+                f = r.table.action_plan
+                f.readable = f.writable = False
 
             if r.method == "create"and r.http == "POST":
                 r.resource.configure(create_next = URL(c="event", f="scenario",
