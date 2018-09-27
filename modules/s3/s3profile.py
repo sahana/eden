@@ -775,7 +775,7 @@ class S3Profile(S3CRUD):
             Generate a Form widget
 
             @param r: the S3Request instance
-            @param widget: the widget as a tuple: (label, type, icon)
+            @param widget: the widget definition as dict
             @param attr: controller attributes for the request
         """
 

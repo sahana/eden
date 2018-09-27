@@ -600,6 +600,9 @@ def config(settings):
         f = table.organisation_id
         f.readable = f.writable = True
         f.label = T("Lead Response Organization")
+        if r.method != "plan":
+            f = table.action_plan
+            f.readable = f.writable = False
 
         if r.interactive:
             s3db.add_custom_callback(tablename,

@@ -1187,6 +1187,11 @@ class S3IncidentModel(S3Model):
                                                    ),
                           self.pr_person_id(label = T("Incident Commander"),
                                             ),
+                          s3_comments("action_plan",
+                                      comment = None,
+                                      label = T("Action Plan"),
+                                      widget = s3_richtext_widget,
+                                      ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -5133,6 +5138,7 @@ class event_ActionPlan(S3Method):
     """
         Custom profile page with multiple DataTables:
             * Tasks
+            * Organizations
             * People
             * Assets
     """
@@ -5144,6 +5150,19 @@ class event_ActionPlan(S3Method):
             @param form: widget config to inject at the top of the page,
                          or a callable to produce such a widget config
         """
+
+        if not form:
+            form = {"type": "form",
+                    "tablename": "event_incident",
+                    "sqlform": S3SQLCustomForm("action_plan",
+                                               S3SQLInlineComponent(
+                                                "document",
+                                                name = "document",
+                                                label = current.T("Attachments"),
+                                                fields = [("", "file")],
+                                                ),
+                                               ),
+                    }
 
         self.form = form
 
@@ -5361,12 +5380,8 @@ class event_ActionPlan(S3Method):
             output = profile.profile(r, **attr)
             if html:
                 output["title"] = response.title = T("Action Plan")
-                # Refresh page every 15 seconds
-                s3.jquery_ready.append('''
-function timedRefresh(timeoutPeriod){
- setTimeout("location.reload(true);",timeoutPeriod);
-}
-window.onload = timedRefresh(15000);''')
+                # Refresh dataTables every 60 seconds
+                s3.scripts.append("/%s/static/scripts/S3/s3.event_action_plan.js" % r.application)
             return output
 
         else:
@@ -5619,16 +5634,6 @@ class event_ApplyScenario(S3Method):
             * People
             * Equipment
     """
-
-    def __init__(self, form=None):
-        """
-            Constructor
-
-            @param form: widget config to inject at the top of the page,
-                         or a callable to produce such a widget config
-        """
-
-        self.form = form
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
