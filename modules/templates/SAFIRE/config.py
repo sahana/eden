@@ -478,8 +478,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_event_incident_report_resource(r, tablename):
 
-        
-
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Log Call"),
             title_display = T("Call Log Details"),
@@ -909,24 +907,6 @@ def config(settings):
     # HRM
     # -------------------------------------------------------------------------
     settings.hrm.job_title_deploy = True
-
-    # -------------------------------------------------------------------------
-    def customise_hrm_job_title_resource(r, tablename):
-
-        #if r.controller == "event":
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Add Position"),
-            title_display = T("Position Details"),
-            title_list = T("Positions"),
-            title_update = T("Edit Position"),
-            label_list_button = T("List Positions"),
-            label_delete_button = T("Remove Position"),
-            msg_record_created = T("Position added"),
-            msg_record_modified = T("Position updated"),
-            msg_record_deleted = T("Position removed"),
-            msg_list_empty = T("No Positions currently registered"))
-
-    settings.customise_hrm_job_title_resource = customise_hrm_job_title_resource
 
     # -------------------------------------------------------------------------
     # Organisations

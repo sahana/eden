@@ -72,6 +72,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                    ),
+                   M("Positions", c="event", f="job_title")(
+                       M("Create", m="create"),
+                       #M("Import", m="import", p="create"),
+                   ),
                    M("Situation Reports", c="event", f="sitrep")(
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),

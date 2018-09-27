@@ -284,7 +284,24 @@ def incident_report():
 def job_title():
     """ Job Titles Controller """
 
+    s3.crud_strings[tablename] = Storage(
+        label_create = T("Add Position"),
+        title_display = T("Position Details"),
+        title_list = T("Positions"),
+        title_update = T("Edit Position"),
+        label_list_button = T("List Positions"),
+        label_delete_button = T("Remove Position"),
+        msg_record_created = T("Position added"),
+        msg_record_modified = T("Position updated"),
+        msg_record_deleted = T("Position removed"),
+        msg_list_empty = T("No Positions currently registered"))
+
     def prep(r):
+        # Default / Hide type
+        f = s3db.hrm_job_title.type
+        f.default = 4 # Deployment
+        f.readable = f.writable = False
+
         if r.representation == "xls":
             # Export format should match Import format
             current.messages["NONE"] = ""
@@ -296,11 +313,6 @@ def job_title():
             table.type.label = None
             table.comments.label = None
             table.comments.represent = lambda v: v or ""
-        elif r.get_vars.get("caller") in ("event_human_resource_job_title_id", "event_scenario_human_resource_job_title_id"):
-            # Default / Hide type
-            f = s3db.hrm_job_title.type
-            f.default = 4 # Deployment
-            f.readable = f.writable = False
         return True
     s3.prep = prep
 

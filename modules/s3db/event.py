@@ -3444,7 +3444,7 @@ class S3EventHRModel(S3Model):
                                                                       filterby="type",
                                                                       filter_opts=(4,), # Type: Deploy
                                                                       )),
-                                                comment = S3PopupLink(c = "hrm",
+                                                comment = S3PopupLink(c = "event",
                                                                       f = "job_title",
                                                                       label = T("Create Position"),
                                                                       title = T("Position"),
@@ -4305,7 +4305,7 @@ class S3EventScenarioHRModel(S3Model):
                                                                       filterby="type",
                                                                       filter_opts=(4,), # Type: Deploy
                                                                       )),
-                                                comment = S3PopupLink(c = "hrm",
+                                                comment = S3PopupLink(c = "event",
                                                                       f = "job_title",
                                                                       # No special controller so need this for an options lookup
                                                                       vars = {"prefix": "hrm",
