@@ -87,6 +87,7 @@ class S3DocumentLibrary(S3Model):
                                event_incident = T("Incident"),
                                event_incident_report = T("Incident Report"),
                                event_sitrep = T("Situation Report"),
+                               fin_expense = T("Expense"),
                                fire_station = T("Fire Station"),
                                hms_hospital = T("Hospital"),
                                hrm_human_resource = T("Human Resource"),

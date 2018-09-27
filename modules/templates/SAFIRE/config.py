@@ -194,6 +194,11 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10
         #)),
+        ("fin", Storage(
+            name_nice = T("Finance"),
+            restricted = True,
+            module_type = 10
+        )),
         ("cr", Storage(
             name_nice = T("Shelters"),
             #description = "Tracks the location, capacity and breakdown of victims in Shelters",
@@ -206,12 +211,12 @@ def config(settings):
             restricted = True,
             module_type = 2
         )),
-        #("req", Storage(
-        #    name_nice = "Requests",
-        #    #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
+        ("req", Storage(
+            name_nice = "Requests",
+            #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+            restricted = True,
+            module_type = 10,
+        )),
         #("hms", Storage(
         #    name_nice = T("Hospitals"),
         #    #description = "Helps to monitor status of hospitals",
@@ -260,6 +265,15 @@ def config(settings):
     settings.cr.people_registration = False
 
     # -------------------------------------------------------------------------
+    def customise_cr_shelter_resource(r, tablename):
+
+        #table = current.s3db.cr_shelter
+        f = current.s3db.cr_shelter.shelter_service_id
+        f.readable = f.writable = False
+
+    settings.customise_cr_shelter_resource = customise_cr_shelter_resource
+
+    # -------------------------------------------------------------------------
     # Events
     # -------------------------------------------------------------------------
     def event_rheader(r):
@@ -280,6 +294,7 @@ def config(settings):
                         (T("Action Plan"), "plan"),
                         (T("Incident Reports"), "incident_report"),
                         (T("Logs"), "log"),
+                        (T("Expenses"), "expense"),
                         (T("Situation Reports"), "sitrep"),
                         ]
 
@@ -459,6 +474,26 @@ def config(settings):
         return attr
 
     settings.customise_event_event_controller = customise_event_event_controller
+
+    # -------------------------------------------------------------------------
+    def customise_event_incident_report_resource(r, tablename):
+
+        
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Log Call"),
+            title_display = T("Call Log Details"),
+            title_list = T("Call Logs"),
+            title_update = T("Edit Call Log"),
+            label_list_button = T("List Call Logs"),
+            label_delete_button = T("Delete Call Log"),
+            msg_record_created = T("Call Log added"),
+            msg_record_modified = T("Call Log updated"),
+            msg_record_deleted = T("Call Log removed"),
+            msg_list_empty = T("No Calls currently logged"),
+            )
+
+    settings.customise_event_incident_report_resource = customise_event_incident_report_resource
 
     # -------------------------------------------------------------------------
     def customise_event_incident_report_controller(**attr):

@@ -920,11 +920,11 @@ class CRShelterModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
-        return dict(ADD_SHELTER = ADD_SHELTER,
-                    SHELTER_LABEL = SHELTER_LABEL,
-                    cr_shelter_id = shelter_id,
-                    cr_shelter_unit_id = shelter_unit_id,
-                    )
+        return {"ADD_SHELTER" : ADD_SHELTER,
+                "SHELTER_LABEL" : SHELTER_LABEL,
+                "cr_shelter_id" : shelter_id,
+                "cr_shelter_unit_id" : shelter_unit_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2004,7 +2004,7 @@ def cr_shelter_rheader(r, tabs=[]):
                 tabs = tabs + s3db.inv_tabs(r)
             except:
                 pass
-
+            tabs.append((T("Assets"), "asset"))
             if settings.has_module("msg"):
                 tabs.append((T("Send Notification"), "dispatch"))
 

@@ -43,6 +43,7 @@ __all__ = ("S3EventModel",
            "S3EventCMSModel",
            "S3EventCMSTagModel",
            "S3EventDCModel",
+           "S3EventExpenseModel",
            "S3EventForumModel",
            "S3EventHRModel",
            "S3EventTeamModel",
@@ -1357,6 +1358,12 @@ class S3IncidentModel(S3Model):
                                                      "key": "incident_report_id",
                                                      "actuate": "replace",
                                                      },
+                            fin_expense = {"link": "event_expense",
+                                           "joinby": "incident_id",
+                                           "key": "expense_id",
+                                           "actuate": "replace",
+                                           "autodelete": False,
+                                           },
                             # Should be able to do everything via the link table
                             #event_organisation = "incident_id",
                             org_organisation = {"link": "event_organisation",
@@ -2103,12 +2110,10 @@ class S3IncidentReportModel(S3Model):
             title_list = T("Incident Reports"),
             title_update = T("Edit Incident Report"),
             label_list_button = T("List Incident Reports"),
-            #label_delete_button = T("Remove Incident Report from this event"),
-            label_delete_button = T("Delete Incident"),
+            label_delete_button = T("Delete Incident Report"),
             msg_record_created = T("Incident Report added"),
             msg_record_modified = T("Incident Report updated"),
             msg_record_deleted = T("Incident Report removed"),
-            #msg_list_empty = T("No Incident Reports currently registered for this event"),
             msg_list_empty = T("No Incident Reports currently registered"),
             )
 
@@ -3277,6 +3282,55 @@ class S3EventDCModel(S3Model):
                   onaccept = lambda form: \
                     set_event_from_incident(form, "event_target"),
                   )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3EventExpenseModel(S3Model):
+    """
+        Link Expenses to Incidents &/or Events
+        - normally linked at the Incident level & just visible at the Event level
+    """
+
+    names = ("event_expense",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        if current.deployment_settings.get_event_cascade_delete_incidents():
+            ondelete = "CASCADE"
+        else:
+            ondelete = "SET NULL"
+
+        # ---------------------------------------------------------------------
+        # Expenses
+        # Simple Expenses record
+
+        tablename = "event_expense"
+        self.define_table(tablename,
+                          self.event_event_id(ondelete = ondelete,
+                                              ),
+                          self.event_incident_id(ondelete = "CASCADE",
+                                                 ),
+                          self.fin_expense_id(empty = False,
+                                              ondelete = "CASCADE",
+                                              ),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       context = {"incident": "incident_id",
+                                  },
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            "incident_id",
+                                                            "expense_id",
+                                                            ),
+                                                 ),
+                       onaccept = lambda form: \
+                                set_event_from_incident(form, "event_expense"),
+                       )
 
         # Pass names back to global scope (s3.*)
         return {}
