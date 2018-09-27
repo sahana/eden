@@ -284,6 +284,7 @@ def incident_report():
 def job_title():
     """ Job Titles Controller """
 
+    table = s3db.hrm_job_title
     s3.crud_strings["hrm_job_title"] = Storage(
         label_create = T("Add Position"),
         title_display = T("Position Details"),
@@ -298,7 +299,7 @@ def job_title():
 
     def prep(r):
         # Default / Hide type
-        f = s3db.hrm_job_title.type
+        f = table.type
         f.default = 4 # Deployment
         f.readable = f.writable = False
 
