@@ -600,7 +600,9 @@ def config(settings):
         f = table.organisation_id
         f.readable = f.writable = True
         f.label = T("Lead Response Organization")
-        if r.method != "plan":
+        if r.method == "plan":
+            table.action_plan.label = T("Event Action Plan")
+        else:
             f = table.action_plan
             f.readable = f.writable = False
 

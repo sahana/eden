@@ -5267,12 +5267,6 @@ class event_ActionPlan(S3Method):
 
             profile_widgets = []
             pwappend = profile_widgets.append
-            form = self.form
-            if form:
-                if callable(form):
-                    form = form(r)
-                if form is not None:
-                    pwappend(form)
 
             tablename = "event_task"
             widget = {"label": "Tasks",
@@ -5352,6 +5346,13 @@ class event_ActionPlan(S3Method):
                                       ],
                       }
             pwappend(widget)
+
+            form = self.form
+            if form:
+                if callable(form):
+                    form = form(r)
+                if form is not None:
+                    pwappend(form)
 
             tablename = r.tablename
 
