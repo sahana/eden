@@ -284,7 +284,7 @@ def incident_report():
 def job_title():
     """ Job Titles Controller """
 
-    s3.crud_strings[tablename] = Storage(
+    s3.crud_strings["hrm_job_title"] = Storage(
         label_create = T("Add Position"),
         title_display = T("Position Details"),
         title_list = T("Positions"),
