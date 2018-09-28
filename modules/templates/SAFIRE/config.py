@@ -65,7 +65,7 @@ def config(settings):
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 
-    settings.security.policy = 5 # Controller, Function & Table ACLs
+    settings.security.policy = 6 # Controller, Function & Table ACLs
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
