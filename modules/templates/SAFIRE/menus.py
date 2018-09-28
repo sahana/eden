@@ -28,6 +28,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Assets", c="asset", f="asset"),
                 MM("Organizations", c="org", f="organisation"),
                 MM("Facilities", c="org", f="facility"),
+                MM("Hospitals", c="hms", f="hospital", m="summary"),
                 MM("Shelters", c="cr", f="shelter"),
                 MM("Warehouses", c="inv", f="warehouse"),
                 MM("Item Catalog", c="supply", f="catalog_item"),
