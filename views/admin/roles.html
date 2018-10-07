@@ -1,0 +1,21 @@
+{{extend "layout.html"}}
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+ </div>
+</div>
+<div class='row'>
+ <div class='small-12 columns'>
+  <div class='row'>
+   <div class='small-12 columns text-right'>
+    {{try:}}{{=page_actions}}{{except:}}{{pass}}
+   </div>
+  </div>
+  <div class='row'>
+   <div id='table-container' class='small-12 columns'>
+    {{try:}}{{=items}}{{except:}}{{pass}}
+   </div>
+  </div>
+ </div>
+</div>
+{{include "dataTables.html"}}

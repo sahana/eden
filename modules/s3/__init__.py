@@ -78,6 +78,7 @@ from s3resource import *
 
 # Authentication, Authorization, Accounting
 from s3aaa import *
+from s3roles import *
 
 # RESTful API =================================================================
 

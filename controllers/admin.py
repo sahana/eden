@@ -37,22 +37,35 @@ def role():
                         )
 
     def prep(r):
-        if r.representation != "html":
+        if r.representation not in ("html", "aadata", "csv", "json"):
             return False
-        handler = s3base.S3RoleManager()
-        modules = settings.modules
-        handler.controllers = Storage([(m, modules[m])
-                                        for m in modules
-                                        if modules[m].restricted])
+        #handler = s3base.S3RoleManager()
+        handler = s3base.S3RoleManager2()
+        #modules = settings.modules
+        #handler.controllers = Storage([(m, modules[m])
+                                        #for m in modules
+                                        #if modules[m].restricted])
+
         # Configure REST methods
         set_handler = r.set_handler
-        set_handler("users", handler)
-        set_handler("read", handler)
-        set_handler("list", handler)
-        set_handler("copy", handler)
-        set_handler("create", handler)
-        set_handler("update", handler)
-        set_handler("delete", handler)
+        #set_handler("users", s3base.S3RoleManager())
+        #set_handler("read", handler)
+        #set_handler("list", handler)
+        #set_handler("copy", handler)
+        #set_handler("create", handler)
+        #set_handler("update", handler)
+        #set_handler("delete", handler)
+        for method in ("users",
+                       "read",
+                       "list",
+                       "copy",
+                       "create",
+                       "update",
+                       "delete",
+                       "datatable",
+                       "datalist",
+                       "import"):
+            set_handler(method, handler)
         return True
     s3.prep = prep
 
@@ -170,7 +183,8 @@ def user():
     set_method = s3db.set_method
     set_method("auth", "user",
                method = "roles",
-               action = s3base.S3RoleManager())
+               action = s3base.S3RoleManager2(),
+               )
 
     set_method("auth", "user",
                method = "disable",
@@ -275,7 +289,8 @@ def user():
     s3.prep = prep
 
     def postp(r, output):
-        if r.interactive and isinstance(output, dict):
+        if r.interactive and isinstance(output, dict) and \
+           r.method in (None, "update", "create"):
             # Only show the disable button if the user is not currently disabled
             table = r.table
             query = (table.registration_key == None) | \

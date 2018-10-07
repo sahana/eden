@@ -3809,6 +3809,7 @@ $.filterOptionsS3({
             query = (table.id == role_id)
 
         role = db(query).select(table.id,
+                                table.uuid,
                                 table.protected,
                                 limitby=(0, 1),
                                 ).first()
@@ -3830,7 +3831,11 @@ $.filterOptionsS3({
             db(ptable.group_id == group_id).update(**data)
 
             # Remove the role
-            role.update_record(role=None, deleted=True)
+            deleted_uuid = "%s-deleted-%s" % (uuid4().hex[-12:], role.uuid[:40])
+            role.update_record(uuid = deleted_uuid,
+                               role = None,
+                               deleted = True,
+                               )
 
     # -------------------------------------------------------------------------
     def s3_assign_role(self, user_id, group_id, for_pe=None):
@@ -5520,14 +5525,13 @@ class S3Permission(object):
     NONE = 0x0000 # must be 0!
 
     PERMISSION_OPTS = OrderedDict([
-        #(NONE, "NONE"),
         [CREATE, "CREATE"],
         [READ, "READ"],
         [UPDATE, "UPDATE"],
         [DELETE, "DELETE"],
         [REVIEW, "REVIEW"],
         [APPROVE, "APPROVE"],
-        [PUBLISH, "PUBLISH"],
+        #[PUBLISH, "PUBLISH"],   # currently unused
     ])
 
     # Method <-> required permission

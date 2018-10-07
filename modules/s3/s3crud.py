@@ -2569,7 +2569,7 @@ class S3CRUD(S3Method):
 
         link = dict(attr)
         link["label"] = s3_str(label)
-        link["url"] = url
+        link["url"] = url if url else ""
         if icon and current.deployment_settings.get_ui_use_button_icons():
             link["icon"] = ICON.css_class(icon)
         if "_class" not in link:

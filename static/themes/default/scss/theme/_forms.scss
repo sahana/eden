@@ -265,7 +265,7 @@ body.rtl {
             max-width: 100%;
         }
         &:not(.filter-form):not(.auth_login):not(.auth_register) {
-            input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.hours):not(.dms-input) {
+            input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.hours):not(.dms-input):not(.rm-target-select) {
                 width: 20rem !important;
             }
         }

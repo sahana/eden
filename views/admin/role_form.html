@@ -1,0 +1,86 @@
+{{extend "layout.html"}}
+<style>
+    /* Rules to be moved into CSS */
+    .rm-form .controls { /* formstyle-specific, IFRC needs different rule */
+        width: 100%;
+    }
+    .rm-module-rules {
+        width: 100%;
+    }
+    .rm-module-header {
+        cursor: pointer;
+        background-color: #F0F0F0;
+    }
+    .rm-module-rules.hasrules .rm-module-header {
+        background-color: #D0D0D0;
+    }
+    .rm-module-toggle,
+    .rm-module-prefix,
+    .rm-module-title,
+    .rm-module-numrules {
+        display: inline-block;
+    }
+    .rm-module-toggle {
+        margin-right: 0.3rem;
+        width: 0.5rem;
+    }
+    .rm-module-prefix {
+        margin-right: 0.3rem;
+        width: 6.5rem;
+    }
+    .rm-module-numrules {
+        margin-left: 0.3rem;
+        font-weight: normal;
+    }
+    .rm-default-rule td,
+    .rm-default-permissions td {
+        font-style: italic;
+        color: #a0a0a0;
+        padding: 0.25rem!important;
+    }
+    .rm-rule-target {
+        width: 20%;
+        padding-left: 0.25rem!important;
+    }
+    .form-container form td.rm-rule-target .rm-target-select {
+        width: auto;
+        max-width: 100%!important;
+    }
+    .rm-rules .action-lnk {
+        color: #2285a2; /* should be primary color */
+        font-style: normal;
+        margin-bottom: 0.2rem;
+        display: inline-block;
+        margin-top: 0.2rem;
+    }
+    .rm-module-add td {
+        padding: 0.2rem 0.7rem !important;
+    }
+    input.rm-invalid {
+        background-color: #FFA0A0!important;
+    }
+</style>
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+ </div>
+</div>
+<div class='row'>
+ <div class='small-12 columns'>
+  <div class='row'>
+   <div class='small-12 columns'>
+    {{try:}}{{=delete_btn}}{{except:}}{{pass}}
+   </div>
+  </div>
+  <div class='row'>
+   <div class='small-12 columns'>
+    {{include "key.html"}}
+    <div class='form-container'>
+     {{try:}}{{=form}}{{except:}}{{pass}}
+    </div>
+    {{try:}}{{=list_btn}}{{except:}}{{pass}}
+   </div>
+  </div>
+ </div>
+</div>
+

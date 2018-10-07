@@ -553,7 +553,7 @@ body.rtl #markDuplicate {
   max-width: 100%;
 }
 /* line 268, ../scss/theme/_forms.scss */
-.form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.hours):not(.dms-input) {
+.form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.hours):not(.dms-input):not(.rm-target-select) {
   width: 20rem !important;
 }
 

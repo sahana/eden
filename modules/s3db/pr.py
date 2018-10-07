@@ -6060,6 +6060,7 @@ class S3SubscriptionModel(S3Model):
 def pr_get_entities(pe_ids=None,
                     types=None,
                     represent=True,
+                    show_instance_type=True,
                     group=False,
                     as_list=False,
                     show_label=False,
@@ -6072,6 +6073,7 @@ def pr_get_entities(pe_ids=None,
         @param pe_ids: a list of pe_ids (filters the results)
         @param types: a list of instance types (filters the results)
         @param represent: provide string representations
+        @param show_instance_type: include instance type in representation
         @param group: group results by instance type (returns a Storage
                       with the instance types as keys)
         @param as_list: return flat lists instead of dicts (ignored if
@@ -6130,7 +6132,10 @@ def pr_get_entities(pe_ids=None,
         if not table:
             continue
 
-        instance_type_nice = type_repr(instance_type)
+        if show_instance_type:
+            instance_type_nice = " (%s)" % type_repr(instance_type)
+        else:
+            instance_type_nice = ""
 
         ids = entities[instance_type]
         query = (table.deleted != True) & \
@@ -6151,12 +6156,12 @@ def pr_get_entities(pe_ids=None,
                 pe_id = row.pe_id
                 if show_label:
                     label = labels.get(pe_id, None) or default_label
-                    pe_str = "%s %s (%s)" % (s3_fullname(row),
-                                             label,
-                                             instance_type_nice)
-                else:
-                    pe_str = "%s (%s)" % (s3_fullname(row),
+                    pe_str = "%s %s%s" % (s3_fullname(row),
+                                          label,
                                           instance_type_nice)
+                else:
+                    pe_str = "%s%s" % (s3_fullname(row),
+                                       instance_type_nice)
                 repr_g[pe_id] = repr_f[pe_id] = pe_str
 
         elif "name" in table.fields:
@@ -6166,19 +6171,19 @@ def pr_get_entities(pe_ids=None,
                 pe_id = row.pe_id
                 if show_label and "pe_label" in table.fields:
                     label = labels.get(pe_id, None) or default_label
-                    pe_str = "%s %s (%s)" % (row.name,
-                                             label,
-                                             instance_type_nice)
-                else:
-                    pe_str = "%s (%s)" % (row.name,
+                    pe_str = "%s %s%s" % (row.name,
+                                          label,
                                           instance_type_nice)
+                else:
+                    pe_str = "%s%s" % (row.name,
+                                       instance_type_nice)
                 repr_g[pe_id] = repr_f[pe_id] = pe_str
 
         else:
             for pe_id in pe_ids:
                 label = labels.get(pe_id, None) or default_label
-                pe_str = "[%s] (%s)" % (label,
-                                        instance_type_nice)
+                pe_str = "[%s]%s" % (label,
+                                     instance_type_nice)
                 repr_g[pe_id] = repr_f[pe_id] = pe_str
 
     if represent:

@@ -450,6 +450,7 @@ def dojs(dogis = False, warnings = True):
                      "ui.dashboard",
                      "ui.embeddedcomponent",
                      "ui.locationselector",
+                     "ui.permissions",
                      "ui.pivottable",
                      "ui.sitecheckin",
                      "ui.timeplot",

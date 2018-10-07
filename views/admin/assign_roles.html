@@ -1,0 +1,72 @@
+{{extend "layout.html"}}
+<style>
+    /* Rules to be moved into CSS */
+    .rm-form .controls {
+        width: 100%;
+    }
+    .rm-assign {
+        width: 80%;
+    }
+    .rm-assign th {
+        min-width: 10rem;
+    }
+    .rm-assign th:first-child {
+        width: 25%;
+    }
+    .rm-assign td {
+        padding: 0.5rem!important;
+    }
+    .rm-assign tfoot td {
+        border-top: 1px solid #C0C0C0;
+        border-collapse: separate
+    }
+    .rm-assign .action-lnk {
+        color: #2285a2; /* should be primary color */
+        font-style: normal;
+        margin-bottom: 0.2rem;
+        display: inline-block;
+        margin-top: 0.2rem;
+    }
+    .rm-assignment.rm-duplicate {
+        border: 1px solid red;
+    }
+    .rm-assignment.rm-duplicate td {
+        border-top: 1px solid red;
+        border-bottom: 1px solid red;
+    }
+    .rm-item-name,
+    .rm-item-title {
+        display: block;
+    }
+    .rm-item-title {
+        font-size: 0.8rem;
+        font-style: italic;
+        color: #A0A0A0;
+    }
+    /* This should become default/generic (mind RTL): */
+    .action-lnk .fa,
+    .action-btn .fa {
+        padding-right: 0.3rem;
+    }
+</style>
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+ </div>
+</div>
+{{try:}}{{rheader=rheader}}{{except:}}{{rheader=None}}{{pass}}
+{{if rheader:}}
+<div id='rheader' class='row'>
+ <div class='small-12 columns'>
+  {{=XML(rheader)}}
+ </div>
+</div>
+{{pass}}
+<div id='component' class='row'>
+ <div class='small-12 columns'>
+  {{include "key.html"}}
+  <div class='form-container'>
+   {{try:}}{{=form}}{{except:}}{{pass}}
+  </div>
+ </div>
+</div>
