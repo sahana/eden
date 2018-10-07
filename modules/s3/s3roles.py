@@ -1751,9 +1751,7 @@ class S3RolesWidget(object):
             script = "/%s/static/scripts/S3/s3.ui.roles.js" % \
                      current.request.application
         else:
-            # TODO add minify-configr
-            #script = "/%s/static/scripts/S3/s3.ui.roles.min.js" %
-            script = "/%s/static/scripts/S3/s3.ui.roles.js" % \
+            script = "/%s/static/scripts/S3/s3.ui.roles.min.js" % \
                      current.request.application
         scripts = s3.scripts
         if script not in scripts:

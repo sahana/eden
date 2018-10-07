@@ -34,14 +34,34 @@
         /**
          * Default options
          *
-         * TODO document options
+         * @prop {string} mode - what to assign ("roles"|"users")
+         * @prop {object} items - the users or roles, an object with the structure:
+         *                        {itemID: {l: label,
+         *                                  t: (sub)title,
+         *                                  a: assignable,     // default true
+         *                                  r: removable,      // default true
+         *                                  u: unrestrictable  // default false
+         *                                  }, ...}
+         * @prop {boolean} useRealm - use realms
+         * @prop {Array} realmTypes - an array of realm types, structure:
+         *                            [[instanceType, label], ...]
+         *                            NB: the order of this array determines the order
+         *                                of assignments in the table and realms in the
+         *                                selector
+         * @prop {object} realms - the selectable realms, an object with the structure:
+         *                         {entityID: {l: label, t: instanceType}, ...}
+         * @prop {string} ajaxURL - the Ajax URL for adding/removing assignments,
+         *                          can contain a URL-escaped "[id]" which will be
+         *                          replaced with the context role/user ID
          */
         options: {
+
+            mode: 'roles',
 
             items: {},
 
             useRealms: false,
-            realmTypes: null,       // a list in order
+            realmTypes: null,
             realms: null,
 
             ajaxURL: null
@@ -88,10 +108,15 @@
 
             this._unbindEvents();
 
+            // Remove any existing assignment table and reset DOM pointers
             $('.rm-assign', el).remove();
+            this.addRow = null;
+            this.addButton = null;
+            this.realmSelector = null;
+            this.itemSelector = null;
 
+            // Parse the current assignments and create a new assignment table
             this._deserialize();
-
             el.append(this._assignmentTable());
 
             this._bindEvents();
@@ -166,17 +191,21 @@
                 columnLabels = $('<tr>').appendTo(thead),
                 targetLabel;
 
+            // The label for the assignable items
             if (opts.mode == 'users') {
                 targetLabel = labels.rm_Users;
             } else {
                 targetLabel = labels.rm_Roles;
             }
-
             $('<th>').text(targetLabel).appendTo(columnLabels);
+
+            // The realm column
             if (opts.useRealms) {
                 $('<th>').text(labels.rm_ForEntity).appendTo(columnLabels);
 
             }
+
+            // The action column (no label)
             $('<th>').appendTo(columnLabels);
 
             return thead;
@@ -192,6 +221,7 @@
             var tbody = $('<tbody>'),
                 self = this;
 
+            // Sort the assignments, then render a row for each
             this.assignments.sort(function(a, b) {
                 return self._compareAssignments(a, b);
             }).forEach(function(assignment) {
@@ -241,30 +271,34 @@
          * Render the assignment table footer
          *
          * @returns {jQuery} - the table footer (tfoot)
-         *
-         * TODO clean up
          */
         _assignmentTableFooter: function() {
 
             var tfoot = $('<tfoot>'),
-                row = $('<tr>').appendTo(tfoot);
+                addRow = $('<tr>').appendTo(tfoot);
 
-            $('<td>').append(this._itemSelector()).appendTo(row);
+            // User/Role selector
+            $('<td>').append(this._itemSelector()).appendTo(addRow);
+
+            // Realm selector (if using realms)
             if (this.options.useRealms) {
-                $('<td>').append(this._realmSelector()).appendTo(row);
+                $('<td>').append(this._realmSelector()).appendTo(addRow);
             }
-            // TODO add-button
+
+            // Add + Cancel buttons
             var addButton = $('<a class="rm-submit-add action-btn">').text(labels.rm_Add),
                 cancel = $('<span class="rm-cancel-add action-lnk">').text(labels.rm_Cancel);
 
+            // Disable Add button initially
+            // - explicitly set attribute for CSS
             addButton.prop('disabled', true)
                      .attr('disabled', 'disabled');
 
+            // Complete the row with the action column
             $('<td class="rm-row-actions">').append(addButton)
                                             .append(cancel)
-                                            .appendTo(row);
-
-            this.addRow = row;
+                                            .appendTo(addRow);
+            this.addRow = addRow;
 
             return tfoot;
         },
@@ -314,8 +348,6 @@
          * Render the realm selector
          *
          * @returns {jQuery} - the realm selector (select)
-         *
-         * TODO optimize
          */
         _realmSelector: function() {
 
@@ -520,9 +552,10 @@
          * existing assignment; toggles 'rm-duplicate' CSS class
          * for duplicate rows
          *
-         * @returns {Array|boolean} - the new assignment if valid and no duplicate
-         *                            false if duplicate
-         *                            undefined if invalid
+         * @returns {mixed} - the new assignment {2-tuple} if valid and
+         *                    not a duplicate
+         *                  - false if duplicate
+         *                  - undefined if invalid or no input
          */
         _checkNewAssignment: function() {
 
@@ -650,6 +683,7 @@
                     self.assignments = self.assignments.filter(function(other) {
                         return (other[0] !== assignment[0] || other[1] !== assignment[1]);
                     });
+                    self._serialize();
 
                     // Remove all table rows which match this assignment
                     $('.rm-assignment', $(self.element)).each(function() {
@@ -670,7 +704,7 @@
                 error: function() {
                     // Show an error message in place of the throbber
                     var msg = $('<span class="rm-error">').insertBefore(throbber.hide());
-                    msg.text('deletion failed');
+                    msg.text(labels.rm_DeletionFailed);
                     throbber.remove();
 
                     // Fade out the message and restore the delete button
@@ -813,6 +847,10 @@
 
             var el = $(this.element),
                 ns = this.eventNamespace;
+
+            if (this.addRow !== undefined) {
+                this.addRow.off(ns);
+            }
 
             el.off(ns);
 

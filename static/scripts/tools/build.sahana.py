@@ -452,6 +452,7 @@ def dojs(dogis = False, warnings = True):
                      "ui.locationselector",
                      "ui.permissions",
                      "ui.pivottable",
+                     "ui.roles",
                      "ui.sitecheckin",
                      "ui.timeplot",
                      "work",
