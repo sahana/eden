@@ -237,7 +237,7 @@
                 return rule[0] !== null && (rule[0] !== 0 || !rule[7]);
             });
 
-            this.input.val(JSON.stringify(rules));
+            this.input.val(JSON.stringify(rules)).change();
         },
 
         /**

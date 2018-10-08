@@ -534,8 +534,8 @@ var S3EnableNavigateAwayConfirm = function() {
         }
         var form = $('form:not(.filter-form)');
 
-        $('input', form).keypress(S3SetNavigateAwayConfirm)
-                        .change(S3SetNavigateAwayConfirm);
+        $('input, textarea', form).keypress(S3SetNavigateAwayConfirm)
+                                  .change(S3SetNavigateAwayConfirm);
         $('select', form).change(S3SetNavigateAwayConfirm);
         form.submit(S3ClearNavigateAwayConfirm);
     });

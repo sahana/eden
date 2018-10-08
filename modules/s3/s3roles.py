@@ -434,6 +434,10 @@ class S3RoleManager2(S3Method):
         form.add_class("rm-form")
         output["form"] = form
 
+        # Navigate-away confirmation
+        if crudopts.navigate_away_confirm:
+            s3.jquery_ready.append("S3EnableNavigateAwayConfirm()")
+
         # Process form
         response = current.response
         formname = "%s/%s" % (tablename, record.id if record else None)
@@ -536,6 +540,7 @@ class S3RoleManager2(S3Method):
 
         uid = formvars.uuid
         if uid is None and role:
+            # Update form with read-only UUID (e.g. system roles)
             uid = role.uuid
 
         role_id = auth.s3_create_role(formvars.role,
