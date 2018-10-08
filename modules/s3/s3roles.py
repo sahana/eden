@@ -534,9 +534,13 @@ class S3RoleManager2(S3Method):
 
         formvars = form.vars
 
+        uid = formvars.uuid
+        if uid is None and role:
+            uid = role.uuid
+
         role_id = auth.s3_create_role(formvars.role,
                                       description = formvars.description,
-                                      uid = formvars.uuid,
+                                      uid = uid,
                                       )
 
         data = {"role": formvars.role}

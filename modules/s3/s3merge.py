@@ -444,7 +444,7 @@ class S3Merge(S3Method):
         init_requires = self.init_requires
         index = 1
         num_fields = len(formfields)
-        
+
         for f in formfields:
 
             # Render the widgets
@@ -490,7 +490,7 @@ class S3Merge(S3Method):
             trs.append(TR(TD(owidget, _class="mwidget"),
                           TD(swap),
                           TD(dwidget, _class="mwidget")))
-            
+
             index = index + 1
         # Show created_on/created_by for each record
         if "created_on" in table:

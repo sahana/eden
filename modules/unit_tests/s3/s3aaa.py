@@ -2431,12 +2431,13 @@ class AccessibleQueryTests(unittest.TestCase):
 
         # Test with TESTREADER
         auth.s3_assign_role(auth.user.id, self.reader, for_pe=self.org[0])
+        roles = set([2,3])
         expected = (((table.realm_entity == self.org[0]) | \
                    (table.realm_entity == None)) | \
                    ((((table.owned_by_user == None) & \
                    (table.owned_by_group == None)) & \
                    (table.realm_entity == None)) | \
-                   (table.owned_by_group.belongs([2,3]))))
+                   (table.owned_by_group.belongs(roles))))
         query = accessible_query("read", "org_permission_test", c=c, f=f)
         assertEqual(query, expected)
         query = accessible_query("update",table,  c=c, f=f)
@@ -2448,7 +2449,7 @@ class AccessibleQueryTests(unittest.TestCase):
                    (table.realm_entity == None))) | \
                    (((table.owned_by_group == self.reader) & \
                    (table.realm_entity.belongs([self.org[0]]))) | \
-                   (table.owned_by_group.belongs([2,3]))))
+                   (table.owned_by_group.belongs(roles))))
         assertEqual(query, expected)
         query = accessible_query("delete", table, c=c, f=f)
         assertEqual(query, NONE)
@@ -2456,13 +2457,14 @@ class AccessibleQueryTests(unittest.TestCase):
 
         # Test with TESTEDITOR
         auth.s3_assign_role(auth.user.id, self.editor, for_pe=self.org[0])
+        roles = set([2,3])
         query = accessible_query("read", table, c=c, f=f)
         expected = (((table.realm_entity == self.org[0]) | \
                    (table.realm_entity == None)) | \
                    ((((table.owned_by_user == None) & \
                    (table.owned_by_group == None)) & \
                    (table.realm_entity == None)) | \
-                   (table.owned_by_group.belongs([2,3]))))
+                   (table.owned_by_group.belongs(roles))))
         assertEqual(query, expected)
         query = accessible_query("update", table, c=c, f=f)
         assertEqual(query, expected)
@@ -2522,6 +2524,7 @@ class AccessibleQueryTests(unittest.TestCase):
                                    entity="any",
                                    )
         auth.s3_assign_role(auth.user.id, self.reader, for_pe=self.org[0])
+        roles = set([3,2,self.reader])
 
         # Strict ownership: user has access to records within the
         # realms of the role, or which he owns either individually or
@@ -2531,7 +2534,7 @@ class AccessibleQueryTests(unittest.TestCase):
         expected = (((table.realm_entity == self.org[0]) | \
                    (table.realm_entity == None)) | \
                    ((table.owned_by_user == auth.user.id) | \
-                   (table.owned_by_group.belongs([3,2,self.reader]))))
+                   (table.owned_by_group.belongs(roles))))
         assertEqual(query, expected)
 
         # Loose ownership: user has access to records within the realm
@@ -2545,7 +2548,7 @@ class AccessibleQueryTests(unittest.TestCase):
                    (((table.owned_by_user == auth.user.id) | \
                    ((table.owned_by_user == None) & \
                    (table.owned_by_group == None))) | \
-                   (table.owned_by_group.belongs([3,2,self.reader]))))
+                   (table.owned_by_group.belongs(roles))))
         assertEqual(query, expected)
 
         # Update permission is limited to owned records
@@ -2553,7 +2556,7 @@ class AccessibleQueryTests(unittest.TestCase):
         expected = (((table.owned_by_user == auth.user.id) | \
                    ((table.owned_by_user == None) & \
                    (table.owned_by_group == None))) | \
-                   (table.owned_by_group.belongs([3,2,self.reader])))
+                   (table.owned_by_group.belongs(roles)))
         assertEqual(query, expected)
 
         # No delete-permission on any record
@@ -2572,14 +2575,14 @@ class AccessibleQueryTests(unittest.TestCase):
                    (((table.owned_by_user == auth.user.id) | \
                    ((table.owned_by_user == None) & \
                    (table.owned_by_group == None))) | \
-                   (table.owned_by_group.belongs([3,2,self.reader]))))
+                   (table.owned_by_group.belongs(roles))))
         assertEqual(query, expected)
 
         query = accessible_query("update",table,  c=c, f=f)
         expected = (((table.owned_by_user == auth.user.id) | \
                    ((table.owned_by_user == None) & \
                    (table.owned_by_group == None))) | \
-                   (table.owned_by_group.belongs([3,2,self.reader])))
+                   (table.owned_by_group.belongs(roles)))
         assertEqual(query, expected)
 
         query = accessible_query("delete", table, c=c, f=f)
@@ -2591,13 +2594,14 @@ class AccessibleQueryTests(unittest.TestCase):
 
         # Test with TESTEDITOR
         auth.s3_assign_role(auth.user.id, self.editor, for_pe=self.org[0])
+        roles = set([3,2])
         query = accessible_query("read", table, c=c, f=f)
         expected = (((table.realm_entity == self.org[0]) | \
                    (table.realm_entity == None)) | \
                    ((((table.owned_by_user == None) & \
                    (table.owned_by_group == None)) & \
                    (table.realm_entity == None)) | \
-                   (table.owned_by_group.belongs([2,3]))))
+                   (table.owned_by_group.belongs(roles))))
         assertEqual(query, expected)
 
         query = accessible_query("update", table, c=c, f=f)
@@ -2617,7 +2621,7 @@ class AccessibleQueryTests(unittest.TestCase):
                    ((((table.owned_by_user == None) & \
                    (table.owned_by_group == None)) & \
                    (table.realm_entity == None)) | \
-                   (table.owned_by_group.belongs([2,3]))))
+                   (table.owned_by_group.belongs(roles))))
         query = accessible_query("read", table, c=c, f=f)
         assertEqual(query, expected)
 
@@ -2667,6 +2671,7 @@ class AccessibleQueryTests(unittest.TestCase):
         user = auth.s3_user_pe_id(auth.s3_get_user_id("normaluser@example.com"))
         s3db.pr_add_affiliation(self.org[2], user, role="TestStaff")
         auth.s3_assign_role(auth.user.id, self.editor, for_pe=self.org[2])
+        roles = set([3,2])
 
         # User should only be able to access records of org[2]
         expected = (((table.realm_entity == self.org[2]) | \
@@ -2674,7 +2679,7 @@ class AccessibleQueryTests(unittest.TestCase):
                    ((((table.owned_by_user == None) & \
                    (table.owned_by_group == None)) & \
                    (table.realm_entity == None)) | \
-                   (table.owned_by_group.belongs([2,3]))))
+                   (table.owned_by_group.belongs(roles))))
         query = accessible_query("read", table, c=c, f=f)
         assertEqual(query, expected)
         query = accessible_query("update", table, c=c, f=f)
@@ -2697,7 +2702,7 @@ class AccessibleQueryTests(unittest.TestCase):
                    ((((table.owned_by_user == None) & \
                    (table.owned_by_group == None)) & \
                    (table.realm_entity == None)) | \
-                   (table.owned_by_group.belongs([2,3]))))
+                   (table.owned_by_group.belongs(roles))))
         assertEqual(query, expected)
         query = accessible_query("update", table, c=c, f=f)
         expected = (((table.realm_entity == self.org[2]) | \
@@ -2708,7 +2713,7 @@ class AccessibleQueryTests(unittest.TestCase):
                    (((table.owned_by_user == None) & \
                    (table.owned_by_group == None)) & \
                    (table.realm_entity == None)) | \
-                   (table.owned_by_group.belongs([2,3])))))
+                   (table.owned_by_group.belongs(roles)))))
         assertEqual(query, expected)
 
         # Remove the affiliation org org[2] with org[1]
@@ -2727,7 +2732,7 @@ class AccessibleQueryTests(unittest.TestCase):
                    ((((table.owned_by_user == None) & \
                    (table.owned_by_group == None)) & \
                    (table.realm_entity == None)) | \
-                   (table.owned_by_group.belongs([2,3]))))
+                   (table.owned_by_group.belongs(roles))))
         assertEqual(query, expected)
         query = accessible_query("update", table, c=c, f=f)
         assertEqual(query, expected)
