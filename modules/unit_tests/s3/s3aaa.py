@@ -2326,7 +2326,7 @@ class AccessibleQueryTests(unittest.TestCase):
         query = accessible_query("read", "org_permission_test", c=c, f=f)
         assertEqual(query, ALL)
         query = accessible_query("update", table, c=c, f=f)
-        roles = [r for r in auth.user.realms if r is not None]
+        roles = set(r for r in auth.user.realms if r is not None)
         OWNED = (((table.owned_by_user == auth.user.id) | \
                 ((table.owned_by_user == None) & \
                 (table.owned_by_group == None))) | \
@@ -2380,7 +2380,7 @@ class AccessibleQueryTests(unittest.TestCase):
         query = accessible_query("read", "org_permission_test", c=c, f=f)
         assertEqual(query, ALL)
         query = accessible_query("update", table, c=c, f=f)
-        roles = [r for r in auth.user.realms if r is not None]
+        roles = set(r for r in auth.user.realms if r is not None)
         OWNED = (((table.owned_by_user == auth.user.id) | \
                 ((table.owned_by_user == None) & \
                 (table.owned_by_group == None))) | \
