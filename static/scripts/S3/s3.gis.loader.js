@@ -212,7 +212,7 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
             'gis/openlayers/lib/OpenLayers/Filter/Comparison.js',
             // Used by GetFeature
             'gis/openlayers/lib/OpenLayers/Filter/Spatial.js',
-            //'gis/openlayers/lib/OpenLayers/Filter/Function.js',                
+            //'gis/openlayers/lib/OpenLayers/Filter/Function.js',
             'gis/openlayers/lib/OpenLayers/Protocol.js',
             'gis/openlayers/lib/OpenLayers/Protocol/HTTP.js',
             'gis/openlayers/lib/OpenLayers/Protocol/WFS.js',
@@ -220,7 +220,7 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
             'gis/openlayers/lib/OpenLayers/Protocol/WFS/v1_0_0.js',
             'gis/openlayers/lib/OpenLayers/Protocol/WFS/v1_1_0.js',
             'gis/openlayers/lib/OpenLayers/Protocol/WFS/v2_0_0.js',
-            //'gis/openlayers/lib/OpenLayers/Protocol/CSW.js', 
+            //'gis/openlayers/lib/OpenLayers/Protocol/CSW.js',
             //'gis/openlayers/lib/OpenLayers/Protocol/CSW/v2_0_2.js',
             'gis/openlayers/lib/OpenLayers/Protocol/Script.js',
             //'gis/openlayers/lib/OpenLayers/Protocol/SOS.js',
@@ -344,8 +344,8 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
             //'gis/openlayers/lib/OpenLayers/WPSClient.js',
             //'gis/openlayers/lib/OpenLayers/WPSProcess.js',
             'gis/openlayers/lib/OpenLayers/Strategy/AttributeCluster.js'
-        ]
-        jsFiles = jsFiles.concat(ol_files)
+        ];
+        jsFiles = jsFiles.concat(ol_files);
 
         try {
             if (Ext) {
@@ -429,9 +429,11 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
                     gxt_files.push('ext-community-extensions/FileUploadField.js');
                     gxt_files.push('gis/gxp/widgets/LayerUploadPanel.js');
                 }
-                jsFiles = jsFiles.concat(gxt_files)
+                jsFiles = jsFiles.concat(gxt_files);
             }
-        } catch(err) {};
+        } catch(err) {
+            // pass
+        }
 
         if (S3.gis.mgrs) {
             jsFiles.push('gis/usng2.js');
@@ -459,7 +461,9 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
                     jsFiles.push('gis/gxp_upload.js');
                 }
             }
-        } catch(err) {};
+        } catch(err) {
+            // pass
+        }
         if (S3.gis.mgrs) {
             jsFiles.push('gis/MGRS.min.js');
         }
@@ -469,9 +473,12 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
     }
 
     // Add the additional scritps from Layers/Plugins
-    jsFiles = jsFiles.concat(scripts)
+    jsFiles = jsFiles.concat(scripts);
 
     var path = S3.Ap.concat('/static/scripts/');
+
+    // Original version with yepnope (TODO remove when sufficiently tested)
+    /*
     if (callback) {
         // Add the full path
         for (var i=0, len=jsFiles.length; i < len; i++) {
@@ -503,4 +510,39 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
         // Hide the Loader
         $('.map_loader').hide();
     }
-}
+    */
+
+    // Use "parser-inserted scripts" for guaranteed execution order
+    // http://hsivonen.iki.fi/script-execution/
+    var src,
+        script,
+        done = false,
+        head = document.getElementsByTagName('head');
+
+    var runWhenReady = function(script) {
+        return function() {
+            var rS = script.readyState;
+            if (!done && (!rS || rS == 'loaded' || rS == 'complete' || rS == 'uninitialized')) {
+                done = true;
+                $('.map_loader').hide();
+                if (callback) {
+                    callback.call();
+                }
+            }
+            script.onload = script.onreadystatechange = script.onerror = null;
+        };
+    };
+
+    for (var i=0, len=jsFiles.length; i < len; i++) {
+        src = path + jsFiles[i];
+
+        script = document.createElement('script');
+        script.src = src;
+        script.async = false; // maintain execution order
+
+        if (i == jsFiles.length - 1) {
+            script.onreadystatechange = script.onload = runWhenReady(script);
+        }
+        head[0].appendChild(script);
+    }
+};
