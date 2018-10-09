@@ -185,8 +185,7 @@ input[type="url"],
 textarea,
 select {
   height: 1.75rem;
-  padding: 0.25rem;
-  margin: 0;
+  padding: 0.25rem!important; // override widget.css
   display: inline-block;
   font-weight: normal;
 }
@@ -264,8 +263,8 @@ body.rtl {
         .ui-multiselect {
             max-width: 100%;
         }
-        &:not(.filter-form):not(.auth_login):not(.auth_register) {
-            input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.hours):not(.dms-input):not(.rm-target-select) {
+        &:not(.filter-form):not(.auth_login):not(.auth_register):not(.rm-form) {
+            input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.hours):not(.dms-input) {
                 width: 20rem !important;
             }
         }

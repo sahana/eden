@@ -1,0 +1,117 @@
+/* Role Manager */
+.rm-form {
+    .controls {
+        width: 100%;
+    }
+    .rm-assign .action-lnk,
+    .rm-rules .action-lnk {
+        display: inline-block;
+        color: $primary-color;
+        font-style: normal;
+    }
+    .rm-toggle-all {
+        margin-top: 0.2rem;
+        margin-bottom: 0.5rem;
+    }
+    .rm-assign {
+        width: 80%;
+        border-collapse: separate;
+        border-spacing: 0;
+        th {
+            min-width: 10rem;
+        }
+        th:first-child {
+            width: 25%;
+        }
+        td {
+            padding: 0.5rem;
+        }
+        tfoot td {
+            border-top: 1px solid #C0C0C0;
+        }
+        .rm-item-name,
+        .rm-item-title {
+            display: block;
+        }
+        .rm-item-title {
+            font-size: 0.8rem;
+            font-style: italic;
+            color: #A0A0A0;
+        }
+        .rm-duplicate {
+            td {
+                border-top: 1px solid red;
+                border-bottom: 1px solid red;
+                &:first-child {
+                    border-left: 1px solid red;
+                }
+                &:last-child {
+                    border-right: 1px solid red;
+                }
+            }
+        }
+    }
+    .rm-module-rules {
+        width: 100%;
+        .rm-module-header {
+            cursor: pointer;
+            background-color: #F0F0F0;
+            div {
+                margin-right: 0.3rem;
+                display: inline-block;
+            }
+            .rm-module-toggle {
+                width: 0.5rem;
+            }
+            .rm-module-prefix {
+                width: 6.5rem;
+            }
+            .rm-module-numrules {
+                font-weight: normal;
+            }
+        }
+        &.hasrules .rm-module-header {
+            background-color: #D0D0D0;
+        }
+
+        th, td {
+            padding: 0.5rem;
+        }
+
+        .rm-default-rule td,
+        .rm-default-permissions td {
+            font-style: italic;
+            color: #a0a0a0;
+        }
+        .rm-rule-target {
+            width: 20%;
+            input {
+                width: auto;
+                display: inline-block;
+            }
+        }
+    }
+    input.rm-invalid {
+        background-color: #FFA0A0;
+    }
+}
+body.rtl {
+    .rm-form {
+        .rm-module-rules .rm-module-header div {
+            margin-right: 0;
+            margin-left: 0.3rem;
+        }
+        .rm-assign .rm-duplicate {
+            td {
+                &:first-child {
+                    border-left: 0;
+                    border-right: 1px solid red;
+                }
+                &:last-child {
+                    border-right: 0;
+                    border-left: 1px solid red;
+                }
+            }
+        }
+    }
+}

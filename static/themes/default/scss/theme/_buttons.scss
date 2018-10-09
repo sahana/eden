@@ -123,6 +123,21 @@ $action_btn_fgcolor_disabled: $action_btn_fgcolor_hover !default;
     }
 }
 
+/* Action links */
+.action-lnk {
+    margin-left: 0.6rem;
+    &:first-child {
+        margin-left: 0;
+    }
+}
+body.rtl .action-lnk {
+    margin-left: 0;
+    margin-right: 0.6rem;
+    &:first-child {
+        margin-right: 0;
+    }
+}
+
 /* Caret */
 .caret {
   display: inline-block;

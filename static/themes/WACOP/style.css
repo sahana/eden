@@ -1446,7 +1446,7 @@ textarea {
   max-width: 100%;
 }
 /* line 166, ../scss/custom/_forms.scss */
-.form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.dms-input) {
+.form-container form:not(.filter-form):not(.auth_login):not(.auth_register):not(.rm-form) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.dms-input) {
   width: 20rem !important;
 }
 
@@ -1998,6 +1998,139 @@ body.rtl .dataTable .group .group-expand {
 .empty {
   font-style: italic;
   font-size: 0.8em;
+}
+
+/* Role Manager */
+/* line 3, ../scss/custom/_roles.scss */
+.rm-form .controls {
+  width: 100%;
+}
+/* line 6, ../scss/custom/_roles.scss */
+.rm-form .rm-assign .action-lnk,
+.rm-form .rm-rules .action-lnk {
+  display: inline-block;
+  color: #4D7EB9;
+  font-style: normal;
+}
+/* line 12, ../scss/custom/_roles.scss */
+.rm-form .rm-toggle-all {
+  margin-top: 0.2rem;
+  margin-bottom: 0.5rem;
+}
+/* line 16, ../scss/custom/_roles.scss */
+.rm-form .rm-assign {
+  width: 80%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+/* line 20, ../scss/custom/_roles.scss */
+.rm-form .rm-assign th {
+  min-width: 10rem;
+}
+/* line 23, ../scss/custom/_roles.scss */
+.rm-form .rm-assign th:first-child {
+  width: 25%;
+}
+/* line 26, ../scss/custom/_roles.scss */
+.rm-form .rm-assign td {
+  padding: 0.5rem;
+}
+/* line 29, ../scss/custom/_roles.scss */
+.rm-form .rm-assign tfoot td {
+  border-top: 1px solid #C0C0C0;
+}
+/* line 32, ../scss/custom/_roles.scss */
+.rm-form .rm-assign .rm-item-name,
+.rm-form .rm-assign .rm-item-title {
+  display: block;
+}
+/* line 36, ../scss/custom/_roles.scss */
+.rm-form .rm-assign .rm-item-title {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #A0A0A0;
+}
+/* line 42, ../scss/custom/_roles.scss */
+.rm-form .rm-assign .rm-duplicate td {
+  border-top: 1px solid red;
+  border-bottom: 1px solid red;
+}
+/* line 45, ../scss/custom/_roles.scss */
+.rm-form .rm-assign .rm-duplicate td:first-child {
+  border-left: 1px solid red;
+}
+/* line 48, ../scss/custom/_roles.scss */
+.rm-form .rm-assign .rm-duplicate td:last-child {
+  border-right: 1px solid red;
+}
+/* line 54, ../scss/custom/_roles.scss */
+.rm-form .rm-module-rules {
+  width: 100%;
+}
+/* line 56, ../scss/custom/_roles.scss */
+.rm-form .rm-module-rules .rm-module-header {
+  cursor: pointer;
+  background-color: #F0F0F0;
+}
+/* line 59, ../scss/custom/_roles.scss */
+.rm-form .rm-module-rules .rm-module-header div {
+  margin-right: 0.3rem;
+  display: inline-block;
+}
+/* line 63, ../scss/custom/_roles.scss */
+.rm-form .rm-module-rules .rm-module-header .rm-module-toggle {
+  width: 0.5rem;
+}
+/* line 66, ../scss/custom/_roles.scss */
+.rm-form .rm-module-rules .rm-module-header .rm-module-prefix {
+  width: 6.5rem;
+}
+/* line 69, ../scss/custom/_roles.scss */
+.rm-form .rm-module-rules .rm-module-header .rm-module-numrules {
+  font-weight: normal;
+}
+/* line 73, ../scss/custom/_roles.scss */
+.rm-form .rm-module-rules.hasrules .rm-module-header {
+  background-color: #D0D0D0;
+}
+/* line 77, ../scss/custom/_roles.scss */
+.rm-form .rm-module-rules th, .rm-form .rm-module-rules td {
+  padding: 0.5rem;
+}
+/* line 81, ../scss/custom/_roles.scss */
+.rm-form .rm-module-rules .rm-default-rule td,
+.rm-form .rm-module-rules .rm-default-permissions td {
+  font-style: italic;
+  color: #a0a0a0;
+}
+/* line 86, ../scss/custom/_roles.scss */
+.rm-form .rm-module-rules .rm-rule-target {
+  width: 20%;
+}
+/* line 88, ../scss/custom/_roles.scss */
+.rm-form .rm-module-rules .rm-rule-target input {
+  width: auto;
+  display: inline-block;
+}
+/* line 94, ../scss/custom/_roles.scss */
+.rm-form input.rm-invalid {
+  background-color: #FFA0A0;
+}
+
+/* line 100, ../scss/custom/_roles.scss */
+body.rtl .rm-form .rm-module-rules .rm-module-header div {
+  margin-right: 0;
+  margin-left: 0.3rem;
+}
+/* line 106, ../scss/custom/_roles.scss */
+body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
+  border-left: 0;
+  border-right: 1px solid red;
+}
+/* line 110, ../scss/custom/_roles.scss */
+body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
+  border-right: 0;
+  border-left: 1px solid red;
 }
 
 /* line 1, ../scss/custom/_misc.scss */

@@ -507,7 +507,7 @@
 
                 addRule.text(labels.rm_AddRule).appendTo(cell);
 
-                if (ruleType != 't' && !this.fRules  && rules.length) {
+                if (ruleType != 't' && !this.options.fRules && rules.length) {
                     addRow.hide();
                 }
                 addRow.append(cell).appendTo(tfoot);

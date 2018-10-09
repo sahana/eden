@@ -19,9 +19,9 @@
         rm_Delete: 'Delete',
         rm_DeletionFailed: 'Deletion Failed',
         rm_ForEntity: 'For Entity',
-        rm_Roles: 'Roles',
+        rm_Role: 'Role',
         rm_SubmissionFailed: 'Submission Failed',
-        rm_Users: 'Users'
+        rm_User: 'User'
     };
 
     var roleManagerID = 0;
@@ -193,9 +193,9 @@
 
             // The label for the assignable items
             if (opts.mode == 'users') {
-                targetLabel = labels.rm_Users;
+                targetLabel = labels.rm_User;
             } else {
-                targetLabel = labels.rm_Roles;
+                targetLabel = labels.rm_Role;
             }
             $('<th>').text(targetLabel).appendTo(columnLabels);
 
@@ -218,7 +218,7 @@
          */
         _assignmentTableBody: function() {
 
-            var tbody = $('<tbody>'),
+            var tbody = $('<tbody>').append('<tr>'),
                 self = this;
 
             // Sort the assignments, then render a row for each
@@ -692,14 +692,13 @@
                             $(this).fadeOut(function() {
                                 throbber.remove();
                                 $(this).remove();
+                                // Update add-button
+                                if (self._checkNewAssignment()) {
+                                    self._toggleAdd(true);
+                                }
                             });
                         }
                     });
-
-                    // Update add-button
-                    if (self._checkNewAssignment()) {
-                        self._toggleAdd(true);
-                    }
                 },
                 error: function() {
                     // Show an error message in place of the throbber

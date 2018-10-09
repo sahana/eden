@@ -1328,6 +1328,12 @@ class S3PermissionWidget(object):
                      _id = widget_id,
                      )
 
+        # Module header icons
+        rtl = current.response.s3.rtl
+        icons = {"expanded": "fa fa-caret-down",
+                 "collapsed": "fa fa-caret-left" if rtl else "fa fa-caret-right",
+                 }
+
         # Client-side widget options
         widget_opts = {"fRules": rules.use_facls,
                        "tRules": use_tacls,
@@ -1335,6 +1341,7 @@ class S3PermissionWidget(object):
                        "permissions": self.get_permissions(),
 
                        "modules": self.get_active_modules(),
+                       "icons": icons,
                        }
 
         if use_tacls:

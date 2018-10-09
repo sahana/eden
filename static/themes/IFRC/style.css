@@ -508,6 +508,100 @@ button.alert-send-btn:enabled {
     margin-right: 8px;
 }
 
+/* Role Manager */
+.action-btn[disabled] {
+  visibility: hidden;
+}
+.rm-form table {
+  width: 100%;
+}
+.rm-assign .action-lnk,
+.rm-rules .action-lnk {
+  display: inline-block;
+  color: #0065A6;
+  font-style: normal;
+}
+.rm-toggle-all {
+  margin-top: 0.2rem;
+  margin-bottom: 0.5rem;
+}
+.rm-assign {
+  width: 80%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.rm-assign th:first-child {
+  width: 25%;
+}
+.rm-assign .rm-row-actions {
+  min-width: 6rem;
+}
+.rm-assign select {
+  max-width: 10rem;
+}
+.rm-assign tfoot td {
+  border-top: 1px solid #C0C0C0!important;
+}
+.rm-assign .rm-item-name,
+.rm-assign .rm-item-title {
+  display: block;
+}
+.rm-assign .rm-item-title {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #A0A0A0;
+}
+.rm-assign .rm-duplicate td {
+  border-top: 1px solid red;
+  border-bottom: 1px solid red;
+}
+.rm-assign .rm-duplicate td:first-child {
+  border-left: 1px solid red;
+}
+.rm-assign .rm-duplicate td:last-child {
+  border-right: 1px solid red;
+}
+.rm-module-rules label {
+  display: block;
+}
+.rm-module-header {
+  cursor: pointer;
+  background-color: #F0F0F0;
+}
+.rm-module-rules.hasrules .rm-module-header {
+  background-color: #D0D0D0;
+}
+.rm-module-header div {
+  margin-right: 0.3rem;
+  display: inline-block;
+}
+.rm-module-header .rm-module-toggle {
+  width: 0.5rem;
+}
+.rm-module-header .rm-module-prefix {
+  width: 6.5rem;
+}
+.rm-module-header .rm-module-numrules {
+  font-weight: normal;
+}
+.rm-form .rm-module-rules tr th,
+.rm-form .rm-module-rules tr td,
+.rm-form .rm-assign tr th,
+.rm-form .rm-assign tr td {
+  padding: 0.5rem;
+}
+.rm-module-rules .rm-default-rule td,
+.rm-module-rules .rm-default-permissions td {
+  font-style: italic;
+  color: #a0a0a0;
+}
+.rm-module-rules .rm-rule-target {
+  width: 20%;
+}
+input.rm-invalid {
+  background-color: #FFA0A0;
+}
+
 /* For Person Duplicates */
 .card_1_line {
     height: 14px; /* Height needs to be same with or without contents */
