@@ -276,6 +276,7 @@ class S3RoleManager2(S3Method):
 
         # Standard actions
         s3.actions = None
+        s3.crud_labels.UPDATE = T("Edit")
         S3CRUD.action_buttons(r, deletable=False)
 
         action_button = S3CRUD.action_button
@@ -377,9 +378,8 @@ class S3RoleManager2(S3Method):
                             label = PERMISSIONS,
                             widget = S3PermissionWidget(r.id),
                             )
-        policy = settings.get_security_policy()
-        if policy in (1, 2):
-            # These policies have fixed access rules
+        if not current.auth.permission.use_cacls:
+            # Security policy with fixed access rules
             permissions.readable = permissions.writable = False
         elif record:
             if record.uuid == "ADMIN":
@@ -482,17 +482,18 @@ class S3RoleManager2(S3Method):
             @returns: the permission rules as JSON string
         """
 
+        permissions = current.auth.permission
+
         rules = []
 
-        table = current.auth.permission.table
+        table = permissions.table
         if table:
             query = (table.group_id == role.id) & \
                     (table.deleted == False)
 
-            policy = current.deployment_settings.get_security_policy()
-            if policy == 3:
+            if not permissions.use_facls:
                 query &= (table.function == None)
-            if policy in (3, 4):
+            if not permissions.use_tacls:
                 query &= (table.tablename == None)
 
             rows = current.db(query).select(table.id,
@@ -982,7 +983,7 @@ class S3RoleManager2(S3Method):
             return True
 
         elif has_role(sr.ORG_ADMIN):
-            if current.deployment_settings.get_security_policy() < 6:
+            if not auth.permission.entity_realm:
                 organisation_id = user.organisation_id
                 if not organisation_id:
                     return None
@@ -1279,8 +1280,6 @@ class S3PermissionWidget(object):
 
         T = current.T
 
-        policy = current.deployment_settings.get_security_policy()
-
         # Widget ID
         widget_id = attributes.get("_id") or str(field).replace(".", "_")
 
@@ -1298,8 +1297,9 @@ class S3PermissionWidget(object):
                           )
 
         # Table access rules tab+page
-        use_table_rules = policy in (5, 6, 7, 8)
-        if use_table_rules:
+        rules = current.auth.permission
+        use_tacls = rules.use_tacls
+        if use_tacls:
             trules_id = "%s-trules" % widget_id
             trules_tab = LI(A(T("Table Access"),
                               _href = "#" + trules_id,
@@ -1329,28 +1329,29 @@ class S3PermissionWidget(object):
                      )
 
         # Client-side widget options
-        rules = current.auth.permission
         widget_opts = {"fRules": rules.use_facls,
-                       "tRules": rules.use_tacls,
+                       "tRules": use_tacls,
                        "useRealms": rules.entity_realm,
                        "permissions": self.get_permissions(),
 
                        "modules": self.get_active_modules(),
                        }
 
-        if use_table_rules:
+        if use_tacls:
             widget_opts["models"] = self.get_active_models()
             widget_opts["defaultPermissions"] = self.get_default_permissions()
 
         # Localized strings for client-side widget
         i18n = {"rm_Add": T("Add"),
                 "rm_AddRule": T("Add Rule"),
+                "rm_AllEntities": T("All Entities"),
                 "rm_AllRecords": T("All Records"),
+                "rm_AssignedEntities": T("Assigned Entities"),
                 "rm_Cancel": T("Cancel"),
                 "rm_CollapseAll": T("Collapse All"),
                 "rm_ConfirmDeleteRule": T("Do you want to delete this rule?"),
-                "rm_DeleteRule": T("Delete"),
                 "rm_Default": T("default"),
+                "rm_DeleteRule": T("Delete"),
                 "rm_ExpandAll": T("Expand All"),
                 "rm_NoAccess": T("No access"),
                 "rm_NoRestrictions": T("No restrictions"),
@@ -1362,8 +1363,6 @@ class S3PermissionWidget(object):
                 "rm_SystemTables": T("System Tables"),
                 "rm_Table": T("Table"),
                 "rm_UnrestrictedTables": T("Unrestricted Tables"),
-                "rm_AssignedEntities": T("Assigned Entities"),
-                "rm_AllEntities": T("All Entities"),
                 }
 
         # Inject the client-side script
@@ -1379,19 +1378,17 @@ class S3PermissionWidget(object):
             @returns: a dict {prefix: (name_nice, restricted)}
         """
 
-        settings = current.deployment_settings
-
         # Modules where access rules do not apply (or are hard-coded)
         exclude = ("appadmin", "errors")
 
         # Active modules
-        modules = settings.modules
+        modules = current.deployment_settings.modules
         active= {k: (s3_str(modules[k].name_nice), modules[k].restricted)
                  for k in modules if k not in exclude
                  }
 
         # Special controllers for dynamic models
-        if settings.get_security_policy() != 3:
+        if current.auth.permission.use_facls:
             active["default/dt"] = (s3_str(current.T("Dynamic Models")), True)
 
         return active

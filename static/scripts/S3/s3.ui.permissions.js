@@ -15,12 +15,14 @@
     var labels = {
         rm_Add: 'Add',
         rm_AddRule: 'Add Rule',
+        rm_AllEntities: 'All Entities',
         rm_AllRecords: 'All Records',
+        rm_AssignedEntities: 'Assigned Entities',
         rm_Cancel: 'Cancel',
         rm_CollapseAll: 'Collapse All',
         rm_ConfirmDeleteRule: 'Do you want to delete this rule?',
-        rm_DeleteRule: 'Delete',
         rm_Default: 'default',
+        rm_DeleteRule: 'Delete',
         rm_ExpandAll: 'Expand All',
         rm_NoAccess: 'No access',
         rm_NoRestrictions: 'No restrictions',
@@ -32,8 +34,6 @@
         rm_SystemTables: 'System Tables',
         rm_Table: 'Table',
         rm_UnrestrictedTables: 'Unrestricted Tables',
-        rm_AssignedEntities: 'Assigned Entities',
-        rm_AllEntities: 'All Entities',
     };
 
     /**

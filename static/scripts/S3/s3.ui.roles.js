@@ -440,7 +440,7 @@
         _resetRealmSelector: function() {
 
             var realmSelector = this.realmSelector;
-            if (realmSelector !== undefined) {
+            if (realmSelector) {
                 // Select the 'null' option if present, else empty
                 if ($('option[value="null"]', realmSelector).length) {
                     realmSelector.val('null');
@@ -471,7 +471,7 @@
                     return;
                 }
                 // Update realm selector status
-                if (realmSelector !== undefined) {
+                if (realmSelector) {
                     if (item.u) {
                         // Unrestrictable item => hide realm selector
                         this._resetRealmSelector();
@@ -494,7 +494,7 @@
 
             } else {
                 // Hide the realmSelector, if any
-                if (realmSelector !== undefined) {
+                if (realmSelector) {
                     this._resetRealmSelector();
                     realmSelector.prop('disabled', true)
                                  .css({visibility: 'hidden'});
