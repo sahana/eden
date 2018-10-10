@@ -27,51 +27,29 @@ def setting():
 # =============================================================================
 @auth.s3_requires_membership(1)
 def role():
-    """
-        Role Manager
-    """
-
-    # ACLs as component of roles
-    s3db.add_components("auth_group",
-                        **{auth.permission.TABLENAME: "group_id"}
-                        )
+    """ Role Manager """
 
     def prep(r):
         if r.representation not in ("html", "aadata", "csv", "json"):
             return False
-        #handler = s3base.S3RoleManager()
-        handler = s3base.S3RoleManager2()
-        #modules = settings.modules
-        #handler.controllers = Storage([(m, modules[m])
-                                        #for m in modules
-                                        #if modules[m].restricted])
 
         # Configure REST methods
-        set_handler = r.set_handler
-        #set_handler("users", s3base.S3RoleManager())
-        #set_handler("read", handler)
-        #set_handler("list", handler)
-        #set_handler("copy", handler)
-        #set_handler("create", handler)
-        #set_handler("update", handler)
-        #set_handler("delete", handler)
-        for method in ("users",
-                       "read",
-                       "list",
-                       "copy",
-                       "create",
-                       "update",
-                       "delete",
-                       "datatable",
-                       "datalist",
-                       "import"):
-            set_handler(method, handler)
+        methods = ("read",
+                   "list",
+                   "create",
+                   "update",
+                   "delete",
+                   "users",
+                   "copy",
+                   "datatable",
+                   "datalist",
+                   "import",
+                   )
+        r.set_handler(methods, s3base.S3RoleManager)
         return True
     s3.prep = prep
 
-    s3.stylesheets.append( "S3/role.css" )
-    output = s3_rest_controller("auth", "group")
-    return output
+    return s3_rest_controller("auth", "group")
 
 # -----------------------------------------------------------------------------
 def user():
@@ -183,8 +161,7 @@ def user():
     set_method = s3db.set_method
     set_method("auth", "user",
                method = "roles",
-               action = s3base.S3RoleManager2(),
-               )
+               action = s3base.S3RoleManager)
 
     set_method("auth", "user",
                method = "disable",

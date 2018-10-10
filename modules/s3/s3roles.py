@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3RoleManager2",
+__all__ = ("S3RoleManager",
            )
 
 import uuid
@@ -46,10 +46,8 @@ from s3widgets import s3_comments_widget
 from s3xml import SEPARATORS
 
 # =============================================================================
-class S3RoleManager2(S3Method):
+class S3RoleManager(S3Method):
     """ REST Method to manage user roles and permission rules """
-
-    # TODO rename into S3RoleManager when deprecating old class
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
