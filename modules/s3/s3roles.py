@@ -536,18 +536,24 @@ class S3RoleManager(S3Method):
         auth = current.auth
 
         formvars = form.vars
+        rolename = formvars.role
 
-        uid = formvars.uuid
-        if uid is None and role:
-            # Update form with read-only UUID (e.g. system roles)
-            uid = role.uuid
+        if role:
+            role_id = role.id
+            data = {"role": rolename,
+                    "description": formvars.description,
+                    }
+            uid = formvars.uuid
+            if uid is not None:
+                data["uuid"] = uid
+            role.update_record(**data)
+        else:
+            data = {"role": rolename}
+            role_id = auth.s3_create_role(rolename,
+                                          description = formvars.description,
+                                          uid = uid,
+                                          )
 
-        role_id = auth.s3_create_role(formvars.role,
-                                      description = formvars.description,
-                                      uid = uid,
-                                      )
-
-        data = {"role": formvars.role}
         if role_id:
             # Update permissions
             permissions = formvars.permissions
