@@ -2,8 +2,8 @@
 {{try:}}{{=form}}{{except:}}{{pass}}
 {{for row in rows:}}{{=row}}{{pass}}
 {{if s3.rfooter:}}
-<div class='row'>
- <div id='rfooter' class='small-12 columns'>
+<div id='rfooter' class='row'>
+ <div class='small-12 columns'>
   {{=XML(s3.rfooter)}}
  </div>
 {{pass}}</div>

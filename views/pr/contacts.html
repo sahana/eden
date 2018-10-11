@@ -17,10 +17,9 @@
 {{pass}}
  {{=contents}}
 </div>
-<div class='row'>
- {{if s3.rfooter:}}
-  <div id='rfooter' class='small-12 columns'>
+{{if s3.rfooter:}}
+<div id='rfooter' class='row'>
+  <div class='small-12 columns'>
    {{=XML(s3.rfooter)}}
   </div>
- {{pass}}
-</div>
+</div>{{pass}}

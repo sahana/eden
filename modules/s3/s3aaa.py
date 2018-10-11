@@ -3524,6 +3524,49 @@ $.filterOptionsS3({
         return system_roles
 
     # -------------------------------------------------------------------------
+    def get_managed_orgs(self):
+        """
+            Get the pe_ids of all managed organisations (to authorize
+            role assignments)
+
+            TODO use this in admin/user controller
+        """
+
+        user = self.user
+        if not user:
+            return None
+
+        has_role = self.s3_has_role
+        sr = self.get_system_roles()
+
+        if has_role(sr.ADMIN):
+            return True
+
+        elif has_role(sr.ORG_ADMIN):
+            if not self.permission.entity_realm:
+                organisation_id = user.organisation_id
+                if not organisation_id:
+                    return None
+                s3db = current.s3db
+                table = s3db.org_organisation
+                pe_id = current.db(table.id == organisation_id).select(table.pe_id,
+                                                                       limitby=(0, 1),
+                                                                       cache = s3db.cache,
+                                                                       ).first().pe_id
+                pe_ids = s3db.pr_get_descendants(pe_id,
+                                                 entity_types="org_organisation",
+                                                 )
+                pe_ids.append(pe_id)
+            else:
+                pe_ids = self.user.realms[sr.ORG_ADMIN]
+                if pe_ids is None:
+                    return True
+            return pe_ids
+
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
     def s3_set_roles(self):
         """ Update pe_id, roles and realms for the current user """
 

@@ -696,7 +696,7 @@ class S3RoleManager(S3Method):
             r.unauthorised()
 
         # Require that the target user record belongs to a managed organisation
-        pe_ids = self.get_managed_orgs()
+        pe_ids = auth.get_managed_orgs()
         if not pe_ids:
             r.unauthorised()
         elif pe_ids is not True:
@@ -963,54 +963,7 @@ class S3RoleManager(S3Method):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def get_managed_orgs():
-        """
-            Get the pe_ids of all managed organisations (to authorize
-            role assignments)
-
-            TODO move this into AuthS3
-            TODO use this in admin/user controller
-        """
-
-        auth = current.auth
-
-        user = auth.user
-        if not user:
-            return None
-
-        has_role = auth.s3_has_role
-        sr = auth.get_system_roles()
-
-        if has_role(sr.ADMIN):
-            return True
-
-        elif has_role(sr.ORG_ADMIN):
-            if not auth.permission.entity_realm:
-                organisation_id = user.organisation_id
-                if not organisation_id:
-                    return None
-                s3db = current.s3db
-                table = s3db.org_organisation
-                pe_id = current.db(table.id == organisation_id).select(table.pe_id,
-                                                                       limitby=(0, 1),
-                                                                       cache = s3db.cache,
-                                                                       ).first().pe_id
-                pe_ids = s3db.pr_get_descendants(pe_id,
-                                                 entity_types="org_organisation",
-                                                 )
-                pe_ids.append(pe_id)
-            else:
-                pe_ids = auth.user.realms[sr.ORG_ADMIN]
-                if pe_ids is None:
-                    return True
-            return pe_ids
-
-        else:
-            return None
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def get_managed_users(cls, role_id):
+    def get_managed_users(role_id):
         """
             Get a dict of users the current user can assign to roles
 
@@ -1037,7 +990,7 @@ class S3RoleManager(S3Method):
 
         users = {}
 
-        pe_ids = cls.get_managed_orgs()
+        pe_ids = auth.get_managed_orgs()
         if pe_ids:
             utable = auth_settings.table_user
             query = (utable.deleted == False)

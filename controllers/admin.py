@@ -56,29 +56,25 @@ def user():
     """ RESTful CRUD controller """
 
     table = auth.settings.table_user
+    sr = auth.get_system_roles()
 
-    if s3_has_role("ADMIN"):
-        # Needed as Admin has all roles
+    # Check for ADMIN first since ADMINs have all roles
+    if s3_has_role(sr.ADMIN):
         pe_ids = None
-    elif s3_has_role("ORG_ADMIN"):
-        if settings.get_security_policy() < 6:
-            # Filter users to just those belonging to the Org Admin's Org & Descendants
+
+    elif s3_has_role(sr.ORG_ADMIN):
+        pe_ids = auth.get_managed_orgs()
+        if pe_ids is None:
+            # OrgAdmin with default realm, but user not affiliated with any org
+            auth.permission.fail()
+        elif pe_ids is not True:
+            # OrgAdmin for certain organisations
             otable = s3db.org_organisation
-            pe_id = db(otable.id == auth.user.organisation_id).select(otable.pe_id,
-                                                                      limitby=(0, 1),
-                                                                      cache=s3db.cache,
-                                                                      ).first().pe_id
-            pe_ids = s3db.pr_get_descendants(pe_id, entity_types="org_organisation")
-            pe_ids.append(pe_id)
             s3.filter = (otable.pe_id.belongs(pe_ids)) & \
                         (table.organisation_id == otable.id)
         else:
-            # Filter users to just those belonging to the Org Admin's Realms
-            pe_ids = auth.user.realms[auth.get_system_roles().ORG_ADMIN]
-            if pe_ids:
-                otable = s3db.org_organisation
-                s3.filter = (otable.pe_id.belongs(pe_ids)) & \
-                            (table.organisation_id == otable.id)
+            # OrgAdmin with site-wide permission
+            pe_ids = None
     else:
         auth.permission.fail()
 
@@ -190,49 +186,49 @@ def user():
         msg_list_empty = T("No Users currently registered"))
 
     def rheader(r):
-        if r.representation != "html":
+        if r.representation != "html" or not r.record:
             return None
 
         rheader = DIV()
 
-        if r.record:
-            id = r.id
-            registration_key = r.record.registration_key
-            if not registration_key:
-                btn = A(T("Disable"),
+        id = r.id
+        registration_key = r.record.registration_key
+        if not registration_key:
+            btn = A(T("Disable"),
+                    _class = "action-btn",
+                    _title = "Disable User",
+                    _href = URL(args=[id, "disable"])
+                    )
+            rheader.append(btn)
+            if settings.get_auth_show_link():
+                btn = A(T("Link"),
                         _class = "action-btn",
-                        _title = "Disable User",
-                        _href = URL(args=[id, "disable"])
+                        _title = "Link (or refresh link) between User, Person & HR Record",
+                        _href = URL(args=[id, "link"])
                         )
                 rheader.append(btn)
-                if settings.get_auth_show_link():
-                    btn = A(T("Link"),
-                            _class = "action-btn",
-                            _title = "Link (or refresh link) between User, Person & HR Record",
-                            _href = URL(args=[id, "link"])
-                            )
-                    rheader.append(btn)
-            #elif registration_key == "pending":
-            #    btn = A(T("Approve"),
-            #            _class = "action-btn",
-            #            _title = "Approve User",
-            #            _href = URL(args=[id, "approve"])
-            #            )
-            #    rheader.append(btn)
-            else:
-                # Verify & Approve
-                btn = A(T("Approve"),
-                        _class = "action-btn",
-                        _title = "Approve User",
-                        _href = URL(args=[id, "approve"])
-                        )
-                rheader.append(btn)
+        #elif registration_key == "pending":
+        #    btn = A(T("Approve"),
+        #            _class = "action-btn",
+        #            _title = "Approve User",
+        #            _href = URL(args=[id, "approve"])
+        #            )
+        #    rheader.append(btn)
+        else:
+            # Verify & Approve
+            btn = A(T("Approve"),
+                    _class = "action-btn",
+                    _title = "Approve User",
+                    _href = URL(args=[id, "approve"])
+                    )
+            rheader.append(btn)
 
-            tabs = [(T("User Details"), None),
-                    (T("Roles"), "roles")
-                    ]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            rheader.append(rheader_tabs)
+        tabs = [(T("User Details"), None),
+                (T("Roles"), "roles")
+                ]
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+        rheader.append(rheader_tabs)
+
         return rheader
 
     # Pre-processor
@@ -247,6 +243,17 @@ def user():
                            listadd = False,
                            sortby = [[2, "asc"], [1, "asc"]],
                            )
+
+            if r.record:
+                # Show a back-button in rfooter since OrgAdmins have no
+                # no other obvious way to return to the list (no left menu)
+                crud_button = s3base.S3CRUD.crud_button
+                s3.rfooter = DIV(crud_button(T("Back to User List"),
+                                             icon = "return",
+                                             _href = r.url(id="", method=""),
+                                             ),
+                                 _class="rfooter",
+                                 )
 
         elif r.representation == "xls":
             lappend((T("Status"), "registration_key"))
