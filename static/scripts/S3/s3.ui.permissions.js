@@ -224,6 +224,7 @@
                 this.rules = JSON.parse(this.input.val());
             } catch(e) {
                 this.rules = [];
+                this._serialize();
             }
         },
 

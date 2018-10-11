@@ -550,7 +550,9 @@ class S3RoleManager(S3Method):
         data = {"role": formvars.role}
         if role_id:
             # Update permissions
-            self.update_permissions(role_id, formvars.permissions)
+            permissions = formvars.permissions
+            if permissions:
+                self.update_permissions(role_id, permissions)
             if not role:
                 message = T("Role %(role)s created") % data
             else:
@@ -666,7 +668,9 @@ class S3RoleManager(S3Method):
             auth.s3_delete_role(role.id)
             auth.s3_set_roles()
 
-            return current.xml.json_message()
+            message = current.T("Role %(role)s deleted") % {"role": role.role}
+
+            return current.xml.json_message(message=message)
 
         else:
             r.error(405, current.ERROR.BAD_METHOD)
@@ -1094,8 +1098,7 @@ class S3RoleManager(S3Method):
 
 
         table = auth.settings.table_group
-        query = (~(table.id.belongs(AUTO))) & \
-                (table.hidden == False) & \
+        query = (table.hidden == False) & \
                 (table.deleted == False)
         rows = current.db(query).select(table.id,
                                         table.uuid,

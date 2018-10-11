@@ -218,11 +218,17 @@
          */
         _assignmentTableBody: function() {
 
-            var tbody = $('<tbody>').append('<tr>'),
+            var tbody = $('<tbody>'),
+                assignments = this.assignments,
                 self = this;
 
+            if (!assignments.length) {
+                // Need at least an empty row for proper styling
+                tbody.append('<tr>');
+            }
+
             // Sort the assignments, then render a row for each
-            this.assignments.sort(function(a, b) {
+            assignments.sort(function(a, b) {
                 return self._compareAssignments(a, b);
             }).forEach(function(assignment) {
                 tbody.append(self._assignmentTableRow(assignment));
