@@ -538,12 +538,12 @@ class S3RoleManager(S3Method):
         formvars = form.vars
         rolename = formvars.role
 
+        uid = formvars.uuid
         if role:
             role_id = role.id
             data = {"role": rolename,
                     "description": formvars.description,
                     }
-            uid = formvars.uuid
             if uid is not None:
                 data["uuid"] = uid
             role.update_record(**data)
