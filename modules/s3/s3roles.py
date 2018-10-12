@@ -769,9 +769,17 @@ class S3RoleManager(S3Method):
             form.add_class("rm-form")
             output["form"] = form
 
+            # Show a back-button since OrgAdmins have no other obvious
+            # way to return to the list (no left menu)
+            crud_button = S3CRUD.crud_button
+            output["list_btn"] = crud_button(T("Back to User List"),
+                                             icon = "return",
+                                             _href = r.url(id="", method=""),
+                                             )
+
             # View
             response = current.response
-            response.view = "admin/assign_roles.html"
+            response.view = "admin/role_form.html"
 
         elif r.http == "POST":
             if r.representation == "json":
@@ -913,8 +921,9 @@ class S3RoleManager(S3Method):
                 output["rheader"] = DIV(return_btn,
                                         _class="rheader",
                                         )
+
             response = current.response
-            response.view = "admin/assign_roles.html"
+            response.view = "admin/role_form.html"
 
         elif r.http == "POST":
             if r.representation == "json":

@@ -244,17 +244,6 @@ def user():
                            sortby = [[2, "asc"], [1, "asc"]],
                            )
 
-            if r.record:
-                # Show a back-button in rfooter since OrgAdmins have no
-                # no other obvious way to return to the list (no left menu)
-                crud_button = s3base.S3CRUD.crud_button
-                s3.rfooter = DIV(crud_button(T("Back to User List"),
-                                             icon = "return",
-                                             _href = r.url(id="", method=""),
-                                             ),
-                                 _class="rfooter",
-                                 )
-
         elif r.representation == "xls":
             lappend((T("Status"), "registration_key"))
 
