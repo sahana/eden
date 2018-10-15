@@ -76,6 +76,8 @@ class S3RoleManager(S3Method):
                 output = self.role_list(r, **attr)
             elif method in ("read", "create", "update"):
                 output = self.role_form(r, **attr)
+            elif method == "copy":
+                output = self.copy_role(r, **attr)
             elif method == "delete":
                 output = self.delete_role(r, **attr)
             elif method == "users":
@@ -293,19 +295,22 @@ class S3RoleManager(S3Method):
                       )
 
         # Copy-button Ajax
-        # TODO activate when implemented
-        #label = T("Copy")
-        #excluded = [str(sr.ADMIN)]
-        #action_button(label, None,
-        #              _ajaxurl = URL(args=["[id]", "copy.json"]),
-        #              exclude = excluded,
-        #              _title = s3_str(T("Copy this role to create a new role")),
-        #              )
-        #action_button(label, None,
-        #              restrict = excluded,
-        #              _disabled = "disabled",
-        #              _title = s3_str(T("This role cannot be copied")),
-        #              )
+        label = T("Copy")
+        excluded = [str(sr.ADMIN)]
+        action_button(label, None,
+                      _ajaxurl = URL(args=["[id]", "copy.json"]),
+                      exclude = excluded,
+                      _title = s3_str(T("Copy this role to create a new role")),
+                      _class = "action-btn copy-role-btn",
+                      )
+        action_button(label, None,
+                      restrict = excluded,
+                      _disabled = "disabled",
+                      _title = s3_str(T("This role cannot be copied")),
+                      )
+        question = T("Create a copy of this role?")
+        script = '''var dt=$('#roles');dt.on('click','.copy-role-btn',dt.dataTableS3('ajaxAction','%s'));''' % question
+        s3.jquery_ready.append(script)
 
         # Delete-button Ajax
         label = T("Delete")
@@ -640,13 +645,79 @@ class S3RoleManager(S3Method):
 
         # CSRF Protection
         key = current.session["_formkey[admin/rolelist]"]
-        if key and r.post_vars.get("_formkey") != key:
+        if not key or r.post_vars.get("_formkey") != key:
             r.error(403, current.ERROR.NOT_PERMITTED)
 
-        # TODO implement copy-role
-        r.error(501, current.ERROR.NOT_IMPLEMENTED)
+        if r.http == "POST":
 
-        # Must be called with POST and JSON-format
+            db = current.db
+
+            role = r.record
+            if not role:
+                r.error(400, current.ERROR.BAD_RECORD)
+
+            # Find a suitable uuid and name
+            table = r.table
+            query = ((table.uuid.like("%s%%" % role.uuid)) | \
+                     (table.role.like("%s%%" % role.role)))
+            rows = db(query).select(table.uuid,
+                                    table.role,
+                                    )
+            uids = set(row.uuid for row in rows)
+            names = set(row.role for row in rows)
+            uid = name = None
+            for i in range(2, 1000):
+                if not uid:
+                    uid = "%s%s" % (role.uuid, i)
+                    if uid in uids:
+                        uid = None
+                if not name:
+                    name = "%s-%s" % (role.role, i)
+                    if name in names:
+                        name = None
+                if uid and name:
+                    break
+            if not uid:
+                uid = str(uuid.uuid4())
+            if not name:
+                name = str(uuid.uuid4())
+
+            # Create the new role
+            role_id = table.insert(uuid = uid,
+                                   role = name,
+                                   )
+
+            # Copy permissions
+            ptable = current.auth.permission.table
+            if ptable:
+                query = (ptable.group_id == role.id) & \
+                        (ptable.deleted == False)
+                rules = db(query).select(ptable.controller,
+                                         ptable.function,
+                                         ptable.tablename,
+                                         ptable.record,
+                                         ptable.oacl,
+                                         ptable.uacl,
+                                         ptable.entity,
+                                         ptable.unrestricted,
+                                         )
+                for rule in rules:
+                    ptable.insert(group_id = role_id,
+                                  controller = rule.controller,
+                                  function = rule.function,
+                                  tablename = rule.tablename,
+                                  record = rule.record,
+                                  oacl = rule.oacl,
+                                  uacl = rule.uacl,
+                                  entity = rule.entity,
+                                  unrestricted = rule.unrestricted,
+                                  )
+
+            message = current.T("New Role %(role)s created") % {"role": name}
+            return current.xml.json_message(message=message)
+
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     def delete_role(self, r, **attr):
@@ -658,7 +729,7 @@ class S3RoleManager(S3Method):
 
         # CSRF Protection
         key = current.session["_formkey[admin/rolelist]"]
-        if key and r.post_vars.get("_formkey") != key:
+        if not key or r.post_vars.get("_formkey") != key:
             r.error(403, current.ERROR.NOT_PERMITTED)
 
         if r.http in ("POST", "DELETE"):
