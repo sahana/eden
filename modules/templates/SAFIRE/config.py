@@ -590,6 +590,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_event_incident_resource(r, tablename):
 
+        from s3 import S3LocationSelector
+
         s3db = current.s3db
 
         table = s3db.event_incident
@@ -597,6 +599,9 @@ def config(settings):
         f.readable = f.writable = True
         f = table.level
         f.readable = f.writable = True
+        table.location_id.widget = S3LocationSelector(polygons = True,
+                                                      show_address = True,
+                                                      )
         f = table.organisation_id
         f.readable = f.writable = True
         f.label = T("Lead Response Organization")
