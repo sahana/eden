@@ -66,24 +66,26 @@ class HRSignatureList(S3Method):
     # -------------------------------------------------------------------------
     def extract(self, resource):
         """
-            TODO docstring
+            Extract the HR records
+
+            @param resource: the hrm_human_resource resource
+
+            @returns: tuple (data, pictures), where
+                      - data is a S3ResourceData instance
+                      - pictures is a dict {pe_id: filepath}
         """
 
         db = current.db
         s3db = current.s3db
 
-        defaultpath = os.path.join(current.request.folder, 'uploads')
-
         list_fields = ["id",
                        "code",
-                       "person_id",
                        "person_id$pe_id",
                        "person_id$first_name",
                        "person_id$middle_name",
                        "person_id$last_name",
                        "person_id$national_id.value",
                        "organisation_id",
-                       "organisation_id$name",
                        "programme_hours.programme_id",
                        ]
 
@@ -109,8 +111,14 @@ class HRSignatureList(S3Method):
         rows = db(query).select(itable.pe_id, itable.image)
 
         field = itable.image
-        path = field.uploadfolder if field.uploadfolder else defaultpath
-        pictures = {row.pe_id: os.path.join(path, row.image) for row in rows if row.image}
+        if field.uploadfolder:
+            path = field.uploadfolder
+        else:
+            path = os.path.join(current.request.folder, 'uploads')
+
+        pictures = {row.pe_id: os.path.join(path, row.image)
+                    for row in rows if row.image
+                    }
 
         return data, pictures
 
@@ -212,7 +220,10 @@ class HRSignatureList(S3Method):
     # -------------------------------------------------------------------------
     def pdf(self, r, **attr):
         """
-            TODO docstring
+            Generate the PDF
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
         """
 
         T = current.T
@@ -263,19 +274,34 @@ class HRSignatureList(S3Method):
             header.append(TR(TD(prog_label, _colspan = 3)))
         header.append(TR(TD()))
 
+        # Should we show the branch column?
+        branches = set(row["_row"]["hrm_human_resource.organisation_id"] for row in data.rows)
+        if org_id:
+            show_branch = len(branches) > 1
+            org_repr = s3db.org_OrganisationRepresent(show_link = False,
+                                                      parent = False,
+                                                      acronym = True,
+                                                      )
+        else:
+            show_branch = True
+            org_repr = r.table.organisation_id.represent
+        org_repr.bulk(list(branches))
+
         # Construct the table header
-        body = TABLE(TR(TH(T("Picture")),
-                        #TH("National Society"),    # TODO Include if no report org
-                        TH(T("Branch")),            # TODO Include if multiple branches
-                        TH(T("Program")),           # TODO Include if no report programme
-                        TH(T("Name")),
-                        TH(T("Last Name")),
-                        TH(T("National ID")),
-                        TH(T("Volunteer ID")),
-                        TH(T("Signature")),
-                        ),
-                     _class="repeat-header",
-                     )
+        labels = TR(TH(T("Picture")),
+                    TH(T("Name")),
+                    TH(T("Last Name")),
+                    TH(T("National ID")),
+                    TH(T("Volunteer ID")),
+                    TH(T("Signature")),
+                    )
+        if show_branch:
+            labels.insert(1, TH(T("Branch")))
+        if not prog_id:
+            labels.insert(2, TH(T("Programme")))
+
+        # Build the table
+        body = TABLE(labels, _class="repeat-header")
 
         # Add the data rows
         for row in data.rows:
@@ -298,15 +324,18 @@ class HRSignatureList(S3Method):
                                       truncate = False,
                                       )
 
+            # Build the row
             trow = TR(TD(picture),
-                      TD(row["org_organisation.name"]),
-                      TD(row["hrm_programme_hours.programme_id"]),
                       TD(name),
                       TD(row["pr_person.last_name"]),
                       TD(row["pr_national_id_identity.value"]),
                       TD(row["hrm_human_resource.code"]),
                       TD(),
                       )
+            if show_branch:
+                trow.insert(1, TD(org_repr(raw["hrm_human_resource.organisation_id"])))
+            if not prog_id:
+                trow.insert(2, TD(row["hrm_programme_hours.programme_id"]))
             body.append(trow)
 
         footer = DIV()
