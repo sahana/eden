@@ -1734,6 +1734,13 @@ Thank you"""
                                        form_postp = add_language,
                                        )
 
+                    # Bind method for signature list export
+                    from templates.RMSAmericas.siglist import HRSignatureList
+                    s3db.set_method("hrm", "human_resource",
+                                    method = "siglist",
+                                    action = HRSignatureList,
+                                    )
+
                 if auth.s3_has_roles(ID_CARD_EXPORT_ROLES):
                     if r.representation == "card":
                         # Configure ID card layout

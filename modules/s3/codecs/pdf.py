@@ -46,7 +46,7 @@ from gluon.contenttype import contenttype
 from gluon.languages import lazyT
 
 from ..s3codec import S3Codec
-from ..s3utils import s3_strip_markup, s3_unicode
+from ..s3utils import s3_strip_markup, s3_unicode, s3_str
 
 try:
     from reportlab.lib import colors
@@ -481,7 +481,7 @@ class EdenDocTemplate(BaseDocTemplate):
 
         BaseDocTemplate.__init__(self,
                                  self.output,
-                                 title = title,
+                                 title = s3_str(title),
                                  leftMargin = self.leftMargin,
                                  rightMargin = self.rightMargin,
                                  topMargin = self.topMargin,
@@ -1342,6 +1342,7 @@ class S3html2pdf():
         elif isinstance(html, DIV):
             return self.parse_div(html)
         elif (isinstance(html, basestring) or isinstance(html, lazyT)):
+            html = s3_str(html)
             if "<" in html:
                 html = s3_strip_markup(html)
             if title:
@@ -1524,11 +1525,14 @@ class S3html2pdf():
             @return: a list containing text that ReportLab can use
         """
 
+        table_classes = (html["_class"] or "").split()
+
         style = [("FONTSIZE", (0, 0), (-1, -1), self.fontsize),
                  ("VALIGN", (0, 0), (-1, -1), "TOP"),
                  ("FONTNAME", (0, 0), (-1, -1), self.font_name),
-                 ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
                  ]
+        if "no-grid" not in table_classes:
+            style.append(("GRID", (0, 0), (-1, -1), 0.5, colors.grey))
 
         content = self.parse_table_components(html,
                                               style = style,
@@ -1536,10 +1540,12 @@ class S3html2pdf():
 
         if content == []:
             return None
+
         table = Table(content,
-                      style=style,
-                      hAlign="LEFT",
-                      vAlign="Top",
+                      style = style,
+                      hAlign = "LEFT",
+                      vAlign = "Top",
+                      repeatRows = 1 if "repeat-header" in table_classes else 0,
                       )
         #cw = table._colWidths
         return [table]
