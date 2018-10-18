@@ -1727,6 +1727,8 @@ Thank you"""
                         #limit_filter_opts = True,
                         )
 
+                export_formats = list(settings.get_ui_export_formats())
+
                 if not r.id:
                     # Filter to just RC people
                     resource.add_filter(FS("organisation_id$organisation_type.name") == RED_CROSS)
@@ -1734,12 +1736,14 @@ Thank you"""
                                        form_postp = add_language,
                                        )
 
-                    # Bind method for signature list export
+                    # Bind method for signature list export + add export icon
                     from templates.RMSAmericas.siglist import HRSignatureList
                     s3db.set_method("hrm", "human_resource",
                                     method = "siglist",
                                     action = HRSignatureList,
                                     )
+                    export_formats.append(("siglist.pdf", "fa fa-list", T("Export Signature List")))
+                    s3.formats["siglist.pdf"] = r.url(method="siglist")
 
                 if auth.s3_has_roles(ID_CARD_EXPORT_ROLES):
                     if r.representation == "card":
@@ -1749,12 +1753,11 @@ Thank you"""
 
                     if not r.id and not r.component:
                         # Add export-icon for ID cards
-                        export_formats = list(settings.get_ui_export_formats())
                         export_formats.append(("card", "fa fa-id-card", T("Export ID Cards")))
-                        settings.ui.export_formats = export_formats
-
-                        # Configure export-URL for ID cards
                         s3.formats["card"] = r.url(method="")
+
+                settings.ui.export_formats = export_formats
+
 
             if not auth.s3_has_role("ADMIN") and \
                    auth.s3_has_roles(("training_coordinator", "training_assistant")):

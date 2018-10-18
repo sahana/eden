@@ -509,7 +509,7 @@ class S3DataTable(object):
                 append_icon(DIV(_class = class_,
                                 _title = title,
                                 data = {"url": url,
-                                        "extension": fmt,
+                                        "extension": fmt.split(".")[-1],
                                         },
                                 ))
 

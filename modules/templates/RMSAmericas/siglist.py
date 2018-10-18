@@ -264,15 +264,15 @@ class HRSignatureList(S3Method):
         header.append(TR(TD()))
 
         # Construct the table header
-        body = TABLE(TR(TH("Picture"),
-                        #TH("National Society"), # TODO Include if no report org
-                        TH("Branch"),            # TODO Include if multiple branches
-                        TH("Program"),           # TODO Include if no report programme
-                        TH("Name"),
-                        TH("Last Name"),
-                        TH("National ID"),
-                        TH("Volunteer ID"),
-                        TH("Signature"),
+        body = TABLE(TR(TH(T("Picture")),
+                        #TH("National Society"),    # TODO Include if no report org
+                        TH(T("Branch")),            # TODO Include if multiple branches
+                        TH(T("Program")),           # TODO Include if no report programme
+                        TH(T("Name")),
+                        TH(T("Last Name")),
+                        TH(T("National ID")),
+                        TH(T("Volunteer ID")),
+                        TH(T("Signature")),
                         ),
                      _class="repeat-header",
                      )
