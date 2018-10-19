@@ -332,10 +332,10 @@ class HRSignatureList(S3Method):
                       TD(row["hrm_human_resource.code"]),
                       TD(),
                       )
+            if not prog_id:
+                trow.insert(1, TD(row["hrm_programme_hours.programme_id"]))
             if show_branch:
                 trow.insert(1, TD(org_repr(raw["hrm_human_resource.organisation_id"])))
-            if not prog_id:
-                trow.insert(2, TD(row["hrm_programme_hours.programme_id"]))
             body.append(trow)
 
         footer = DIV()
