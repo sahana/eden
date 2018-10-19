@@ -3048,7 +3048,10 @@ class S3ImportJob():
         else:
             # Now parse the components
             table = item.table
-            components = current.s3db.get_components(table, names=components)
+
+            s3db = current.s3db
+            components = s3db.get_components(table, names=components)
+            super_keys = s3db.get_super_keys(table)
 
             cnames = Storage()
             cinfos = Storage()
@@ -3063,6 +3066,11 @@ class S3ImportJob():
 
                 # Determine the keys
                 pkey = component.pkey
+
+                if pkey != table._id.name and pkey not in super_keys:
+                    # Pseudo-component cannot be imported => skip
+                    continue
+
                 if component.linktable:
                     ctable = component.linktable
                     fkey = component.lkey

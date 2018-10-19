@@ -1494,7 +1494,7 @@ class S3Model(object):
         get_config = cls.get_config
 
         # Get all super-entities of this table
-        tablename = table._tablename
+        tablename = original_tablename(table)
         supertables = get_config(tablename, "super_entity")
         if not supertables:
             return False
@@ -1615,7 +1615,7 @@ class S3Model(object):
 
         # Get all super-tables
         get_config = cls.get_config
-        supertables = get_config(table._tablename, "super_entity")
+        supertables = get_config(original_tablename(table), "super_entity")
 
         # None? Ok - done!
         if not supertables:
@@ -1667,6 +1667,37 @@ class S3Model(object):
                 return False
 
         return True
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def get_super_keys(cls, table):
+        """
+            Get the super-keys in an instance table
+
+            @param table: the instance table
+            @returns: list of field names
+        """
+
+        tablename = original_tablename(table)
+
+        supertables = cls.get_config(tablename, "super_entity")
+        if not supertables:
+            return False
+        if not isinstance(supertables, (list, tuple)):
+            supertables = [supertables]
+
+        keys = []
+        append = keys.append
+        for s in supertables:
+            if type(s) is not Table:
+                s = cls.table(s)
+            if s is None:
+                continue
+            key = s._id.name
+            if key in table.fields:
+                append(key)
+
+        return keys
 
     # -------------------------------------------------------------------------
     @classmethod

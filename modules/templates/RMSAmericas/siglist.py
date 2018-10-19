@@ -36,7 +36,6 @@ from gluon import current, DIV, H4, H5, IMG, TABLE, TD, TH, TR
 from gluon.contenttype import contenttype
 
 from s3 import S3Method, s3_format_fullname
-from s3.codecs.pdf import EdenDocTemplate, S3RL_PDF
 
 # =============================================================================
 class HRSignatureList(S3Method):
@@ -339,6 +338,8 @@ class HRSignatureList(S3Method):
             body.append(trow)
 
         footer = DIV()
+
+        from s3.codecs.pdf import EdenDocTemplate, S3RL_PDF
 
         doc = EdenDocTemplate(title=title)
         printable_width = doc.printable_width

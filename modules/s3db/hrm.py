@@ -5756,11 +5756,12 @@ def hrm_human_resource_onaccept(form):
                                   entity = entity,
                                   force_update = True)
 
-    # Set person record to follow HR record
-    # (Person base location remains untouched)
     tracker = S3Tracker()
-    pr_tracker = tracker(ptable, person_id)
-    pr_tracker.check_in(htable, record_id, timestmp = request.utcnow)
+    if person_id:
+        # Set person record to follow HR record
+        # (Person base location remains untouched)
+        pr_tracker = tracker(ptable, person_id)
+        pr_tracker.check_in(htable, record_id, timestmp = request.utcnow)
 
     if record.type == 1:
         # Staff
