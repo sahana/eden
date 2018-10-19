@@ -2930,6 +2930,8 @@ class S3ImportJob():
         self.files = files
         self.directory = Storage()
 
+        self._uidmap = None
+
         # Mandatory fields
         self.mandatory_fields = Storage()
 
@@ -2997,6 +2999,40 @@ class S3ImportJob():
         else:
             self.job_id = uuid.uuid4() # unique ID for this job
             self.second_pass = False
+
+    # -------------------------------------------------------------------------
+    @property
+    def uidmap(self):
+        """
+            Map uuid/tuid => element, for faster reference lookups
+        """
+
+        uidmap = self._uidmap
+        tree = self.tree
+
+        if uidmap is None and tree is not None:
+
+            root = tree if isinstance(tree, etree._Element) else tree.getroot()
+
+            xml = current.xml
+            UUID = xml.UID
+            TUID = xml.ATTRIBUTE.tuid
+
+            elements = root.xpath(".//%s" % xml.TAG.resource)
+            self._uidmap = uidmap = {UUID: {},
+                                     TUID: {},
+                                     }
+            uuidmap = uidmap[UUID]
+            tuidmap = uidmap[TUID]
+            for element in elements:
+                r_uuid = element.get(UUID)
+                if r_uuid and r_uuid not in uuidmap:
+                    uuidmap[r_uuid] = element
+                r_tuid = element.get(TUID)
+                if r_tuid and r_tuid not in tuidmap:
+                    tuidmap[r_tuid] = element
+
+        return uidmap
 
     # -------------------------------------------------------------------------
     def add_item(self,
@@ -3235,25 +3271,23 @@ class S3ImportJob():
 
         db = current.db
         s3db = current.s3db
+
         xml = current.xml
         import_uid = xml.import_uid
+
         ATTRIBUTE = xml.ATTRIBUTE
         TAG = xml.TAG
         UID = xml.UID
+
         reference_list = []
+        rlappend = reference_list.append
 
         root = None
         if tree is not None:
-            if isinstance(tree, etree._Element):
-                root = tree
-            else:
-                root = tree.getroot()
+            root = tree if isinstance(tree, etree._Element) else tree.getroot()
+        uidmap = self.uidmap
 
-        if lookup:
-            references = [lookup]
-        else:
-            references = element.findall("reference")
-
+        references = [lookup] if lookup else element.findall("reference")
         for reference in references:
 
             if lookup:
@@ -3306,19 +3340,33 @@ class S3ImportJob():
             relements = []
 
             # Create a UID<->ID map
-            id_map = Storage()
+            id_map = {}
             if attr == UID and uids:
-                _uids = map(import_uid, uids)
-                query = ktable[UID].belongs(_uids)
-                records = db(query).select(ktable.id,
-                                           ktable[UID])
-                id_map = dict((r[UID], r.id) for r in records)
+                if len(uids) == 1:
+                    uid = import_uid(uids[0])
+                    query = (ktable[UID] == uid)
+                    record = db(query).select(ktable.id,
+                                              cacheable = True,
+                                              limitby = (0, 1),
+                                              ).first()
+                    if record:
+                        id_map[uid] = record.id
+                else:
+                    uids_ = map(import_uid, uids)
+                    query = (ktable[UID].belongs(uids_))
+                    records = db(query).select(ktable.id,
+                                               ktable[UID],
+                                               limitby = (0, len(uids_)),
+                                               )
+                    for r in records:
+                        id_map[r[UID]] = r.id
 
             if not uids:
                 # Anonymous reference: <resource> inside the element
                 expr = './/%s[@%s="%s"]' % (TAG.resource,
                                             ATTRIBUTE.name,
-                                            tablename)
+                                            tablename,
+                                            )
                 relements = reference.xpath(expr)
                 if relements and not multiple:
                     relements = relements[:1]
@@ -3328,38 +3376,38 @@ class S3ImportJob():
                 for uid in uids:
 
                     entry = None
+
                     # Entry already in directory?
                     if directory is not None:
-                        entry = directory.get((tablename, attr, uid), None)
+                        entry = directory.get((tablename, attr, uid))
+
                     if not entry:
-                        expr = './/%s[@%s="%s" and @%s=$uid]' % (
-                                    TAG.resource,
-                                    ATTRIBUTE.name,
-                                    tablename,
-                                    attr)
-                        e = root.xpath(expr, uid=uid)
-                        if e:
+                        e = uidmap[attr].get(uid) if uidmap else None
+                        if e is not None:
                             # Element in the source => append to relements
-                            relements.append(e[0])
+                            relements.append(e)
                         else:
                             # No element found, see if original record exists
                             _uid = import_uid(uid)
                             if _uid and _uid in id_map:
                                 _id = id_map[_uid]
-                                entry = Storage(tablename=tablename,
-                                                element=None,
-                                                uid=uid,
-                                                id=_id,
-                                                item_id=None)
-                                reference_list.append(Storage(field=field,
-                                                              element=reference,
-                                                              entry=entry))
+                                entry = Storage(tablename = tablename,
+                                                element = None,
+                                                uid = uid,
+                                                id = _id,
+                                                item_id = None,
+                                                )
+                                rlappend(Storage(field = field,
+                                                 element = reference,
+                                                 entry = entry,
+                                                 ))
                             else:
                                 continue
                     else:
-                        reference_list.append(Storage(field=field,
-                                                      element=reference,
-                                                      entry=entry))
+                        rlappend(Storage(field = field,
+                                         element = reference,
+                                         entry = entry,
+                                         ))
 
             # Create entries for all newly found elements
             for relement in relements:
@@ -3370,18 +3418,20 @@ class S3ImportJob():
                 else:
                     _uid = None
                     _id = None
-                entry = Storage(tablename=tablename,
-                                element=relement,
-                                uid=uid,
-                                id=_id,
-                                item_id=None)
+                entry = Storage(tablename = tablename,
+                                element = relement,
+                                uid = uid,
+                                id = _id,
+                                item_id = None,
+                                )
                 # Add entry to directory
                 if uid and directory is not None:
                     directory[(tablename, attr, uid)] = entry
                 # Append the entry to the reference list
-                reference_list.append(Storage(field=field,
-                                              element=reference,
-                                              entry=entry))
+                rlappend(Storage(field = field,
+                                 element = reference,
+                                 entry = entry,
+                                 ))
 
         return reference_list
 
