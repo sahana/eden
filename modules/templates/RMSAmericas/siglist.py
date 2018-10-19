@@ -301,7 +301,7 @@ class HRSignatureList(S3Method):
             labels.insert(2, TH(T("Programme")))
 
         # Build the table
-        body = TABLE(labels, _class="repeat-header")
+        body = TABLE(labels, _class="repeat-header shrink-to-fit")
 
         # Add the data rows
         for row in data.rows:

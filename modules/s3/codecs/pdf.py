@@ -1547,7 +1547,29 @@ class S3html2pdf():
                       vAlign = "Top",
                       repeatRows = 1 if "repeat-header" in table_classes else 0,
                       )
-        #cw = table._colWidths
+
+        if "shrink-to-fit" in table_classes:
+            # Calculate column widths
+            table.wrap(self.pageWidth, 0)
+
+            cw = table._colWidths
+            tw = sum(cw)
+            pw = self.pageWidth
+
+            if tw and tw > pw:
+                # Table overflows => adjust column widths proportionally
+                factor = pw / tw
+                cw = [w * factor for w in cw]
+
+                # Re-instantiate with colWidths
+                table = Table(content,
+                              style = style,
+                              hAlign = "LEFT",
+                              vAlign = "Top",
+                              repeatRows = 1 if "repeat-header" in table_classes else 0,
+                              colWidths = cw
+                              )
+
         return [table]
 
     # -------------------------------------------------------------------------
