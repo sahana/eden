@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime, timedelta
+from gluon.messageboxhandler import Tkinter
 
 try:
     import json # try stdlib (Python 2.6)
@@ -45,11 +46,15 @@ class index(S3CustomController):
         layer = current.db(query).select(ftable.layer_id,
                                          limitby=(0, 1)
                                          ).first()
+        
+        skipMap = True
         try:
             layer_id = layer.layer_id
+            skipMap = False
         except:
             current.log.error("Cannot find Layer for Map")
-            layer_id = None
+            Tkinter.messagebox.showinfo("Error", "Cannot find Layer for Map")
+            
 
         feature_resources = [{"name"      : T("Alerts"),
                               "id"        : "search_results",
@@ -59,15 +64,15 @@ class index(S3CustomController):
                               # We activate in callback after ensuring URL is updated for current filter status
                               "active"    : False,
                               }]
-
-        _map = current.gis.show_map(callback='''S3.search.s3map()''',
-                                    catalogue_layers=True,
-                                    collapsed=True,
-                                    feature_resources=feature_resources,
-                                    save=False,
-                                    search=True,
-                                    toolbar=True,
-                                    )
+        if not skipMap:
+            _map = current.gis.show_map(callback='''S3.search.s3map()''',
+                                        catalogue_layers=True,
+                                        collapsed=True,
+                                        feature_resources=feature_resources,
+                                        save=False,
+                                        search=True,
+                                        toolbar=True,
+                                        )
         output["_map"] = _map
 
         # Filterable List of Alerts
