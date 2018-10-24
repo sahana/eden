@@ -13,6 +13,8 @@
          Last Name.......................pr_person.last_name
          Email...........................pr_contact (to deduplicate person)
          Mobile Phone....................pr_contact (to deduplicate person)
+         National ID.....................pr_identity (to deduplicate person)
+         #Organisation ID.................hrm_human_resource.code (to deduplicate person)
          Date............................hrm_programme_hours.date
          Hours...........................hrm_programme_hours.hours
 
@@ -38,7 +40,8 @@
              use="concat(col[@field='First Name'],
                          col[@field='Last Name'],
                          col[@field='Email'],
-                         col[@field='Mobile Phone'])"/>
+                         col[@field='Mobile Phone'],
+                         col[@field='National ID'])"/>
     
     <!-- ****************************************************************** -->
 
@@ -73,7 +76,8 @@
                                                         concat(col[@field='First Name'],
                                                                col[@field='Last Name'],
                                                                col[@field='Email'],
-                                                               col[@field='Mobile Phone']))[1])]">
+                                                               col[@field='Mobile Phone'],
+                                                               col[@field='National ID']))[1])]">
                 <xsl:call-template name="Person"/>
             </xsl:for-each>
 
@@ -94,7 +98,8 @@
                     <xsl:value-of select="concat(col[@field='First Name'],
                                                  col[@field='Last Name'],
                                                  col[@field='Email'],
-                                                 col[@field='Mobile Phone'])"/>
+                                                 col[@field='Mobile Phone'],
+                                                 col[@field='National ID'])"/>
                 </xsl:attribute>
             </reference>
             <reference field="programme_id" resource="hrm_programme">
@@ -166,13 +171,16 @@
         <xsl:variable name="LastName" select="col[@field='Last Name']/text()"/>
         <xsl:variable name="Email" select="col[@field='Email']/text()"/>
         <xsl:variable name="MobilePhone" select="col[@field='Mobile Phone']/text()"/>
+        <xsl:variable name="NationalID" select="col[@field='National ID']/text()"/>
+        <!--<xsl:variable name="OrganisationID" select="col[@field='Organisation ID']/text()"/>-->
 
         <resource name="pr_person">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat($FirstName,
                                              $LastName,
                                              $Email,
-                                             $MobilePhone)"/>
+                                             $MobilePhone,
+                                             $NationalID)"/>
             </xsl:attribute>
 
             <data field="first_name"><xsl:value-of select="$FirstName"/></data>
@@ -195,6 +203,24 @@
                     </data>
                 </resource>
             </xsl:if>
+
+            <xsl:if test="$NationalID!=''">
+                <resource name="pr_identity">
+                    <data field="type" value="2"/>
+                    <data field="value">
+                        <xsl:value-of select="$NationalID"/>
+                    </data>
+                </resource>
+            </xsl:if>
+
+            <!--<xsl:if test="$OrganisationID!=''">
+                <resource name="hrm_human_resource">
+                    <data field="code">
+                        <xsl:value-of select="$OrganisationID"/>
+                    </data>
+                </resource>-->
+            </xsl:if>
+
         </resource>
 
     </xsl:template>

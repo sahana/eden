@@ -251,7 +251,6 @@ class S3MembersModel(S3Model):
         if types:
             list_fields.append("membership_type_id")
         list_fields += ["start_date",
-                        # useful for testing the paid virtual field
                         #"membership_paid",
                         (T("Paid"), "paid"),
                         (T("Email"), "email.value"),
@@ -608,10 +607,22 @@ def member_rheader(r, tabs=[]):
 
     T = current.T
     resourcename = r.name
+    settings = current.deployment_settings
 
     # Tabs
+    if settings.get_hrm_use_id():
+        id_tab = (T("ID"), "identity")
+    else:
+        id_tab = None
+
+    description_tab = settings.get_hrm_use_description() or None
+    if description_tab:
+        description_tab = (T(description_tab), "physical_description")
+
     tabs = [(T("Person Details"), None),
             (T("Membership Details"), "membership"),
+            id_tab,
+            description_tab,
             (T("Addresses"), "address"),
             #(T("Contacts"), "contact"),
             (T("Contacts"), "contacts"),
@@ -642,7 +653,7 @@ def member_rheader(r, tabs=[]):
             rheader = None
 
     elif resourcename == "person":
-        if current.deployment_settings.get_member_cv_tab():
+        if settings.get_member_cv_tab():
             tabs.append((T("CV"), "cv"))
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader = DIV(DIV(s3_avatar_represent(record.id,

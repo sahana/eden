@@ -3835,6 +3835,14 @@ class S3Config(Storage):
         """
         return self.hrm.get("use_job_titles", True)
 
+    def get_hrm_use_national_id(self):
+        """
+            Whether Human Resources should show National IDs in list_fields
+            & text_search_fields
+            either True or False
+        """
+        return self.__lazy("hrm", "use_national_id", default=False)
+
     def get_hrm_use_skills(self):
         """
             Whether Human Resources should use Skills

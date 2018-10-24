@@ -397,7 +397,12 @@ def config(settings):
     # Module Settings
 
     # -------------------------------------------------------------------------
-    # Organisation Management
+    # Members
+    #
+    settings.member.cv_tab = True
+
+    # -------------------------------------------------------------------------
+    # Organisations
     #
     # Enable the use of Organisation Branches
     settings.org.branches = True
@@ -1736,6 +1741,17 @@ Thank you"""
                                        form_postp = add_language,
                                        )
 
+                    # Custom list_fields
+                    list_fields = [(T("Full Name"), "person_id"),
+                                   "organisation_id",
+                                   (T("Program"), "person_id$hours.programme_id"),
+                                   (T("National ID"), "person_id$national_id.value"),
+                                   "code",
+                                   (T("Email"), "email.value"),
+                                   (settings.get_ui_label_mobile_phone(), "phone.value"),
+                                   ]
+                    r.resource.configure(list_fields = list_fields)
+
                     # Bind method for signature list export + add export icon
                     from templates.RMSAmericas.siglist import HRSignatureList
                     s3db.set_method("hrm", "human_resource",
@@ -1767,7 +1783,7 @@ Thank you"""
             # Default to Volunteers
             table.type.default = 2
 
-           # Hide Venues from the list of Offices
+            # Hide Venues from the list of Offices
             from gluon import IS_EMPTY_OR
 
             ttable = s3db.org_facility_type
@@ -2671,13 +2687,28 @@ Thank you"""
 
         ADD_MEMBERSHIP_TYPE = T("Create Partner Type")
 
-        table = current.s3db.member_membership
+        s3db = current.s3db
+        table = s3db.member_membership
         table.code.label = T("Partner ID")
         table.membership_type_id.comment = S3PopupLink(f = "membership_type",
                                                        label = ADD_MEMBERSHIP_TYPE,
                                                        title = ADD_MEMBERSHIP_TYPE,
                                                        tooltip = T("Add a new partner type to the catalog."),
                                                        )
+        list_fields = [(T("Full Name"), "person_id"),
+                       "organisation_id",
+                       "membership_type_id",
+                       "code",
+                       (T("National ID"), "person_id$national_id.value"),
+                       (T("Email"), "email.value"),
+                       (T("Mobile Phone"), "phone.value"),
+                       "membership_fee",
+                       (T("Paid"), "paid"),
+                       ]
+
+        s3db.configure(tablename,
+                       list_fields = list_fields,
+                       )
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Create Partner"),
@@ -3432,9 +3463,19 @@ Thank you"""
                                                sort = True)
                 else:
                     # Organisation needs to be an NS/Branch
+                    if auth.s3_has_roles(("surge_capacity_manager",
+                                          "ns_training_manager",
+                                          "ns_training_assistant",
+                                          "training_coordinator",
+                                          "training_assistant",
+                                          )):
+                        updateable = False
+                    else:
+                        updateable = True
                     ns_only("hrm_human_resource",
                             required = True,
                             branches = True,
+                            updateable = updateable,
                             )
                 f = table.essential
                 f.readable = f.writable = False
@@ -3564,8 +3605,11 @@ Thank you"""
             return True
         s3.prep = custom_prep
 
-        # Common rheader for all views
-        attr["rheader"] = s3db.hrm_rheader
+        if current.request.controller in ("hrm", "vol"):
+            attr["csv_template"] = ("../../themes/RMSAmericas/formats", "hrm_person")
+            # Common rheader for all views
+            attr["rheader"] = s3db.hrm_rheader
+
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller

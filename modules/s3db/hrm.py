@@ -6544,14 +6544,14 @@ def hrm_rheader(r, tabs=None, profile=False):
         else:
             credentials_tab = None
 
-        description_tab = settings.get_hrm_use_description() or None
-        if description_tab:
-            description_tab = (T(description_tab), "physical_description")
-
         if settings.get_hrm_vol_availability_tab():
             availability_tab = (T("Availability"), "availability")
         else:
             availability_tab = None
+
+        description_tab = settings.get_hrm_use_description() or None
+        if description_tab:
+            description_tab = (T(description_tab), "physical_description")
 
         if settings.get_hrm_use_education() and not use_cv:
             education_tab = (T("Education"), "education")
@@ -7505,8 +7505,7 @@ def hrm_human_resource_controller(extra_filter = None):
                                                         hrm_type_opts = s3db.hrm_type_opts)
 
             # List Fields
-            list_fields = ["id",
-                           "person_id",
+            list_fields = ["person_id",
                            "job_title_id",
                            "organisation_id",
                            ]
@@ -7519,6 +7518,13 @@ def hrm_human_resource_controller(extra_filter = None):
                              (T("Training"), "training.course_id"),
                              ]
             rappend = report_fields.append
+
+            if settings.get_hrm_use_national_id():
+                list_fields.append((T("National ID"), "person_id$national_id.value"))
+
+            use_code = settings.get_hrm_use_code()
+            if use_code is True or use_code and not vol:
+                list_fields.append("code")
 
             if vol:
                 vol_active = settings.get_hrm_vol_active()
@@ -8310,7 +8316,7 @@ def hrm_xls_list_fields(r, staff=True, vol=True):
                    ("Last Name", "person_id$last_name"),
                    ]
     if staff and vol:
-        list_fields.insert(1, ("Type", "type"))
+        list_fields.insert(0, ("Type", "type"))
     if settings.get_hrm_use_code():
         list_fields.append(("Staff ID", "code"))
     list_fields.append(("Sex", "person_id$gender"))
@@ -9708,8 +9714,11 @@ def hrm_human_resource_filters(resource_type = None,
                           ]
 
     use_code = settings.get_hrm_use_code()
-    if resource_type != "volunteer" and use_code or use_code is True:
+    if use_code is True or use_code and resource_type != "volunteer":
         text_search_fields.append("code")
+
+    if settings.get_hrm_use_national_id():
+        text_search_fields.append("person_id$national_id.value")
 
     filter_widgets = [S3TextFilter(text_search_fields,
                                    label = T("Search"),
