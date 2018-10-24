@@ -211,7 +211,7 @@ class HRSignatureList(S3Method):
         if programme_id:
             table = current.s3db.hrm_programme_hours
             field = table.programme_id
-            label = current.T("Programme: %(programme)s") % \
+            label = current.T("Program: %(programme)s") % \
                         {"programme": field.represent(programme_id)}
 
         return programme_id, label
@@ -294,10 +294,10 @@ class HRSignatureList(S3Method):
                     TH(T("Volunteer ID")),
                     TH(T("Signature")),
                     )
+        if not prog_id:
+            labels.insert(1, TH(T("Program")))
         if show_branch:
             labels.insert(1, TH(T("Branch")))
-        if not prog_id:
-            labels.insert(2, TH(T("Programme")))
 
         # Build the table
         body = TABLE(labels, _class="repeat-header shrink-to-fit")
