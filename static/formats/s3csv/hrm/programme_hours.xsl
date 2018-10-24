@@ -7,6 +7,7 @@
 
          CSV fields:
          Organisation....................hrm_programme.owned_by_entity
+         Branch..........................hrm_human_resource.organisation_id
          Programme.......................hrm_programme.name
          Job Title.......................hrm_programme.job_title_id$name
          First Name......................pr_person.first_name
@@ -14,18 +15,19 @@
          Email...........................pr_contact (to deduplicate person)
          Mobile Phone....................pr_contact (to deduplicate person)
          National ID.....................pr_identity (to deduplicate person)
-         #Organisation ID.................hrm_human_resource.code (to deduplicate person)
+         Organisation ID.................hrm_human_resource.code (to deduplicate person)
          Date............................hrm_programme_hours.date
          Hours...........................hrm_programme_hours.hours
 
     *********************************************************************** -->
+    <xsl:import href="person.xsl"/>
     <xsl:import href="../commons.xsl"/>
 
     <xsl:output method="xml"/>
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
-    <xsl:key name="orgs" match="row"
+    <xsl:key name="root_orgs" match="row"
              use="col[@field='Organisation']"/>
 
     <xsl:key name="programmes" match="row"
@@ -41,17 +43,19 @@
                          col[@field='Last Name'],
                          col[@field='Email'],
                          col[@field='Mobile Phone'],
-                         col[@field='National ID'])"/>
+                         col[@field='National ID'],
+                         col[@field='Organisation ID'])"/>
     
     <!-- ****************************************************************** -->
 
     <xsl:template match="/">
         <s3xml>
-            <!-- Organisations -->
-            <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('orgs',
-                                                        col[@field='Organisation'])[1])]">
-                <xsl:call-template name="Organisation"/>
+            <!-- Import the Organisation hierarchy -->
+            <xsl:for-each select="table/row[1]">
+                <xsl:call-template name="OrganisationHierarchy">
+                    <xsl:with-param name="level">Organisation</xsl:with-param>
+                    <xsl:with-param name="rows" select="//table/row"/>
+                </xsl:call-template>
             </xsl:for-each>
 
             <!-- Programmes -->
@@ -77,7 +81,8 @@
                                                                col[@field='Last Name'],
                                                                col[@field='Email'],
                                                                col[@field='Mobile Phone'],
-                                                               col[@field='National ID']))[1])]">
+                                                               col[@field='National ID'],
+                                                               col[@field='Organisation ID']))[1])]">
                 <xsl:call-template name="Person"/>
             </xsl:for-each>
 
@@ -99,7 +104,8 @@
                                                  col[@field='Last Name'],
                                                  col[@field='Email'],
                                                  col[@field='Mobile Phone'],
-                                                 col[@field='National ID'])"/>
+                                                 col[@field='National ID'],
+                                                 col[@field='Organisation ID'])"/>
                 </xsl:attribute>
             </reference>
             <reference field="programme_id" resource="hrm_programme">
@@ -135,7 +141,7 @@
 
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$Organisation"/>
+                    <xsl:value-of select="concat('ORG:', $Organisation)"/>
                 </xsl:attribute>
             </reference>
 
@@ -157,7 +163,7 @@
 
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$Organisation"/>
+                    <xsl:value-of select="concat('ORG:', $Organisation)"/>
                 </xsl:attribute>
             </reference>
 
@@ -172,7 +178,7 @@
         <xsl:variable name="Email" select="col[@field='Email']/text()"/>
         <xsl:variable name="MobilePhone" select="col[@field='Mobile Phone']/text()"/>
         <xsl:variable name="NationalID" select="col[@field='National ID']/text()"/>
-        <!--<xsl:variable name="OrganisationID" select="col[@field='Organisation ID']/text()"/>-->
+        <xsl:variable name="OrganisationID" select="col[@field='Organisation ID']/text()"/>
 
         <resource name="pr_person">
             <xsl:attribute name="tuid">
@@ -180,7 +186,8 @@
                                              $LastName,
                                              $Email,
                                              $MobilePhone,
-                                             $NationalID)"/>
+                                             $NationalID,
+                                             $OrganisationID)"/>
             </xsl:attribute>
 
             <data field="first_name"><xsl:value-of select="$FirstName"/></data>
@@ -213,12 +220,21 @@
                 </resource>
             </xsl:if>
 
-            <!--<xsl:if test="$OrganisationID!=''">
+            <xsl:if test="$OrganisationID!=''">
                 <resource name="hrm_human_resource">
+                    <reference field="organisation_id" resource="org_organisation">
+                        <xsl:attribute name="tuid">
+                            <xsl:call-template name="OrganisationID"/>
+                        </xsl:attribute>
+                    </reference>
+                    <data field="type">
+                        <!-- Volunteer -->
+                        <xsl:value-of select="2"/>
+                    </data>
                     <data field="code">
                         <xsl:value-of select="$OrganisationID"/>
                     </data>
-                </resource>-->
+                </resource>
             </xsl:if>
 
         </resource>
