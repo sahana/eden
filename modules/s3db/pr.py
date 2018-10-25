@@ -1368,22 +1368,25 @@ class PRPersonModel(S3Model):
         # Optional extra data
         dob = data.get("date_of_birth")
         email = sms = None
+        hr_code = None
         identities = {}
         for citem in item.components:
-            if citem.tablename == "pr_contact":
-                data = citem.data
-                if data:
-                    if data.get("contact_method") == "EMAIL":
+            data = citem.data
+            if data:
+                ctablename = citem.tablename
+                if ctablename == "pr_contact":
+                    contact_method = data.get("contact_method")
+                    if contact_method == "EMAIL":
                         email = data.value
-                    elif data.get("contact_method") == "SMS":
+                    elif contact_method == "SMS":
                         sms = data.value
-            elif citem.tablename == "pr_identity":
-                data = citem.data
-                if data:
+                elif ctablename == "pr_identity":
                     id_type = data.get("type")
                     id_value = data.get("value")
                     if id_type and id_value:
                         identities[id_type] = id_value
+                elif ctablename == "hrm_human_resource":
+                    hr_code = data.get("code")
 
         s3db = current.s3db
         table = s3db.pr_contact
@@ -1416,6 +1419,11 @@ class PRPersonModel(S3Model):
                        ]
             left.append(itable.on(itable.person_id == ptable.id))
 
+        if hr_code:
+            htable = s3db.hrm_human_resource
+            fields.append(htable.code)
+            left.append(htable.on(htable.person_id == ptable.id))
+
         candidates = db(query).select(*fields,
                                       left=left,
                                       orderby=["pr_person.created_on ASC"])
@@ -1444,6 +1452,8 @@ class PRPersonModel(S3Model):
             if identities:
                 row_id_type = row[itable.type]
                 row_id_value = row[itable.value]
+            if hr_code:
+                row_hr_code = row[htable.code]
 
             check = 0
 
@@ -1488,6 +1498,9 @@ class PRPersonModel(S3Model):
                 id_value = identities.get(str(row_id_type), None)
                 if id_value and row_id_value:
                     check += rank(id_value, row_id_value, +5, -2)
+
+            if hr_code and row_hr_code:
+                check += rank(hr_code.lower(), row_hr_code.lower(), +2, -2)
 
             if check in duplicates:
                 continue
