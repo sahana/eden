@@ -2734,11 +2734,11 @@ class S3EntityResolver(etree.Resolver):
             if p.scheme in ("", "file"):
 
                 path = p.path.split("/")
+                is_drive_letter = lambda s: len(s) == 2 and s[1] == ":"
 
                 # Validate netloc
                 netloc = p.netloc
-                if len(netloc) == 2 and netloc[-1] == ":":
-                    # Windows drive letter
+                if is_drive_letter(netloc):
                     path[0] = netloc
                 elif netloc not in ("", "localhost"):
                     # File on a different host
@@ -2746,13 +2746,12 @@ class S3EntityResolver(etree.Resolver):
 
                 # Translate the URL path into a file system path
                 if not path[0] and len(path) > 1:
-                    second = path[1]
-                    if len(second) == 2 and second[-1] == ":":
-                        # Windows drive letter
+                    if is_drive_letter(path[1]):
                         path = path[1:]
                     else:
-                        # Absolute path
                         path[0] = os.path.sep
+                if is_drive_letter(path[0]):
+                    path[0] = "%s%s" % (path[0], os.path.sep)
                 path = os.path.realpath(os.path.join(*path))
 
                 # Deny all access outside of app-local static-folder
