@@ -1386,6 +1386,9 @@ class PRPersonModel(S3Model):
                     if id_type and id_value:
                         identities[id_type] = id_value
                 elif ctablename == "hrm_human_resource":
+                    # Organisation ID
+                    # Note that we cannot see the Organisation here, so need to assume that these are unique across all Organisations
+                    # - therefore we make this a low priority additional check
                     hr_code = data.get("code")
 
         s3db = current.s3db
