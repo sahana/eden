@@ -732,6 +732,8 @@ def config(settings):
     #settings.hrm.multiple_job_titles = True
     # Uncomment to have each root Org use a different Job Title Catalog
     #settings.hrm.org_dependent_job_titles = True
+    # Uncomment to display & search by National ID
+    #settings.hrm.use_national_id = True
     # Uncomment to hide the Staff resource
     #settings.hrm.show_staff = False
     # Uncomment to have Staff use their Home Address as fallback if they have no Site defined
