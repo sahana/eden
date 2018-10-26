@@ -1947,6 +1947,14 @@ Thank you"""
     settings.customise_hrm_programme_hours_controller = customise_hrm_programme_hours_controller
 
     # -------------------------------------------------------------------------
+    def skip_create(deduplicate):
+        """ Decorator for deduplicators to prevent creation of new records """
+        def wrapped(item):
+            if callable(deduplicate):
+                deduplicate(item)
+            item.strategy = [item.METHOD.UPDATE]
+        return wrapped
+
     def customise_hrm_programme_hours_resource(r, tablename):
 
         from s3 import S3SQLCustomForm
@@ -1990,10 +1998,23 @@ Thank you"""
         #               "hours",
         #               ]
 
-        s3db.configure("hrm_programme_hours",
-                       crud_form = crud_form,
-                       #list_fields = list_fields,
-                       )
+        configure = s3db.configure
+        configure("hrm_programme_hours",
+                  crud_form = crud_form,
+                  #list_fields = list_fields,
+                  )
+
+        # Prevent create during imports
+        get_config = s3db.get_config
+        configure("pr_person",
+                  deduplicate = skip_create(get_config("pr_person", "deduplicate")),
+                  )
+        configure("org_organisation",
+                  deduplicate = skip_create(get_config("org_organisation", "deduplicate")),
+                  )
+        configure("hrm_programme",
+                  deduplicate = skip_create(get_config("org_organisation", "deduplicate")),
+                  )
 
     settings.customise_hrm_programme_hours_resource = customise_hrm_programme_hours_resource
 
