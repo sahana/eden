@@ -1415,6 +1415,10 @@ class S3OrganisationBranchModel(S3Model):
                branch.root_organisation != organisation.root_organisation:
                 org_update_root_organisation(branch_id)
 
+            # Update realm entity, because realm rules may depend
+            # on branch relationships and/or inherited data
+            current.auth.set_realm_entity(otable, branch_id, force_update=True)
+
     # -------------------------------------------------------------------------
     @staticmethod
     def org_branch_ondelete(row):
