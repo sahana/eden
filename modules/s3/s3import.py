@@ -3820,11 +3820,15 @@ class S3Duplicate(object):
         duplicate = current.db(query).select(table._id,
                                              limitby = (0, 1)).first()
 
-        # Update import item if match found:
         if duplicate:
+            # Match found: Update import item
             item.id = duplicate[table._id]
             if not data.deleted:
                 item.method = item.METHOD.UPDATE
+        else:
+            # New record
+            if table._tablename in current.deployment_settings.get_import_uninsertable_tables():
+                item.accepted = False
 
         # For uses outside of imports:
         return duplicate
@@ -3855,6 +3859,7 @@ class S3Duplicate(object):
             query = (field.lower() == s3_unicode(value).lower().encode("utf-8"))
         else:
             query = (field == value)
+
         return query
 
 # =============================================================================

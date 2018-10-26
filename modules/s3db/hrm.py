@@ -1017,13 +1017,13 @@ class S3HRModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(hrm_department_id = department_id,
-                    hrm_job_title_id = job_title_id,
-                    hrm_human_resource_id = human_resource_id,
-                    hrm_status_opts = hrm_status_opts,
-                    hrm_type_opts = hrm_type_opts,
-                    hrm_human_resource_represent = hrm_human_resource_represent,
-                    )
+        return {"hrm_department_id": department_id,
+                "hrm_job_title_id": job_title_id,
+                "hrm_human_resource_id": human_resource_id,
+                "hrm_status_opts": hrm_status_opts,
+                "hrm_type_opts": hrm_type_opts,
+                "hrm_human_resource_represent": hrm_human_resource_represent,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1036,10 +1036,10 @@ class S3HRModel(S3Model):
                                 readable = False,
                                 writable = False)
 
-        return dict(hrm_department_id = lambda **attr: dummy("department_id"),
-                    hrm_job_title_id = lambda **attr: dummy("job_title_id"),
-                    hrm_human_resource_id = lambda **attr: dummy("human_resource_id"),
-                    )
+        return {"hrm_department_id": lambda **attr: dummy("department_id"),
+                "hrm_job_title_id": lambda **attr: dummy("job_title_id"),
+                "hrm_human_resource_id": lambda **attr: dummy("human_resource_id"),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2012,8 +2012,8 @@ class S3HRJobModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(hrm_position_id = position_id,
-                    )
+        return {"hrm_position_id": position_id,
+                }
 
 # =============================================================================
 class S3HRSkillModel(S3Model):
@@ -3527,13 +3527,13 @@ class S3HRSkillModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(hrm_course_id = course_id,
-                    hrm_skill_id = skill_id,
-                    hrm_multi_skill_id = multi_skill_id,
-                    hrm_multi_skill_represent = multi_skill_represent,
-                    hrm_training_event_id = training_event_id,
-                    hrm_certification_onaccept = self.hrm_certification_onaccept,
-                    )
+        return {"hrm_course_id": course_id,
+                "hrm_skill_id": skill_id,
+                "hrm_multi_skill_id": multi_skill_id,
+                "hrm_multi_skill_represent": multi_skill_represent,
+                "hrm_training_event_id": training_event_id,
+                "hrm_certification_onaccept": self.hrm_certification_onaccept,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3550,10 +3550,10 @@ class S3HRSkillModel(S3Model):
                                         readable = False,
                                         writable = False)
 
-        return dict(hrm_course_id = lambda **attr: dummy("course_id"),
-                    hrm_skill_id = lambda **attr: dummy("skill_id"),
-                    hrm_multi_skill_id = lambda **attr: dummy_listref("skill_id"),
-                    )
+        return {"hrm_course_id": lambda **attr: dummy("course_id"),
+                "hrm_skill_id": lambda **attr: dummy("skill_id"),
+                "hrm_multi_skill_id": lambda **attr: dummy_listref("skill_id"),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4955,8 +4955,8 @@ class S3HRProgrammeModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(hrm_programme_id = programme_id,
-                    )
+        return {"hrm_programme_id": programme_id,
+                }
 
 # =============================================================================
 def hrm_programme_hours_month(row):

@@ -1934,17 +1934,13 @@ Thank you"""
                               tablename = "hrm_programme_hours")
 
         # Don't create new Branches, People or Programmes through Imports
-        # @ToDo: FIXME
-        configure = current.s3db.configure
-        configure("hrm_programme",
-                  insertable = False,
-                  )
-        configure("org_organisation",
-                  insertable = False,
-                  )
-        configure("pr_person",
-                  insertable = False,
-                  )
+        phtable = current.s3db.hrm_programme_hours
+        phtable.programme_id.requires = phtable.programme_id.requires.other
+        phtable.person_id.requires = phtable.person_id.requires.other
+        settings.base.import_uninsertable_tables = ["hrm_programme",
+                                                    "org_organisation",
+                                                    "pr_person",
+                                                    ]
 
         return attr
 

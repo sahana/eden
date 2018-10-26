@@ -1314,23 +1314,28 @@ class PRPersonModel(S3Model):
         """ Import item deduplication """
 
         db = current.db
+        settings = current.deployment_settings
+
         data = item.data
+        table = item.table
 
         # Master field (if-present)
         pe_label = data.get("pe_label")
         if pe_label:
             # Just look at this
-            table = item.table
-            query = (table.pe_label == pe_label)
-            duplicate = db(query).select(table.id,
-                                         limitby=(0, 1)).first()
+            duplicate = db(table.pe_label == pe_label).select(table.id,
+                                                              limitby=(0, 1)
+                                                              ).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
+            else:
+                # New record
+                if table._tablename in settings.get_import_uninsertable_tables():
+                    item.accepted = False
 
             return
 
-        settings = current.deployment_settings
         middle_mandatory = settings.get_L10n_mandatory_middlename()
 
         ptable = db.pr_person
@@ -1392,8 +1397,8 @@ class PRPersonModel(S3Model):
                     hr_code = data.get("code")
 
         s3db = current.s3db
-        table = s3db.pr_contact
-        etable = table.with_alias("pr_email")
+        ctable = s3db.pr_contact
+        etable = ctable.with_alias("pr_email")
 
         fields = [ptable._id,
                   ptable.first_name,
@@ -1411,7 +1416,7 @@ class PRPersonModel(S3Model):
             fields.append(ptable.date_of_birth)
 
         if sms:
-            stable = table.with_alias("pr_sms")
+            stable = ctable.with_alias("pr_sms")
             fields.append(stable.value)
             left.append(stable.on((stable.pe_id == ptable.pe_id) & \
                                   (stable.contact_method == "SMS")))
@@ -1432,6 +1437,9 @@ class PRPersonModel(S3Model):
                                       orderby=["pr_person.created_on ASC"])
 
         if not candidates:
+            # New record
+            if table._tablename in settings.get_import_uninsertable_tables():
+                item.accepted = False
             return
 
         duplicates = Storage()
@@ -1518,6 +1526,11 @@ class PRPersonModel(S3Model):
                 item.method = item.METHOD.UPDATE
                 for citem in item.components:
                     citem.method = citem.METHOD.UPDATE
+        else:
+            # New record
+            if table._tablename in settings.get_import_uninsertable_tables():
+                item.accepted = False
+
         return
 
     # -------------------------------------------------------------------------

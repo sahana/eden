@@ -7699,6 +7699,10 @@ class org_OrganisationDuplicate(object):
         if duplicate_id:
             item.id = duplicate_id
             item.method = item.METHOD.UPDATE
+        else:
+            # New record
+            if item.table._tablename in current.deployment_settings.get_import_uninsertable_tables():
+                item.accepted = False
 
     # -------------------------------------------------------------------------
     @classmethod
