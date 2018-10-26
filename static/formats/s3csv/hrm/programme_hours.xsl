@@ -11,6 +11,7 @@
          Programme.......................hrm_programme.name
          Job Title.......................hrm_programme.job_title_id$name
          First Name......................pr_person.first_name
+         Middle Name.....................pr_person.middle_name
          Last Name.......................pr_person.last_name
          Email...........................pr_contact (to deduplicate person)
          Mobile Phone....................pr_contact (to deduplicate person)
@@ -40,6 +41,7 @@
 
     <xsl:key name="persons" match="row"
              use="concat(col[@field='First Name'],
+                         col[@field='Middle Name'],
                          col[@field='Last Name'],
                          col[@field='Email'],
                          col[@field='Mobile Phone'],
@@ -78,6 +80,7 @@
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('persons',
                                                         concat(col[@field='First Name'],
+                                                               col[@field='Middle Name'],
                                                                col[@field='Last Name'],
                                                                col[@field='Email'],
                                                                col[@field='Mobile Phone'],
@@ -101,6 +104,7 @@
             <reference field="person_id" resource="pr_person">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="concat(col[@field='First Name'],
+                                                 col[@field='Middle Name'],
                                                  col[@field='Last Name'],
                                                  col[@field='Email'],
                                                  col[@field='Mobile Phone'],
@@ -174,6 +178,7 @@
     <!-- ****************************************************************** -->
     <xsl:template name="Person">
         <xsl:variable name="FirstName" select="col[@field='First Name']/text()"/>
+        <xsl:variable name="MiddleName" select="col[@field='Middle Name']/text()"/>
         <xsl:variable name="LastName" select="col[@field='Last Name']/text()"/>
         <xsl:variable name="Email" select="col[@field='Email']/text()"/>
         <xsl:variable name="MobilePhone" select="col[@field='Mobile Phone']/text()"/>
@@ -183,6 +188,7 @@
         <resource name="pr_person">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat($FirstName,
+                                             $MiddleName,
                                              $LastName,
                                              $Email,
                                              $MobilePhone,
@@ -191,6 +197,7 @@
             </xsl:attribute>
 
             <data field="first_name"><xsl:value-of select="$FirstName"/></data>
+            <data field="middle_name"><xsl:value-of select="$MiddleName"/></data>
             <data field="last_name"><xsl:value-of select="$LastName"/></data>
 
             <xsl:if test="$Email!=''">

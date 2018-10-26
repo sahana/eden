@@ -1933,6 +1933,19 @@ Thank you"""
                               user_org_default_filter,
                               tablename = "hrm_programme_hours")
 
+        # Don't create new Branches, People or Programmes through Imports
+        # @ToDo: FIXME
+        configure = current.s3db.configure
+        configure("hrm_programme",
+                  insertable = False,
+                  )
+        configure("org_organisation",
+                  insertable = False,
+                  )
+        configure("pr_person",
+                  insertable = False,
+                  )
+
         return attr
 
     settings.customise_hrm_programme_hours_controller = customise_hrm_programme_hours_controller
