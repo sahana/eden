@@ -1933,15 +1933,6 @@ Thank you"""
                               user_org_default_filter,
                               tablename = "hrm_programme_hours")
 
-        # Don't create new Branches, People or Programmes through Imports
-        phtable = current.s3db.hrm_programme_hours
-        phtable.programme_id.requires = phtable.programme_id.requires.other
-        phtable.person_id.requires = phtable.person_id.requires.other
-        settings.base.import_uninsertable_tables = ["hrm_programme",
-                                                    "org_organisation",
-                                                    "pr_person",
-                                                    ]
-
         return attr
 
     settings.customise_hrm_programme_hours_controller = customise_hrm_programme_hours_controller
@@ -2013,7 +2004,7 @@ Thank you"""
                   deduplicate = skip_create(get_config("org_organisation", "deduplicate")),
                   )
         configure("hrm_programme",
-                  deduplicate = skip_create(get_config("org_organisation", "deduplicate")),
+                  deduplicate = skip_create(get_config("hrm_programme", "deduplicate")),
                   )
 
     settings.customise_hrm_programme_hours_resource = customise_hrm_programme_hours_resource

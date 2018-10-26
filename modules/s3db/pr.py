@@ -1314,29 +1314,24 @@ class PRPersonModel(S3Model):
         """ Import item deduplication """
 
         db = current.db
-        settings = current.deployment_settings
 
         data = item.data
-        table = item.table
 
         # Master field (if-present)
         pe_label = data.get("pe_label")
         if pe_label:
             # Just look at this
+            table = item.table
             duplicate = db(table.pe_label == pe_label).select(table.id,
                                                               limitby=(0, 1)
                                                               ).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-            else:
-                # New record
-                if table._tablename in settings.get_import_uninsertable_tables():
-                    item.accepted = False
 
             return
 
-        middle_mandatory = settings.get_L10n_mandatory_middlename()
+        middle_mandatory = current.deployment_settings.get_L10n_mandatory_middlename()
 
         ptable = db.pr_person
         # Mandatory data
@@ -1437,9 +1432,6 @@ class PRPersonModel(S3Model):
                                       orderby=["pr_person.created_on ASC"])
 
         if not candidates:
-            # New record
-            if table._tablename in settings.get_import_uninsertable_tables():
-                item.accepted = False
             return
 
         duplicates = Storage()
@@ -1526,10 +1518,6 @@ class PRPersonModel(S3Model):
                 item.method = item.METHOD.UPDATE
                 for citem in item.components:
                     citem.method = citem.METHOD.UPDATE
-        else:
-            # New record
-            if table._tablename in settings.get_import_uninsertable_tables():
-                item.accepted = False
 
         return
 

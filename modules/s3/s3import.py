@@ -3825,10 +3825,6 @@ class S3Duplicate(object):
             item.id = duplicate[table._id]
             if not data.deleted:
                 item.method = item.METHOD.UPDATE
-        else:
-            # New record
-            if table._tablename in current.deployment_settings.get_import_uninsertable_tables():
-                item.accepted = False
 
         # For uses outside of imports:
         return duplicate

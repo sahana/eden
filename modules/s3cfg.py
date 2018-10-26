@@ -1066,14 +1066,6 @@ class S3Config(Storage):
             if default:
                 return default
 
-    def get_import_uninsertable_tables(self):
-        """
-           List of tables to block creation of new records in
-            - helps prevent duplicates by forcing referenced records to be
-              accurately entered in the spreadsheet
-        """
-        return self.base.get("import_uninsertable_tables", [])
-
     # -------------------------------------------------------------------------
     # Logger settings
     def get_log_level(self):
