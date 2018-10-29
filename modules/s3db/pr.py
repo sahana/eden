@@ -1314,6 +1314,7 @@ class PRPersonModel(S3Model):
         """ Import item deduplication """
 
         db = current.db
+        settings = current.deployment_settings
 
         data = item.data
 
@@ -1331,7 +1332,7 @@ class PRPersonModel(S3Model):
 
             return
 
-        middle_mandatory = current.deployment_settings.get_L10n_mandatory_middlename()
+        middle_mandatory = settings.get_L10n_mandatory_middlename()
 
         ptable = db.pr_person
         # Mandatory data
