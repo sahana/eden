@@ -1682,7 +1682,7 @@ class S3Model(object):
 
         supertables = cls.get_config(tablename, "super_entity")
         if not supertables:
-            return False
+            return []
         if not isinstance(supertables, (list, tuple)):
             supertables = [supertables]
 
