@@ -142,6 +142,10 @@ table td textarea {
 .table-bar p{margin-bottom:0;}
 .table-bar select{margin:0 10px;}
 
+.dataTable tr td {
+    vertical-align: middle;
+}
+
 /*** Buttons ***/
 
 .red-button {
