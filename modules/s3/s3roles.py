@@ -1272,7 +1272,7 @@ class S3RoleManager(S3Method):
             NB this function must be restricted to ADMINs (in apply_method)
         """
 
-        output = S3RolesExport().as_csv()
+        output = S3RolesExport(r.resource).as_csv()
 
         # Response headers
         from gluon.contenttype import contenttype
@@ -1844,9 +1844,12 @@ class S3RolesExport(object):
         Roles Exporter
     """
 
-    def __init__(self):
+    def __init__(self, resource):
         """
             Constructor
+
+            @param resource: the role resource (auth_group) with REST
+                             filters; or None to export all groups
         """
 
         db = current.db
@@ -1857,17 +1860,21 @@ class S3RolesExport(object):
         self.col_protected = False
         self.col_entity = False
 
-        # Look up all roles
+        # Look up the roles
         gtable = auth.settings.table_group
-        query = (gtable.deleted == False)
-        roles = db(query).select(gtable.id,
-                                 gtable.uuid,
-                                 gtable.role,
-                                 gtable.description,
-                                 gtable.hidden,
-                                 gtable.protected,
-                                 gtable.system,
-                                 )
+        fields = ("id",
+                  "uuid",
+                  "role",
+                  "description",
+                  "hidden",
+                  "protected",
+                  "system",
+                  )
+        if resource and resource.tablename == str(gtable):
+            roles = resource.select(fields, as_rows=True)
+        else:
+            query = (gtable.deleted == False)
+            roles = db(query).select(*fields)
 
         # Generate roles dict
         role_dicts = {}
