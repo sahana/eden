@@ -63,6 +63,32 @@
         return true;
     };
 
+    /**
+     * Helper function to get the target of a permission rule
+     * => target = table name, or page as string "controller/function"
+     *
+     * @param {Array} rule - the permission rule
+     *
+     * @returns {string} - the rule target, or undefined if the rule
+     *                     has no target (i.e. empty rule in add-row)
+     */
+    var getTarget = function(rule) {
+
+        var target,
+            tablename = rule[3];
+
+        if (tablename) {
+            if (tablename !== true) {
+                target = tablename;
+            }
+        } else {
+            if (rule[2] !== true) {
+                target = rule[1] + '/' + (rule[2] || '*');
+            }
+        }
+        return target;
+    };
+
     var permissionEditID = 0;
 
     /**
@@ -419,32 +445,59 @@
             var opts = this.options,
                 tbody = $('<tbody>').hide(),
                 hasRules = true,
+                targets = rules.map(getTarget),
                 targetLabel;
 
             if (ruleType == 't') {
-                // Append default-rules for restricted tables for which
-                // no access rule is defined
-                var targets = rules.map(function(rule) { return rule[3]; }),
-                    tables = opts.models[prefix];
+
+                // Append default-rules for restricted tables
+                var tables = opts.models[prefix];
                 if (tables) {
-                    Object.keys(tables).forEach(function(tablename) {
+                    for (var tablename in tables) {
                         if (tables[tablename] && targets.indexOf(tablename) == -1) {
                             rules.push([null, null, null, tablename, null, null, null, false]);
                         }
-                    });
+                    }
                 }
 
+                // Set the target label
                 targetLabel = labels.rm_Table;
 
+                // Show default rules if no rules available
                 if (rules.length === 0) {
                     // No restricted tables in this module
                     hasRules = false;
                     tbody.append(this._defaultRule(false));
                 }
             } else {
+                var dynamicTables = prefix == 'default/dt',
+                    page,
+                    match,
+                    f;
 
+                // Append default-rules for pages where available
+                for (var target in opts.defaultPermissions) {
+                    if (dynamicTables) {
+                        match = target == 'default/tables' || target == 'default/table';
+                    } else {
+                        match = target.slice(0, prefix.length + 1) == prefix + '/';
+                    }
+                    if (match && targets.indexOf(target) == -1) {
+                        page = target.split('/');
+                        f = page[1];
+                        if (f == '*') {
+                            f = null;
+                        } else if (!opts.fRules) {
+                            continue;
+                        }
+                        rules.push([null, page[0], f, null, null, null, null, false]);
+                    }
+                }
+
+                // Set the target label
                 targetLabel = labels.rm_Page;
 
+                // Show default rules if no rules available
                 if (rules.length === 0) {
                     // Restricted controller, but no access rules defined
                     hasRules = false;
@@ -528,19 +581,7 @@
 
             var row = $('<tr class="rm-rule">').data({rule: rule}),
                 opts = this.options,
-                tablename = rule[3],
-                target;
-
-            // Determine target
-            if (tablename) {
-                if (tablename !== true) {
-                    target = tablename;
-                }
-            } else {
-                if (rule[2] !== true) {
-                    target = rule[1] + '/' + (rule[2] || '*');
-                }
-            }
+                target = getTarget(rule);
 
             if (target) {
                 // Add target name
@@ -895,30 +936,34 @@
                 // Adding a new rule from a default-permissions row
                 rule = row.data('rule');
 
+                // Create a new rule
                 var tablename = rule[3];
                 if (tablename) {
-                    // Create a new table rule
                     rule = [0, null, null, tablename, 0, 0, null, false];
+                } else {
+                    rule = [0, rule[1], rule[2], null, 0, 0, null, false];
+                }
 
-                    // Pre-set default permissions (if any)
-                    var defaultPermissions = opts.defaultPermissions[tablename];
-                    if (defaultPermissions) {
-                        rule[4] = defaultPermissions[0];
-                        rule[5] = defaultPermissions[1];
-                    }
+                // Pre-set default permissions (if any)
+                var defaultPermissions = opts.defaultPermissions[getTarget(rule)];
+                if (defaultPermissions) {
+                    rule[4] = defaultPermissions[0];
+                    rule[5] = defaultPermissions[1];
+                }
 
-                    // Add to this.rules
-                    this.rules.push(rule);
+                // Add to this.rules
+                this.rules.push(rule);
 
-                    // Create a new row and replace the default-permissions row with it
-                    newRow = this._ruleTableRow(rule);
-                    row.after(newRow).remove();
+                // Create a new row and replace the default-permissions row with it
+                newRow = this._ruleTableRow(rule);
+                row.after(newRow).remove();
 
+                if (tablename) {
                     // Count the new rule as restriction for this table
                     models[tablename] += 1;
-
-                    this._serialize();
                 }
+
+                this._serialize();
 
             } else {
                 // Adding a new rule from rule table footer
@@ -1174,7 +1219,9 @@
                 var opts = this.options,
                     ruleTable = row.closest('.rm-module-rules'),
                     moduleRestricted = false,
-                    rule = row.data('rule');
+                    rule = row.data('rule'),
+                    otherRules,
+                    defaultRule;
 
                 // Mark the rule as deleted
                 rule[7] = true;
@@ -1183,7 +1230,7 @@
                 var tablename = rule[3];
                 if (tablename) {
                     // Do we have another rule for this table?
-                    var otherRules = this.rules.filter(function(r) {
+                    otherRules = this.rules.filter(function(r) {
                         return r[3] == tablename && !r[7];
                     });
                     if (!otherRules.length) {
@@ -1195,11 +1242,20 @@
                         models[tablename] -= 1;
                         if (models[tablename] > 0) {
                             // Table is still restricted => show default permissions
-                            var defaultRule = [null, null, null, tablename, null, null, null, false];
+                            defaultRule = [null, null, null, tablename, null, null, null, false];
                             this._ruleTableRow(defaultRule).insertBefore(row);
                         }
                     }
                 } else {
+                    otherRules = this.rules.filter(function(r) {
+                        return r[1] == rule[1] && r[2] == rule[2] && !r[7];
+                    });
+                    if (!otherRules.length) {
+                        if (opts.defaultPermissions[getTarget(rule)]) {
+                            defaultRule = [null, rule[1], rule[2], null, null, null, null, false];
+                            this._ruleTableRow(defaultRule).insertBefore(row);
+                        }
+                    }
                     moduleRestricted = true;
                 }
 

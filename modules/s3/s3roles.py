@@ -1379,14 +1379,13 @@ class S3PermissionWidget(object):
                        "tRules": use_tacls,
                        "useRealms": rules.entity_realm,
                        "permissions": self.get_permissions(),
-
+                       "defaultPermissions": self.get_default_permissions(),
                        "modules": self.get_active_modules(),
                        "icons": icons,
                        }
 
         if use_tacls:
             widget_opts["models"] = self.get_active_models()
-            widget_opts["defaultPermissions"] = self.get_default_permissions()
 
         # Localized strings for client-side widget
         i18n = {"rm_Add": T("Add"),
@@ -1552,30 +1551,40 @@ class S3PermissionWidget(object):
             @returns: a dict {tablename: (uACL, oACL)}
         """
 
-        table = current.auth.permission.table
+        permissions = current.auth.permission
+        table = permissions.table
 
         default_roles = self.default_roles
         default_permissions = {}
 
         if table and default_roles:
-            query = (table.group_id.belongs(default_roles)) & \
-                    (table.controller == None) & \
-                    (table.function == None) & \
-                    (table.tablename != None) & \
-                    (table.deleted == False)
-            rows = current.db(query).select(table.tablename,
+            query = (table.group_id.belongs(default_roles))
+            if not permissions.use_facls:
+                query &= (table.function == None)
+            if not permissions.use_tacls:
+                query &= (table.tablename == None)
+            query &= (table.deleted == False)
+            rows = current.db(query).select(table.controller,
+                                            table.function,
+                                            table.tablename,
                                             table.uacl,
                                             table.oacl,
                                             )
             for row in rows:
-                tablename = row.tablename
-                rules = default_permissions.get(tablename)
+                target = row.tablename
+                if not target:
+                    c = row.controller
+                    if c:
+                        target = "%s/%s" % (c, row.function or "*")
+                    else:
+                        continue
+                rules = default_permissions.get(target)
                 if rules:
-                    default_permissions[tablename] = (rules[0] | row.uacl,
-                                                      rules[1] | row.oacl,
-                                                      )
+                    default_permissions[target] = (rules[0] | row.uacl,
+                                                   rules[1] | row.oacl,
+                                                   )
                 else:
-                    default_permissions[tablename] = (row.uacl, row.oacl)
+                    default_permissions[target] = (row.uacl, row.oacl)
 
         return default_permissions
 
