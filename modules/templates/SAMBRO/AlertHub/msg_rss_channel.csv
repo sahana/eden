@@ -1,36 +1,37 @@
 Name,URL,Content-Type Override,Type
 Administration de l'Aéroport de Luxembourg,http://meteoalarm.eu/ATOM/LU.xml,true,cap
-Agencia Estatal de Meteorología,http://meteoalarm.eu/ATOM/ES.xml,true,cap
-Alberta Emergency Management Agency,http://emergencyalert.alberta.ca/aeapublic/feed.atom,false,cap
 Anguilla Disaster Management,https://axa-primary.capews.com/capews/public/atom?type=cap,false,cap
 Antigua and Barbuda Meteorological Services,https://alert.metoffice.gov.ag/capfeed.php,false,cap
 Argentina Servicio Meteorologico Nacional,http://www.smn.gov.ar/?mod=feeds&id=2,false,cap
-"Badan Meteorologi, Klimatologi, dan Geofisika",https://inatews.bmkg.go.id/rss/capatomlast40event.xml,false,cap
+Australian New South Wales Rural Fire Service,http://www.rfs.nsw.gov.au/feeds/majorIncidentsCAP.xml,false,cap
+Austrian Central Institute for Meteorology and Geodynamics,http://meteoalarm.eu/ATOM/AT.xml,true,cap
+Belgium L'Institut Royal Météorologique,http://meteoalarm.eu/ATOM/BE.xml,true,cap
+Bosnia and Herzegovina: Federalni hidrometeorološki zavod,http://meteoalarm.eu/ATOM/BA.xml,true,cap
 Brazilian Instituto Nacional de Meteorologia,http://alert-as.inmet.gov.br/cap_12/rss/alert-as.rss,false,cap
-Central Institute for Meteorology and Geodynamics,http://meteoalarm.eu/ATOM/AT.xml,true,cap
-Croatia: Državni hidrometeorološki zavod (DHMZ),http://meteoalarm.eu/ATOM/HR.xml,true,cap
+Bulgarian National Institute of Meteorology and Hydrology,http://meteoalarm.eu/ATOM/BG.xml,true,cap
+Canadian Alberta Emergency Management Agency,http://emergencyalert.alberta.ca/aeapublic/feed.atom,false,cap
+Colombian National Unit for Disaster Risk Management,http://www.gestiondelriesgo.gov.co/rss/AtomAlert.atom,false,cms
+Croatian Državni hidrometeorološki zavod (DHMZ),http://meteoalarm.eu/ATOM/HR.xml,true,cap
 Cyprus Meteorological Service,http://meteoalarm.eu/ATOM/CY.xml,true,cap
-Czech Hydrometeorological Institute,http://meteoalarm.eu/ATOM/CZ.xml,true,cap
-Danish Meteorological Institute,http://meteoalarm.eu/ATOM/DK.xml,true,cap
-Deutscher Wetterdienst,http://meteoalarm.eu/ATOM/DE.xml,true,cap
+Czech Republic Hydrometeorological Institute,http://meteoalarm.eu/ATOM/CZ.xml,true,cap
+Denmark Meteorological Institute,http://meteoalarm.eu/ATOM/DK.xml,true,cap
 Direction de la Météorologie Nationale du Togo,https://alerts.met.gov.to/capfeed.php,false,cap
 Environment Canada,http://rss.naad-adna.pelmorex.com,false,cap
-Environmental Protection Agency,http://feeds.enviroflash.info/cap/aggregate.xml,false,cap
 Estonian Meteorological and Hydrological Institute,http://meteoalarm.eu/ATOM/EE.xml,true,cap
-Federal Hydrometeorological Institute of Bosnia and Herzegovina,http://meteoalarm.eu/ATOM/BA.xml,true,cap
 Finnish Environment Institute,http://meteoalarm.eu/ATOM/FI.xml,true,cap
+German: Deutscher Wetterdienst,http://meteoalarm.eu/ATOM/DE.xml,true,cap
 Global Disaster Alert and Coordination,http://www.gdacs.org/xml/gdacs_cap.xml,false,cap
-GNS Science,https://api.geonet.org.nz/cap/1.2/GPA1.0/feed/atom1.0/quake,false,cap
+Greece: ΕΜΥ-Εθνική Μετεωρολογική Υπηρεσία,http://meteoalarm.eu/ATOM/GR.xml,true,cap
 Guyana Hydrometeorological Service,http://hydromet.gov.gy/cap/en/alerts/rss.xml,false,cap
 Hellenic National Meteorological Service,http://meteoalarm.eu/ATOM/GR.xml,true,cap
 Hungarian Meteorological Service,http://meteoalarm.eu/ATOM/HU.xml,true,cap
 Icelandic Meteorological Office,http://meteoalarm.eu/ATOM/IS.xml,true,cap
-Institute of Hydrometeorology and Seismology of Montenegro,http://meteoalarm.eu/ATOM/ME.xml,true,cap
-Institute of Meteorology and Water Management,http://meteoalarm.eu/ATOM/PL.xml,true,cap
+Indonesian Badan Meteorologi Klimatologi dan Geofisika,https://inatews.bmkg.go.id/rss/capatomlast40event.xml,false,cap
 Instituto Portugues do Mar e Atmosfera,http://meteoalarm.eu/ATOM/PT.xml,true,cap
 International Federation of Red Cross and Red Crescent Societies,https://api.preparecenter.org/v1/alerts/rss,false,cap
 Irish Meteorological Service,http://meteoalarm.eu/ATOM/IE.xml,true,cap
 Israel,http://meteoalarm.eu/ATOM/IL.xml,true,cap
+Italian National Centre for Aeronautical Meteorology and Climatology,http://meteoalarm.eu/ATOM/IT.xml,true,cap
 Japan Meteorological Agency,http://xml.kishou.go.jp/feed/eqvol.xml,false,cms
 Japan Meteorological Agency,http://xml.kishou.go.jp/feed/extra.xml,false,cms
 Japan Meteorological Agency,http://xml.kishou.go.jp/feed/other.xml,false,cms
@@ -39,49 +40,51 @@ Japan Meteorological Agency,http://xml.kishou.go.jp/feed/regular.xml,false,cms
 Kazakhstan Hydromet Services (Kazhydromet),http://meteoalarm.eu/ATOM/KS.xml,true,cap
 Kuwait Meteorological Department,http://www.met.gov.kw/rss_eng/kuwait_cap.xml,false,cap
 Kyrgyz Hydromet Services (Kyrgyzhydromet),http://meteoalarm.eu/ATOM/KZ.xml,true,cap
-L'Institut Royal Météorologique,http://meteoalarm.eu/ATOM/BE.xml,true,cap
-"Latvian Environment, Geology and Meteorology Centre",http://meteoalarm.eu/ATOM/LV.xml,true,cap
+Latvian Environment Geology and Meteorology Centre,http://meteoalarm.eu/ATOM/LV.xml,true,cap
 Lithuanian Hydrometeorological Service,http://meteoalarm.eu/ATOM/LT.xml,true,cap
-Main Administration of Hydrometeorology and Monitoring of the Environment,http://meteoalarm.eu/ATOM/TJ.xml,true,cap
+Macedonia Republic Hydrometeorological Organization,http://meteoalarm.eu/ATOM/MK.xml,true,cap
 Maldives National Disaster Management Center,http://www.dhandhaana.gov.mv/eden/cap/public.rss,false,cap
 Malta Meteorological Office,http://meteoalarm.eu/ATOM/MT.xml,true,cap
 Météo-France,http://meteoalarm.eu/ATOM/FR.xml,true,cap
-Meteorological Department Aruba (Dutch),http://201.229.69.218/cap/nl/alerts/rss.xml,false,cms
-Meteorological Department Aruba (English),http://201.229.69.218/cap/en/alerts/rss.xml,false,cms
-Meteorological Department Aruba (Papiamento),http://201.229.69.218/cap/pap/alerts/rss.xml,false,cms
+Aruba Meteorological Department (Dutch),http://201.229.69.218/cap/nl/alerts/rss.xml,false,cms
+Aruba Meteorological Department (English),http://201.229.69.218/cap/en/alerts/rss.xml,false,cms
+Aruba Meteorological Department (Papiamento),http://201.229.69.218/cap/pap/alerts/rss.xml,false,cms
 Meteorological Service of Canada,http://rss.naad-adna.pelmorex.com/,false,cap
 Meteorological Service of New Zealand Limited,http://alerts.metservice.com/cap/rss,false,cap
-Ministère de la Sécurité Publique du Québec,http://rss.naad-adna.pelmorex.com/,false,cap
+Ministère de la Sécurité Publique du Québec Canada,http://rss.naad-adna.pelmorex.com/,false,cap
 Moldova State Hydrometeorological Service,http://meteoalarm.eu/ATOM/MD.xml,true,cap
+Montenegro Institute of Hydrometeorology and Seismology,http://meteoalarm.eu/ATOM/ME.xml,true,cap
 Myanmar Department of Meteorology and Hydrology,http://www.dmhwarning.gov.mm/eden/cap/public.rss,false,cap
-National Centre for Aeronautical Meteorology and Climatology,http://meteoalarm.eu/ATOM/IT.xml,true,cap
-National Institute of Meteorology and Hydrology,http://meteoalarm.eu/ATOM/BG.xml,true,cap
-National Unit for Disaster Risk Management,http://www.gestiondelriesgo.gov.co/rss/AtomAlert.atom,false,cms
-New South Wales Rural Fire Service,http://www.rfs.nsw.gov.au/feeds/majorIncidentsCAP.xml,false,cap
-NOAA Earthquake Bulletins,http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.atom,false,cms
-NOAA Earthquake Warning Center,https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.atom,false,cms
-NOAA National Weather Service,https://alerts.weather.gov/cap/us.php?x=0,false,cap
-Pacific Tsunami Warning Center,http://ptwc.weather.gov/feeds/ptwc_rss.xml,false,cms
-Pacific Tsunami Warning Center,http://ptwc.weather.gov/feeds/ptwc_rss_hawaii.xml,false,cms
-Pacific Tsunami Warning Center,http://ptwc.weather.gov/feeds/ptwc_rss_pacific.xml,false,cms
+New Zealand GNS Science,https://api.geonet.org.nz/cap/1.2/GPA1.0/feed/atom1.0/quake,false,cap
 Papua New Guinea Meteorological Service,https://smartalert.pngmet.gov.pg/capfeed.php,false,cap
 Philippine Atmospheric Geophysical and Astronomical Services Administration,http://publicalert.pagasa.dost.gov.ph/feeds/,false,cap
-Republic Hydrometeorological Organization,http://meteoalarm.eu/ATOM/MK.xml,true,cap
-Republic Hydrometeorological Service of Serbia,http://meteoalarm.eu/ATOM/RS.xml,true,cap
-Romania National Meteorological Administration,http://meteoalarm.eu/ATOM/RO.xml,true,cap
+Polish Institute of Meteorology and Water Management,http://meteoalarm.eu/ATOM/PL.xml,true,cap
+Romanian National Meteorological Administration,http://meteoalarm.eu/ATOM/RO.xml,true,cap
 Royal Netherlands Meteorological Institute,http://meteoalarm.eu/ATOM/NL.xml,true,cap
 Russian Federal Service for Hydrometeorology and Environmental Monitoring,http://meteoalarm.eu/ATOM/RU.xml,true,cap
+Russian Federal Service for Hydrometeorology and Environmental Monitoring,https://meteoinfo.ru/hmc-output/cap/cap-feed/ru/atom.xml,true,cap
 Samoa Meteorology Division,http://alert.samet.gov.ws/capfeed.php,false,cap
+Serbian Republic Hydrometeorological Service,http://meteoalarm.eu/ATOM/RS.xml,true,cap
 Servicio Meteorologico Nacional de Mexico,https://correo1.conagua.gob.mx/feedsmn/feedalert.aspx,false,cap
 Slovak Hydrometeorological Institute,http://meteoalarm.eu/ATOM/SK.xml,true,cap
 Slovenian National Meteorological Service,http://meteoalarm.eu/ATOM/SI.xml,true,cap
 Solomon Islands Meteorological Service,https://smartalert.met.gov.sb/capfeed.php,false,cap
+Spanish Agencia Estatal de Meteorología,http://meteoalarm.eu/ATOM/ES.xml,true,cap
 Swedish Meteorological and Hydrological Institute,http://meteoalarm.eu/ATOM/SE.xml,true,cap
 Swiss Seismological Service,http://meteoalarm.eu/ATOM/CH.xml,true,cap
 Taiwan National Center for Disaster Reduction,https://alerts.ncdr.nat.gov.tw/RssAtomFeed.ashx,false,cap
+Tajikistan Main Administration of Hydrometeorology and Monitoring of the Environment,http://meteoalarm.eu/ATOM/TJ.xml,true,cap
+Tanzania Meteorological Agency,http://tma.meteo.go.tz:8080/feeds/en/alerts/rss.xml,false,cap
 Thai Meteorological Department,http://www.tmd.go.th/feeds/CAPfeeds.php,false,cap
 United Kingdom Met Office,http://meteoalarm.eu/ATOM/UK.xml,true,cap
 United States Geological Survey Volcano,https://volcanoes.usgs.gov/hans2/cap/rss/,false,cap
+United States NOAA Earthquake Bulletins,http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.atom,false,cms
+United States NOAA Earthquake Warning Center,https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.atom,false,cms
+United States NOAA National Weather Service,https://alerts.weather.gov/cap/us.php?x=0,false,cap
+United States Pacific Tsunami Warning Center,http://ptwc.weather.gov/feeds/ptwc_rss.xml,false,cms
+United States Pacific Tsunami Warning Center,http://ptwc.weather.gov/feeds/ptwc_rss_hawaii.xml,false,cms
+United States Pacific Tsunami Warning Center,http://ptwc.weather.gov/feeds/ptwc_rss_pacific.xml,false,cms
+United States Environmental Protection Agency,http://feeds.enviroflash.info/cap/aggregate.xml,false,cap
 Uzbekistan Hydrometeorological Service (Uzhydromet),http://meteoalarm.eu/ATOM/UZ.xml,true,cap
 Vanuatu Meteorology and Geo-Hazard Department,https://smartalert.vmgd.gov.vu/capfeed.php,false,cap
 West Coast and Alaska Tsunami Warning Center,http://wcatwc.arh.noaa.gov/events/xml/PAAQAtom.xml,false,cms
