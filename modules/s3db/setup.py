@@ -2165,7 +2165,8 @@ def setup_rheader(r, tabs=None):
                                  ),
                        )
 
-            rheader = DIV(rheader_tabs)
+            rheader = DIV(button,
+                          rheader_tabs)
 
         if r_name == "server":
             tabs = [(T("Server Details"), None),
