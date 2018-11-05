@@ -244,6 +244,10 @@ class S3SetupModel(S3Model):
                        setup_setting = "deployment_id",
                        )
 
+        set_method("setup", "deployment",
+                   method = "wizard",
+                   action = self.setup_server_wizard)
+
         represent = setup_DeploymentRepresent()
 
         deployment_id = S3ReusableField("deployment_id", "reference %s" % tablename,
@@ -512,6 +516,12 @@ class S3SetupModel(S3Model):
                    action = self.setup_instance_clean,
                    )
 
+        set_method("setup", "deployment",
+                   component_name = "instance",
+                   method = "wizard",
+                   action = self.setup_instance_wizard,
+                   )
+
         represent = S3Represent(lookup = tablename,
                                 fields = ["type"],
                                 labels = lambda row: type_represent(row.type))
@@ -660,6 +670,59 @@ class S3SetupModel(S3Model):
         templates += subtemplates
         templates.sort()
         return templates
+
+    # -------------------------------------------------------------------------
+    def setup_server_wizard(self, r, **attr):
+        """
+            Custom S3Method to select an Instance to Configure
+        """
+
+        db = current.db
+        deployment_id = r.id
+        itable = db.setup_instance
+
+        instances = db(itable.deployment_id == deployment_id).select(itable.id,
+                                                                     itable.type,
+                                                                     )
+
+        if len(instances) == 1:
+            # Redirect to the Instance Wizard
+            redirect(URL(c="setup", f="deployment",
+                         args = [deployment_id, "instance", instances.first().id, "wizard"],
+                         ))
+
+        # Provide a Dropdown of Instances for the user to select
+        dropdown = SELECT(OPTION(_value=""),
+                          _id = "instances",
+                          )
+        for instance in instances:
+            dropdown.append(OPTION(INSTANCE_TYPES[instance.type],
+                                   _value="%s" % instance.id))
+
+        script = '''
+var dropdown = $('#instances');
+dropdown.change(function() {
+ var url = S3.Ap.concat('/setup/deployment/%s/instance/' + this.value + '/wizard');
+ $(location).prop('href', url);
+})''' % deployment_id
+        response = current.response
+        response.s3.jquery_ready.append(script)
+        response.view = "simple.html"
+        output = {"item": DIV(P(T("Select the instance you wish to configure")),
+                              dropdown),
+                  }
+        return output
+
+    # -------------------------------------------------------------------------
+    def setup_instance_wizard(self, r, **attr):
+        """
+            Custom S3Method to Configure an Instance
+        """
+
+        current.response.view = "simple.html"
+        output = {"item": DIV("tbc"),
+                  }
+        return output
 
     # -------------------------------------------------------------------------
     def setup_instance_deploy(self, r, **attr):
@@ -2094,6 +2157,13 @@ def setup_rheader(r, tabs=None):
                     ]
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            button = A(T("Configuration Wizard"),
+                       _class="action-btn",
+                       _href=URL(c="setup", f="deployment",
+                                 args=[r.id, "wizard"],
+                                 ),
+                       )
 
             rheader = DIV(rheader_tabs)
 
