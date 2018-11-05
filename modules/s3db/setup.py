@@ -388,13 +388,15 @@ class S3SetupModel(S3Model):
         # ---------------------------------------------------------------------
         # Instances
         #
+        type_represent = S3Represent(options = INSTANCE_TYPES)
+
         tablename = "setup_instance"
         define_table(tablename,
                      deployment_id(),
                      Field("type", "integer",
                            default = 1,
                            label = T("Type"),
-                           represent = S3Represent(options = INSTANCE_TYPES),
+                           represent = type_represent,
                            requires = IS_IN_SET(INSTANCE_TYPES),
                            ),
                      Field("url",
@@ -512,7 +514,7 @@ class S3SetupModel(S3Model):
 
         represent = S3Represent(lookup = tablename,
                                 fields = ["type"],
-                                labels = S3Represent(options = INSTANCE_TYPES))
+                                labels = lambda row: type_represent(row.type))
 
         instance_id = S3ReusableField("instance_id", "reference %s" % tablename,
                                       label = T("Instance"),
