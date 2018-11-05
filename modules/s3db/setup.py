@@ -510,7 +510,9 @@ class S3SetupModel(S3Model):
                    action = self.setup_instance_clean,
                    )
 
-        represent = S3Represent(lookup=tablename, fields=["type"])
+        represent = S3Represent(lookup = tablename,
+                                fields = ["type"],
+                                labels = S3Represent(options = INSTANCE_TYPES))
 
         instance_id = S3ReusableField("instance_id", "reference %s" % tablename,
                                       label = T("Instance"),
