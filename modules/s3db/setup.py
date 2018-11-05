@@ -708,7 +708,7 @@ dropdown.change(function() {
         response = current.response
         response.s3.jquery_ready.append(script)
         response.view = "simple.html"
-        output = {"item": DIV(P(T("Select the instance you wish to configure")),
+        output = {"item": DIV(P(current.T("Select the instance you wish to configure")),
                               dropdown),
                   }
         return output
