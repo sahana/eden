@@ -1933,6 +1933,7 @@ Thank you"""
                               user_org_default_filter,
                               tablename = "hrm_programme_hours")
 
+        attr["csv_template"] = ("../../themes/RMSAmericas/formats", "hrm_programme_hours")
         return attr
 
     settings.customise_hrm_programme_hours_controller = customise_hrm_programme_hours_controller

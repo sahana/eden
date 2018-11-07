@@ -62,11 +62,13 @@
     <column name="MiddleName">
         <label>Middle Name</label>
         <label>Apellido Paterno</label>
+        <label>Father's Surname</label>
     </column>
 
     <column name="LastName">
         <label>Last Name</label>
         <label>Apellido Materno</label>
+        <label>Mother's Surname</label>
     </column>
 
     <column name="PersonGender">

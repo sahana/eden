@@ -166,6 +166,18 @@
     <!-- ****************************************************************** -->
     <!-- Lookup column names -->
 
+    <xsl:variable name="MiddleName">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">MiddleName</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="LastName">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">LastName</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
     <xsl:variable name="HomeAddress">
         <xsl:call-template name="ResolveColumnHeader">
             <xsl:with-param name="colname">HomeAddress</xsl:with-param>
@@ -553,6 +565,17 @@
     <!-- Person Record -->
     <xsl:template match="row">
 
+        <xsl:variable name="MiddleName">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$MiddleName"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="LastName">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$LastName"/>
+            </xsl:call-template>
+        </xsl:variable>
+
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="BloodType" select="col[@field='Blood Type']"/>
         <xsl:variable name="Ethnicity" select="col[@field='Ethnicity']"/>
@@ -607,11 +630,11 @@
 
             <!-- Person record -->
             <data field="first_name"><xsl:value-of select="col[@field='First Name']"/></data>
-            <xsl:if test="col[@field='Middle Name']!=''">
-                <data field="middle_name"><xsl:value-of select="col[@field='Middle Name']"/></data>
+            <xsl:if test="$MiddleName!=''">
+                <data field="middle_name"><xsl:value-of select="$MiddleName"/></data>
             </xsl:if>
-            <xsl:if test="col[@field='Last Name']!=''">
-                <data field="last_name"><xsl:value-of select="col[@field='Last Name']"/></data>
+            <xsl:if test="$LastName!=''">
+                <data field="last_name"><xsl:value-of select="$LastName"/></data>
             </xsl:if>
             <xsl:if test="col[@field='Initials']!=''">
                 <data field="initials"><xsl:value-of select="col[@field='Initials']"/></data>

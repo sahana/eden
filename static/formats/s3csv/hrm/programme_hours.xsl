@@ -27,6 +27,21 @@
     <xsl:output method="xml"/>
 
     <!-- ****************************************************************** -->
+    <!-- Lookup column names -->
+
+    <xsl:variable name="MiddleName">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">MiddleName</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="LastName">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">LastName</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <xsl:key name="root_orgs" match="row"
              use="col[@field='Organisation']"/>
@@ -41,8 +56,10 @@
 
     <xsl:key name="persons" match="row"
              use="concat(col[@field='First Name'],
-                         col[@field='Middle Name'],
-                         col[@field='Last Name'],
+                         col[contains(document('../labels.xml')/labels/column[@name='MiddleName']/match/text(),
+                             concat('|', @field, '|'))],
+                         col[contains(document('../labels.xml')/labels/column[@name='LastName']/match/text(),
+                             concat('|', @field, '|'))],
                          col[@field='Email'],
                          col[@field='Mobile Phone'],
                          col[@field='National ID'],
@@ -80,8 +97,10 @@
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('persons',
                                                         concat(col[@field='First Name'],
-                                                               col[@field='Middle Name'],
-                                                               col[@field='Last Name'],
+                                                               col[contains(document('../labels.xml')/labels/column[@name='MiddleName']/match/text(),
+                                                                   concat('|', @field, '|'))],
+                                                               col[contains(document('../labels.xml')/labels/column[@name='LastName']/match/text(),
+                                                                   concat('|', @field, '|'))],
                                                                col[@field='Email'],
                                                                col[@field='Mobile Phone'],
                                                                col[@field='National ID'],
@@ -104,8 +123,10 @@
             <reference field="person_id" resource="pr_person">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="concat(col[@field='First Name'],
-                                                 col[@field='Middle Name'],
-                                                 col[@field='Last Name'],
+                                                 col[contains(document('../labels.xml')/labels/column[@name='MiddleName']/match/text(),
+                                                     concat('|', @field, '|'))],
+                                                 col[contains(document('../labels.xml')/labels/column[@name='LastName']/match/text(),
+                                                     concat('|', @field, '|'))],
                                                  col[@field='Email'],
                                                  col[@field='Mobile Phone'],
                                                  col[@field='National ID'],
@@ -178,8 +199,16 @@
     <!-- ****************************************************************** -->
     <xsl:template name="Person">
         <xsl:variable name="FirstName" select="col[@field='First Name']/text()"/>
-        <xsl:variable name="MiddleName" select="col[@field='Middle Name']/text()"/>
-        <xsl:variable name="LastName" select="col[@field='Last Name']/text()"/>
+        <xsl:variable name="MiddleName">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$MiddleName"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="LastName">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$LastName"/>
+            </xsl:call-template>
+        </xsl:variable>
         <xsl:variable name="Email" select="col[@field='Email']/text()"/>
         <xsl:variable name="MobilePhone" select="col[@field='Mobile Phone']/text()"/>
         <xsl:variable name="NationalID" select="col[@field='National ID']/text()"/>

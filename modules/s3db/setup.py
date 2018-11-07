@@ -719,6 +719,8 @@ dropdown.change(function() {
             Custom S3Method to Configure an Instance
         """
 
+        #questions = current.deployment_settings.get_setup_questions()
+
         current.response.view = "simple.html"
         output = {"item": DIV("tbc"),
                   }
