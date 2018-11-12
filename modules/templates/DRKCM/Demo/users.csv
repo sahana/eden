@@ -20,3 +20,5 @@ WN,Case Manager,wn_case_manager@example.com,eden,CASE_MANAGEMENT,DRK Kreisverban
 WN,Registration,wn_registration@example.com,eden,REGISTRATION,DRK Kreisverband Rems-Murr,de
 WN,Tracing,wn_tracing@example.com,eden,TRACING,DRK Kreisverband Rems-Murr,de
 WN,Admin,wn_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Rems-Murr,de
+LEA,Case Manager,lea_case_manager@example.com,eden,CASE_MANAGEMENT,LEA Ellwangen,de
+LEA,Admin,lea_admin@example.com,eden,ORG_ADMIN,LEA Ellwangen,de

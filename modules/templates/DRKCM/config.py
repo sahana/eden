@@ -10,6 +10,31 @@ from gluon.storage import Storage
 from s3 import FS, IS_ONE_OF
 from s3dal import original_tablename
 
+# =============================================================================
+# UI options per organisation
+#
+UI_DEFAULTS = {"case_use_service_contacts": True,
+               "case_use_notes": True,
+               }
+
+UI_OPTIONS = {"LEA": {"case_use_service_contacts": False,
+                      "case_use_notes": False,
+                      },
+              }
+
+UI_TYPES = {"LEA Ellwangen": "LEA",
+            }
+
+def get_ui_options():
+    """ Get the UI options for the current user's root organisation """
+
+    ui_options = dict(UI_DEFAULTS)
+    ui_type = UI_TYPES.get(current.auth.root_org_name())
+    if ui_type:
+        ui_options.update(UI_OPTIONS[ui_type])
+    return ui_options
+
+# =============================================================================
 def config(settings):
     """
         DRKCM Template: Case Management, German Red Cross
@@ -2950,17 +2975,23 @@ def drk_dvr_rheader(r, tabs=None):
 
             else:
 
+                ui_opts = get_ui_options()
+
                 if not tabs:
                     tabs = [(T("Basic Details"), None),
                             (T("Contact Info"), "contacts"),
                             (T("Family Members"), "group_membership/"),
                             (T("Activities"), "case_activity"),
                             (T("Appointments"), "case_appointment"),
-                            (T("Service Contacts"), "service_contact"),
+                            #(T("Service Contacts"), "service_contact"),
                             (T("Photos"), "image"),
                             (T("Documents"), "document/"),
-                            (T("Notes"), "case_note"),
+                            #(T("Notes"), "case_note"),
                             ]
+                    if ui_opts.get("case_use_service_contacts"):
+                        tabs.insert(5, (T("Service Contacts"), "service_contact"))
+                    if ui_opts.get("case_use_notes"):
+                        tabs.append((T("Notes"), "case_note"))
 
                 case = resource.select(["first_name",
                                         "last_name",
