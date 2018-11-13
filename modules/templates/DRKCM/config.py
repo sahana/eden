@@ -16,7 +16,9 @@ from s3dal import original_tablename
 UI_DEFAULTS = {"case_bamf_first": False,
                "case_use_address": True,
                "case_use_arrival_date": True,
+               "case_use_education": False,
                "case_use_notes": True,
+               "case_use_occupation": True,
                "case_use_residence_status": True,
                "case_use_service_contacts": True,
                "case_lodging": "site", # "site"|"text"|None
@@ -26,7 +28,9 @@ UI_DEFAULTS = {"case_bamf_first": False,
 UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "case_use_address": False,
                       "case_use_arrival_date": False,
+                      "case_use_education": True,
                       "case_use_notes": False,
+                      "case_use_occupation": False,
                       "case_use_residence_status": False,
                       "case_use_service_contacts": False,
                       "case_lodging": "text",
@@ -746,6 +750,15 @@ def config(settings):
                     configure_person_tags()
                     ui_options = get_ui_options()
 
+                    # Alternatives: site_id or simple text field
+                    lodging_opt = ui_options.get("case_lodging")
+                    if lodging_opt == "site":
+                        lodging = "dvr_case.site_id"
+                    elif lodging_opt == "text":
+                        lodging = "case_details.lodging"
+                    else:
+                        lodging = None
+
                     if r.method == "report":
 
                         # Custom Report Options
@@ -845,15 +858,6 @@ def config(settings):
                             bamf_first = None
                             bamf_last = bamf
 
-                        # Alternatives: site_id or simple text field
-                        lodging_opt = ui_options.get("case_lodging")
-                        if lodging_opt == "site":
-                            lodging = "dvr_case.site_id"
-                        elif lodging_opt == "text":
-                            lodging = "case_details.lodging"
-                        else:
-                            lodging = None
-
                         # Optional: site dates
                         if ui_options.get("case_lodging_dates"):
                             on_site_from = (T("Moving-in Date"),
@@ -913,6 +917,16 @@ def config(settings):
                         else:
                             residence_status = None
 
+                        # Optional: Occupation/Educational Background
+                        if ui_options.get("case_use_occupation"):
+                            occupation = "person_details.occupation"
+                        else:
+                            occupation = None
+                        if ui_options.get("case_use_education"):
+                            education = "person_details.education"
+                        else:
+                            education = None
+
                         # Custom CRUD form
                         crud_form = S3SQLCustomForm(
 
@@ -948,7 +962,6 @@ def config(settings):
                             residence_status,
 
                             # Other Details ---------------------------
-                            "person_details.occupation",
                             S3SQLInlineComponent(
                                     "contact",
                                     fields = [("", "value")],
@@ -959,6 +972,8 @@ def config(settings):
                                     multiple = False,
                                     name = "phone",
                                     ),
+                            education,
+                            occupation,
                             "person_details.literacy",
                             S3SQLInlineComponent(
                                     "case_language",
@@ -1059,7 +1074,7 @@ def config(settings):
                                    "person_details.nationality",
                                    "dvr_case.date",
                                    "dvr_case.status_id",
-                                   "dvr_case.site_id",
+                                   lodging,
                                    ]
                     if multiple_orgs:
                         list_fields.insert(-1, "dvr_case.organisation_id")
@@ -3366,6 +3381,11 @@ def drk_person_anonymize():
                                         "fields": {"comments": "remove",
                                                    },
                                         }),
+                          ("dvr_case_details", {"key": "person_id",
+                                                "match": "id",
+                                                "fields": {"lodging": "remove",
+                                                           },
+                                                }),
                           ("pr_contact", {"key": "pe_id",
                                           "match": "pe_id",
                                           "fields": {"contact_description": "remove",
@@ -3389,6 +3409,12 @@ def drk_person_anonymize():
                                                      "comments": "remove",
                                                      },
                                           }),
+                          ("pr_person_details", {"key": "person_id",
+                                                 "match": "id",
+                                                 "fields": {"education": "remove",
+                                                            "occupation": "remove",
+                                                            },
+                                                 }),
                           ("pr_person_tag", {"key": "person_id",
                                              "match": "id",
                                              "fields": {"value": ("set", ANONYMOUS),

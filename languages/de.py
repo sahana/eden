@@ -1682,6 +1682,7 @@
 'Education materials received': 'Ausbildungsmaterialien erhalten',
 'Education materials, source': 'Herkunft der Ausbildungsmaterialien',
 'Education': 'Bildung',
+'Educational Background': 'Vorbildung',
 'Effects Inventory': 'Auswirkungsbestandliste',
 'Effort (Hours)': 'Zeitaufwand (Stunden)',
 'Eggs': 'Eier',
