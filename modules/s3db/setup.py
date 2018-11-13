@@ -1082,6 +1082,7 @@ dropdown.change(function() {
                                 #"args": {"chdir": "/home/%s" % instance_type,
                                 #         },
                                 "command": "/usr/local/bin/compile %s" % instance_type,
+                                "become": "yes",
                                 },
                                ]
                      },
