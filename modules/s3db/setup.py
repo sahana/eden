@@ -1177,11 +1177,14 @@ dropdown.change(function() {
                  #"args": {"chdir": "/home/%s" % instance_type,
                  #         },
                  "command": "/usr/local/bin/compile %s" % instance_type,
+                 "become": "yes",
                  })
 
         playbook = [{"hosts": host,
                      "connection": "local", # @ToDo: Don't assume this
                      "remote_user": remote_user,
+                     "become_method": "sudo",
+                     "become_user": "root",
                      "tasks": tasks,
                      },
                     ]
