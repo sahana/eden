@@ -1038,7 +1038,7 @@ dropdown.change(function() {
         instance = db(itable.id == setting.instance_id).select(itable.type,
                                                                limitby = (0, 1)
                                                                ).first()
-        instance_type = instance.type
+        instance_type = INSTANCE_TYPES[instance.type]
 
         # Lookup Server Details
         # @ToDo: Support multiple Eden servers used as Load-balancers
@@ -1133,7 +1133,7 @@ dropdown.change(function() {
                                                        limitby = (0, 1)
                                                        ).first()
         deployment_id = instance.deployment_id
-        instance_type = instance.type
+        instance_type = INSTANCE_TYPES[instance.type]
 
         # Lookup Server Details
         # @ToDo: Support multiple Eden servers used as Load-balancers
