@@ -1067,6 +1067,8 @@ dropdown.change(function() {
         playbook = [{"hosts": host,
                      "connection": "local", # @ToDo: Don't assume this
                      "remote_user": remote_user,
+                     "become_method": "sudo",
+                     "become_user": "root",
                      "tasks": [{"name": "Edit 000_config.py",
                                 "lineinfile": {"dest": "/home/%s/applications/%s/models/000_config.py" % (instance_type, appname),
                                                "regexp": "^settings.%s =" % the_setting,
