@@ -1125,6 +1125,7 @@ dropdown.change(function() {
 
         db = current.db
         s3db = current.s3db
+        appname = current.request.application
 
         itable = s3db.setup_instance
         instance = db(itable.id == instance_id).select(itable.deployment_id,
@@ -1174,8 +1175,6 @@ dropdown.change(function() {
                  #         },
                  "command": "/usr/local/bin/compile",
                  })
-
-        appname = current.request.application
 
         playbook = [{"hosts": host,
                      "connection": "local", # @ToDo: Don't assume this
