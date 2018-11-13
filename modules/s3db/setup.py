@@ -1079,7 +1079,7 @@ dropdown.change(function() {
                                 #"command": "sudo -H -u web2py python web2py.py -S %(appname)s -M -R applications/%(appname)s/static/scripts/tools/compile.py" % {"appname": appname},
                                 #"args": {"chdir": "/home/%s" % instance_type,
                                 #         },
-                                "command": "/usr/local/bin/compile",
+                                "command": "/usr/local/bin/compile %s" % instance_type,
                                 },
                                ]
                      },
@@ -1173,7 +1173,7 @@ dropdown.change(function() {
                  #"command": "sudo -H -u web2py python web2py.py -S %(appname)s -M -R applications/%(appname)s/static/scripts/tools/compile.py" % {"appname": appname},
                  #"args": {"chdir": "/home/%s" % instance_type,
                  #         },
-                 "command": "/usr/local/bin/compile",
+                 "command": "/usr/local/bin/compile %s" % instance_type,
                  })
 
         playbook = [{"hosts": host,
