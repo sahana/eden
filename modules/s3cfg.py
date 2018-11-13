@@ -210,6 +210,8 @@ class S3Config(Storage):
         self.search = Storage()
         self.security = Storage()
         self.setup = Storage()
+        # Allow templates to append rather than replace
+        self.setup.wizard_questions = []
         self.supply = Storage()
         self.sync = Storage()
         self.tasks = Storage()
@@ -2595,6 +2597,12 @@ class S3Config(Storage):
             Which template folder to use to load monitor.py
         """
         return self.setup.get("monitor_template", "default")
+
+    def get_setup_wizard_questions(self):
+        """
+            Configuration options to see in the Setup Wizard
+        """
+        return self.setup.get("wizard_questions", [])
 
     # =========================================================================
     # Sync

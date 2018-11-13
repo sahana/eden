@@ -719,10 +719,51 @@ dropdown.change(function() {
             Custom S3Method to Configure an Instance
         """
 
-        #questions = current.deployment_settings.get_setup_questions()
+        from gluon import IS_IN_SET, SQLFORM
+        from gluon.sqlhtml import RadioWidget
+        from s3 import s3_mark_required
+        from s3dal import Field
+
+        T = current.T
+        response = current.response
+        settings = current.deployment_settings
+
+        questions = settings.get_setup_wizard_questions()
+
+        fields = []
+        fappend = fields.append
+        for q in questions:
+            setting = q["setting"]
+            fname = setting.replace(".", "_")
+            fappend(Field(fname,
+                          label = T(q["question"]),
+                          requires = IS_IN_SET(q["options"]),
+                          widget = RadioWidget.widget,
+                          #widget = lambda f, v: RadioWidget.widget(f, v, style="divs"),
+                          _id = "setting",
+                          ))
+
+        labels, required = s3_mark_required(fields)
+        response.s3.has_required = required
+        response.form_label_separator = ""
+
+        form = SQLFORM.factory(#formstyle = settings.get_ui_formstyle(),
+                               submit_button = T("Submit"),
+                               labels = labels,
+                               separator = "",
+                               table_name = "options", # Dummy table name
+                               _id = "options",
+                               *fields
+                               )
+
+        if form.accepts(r.post_vars, current.session):
+            # Processs Form
+            result = self.setup_settings_apply(r.id, form.vars)
+            if result:
+                response.confirmation = T("Settings Applied")
 
         current.response.view = "simple.html"
-        output = {"item": DIV("tbc"),
+        output = {"item": form,
                   }
         return output
 
@@ -993,28 +1034,25 @@ dropdown.change(function() {
                                                      ).first()
         new_value = setting.new_value
 
-        dtable = s3db.setup_deployment
         itable = s3db.setup_instance
-        query = (itable.id == setting.instance_id) & \
-                (dtable.id == itable.deployment_id)
-        deployment = db(query).select(dtable.remote_user,
-                                      dtable.private_key,
-                                      itable.type,
-                                      limitby = (0, 1)
-                                      ).first()
-        remote_user = deployment["setup_deployment.remote_user"]
-        private_key = deployment["setup_deployment.private_key"]
-        instance_type = deployment["setup_instance.type"]
+        instance = db(itable.id == setting.instance_id).select(itable.type,
+                                                               limitby = (0, 1)
+                                                               ).first()
+        instance_type = instance.type
 
-        # Lookup Server IP
+        # Lookup Server Details
         # @ToDo: Support multiple Eden servers used as Load-balancers
         svtable = s3db.setup_server
         query = (svtable.deployment_id == deployment_id) & \
                 (svtable.role.belongs((1, 4)))
         server = db(query).select(svtable.host_ip,
+                                  svtable.remote_user,
+                                  svtable.private_key,
                                   limitby = (0, 1)
                                   ).first()
         host = server.host_ip
+        remote_user = server.remote_user
+        private_key = server.private_key
 
         # Build Playbook data structure:
         the_setting = setting.setting
@@ -1076,6 +1114,105 @@ dropdown.change(function() {
         redirect(URL(c="setup", f="deployment",
                      args = [deployment_id, "setting"]),
                      )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def setup_settings_apply(instance_id, settings):
+        """
+            Method to Apply Settings to an instance
+            via models/000_config.py
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        itable = s3db.setup_instance
+        instance = db(itable.id == instance_id).select(itable.deployment_id,
+                                                       itable.type,
+                                                       limitby = (0, 1)
+                                                       ).first()
+        deployment_id = instance.deployment_id
+        instance_type = instance.type
+
+        # Lookup Server Details
+        # @ToDo: Support multiple Eden servers used as Load-balancers
+        svtable = s3db.setup_server
+        query = (svtable.deployment_id == deployment_id) & \
+                (svtable.role.belongs((1, 4)))
+        server = db(query).select(svtable.host_ip,
+                                  svtable.remote_user,
+                                  svtable.private_key,
+                                  limitby = (0, 1)
+                                  ).first()
+        host = server.host_ip
+        remote_user = server.remote_user
+        private_key = server.private_key
+
+        # Build Playbook data structure:
+        tasks = []
+        tappend = tasks.append
+        for setting in settings:
+            the_setting = setting.replace("_", ".", 1)
+            new_value = settings[setting]
+            if new_value == "True" or new_value == "False":
+                new_line = "settings.%s = %s" % (the_setting, new_value)
+            else:
+                # @ToDo: Handle lists/dicts (load into JSONS3?)
+                new_line = 'settings.%s = "%s"' % (the_setting, new_value)
+            tappend({"name": "Edit 000_config.py",
+                     "lineinfile": {"dest": "/home/%s/applications/%s/models/000_config.py" % (instance_type, appname),
+                                    "regexp": "^settings.%s =" % the_setting,
+                                    "line": new_line,
+                                    "state": "present",
+                                    },
+                     })
+
+        # @ToDo: Handle case where need to restart multiple webservers
+        tappend({"name": "Compile & Restart WebServer",
+                 #"command": "sudo -H -u web2py python web2py.py -S %(appname)s -M -R applications/%(appname)s/static/scripts/tools/compile.py" % {"appname": appname},
+                 #"args": {"chdir": "/home/%s" % instance_type,
+                 #         },
+                 "command": "/usr/local/bin/compile",
+                 })
+
+        appname = current.request.application
+
+        playbook = [{"hosts": host,
+                     "connection": "local", # @ToDo: Don't assume this
+                     "remote_user": remote_user,
+                     "tasks": tasks,
+                     },
+                    ]
+
+        # Write Playbook
+        name = "apply_%d" % int(time.time())
+        task_vars = setup_write_playbook("%s.yml" % name,
+                                         playbook,
+                                         [host],
+                                         tags = None,
+                                         private_key = private_key,
+                                         )
+
+        # Run the Playbook
+        current.s3task.schedule_task(name,
+                                     vars = task_vars,
+                                     function_name = "setup_run_playbook",
+                                     repeats = 1,
+                                     timeout = 6000,
+                                     #sync_output = 300
+                                     )
+
+        # Update the DB to show that the settings have been applied
+        # @ToDo: Do this as a callback from the async task
+        stable = s3db.setup_setting
+        q = (stable.instance_id == instance_id)
+        for setting in settings:
+            the_setting = setting.replace("_", ".", 1)
+            new_value = settings[setting]
+            db(q & (stable.setting == the_setting)).update(current_value = new_value,
+                                                           new_value = None)
+
+        return True
 
 # =============================================================================
 class S3SetupMonitorModel(S3Model):

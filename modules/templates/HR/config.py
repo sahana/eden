@@ -124,6 +124,90 @@ def config(settings):
     #settings.security.policy = 7 # Organisation-ACLs
 
     # -------------------------------------------------------------------------
+    # Setup
+    settings.setup.wizard_questions += [{"question": "Will you record data for multiple Organisations?",
+                                         "setting": "hrm.multiple_orgs",
+                                         "options": {True: "Yes", False: "No"},
+                                         },
+                                        {"question": "Do you need support for Branch Organisations?",
+                                         "setting": "org.branches",
+                                         "options": {True: "Yes", False: "No"},
+                                         },
+                                        ]
+
+    # -------------------------------------------------------------------------
+    # Organisations
+    # Uncomment to use an Autocomplete for Organisation lookup fields
+    #settings.org.autocomplete = True
+    # Enable the Organisation Sector field
+    #settings.org.sector = True
+    # But hide it from the rheader
+    #settings.org.sector_rheader = False
+    # Enable the use of Organisation Branches
+    #settings.org.branches = True
+    # Show branches as tree rather than as table
+    #settings.org.branches_tree_view = True
+    # Make Facility Types Hierarchical
+    #settings.org.facility_types_hierarchical = True
+    # Enable the use of Organisation Groups & what their name is
+    #settings.org.groups = "Coalition"
+    #settings.org.groups = "Network"
+    # Organisation Location context
+    #settings.org.organisation_location_context = "organisation_location.location_id"
+    # Make Organisation Types Hierarchical
+    #settings.org.organisation_types_hierarchical = True
+    # Make Organisation Types Multiple
+    #settings.org.organisation_types_multiple = True
+    # Show Organisation Types in the rheader
+    #settings.org.organisation_type_rheader = True
+    # Enable the use of Organisation Regions
+    #settings.org.regions = True
+    # Make Organisation Regions Hierarchical
+    #settings.org.regions_hierarchical = True
+    # Enable the use of Organisation Region Countries
+    #settings.org.region_countries = True
+    # Uncomment to show a Tab for Organisation Resources
+    #settings.org.resources_tab = True
+    # Make Services Hierarchical
+    #settings.org.services_hierarchical = True
+    # Set the length of the auto-generated org/site code the default is 10
+    #settings.org.site_code_len = 3
+    # Set the label for Sites
+    #settings.org.site_label = "Facility"
+    # Uncomment to show the date when a Site (Facilities-only for now) was last contacted
+    #settings.org.site_last_contacted = True
+    # Uncomment to use an Autocomplete for Site lookup fields
+    #settings.org.site_autocomplete = True
+    # Extra fields to search in Autocompletes & display in Representations
+    #settings.org.site_autocomplete_fields = ("instance_type", "location_id$L1", "location_id$addr_street", "organisation_id$name")
+    # Uncomment to hide inv & req tabs from Sites
+    #settings.org.site_inv_req_tabs = False
+    # Uncomment to allow Sites to be staffed by Volunteers
+    #settings.org.site_volunteers = True
+    # Uncomment to add summary fields for Organisations/Offices for # National/International staff
+    #settings.org.summary = True
+    # Enable certain fields just for specific Organisations
+    # Requires a call to settings.set_org_dependent_field(field)
+    # empty list => disabled for all (including Admin)
+    #settings.org.dependent_fields = \
+    #    {#"<table name>.<field name>"  : ["<Organisation Name>"],
+    #     "pr_person_details.mother_name"             : [],
+    #     "pr_person_details.father_name"             : [],
+    #     "pr_person_details.company"                 : [],
+    #     "pr_person_details.affiliations"            : [],
+    #     "vol_volunteer.active"                      : [],
+    #     "vol_volunteer_cluster.vol_cluster_type_id"      : [],
+    #     "vol_volunteer_cluster.vol_cluster_id"          : [],
+    #     "vol_volunteer_cluster.vol_cluster_position_id" : [],
+    #     }
+    # Uncomment to make Office codes unique
+    #settings.org.office_code_unique = True
+    # Uncomment to make Facility codes unique
+    #settings.org.facility_code_unique = True
+    # Uncomment to use Tags for Organisations, Offices & Facilities
+    #settings.org.tags = True
+
+    # -------------------------------------------------------------------------
     # Human Resource Management
     # Uncomment to change the label for 'Staff'
     #settings.hrm.staff_label = "Contacts"
@@ -132,7 +216,7 @@ def config(settings):
     # Uncomment to allow Staff & Volunteers to be registered without an Organisation
     #settings.hrm.org_required = False
     # Uncomment if their are only Staff & Volunteers from a single Organisation with no Branches
-    settings.hrm.multiple_orgs = False
+    #settings.hrm.multiple_orgs = False
     # Uncomment to disable the 'Send Message' action button
     #settings.hrm.compose_button = False
     # Uncomment to allow HR records to be deletable rather than just marking them as obsolete
@@ -238,6 +322,12 @@ def config(settings):
         ("errors", Storage(
             name_nice = T("Ticket Viewer"),
             #description = "Needed for Breadcrumbs",
+            restricted = False,
+            module_type = None  # No Menu
+        )),
+        ("setup", Storage(
+            name_nice = T("Setup"),
+            #description = "Configuration Wizard",
             restricted = False,
             module_type = None  # No Menu
         )),

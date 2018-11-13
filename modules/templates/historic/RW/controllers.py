@@ -70,9 +70,8 @@ class index(S3CustomController):
         # Contact Form
         request_email = settings.get_frontpage("request_email")
         if request_email:
+            from gluon import IS_NOT_EMPTY, SQLFORM
             from s3dal import Field
-            from gluon.validators import IS_NOT_EMPTY
-            from gluon.sqlhtml import SQLFORM
             fields = [Field("name",
                             label="Your name",
                             requires=IS_NOT_EMPTY(),
@@ -100,7 +99,7 @@ class index(S3CustomController):
                                            labels = labels,
                                            separator = "",
                                            table_name = "contact", # Dummy table name
-                                           _id="mailform",
+                                           _id = "mailform",
                                            *fields
                                            )
 
