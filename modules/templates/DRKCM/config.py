@@ -23,6 +23,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
                "case_use_service_contacts": True,
                "case_lodging": "site", # "site"|"text"|None
                "case_lodging_dates": True,
+               "activity_closure": True,
                }
 
 UI_OPTIONS = {"LEA": {"case_bamf_first": True,
@@ -35,6 +36,7 @@ UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "case_use_service_contacts": False,
                       "case_lodging": "text",
                       "case_lodging_dates": False,
+                      "activity_closure": False,
                       },
               }
 
@@ -1544,6 +1546,17 @@ def config(settings):
             return
 
         human_resource_id = auth.s3_logged_in_human_resource()
+        ui_options = get_ui_options()
+
+        # Optional: closure details
+        if ui_options.get("activity_closure"):
+            status_id = "status_id"
+            end_date = "end_date"
+            outcome = "outcome"
+        else:
+            status_id = None
+            end_date = None
+            outcome = None
 
         if r.method == "report":
 
@@ -1796,10 +1809,10 @@ def config(settings):
                                                  explicit_add = T("Add Entry"),
                                                  ),
 
-                            "status_id",
-                            "end_date",
+                            status_id,
+                            end_date,
 
-                            "outcome",
+                            outcome,
 
                             S3SQLInlineComponent(
                                 "document",
@@ -1829,7 +1842,7 @@ def config(settings):
                            #"followup_date",
                            "start_date",
                            "human_resource_id",
-                           "status_id",
+                           status_id,
                            ]
 
             # Custom list fields
@@ -1873,6 +1886,9 @@ def config(settings):
             # Configure person tags
             configure_person_tags()
 
+            # Get UI options
+            ui_options = get_ui_options()
+
             # Adapt list title when filtering for priority 0 (Emergency)
             if r.get_vars.get("~.priority") == "0":
                 emergencies = True
@@ -1894,19 +1910,30 @@ def config(settings):
 
                 db = current.db
 
-                # Status filter options + defaults
-                stable = s3db.dvr_case_activity_status
-                query = (stable.deleted == False)
-                rows = db(query).select(stable.id,
-                                        stable.name,
-                                        stable.is_closed,
-                                        cache = s3db.cache,
-                                        orderby = stable.workflow_position,
-                                        )
-                status_filter_options = OrderedDict((row.id, T(row.name))
-                                                    for row in rows)
-                status_filter_defaults = [row.id for row in rows
-                                                 if not row.is_closed]
+                # Status filter options + defaults, status list field
+                if ui_options.get("activity_closure"):
+                    stable = s3db.dvr_case_activity_status
+                    query = (stable.deleted == False)
+                    rows = db(query).select(stable.id,
+                                            stable.name,
+                                            stable.is_closed,
+                                            cache = s3db.cache,
+                                            orderby = stable.workflow_position,
+                                            )
+                    status_filter_options = OrderedDict((row.id, T(row.name))
+                                                        for row in rows)
+                    status_filter_defaults = [row.id for row in rows
+                                                     if not row.is_closed]
+                    status_filter = S3OptionsFilter("status_id",
+                                                    options = status_filter_options,
+                                                    cols = 3,
+                                                    default = status_filter_defaults,
+                                                    sort = False,
+                                                    )
+                    status_id = "status_id"
+                else:
+                    status_filter = None
+                    status_id = None
 
                 # Filter widgets
                 filter_widgets = [
@@ -1917,12 +1944,6 @@ def config(settings):
                                   ],
                                   label = T("Search"),
                                   ),
-                    S3OptionsFilter("status_id",
-                                    options = status_filter_options,
-                                    cols = 3,
-                                    default = status_filter_defaults,
-                                    sort = False,
-                                    ),
                     S3OptionsFilter("sector_id",
                                     hidden = True,
                                     options = lambda: s3_get_filter_opts("org_sector",
@@ -1940,6 +1961,8 @@ def config(settings):
                                     hidden = True,
                                     ),
                     ]
+                if status_filter:
+                    filter_widgets.insert(1, status_filter)
 
                 # Priority filter (unless pre-filtered to emergencies anyway)
                 if not emergencies:
@@ -1979,7 +2002,7 @@ def config(settings):
                                "start_date",
                                #"followup",
                                #"followup_date",
-                               "status_id",
+                               status_id,
                                ]
 
                 # Person responsible filter and list_field
