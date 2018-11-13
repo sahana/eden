@@ -13,12 +13,24 @@ from s3dal import original_tablename
 # =============================================================================
 # UI options per organisation
 #
-UI_DEFAULTS = {"case_use_service_contacts": True,
+UI_DEFAULTS = {"case_bamf_first": False,
+               "case_use_address": True,
+               "case_use_arrival_date": True,
                "case_use_notes": True,
+               "case_use_residence_status": True,
+               "case_use_service_contacts": True,
+               "case_lodging": "site", # "site"|"text"|None
+               "case_lodging_dates": True,
                }
 
-UI_OPTIONS = {"LEA": {"case_use_service_contacts": False,
+UI_OPTIONS = {"LEA": {"case_bamf_first": True,
+                      "case_use_address": False,
+                      "case_use_arrival_date": False,
                       "case_use_notes": False,
+                      "case_use_residence_status": False,
+                      "case_use_service_contacts": False,
+                      "case_lodging": "text",
+                      "case_lodging_dates": False,
                       },
               }
 
@@ -732,6 +744,7 @@ def config(settings):
                         multiple_orgs = False
 
                     configure_person_tags()
+                    ui_options = get_ui_options()
 
                     if r.method == "report":
 
@@ -799,13 +812,6 @@ def config(settings):
                         del options[9] # Remove "other"
                         field.requires = IS_IN_SET(options, zero=None)
 
-                        # Remove Add-links in residence status
-                        rtable = s3db.dvr_residence_status
-                        field = rtable.status_type_id
-                        field.comment = None
-                        field = rtable.permit_type_id
-                        field.comment = None
-
                         # Make gender mandatory, remove "unknown"
                         field = table.gender
                         field.default = None
@@ -820,6 +826,92 @@ def config(settings):
                         # Last name is required
                         field = table.last_name
                         field.requires = IS_NOT_EMPTY()
+
+                        # Alternatives: BAMF first or last
+                        bamf = S3SQLInlineComponent(
+                                    "bamf",
+                                    fields = [("", "value")],
+                                    filterby = {"field": "tag",
+                                                "options": "BAMF",
+                                                },
+                                    label = T("BAMF Reference Number"),
+                                    multiple = False,
+                                    name = "bamf",
+                                    )
+                        if ui_options.get("case_bamf_first"):
+                            bamf_first = bamf
+                            bamf_last = None
+                        else:
+                            bamf_first = None
+                            bamf_last = bamf
+
+                        # Alternatives: site_id or simple text field
+                        lodging_opt = ui_options.get("case_lodging")
+                        if lodging_opt == "site":
+                            lodging = "dvr_case.site_id"
+                        elif lodging_opt == "text":
+                            lodging = "case_details.lodging"
+                        else:
+                            lodging = None
+
+                        # Optional: site dates
+                        if ui_options.get("case_lodging_dates"):
+                            on_site_from = (T("Moving-in Date"),
+                                            "case_details.on_site_from",
+                                            )
+                            on_site_until = (T("Moving-out Date"),
+                                             "case_details.on_site_until",
+                                             )
+                        else:
+                            on_site_from = None
+                            on_site_until = None
+
+                        # Optional: Address
+                        if ui_options.get("case_use_address"):
+                            address = S3SQLInlineComponent(
+                                            "address",
+                                            label = T("Current Address"),
+                                            fields = [("", "location_id")],
+                                            filterby = {"field": "type",
+                                                        "options": "1",
+                                                        },
+                                            link = False,
+                                            multiple = False,
+                                            )
+                        else:
+                            address = None
+
+                        # Optional: Date of Entry
+                        if ui_options.get("case_use_arrival_date"):
+                            arrival_date = (T("Date of Entry"),
+                                            "case_details.arrival_date",
+                                            )
+                        else:
+                            arrival_date = None
+
+                        # Optional: Residence Status
+                        if ui_options.get("case_use_residence_status"):
+                            # Remove Add-links
+                            rtable = s3db.dvr_residence_status
+                            field = rtable.status_type_id
+                            field.comment = None
+                            field = rtable.permit_type_id
+                            field.comment = None
+                            residence_status = S3SQLInlineComponent(
+                                                "residence_status",
+                                                fields = ["status_type_id",
+                                                          "permit_type_id",
+                                                          #"reference",
+                                                          #"valid_from",
+                                                          "valid_until",
+                                                          "comments",
+                                                          ],
+                                                label = T("Residence Status"),
+                                                multiple = False,
+                                                layout = S3SQLVerticalSubFormLayout,
+                                                )
+                        else:
+                            residence_status = None
 
                         # Custom CRUD form
                         crud_form = S3SQLCustomForm(
@@ -838,6 +930,7 @@ def config(settings):
 
                             # Person Details --------------------------
                             (T("ID"), "pe_label"),
+                            bamf_first,
                             "last_name",
                             "first_name",
                             "person_details.nationality",
@@ -846,43 +939,13 @@ def config(settings):
                             "person_details.marital_status",
 
                             # Process Data ----------------------------
-                            "dvr_case.site_id",
-                            (T("Moving-in Date"), "case_details.on_site_from"),
-                            (T("Moving-out Date"), "case_details.on_site_until"),
-                            S3SQLInlineComponent(
-                                    "address",
-                                    label = T("Current Address"),
-                                    fields = [("", "location_id")],
-                                    filterby = {"field": "type",
-                                                "options": "1",
-                                                },
-                                    link = False,
-                                    multiple = False,
-                                    ),
-                            S3SQLInlineComponent(
-                                    "bamf",
-                                    fields = [("", "value")],
-                                    filterby = {"field": "tag",
-                                                "options": "BAMF",
-                                                },
-                                    label = T("BAMF Reference Number"),
-                                    multiple = False,
-                                    name = "bamf",
-                                    ),
-                            (T("Date of Entry"), "case_details.arrival_date"),
-                            S3SQLInlineComponent(
-                                    "residence_status",
-                                    fields = ["status_type_id",
-                                              "permit_type_id",
-                                              #"reference",
-                                              #"valid_from",
-                                              "valid_until",
-                                              "comments",
-                                              ],
-                                    label = T("Residence Status"),
-                                    multiple = False,
-                                    layout = S3SQLVerticalSubFormLayout,
-                                    ),
+                            lodging,
+                            on_site_from,
+                            on_site_until,
+                            address,
+                            bamf_last,
+                            arrival_date,
+                            residence_status,
 
                             # Other Details ---------------------------
                             "person_details.occupation",
@@ -969,12 +1032,15 @@ def config(settings):
                                          hidden = True,
                                          comment = T("Search for multiple IDs (separated by blanks)"),
                                          ),
-                            S3TextFilter(["service_contact.reference"],
-                                         label = T("Ref.No."),
-                                         hidden = True,
-                                         comment = T("Search by service contact reference number"),
-                                         ),
                             ]
+
+                        if ui_options.get("case_use_service_contacts"):
+                            filter_widgets.append(S3TextFilter(
+                                                    ["service_contact.reference"],
+                                                    label = T("Ref.No."),
+                                                    hidden = True,
+                                                    comment = T("Search by service contact reference number"),
+                                                    ))
                         if multiple_orgs:
                             filter_widgets.insert(1,
                                                   S3OptionsFilter("dvr_case.organisation_id"),
@@ -2993,13 +3059,24 @@ def drk_dvr_rheader(r, tabs=None):
                     if ui_opts.get("case_use_notes"):
                         tabs.append((T("Notes"), "case_note"))
 
+                lodging_opt = ui_opts.get("case_lodging")
+                if lodging_opt == "site":
+                    lodging_sel = "dvr_case.site_id"
+                    lodging_col = "dvr_case.site_id"
+                elif lodging_opt == "text":
+                    lodging_sel = "case_details.lodging"
+                    lodging_col = "dvr_case_details.lodging"
+                else:
+                    lodging_sel = None
+                    lodging_col = None
+
                 case = resource.select(["first_name",
                                         "last_name",
                                         "dvr_case.status_id",
                                         "dvr_case.archived",
                                         "dvr_case.household_size",
                                         "dvr_case.organisation_id",
-                                        "dvr_case.site_id",
+                                        lodging_sel,
                                         "dvr_case_flag_case.flag_id",
                                         ],
                                         represent = True,
@@ -3014,7 +3091,10 @@ def drk_dvr_rheader(r, tabs=None):
                     archived = case["_row"]["dvr_case.archived"]
                     household_size = lambda row: case["dvr_case.household_size"]
                     organisation = lambda row: case["dvr_case.organisation_id"]
-                    facility = lambda row: case["dvr_case.site_id"]
+                    if lodging_col:
+                        lodging = (T("Lodging"), lambda row: case[lodging_col])
+                    else:
+                        lodging = None
                     flags = lambda row: case["dvr_case_flag_case.flag_id"]
                 else:
                     # Target record exists, but doesn't match filters
@@ -3026,7 +3106,7 @@ def drk_dvr_rheader(r, tabs=None):
                                    ],
                                   [(T("Name"), name),
                                    (T("Size of Family"), household_size),
-                                   (T("Shelter"), facility),
+                                   lodging,
                                    ],
                                   ["date_of_birth",
                                    ],

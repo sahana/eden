@@ -2721,6 +2721,7 @@
 'Locations of this level need to have a parent of level': 'Standorte dieser Ebene müssen ein übergeordnetes Element der folgenden Ebene haben',
 'Locations': 'Standorte',
 'Lockdown': 'Sperrung',
+'Lodging': 'Unterkunft',
 'Log Entry Details': 'Details zum Protokolleintrag',
 'Log entry added': 'Protokolleintrag hinzugefügt',
 'Log entry deleted': 'Protokolleintrag gelöscht',

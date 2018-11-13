@@ -1742,7 +1742,7 @@ class S3ScriptItem(S3NavigationItem):
         return ""
 
 # =============================================================================
-class S3ResourceHeader:
+class S3ResourceHeader(object):
     """ Simple Generic Resource Header for tabbed component views """
 
     def __init__(self, fields=None, tabs=None):
@@ -1838,7 +1838,9 @@ class S3ResourceHeader:
                     field = None
                     label = ""
                     value = ""
-                    if isinstance(col, (tuple, list)) and len(col) == 2:
+                    if col is None:
+                        continue
+                    elif isinstance(col, (tuple, list)) and len(col) == 2:
                         label, f = col
                     else:
                         f = col

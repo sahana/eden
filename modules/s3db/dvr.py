@@ -98,6 +98,7 @@ class DVRCaseModel(S3Model):
         settings = current.deployment_settings
 
         crud_strings = current.response.s3.crud_strings
+        NONE = current.messages["NONE"]
 
         configure = self.configure
         define_table = self.define_table
@@ -620,6 +621,11 @@ class DVRCaseModel(S3Model):
                      s3_date("arrival_date",
                              label = T("Arrival Date"),
                              ),
+                     Field("lodging", length=128,
+                           label = T("Lodging"),
+                           represent = lambda v: v if v else NONE,
+                           requires = IS_LENGTH(128),
+                           ),
                      s3_date("on_site_from",
                              label = T("On-site from"),
                              ),
