@@ -24,6 +24,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
                "case_lodging": "site", # "site"|"text"|None
                "case_lodging_dates": True,
                "activity_closure": True,
+               "activity_default_sector": False,
                }
 
 UI_OPTIONS = {"LEA": {"case_bamf_first": True,
@@ -37,6 +38,7 @@ UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "case_lodging": "text",
                       "case_lodging_dates": False,
                       "activity_closure": False,
+                      "activity_default_sector": True,
                       },
               }
 
@@ -1540,6 +1542,7 @@ def config(settings):
 
         auth = current.auth
         s3db = current.s3db
+        table = s3db.dvr_case_activity
 
         if r.method == "count_due_followups":
             # Just counting due followups => skip customisation
@@ -1594,8 +1597,6 @@ def config(settings):
             from s3 import S3SQLCustomForm, \
                            S3SQLInlineComponent
 
-            table = s3db.dvr_case_activity
-
             # Represent person_id as link
             field = table.person_id
             #fmt = "%(pe_label)s %(last_name)s, %(first_name)s"
@@ -1617,7 +1618,7 @@ def config(settings):
 
             db = current.db
 
-            # Get the root org of the case org
+            # Get the root org of the case
             if person_id:
                 ctable = s3db.dvr_case
                 otable = s3db.org_organisation
@@ -1634,37 +1635,57 @@ def config(settings):
             else:
                 case_root_org = None
 
-            # Limit the sector selection to the case root org's sectors
-            if case_root_org:
-                ltable = s3db.org_sector_organisation
-                query = (ltable.organisation_id == case_root_org) & \
-                        (ltable.deleted == False)
-                rows = db(query).select(ltable.sector_id)
-                sector_ids = set(row.sector_id for row in rows)
-            else:
-                sector_ids = set()
-
-            # Include the sector_id of the current record (if any)
-            record = None
-            component = r.component
-            if not component:
-                if r.tablename == "dvr_case_activity":
-                    record = r.record
-            elif component.tablename == "dvr_case_activity" and r.component_id:
-                query = table.id == r.component_id
-                record = db(query).select(table.sector_id,
-                                          limitby = (0, 1),
-                                          ).first()
-            if record and record.sector_id:
-                sector_ids.add(record.sector_id)
-
             # Configure sector_id
             field = table.sector_id
             field.comment = None
-            subset = db(s3db.org_sector.id.belongs(sector_ids))
-            field.requires = IS_EMPTY_OR(IS_ONE_OF(subset, "org_sector.id",
-                                                   field.represent,
-                                                   ))
+
+            # Get the root org for sector selection
+            if case_root_org:
+                sector_root_org = case_root_org
+            else:
+                sector_root_org = auth.root_org()
+
+            if sector_root_org:
+                # Limit the sector selection
+                ltable = s3db.org_sector_organisation
+                query = (ltable.organisation_id == sector_root_org) & \
+                        (ltable.deleted == False)
+                rows = db(query).select(ltable.sector_id)
+                sector_ids = set(row.sector_id for row in rows)
+
+                # Default sector
+                if len(sector_ids) == 1:
+                    default_sector_id = rows.first().sector_id
+                else:
+                    default_sector_id = None
+
+                # Include the sector_id of the current record (if any)
+                record = None
+                component = r.component
+                if not component:
+                    if r.tablename == "dvr_case_activity":
+                        record = r.record
+                elif component.tablename == "dvr_case_activity" and r.component_id:
+                    query = table.id == r.component_id
+                    record = db(query).select(table.sector_id,
+                                              limitby = (0, 1),
+                                              ).first()
+                if record and record.sector_id:
+                    sector_ids.add(record.sector_id)
+
+                # Set selectable sectors
+                subset = db(s3db.org_sector.id.belongs(sector_ids))
+                field.requires = IS_EMPTY_OR(IS_ONE_OF(subset, "org_sector.id",
+                                                       field.represent,
+                                                       ))
+
+                # Default selection?
+                if ui_options.get("activity_default_sector") and \
+                   (not sector_ids or len(sector_ids) == 1 and default_sector_id):
+                    # No selectable sectors or single option
+                    # => auto-select and hide the field
+                    field.default = default_sector_id
+                    field.readable = field.writable = False
 
             # Show subject field
             field = table.subject
@@ -1836,7 +1857,7 @@ def config(settings):
         # Custom list fields for case activity component tab
         if r.tablename != "dvr_case_activity":
             list_fields = ["priority",
-                           "sector_id",
+                           #"sector_id",
                            "subject",
                            #"followup",
                            #"followup_date",
@@ -1844,6 +1865,8 @@ def config(settings):
                            "human_resource_id",
                            status_id,
                            ]
+            if table.sector_id.readable:
+                list_fields.insert(1, "sector_id")
 
             # Custom list fields
             s3db.configure("dvr_case_activity",
@@ -1905,10 +1928,14 @@ def config(settings):
             if not r.component and not r.record:
 
                 from s3 import S3TextFilter, \
-                               S3OptionsFilter, \
-                               s3_get_filter_opts
+                               S3OptionsFilter
 
                 db = current.db
+
+                # Sector filter options
+                # (field options are configured in customise_*_resource)
+                sector_id = resource.table.sector_id
+                sector_options = {k:v for k, v in sector_id.requires.options() if k}
 
                 # Status filter options + defaults, status list field
                 if ui_options.get("activity_closure"):
@@ -1944,23 +1971,18 @@ def config(settings):
                                   ],
                                   label = T("Search"),
                                   ),
-                    S3OptionsFilter("sector_id",
-                                    hidden = True,
-                                    options = lambda: s3_get_filter_opts("org_sector",
-                                                                         translate = True,
-                                                                         ),
-                                    ),
-                    #S3OptionsFilter("case_activity_need.need_id",
-                    #                options = lambda: s3_get_filter_opts("dvr_need",
-                    #                                                     translate = True,
-                    #                                                     ),
-                    #                hidden = True,
-                    #                ),
                     S3OptionsFilter("person_id$person_details.nationality",
                                     label = T("Client Nationality"),
                                     hidden = True,
                                     ),
                     ]
+
+                if sector_id.readable:
+                    filter_widgets.insert(1, S3OptionsFilter(
+                                                "sector_id",
+                                                hidden = True,
+                                                options = sector_options,
+                                                ))
                 if status_filter:
                     filter_widgets.insert(1, status_filter)
 
@@ -1997,13 +2019,15 @@ def config(settings):
                 list_fields = ["priority",
                                (T("ID"), "person_id$pe_label"),
                                (T("Case"), "person_id"),
-                               "sector_id",
+                               #"sector_id",
                                "subject",
                                "start_date",
                                #"followup",
                                #"followup_date",
                                status_id,
                                ]
+                if sector_id.readable:
+                    list_fields.insert(3, "sector_id")
 
                 # Person responsible filter and list_field
                 if not r.get_vars.get("mine"):
