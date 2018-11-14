@@ -934,7 +934,7 @@ dropdown.change(function() {
         task_id = current.s3task.schedule_task(name,
                                                vars = task_vars,
                                                function_name = "setup_run_playbook",
-                                               repeats = 1,
+                                               repeats = None,
                                                timeout = 6000,
                                                #sync_output = 300
                                                )
@@ -1101,7 +1101,7 @@ dropdown.change(function() {
         current.s3task.schedule_task(name,
                                      vars = task_vars,
                                      function_name = "setup_run_playbook",
-                                     repeats = 1,
+                                     repeats = None,
                                      timeout = 6000,
                                      #sync_output = 300
                                      )
@@ -1202,7 +1202,7 @@ dropdown.change(function() {
         current.s3task.schedule_task(name,
                                      vars = task_vars,
                                      function_name = "setup_run_playbook",
-                                     repeats = 1,
+                                     repeats = None,
                                      timeout = 6000,
                                      #sync_output = 300
                                      )
@@ -2207,7 +2207,7 @@ def setup_instance_method(instance_id, method="start"):
     current.s3task.schedule_task(name,
                                  vars = task_vars,
                                  function_name = "setup_run_playbook",
-                                 repeats = 1,
+                                 repeats = None,
                                  timeout = 6000,
                                  #sync_output = 300
                                  )
