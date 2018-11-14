@@ -14,6 +14,7 @@ from s3dal import original_tablename
 # UI options per organisation
 #
 UI_DEFAULTS = {"case_bamf_first": False,
+               "case_hide_default_org": False,
                "case_use_address": True,
                "case_use_arrival_date": True,
                "case_use_education": False,
@@ -28,6 +29,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
                }
 
 UI_OPTIONS = {"LEA": {"case_bamf_first": True,
+                      "case_hide_default_org": True,
                       "case_use_address": False,
                       "case_use_arrival_date": False,
                       "case_use_education": True,
@@ -661,6 +663,8 @@ def config(settings):
         auth = current.auth
         realms = auth.permission.permitted_realms("dvr_case", "create")
 
+        default_org = None
+
         if realms is None:
             # User can create cases for any org
             orgs = []
@@ -677,13 +681,12 @@ def config(settings):
             # User can create cases for multiple orgs
             user_org = auth.user.organisation_id if auth.user else None
             if user_org and user_org in orgs:
-                return user_org
+                default_org = user_org
         elif orgs:
             # User can create cases for exactly one org
-            return orgs[0]
+            default_org = orgs[0]
 
-        # No default, must choose
-        return None
+        return default_org, multiple_orgs
 
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
@@ -806,7 +809,12 @@ def config(settings):
                         # Default organisation
                         ctable = s3db.dvr_case
                         field = ctable.organisation_id
-                        field.default = case_default_org()
+                        default_org, selectable = case_default_org()
+                        if default_org:
+                            if ui_options.get("case_hide_default_org"):
+                                field.writable = selectable
+                                field.readable = selectable or multiple_orgs
+                        field.default = default_org
 
                         # Organisation is required
                         requires = field.requires
