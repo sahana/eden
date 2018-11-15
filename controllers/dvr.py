@@ -878,7 +878,7 @@ def response_action():
             resource.add_filter(query)
 
             # Create/delete requires context perspective
-            insertable = deletable = True
+            insertable = deletable = False
 
         # Filter for "mine"
         mine = r.get_vars.get("mine")

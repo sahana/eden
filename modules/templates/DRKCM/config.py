@@ -2199,16 +2199,6 @@ def config(settings):
 
         table = s3db.dvr_response_action
 
-        # Custom format for case activity representation
-        field = table.case_activity_id
-        #fmt = "%(pe_label)s %(last_name)s, %(first_name)s"
-        fmt = "%(last_name)s, %(first_name)s"
-        field.represent = s3db.dvr_CaseActivityRepresent(fmt = fmt,
-                                                         show_link = True,
-                                                         )
-
-        is_report = r.method == "report"
-
         # Can the user see cases from more than one org?
         realms = current.auth.permission.permitted_realms("dvr_case", "read")
         if realms is None or len(realms) > 1:
@@ -2218,6 +2208,7 @@ def config(settings):
 
         org_context = "case_activity_id$person_id$dvr_case.organisation_id"
 
+        is_report = r.method == "report"
         if is_report:
 
             # Custom Report Options
@@ -2257,11 +2248,10 @@ def config(settings):
 
         if r.interactive or r.representation in ("aadata", "xls", "pdf"):
 
-            table = r.table
-
             # Use drop-down for human_resource_id
             field = table.human_resource_id
             field.widget = None
+            field.default = current.auth.s3_logged_in_human_resource()
 
             get_vars = r.get_vars
             if r.tablename == "dvr_response_action" and "viewing" in get_vars:
@@ -2311,6 +2301,14 @@ def config(settings):
                                update_next = r.url(id="", method=""),
                                )
             else:
+
+                # Custom format for case activity representation
+                field = table.case_activity_id
+                #fmt = "%(pe_label)s %(last_name)s, %(first_name)s"
+                fmt = "%(last_name)s, %(first_name)s"
+                field.represent = s3db.dvr_CaseActivityRepresent(fmt = fmt,
+                                                                 show_link = True,
+                                                                 )
 
                 # Custom Filter Options
                 from s3 import S3AgeFilter, \
