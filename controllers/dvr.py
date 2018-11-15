@@ -842,11 +842,45 @@ def response_action():
 
         resource = r.resource
 
-        if not r.record:
+        get_vars = r.get_vars
+        if "viewing" in get_vars:
+            try:
+                vtablename, record_id = get_vars["viewing"].split(".")
+            except ValueError:
+                return False
+
+            has_permission = auth.s3_has_permission
+            if vtablename == "pr_person":
+                if not has_permission("read", "pr_person", record_id):
+                    r.unauthorised()
+                query = (FS("case_activity_id$person_id") == record_id)
+                resource.add_filter(query)
+
+                field = r.table.case_activity_id
+                field.readable = field.writable = True
+
+                if record_id:
+                    # Restrict case activity selection to the case viewed
+                    atable = s3db.dvr_case_activity
+                    field.requires = IS_ONE_OF(db(atable.person_id == record_id),
+                                               "dvr_case_activity.id",
+                                               field.represent,
+                                               )
+            else:
+                return False
+
+            insertable = deletable = True
+
+        elif not r.record:
+
             # Filter out response actions of archived cases
             query = (FS("case_activity_id$person_id$dvr_case.archived") == False)
             resource.add_filter(query)
 
+            # Create/delete requires context perspective
+            insertable = deletable = True
+
+        # Filter for "mine"
         mine = r.get_vars.get("mine")
         if mine == "a":
             # Filter for response actions assigned to logged-in user
@@ -868,15 +902,15 @@ def response_action():
                 resource.add_filter(mine_selector.belongs(set()))
             s3.crud_strings[resource.tablename]["title_list"] = title_list
 
-        resource.configure(# Must not create or delete actions from here:
-                           insertable = False,
-                           deletable = False,
+        resource.configure(insertable = insertable,
+                           deletable = deletable,
                            )
 
         return True
     s3.prep = prep
 
-    return s3_rest_controller()
+    return s3_rest_controller(rheader = s3db.dvr_rheader,
+                              )
 
 # -----------------------------------------------------------------------------
 def termination_type():

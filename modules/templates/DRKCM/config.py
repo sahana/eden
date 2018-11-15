@@ -15,6 +15,7 @@ from s3dal import original_tablename
 #
 UI_DEFAULTS = {"case_bamf_first": False,
                "case_hide_default_org": False,
+               "case_use_action_tab": False,
                "case_use_address": True,
                "case_use_arrival_date": True,
                "case_use_education": False,
@@ -30,6 +31,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
 
 UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "case_hide_default_org": True,
+                      "case_use_action_tab": True,
                       "case_use_address": False,
                       "case_use_arrival_date": False,
                       "case_use_education": True,
@@ -2253,82 +2255,45 @@ def config(settings):
             crud_strings = current.response.s3.crud_strings["dvr_response_action"]
             crud_strings["title_report"] = T("Action Statistic")
 
-        if r.interactive or r.representation == "aadata":
+        if r.interactive or r.representation in ("aadata", "xls", "pdf"):
 
-            # Custom Filter Options
-            from s3 import S3AgeFilter, \
-                           S3DateFilter, \
-                           S3OptionsFilter, \
-                           S3TextFilter, \
-                           s3_get_filter_opts
+            table = r.table
 
-            filter_widgets = [S3TextFilter(
-                                ["case_activity_id$person_id$pe_label",
-                                 "case_activity_id$person_id$first_name",
-                                 "case_activity_id$person_id$middle_name",
-                                 "case_activity_id$person_id$last_name",
-                                 "comments",
-                                 ],
-                                label = T("Search"),
-                                ),
-                              S3OptionsFilter(
-                                    "status_id",
-                                    options = lambda: \
-                                              s3_get_filter_opts("dvr_response_status"),
-                                    cols = 3,
-                                    translate = True,
-                                    ),
-                              S3DateFilter("date", hidden=not is_report),
-                              S3DateFilter("date_due", hidden=is_report),
-                              S3OptionsFilter(
-                                    "response_theme_ids",
-                                    hidden = True,
-                                    options = lambda: \
-                                              s3_get_filter_opts("dvr_response_theme",
-                                                                 org_filter = True,
-                                                                 ),
-                                    ),
-                              S3OptionsFilter("case_activity_id$person_id$person_details.nationality",
-                                              label = T("Client Nationality"),
-                                              hidden = True,
-                                              ),
-                              S3AgeFilter("case_activity_id$person_id$date_of_birth",
-                                          label = T("Client Age"),
-                                          hidden = True,
-                                          )
-                              #S3DateFilter("case_activity_id$person_id$date_of_birth",
-                              #             label = T("Client Date of Birth"),
-                              #             hidden = True,
-                              #             ),
-                              ]
+            # Use drop-down for human_resource_id
+            field = table.human_resource_id
+            field.widget = None
 
-            if r.interactive and multiple_orgs:
-                # Add case organisation filter
-                if realms:
-                    # Provide the realms as filter options
-                    otable = s3db.org_organisation
-                    orgs = db(otable.pe_id.belongs(realms)).select(otable.id)
-                    org_filter_opts = s3db.org_organisation_represent.bulk(
-                                            [org.id for org in orgs],
-                                            show_link = False,
-                                            )
-                    org_filter_opts.pop(None, None)
+            get_vars = r.get_vars
+            if r.tablename == "dvr_response_action" and "viewing" in get_vars:
+
+                # Represent case_activity_id by its subject when viewing
+                # from case perspective
+                try:
+                    vtablename, record_id = get_vars["viewing"].split(".")
+                except ValueError:
+                    vtablename, record_id = None, None
+
+                if vtablename == "pr_person":
+                    show_link = True
+                    linkto = URL(c="dvr", f="person",
+                                 args = [record_id, "case_activity", "[id]"],
+                                 )
                 else:
-                    # Look up from records
-                    org_filter_opts = None
-                filter_widgets.insert(1,
-                                      S3OptionsFilter(org_context,
-                                                      options = org_filter_opts,
-                                                      ),
-                                      )
+                    show_link = False,
+                    linkto = None
 
-            s3db.configure("dvr_response_action",
-                           filter_widgets = filter_widgets,
-                           )
+                from s3 import S3Represent
 
-            if r.tablename == "dvr_response_action":
-                list_fields = [(T("ID"), "case_activity_id$person_id$pe_label"),
-                               "case_activity_id",
+                field = table.case_activity_id
+                field.label = T("Subject")
+                field.represent = S3Represent(lookup = "dvr_case_activity",
+                                              fields = ["subject"],
+                                              show_link = show_link,
+                                              linkto = linkto,
+                                              )
+
+                # Custom list fields
+                list_fields = ["case_activity_id",
                                "response_theme_ids",
                                "comments",
                                "human_resource_id",
@@ -2337,16 +2302,123 @@ def config(settings):
                                "hours",
                                "status_id",
                                ]
+
                 s3db.configure("dvr_response_action",
                                list_fields = list_fields,
+                               filter_widgets = None,
+                               orderby = "dvr_response_action.date desc",
+                               create_next = r.url(id="", method=""),
+                               update_next = r.url(id="", method=""),
                                )
+            else:
+
+                # Custom Filter Options
+                from s3 import S3AgeFilter, \
+                               S3DateFilter, \
+                               S3OptionsFilter, \
+                               S3TextFilter, \
+                               s3_get_filter_opts
+
+                filter_widgets = [S3TextFilter(
+                                    ["case_activity_id$person_id$pe_label",
+                                     "case_activity_id$person_id$first_name",
+                                     "case_activity_id$person_id$middle_name",
+                                     "case_activity_id$person_id$last_name",
+                                     "comments",
+                                     ],
+                                    label = T("Search"),
+                                    ),
+                                  S3OptionsFilter(
+                                        "status_id",
+                                        options = lambda: \
+                                                  s3_get_filter_opts("dvr_response_status"),
+                                        cols = 3,
+                                        translate = True,
+                                        ),
+                                  S3DateFilter("date", hidden=not is_report),
+                                  S3DateFilter("date_due", hidden=is_report),
+                                  S3OptionsFilter(
+                                        "response_theme_ids",
+                                        hidden = True,
+                                        options = lambda: \
+                                                  s3_get_filter_opts("dvr_response_theme",
+                                                                     org_filter = True,
+                                                                     ),
+                                        ),
+                                  S3OptionsFilter("case_activity_id$person_id$person_details.nationality",
+                                                  label = T("Client Nationality"),
+                                                  hidden = True,
+                                                  ),
+                                  S3AgeFilter("case_activity_id$person_id$date_of_birth",
+                                              label = T("Client Age"),
+                                              hidden = True,
+                                              )
+                                  #S3DateFilter("case_activity_id$person_id$date_of_birth",
+                                  #             label = T("Client Date of Birth"),
+                                  #             hidden = True,
+                                  #             ),
+                                  ]
+
+                if r.interactive and multiple_orgs:
+                    # Add case organisation filter
+                    if realms:
+                        # Provide the realms as filter options
+                        otable = s3db.org_organisation
+                        orgs = db(otable.pe_id.belongs(realms)).select(otable.id)
+                        org_filter_opts = s3db.org_organisation_represent.bulk(
+                                                [org.id for org in orgs],
+                                                show_link = False,
+                                                )
+                        org_filter_opts.pop(None, None)
+                    else:
+                        # Look up from records
+                        org_filter_opts = None
+                    filter_widgets.insert(1,
+                                          S3OptionsFilter(org_context,
+                                                          options = org_filter_opts,
+                                                          ),
+                                          )
+
+                s3db.configure("dvr_response_action",
+                               filter_widgets = filter_widgets,
+                               )
+
+                if r.tablename == "dvr_response_action":
+                    list_fields = [(T("ID"), "case_activity_id$person_id$pe_label"),
+                                   "case_activity_id",
+                                   "response_theme_ids",
+                                   "comments",
+                                   "human_resource_id",
+                                   "date_due",
+                                   "date",
+                                   "hours",
+                                   "status_id",
+                                   ]
+                    s3db.configure("dvr_response_action",
+                                   list_fields = list_fields,
+                                   )
 
     settings.customise_dvr_response_action_resource = customise_dvr_response_action_resource
 
     # -------------------------------------------------------------------------
     def customise_dvr_response_action_controller(**attr):
 
-        settings.base.bigtable = True
+        s3db = current.s3db
+
+        if "viewing" in current.request.get_vars:
+            # Set contacts-method to retain the tab
+            s3db.set_method("pr", "person",
+                            method = "contacts",
+                            action = s3db.pr_Contacts,
+                            )
+
+        else:
+            settings.base.bigtable = True
+
+        # Custom rheader tabs
+        if current.request.controller == "dvr":
+            attr = dict(attr)
+            attr["rheader"] = drk_dvr_rheader
 
         return attr
 
@@ -3124,6 +3196,8 @@ def drk_dvr_rheader(r, tabs=None):
                             (T("Documents"), "document/"),
                             #(T("Notes"), "case_note"),
                             ]
+                    if ui_opts.get("case_use_action_tab"):
+                        tabs.insert(4, (T("Actions"), "response_action/"))
                     if ui_opts.get("case_use_service_contacts"):
                         tabs.insert(5, (T("Service Contacts"), "service_contact"))
                     if ui_opts.get("case_use_notes"):

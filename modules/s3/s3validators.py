@@ -971,6 +971,11 @@ class IS_ONE_OF_EMPTY(Validator):
     # -------------------------------------------------------------------------
     def __call__(self, value):
 
+        # Translate error message if string
+        error_message = self.error_message
+        if isinstance(error_message, basestring):
+            error_message = current.T(error_message)
+
         try:
             dbset = self.dbset
             table = dbset._db[self.ktable]
@@ -1004,7 +1009,7 @@ class IS_ONE_OF_EMPTY(Validator):
                     if not [x for x in values if not x in self.theset]:
                         return (values, None)
                     else:
-                        return (value, self.error_message)
+                        return (value, error_message)
                 else:
                     field = table[self.kfield]
                     query = None
@@ -1018,7 +1023,7 @@ class IS_ONE_OF_EMPTY(Validator):
                         query = query is not None and \
                                 (deleted_q & (query)) or deleted_q
                     if dbset(query).count() < 1:
-                        return (value, self.error_message)
+                        return (value, error_message)
                     return (values, None)
             elif self.theset:
                 if str(value) in self.theset:
@@ -1046,7 +1051,7 @@ class IS_ONE_OF_EMPTY(Validator):
         except:
             pass
 
-        return (value, self.error_message)
+        return (value, error_message)
 
 
 # =============================================================================
