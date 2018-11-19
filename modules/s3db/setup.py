@@ -1081,7 +1081,8 @@ dropdown.change(function() {
                                 #"command": "sudo -H -u web2py python web2py.py -S %(appname)s -M -R applications/%(appname)s/static/scripts/tools/compile.py" % {"appname": appname},
                                 #"args": {"chdir": "/home/%s" % instance_type,
                                 #         },
-                                "command": "/usr/local/bin/compile %s" % instance_type,
+                                # We don't want to restart the UWSGI process running the Task until after the Task has completed
+                                "command": 'echo "/usr/local/bin/compile %s" | at now + 1 minutes' % instance_type,
                                 "become": "yes",
                                 },
                                ]
@@ -1176,7 +1177,8 @@ dropdown.change(function() {
                  #"command": "sudo -H -u web2py python web2py.py -S %(appname)s -M -R applications/%(appname)s/static/scripts/tools/compile.py" % {"appname": appname},
                  #"args": {"chdir": "/home/%s" % instance_type,
                  #         },
-                 "command": "/usr/local/bin/compile %s" % instance_type,
+                 # We don't want to restart the UWSGI process running the Task until after the Task has completed
+                 "command": 'echo "/usr/local/bin/compile %s" | at now + 1 minutes' % instance_type,
                  "become": "yes",
                  })
 
