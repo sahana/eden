@@ -26,7 +26,9 @@ UI_DEFAULTS = {"case_bamf_first": False,
                "case_lodging": "site", # "site"|"text"|None
                "case_lodging_dates": True,
                "activity_closure": True,
+               "activity_comments": True,
                "activity_default_sector": False,
+               "activity_need_details": True,
                }
 
 UI_OPTIONS = {"LEA": {"case_bamf_first": True,
@@ -42,7 +44,9 @@ UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "case_lodging": "text",
                       "case_lodging_dates": False,
                       "activity_closure": False,
+                      "activity_comments": False,
                       "activity_default_sector": True,
+                      "activity_need_details": False,
                       },
               }
 
@@ -1563,11 +1567,14 @@ def config(settings):
 
         # Optional: closure details
         if ui_options.get("activity_closure"):
+            # Activities can be closed
             status_id = "status_id"
             end_date = "end_date"
             outcome = "outcome"
         else:
+            # Activities are never closed
             status_id = None
+            table.start_date.label = T("Date")
             end_date = None
             outcome = None
 
@@ -1577,14 +1584,15 @@ def config(settings):
             facts = ((T("Number of Activities"), "count(id)"),
                      (T("Number of Clients"), "count(person_id)"),
                      )
-            axes = ("person_id$gender",
+            axes = ["person_id$gender",
                     "person_id$person_details.nationality",
                     "person_id$person_details.marital_status",
-                    "status_id",
                     "priority",
                     "sector_id",
                     (T("Theme"), "response_action.response_theme_ids"),
-                    )
+                    ]
+            if status_id == "status_id":
+                axes.insert(3, status_id)
             report_options = {
                 "rows": axes,
                 "cols": axes,
@@ -1603,7 +1611,6 @@ def config(settings):
 
         if r.interactive or r.representation == "aadata":
 
-            from gluon.sqlhtml import OptionsWidget
             from s3 import S3SQLCustomForm, \
                            S3SQLInlineComponent
 
@@ -1702,6 +1709,10 @@ def config(settings):
             field.readable = field.writable = True
             field.requires = IS_NOT_EMPTY()
 
+            # Show need details
+            field = table.need_details
+            field.readable = field.writable = ui_options.get("activity_need_details")
+
             # Customise Priority
             field = table.priority
             priority_opts = [(0, T("Emergency")),
@@ -1720,28 +1731,6 @@ def config(settings):
                                                  3: "grey",
                                                  }).represent
 
-            # Customise "completed" flag
-            # => label as "Status" and use drop-down for open/closed
-            CURRENT = T("Current")
-            COMPLETED = T("Completed")
-            field = table.completed
-            field.label = T("Status")
-            field.represent = lambda v, row=None: COMPLETED if v else CURRENT
-            field.requires = [IS_IN_SET([(False, CURRENT),
-                                         (True, COMPLETED),
-                                         ],
-                                        zero=None,
-                                        ),
-                              # Form option is a str => convert to boolean
-                              lambda v: (str(v) == "True", None),
-                              ]
-            field.widget = OptionsWidget.widget
-
-            # Show end_date field (read-only)
-            field = table.end_date
-            field.label = T("Completed on")
-            field.readable = True
-
             # Show human_resource_id
             field = table.human_resource_id
             field.readable = field.writable = True
@@ -1750,15 +1739,15 @@ def config(settings):
             field.widget = None
             field.comment = None
 
-            # Inline-needs
-            #ntable = current.s3db.dvr_case_activity_need
-            #
-            #field = ntable.human_resource_id
-            #field.default = human_resource_id
-            #field.widget = field.comment = None
-            #
-            #field = ntable.need_id
-            #field.comment = None
+            # Show end_date field (read-only)
+            if end_date is not None:
+                field = table.end_date
+                field.label = T("Completed on")
+                field.readable = True
+
+            # Show comments
+            field = table.comments
+            field.readable = field.writable = ui_options.get("activity_comments")
 
             # Inline-responses
             rtable = s3db.dvr_response_action
@@ -1785,6 +1774,7 @@ def config(settings):
             field.default = human_resource_id
             field.widget = field.comment = None
 
+            # Custom CRUD form
             from s3 import S3SQLVerticalSubFormLayout
             crud_form = S3SQLCustomForm(
                             "person_id",
@@ -1797,18 +1787,6 @@ def config(settings):
                             "start_date",
                             "priority",
                             "human_resource_id",
-
-                            #S3SQLInlineComponent("case_activity_need",
-                            #                     label = T("Needs Assessment"),
-                            #                     fields = [
-                            #                         "date",
-                            #                         "need_id",
-                            #                         (T("Details"), "comments"),
-                            #                         "human_resource_id",
-                            #                         ],
-                            #                     layout = S3SQLVerticalSubFormLayout,
-                            #                     explicit_add = T("Add Need"),
-                            #                     ),
 
                             S3SQLInlineComponent("response_action",
                                                  label = T("Actions"),
