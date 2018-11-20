@@ -1,0 +1,44 @@
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+ </div>
+</div>
+{{try:}}{{rheader=rheader}}
+<div id='rheader' class='row'>
+ <div class='small-12 columns'>
+  {{=XML(rheader)}}
+ </div>
+</div>
+<div id='component' class='row'>
+{{except:}}
+<div class='row'>
+{{pass}}
+ <div class='small-12 columns'>
+  <div class='row'>
+   <div id='map' class='small-12 columns'></div>
+  </div>
+  <div class='row'>
+   <div class='medium-9 large-8 columns end'>
+    {{try:}}{{if list_filter_form:}}
+    <div id='list-filter' class='form-container'>
+     {{=list_filter_form}}
+    </div>
+    {{pass}}
+    {{except:}}{{pass}}
+   </div>
+  </div>
+  <div class='row'>
+   {{try:}}{{organizer=organizer}}
+   <div id='organizer-container' class='small-12 columns'>
+    {{=organizer}}
+   </div>
+   {{except:}}{{pass}}
+  </div>
+ </div>
+</div>
+{{if s3.rfooter:}}
+<div id='rfooter' class='row'>
+ <div class='small-12 columns'>
+  {{=XML(s3.rfooter)}}
+ </div>
+</div>{{pass}}

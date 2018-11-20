@@ -162,4 +162,10 @@ body.rtl {
     @include empty_section();
 }
 
+// TODO: move into separate file
+.fc table,
+.fc table tr {
+    background: transparent;
+}
+
 // END ========================================================================

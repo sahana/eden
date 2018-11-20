@@ -88,6 +88,7 @@ from s3rest import *
 # CRUD
 from s3crud import *
 from s3forms import *
+from s3organizer import *
 
 # Filtering
 from s3filter import *

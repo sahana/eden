@@ -2150,6 +2150,12 @@ def config(settings):
                                    insertable = False,
                                    deletable = False,
                                    update_next = r.url(method=""),
+
+                                   # TODO move into customise_resource
+                                   # TODO adapt represent to perspective
+                                   organize = {"start": "date",
+                                               "represent": "person_id",
+                                               },
                                    )
 
             return result

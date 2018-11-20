@@ -220,6 +220,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     set_handler("import", s3base.S3Importer)
     set_handler("map", s3base.S3Map)
     set_handler("mform", s3base.S3MobileCRUD, representation="json")
+    set_handler("organize", s3base.S3Organizer)
     set_handler("profile", s3base.S3Profile)
     set_handler("report", s3base.S3Report) # For HTML, JSON
     set_handler("report", s3base.S3Report, transform=True) # For GeoJSON

@@ -1293,15 +1293,15 @@ S3.search = {};
             }
             target_data = targets[target_id];
             t = $('#' + target_id);
-            if (t.hasClass('dl')) {
-                t.datalist('ajaxReload', target_data.queries);
-            } else if (t.hasClass('dataTable')) {
+            if (t.hasClass('dataTable')) {
                 // Refresh Data
                 var dt = t.dataTable(),
                     dtAjaxURL = target_data.ajaxurl;
                 dt.fnReloadAjax(dtAjaxURL);
                 updateFormatURLs(dt, queries);
                 $('#' + dt[0].id + '_dataTable_filterURL').val(dtAjaxURL);
+            } else if (t.hasClass('dl')) {
+                t.datalist('ajaxReload', target_data.queries);
             } else if (t.hasClass('map_wrapper')) {
                 S3.gis.refreshLayer('search_results');
             } else if (t.hasClass('gi-container')) {
@@ -1310,6 +1310,8 @@ S3.search = {};
                 t.pivottable('reload', null, target_data.queries);
             } else if (t.hasClass('tp-container')) {
                 t.timeplot('reload', null, target_data.queries);
+            } else if (t.hasClass('s3-organizer')) {
+                t.organizer('reload');
             }
         }
     };
@@ -1395,7 +1397,8 @@ S3.search = {};
             t.hasClass('gi-container') ||
             t.hasClass('pt-container') ||
             t.hasClass('tp-container') ||
-            t.hasClass('map_wrapper')) {
+            t.hasClass('map_wrapper') ||
+            t.hasClass('s3-organizer')) {
             // These targets handle their AjaxURL themselves
             ajaxurl = null;
         } else if (t.hasClass('dataTable')) {
@@ -1904,11 +1907,8 @@ S3.search = {};
                 needs_reload = false;
                 ajaxurl = null;
 
-                if (t.hasClass('dl')) {
-                    // data lists do not need page reload
-                    needs_reload = false;
-                } else if (t.hasClass('dataTable')) {
-                    // data tables need page reload if no AjaxURL configured
+                if (t.hasClass('dataTable')) {
+                    // Data tables need page reload if no AjaxURL configured
                     config = $('input#' + targets[i] + '_configurations');
                     if (config.length) {
                         settings = JSON.parse($(config).val());
@@ -1925,35 +1925,29 @@ S3.search = {};
                     } else {
                         needs_reload = true;
                     }
-                } else if (t.hasClass('map_wrapper')) {
-                    // maps do not need page reload
-                    needs_reload = false;
-                } else if (t.hasClass('cms_content')) {
-                    // CMS widgets do not need page reload
-                    needs_reload = false;
-                } else if (t.hasClass('gi-container')) {
-                    // GroupedItems do not need page reload
-                    needs_reload = false;
-                } else if (t.hasClass('pt-container')) {
-                    // PivotTables do not need page reload
-                    needs_reload = false;
-                } else if (t.hasClass('tp-container')) {
-                    // TimePlots do not need page reload
+                } else if (t.hasClass('dl') ||
+                           t.hasClass('map_wrapper') ||
+                           t.hasClass('cms_content') ||
+                           t.hasClass('gi-container') ||
+                           t.hasClass('pt-container') ||
+                           t.hasClass('tp-container') ||
+                           t.hasClass('s3-organizer')) {
+                    // These targets can be Ajax-reloaded
                     needs_reload = false;
                 } else {
-                    // all other targets need page reload
+                    // All other targets need page reload
                     if (visible) {
-                        // reload immediately
+                        // Reload immediately
                         url = filterURL(url, queries);
                         window.location.href = url;
                     } else {
-                        // mark the need for a reload later
+                        // Mark the need for a reload later
                         needs_reload = true;
                     }
                 }
 
                 if (!visible) {
-                    // schedule for later
+                    // Schedule for later
                     pendingTargets[form_id][target_id] = {
                         needs_reload: needs_reload,
                         ajaxurl: ajaxurl,
@@ -1968,14 +1962,14 @@ S3.search = {};
                 t = $('#' + target_id);
                 if (!t.is(':visible')) {
                     continue;
-                } else if (t.hasClass('dl')) {
-                    t.datalist('ajaxReload', queries);
                 } else if (t.hasClass('dataTable')) {
                     var dt = t.dataTable(),
                         dtAjaxURL = dt_ajaxurl[target_id];
                     dt.fnReloadAjax(dtAjaxURL);
                     updateFormatURLs(dt, queries);
                     $('#' + dt[0].id + '_dataTable_filterURL').val(dtAjaxURL);
+                } else if (t.hasClass('dl')) {
+                    t.datalist('ajaxReload', queries);
                 } else if (t.hasClass('map_wrapper')) {
                     S3.gis.refreshLayer('search_results', queries);
                 } else if (t.hasClass('gi-container')) {
@@ -1984,6 +1978,8 @@ S3.search = {};
                     t.pivottable('reload', null, queries);
                 } else if (t.hasClass('tp-container')) {
                     t.timeplot('reload', null, queries);
+                } else if (t.hasClass('s3-organizer')) {
+                    t.organizer('reload');
                 }
             }
         } else {
