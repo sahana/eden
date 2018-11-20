@@ -43,7 +43,7 @@ __all__ = ("S3NavigationItem",
 
 from gluon import *
 from gluon.storage import Storage
-from s3utils import s3_unicode
+from s3utils import s3_str
 
 # =============================================================================
 class S3NavigationItem(object):
@@ -746,7 +746,7 @@ class S3NavigationItem(object):
         if level == 2:
             extra = 1
             for k, v in link_vars.iteritems():
-                if k not in rvars or k in rvars and rvars[k] != s3_unicode(v):
+                if k not in rvars or k in rvars and rvars[k] != s3_str(v):
                     extra = 0
                     break
                 else:
@@ -1836,14 +1836,31 @@ class S3ResourceHeader(object):
                 tr = TR()
                 for col in row:
                     field = None
-                    label = ""
+                    label = True
                     value = ""
+                    colspan = None
+
+                    # Parse column spec:
+                    # fieldname|(label, fieldname)|(label,fieldname,colspan)
+                    # label can be either a T(), str, HTML, or:
+                    #       True        => automatic (use field label, default)
+                    #       None        => no label column
+                    #       "" or False => empty label
                     if col is None:
                         continue
-                    elif isinstance(col, (tuple, list)) and len(col) == 2:
-                        label, f = col
+                    elif isinstance(col, (tuple, list)):
+                        if len(col) == 2:
+                            label, f = col
+                        elif len(col) > 2:
+                            label, f, colspan = col
+                        else:
+                            f = col[0]
                     else:
                         f = col
+
+                    # Get value:
+                    # value can be a fieldname, a Field instance or a callable to
+                    # extract the value from the record
                     if callable(f):
                         try:
                             value = f(record)
@@ -1864,22 +1881,22 @@ class S3ResourceHeader(object):
                         elif isinstance(f, Field) and f.name in record:
                             field = f
                             value = record[f.name]
-                    if field is not None:
-                        if not label:
-                            label = field.label
-                        if hasattr(field, "represent") and \
-                           field.represent is not None:
-                            value = field.represent(value)
+                    if hasattr(field, "represent") and field.represent is not None:
+                        value = field.represent(value)
+
+                    # Render label
+                    if label is True:
+                        label = field.label if field is not None else False
                     if label is not None:
-                        tr.append(TH("%s: " % label))
+                        tr.append(TH(("%s: " % label) if label else ""))
+
+                    # Render value
                     v = value
                     if not isinstance(v, basestring) and \
                        not isinstance(value, DIV):
-                        try:
-                            v = unicode(v)
-                        except:
-                            pass
-                    tr.append(TD(v))
+                        v = s3_str(v)
+                    tr.append(TD(v, _colspan=colspan) if colspan else TD(v))
+
                 trs.append(tr)
             if as_div:
                 rheader = DIV(TABLE(trs), rheader_tabs)

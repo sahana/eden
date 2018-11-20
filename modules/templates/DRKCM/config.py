@@ -19,6 +19,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
                "case_use_address": True,
                "case_use_arrival_date": True,
                "case_use_education": False,
+               "case_use_flags": True,
                "case_use_notes": True,
                "case_use_occupation": True,
                "case_use_residence_status": True,
@@ -37,6 +38,7 @@ UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "case_use_address": False,
                       "case_use_arrival_date": False,
                       "case_use_education": True,
+                      "case_use_flags": False,
                       "case_use_notes": False,
                       "case_use_occupation": False,
                       "case_use_residence_status": False,
@@ -836,6 +838,17 @@ def config(settings):
                         field.readable = field.writable = True
                         field.widget = None
 
+                        # Optional: Case Flags
+                        if ui_options.get("case_use_flags"):
+                            case_flags = S3SQLInlineLink("case_flag",
+                                                         label = T("Flags"),
+                                                         field = "flag_id",
+                                                         help_field = "comments",
+                                                         cols = 4,
+                                                         )
+                        else:
+                            case_flags = None
+
                         # Make marital status mandatory, remove "other"
                         dtable = s3db.pr_person_details
                         field = dtable.marital_status
@@ -953,12 +966,7 @@ def config(settings):
                             "dvr_case.organisation_id",
                             "dvr_case.human_resource_id",
                             (T("Case Status"), "dvr_case.status_id"),
-                            S3SQLInlineLink("case_flag",
-                                           label = T("Flags"),
-                                           field = "flag_id",
-                                           help_field = "comments",
-                                           cols = 4,
-                                           ),
+                            case_flags,
 
                             # Person Details --------------------------
                             (T("ID"), "pe_label"),
@@ -1033,14 +1041,6 @@ def config(settings):
                             S3DateFilter("date_of_birth",
                                          hidden = True,
                                          ),
-                            S3OptionsFilter("case_flag_case.flag_id",
-                                            label = T("Flags"),
-                                            options = s3_get_filter_opts("dvr_case_flag",
-                                                                         translate = True,
-                                                                         ),
-                                            cols = 3,
-                                            hidden = True,
-                                            ),
                             S3OptionsFilter("dvr_case.status_id",
                                             cols = 3,
                                             #default = None,
@@ -1067,6 +1067,7 @@ def config(settings):
                                          ),
                             ]
 
+                        # Ref.No.-filter if using service contacts
                         if ui_options.get("case_use_service_contacts"):
                             filter_widgets.append(S3TextFilter(
                                                     ["service_contact.reference"],
@@ -1074,6 +1075,18 @@ def config(settings):
                                                     hidden = True,
                                                     comment = T("Search by service contact reference number"),
                                                     ))
+                        # Flag-filter if using case flags
+                        if case_flags:
+                            filter_widgets.insert(2, S3OptionsFilter(
+                                                    "case_flag_case.flag_id",
+                                                    label = T("Flags"),
+                                                    options = s3_get_filter_opts("dvr_case_flag",
+                                                                                 translate = True,
+                                                                                 ),
+                                                    cols = 3,
+                                                    hidden = True,
+                                                    ))
+                        # Org-filter if user can see cases from multiple orgs/branches
                         if multiple_orgs:
                             filter_widgets.insert(1,
                                                   S3OptionsFilter("dvr_case.organisation_id"),
@@ -3190,6 +3203,11 @@ def drk_dvr_rheader(r, tabs=None):
                     lodging_sel = None
                     lodging_col = None
 
+                if ui_opts.get("case_use_flags"):
+                    flags_sel = "dvr_case_flag_case.flag_id"
+                else:
+                    flags_sel = None
+
                 case = resource.select(["first_name",
                                         "last_name",
                                         "dvr_case.status_id",
@@ -3197,7 +3215,7 @@ def drk_dvr_rheader(r, tabs=None):
                                         "dvr_case.household_size",
                                         "dvr_case.organisation_id",
                                         lodging_sel,
-                                        "dvr_case_flag_case.flag_id",
+                                        flags_sel,
                                         ],
                                         represent = True,
                                         raw_data = True,
@@ -3215,7 +3233,10 @@ def drk_dvr_rheader(r, tabs=None):
                         lodging = (T("Lodging"), lambda row: case[lodging_col])
                     else:
                         lodging = None
-                    flags = lambda row: case["dvr_case_flag_case.flag_id"]
+                    if flags_sel:
+                        flags = lambda row: case["dvr_case_flag_case.flag_id"]
+                    else:
+                        flags = None
                 else:
                     # Target record exists, but doesn't match filters
                     return None
@@ -3230,10 +3251,10 @@ def drk_dvr_rheader(r, tabs=None):
                                    ],
                                   ["date_of_birth",
                                    ],
-                                  [(T("Flags"), flags),
-                                   ],
                                   ]
 
+                if flags_sel:
+                    rheader_fields.append([(T("Flags"), flags, 5)])
                 if archived:
                     rheader_fields.insert(0, [(None, hint)])
 
