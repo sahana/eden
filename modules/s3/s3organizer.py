@@ -476,8 +476,7 @@ class S3OrganizerWidget(object):
         else:
             inject = ["moment.min.js",
                       "fullcalendar/fullcalendar.min.js",
-                      # TODO Add minified script
-                      "S3/s3.ui.organizer.js",
+                      "S3/s3.ui.organizer.min.js",
                       ]
 
         # Choose locale

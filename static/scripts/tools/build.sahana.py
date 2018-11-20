@@ -450,6 +450,7 @@ def dojs(dogis = False, warnings = True):
                      "ui.dashboard",
                      "ui.embeddedcomponent",
                      "ui.locationselector",
+                     "ui.organizer",
                      "ui.permissions",
                      "ui.pivottable",
                      "ui.roles",
