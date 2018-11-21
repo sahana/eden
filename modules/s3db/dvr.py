@@ -1456,12 +1456,12 @@ class DVRResponseModel(S3Model):
         )
 
         # Reusable field
-        represent = S3Represent(lookup = tablename,
-                                multiple = True,
-                                translate = True,
-                                )
+        theme_represent = S3Represent(lookup = tablename,
+                                      multiple = True,
+                                      translate = True,
+                                      )
         requires = IS_ONE_OF(db, "%s.id" % tablename,
-                             represent,
+                             theme_represent,
                              multiple = True,
                              )
         if settings.get_dvr_response_themes_org_specific():
@@ -1475,7 +1475,7 @@ class DVRResponseModel(S3Model):
                                 "list:reference %s" % tablename,
                                 label = T("Themes"),
                                 ondelete = "RESTRICT",
-                                represent = represent,
+                                represent = theme_represent,
                                 requires = IS_EMPTY_OR(requires),
                                 sortby = "name",
                                 widget = S3MultiSelectWidget(header = False,
@@ -1734,6 +1734,7 @@ class DVRResponseModel(S3Model):
                   crud_form = crud_form,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
+                  onaccept = self.response_action_onaccept,
                   )
 
         # CRUD Strings
@@ -1750,6 +1751,26 @@ class DVRResponseModel(S3Model):
             msg_list_empty = T("No Actions currently registered"),
         )
 
+
+        # ---------------------------------------------------------------------
+        # Response Action <=> Theme link table
+        #   - for filtering/reporting by extended theme attributes
+        #   - not exposed directly, populated onaccept from response_theme_ids
+        #
+        tablename = "dvr_response_action_theme"
+        define_table(tablename,
+                     Field("action_id", "reference dvr_response_action",
+                           ondelete = "CASCADE",
+                           requires = IS_ONE_OF(db, "dvr_response_action.id"),
+                           ),
+                     Field("theme_id", "reference dvr_response_theme",
+                           ondelete = "CASCADE",
+                           represent = theme_represent,
+                           requires = IS_ONE_OF(db, "dvr_response_theme.id",
+                                                theme_represent,
+                                                ),
+                           ),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Response Types <=> Case Activities link table
@@ -1840,6 +1861,58 @@ class DVRResponseModel(S3Model):
                 theme_ids = row[reference]
                 row.update_record(response_theme_ids = \
                     [tid for tid in theme_ids if tid != theme_id])
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def response_action_onaccept(form):
+        """
+            Onaccept routine for response actions
+                - update theme links from inline response_theme_ids
+        """
+
+        form_vars = form.vars
+        try:
+            record_id = form_vars.id
+        except AttributeError:
+            record_id = None
+        if not record_id:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get the record
+        atable = s3db.dvr_response_action
+        query = (atable.id == record_id)
+        record = db(query).select(atable.id,
+                                  atable.response_theme_ids,
+                                  limitby = (0, 1),
+                                  ).first()
+        if not record:
+            return
+
+        # Get all selected themes
+        selected = set(record.response_theme_ids)
+
+        # Get all linked themes
+        ltable = s3db.dvr_response_action_theme
+        query = (ltable.action_id == record_id) & \
+                (ltable.deleted == False)
+        links = db(query).select(ltable.theme_id)
+        linked = set(link.theme_id for link in links)
+
+        # Remove obsolete theme links
+        obsolete = linked - selected
+        if obsolete:
+            query &= ltable.theme_id.belongs(obsolete)
+            db(query).delete()
+
+        # Add links for newly selected themes
+        added = selected - linked
+        for theme_id in added:
+            ltable.insert(action_id = record_id,
+                          theme_id = theme_id,
+                          )
 
     # -------------------------------------------------------------------------
     @staticmethod
