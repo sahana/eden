@@ -296,8 +296,8 @@ class S3Organizer(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def parse_config(resource):
+    @classmethod
+    def parse_config(cls, resource):
         """
             Parse the resource configuration and add any fallbacks
 
@@ -310,7 +310,7 @@ class S3Organizer(S3Method):
                        }
         """
 
-        prefix = lambda s: "~.%s" % s if "." not in s.split("$", 1)[0] else s
+        prefix = lambda selector: cls.prefix_selector(resource, selector)
 
         table = resource.table
         config = resource.get_config("organize")
@@ -366,6 +366,36 @@ class S3Organizer(S3Method):
                 "use_time": use_time,
                 "represent": represent,
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def prefix_selector(resource, selector):
+        """
+            Helper method to prefix an unprefixed field selector
+
+            @param resource: the target resource
+            @param selector: the field selector
+
+            @return: the prefixed selector
+        """
+
+        alias = resource.alias if resource.parent else None
+        items = selector.split("$", 0)
+        head = items[0]
+        if "." in head:
+            if alias not in (None, "~"):
+                prefix, key = head.split(".", 1)
+                if prefix == "~":
+                    prefix = alias
+                elif prefix != alias:
+                    prefix = "%s.%s" % (alias, prefix)
+                items[0] = "%s.%s" % (prefix, key)
+                selector = "$".join(items)
+        else:
+            if alias is None:
+                alias = "~"
+            selector = "%s.%s" % (alias, selector)
+        return selector
 
     # -------------------------------------------------------------------------
     @staticmethod
