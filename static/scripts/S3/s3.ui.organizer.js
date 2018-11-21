@@ -176,6 +176,7 @@
         _init: function() {
 
             this.openRequest = null;
+            this.loadCount = -1;
 
             this.refresh();
         },
@@ -197,8 +198,6 @@
 
             this._unbindEvents();
 
-            // TODO add throbber to header
-
             // Determine available views and default view
             // TODO make configurable (override options)
             var leftHeader,
@@ -214,9 +213,8 @@
             var self = this;
             $(this.element).fullCalendar({
                 customButtons: {
-                    // TODO use reload-icon, make optional
                     reloadButton: {
-                        text: 'Reload',
+                        text: '',
                         click: function() {
                             self.reload();
                         }
@@ -239,6 +237,14 @@
                 // Show all events in local time zone
                 timezone: 'local'
             });
+
+            // Remember reloadButton, use icon
+            this.reloadButton = $('.fc-reloadButton-button').html('<i class="fa fa-refresh">');
+
+            // Add throbber
+            var throbber = $('<div class="inline-throbber">').css({visibility: 'hidden'});
+            $('.fc-header-toolbar .fc-left', this.element).append(throbber);
+            this.throbber = throbber;
 
             // Configure resources
             var resourceConfigs = opts.resources;
@@ -297,7 +303,8 @@
 
             var opts = this.options;
 
-            // TODO Show throbber
+            // Show throbber
+            this._showThrobber();
 
             // Get current filters
             var filterForm;
@@ -373,6 +380,7 @@
             }
 
             // Request updates for resource from server
+            var self = this;
             resource.openRequest = ajaxMethod({
                 'timeout': timeout,
                 'url': ajaxURL,
@@ -380,15 +388,13 @@
                 'type': 'GET',
                 'success': function(data) {
 
-                    // TODO hide throbber
-
+                    self._hideThrobber();
                     resource._cache.store(start, end, data);
                     callback(data);
                 },
                 'error': function(jqXHR, textStatus, errorThrown) {
 
-                    // TODO hide throbber
-
+                    self._hideThrobber();
                     var msg;
                     if (errorThrown == 'UNAUTHORIZED') {
                         msg = i18n.gis_requires_login;
@@ -410,6 +416,22 @@
             });
 
             $(this.element).fullCalendar('refetchEvents');
+        },
+
+        /**
+         * Show the throbber
+         */
+        _showThrobber: function() {
+            this.reloadButton.prop('disabled', true);
+            this.throbber.css({visibility: 'visible'});
+        },
+
+        /**
+         * Hide the throbber
+         */
+        _hideThrobber: function() {
+            this.throbber.css({visibility: 'hidden'});
+            this.reloadButton.prop('disabled', false);
         },
 
         /**

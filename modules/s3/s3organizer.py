@@ -356,8 +356,15 @@ class S3Organizer(S3Method):
                 else:
                     use_time = False
 
-        # If represent is a field selector, resolve it
+        # Get represent-function to produce an item title
         represent = config.get("represent")
+        if represent is None:
+            for fn in ("subject", "name", "type_id"):
+                if fn in table.fields:
+                    represent = fn
+                    break
+
+        # If represent is a field selector, resolve it
         if type(represent) is str:
             represent = resource.resolve_selector(prefix(represent))
 
