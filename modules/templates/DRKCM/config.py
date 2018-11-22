@@ -30,6 +30,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
                "activity_comments": True,
                "activity_default_sector": False,
                "activity_need_details": True,
+               "appointments_staff_link": False,
                "response_themes_sectors": False,
                }
 
@@ -50,6 +51,7 @@ UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "activity_comments": False,
                       "activity_default_sector": True,
                       "activity_need_details": False,
+                      "appointments_staff_link": True,
                       "response_themes_sectors": True,
                       },
               }
@@ -2057,6 +2059,21 @@ def config(settings):
         return attr
 
     settings.customise_dvr_case_activity_controller = customise_dvr_case_activity_controller
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_appointment_resource(r, tablename):
+
+        ui_options = get_ui_options()
+        if ui_options.get("appointments_staff_link"):
+
+            # Enable staff link and default to logged-in user
+            table = current.s3db.dvr_case_appointment
+            field = table.human_resource_id
+            field.readable = field.writable = True
+            field.default = current.auth.s3_logged_in_human_resource()
+            field.widget = None
+
+    settings.customise_dvr_case_appointment_resource = customise_dvr_case_appointment_resource
 
     # -------------------------------------------------------------------------
     def customise_dvr_case_appointment_controller(**attr):

@@ -3349,6 +3349,10 @@ class DVRCaseAppointmentModel(S3Model):
                                          ),
                      s3_date(label = T("Planned on"),
                              ),
+                     # Activate in template as needed:
+                     self.hrm_human_resource_id(readable=False,
+                                                writable=False,
+                                                ),
                      Field("status", "integer",
                            default = 1, # Planning
                            requires = IS_IN_SET(appointment_status_opts,
