@@ -30,6 +30,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
                "activity_comments": True,
                "activity_default_sector": False,
                "activity_need_details": True,
+               "response_themes_sectors": False,
                }
 
 UI_OPTIONS = {"LEA": {"case_bamf_first": True,
@@ -49,6 +50,7 @@ UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "activity_comments": False,
                       "activity_default_sector": True,
                       "activity_need_details": False,
+                      "response_themes_sectors": True,
                       },
               }
 
@@ -63,6 +65,13 @@ def get_ui_options():
     if ui_type:
         ui_options.update(UI_OPTIONS[ui_type])
     return ui_options
+
+def get_ui_option(key):
+    """ Getter for UI options, for lazy deployment settings """
+
+    def getter(default=None):
+        return get_ui_options().get(key, default)
+    return getter
 
 # =============================================================================
 def config(settings):
@@ -383,6 +392,8 @@ def config(settings):
     settings.dvr.response_types = False
     # Response types hierarchical
     settings.dvr.response_types_hierarchical = True
+    # Response themes organized by sectors
+    settings.dvr.response_themes_sectors = get_ui_option("response_themes_sectors")
 
     # Expose flags to mark appointment types as mandatory
     settings.dvr.mandatory_appointments = False
@@ -2208,17 +2219,25 @@ def config(settings):
         is_report = r.method == "report"
         if is_report:
 
+            # Sector Axis
+            if settings.get_dvr_response_themes_sectors():
+                sector = "dvr_response_action_theme.theme_id$sector_id"
+                default_cols = None
+            else:
+                sector = "case_activity_id$sector_id"
+                default_cols = sector
+
             # Custom Report Options
-            facts = ((T("Number of Clients"), "count(case_activity_id$person_id)"),
-                     (T("Hours (Average)"), "avg(hours)"),
+            facts = ((T("Number of Actions"), "count(id)"),
+                     (T("Number of Clients"), "count(case_activity_id$person_id)"),
                      (T("Hours (Total)"), "sum(hours)"),
-                     (T("Number of Actions"), "count(id)"),
+                     (T("Hours (Average)"), "avg(hours)"),
                      )
             axes = ("case_activity_id$person_id$gender",
                     "case_activity_id$person_id$person_details.nationality",
                     "case_activity_id$person_id$person_details.marital_status",
-                    "case_activity_id$sector_id",
                     (T("Theme"), "response_theme_ids"),
+                    sector,
                     "human_resource_id",
                     )
             if multiple_orgs:
@@ -2230,7 +2249,7 @@ def config(settings):
                 "cols": axes,
                 "fact": facts,
                 "defaults": {"rows": "response_theme_ids",
-                             "cols": "case_activity_id$sector_id",
+                             "cols": default_cols,
                              "fact": "count(id)",
                              "totals": True,
                              },
@@ -2422,6 +2441,24 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dvr_response_theme_resource(r, tablename):
 
+        if settings.get_dvr_response_themes_sectors() and \
+           r.tablename == "org_organisation" and r.id:
+
+            # Limit sector selection to the sectors of the organisation
+            s3db = current.s3db
+            stable = s3db.org_sector
+            ltable = s3db.org_sector_organisation
+            ttable = s3db.dvr_response_theme
+
+            dbset = current.db((ltable.sector_id == stable.id) & \
+                               (ltable.organisation_id == r.id) & \
+                               (ltable.deleted == False))
+            field = ttable.sector_id
+            field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "org_sector.id",
+                                                   field.represent,
+                                                   ))
+
+        # Custom CRUD Strings
         current.response.s3.crud_strings["dvr_response_theme"] = Storage(
             label_create = T("Create Counseling Theme"),
             title_display = T("Counseling Theme Details"),

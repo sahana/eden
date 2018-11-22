@@ -1417,6 +1417,7 @@ class DVRResponseModel(S3Model):
         define_table = self.define_table
         configure = self.configure
 
+        response_themes_sectors = settings.get_dvr_response_themes_sectors()
         hierarchical_response_types = settings.get_dvr_response_types_hierarchical()
 
         NONE = current.messages["NONE"]
@@ -1430,6 +1431,9 @@ class DVRResponseModel(S3Model):
                            requires = IS_NOT_EMPTY(),
                            ),
                      self.org_organisation_id(),
+                     self.org_sector_id(readable = response_themes_sectors,
+                                        writable = response_themes_sectors,
+                                        ),
                      s3_comments(),
                      *s3_meta_fields())
 

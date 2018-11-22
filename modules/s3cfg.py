@@ -3301,6 +3301,12 @@ class S3Config(Storage):
         """
         return self.dvr.get("response_themes_org_specific", True)
 
+    def get_dvr_response_themes_sectors(self):
+        """
+            Response themes are organized per org sector
+        """
+        return self.__lazy("dvr", "response_themes_sectors", default=False)
+
     # -------------------------------------------------------------------------
     # Education
     #
