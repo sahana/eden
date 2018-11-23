@@ -95,7 +95,11 @@ class S3Organizer(S3Method):
                        ]
         """
 
+        db = current.db
+        auth = current.auth
+
         resource = self.resource
+        table = resource.table
         id_col = str(resource._id)
 
         config = self.parse_config(resource)
@@ -139,11 +143,22 @@ class S3Organizer(S3Method):
         else:
             representations = None
 
-        # TODO
-        # Determine which records can be updated (permission)
-        # Determine which records can be deleted (permission)
+        # Determine which records can be updated/deleted
+        query = table.id.belongs(record_ids)
 
-        # Get the column names
+        q = query & auth.s3_accessible_query("update", table)
+        accessible_rows = db(q).select(table._id,
+                                       limitby = (0, len(record_ids)),
+                                       )
+        editable = set(row[id_col] for row in accessible_rows)
+
+        q = query & auth.s3_accessible_query("delete", table)
+        accessible_rows = db(q).select(table._id,
+                                       limitby = (0, len(record_ids)),
+                                       )
+        deletable = set(row[id_col] for row in accessible_rows)
+
+        # Encode the items
         items = []
         for row in rows:
 
@@ -174,8 +189,8 @@ class S3Organizer(S3Method):
             item = {"id": record_id,
                     "t": s3_str(title),
                     "s": start_date,
-                    #"editable": True,   # TODO
-                    #"deletable": True,  # TODO
+                    "pe": 1 if record_id in editable else 0,
+                    "pd": 1 if record_id in deletable else 0,
                     }
 
             if end_rfield:
@@ -281,12 +296,17 @@ class S3Organizer(S3Method):
 
         # Configure Resource
         config = self.parse_config(resource)
+        permitted = self._permitted
         resource_config = {"ajaxURL": r.url(representation="json"),
                            "useTime": config.get("use_time"),
                            "baseURL": r.url(method=""),
                            "labelCreate": s3_str(crud_string(self.tablename, "label_create")),
                            "insertable": resource.get_config("insertable", True) and \
-                                         self._permitted("create")
+                                         permitted("create"),
+                           "editable": resource.get_config("editable", True) and \
+                                       permitted("update"),
+                           "deletable": resource.get_config("deletable", True) and \
+                                        permitted("delete"),
                            }
 
         # Start and End Field

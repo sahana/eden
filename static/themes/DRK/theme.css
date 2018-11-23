@@ -1702,14 +1702,19 @@ form.anonymize-form,
   font-weight: normal;
   margin-bottom: 0.3rem;
 }
+/* line 389, ../../default/scss/theme/_widgets.scss */
+.s3-organizer-popup .action-btn {
+  margin-left: 0;
+  margin-right: 0.3rem;
+}
 
-/* line 391, ../../default/scss/theme/_widgets.scss */
+/* line 395, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-create .action-btn {
   display: block;
 }
 
 /* Priority Representation */
-/* line 397, ../../default/scss/theme/_widgets.scss */
+/* line 401, ../../default/scss/theme/_widgets.scss */
 .prio {
   padding: 0 4px;
   border: 1px solid black;
@@ -1718,50 +1723,50 @@ form.anonymize-form,
   font-weight: normal;
 }
 
-/* line 404, ../../default/scss/theme/_widgets.scss */
+/* line 408, ../../default/scss/theme/_widgets.scss */
 .prio-red {
   color: white;
   background-color: #d10000;
 }
 
-/* line 408, ../../default/scss/theme/_widgets.scss */
+/* line 412, ../../default/scss/theme/_widgets.scss */
 .prio-blue {
   color: white;
   background-color: #10427b;
 }
 
-/* line 412, ../../default/scss/theme/_widgets.scss */
+/* line 416, ../../default/scss/theme/_widgets.scss */
 .prio-lightblue {
   background-color: #b7ddff;
 }
 
-/* line 415, ../../default/scss/theme/_widgets.scss */
+/* line 419, ../../default/scss/theme/_widgets.scss */
 .prio-grey {
   background-color: silver;
 }
 
-/* line 422, ../../default/scss/theme/_widgets.scss */
+/* line 426, ../../default/scss/theme/_widgets.scss */
 body.rtl .range-filter-widget input.date-filter-input {
   margin-right: 0;
   margin-left: 2px;
 }
-/* line 427, ../../default/scss/theme/_widgets.scss */
+/* line 431, ../../default/scss/theme/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
   margin-right: 0;
   margin-left: 1rem;
 }
-/* line 433, ../../default/scss/theme/_widgets.scss */
+/* line 437, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0;
   margin-left: 0.3rem;
 }
-/* line 439, ../../default/scss/theme/_widgets.scss */
+/* line 443, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 0;
   border-right: 1px solid red;
 }
-/* line 443, ../../default/scss/theme/_widgets.scss */
+/* line 447, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;

@@ -304,8 +304,10 @@
 
             var self = this;
             $(this.element).fullCalendar('addEventSource', {
-                id: '' + index, // must pass a string here
+                id: '' + index, // must be string, falsy gets dropped
                 allDayDefault: !resource.useTime,
+                editable: !!resource.editable, // can be overridden per-record
+                durationEditable: !!resource.end,
                 events: function(start, end, timezone, callback) {
                     self._fetchItems(resource, start, end, timezone, callback);
                 }
@@ -323,7 +325,6 @@
             var self = this;
 
             // Attach the item popup
-            // TODO add modals on visible-event
             $(element).qtip({
                 content: {
                     title: function(jsEvent, api) {
@@ -352,6 +353,11 @@
                     event: 'click mouseleave',
                     delay: 800,
                     fixed: true
+                },
+                events: {
+                    visible: function(/* jsEvent, api */) {
+                        S3.addModals();
+                    }
                 }
             });
         },
@@ -391,19 +397,20 @@
          * Render the popup contents for a calendar item
          *
          * @param {object} item - the calendar item
+         * @param {object} api - the qtip-API of the popup
          *
          * @returns {jQuery} - a DOM node with the contents
          */
-        _itemDisplay: function(item) {
+        _itemDisplay: function(item, api) {
 
             var contents = $('<div class="s3-organizer-popup">'),
                 opts = this.options,
                 resource = opts.resources[item.source.id];
 
-            // Item title
+            // Item Title
             $('<h6>').text(item.title).appendTo(contents);
 
-            // Item description
+            // Item Description
             var columns = resource.columns,
                 description = item.description;
             if (columns && description) {
@@ -419,11 +426,37 @@
                 });
             }
 
-            // Buttons
-            // TODO make these work
-            // TODO convert edit-button into action-button with popup
-//             $('<button class="tiny button s3-organizer-edit" type="button">').text('Edit').appendTo(contents);
-//             $('<button class="tiny alert button s3-organizer-delete" type="button">').text('Delete').appendTo(contents);
+            // Edit/Delete Buttons
+            var widgetID = $(this.element).attr('id'),
+                ns = this.eventNamespace,
+                buttons = [],
+                btn,
+                baseURL = resource.baseURL,
+                url;
+            if (baseURL) {
+                if (resource.editable && item.editable !== false) {
+                    url = baseURL + '/' + item.id + '/update.popup?refresh=' + widgetID;
+                    // TODO i18n
+                    btn = $('<a class="action-btn s3_modal">').text('Edit')
+                                                              .attr('href', url)
+                                                              .on('click' + ns, function() {
+                                                                api.hide();
+                                                              });
+                    buttons.push(btn);
+                }
+                if (resource.deletable && item.deletable !== false) {
+                    // TODO i18n
+                    // TODO bind Ajax-deletion method
+                    btn = $('<a class="action-btn delete-btn-ajax">').text('Delete');
+                    buttons.push(btn);
+                }
+            }
+            if (buttons.length) {
+                var buttonArea = $('<div>').appendTo(contents);
+                buttons.forEach(function(btn) {
+                    btn.appendTo(buttonArea);
+                });
+            }
 
             return contents;
         },
@@ -490,9 +523,8 @@
 
             var opts = this.options,
                 resources = opts.resources,
-                el = $(this.element),
                 ns = this.eventNamespace,
-                widgetID = el.attr('id'),
+                widgetID = $(this.element).attr('id'),
                 contents = $('<div>');
 
             resources.forEach(function(resource) {
@@ -523,7 +555,7 @@
                                 .text(label)
                                 .appendTo(contents)
                                 .on('click' + ns, function() {
-                                    el.qtip('hide');
+                                    api.hide();
                                 });
                 }
             });
@@ -688,13 +720,24 @@
                         }
                     }
                 }
-                items.push({
+
+                var item = {
                     id: record.id,
                     title: record.t,
                     start: record.s,
                     end: record.e,
                     description: description
-                });
+                };
+
+                // Permission overrides (skip if true to let resource-default apply)
+                if (!record.pe) {
+                    item.editable = false;
+                }
+                if (!record.pd) {
+                    item.deletable = false;
+                }
+
+                items.push(item);
             });
 
             return items;
