@@ -2182,7 +2182,7 @@ def config(settings):
                                    # TODO move into customise_resource
                                    # TODO adapt represent to perspective
                                    organize = {"start": "date",
-                                               "represent": "person_id",
+                                               "title": "person_id",
                                                "description": [(T("ID"), "person_id$pe_label"),
                                                                "type_id",
                                                                "human_resource_id",

@@ -194,9 +194,19 @@
          */
         refresh: function() {
 
-            var opts = this.options;
+            var opts = this.options,
+                resourceConfigs = opts.resources;
 
             this._unbindEvents();
+
+            // Can records be created for any resource?
+            var insertable = false;
+            for (var i = resourceConfigs.length; i--;) {
+                if (resourceConfigs[i].insertable) {
+                    insertable = true;
+                    break;
+                }
+            }
 
             // Determine available views and default view
             // TODO make configurable (override options)
@@ -220,7 +230,7 @@
                 snapDuration: '00:15:00',       // TODO make configurable (default 15min)
 
                 // Permitted actions
-                selectable: true,               // TODO make sure we have insertable resources
+                selectable: insertable,
                 editable: true,                 // TODO implement edit
 
                 // View options
@@ -267,7 +277,6 @@
             this.throbber = throbber;
 
             // Configure resources
-            var resourceConfigs = opts.resources;
             this.resources = [];
             if (resourceConfigs) {
                 resourceConfigs.forEach(function(resourceConfig, index) {
@@ -513,8 +522,7 @@
                     createButton.attr('href', url)
                                 .text(label)
                                 .appendTo(contents)
-                                .off(ns).on('click' + ns, function() {
-                                    // TODO bind per button-class rather than individual button?
+                                .on('click' + ns, function() {
                                     el.qtip('hide');
                                 });
                 }
@@ -650,21 +658,28 @@
         },
 
         /**
-         * TODO docstring
+         * Decode server data into fullCalendar events
+         *
+         * @param {object} data - the data returned from the server
+         *
+         * @returns {Array} - Array of fullCalendar event objects
          */
         _decodeServerData: function(data) {
 
-            var columns = data.columns,
-                items = data.items,
+            var columns = data.c,
+                records = data.r,
+                items = [],
                 translateCols = 0;
 
             if (columns && columns.constructor === Array) {
                 translateCols = columns.length;
             }
 
-            items.forEach(function(item) {
+            records.forEach(function(record) {
+
                 var description = {},
-                    values = item.description;
+                    values = record.d;
+
                 if (translateCols && values && values.constructor === Array) {
                     var len = values.length;
                     if (len <= translateCols) {
@@ -673,7 +688,13 @@
                         }
                     }
                 }
-                item.description = description;
+                items.push({
+                    id: record.id,
+                    title: record.t,
+                    start: record.s,
+                    end: record.e,
+                    description: description
+                });
             });
 
             return items;

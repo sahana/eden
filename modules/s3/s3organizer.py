@@ -110,7 +110,7 @@ class S3Organizer(S3Method):
         if end_rfield:
             fields.append(end_rfield)
 
-        represent = config["represent"]
+        represent = config["title"]
         if hasattr(represent, "selector"):
             title_field = represent.colname
             fields.append(represent)
@@ -172,15 +172,15 @@ class S3Organizer(S3Method):
 
             # Build the item
             item = {"id": record_id,
-                    "title": s3_str(title),
-                    "start": start_date,
+                    "t": s3_str(title),
+                    "s": start_date,
                     #"editable": True,   # TODO
                     #"deletable": True,  # TODO
                     }
 
             if end_rfield:
                 end_date = self.isoformat(raw[end_rfield.colname])
-                item["end"] = end_date
+                item["e"] = end_date
 
             if columns:
                 data = []
@@ -189,11 +189,11 @@ class S3Organizer(S3Method):
                     if value is not None:
                         value = s3_str(value)
                     data.append(value)
-                item["description"] = data
+                item["d"] = data
 
             items.append(item)
 
-        return json.dumps({"columns": columns, "items": items})
+        return json.dumps({"c": columns, "r": items})
 
     # -------------------------------------------------------------------------
     def organizer(self, r, **attr):
@@ -285,9 +285,8 @@ class S3Organizer(S3Method):
                            "useTime": config.get("use_time"),
                            "baseURL": r.url(method=""),
                            "labelCreate": s3_str(crud_string(self.tablename, "label_create")),
-                           # TODO determine whether resource is insertable and
-                           #      user has permission to do so
-                           "insertable": True,
+                           "insertable": resource.get_config("insertable", True) and \
+                                         self._permitted("create")
                            }
 
         # Start and End Field
@@ -325,7 +324,9 @@ class S3Organizer(S3Method):
             @returns: the resource organizer configuration, format:
                       {"start": S3ResourceField,
                        "end": S3ResourceField or None,
-                       "represent": callable to produce item titles,
+                       "use_time": whether this resource has timed events,
+                       "title": selector or callable to produce item titles,
+                       "description": list of selectors for the item description,
                        }
         """
 
@@ -376,8 +377,7 @@ class S3Organizer(S3Method):
                     use_time = False
 
         # Get represent-function to produce an item title
-        # TODO rename into title
-        represent = config.get("represent")
+        represent = config.get("title")
         if represent is None:
             for fn in ("subject", "name", "type_id"):
                 if fn in table.fields:
@@ -405,7 +405,7 @@ class S3Organizer(S3Method):
         return {"start": start_rfield,
                 "end": end_rfield,
                 "use_time": use_time,
-                "represent": represent,
+                "title": represent,
                 "description": description,
                 }
 
