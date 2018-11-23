@@ -212,6 +212,18 @@
 
             var self = this;
             $(this.element).fullCalendar({
+
+                // General options
+                aspectRatio: 1.8,               // TODO make configurable (default 1.8)
+                nowIndicator: true,             // TODO make configurable (default on)
+                slotDuration: '00:30:00',       // TODO make configurable (default 30min)
+                snapDuration: '00:15:00',       // TODO make configurable (default 15min)
+
+                // Permitted actions
+                selectable: true,               // TODO make sure we have insertable resources
+                editable: true,                 // TODO implement edit
+
+                // View options
                 customButtons: {
                     reloadButton: {
                         text: '',
@@ -225,19 +237,21 @@
                     center: 'title',
                     right: 'today prev,next'
                 },
+                defaultView: defaultView,
+
                 eventRender: function(item, element) {
                     self._eventRender(item, element);
                 },
                 eventDestroy: function(item, element) {
                     self._eventDestroy(item, element);
                 },
-                defaultView: defaultView,
-                aspectRatio: 1.8,               // TODO make configurable (default 1.8)
-                nowIndicator: true,             // TODO make configurable (default on)
-                slotDuration: '00:30:00',       // TODO make configurable (default 30min)
-                snapDuration: '00:15:00',       // TODO make configurable (default 15min)
-                selectable: true,               // TODO implement create
-                editable: true,                 // TODO implement edit
+                select: function(start, end, jsEvent /*, view */) {
+                    self._selectDate(start, end, jsEvent);
+                },
+                unselect: function(/* jsEvent, view */) {
+                    $(self.element).qtip('destroy', true);
+                },
+                unselectCancel: '.s3-organizer-create',
 
                 // L10n
                 locale: opts.locale,
@@ -300,6 +314,7 @@
             var self = this;
 
             // Attach the item popup
+            // TODO add modals on visible-event
             $(element).qtip({
                 content: {
                     title: function(jsEvent, api) {
@@ -397,8 +412,113 @@
 
             // Buttons
             // TODO make these work
+            // TODO convert edit-button into action-button with popup
 //             $('<button class="tiny button s3-organizer-edit" type="button">').text('Edit').appendTo(contents);
 //             $('<button class="tiny alert button s3-organizer-delete" type="button">').text('Delete').appendTo(contents);
+
+            return contents;
+        },
+
+        /**
+         * Actions when a date interval has been selected
+         *
+         * @param {moment} start - the start date
+         * @param {moment} end - the end date
+         * @param {event} jsEvent - the JS event that triggered the selection
+         */
+        _selectDate: function(start, end, jsEvent) {
+
+            var self = this;
+
+            $(this.element).qtip({
+                content: {
+                    text: function(jsEvent, api) {
+                        return self._selectResource(start, end, jsEvent, api);
+                    }
+                },
+                position: {
+                    target: 'mouse',
+                    at: 'center right',
+                    my: 'left center',
+                    effect: false,
+                    viewport: $(window),
+                    adjust: {
+                        mouse: false,
+                        method: 'flip shift'
+                    }
+                },
+                show: {
+                    event: 'click',
+                    solo: true
+                },
+                hide: {
+                    event: 'mouseleave',
+                    delay: 800,
+                    fixed: true
+                },
+                events: {
+                    visible: function(/* jsEvent, api */) {
+                        S3.addModals();
+                    }
+                }
+            });
+
+            $(this.element).qtip('show', jsEvent);
+        },
+
+        /**
+         * Render the contents of the resource-selector (create-popup)
+         *
+         * @param {moment} start - the start of the selected interval
+         * @param {moment} end - the end of the selected interval
+         * @param {event} jsEvent - the event that opened the popup
+         * @param {object} api - the qtip-API for the popup
+         */
+        _selectResource: function(start, end, jsEvent, api) {
+
+            // Add class to attach styles and cancel auto-unselect
+            api.set('style.classes', 's3-organizer-create');
+
+            var opts = this.options,
+                resources = opts.resources,
+                el = $(this.element),
+                ns = this.eventNamespace,
+                widgetID = el.attr('id'),
+                contents = $('<div>');
+
+            resources.forEach(function(resource) {
+
+                // Make sure resource is insertable
+                if (!resource.insertable) {
+                    return;
+                }
+                var createButton = $('<a class="action-btn s3_modal">'),
+                    label = resource.labelCreate,
+                    url = resource.baseURL;
+
+                if (url && label) {
+                    url += '/create.popup';
+                    var query = [];
+
+                    // Add refresh-target
+                    if (widgetID) {
+                        query.push('refresh=' + encodeURIComponent(widgetID));
+                    }
+
+                    // Add selected date range
+                    var dates = start.toISOString() + '--' + moment(end).subtract(1, 'seconds').toISOString();
+                    query.push('organizer=' + encodeURIComponent(dates));
+
+                    url += '?' + query.join('&');
+                    createButton.attr('href', url)
+                                .text(label)
+                                .appendTo(contents)
+                                .off(ns).on('click' + ns, function() {
+                                    // TODO bind per button-class rather than individual button?
+                                    el.qtip('hide');
+                                });
+                }
+            });
 
             return contents;
         },

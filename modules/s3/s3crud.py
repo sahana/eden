@@ -50,7 +50,7 @@ from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3datetime import S3DateTime
+from s3datetime import S3DateTime, s3_decode_iso_datetime
 from s3export import S3Exporter
 from s3forms import S3SQLDefaultForm
 from s3rest import S3Method
@@ -305,6 +305,11 @@ class S3CRUD(S3Method):
                         except KeyError:
                             import sys
                             r.error(404, sys.exc_info()[1])
+
+            # Organizer
+            organizer = get_vars.get("organizer")
+            if organizer:
+                self._set_organizer_dates(organizer)
 
             # Copy record
             from_table = None
@@ -3228,6 +3233,44 @@ class S3CRUD(S3Method):
             return current.xml.json_message(message=message, uuid=uid)
         else:
             r.error(404, current.ERROR.BAD_RECORD)
+
+    # -------------------------------------------------------------------------
+    def _set_organizer_dates(self, dates):
+        """
+            Set default dates for organizer resources
+
+            @param dates: a string with two ISO dates separated by --, like:
+                          "2010-11-29T23:00:00.000Z--2010-11-29T23:59:59.000Z"
+        """
+
+        resource = self.resource
+
+        if dates:
+            dates = dates.split("--")
+            if len(dates) != 2:
+                return
+
+            from s3datetime import s3_decode_iso_datetime
+            from s3organizer import S3Organizer
+
+            try:
+                config = S3Organizer.parse_config(resource)
+            except AttributeError:
+                return
+
+            start = config["start"]
+            if start and start.field:
+                try:
+                    start.field.default = s3_decode_iso_datetime(dates[0])
+                except ValueError:
+                    pass
+
+            end = config["end"]
+            if end and end.field:
+                try:
+                    end.field.default = s3_decode_iso_datetime(dates[1])
+                except ValueError:
+                    pass
 
     # -------------------------------------------------------------------------
     @staticmethod

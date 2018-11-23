@@ -50,6 +50,10 @@ function s3_popup_refresh_caller(popupData) {
                 // reload the whole list
                 callerWidget.datalist('ajaxReload');
             }
+        } else if (callerWidget.hasClass('s3-organizer')) {
+            try {
+                callerWidget.organizer('reload');
+            } catch(e) {}
         } else {
             // Refresh dataTable
             try {

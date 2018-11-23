@@ -121,6 +121,8 @@ class S3Organizer(S3Method):
         if description:
             fields.extend(description)
             columns = [rfield.colname for rfield in description]
+        else:
+            columns = None
 
         # Extract the records
         data = resource.select(fields,
@@ -180,7 +182,7 @@ class S3Organizer(S3Method):
                 end_date = self.isoformat(raw[end_rfield.colname])
                 item["end"] = end_date
 
-            if description:
+            if columns:
                 data = []
                 for colname in columns:
                     value = row[colname]
@@ -281,6 +283,11 @@ class S3Organizer(S3Method):
         config = self.parse_config(resource)
         resource_config = {"ajaxURL": r.url(representation="json"),
                            "useTime": config.get("use_time"),
+                           "baseURL": r.url(method=""),
+                           "labelCreate": s3_str(crud_string(self.tablename, "label_create")),
+                           # TODO determine whether resource is insertable and
+                           #      user has permission to do so
+                           "insertable": True,
                            }
 
         # Start and End Field
