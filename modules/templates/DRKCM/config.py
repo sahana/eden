@@ -2183,6 +2183,10 @@ def config(settings):
                                    # TODO adapt represent to perspective
                                    organize = {"start": "date",
                                                "represent": "person_id",
+                                               "description": [(T("ID"), "person_id$pe_label"),
+                                                               "type_id",
+                                                               "human_resource_id",
+                                                               ],
                                                },
                                    )
 

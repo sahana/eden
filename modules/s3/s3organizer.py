@@ -86,10 +86,10 @@ class S3Organizer(S3Method):
                         "title": the record title,
                         "start": start date as ISO8601 string,
                         "end": end date as ISO8601 string (if resource has end dates),
+                        "description": array of item values to render a description,
                         TODO:
                         "editable": item date/duration can be changed (true|false),
                         "deletable": item can be deleted (true|false),
-                        "description": dict of item values to render a description,
                         },
                        ...
                        ]
@@ -104,18 +104,23 @@ class S3Organizer(S3Method):
         fields = [resource._id.name]
 
         start_rfield = config["start"]
-        fields.append(start_rfield.selector)
+        fields.append(start_rfield)
 
         end_rfield = config["end"]
         if end_rfield:
-            fields.append(end_rfield.selector)
+            fields.append(end_rfield)
 
         represent = config["represent"]
         if hasattr(represent, "selector"):
             title_field = represent.colname
-            fields.append(represent.selector)
+            fields.append(represent)
         else:
             title_field = None
+
+        description = config["description"]
+        if description:
+            fields.extend(description)
+            columns = [rfield.colname for rfield in description]
 
         # Extract the records
         data = resource.select(fields,
@@ -175,16 +180,18 @@ class S3Organizer(S3Method):
                 end_date = self.isoformat(raw[end_rfield.colname])
                 item["end"] = end_date
 
-            # TODO implement description
-            #       - have a "description" config option
-            #       - should be a list of field selectors
-            #       - add the description selectors to the resource.select
-            #       - extract the represented data here and add as dict
-            #item["description"] = ""
+            if description:
+                data = []
+                for colname in columns:
+                    value = row[colname]
+                    if value is not None:
+                        value = s3_str(value)
+                    data.append(value)
+                item["description"] = data
 
             items.append(item)
 
-        return json.dumps(items)
+        return json.dumps({"columns": columns, "items": items})
 
     # -------------------------------------------------------------------------
     def organizer(self, r, **attr):
@@ -270,24 +277,29 @@ class S3Organizer(S3Method):
                 title = crud_string(self.tablename, "title_list")
             output["title"] = title
 
-        # Configure resources for organizer
+        # Configure Resource
         config = self.parse_config(resource)
-
-        # TODO allow adding other resources
-        resource_config = {"ajax_url": r.url(representation="json"),
+        resource_config = {"ajaxURL": r.url(representation="json"),
+                           "useTime": config.get("use_time"),
                            }
-        start_rfield = config.get("start")
-        if start_rfield:
-            resource_config["start"] = start_rfield.selector
-        end_rfield = config.get("end")
-        if end_rfield:
-            resource_config["end"] = end_rfield.selector
 
-        resource_configs = [resource_config,
-                            ]
+        # Start and End Field
+        start = config["start"]
+        resource_config["start"] = start.selector if start else None
+        end = config["end"]
+        resource_config["end"] = end.selector if end else None
+
+        # Description Labels
+        labels = []
+        for rfield in config["description"]:
+            label = rfield.label
+            if label is not None:
+                label = s3_str(label)
+            labels.append((rfield.colname, label))
+        resource_config["columns"] = labels
 
         # Instantiate Organizer Widget
-        widget = S3OrganizerWidget(resource_configs)
+        widget = S3OrganizerWidget([resource_config])
         output["organizer"] = widget.html(widget_id=widget_id)
 
         # View
@@ -357,6 +369,7 @@ class S3Organizer(S3Method):
                     use_time = False
 
         # Get represent-function to produce an item title
+        # TODO rename into title
         represent = config.get("represent")
         if represent is None:
             for fn in ("subject", "name", "type_id"):
@@ -368,10 +381,25 @@ class S3Organizer(S3Method):
         if type(represent) is str:
             represent = resource.resolve_selector(prefix(represent))
 
+        # Description
+        setting = config.get("description")
+        description = []
+        if isinstance(setting, (tuple, list)):
+            for item in setting:
+                if type(item) is tuple and len(item) > 1:
+                    label, selector = item[:2]
+                else:
+                    label, selector = None, item
+                rfield = resource.resolve_selector(prefix(selector))
+                if label is not None:
+                    rfield.label = label
+                description.append(rfield)
+
         return {"start": start_rfield,
                 "end": end_rfield,
                 "use_time": use_time,
                 "represent": represent,
+                "description": description,
                 }
 
     # -------------------------------------------------------------------------
@@ -461,15 +489,10 @@ class S3OrganizerWidget(object):
         resource_configs = []
         use_time = False
         for resource_config in resources:
-            resource_use_time = resource_config.get("use_time")
+            resource_use_time = resource_config.get("useTime")
             if resource_use_time:
                 use_time = True
-            resource_configs.append({
-                "ajaxURL": resource_config.get("ajax_url"),
-                "start": resource_config.get("start"),
-                "end": resource_config.get("end"),
-                "useTime": resource_use_time,
-                })
+            resource_configs.append(resource_config)
 
         # Inject script and widget instantiation
         script_opts = {"resources": resource_configs,
@@ -501,18 +524,22 @@ class S3OrganizerWidget(object):
         # TODO move into themes?
         if s3.debug:
             s3.stylesheets.append("fullcalendar/fullcalendar.css")
+            s3.stylesheets.append("qtip/jquery.qtip.css")
         else:
             s3.stylesheets.append("fullcalendar/fullcalendar.min.css")
+            s3.stylesheets.append("qtip/jquery.qtip.min.css")
 
         # Select scripts
         if s3.debug:
             inject = ["moment.js",
                       "fullcalendar/fullcalendar.js",
+                      "jquery.qtip.js",
                       "S3/s3.ui.organizer.js",
                       ]
         else:
             inject = ["moment.min.js",
                       "fullcalendar/fullcalendar.min.js",
+                      "jquery.qtip.min.js",
                       "S3/s3.ui.organizer.min.js",
                       ]
 

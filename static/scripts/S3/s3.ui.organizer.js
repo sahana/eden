@@ -225,16 +225,22 @@
                     center: 'title',
                     right: 'today prev,next'
                 },
-                locale: opts.locale,
+                eventRender: function(item, element) {
+                    self._eventRender(item, element);
+                },
+                eventDestroy: function(item, element) {
+                    self._eventDestroy(item, element);
+                },
                 defaultView: defaultView,
                 aspectRatio: 1.8,               // TODO make configurable (default 1.8)
                 nowIndicator: true,             // TODO make configurable (default on)
                 slotDuration: '00:30:00',       // TODO make configurable (default 30min)
                 snapDuration: '00:15:00',       // TODO make configurable (default 15min)
-                selectable: false,              // TODO implement create
-                editable: false,                // TODO implement edit
+                selectable: true,               // TODO implement create
+                editable: true,                 // TODO implement edit
 
-                // Show all events in local time zone
+                // L10n
+                locale: opts.locale,
                 timezone: 'local'
             });
 
@@ -250,8 +256,8 @@
             var resourceConfigs = opts.resources;
             this.resources = [];
             if (resourceConfigs) {
-                resourceConfigs.forEach(function(resourceConfig) {
-                    this._addResource(resourceConfig);
+                resourceConfigs.forEach(function(resourceConfig, index) {
+                    this._addResource(resourceConfig, index);
                 }, this);
             }
 
@@ -263,7 +269,7 @@
          *
          * @param {object} resourceConfig - the resource config from options
          */
-        _addResource: function(resourceConfig) {
+        _addResource: function(resourceConfig, index) {
 
             var resource = $.extend({}, resourceConfig, {_cache: new EventCache()});
 
@@ -275,11 +281,126 @@
 
             var self = this;
             $(this.element).fullCalendar('addEventSource', {
+                id: '' + index, // must pass a string here
                 allDayDefault: !resource.useTime,
                 events: function(start, end, timezone, callback) {
                     self._fetchItems(resource, start, end, timezone, callback);
                 }
             });
+        },
+
+        /**
+         * Actions after a calendar item has been rendered
+         *
+         * @param {object} item - the calendar item
+         * @param {jQuery} element - the DOM node of the item
+         */
+        _eventRender: function(item, element) {
+
+            var self = this;
+
+            // Attach the item popup
+            $(element).qtip({
+                content: {
+                    title: function(jsEvent, api) {
+                        return self._itemTitle(item, api);
+                    },
+                    text: function(jsEvent, api) {
+                        return self._itemDisplay(item, api);
+                    },
+                    button: true
+                },
+                position: {
+                    at: 'center right',
+                    my: 'left center',
+                    effect: false,
+                    viewport: $(window),
+                    adjust: {
+                        // horizontal vertical
+                        method: 'flip shift'
+                    }
+                },
+                show: {
+                    event: 'click',
+                    solo: true
+                },
+                hide: {
+                    event: 'click mouseleave',
+                    delay: 800,
+                    fixed: true
+                }
+            });
+        },
+
+        /**
+         * Actions before a calendar item is removed from the DOM
+         *
+         * @param {object} item - the calendar item
+         * @param {jQuery} element - the DOM node of the item
+         */
+        _eventDestroy: function(item, element) {
+
+            // Remove the item popup
+            $(element).qtip('destroy', true);
+        },
+
+        /**
+         * Render the popup title for a calendar item
+         *
+         * @param {object} item - the calendar item
+         *
+         * @returns {string} - the popup title
+         */
+        _itemTitle: function(item) {
+
+            var dateFormat = item.allDay && 'L' || 'L LT',
+                dates = [item.start.format(dateFormat)];
+
+            if (item.end) {
+                dates.push(item.end.format(dateFormat));
+            }
+
+            return dates.join(' - ');
+        },
+
+        /**
+         * Render the popup contents for a calendar item
+         *
+         * @param {object} item - the calendar item
+         *
+         * @returns {jQuery} - a DOM node with the contents
+         */
+        _itemDisplay: function(item) {
+
+            var contents = $('<div class="s3-organizer-popup">'),
+                opts = this.options,
+                resource = opts.resources[item.source.id];
+
+            // Item title
+            $('<h6>').text(item.title).appendTo(contents);
+
+            // Item description
+            var columns = resource.columns,
+                description = item.description;
+            if (columns && description) {
+                columns.forEach(function(column) {
+                    var colName = column[0],
+                        label = column[1];
+                    if (description[colName] !== undefined) {
+                        if (label) {
+                            $('<label>').text(label).appendTo(contents);
+                        }
+                        $('<p>').html(description[colName]).appendTo(contents);
+                    }
+                });
+            }
+
+            // Buttons
+            // TODO make these work
+//             $('<button class="tiny button s3-organizer-edit" type="button">').text('Edit').appendTo(contents);
+//             $('<button class="tiny alert button s3-organizer-delete" type="button">').text('Delete').appendTo(contents);
+
+            return contents;
         },
 
         /**
@@ -388,6 +509,8 @@
                 'type': 'GET',
                 'success': function(data) {
 
+                    data = self._decodeServerData(data);
+
                     self._hideThrobber();
                     resource._cache.store(start, end, data);
                     callback(data);
@@ -404,6 +527,36 @@
                     console.log(msg);
                 }
             });
+        },
+
+        /**
+         * TODO docstring
+         */
+        _decodeServerData: function(data) {
+
+            var columns = data.columns,
+                items = data.items,
+                translateCols = 0;
+
+            if (columns && columns.constructor === Array) {
+                translateCols = columns.length;
+            }
+
+            items.forEach(function(item) {
+                var description = {},
+                    values = item.description;
+                if (translateCols && values && values.constructor === Array) {
+                    var len = values.length;
+                    if (len <= translateCols) {
+                        for (var i = 0; i < len; i++) {
+                            description[columns[i]] = values[i];
+                        }
+                    }
+                }
+                item.description = description;
+            });
+
+            return items;
         },
 
         /**
