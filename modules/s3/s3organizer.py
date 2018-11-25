@@ -41,11 +41,14 @@ except ImportError:
     raise
 import json
 import os
+import uuid
 
-from gluon import current, DIV
+from gluon import current, DIV, INPUT
 
+from s3datetime import s3_decode_iso_datetime
 from s3rest import S3Method
 from s3utils import s3_str
+from s3validators import JSONERRORS
 
 # =============================================================================
 class S3Organizer(S3Method):
@@ -68,8 +71,167 @@ class S3Organizer(S3Method):
                 output = self.organizer(r, **attr)
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
+        elif r.http == "POST":
+            if r.representation == "json":
+                output = self.update_json(r, **attr)
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def organizer(self, r, **attr):
+        """
+            Render the organizer view (HTML method)
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+
+            @returns: dict of values for the view
+        """
+
+        output = {}
+
+        resource = self.resource
+        get_config = resource.get_config
+
+        # Parse resource configuration
+        config = self.parse_config(resource)
+        start = config["start"]
+        end = config["end"]
+
+        widget_id = "organizer"
+
+        # Filter Defaults
+        hide_filter = self.hide_filter
+        filter_widgets = get_config("filter_widgets", None)
+
+        show_filter_form = False
+        default_filters = None
+
+        if filter_widgets and not hide_filter:
+
+            # Drop all filter widgets for start/end fields
+            # (so they don't clash with the organizer's own filters)
+            fw = []
+            prefix_selector = self.prefix_selector
+            for filter_widget in filter_widgets:
+                filter_field = filter_widget.field
+                if isinstance(filter_field, basestring):
+                    filter_field = prefix_selector(resource, filter_field)
+                if start and start.selector == filter_field or \
+                   end and end.selector == filter_field:
+                    continue
+                fw.append(filter_widget)
+            filter_widgets = fw
+
+            if filter_widgets:
+                show_filter_form = True
+                # Apply filter defaults (before rendering the data!)
+                from s3filter import S3FilterForm
+                default_filters = S3FilterForm.apply_filter_defaults(r, resource)
+
+        # Filter Form
+        if show_filter_form:
+
+            get_vars = r.get_vars
+
+            # Where to retrieve filtered data from
+            filter_submit_url = attr.get("filter_submit_url")
+            if not filter_submit_url:
+                get_vars_ = self._remove_filters(get_vars)
+                filter_submit_url = r.url(vars=get_vars_)
+
+            # Where to retrieve updated filter options from:
+            filter_ajax_url = attr.get("filter_ajax_url")
+            if filter_ajax_url is None:
+                filter_ajax_url = r.url(method = "filter",
+                                        vars = {},
+                                        representation = "options",
+                                        )
+
+            filter_clear = get_config("filter_clear",
+                                      current.deployment_settings.get_ui_filter_clear())
+            filter_formstyle = get_config("filter_formstyle", None)
+            filter_submit = get_config("filter_submit", True)
+            filter_form = S3FilterForm(filter_widgets,
+                                       clear = filter_clear,
+                                       formstyle = filter_formstyle,
+                                       submit = filter_submit,
+                                       ajax = True,
+                                       url = filter_submit_url,
+                                       ajaxurl = filter_ajax_url,
+                                       _class = "filter-form",
+                                       _id = "%s-filter-form" % widget_id
+                                       )
+            fresource = current.s3db.resource(resource.tablename) # Use a clean resource
+            alias = resource.alias if r.component else None
+            output["list_filter_form"] = filter_form.html(fresource,
+                                                          get_vars,
+                                                          target = widget_id,
+                                                          alias = alias
+                                                          )
+        else:
+            # Render as empty string to avoid the exception in the view
+            output["list_filter_form"] = ""
+
+        # Page Title
+        crud_string = self.crud_string
+        if r.representation != "iframe":
+            if r.component:
+                title = crud_string(r.tablename, "title_display")
+            else:
+                title = crud_string(self.tablename, "title_list")
+            output["title"] = title
+
+        # Configure Resource
+        permitted = self._permitted
+        resource_config = {"ajaxURL": r.url(representation="json"),
+                           "useTime": config.get("use_time"),
+                           "baseURL": r.url(method=""),
+                           "labelCreate": s3_str(crud_string(self.tablename, "label_create")),
+                           "insertable": resource.get_config("insertable", True) and \
+                                         permitted("create"),
+                           "editable": resource.get_config("editable", True) and \
+                                       permitted("update"),
+                           "deletable": resource.get_config("deletable", True) and \
+                                        permitted("delete"),
+                           # Forced reload on update, e.g. if onaccept changes
+                           # other data that are visible in the organizer
+                           "reloadOnUpdate": config.get("reload_on_update", False),
+                           }
+
+        # Start and End Field
+        resource_config["start"] = start.selector if start else None
+        resource_config["end"] = end.selector if end else None
+
+        # Description Labels
+        labels = []
+        for rfield in config["description"]:
+            label = rfield.label
+            if label is not None:
+                label = s3_str(label)
+            labels.append((rfield.colname, label))
+        resource_config["columns"] = labels
+
+        # Generate form key
+        formkey = uuid.uuid4().get_hex()
+
+        # Store form key in session
+        session = current.session
+        keyname = "_formkey[%s]" % self.formname(r)
+        session[keyname] = session.get(keyname, [])[-9:] + [formkey]
+
+        # Instantiate Organizer Widget
+        widget = S3OrganizerWidget([resource_config])
+        output["organizer"] = widget.html(widget_id = widget_id,
+                                          formkey = formkey,
+                                          )
+
+        # View
+        current.response.view = self._view(r, "organize.html")
 
         return output
 
@@ -211,127 +373,150 @@ class S3Organizer(S3Method):
         return json.dumps({"c": columns, "r": items})
 
     # -------------------------------------------------------------------------
-    def organizer(self, r, **attr):
+    def update_json(self, r, **attr):
         """
-            Render the organizer view (HTML method)
+            Update or delete calendar items (Ajax method)
 
             @param r: the S3Request instance
             @param attr: controller attributes
-
-            @returns: dict of values for the view
         """
 
-        output = {}
+        # Read+parse body JSON
+        s = r.body
+        s.seek(0)
+        try:
+            options = json.load(s)
+        except JSONERRORS:
+            options = None
+        if not isinstance(options, dict):
+            r.error(400, "Invalid request options")
+
+        # Verify formkey
+        keyname = "_formkey[%s]" % self.formname(r)
+        formkey = options.get("k")
+        if not formkey or formkey not in current.session.get(keyname, []):
+            r.error(403, current.ERROR.NOT_PERMITTED)
 
         resource = self.resource
-        get_config = resource.get_config
+        tablename = resource.tablename
 
-        widget_id = "organizer"
+        # Updates
+        items = options.get("u")
+        if items and type(items) is list:
 
-        # Filter Defaults
-        hide_filter = self.hide_filter
-        filter_widgets = get_config("filter_widgets", None)
+            # Error if resource is not editable
+            if not resource.get_config("editable", True):
+                r.error(403, current.ERROR.NOT_PERMITTED)
 
-        show_filter_form = False
-        if filter_widgets and not hide_filter:
-            show_filter_form = True
-            # Apply filter defaults (before rendering the data!)
-            from s3filter import S3FilterForm
-            default_filters = S3FilterForm.apply_filter_defaults(r, resource)
-        else:
-            default_filters = None
+            # Parse the organizer-config of the target resource
+            config = self.parse_config(resource)
+            start = config.get("start")
+            if start:
+                if not start.field or start.tname != tablename:
+                    # Field must be in target resource
+                    # TODO support fields in subtables
+                    start = None
+            end = config.get("end")
+            if end:
+                if not end.field or end.tname != tablename:
+                    # Field must be in target resource
+                    # TODO support fields in subtables
+                    end = None
 
-        # Filter Form
-        if show_filter_form:
+            # Resource details
+            db = current.db
+            table = resource.table
+            prefix, name = resource.prefix, resource.name
 
-            get_vars = r.get_vars
+            # Model methods
+            s3db = current.s3db
+            onaccept = s3db.onaccept
+            update_super = s3db.update_super
 
-            # Where to retrieve filtered data from
-            filter_submit_url = attr.get("filter_submit_url")
-            if not filter_submit_url:
-                get_vars_ = self._remove_filters(get_vars)
-                filter_submit_url = r.url(vars=get_vars_)
+            # Auth methods
+            auth = current.auth
+            audit = current.audit
+            permitted = auth.s3_has_permission
+            set_realm_entity = auth.set_realm_entity
 
-            # Where to retrieve updated filter options from:
-            filter_ajax_url = attr.get("filter_ajax_url")
-            if filter_ajax_url is None:
-                filter_ajax_url = r.url(method = "filter",
-                                        vars = {},
-                                        representation = "options",
-                                        )
+            # Process the updates
+            for item in items:
 
-            filter_clear = get_config("filter_clear",
-                                      current.deployment_settings.get_ui_filter_clear())
-            filter_formstyle = get_config("filter_formstyle", None)
-            filter_submit = get_config("filter_submit", True)
-            filter_form = S3FilterForm(filter_widgets,
-                                       clear = filter_clear,
-                                       formstyle = filter_formstyle,
-                                       submit = filter_submit,
-                                       ajax = True,
-                                       url = filter_submit_url,
-                                       ajaxurl = filter_ajax_url,
-                                       _class = "filter-form",
-                                       _id = "%s-filter-form" % widget_id
-                                       )
-            fresource = current.s3db.resource(resource.tablename) # Use a clean resource
-            alias = resource.alias if r.component else None
-            output["list_filter_form"] = filter_form.html(fresource,
-                                                          get_vars,
-                                                          target = widget_id,
-                                                          alias = alias
-                                                          )
-        else:
-            # Render as empty string to avoid the exception in the view
-            output["list_filter_form"] = ""
+                # Get the record ID
+                record_id = item.get("id")
+                if not record_id:
+                    continue
 
-        # Page Title
-        crud_string = self.crud_string
-        if r.representation != "iframe":
-            if r.component:
-                title = crud_string(r.tablename, "title_display")
-            else:
-                title = crud_string(self.tablename, "title_list")
-            output["title"] = title
+                # Check permission to update the record
+                if not permitted("update", table, record_id=record_id):
+                    r.unauthorised()
 
-        # Configure Resource
-        config = self.parse_config(resource)
-        permitted = self._permitted
-        resource_config = {"ajaxURL": r.url(representation="json"),
-                           "useTime": config.get("use_time"),
-                           "baseURL": r.url(method=""),
-                           "labelCreate": s3_str(crud_string(self.tablename, "label_create")),
-                           "insertable": resource.get_config("insertable", True) and \
-                                         permitted("create"),
-                           "editable": resource.get_config("editable", True) and \
-                                       permitted("update"),
-                           "deletable": resource.get_config("deletable", True) and \
-                                        permitted("delete"),
-                           }
+                # Collect and validate the update-data
+                data = {}
+                error = None
+                if "s" in item:
+                    if not start:
+                        error = "Event start not editable"
+                    else:
+                        try:
+                            data[start.fname] = s3_decode_iso_datetime(item["s"])
+                        except ValueError:
+                            error = "Invalid start date"
+                if not error and "e" in item:
+                    if not end:
+                        error = "Event end not editable"
+                    else:
+                        try:
+                            data[end.fname] = s3_decode_iso_datetime(item["e"])
+                        except ValueError:
+                            error = "Invalid end date"
+                if error:
+                    r.error(400, error)
 
-        # Start and End Field
-        start = config["start"]
-        resource_config["start"] = start.selector if start else None
-        end = config["end"]
-        resource_config["end"] = end.selector if end else None
+                # Update the record, postprocess update
+                if data:
+                    success = db(table._id == record_id).update(**data)
+                    if not success:
+                        r.error(400, "Failed to update %s#%s" % (tablename, record_id))
+                    else:
+                        data[table._id.name] = record_id
 
-        # Description Labels
-        labels = []
-        for rfield in config["description"]:
-            label = rfield.label
-            if label is not None:
-                label = s3_str(label)
-            labels.append((rfield.colname, label))
-        resource_config["columns"] = labels
+                    # Audit update
+                    audit("update", prefix, name,
+                          record=record_id, representation="json")
+                    # Update super entity links
+                    update_super(table, data)
+                    # Update realm
+                    if resource.get_config("update_realm"):
+                        set_realm_entity(table, record_id, force_update=True)
+                    # Onaccept
+                    onaccept(table, data, method="update")
 
-        # Instantiate Organizer Widget
-        widget = S3OrganizerWidget([resource_config])
-        output["organizer"] = widget.html(widget_id=widget_id)
+        # Deletions
+        items = options.get("d")
+        if items and type(items) is list:
 
-        # View
-        current.response.view = self._view(r, "organize.html")
+            # Error if resource is not deletable
+            if not resource.get_config("deletable", True):
+                r.error(403, current.ERROR.NOT_PERMITTED)
 
-        return output
+            # Collect record IDs
+            delete_ids = []
+            for item in items:
+                record_id = item.get("id")
+                if not record_id:
+                    continue
+                delete_ids.append(record_id)
+
+            # Delete the records
+            # (includes permission check, audit and ondelete-postprocess)
+            if delete_ids:
+                dresource = current.s3db.resource(tablename, id=delete_ids)
+                deleted = dresource.delete(cascade=True)
+                if deleted != len(delete_ids):
+                    r.error(400, "Failed to delete %s items" % tablename)
+
+        return current.xml.json_message()
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -461,6 +646,17 @@ class S3Organizer(S3Method):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def formname(r):
+
+        if r.component:
+            prefix = "%s/%s/%s" % (r.tablename, r.id, r.component.alias)
+        else:
+            prefix = r.tablename
+
+        return "%s/organizer" % prefix
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def isoformat(dt):
         """
             Format a date/datetime as ISO8601 datetime string
@@ -499,7 +695,7 @@ class S3OrganizerWidget(object):
         self.resources = resources
 
     # -------------------------------------------------------------------------
-    def html(self, widget_id=None):
+    def html(self, widget_id=None, formkey=None):
         """
             Render the organizer container and instantiate the UI widget
 
@@ -528,7 +724,11 @@ class S3OrganizerWidget(object):
         self.inject_script(widget_id, script_opts)
 
         # Generate and return the HTML for the widget container
-        return DIV(_id = widget_id,
+        return DIV(INPUT(_name = "_formkey",
+                         _type = "hidden",
+                         _value = str(formkey) if formkey else "",
+                         ),
+                   _id = widget_id,
                    _class = "s3-organizer",
                    )
 

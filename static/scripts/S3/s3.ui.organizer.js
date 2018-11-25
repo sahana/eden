@@ -20,6 +20,7 @@
      */
     function EventCache() {
 
+        this.items = {};  // {id: item}
         this.slices = []; // [[startMoment, endMoment, {id: item, ...}], ...]
     }
 
@@ -35,8 +36,8 @@
         // Convert items array into object with item IDs as keys
         var events = {};
         items.forEach(function(item) {
-            events[item.id] = item;
-        });
+            this.items[item.id] = events[item.id] = item;
+        }, this);
 
         // Add the new slice
         var slices = this.slices,
@@ -129,6 +130,21 @@
             }
         }
         return null;
+    };
+
+    /**
+     * Update an item in the cache
+     *
+     * @param {integer} itemID - the item record ID
+     * @param {object} data - the data to update the item with
+     */
+    EventCache.prototype.updateItem = function(itemID, data) {
+
+        var item = this.items[itemID];
+
+        if (item && data) {
+            $.extend(item, data);
+        }
     };
 
     /**
@@ -231,7 +247,13 @@
 
                 // Permitted actions
                 selectable: insertable,
-                editable: true,                 // TODO implement edit
+                editable: true,
+                eventDrop: function(event, delta, revertFunc /* , jsEvent, ui, view */) {
+                    self._updateItem(event, revertFunc);
+                },
+                eventResize: function(event, delta, revertFunc /* , jsEvent, ui, view */) {
+                    self._updateItem(event, revertFunc);
+                },
 
                 // View options
                 customButtons: {
@@ -474,7 +496,7 @@
 
             $(this.element).qtip({
                 content: {
-                    text: function(jsEvent, api) {
+                    'text': function(jsEvent, api) {
                         return self._selectResource(start, end, jsEvent, api);
                     }
                 },
@@ -499,7 +521,7 @@
                     fixed: true
                 },
                 events: {
-                    visible: function(/* jsEvent, api */) {
+                    'visible': function(/* jsEvent, api */) {
                         S3.addModals();
                     }
                 }
@@ -596,43 +618,25 @@
             }
             var currentFilters = S3.search.getCurrentFilters(filterForm);
 
+            // Remove other filters for start/end
+            var filters = currentFilters.filter(function(query) {
+                var selector = query[0].split('__')[0];
+                return selector !== resource.start && selector !== resource.end;
+            });
+
             // Add date filters for start/end
-            var startQuery,
-                endQuery,
-                filters = [];
+            // (record start date or end date must be within the interval)
+            var selectors = [];
             if (resource.start) {
-                startQuery = [resource.start + '__ge', start.toISOString()];
+                selectors.push(resource.start);
             }
             if (resource.end) {
-                endQuery = [resource.end + '__lt', end.toISOString()];
-            } else {
-                endQuery = [resource.start + '__lt', end.toISOString()];
+                selectors.push(resource.end);
             }
-            currentFilters.forEach(function(query) {
-                var selector = query[0].split('__')[0];
-                if (selector === resource.start) {
-                    if (startQuery) {
-                        filters.push(startQuery);
-                        startQuery = null;
-                        if (!resource.end) {
-                            filters.push(endQuery);
-                            endQuery = null;
-                        }
-                    }
-                } else if (selector === resource.end) {
-                    if (endQuery) {
-                        filters.push(endQuery);
-                        endQuery = null;
-                    }
-                } else {
-                    filters.push(query);
-                }
-            });
-            if (startQuery) {
-                filters.push(startQuery);
-            }
-            if (endQuery) {
-                filters.push(endQuery);
+            if (selectors.length) {
+                selectors = selectors.join('|');
+                filters.push([selectors + '__ge', start.toISOString()]);
+                filters.push([selectors + '__lt', end.toISOString()]);
             }
 
             // Update ajax URL
@@ -669,7 +673,7 @@
                 'type': 'GET',
                 'success': function(data) {
 
-                    data = self._decodeServerData(data);
+                    data = self._decodeServerData(resource, data);
 
                     self._hideThrobber();
                     resource._cache.store(start, end, data);
@@ -692,11 +696,12 @@
         /**
          * Decode server data into fullCalendar events
          *
+         * @param {object} resource - the resource from which items are loaded
          * @param {object} data - the data returned from the server
          *
          * @returns {Array} - Array of fullCalendar event objects
          */
-        _decodeServerData: function(data) {
+        _decodeServerData: function(resource, data) {
 
             var columns = data.c,
                 records = data.r,
@@ -721,11 +726,23 @@
                     }
                 }
 
+                var end = record.e;
+                if (end) {
+                    // End date in item is exclusive
+                    if (resource.useTime) {
+                        // Item end date is record end date plus one second
+                        end = moment(end).add(1, 'seconds').toISOString();
+                    } else {
+                        // Item end date is start of next day after record end
+                        end = moment(end).add(1, 'days').startOf('day').toISOString();
+                    }
+                }
+
                 var item = {
-                    id: record.id,
+                    'id': record.id,
                     title: record.t,
                     start: record.s,
-                    end: record.e,
+                    end: end,
                     description: description
                 };
 
@@ -741,6 +758,80 @@
             });
 
             return items;
+        },
+
+        /**
+         * Update start/end of a calendar item
+         *
+         * @param {object} item - the calendar item
+         * @param {function} revertFunc - function to revert the action
+         *                                (in case the Ajax request fails)
+         */
+        _updateItem: function(item, revertFunc) {
+
+            var resource = this.resources[item.source.id],
+                self = this;
+
+            var data = {"id": item.id, "s": item.start.toISOString()};
+            if (resource.end) {
+                // End date in item is exclusive
+                if (resource.useTime) {
+                    // Record end is one second before item end
+                    data.e = moment(item.end).subtract(1, 'seconds').toISOString();
+                } else {
+                    // Record end is end of previous day before item end
+                    data.e = moment(item.end).subtract(1, 'days').endOf('day').toISOString();
+                }
+            }
+
+            this._sendItems(resource, {u: [data]}, function() {
+                if (resource.reloadOnUpdate) {
+                    self.reload();
+                } else {
+                    resource._cache.updateItem(item.id, {
+                        start: item.start,
+                        end: item.end
+                    });
+                }
+            }, revertFunc);
+        },
+
+        /**
+         * Send item updates to the server
+         *
+         * @param {object} resource - the resource to send updates to
+         * @param {object} data - the data to send
+         * @param {function} callback - the callback to invoke upon success
+         * @param {function} revertFunc - the callback to invoke upon failure
+         */
+        _sendItems: function(resource, data, callback, revertFunc) {
+
+            var formKey = $('input[name="_formkey"]', this.element).val(),
+                jsonData = JSON.stringify($.extend({k: formKey}, data));
+
+            this._showThrobber();
+
+            var self = this;
+            $.ajaxS3({
+                type: 'POST',
+                url: resource.ajaxURL,
+                data: jsonData,
+                dataType: 'json',
+                retryLimit: 0,
+                contentType: 'application/json; charset=utf-8',
+                success: function() {
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                    self._hideThrobber();
+                },
+                error: function() {
+                    if (typeof revertFunc === 'function') {
+                        revertFunc();
+                    }
+                    self._hideThrobber();
+                }
+            });
         },
 
         /**

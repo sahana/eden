@@ -2063,15 +2063,44 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dvr_case_appointment_resource(r, tablename):
 
+        s3db = current.s3db
+
+        # Organizer popups
+        if r.tablename == "pr_person":
+            title = "type_id"
+            description = ["status",
+                           "comments",
+                           ]
+        elif r.tablename == "dvr_case_appointment":
+            title = "person_id"
+            description = [(T("ID"), "person_id$pe_label"),
+                           "type_id",
+                           "status",
+                           "comments",
+                           ]
+        else:
+            title = description = None
+
         ui_options = get_ui_options()
         if ui_options.get("appointments_staff_link"):
-
             # Enable staff link and default to logged-in user
-            table = current.s3db.dvr_case_appointment
+            table = s3db.dvr_case_appointment
             field = table.human_resource_id
             field.readable = field.writable = True
             field.default = current.auth.s3_logged_in_human_resource()
             field.widget = None
+            # Also show staff link in organizer popup
+            if description:
+                description.insert(-1, "human_resource_id")
+
+        # Configure Organizer
+        if title:
+            s3db.configure("dvr_case_appointment",
+                           organize = {"start": "date",
+                                       "title": title,
+                                       "description": description,
+                                       },
+                           )
 
     settings.customise_dvr_case_appointment_resource = customise_dvr_case_appointment_resource
 
@@ -2178,16 +2207,6 @@ def config(settings):
                                    insertable = False,
                                    deletable = False,
                                    update_next = r.url(method=""),
-
-                                   # TODO move into customise_resource
-                                   # TODO adapt represent to perspective
-                                   organize = {"start": "date",
-                                               "title": "person_id",
-                                               "description": [(T("ID"), "person_id$pe_label"),
-                                                               "type_id",
-                                                               "human_resource_id",
-                                                               ],
-                                               },
                                    )
 
             return result
