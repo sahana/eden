@@ -216,20 +216,23 @@
             this._unbindEvents();
 
             // Can records be created for any resource?
-            var insertable = false;
-            for (var i = resourceConfigs.length; i--;) {
-                if (resourceConfigs[i].insertable) {
+            var insertable = false,
+                allDaySlot = false;
+            resourceConfigs.forEach(function(resourceConfig) {
+                if (resourceConfig.insertable) {
                     insertable = true;
-                    break;
                 }
-            }
+                if (!resourceConfig.useTime) {
+                    allDaySlot = true;
+                }
+            });
 
             // Determine available views and default view
             // TODO make configurable (override options)
             var leftHeader,
                 defaultView;
             if (opts.useTime) {
-                leftHeader = 'month,agendaWeek reloadButton';
+                leftHeader = 'month,agendaWeek,agendaDay reloadButton';
                 defaultView = 'agendaWeek';
             } else {
                 leftHeader = 'month,basicWeek reloadButton';
@@ -244,6 +247,8 @@
                 nowIndicator: true,             // TODO make configurable (default on)
                 slotDuration: '00:30:00',       // TODO make configurable (default 30min)
                 snapDuration: '00:15:00',       // TODO make configurable (default 15min)
+                defaultTimedEventDuration: '00:30:00',
+                allDaySlot: allDaySlot,
 
                 // Permitted actions
                 selectable: insertable,
@@ -329,7 +334,8 @@
                 id: '' + index, // must be string, falsy gets dropped
                 allDayDefault: !resource.useTime,
                 editable: !!resource.editable, // can be overridden per-record
-                durationEditable: !!resource.end,
+                startEditable: !!resource.startEditable,
+                durationEditable: !!resource.end && !!resource.durationEditable,
                 events: function(start, end, timezone, callback) {
                     self._fetchItems(resource, start, end, timezone, callback);
                 }
