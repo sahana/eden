@@ -11,6 +11,7 @@
          Branch.........................optional.....Organisation Branch Name
          ...SubBranch,SubSubBranch...etc (indefinite depth, must specify all from root)
 
+         Sector......................string..........Sector Name
          Theme.......................string..........Theme Name
          Comments....................string..........Comments
 
@@ -19,6 +20,10 @@
     <xsl:import href="../orgh.xsl"/>
 
     <xsl:output method="xml"/>
+
+    <!-- ****************************************************************** -->
+    <!-- Indexes for faster processing -->
+    <xsl:key name="sectors" match="row" use="col[@field='Sector']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -31,6 +36,12 @@
                     <xsl:with-param name="level">Organisation</xsl:with-param>
                     <xsl:with-param name="rows" select="//table/row"/>
                 </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Sectors -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('sectors',
+                                                                   col[@field='Sector'])[1])]">
+                <xsl:call-template name="Sector"/>
             </xsl:for-each>
 
             <!-- Process all rows for response themes -->
@@ -60,6 +71,16 @@
                     </xsl:attribute>
                 </reference>
 
+                <!-- Link to sector -->
+                <xsl:variable name="Sector" select="col[@field='Sector']/text()"/>
+                <xsl:if test="$Sector!=''">
+                    <reference field="sector_id" resource="org_sector">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('SECTOR:', $Sector)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
+
                 <!-- Comments -->
                 <data field="comments">
                     <xsl:value-of select="col[@field='comments']"/>
@@ -67,6 +88,24 @@
 
             </resource>
         </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Sectors -->
+    <xsl:template name="Sector">
+
+        <xsl:variable name="Name" select="col[@field='Sector']/text()"/>
+        <xsl:if test="$Name!=''">
+            <resource name="org_sector">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('SECTOR:', $Name)"/>
+                </xsl:attribute>
+                <data field="name">
+                    <xsl:value-of select="$Name"/>
+                </data>
+            </resource>
+        </xsl:if>
+
     </xsl:template>
 
     <!-- END ************************************************************** -->

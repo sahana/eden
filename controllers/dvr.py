@@ -842,6 +842,9 @@ def response_action():
 
         resource = r.resource
 
+        # Create/delete requires context perspective
+        insertable = deletable = False
+
         get_vars = r.get_vars
         if "viewing" in get_vars:
             try:
@@ -876,9 +879,6 @@ def response_action():
             # Filter out response actions of archived cases
             query = (FS("case_activity_id$person_id$dvr_case.archived") == False)
             resource.add_filter(query)
-
-            # Create/delete requires context perspective
-            insertable = deletable = False
 
         # Filter for "mine"
         mine = r.get_vars.get("mine")
