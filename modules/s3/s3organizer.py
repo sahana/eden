@@ -44,11 +44,13 @@ import os
 import uuid
 
 from gluon import current, DIV, INPUT
+from gluon.storage import Storage
 
 from s3datetime import s3_decode_iso_datetime
 from s3rest import S3Method
 from s3utils import s3_str
 from s3validators import JSONERRORS
+from s3widgets import S3DateWidget
 
 # =============================================================================
 class S3Organizer(S3Method):
@@ -731,11 +733,19 @@ class S3OrganizerWidget(object):
                        }
         self.inject_script(widget_id, script_opts)
 
+        # Add a datepicker to navigate to arbitrary dates
+        picker = S3DateWidget()(Storage(name="date_select"),
+                                None,
+                                _type="hidden",
+                                _id="%s-date-picker" % widget_id,
+                                )
+
         # Generate and return the HTML for the widget container
         return DIV(INPUT(_name = "_formkey",
                          _type = "hidden",
                          _value = str(formkey) if formkey else "",
                          ),
+                   picker,
                    _id = widget_id,
                    _class = "s3-organizer",
                    )
@@ -780,15 +790,15 @@ class S3OrganizerWidget(object):
 
         # Choose locale
         language = current.session.s3.language
-        i18n_path = os.path.join(request.folder,
+        l10n_path = os.path.join(request.folder,
                                  "static", "scripts", "fullcalendar", "locale",
                                  )
-        i18n_file = "%s.js" % language
-        script = "fullcalendar/locale/%s" % i18n_file
+        l10n_file = "%s.js" % language
+        script = "fullcalendar/locale/%s" % l10n_file
         if script not in scripts and \
-           os.path.exists(os.path.join(i18n_path, i18n_file)):
+           os.path.exists(os.path.join(l10n_path, l10n_file)):
             options["locale"] = language
-            inject.insert(-1, "fullcalendar/locale/%s" % i18n_file)
+            inject.insert(-1, "fullcalendar/locale/%s" % l10n_file)
 
         # Inject scripts
         for path in inject:

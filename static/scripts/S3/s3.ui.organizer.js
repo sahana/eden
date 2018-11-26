@@ -6,6 +6,10 @@
  *
  * requires jQuery 1.9.1+
  * requires jQuery UI 1.10 widget factory
+ * requires moment.js
+ * requires jQuery fullCalendar plugin
+ * requires qTip2
+ * requires jQuery UI datepicker
  */
 (function($, undefined) {
 
@@ -211,7 +215,9 @@
         refresh: function() {
 
             var opts = this.options,
-                resourceConfigs = opts.resources;
+                resourceConfigs = opts.resources,
+                el = $(this.element),
+                widgetID = el.attr('id');
 
             this._unbindEvents();
 
@@ -232,14 +238,15 @@
             var leftHeader,
                 defaultView;
             if (opts.useTime) {
-                leftHeader = 'month,agendaWeek,agendaDay reloadButton';
+                leftHeader = 'month,agendaWeek,agendaDay reload';
                 defaultView = 'agendaWeek';
             } else {
-                leftHeader = 'month,basicWeek reloadButton';
+                leftHeader = 'month,basicWeek reload';
                 defaultView = 'month';
             }
 
-            var self = this;
+            var self = this,
+                datePicker = $('#' + widgetID + '-date-picker');
             $(this.element).fullCalendar({
 
                 // General options
@@ -262,17 +269,23 @@
 
                 // View options
                 customButtons: {
-                    reloadButton: {
+                    reload: {
                         text: '',
                         click: function() {
                             self.reload();
+                        }
+                    },
+                    calendar: {
+                        text: '',
+                        click: function() {
+                            datePicker.datepicker('show');
                         }
                     }
                 },
                 header: {
                     left: leftHeader,
                     center: 'title',
-                    right: 'today prev,next'
+                    right: 'calendar today prev,next'
                 },
                 defaultView: defaultView,
 
@@ -296,7 +309,18 @@
             });
 
             // Remember reloadButton, use icon
-            this.reloadButton = $('.fc-reloadButton-button').html('<i class="fa fa-refresh">');
+            this.reloadButton = $('.fc-reload-button').html('<i class="fa fa-refresh">');
+
+            // Move datepicker into header, use icon for calendar button
+            var calendarButton = $('.fc-calendar-button').html('<i class="fa fa-calendar">');
+            datePicker.datepicker('option', {showOn: 'focus', showButtonPanel: true})
+                      .insertBefore(calendarButton)
+                      .on('change', function() {
+                          var date = datePicker.datepicker('getDate');
+                          if (date) {
+                              el.fullCalendar('gotoDate', date);
+                          }
+                      });
 
             // Add throbber
             var throbber = $('<div class="inline-throbber">').css({visibility: 'hidden'});
