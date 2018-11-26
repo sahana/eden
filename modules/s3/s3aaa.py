@@ -543,8 +543,6 @@ Thank you"""
             utable[passfield].requires[-1].min_length = 0
         except:
             pass
-        if next is DEFAULT:
-            next = request.vars._next or settings.login_next
         if onvalidation is DEFAULT:
             onvalidation = settings.login_onvalidation
         if onaccept is DEFAULT:
@@ -765,7 +763,9 @@ Thank you"""
             elif hasattr(cas, "login_form"):
                 return cas.login_form()
             else:
-                # we need to pass through login again before going on
+                # We need to pass through login again before going on
+                if next is DEFAULT:
+                    next = request.vars._next or settings.login_next
                 next = "%s?_next=%s" % (URL(r=request), next)
                 redirect(cas.login_url(next))
 
@@ -777,6 +777,20 @@ Thank you"""
             self.log_event(log, self.user)
 
         # How to continue
+        if next is DEFAULT:
+            if deployment_settings.has_module("setup") and deployment_settings.get_setup_wizard_questions() and self.s3_has_role("ADMIN"):
+                itable = current.s3db.setup_instance
+                instance = db(itable.url == "https://%s" % request.env.HTTP_HOST).select(itable.id,
+                                                                                         itable.deployment_id,
+                                                                                         itable.configured,
+                                                                                         limitby = (0, 1)
+                                                                                         ).first()
+                if instance and not instance.configured:
+                    # Run Configuration Wizard
+                    next = URL(c="setup", f="deployment",
+                               args = [instance.deployment_id, "instance", instance.id, "wizard"])
+            if next is DEFAULT:
+                next = request.vars._next or settings.login_next
         if settings.login_form == self:
             if accepted_form:
                 if onaccept:

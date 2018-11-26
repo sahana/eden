@@ -463,6 +463,13 @@ class S3SetupModel(S3Model):
                               ) if opt else current.messages["NONE"],
                            writable = False,
                            ),
+                     # Has the Configuration Wizard been run?
+                     Field("configured", "boolean",
+                           default = False,
+                           #represent = s3_yes_no_represent,
+                           readable = False,
+                           writable = False,
+                           ),
                      *s3_meta_fields()
                      )
 
@@ -717,6 +724,9 @@ dropdown.change(function() {
     def setup_instance_wizard(self, r, **attr):
         """
             Custom S3Method to Configure an Instance
+
+            @ToDo: Option to Propagate settings from Prod to Demo &/or Test
+                   - on by default
         """
 
         from gluon import IS_IN_SET, SQLFORM
@@ -764,6 +774,7 @@ dropdown.change(function() {
 
         current.response.view = "simple.html"
         output = {"item": form,
+                  "title": T("Configuration Wizard"),
                   }
         return output
 
@@ -1132,7 +1143,8 @@ dropdown.change(function() {
         appname = current.request.application
 
         itable = s3db.setup_instance
-        instance = db(itable.id == instance_id).select(itable.deployment_id,
+        instance = db(itable.id == instance_id).select(itable.id,
+                                                       itable.deployment_id,
                                                        itable.type,
                                                        limitby = (0, 1)
                                                        ).first()
@@ -1211,6 +1223,7 @@ dropdown.change(function() {
 
         # Update the DB to show that the settings have been applied
         # @ToDo: Do this as a callback from the async task
+        instance.update_record(configured = True)
         stable = s3db.setup_setting
         q = (stable.instance_id == instance_id)
         for setting in settings:
