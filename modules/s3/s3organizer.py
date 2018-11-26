@@ -196,6 +196,8 @@ class S3Organizer(S3Method):
                                          permitted("create"),
                            "editable": resource.get_config("editable", True) and \
                                        permitted("update"),
+                           "startEditable": start.field and start.field.writable,
+                           "durationEditable": end and end.field and end.field.writable,
                            "deletable": resource.get_config("deletable", True) and \
                                         permitted("delete"),
                            # Forced reload on update, e.g. if onaccept changes
@@ -459,17 +461,23 @@ class S3Organizer(S3Method):
                         error = "Event start not editable"
                     else:
                         try:
-                            data[start.fname] = s3_decode_iso_datetime(item["s"])
+                            dt = s3_decode_iso_datetime(item["s"])
                         except ValueError:
                             error = "Invalid start date"
+                        if start.field:
+                            dt, error = start.field.validate(dt)
+                        data[start.fname] = dt
                 if not error and "e" in item:
                     if not end:
                         error = "Event end not editable"
                     else:
                         try:
-                            data[end.fname] = s3_decode_iso_datetime(item["e"])
+                            dt = s3_decode_iso_datetime(item["e"])
                         except ValueError:
                             error = "Invalid end date"
+                        if end.field:
+                            dt, error = end.field.validate(dt)
+                        data[end.fname] = dt
                 if error:
                     r.error(400, error)
 
