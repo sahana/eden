@@ -4,7 +4,7 @@ import datetime
 
 from collections import OrderedDict
 
-from gluon import current, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, SPAN, URL
+from gluon import current, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, SPAN, TAG, URL
 from gluon.storage import Storage
 
 from s3 import FS, IS_ONE_OF
@@ -38,7 +38,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
                }
 
 UI_OPTIONS = {"LEA": {"case_bamf_first": True,
-                      #"case_document_templates": True,  # Hide until ready
+                      "case_document_templates": True,
                       "case_hide_default_org": True,
                       "case_use_action_tab": True,
                       "case_use_address": False,
@@ -653,7 +653,7 @@ def config(settings):
             s3db.configure("pr_person",
                            anonymize = drk_person_anonymize(),
                            )
-                           
+
             if current.auth.s3_has_role("CASE_MANAGEMENT"):
                 # Allow use of Document Templates
                 s3db.set_method("pr", "person",
@@ -748,6 +748,7 @@ def config(settings):
 
         auth = current.auth
         s3db = current.s3db
+        ui_options = get_ui_options()
 
         settings.base.bigtable = True
 
@@ -808,7 +809,6 @@ def config(settings):
                         multiple_orgs = False
 
                     configure_person_tags()
-                    ui_options = get_ui_options()
 
                     # Alternatives: site_id or simple text field
                     lodging_opt = ui_options.get("case_lodging")
@@ -1192,17 +1192,32 @@ def config(settings):
                r.method in (None, "update", "read") and \
                isinstance(output, dict):
 
-                # Add anonymize-button
+                # Custom CRUD buttons
                 if "buttons" not in output:
                     buttons = output["buttons"] = {}
                 else:
                     buttons = output["buttons"]
 
+                # Anonymize-button
                 from s3 import S3AnonymizeWidget
-                buttons["delete_btn"] = S3AnonymizeWidget.widget(
-                                            r,
-                                            _class="action-btn anonymize-btn",
-                                            )
+                anonymize = S3AnonymizeWidget.widget(r,
+                                         _class="action-btn anonymize-btn")
+
+                # Doc-From-Template-button
+                if ui_options.get("case_document_templates") and \
+                   auth.s3_has_role("CASE_MANAGEMENT"):
+                    doc_from_template = A(T("Document from Template"),
+                                          _class = "action-btn s3_modal",
+                                          _title = T("Generate Document from Template"),
+                                          _href = URL(args=[r.id, "templates"]),
+                                          )
+                else:
+                    doc_from_template = ""
+
+                # Render in place of the delete-button
+                buttons["delete_btn"] = TAG[""](doc_from_template,
+                                                anonymize,
+                                                )
 
             return output
         s3.postp = custom_postp
@@ -2871,7 +2886,7 @@ def config(settings):
                 r.resource.configure(insertable = insertable)
 
             if r.component_name == "document":
-                s3.crud_strings["doc_document"].label_create = T("Add Case Document Template")
+                s3.crud_strings["doc_document"].label_create = T("Add Document Template")
                 # Done in customise_doc_document_resource
                 #f = current.s3db.doc_document.url
                 #f.readable = f.writable = False
@@ -3384,14 +3399,6 @@ def drk_dvr_rheader(r, tabs=None):
                 else:
                     flags_sel = None
 
-                if ui_opts_get("case_document_templates") and current.auth.s3_has_role("CASE_MANAGEMENT"):
-                    templates_btn = A(T("Export using Template"),
-                                      _class = "action-btn s3_modal",
-                                      _href = URL(args=[record_id, "templates"]),
-                                      )
-                else:
-                    templates_btn = None
-
                 case = resource.select(["first_name",
                                         "last_name",
                                         "dvr_case.status_id",
@@ -3448,14 +3455,6 @@ def drk_dvr_rheader(r, tabs=None):
                                 table = resource.table,
                                 record = record,
                                 )
-
-                if templates_btn:
-                    row = rheader[0][2]
-                    rappend = row.append
-                    rappend(" ")
-                    rappend(" ")
-                    rappend(" ")
-                    rappend(templates_btn)
 
                 # Add profile picture
                 from s3 import s3_avatar_represent
@@ -3541,8 +3540,11 @@ def drk_org_rheader(r, tabs=None):
                 # as they are used in themes:
                 tabs.append((T("Need Types"), "need"))
 
-            if not branch and ui_options.get("case_document_templates") and current.auth.s3_has_role("ORG_ADMIN"):
-                tabs.append((T("Case Document Templates"), "document"))
+            if not branch and \
+               (is_admin or \
+                ui_options.get("case_document_templates") and \
+                current.auth.s3_has_role("ORG_ADMIN")):
+                tabs.append((T("Document Templates"), "document"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 

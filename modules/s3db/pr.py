@@ -7843,22 +7843,26 @@ class pr_Templates(S3Method):
                 root_org = s3db.org_root_organisation(current.auth.user.organisation_id)
                 table = s3db.doc_document
                 query = (table.organisation_id == root_org) & \
-                        (table.is_template == True)
-                templates = current.db(query).select(table.name,
-                                                     table.id)
+                        (table.is_template == True) & \
+                        (table.deleted == False)
+                templates = current.db(query).select(table.id,
+                                                     table.name,
+                                                     )
+                if not templates:
+                    buttons = P(T("No document templates found."))
+                else:
+                    buttons = UL()
+                    bappend = buttons.append
+                    for t in templates:
+                        bappend(LI(A(t.name,
+                                     #_class = "action-btn",
+                                     _href = URL(args = [person_id, "template.docx"],
+                                                 vars = {"template": t.id},
+                                                 ),
+                                     _target = "_top",
+                                     )))
 
-                buttons = UL()
-                bappend = buttons.append
-                for t in templates:
-                    bappend(LI(A(t.name,
-                                 #_class = "action-btn",
-                                 _href = URL(args = [person_id, "template.docx"],
-                                             vars = {"template": t.id},
-                                             ),
-                                 _target = "_top",
-                                 )))
-
-                output = {"title": "%s:" % current.T("Select Template"),
+                output = {"title": "", #"%s:" % current.T("Select Template"),
                           "item": buttons,
                           }
                 current.response.view = "plain.html"
@@ -7928,14 +7932,6 @@ class pr_Template(S3Method):
                     if "." not in selector:
                         selector = "pr_person.%s" % selector
                     doc_data[field] = data[selector]
-
-                #data = {"ID": "123456",
-                #        "Vorname": "Fran",
-                #        "Name": "Boon",
-                #        "Geburtsdatum": "11/3/1971",
-                #        "Land": "UK",
-                #        "Registrierungsdatum": "1/1/2018",
-                #        }
 
                 # Merge
                 filename = "%s_%s.docx" % (template.name, person_id)

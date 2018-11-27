@@ -1576,145 +1576,146 @@ form.anonymize-form,
 /* line 280, ../../default/scss/theme/_widgets.scss */
 .s3-anonymize {
   display: inline-block;
+  margin: 0.2rem;
 }
 
 /* Role Manager */
-/* line 286, ../../default/scss/theme/_widgets.scss */
+/* line 287, ../../default/scss/theme/_widgets.scss */
 .rm-form .controls {
   width: 100%;
 }
-/* line 289, ../../default/scss/theme/_widgets.scss */
+/* line 290, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .action-lnk,
 .rm-form .rm-rules .action-lnk {
   display: inline-block;
   color: #006A71;
   font-style: normal;
 }
-/* line 295, ../../default/scss/theme/_widgets.scss */
+/* line 296, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-toggle-all {
   margin-top: 0.2rem;
   margin-bottom: 0.5rem;
 }
-/* line 299, ../../default/scss/theme/_widgets.scss */
+/* line 300, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign {
   width: 80%;
   border-collapse: separate;
   border-spacing: 0;
 }
-/* line 303, ../../default/scss/theme/_widgets.scss */
+/* line 304, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign th {
   min-width: 10rem;
 }
-/* line 306, ../../default/scss/theme/_widgets.scss */
+/* line 307, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign th:first-child {
   width: 25%;
 }
-/* line 309, ../../default/scss/theme/_widgets.scss */
+/* line 310, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign td {
   padding: 0.5rem;
 }
-/* line 312, ../../default/scss/theme/_widgets.scss */
+/* line 313, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign tfoot td {
   border-top: 1px solid #C0C0C0;
 }
-/* line 315, ../../default/scss/theme/_widgets.scss */
+/* line 316, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-item-name,
 .rm-form .rm-assign .rm-item-title {
   display: block;
 }
-/* line 319, ../../default/scss/theme/_widgets.scss */
+/* line 320, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-item-title {
   font-size: 0.8rem;
   font-style: italic;
   color: #A0A0A0;
 }
-/* line 325, ../../default/scss/theme/_widgets.scss */
+/* line 326, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-duplicate td {
   border-top: 1px solid red;
   border-bottom: 1px solid red;
 }
-/* line 328, ../../default/scss/theme/_widgets.scss */
+/* line 329, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 1px solid red;
 }
-/* line 331, ../../default/scss/theme/_widgets.scss */
+/* line 332, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 1px solid red;
 }
-/* line 337, ../../default/scss/theme/_widgets.scss */
+/* line 338, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules {
   width: 100%;
 }
-/* line 339, ../../default/scss/theme/_widgets.scss */
+/* line 340, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header {
   cursor: pointer;
   background-color: #F0F0F0;
 }
-/* line 342, ../../default/scss/theme/_widgets.scss */
+/* line 343, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0.3rem;
   display: inline-block;
 }
-/* line 346, ../../default/scss/theme/_widgets.scss */
+/* line 347, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header .rm-module-toggle {
   width: 0.5rem;
 }
-/* line 349, ../../default/scss/theme/_widgets.scss */
+/* line 350, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header .rm-module-prefix {
   width: 6.5rem;
 }
-/* line 352, ../../default/scss/theme/_widgets.scss */
+/* line 353, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header .rm-module-numrules {
   font-weight: normal;
 }
-/* line 356, ../../default/scss/theme/_widgets.scss */
+/* line 357, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules.hasrules .rm-module-header {
   background-color: #D0D0D0;
 }
-/* line 360, ../../default/scss/theme/_widgets.scss */
+/* line 361, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules th, .rm-form .rm-module-rules td {
   padding: 0.5rem;
 }
-/* line 364, ../../default/scss/theme/_widgets.scss */
+/* line 365, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-default-rule td,
 .rm-form .rm-module-rules .rm-default-permissions td {
   font-style: italic;
   color: #a0a0a0;
 }
-/* line 369, ../../default/scss/theme/_widgets.scss */
+/* line 370, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-rule-target {
   width: 20%;
 }
-/* line 373, ../../default/scss/theme/_widgets.scss */
+/* line 374, ../../default/scss/theme/_widgets.scss */
 .rm-form input.rm-invalid {
   background-color: #FFA0A0;
 }
 
 /* Organizer */
-/* line 380, ../../default/scss/theme/_widgets.scss */
+/* line 381, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-popup label {
   font-size: 0.7rem;
   font-weight: bold;
 }
-/* line 384, ../../default/scss/theme/_widgets.scss */
+/* line 385, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-popup p {
   font-size: 0.8rem;
   font-weight: normal;
   margin-bottom: 0.3rem;
 }
-/* line 389, ../../default/scss/theme/_widgets.scss */
+/* line 390, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-popup .action-btn {
   margin-left: 0;
   margin-right: 0.3rem;
 }
 
-/* line 395, ../../default/scss/theme/_widgets.scss */
+/* line 396, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-create .action-btn {
   display: block;
 }
 
 /* Priority Representation */
-/* line 401, ../../default/scss/theme/_widgets.scss */
+/* line 402, ../../default/scss/theme/_widgets.scss */
 .prio {
   padding: 0 4px;
   border: 1px solid black;
@@ -1723,50 +1724,50 @@ form.anonymize-form,
   font-weight: normal;
 }
 
-/* line 408, ../../default/scss/theme/_widgets.scss */
+/* line 409, ../../default/scss/theme/_widgets.scss */
 .prio-red {
   color: white;
   background-color: #d10000;
 }
 
-/* line 412, ../../default/scss/theme/_widgets.scss */
+/* line 413, ../../default/scss/theme/_widgets.scss */
 .prio-blue {
   color: white;
   background-color: #10427b;
 }
 
-/* line 416, ../../default/scss/theme/_widgets.scss */
+/* line 417, ../../default/scss/theme/_widgets.scss */
 .prio-lightblue {
   background-color: #b7ddff;
 }
 
-/* line 419, ../../default/scss/theme/_widgets.scss */
+/* line 420, ../../default/scss/theme/_widgets.scss */
 .prio-grey {
   background-color: silver;
 }
 
-/* line 426, ../../default/scss/theme/_widgets.scss */
+/* line 427, ../../default/scss/theme/_widgets.scss */
 body.rtl .range-filter-widget input.date-filter-input {
   margin-right: 0;
   margin-left: 2px;
 }
-/* line 431, ../../default/scss/theme/_widgets.scss */
+/* line 432, ../../default/scss/theme/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
   margin-right: 0;
   margin-left: 1rem;
 }
-/* line 437, ../../default/scss/theme/_widgets.scss */
+/* line 438, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0;
   margin-left: 0.3rem;
 }
-/* line 443, ../../default/scss/theme/_widgets.scss */
+/* line 444, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 0;
   border-right: 1px solid red;
 }
-/* line 447, ../../default/scss/theme/_widgets.scss */
+/* line 448, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;
