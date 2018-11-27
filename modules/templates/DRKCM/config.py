@@ -1789,7 +1789,7 @@ def config(settings):
             rtable = s3db.dvr_response_action
 
             field = rtable.human_resource_id
-            field.label = T("Assigned to")
+            #field.label = T("Assigned to")
             field.default = human_resource_id
             field.widget = field.comment = None
 

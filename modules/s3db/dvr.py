@@ -1640,8 +1640,14 @@ class DVRResponseModel(S3Model):
 
         use_response_types = settings.get_dvr_response_types()
         use_response_themes = settings.get_dvr_response_themes()
+
         response_planning = settings.get_dvr_response_planning()
-        DATE = T("Date Actioned") if response_planning else T("Date")
+        if response_planning:
+            DATE = T("Date Actioned")
+            date_default = None
+        else:
+            DATE = T("Date")
+            date_default = "now"
 
         tablename = "dvr_response_action"
         define_table(tablename,
@@ -1669,6 +1675,7 @@ class DVRResponseModel(S3Model):
                              writable = response_planning,
                              ),
                      s3_date(label = DATE,
+                             default = date_default,
                              ),
                      self.hrm_human_resource_id(),
                      response_status_id(readable = response_planning,
