@@ -280,7 +280,7 @@ S3.popup_loaded = function(id) {
     var width = $('.ui-dialog').width();
 
     // Adjust iframe width, then un-hide popup contents
-    $('#' + id).width(width).contents().find('#popup').show();
+    $('#' + id).removeClass('loading').width(width).contents().find('#popup').show();
 };
 S3.popup_remove = function() {
     // Close jQueryUI Dialog Modal Popup

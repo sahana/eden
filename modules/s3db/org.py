@@ -8137,7 +8137,7 @@ class org_CapacityReport(S3Method):
 
                 T = current.T
 
-                output = dict(title = T("Branch Organisational Capacity Assessment"))
+                output = {"title": T("Branch Organisational Capacity Assessment")}
                 current.response.view = "org/capacity_report.html"
 
                 # Maintain RHeader for consistency

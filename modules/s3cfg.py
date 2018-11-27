@@ -3087,6 +3087,16 @@ class S3Config(Storage):
         """
         return self.doc.get("label", "Document")
 
+    def get_doc_mailmerge_fields(self):
+        """
+            Dictionary of mailmerge fields
+            - assumes starting from pr_person
+        """
+        return self.doc.get("mailmerge_fields", {"First Name": "first_name",
+                                                 "Last Name": "last_name",
+                                                 "Date of Birth": "date_of_birth",
+                                                 })
+
     # -------------------------------------------------------------------------
     # DVR Options
     #
