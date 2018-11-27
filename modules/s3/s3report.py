@@ -177,6 +177,8 @@ class S3Report(S3Method):
             if show_filter_form:
                 advanced = False
                 for widget in filter_widgets:
+                    if not widget:
+                        continue
                     if "hidden" in widget.opts and widget.opts.hidden:
                         advanced = resource.get_config("report_advanced", True)
                         break
