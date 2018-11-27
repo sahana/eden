@@ -3277,6 +3277,13 @@ class S3Config(Storage):
         """
         return self.dvr.get("manage_response_actions", False)
 
+    def get_dvr_response_planning(self):
+        """
+            Response actions can be planned
+            (as opposed to being documented in hindsight)
+        """
+        return self.__lazy("dvr", "response_planning", default=False)
+
     def get_dvr_response_types(self):
         """
             Use response type categories

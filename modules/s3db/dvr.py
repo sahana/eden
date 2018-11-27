@@ -1640,6 +1640,8 @@ class DVRResponseModel(S3Model):
 
         use_response_types = settings.get_dvr_response_types()
         use_response_themes = settings.get_dvr_response_themes()
+        response_planning = settings.get_dvr_response_planning()
+        DATE = T("Date Actioned") if response_planning else T("Date")
 
         tablename = "dvr_response_action"
         define_table(tablename,
@@ -1663,11 +1665,15 @@ class DVRResponseModel(S3Model):
                          ),
                      s3_date("date_due",
                              label = T("Date Due"),
+                             readable = response_planning,
+                             writable = response_planning,
                              ),
-                     s3_date(label = T("Date Actioned"),
+                     s3_date(label = DATE,
                              ),
                      self.hrm_human_resource_id(),
-                     response_status_id(),
+                     response_status_id(readable = response_planning,
+                                        writable = response_planning,
+                                        ),
                      Field("hours", "double",
                            label = T("Effort (Hours)"),
                            requires = IS_EMPTY_OR(
@@ -1685,11 +1691,14 @@ class DVRResponseModel(S3Model):
         list_fields = ["case_activity_id",
                        "comments",
                        "human_resource_id",
-                       "date_due",
+                       #"date_due",
                        "date",
                        "hours",
-                       "status_id",
+                       #"status_id",
                        ]
+        if response_planning:
+            list_fields[3:3] = ["date_due"]
+            list_fields.append("status_id")
         if use_response_types:
             list_fields[1:1] = ["response_type_id"]
         if use_response_themes:
@@ -1713,6 +1722,17 @@ class DVRResponseModel(S3Model):
         else:
             response_type_filter = None
 
+        if response_planning:
+            status_filter = S3OptionsFilter("status_id",
+                                            options = lambda: \
+                                                      s3_get_filter_opts("dvr_response_status"),
+                                            cols = 3,
+                                            translate = True,
+                                            )
+            due_filter = S3DateFilter("date_due")
+        else:
+            status_filter = due_filter = None
+
         filter_widgets = [S3TextFilter(["case_activity_id$person_id$pe_label",
                                         "case_activity_id$person_id$first_name",
                                         "case_activity_id$person_id$middle_name",
@@ -1721,27 +1741,25 @@ class DVRResponseModel(S3Model):
                                         ],
                                         label = T("Search"),
                                        ),
-                          S3OptionsFilter("status_id",
-                                          options = lambda: \
-                                              s3_get_filter_opts("dvr_response_status"),
-                                          cols = 3,
-                                          translate = True,
-                                          ),
-                          S3DateFilter("date_due"),
+                          status_filter,
+                          due_filter,
                           response_type_filter,
                           ]
 
         # CRUD Form
         type_field = "response_type_id" if use_response_types else None
         theme_field = "response_theme_ids" if use_response_themes else None
+        status_field = "status_id" if response_planning else None
+        due_field = "date_due" if response_planning else None
         crud_form = S3SQLCustomForm("case_activity_id",
                                     theme_field,
                                     type_field,
                                     "comments",
                                     "human_resource_id",
-                                    "date_due",
+                                    due_field,
                                     "date",
-                                    "status_id",
+                                    status_field,
+                                    "hours",
                                     )
 
         # Table Configuration
@@ -5683,10 +5701,17 @@ def dvr_response_default_status():
     default = field.default
     if not default:
 
-        # Look up the default status
         stable = s3db.dvr_response_status
-        query = (stable.is_default == True) & \
-                (stable.deleted != True)
+
+        if current.deployment_settings.get_dvr_response_planning():
+            # Actions are planned ahead, so initial status by default
+            query = (stable.is_default == True)
+        else:
+            # Actions are documented in hindsight, so closed by default
+            query = (stable.is_default_closure == True)
+
+        # Look up the default status
+        query = query & (stable.deleted != True)
         row = current.db(query).select(stable.id, limitby=(0, 1)).first()
 
         if row:

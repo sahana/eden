@@ -32,6 +32,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
                "activity_default_sector": False,
                "activity_need_details": True,
                "appointments_staff_link": False,
+               "response_planning": True,
                "response_themes_sectors": False,
                "response_themes_needs": False,
                }
@@ -55,6 +56,7 @@ UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "activity_default_sector": True,
                       "activity_need_details": False,
                       "appointments_staff_link": True,
+                      "response_planning": False,
                       "response_themes_sectors": True,
                       "response_themes_needs": True,
                       },
@@ -390,6 +392,8 @@ def config(settings):
 
     # Manage individual response actions in case activities
     settings.dvr.manage_response_actions = True
+    # Planning response actions, or just documenting them?
+    settings.dvr.response_planning = get_ui_option("response_planning")
     # Use response themes
     settings.dvr.response_themes = True
     # Response themes are org-specific
@@ -1789,6 +1793,23 @@ def config(settings):
             field.default = human_resource_id
             field.widget = field.comment = None
 
+            if settings.get_dvr_response_planning():
+                response_action_fields = ["response_theme_ids",
+                                          "date_due",
+                                          "comments",
+                                          "human_resource_id",
+                                          "status_id",
+                                          "date",
+                                          "hours",
+                                          ]
+            else:
+                response_action_fields = ["response_theme_ids",
+                                          "comments",
+                                          "human_resource_id",
+                                          (T("Date"), "date"),
+                                          "hours",
+                                          ]
+
             # Filter themes-options to themes of the case root org
             if case_root_org and r.tablename == "pr_person" and r.record:
                 requires = rtable.response_theme_ids.requires
@@ -1822,15 +1843,7 @@ def config(settings):
 
                             S3SQLInlineComponent("response_action",
                                                  label = T("Actions"),
-                                                 fields = [
-                                                     "response_theme_ids",
-                                                     "date_due",
-                                                     "comments",
-                                                     "human_resource_id",
-                                                     "status_id",
-                                                     "date",
-                                                     "hours",
-                                                     ],
+                                                 fields = response_action_fields,
                                                  layout = S3SQLVerticalSubFormLayout,
                                                  explicit_add = T("Add Action"),
                                                  ),
@@ -2333,6 +2346,20 @@ def config(settings):
             field.widget = None
             field.default = current.auth.s3_logged_in_human_resource()
 
+            list_fields = ["case_activity_id",
+                           "response_theme_ids",
+                           "comments",
+                           "human_resource_id",
+                           "date",
+                           "hours",
+                           ]
+
+            # Response planning?
+            response_planning = settings.get_dvr_response_planning()
+            if response_planning:
+                list_fields.insert(-3, "date_due")
+                list_fields.append("status_id")
+
             get_vars = r.get_vars
             if r.tablename == "dvr_response_action" and "viewing" in get_vars:
 
@@ -2362,17 +2389,6 @@ def config(settings):
                                               linkto = linkto,
                                               )
 
-                # Custom list fields
-                list_fields = ["case_activity_id",
-                               "response_theme_ids",
-                               "comments",
-                               "human_resource_id",
-                               "date_due",
-                               "date",
-                               "hours",
-                               "status_id",
-                               ]
-
                 s3db.configure("dvr_response_action",
                                list_fields = list_fields,
                                filter_widgets = None,
@@ -2397,6 +2413,17 @@ def config(settings):
                                S3TextFilter, \
                                s3_get_filter_opts
 
+                if response_planning:
+                    status_filter = S3OptionsFilter("status_id",
+                                                    options = lambda: \
+                                                              s3_get_filter_opts("dvr_response_status"),
+                                                    cols = 3,
+                                                    translate = True,
+                                                    )
+                    due_filter = S3DateFilter("date_due", hidden=is_report)
+                else:
+                    status_filter = due_filter = None
+
                 filter_widgets = [S3TextFilter(
                                     ["case_activity_id$person_id$pe_label",
                                      "case_activity_id$person_id$first_name",
@@ -2406,15 +2433,9 @@ def config(settings):
                                      ],
                                     label = T("Search"),
                                     ),
-                                  S3OptionsFilter(
-                                        "status_id",
-                                        options = lambda: \
-                                                  s3_get_filter_opts("dvr_response_status"),
-                                        cols = 3,
-                                        translate = True,
-                                        ),
+                                  status_filter,
                                   S3DateFilter("date", hidden=not is_report),
-                                  S3DateFilter("date_due", hidden=is_report),
+                                  due_filter,
                                   S3OptionsFilter(
                                         "response_theme_ids",
                                         hidden = True,
@@ -2462,16 +2483,7 @@ def config(settings):
                                )
 
                 if r.tablename == "dvr_response_action":
-                    list_fields = [(T("ID"), "case_activity_id$person_id$pe_label"),
-                                   "case_activity_id",
-                                   "response_theme_ids",
-                                   "comments",
-                                   "human_resource_id",
-                                   "date_due",
-                                   "date",
-                                   "hours",
-                                   "status_id",
-                                   ]
+                    list_fields.insert(0, (T("ID"), "case_activity_id$person_id$pe_label"))
                     s3db.configure("dvr_response_action",
                                    list_fields = list_fields,
                                    )
@@ -2506,13 +2518,13 @@ def config(settings):
     def customise_dvr_response_theme_resource(r, tablename):
 
         is_admin = current.auth.s3_has_role("ADMIN")
-                                                      
+
 
         if r.tablename == "org_organisation" and r.id:
 
             s3db = current.s3db
-                                    
-                                                 
+
+
             ttable = s3db.dvr_response_theme
 
             if is_admin or settings.get_dvr_response_themes_sectors():
@@ -2520,8 +2532,8 @@ def config(settings):
                 # Limit sector selection to the sectors of the organisation
                 stable = s3db.org_sector
                 ltable = s3db.org_sector_organisation
-                                                                   
-                                                     
+
+
 
                 dbset = current.db((ltable.sector_id == stable.id) & \
                                    (ltable.organisation_id == r.id) & \

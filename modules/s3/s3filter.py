@@ -3019,6 +3019,8 @@ class S3FilterForm(object):
         rappend = rows.append
         advanced = False
         for f in self.widgets:
+            if not f:
+                continue
             widget = f(resource, get_vars, alias=alias)
             widget_opts = f.opts
             label = widget_opts["label"]
@@ -3209,7 +3211,7 @@ class S3FilterForm(object):
 
             # Do not apply defaults of hidden widgets because they are
             # not visible to the user:
-            if filter_widget.opts.hidden:
+            if not filter_widget or filter_widget.opts.hidden:
                 continue
 
             has_default = False

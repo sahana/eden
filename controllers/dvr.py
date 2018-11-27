@@ -841,6 +841,7 @@ def response_action():
     def prep(r):
 
         resource = r.resource
+        r.table.status_id.default = s3db.dvr_response_default_status()
 
         # Create/delete requires context perspective
         insertable = deletable = False
