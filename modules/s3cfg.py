@@ -3307,6 +3307,12 @@ class S3Config(Storage):
         """
         return self.__lazy("dvr", "response_themes_sectors", default=False)
 
+    def get_dvr_response_themes_needs(self):
+        """
+            Response themes are linked to needs
+        """
+        return self.__lazy("dvr", "response_themes_needs", default=False)
+
     # -------------------------------------------------------------------------
     # Education
     #

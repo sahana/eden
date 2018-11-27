@@ -568,6 +568,16 @@ def config(settings):
 
     # Uncomment this to manage individual response actions in case activities
     #settings.dvr.manage_response_actions = True
+    # Uncomment this to not use response action types
+    #settings.dvr.response_types = False
+    # Uncomment this to use response themes
+    #settings.dvr.response_themes = True
+    # Uncomment this to not use org-specific response themes
+    #settings.dvr.response_themes_org_specific = False
+    # Uncomment this to link response themes to org sectors
+    #settings.dvr.response_themes_sectors = True
+    # Uncomment this to link response themes to needs
+    #settings.dvr.response_themes_needs = True
 
     # Configure a regular expression pattern for ID Codes (QR Codes)
     #settings.dvr.id_code_pattern = "(?P<label>[^,]*),(?P<first_name>[^,]*),(?P<last_name>[^,]*),(?P<date_of_birth>[^,]*)"
