@@ -32,6 +32,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
                "activity_need_details": True,
                "appointments_staff_link": False,
                "response_themes_sectors": False,
+               "response_themes_needs": False,
                }
 
 UI_OPTIONS = {"LEA": {"case_bamf_first": True,
@@ -53,6 +54,7 @@ UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "activity_need_details": False,
                       "appointments_staff_link": True,
                       "response_themes_sectors": True,
+                      "response_themes_needs": True,
                       },
               }
 
@@ -396,6 +398,8 @@ def config(settings):
     settings.dvr.response_types_hierarchical = True
     # Response themes organized by sectors
     settings.dvr.response_themes_sectors = get_ui_option("response_themes_sectors")
+    # Response themes linked to needs
+    settings.dvr.response_themes_needs = get_ui_option("response_themes_needs")
 
     # Expose flags to mark appointment types as mandatory
     settings.dvr.mandatory_appointments = False
@@ -2240,6 +2244,17 @@ def config(settings):
     settings.customise_dvr_case_flag_resource = customise_dvr_case_flag_resource
 
     # -------------------------------------------------------------------------
+    def customise_dvr_need_resource(r, tablename):
+
+        table = current.s3db.dvr_need
+
+        # Expose organisation_id (only relevant for ADMINs)
+        field = table.organisation_id
+        field.readable = field.writable = True
+
+    settings.customise_dvr_need_resource = customise_dvr_need_resource
+
+    # -------------------------------------------------------------------------
     def customise_dvr_response_action_resource(r, tablename):
 
         db = current.db
@@ -2267,6 +2282,12 @@ def config(settings):
                 sector = "case_activity_id$sector_id"
                 default_cols = sector
 
+            # Needs Axis
+            if settings.get_dvr_response_themes_needs():
+                need = "dvr_response_action_theme.theme_id$need_id"
+            else:
+                need = None
+
             # Custom Report Options
             facts = ((T("Number of Actions"), "count(id)"),
                      (T("Number of Clients"), "count(case_activity_id$person_id)"),
@@ -2278,6 +2299,7 @@ def config(settings):
                     "case_activity_id$person_id$person_details.marital_status",
                     (T("Theme"), "response_theme_ids"),
                     sector,
+                    need,
                     "human_resource_id",
                     )
             if multiple_orgs:
@@ -2481,22 +2503,41 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dvr_response_theme_resource(r, tablename):
 
-        if settings.get_dvr_response_themes_sectors() and \
-           r.tablename == "org_organisation" and r.id:
+        is_admin = current.auth.s3_has_role("ADMIN")
 
-            # Limit sector selection to the sectors of the organisation
+        if r.tablename == "org_organisation" and r.id:
+
             s3db = current.s3db
-            stable = s3db.org_sector
-            ltable = s3db.org_sector_organisation
             ttable = s3db.dvr_response_theme
 
-            dbset = current.db((ltable.sector_id == stable.id) & \
-                               (ltable.organisation_id == r.id) & \
-                               (ltable.deleted == False))
-            field = ttable.sector_id
-            field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "org_sector.id",
-                                                   field.represent,
-                                                   ))
+            if is_admin or settings.get_dvr_response_themes_sectors():
+
+                # Limit sector selection to the sectors of the organisation
+                stable = s3db.org_sector
+                ltable = s3db.org_sector_organisation
+
+                dbset = current.db((ltable.sector_id == stable.id) & \
+                                   (ltable.organisation_id == r.id) & \
+                                   (ltable.deleted == False))
+                field = ttable.sector_id
+                field.comment = None
+                field.readable = field.writable = True
+                field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "org_sector.id",
+                                                       field.represent,
+                                                       ))
+
+            if is_admin or settings.get_dvr_response_themes_needs():
+
+                # Limit needs selection to the needs of the organisation
+                ntable = s3db.dvr_need
+
+                dbset = current.db(ntable.organisation_id == r.id)
+                field = ttable.need_id
+                field.comment = None
+                field.readable = field.writable = True
+                field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "dvr_need.id",
+                                                       field.represent,
+                                                       ))
 
         # Custom CRUD Strings
         current.response.s3.crud_strings["dvr_response_theme"] = Storage(
@@ -3406,6 +3447,9 @@ def drk_org_rheader(r, tabs=None):
     if record:
         T = current.T
 
+        ui_options = get_ui_options()
+        is_admin = current.auth.s3_has_role("ADMIN")
+
         if tablename == "org_organisation":
 
             table = resource.table
@@ -3415,9 +3459,13 @@ def drk_org_rheader(r, tabs=None):
                     (T("Branches"), "branch"),
                     (T("Facilities"), "facility"),
                     (T("Staff & Volunteers"), "human_resource"),
-                    #(T("Projects"), "project"),
                     (T("Counseling Themes"), "response_theme"),
                     ]
+
+            if is_admin or ui_options.get("response_themes_needs"):
+                # Ability to manage org-specific need types
+                # as they are used in themes:
+                tabs.append((T("Need Types"), "need"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 

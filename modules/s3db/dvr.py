@@ -1110,6 +1110,10 @@ class DVRNeedsModel(S3Model):
                                 readable = service_type,
                                 writable = service_type,
                                 ),
+                     # Activate in template as needed:
+                     self.org_organisation_id(readable = False,
+                                              writable = False,
+                                              ),
                      # This form of hierarchy may not work on all Databases:
                      Field("parent", "reference dvr_need",
                            label = T("Subtype of"),
@@ -1133,7 +1137,9 @@ class DVRNeedsModel(S3Model):
         # Table configuration
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("name",),
-                                            secondary = ("parent",),
+                                            secondary = ("parent",
+                                                         "organisation_id",
+                                                         ),
                                             ),
                   hierarchy = hierarchy,
                   )
@@ -1417,8 +1423,9 @@ class DVRResponseModel(S3Model):
         define_table = self.define_table
         configure = self.configure
 
-        response_themes_sectors = settings.get_dvr_response_themes_sectors()
         hierarchical_response_types = settings.get_dvr_response_types_hierarchical()
+        themes_sectors = settings.get_dvr_response_themes_sectors()
+        themes_needs = settings.get_dvr_response_themes_needs()
 
         NONE = current.messages["NONE"]
 
@@ -1428,12 +1435,16 @@ class DVRResponseModel(S3Model):
         tablename = "dvr_response_theme"
         define_table(tablename,
                      Field("name",
+                           label = T("Theme"),
                            requires = IS_NOT_EMPTY(),
                            ),
                      self.org_organisation_id(),
-                     self.org_sector_id(readable = response_themes_sectors,
-                                        writable = response_themes_sectors,
+                     self.org_sector_id(readable = themes_sectors,
+                                        writable = themes_sectors,
                                         ),
+                     self.dvr_need_id(readable = themes_needs,
+                                      writable = themes_needs,
+                                      ),
                      s3_comments(),
                      *s3_meta_fields())
 

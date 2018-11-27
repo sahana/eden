@@ -679,6 +679,8 @@ class S3OrganisationModel(S3Model):
                        hrm_human_resource = "organisation_id",
                        # Members
                        member_membership = "organisation_id",
+                       # DVR needs
+                       dvr_need = "organisation_id",
                        # DVR response themes
                        dvr_response_theme = "organisation_id",
                        # Evacuees

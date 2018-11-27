@@ -12,6 +12,9 @@
          ...SubBranch,SubSubBranch...etc (indefinite depth, must specify all from root)
 
          Sector......................string..........Sector Name
+         Need........................string..........Need Type Name
+         Generic Need................string..........need type is not org-specific
+                                                     true|false (default false)
          Theme.......................string..........Theme Name
          Comments....................string..........Comments
 
@@ -24,6 +27,7 @@
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <xsl:key name="sectors" match="row" use="col[@field='Sector']"/>
+    <xsl:key name="needs" match="row" use="col[@field='Need']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -42,6 +46,12 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('sectors',
                                                                    col[@field='Sector'])[1])]">
                 <xsl:call-template name="Sector"/>
+            </xsl:for-each>
+
+            <!-- Needs -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('needs',
+                                                                   col[@field='Need'])[1])]">
+                <xsl:call-template name="Need"/>
             </xsl:for-each>
 
             <!-- Process all rows for response themes -->
@@ -81,6 +91,16 @@
                     </reference>
                 </xsl:if>
 
+                <!-- Link to need -->
+                <xsl:variable name="Need" select="col[@field='Need']/text()"/>
+                <xsl:if test="$Need!=''">
+                    <reference field="need_id" resource="dvr_need">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('NEED:', $Need)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
+
                 <!-- Comments -->
                 <data field="comments">
                     <xsl:value-of select="col[@field='comments']"/>
@@ -103,6 +123,32 @@
                 <data field="name">
                     <xsl:value-of select="$Name"/>
                 </data>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Needs -->
+    <xsl:template name="Need">
+
+        <xsl:variable name="Name" select="col[@field='Need']/text()"/>
+        <xsl:if test="$Name!=''">
+            <resource name="dvr_need">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('NEED:', $Name)"/>
+                </xsl:attribute>
+                <data field="name">
+                    <xsl:value-of select="$Name"/>
+                </data>
+                <!-- Link to Organisation if not generic -->
+                <xsl:if test="not(col[@field='Generic Need']/text()='true')">
+                    <reference field="organisation_id" resource="org_organisation">
+                        <xsl:attribute name="tuid">
+                            <xsl:call-template name="OrganisationID"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
             </resource>
         </xsl:if>
 
