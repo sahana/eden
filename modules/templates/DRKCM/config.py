@@ -38,7 +38,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
                }
 
 UI_OPTIONS = {"LEA": {"case_bamf_first": True,
-                      "case_document_templates": True,
+                      #"case_document_templates": True,  # Hide until ready
                       "case_hide_default_org": True,
                       "case_use_action_tab": True,
                       "case_use_address": False,
