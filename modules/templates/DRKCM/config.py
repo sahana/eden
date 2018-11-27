@@ -3412,6 +3412,14 @@ def drk_dvr_rheader(r, tabs=None):
                                 record = record,
                                 )
 
+                if templates_btn:
+                    row = rheader[0][2]
+                    rappend = row.append
+                    rappend(" ")
+                    rappend(" ")
+                    rappend(" ")
+                    rappend(templates_btn)
+
                 # Add profile picture
                 from s3 import s3_avatar_represent
                 rheader.insert(0, A(s3_avatar_represent(record_id,
@@ -3424,10 +3432,6 @@ def drk_dvr_rheader(r, tabs=None):
                                               ),
                                     )
                                )
-
-                if templates_btn:
-                    #rheader[0]
-                    pass
 
                 return rheader
 
