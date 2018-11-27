@@ -3279,9 +3279,8 @@ def drk_dvr_rheader(r, tabs=None):
                    s3_fullname
 
     tablename, record = s3_rheader_resource(r)
-    record_id = record.id
     if tablename != r.tablename:
-        resource = current.s3db.resource(tablename, id=record_id)
+        resource = current.s3db.resource(tablename, id=record.id)
     else:
         resource = r.resource
 
@@ -3290,6 +3289,7 @@ def drk_dvr_rheader(r, tabs=None):
 
     if record:
         T = current.T
+        record_id = record.id
 
         if tablename == "pr_person":
 
@@ -3425,6 +3425,10 @@ def drk_dvr_rheader(r, tabs=None):
                                     )
                                )
 
+                if templates_btn:
+                    #rheader[0]
+                    pass
+
                 return rheader
 
         elif tablename == "dvr_case":
@@ -3458,9 +3462,8 @@ def drk_org_rheader(r, tabs=None):
     s3db = current.s3db
 
     tablename, record = s3_rheader_resource(r)
-    record_id = record.id
     if tablename != r.tablename:
-        resource = s3db.resource(tablename, id=record_id)
+        resource = s3db.resource(tablename, id=record.id)
     else:
         resource = r.resource
 
@@ -3469,6 +3472,7 @@ def drk_org_rheader(r, tabs=None):
 
     if record:
         T = current.T
+        record_id = record.id
 
         ui_options = get_ui_options()
         is_admin = current.auth.s3_has_role("ADMIN")
