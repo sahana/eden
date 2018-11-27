@@ -72,6 +72,8 @@ __all__ = (# PR Base Entities
            "pr_AssignMethod",
            "pr_compose",
            "pr_Contacts",
+           "pr_Template",
+           "pr_Templates",
 
            # PE Hierarchy and Realms
            "pr_update_affiliations",
@@ -440,12 +442,12 @@ class PRPersonEntityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(pr_pe_types = pe_types,
-                    pr_pe_label = pr_pe_label,
-                    pr_role_types = role_types,
-                    pr_role_id = role_id,
-                    pr_pentity_represent = pr_pentity_represent,
-                    )
+        return {"pr_pe_types": pe_types,
+                "pr_pe_label": pr_pe_label,
+                "pr_role_types": role_types,
+                "pr_role_id": role_id,
+                "pr_pentity_represent": pr_pentity_represent,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -688,8 +690,10 @@ class PRPersonEntityModel(S3Model):
                     "pe_id": None,
                     "deleted_fk": json.dumps(deleted_fk)}
             db(query).update(**data)
+
             # Clear descendant paths
             current.s3db.pr_rebuild_path(pe_id, clear=True)
+
         return
 
     # -------------------------------------------------------------------------
@@ -1016,6 +1020,15 @@ class PRPersonModel(S3Model):
                    method = "check_duplicates",
                    action = self.pr_person_check_duplicates)
 
+        # Enable in templates as-required
+        #set_method("pr", "person",
+        #           method = "templates",
+        #           action = pr_Templates())
+
+        #set_method("pr", "person",
+        #           method = "template",
+        #           action = pr_Template())
+
         # Components
         self.add_components(tablename,
                             # Assets
@@ -1187,12 +1200,12 @@ class PRPersonModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(pr_gender = pr_gender,
-                    pr_gender_opts = pr_gender_opts,
-                    pr_person_id = person_id,
-                    pr_person_lookup = self.pr_person_lookup,
-                    pr_person_represent = person_represent,
-                    )
+        return {"pr_gender": pr_gender,
+                "pr_gender_opts": pr_gender_opts,
+                "pr_person_id": person_id,
+                "pr_person_lookup": self.pr_person_lookup,
+                "pr_person_represent": person_represent,
+                }
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -2710,9 +2723,9 @@ class PRGroupModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(pr_group_id = group_id,
-                    pr_mailing_list_crud_strings = mailing_list_crud_strings,
-                    )
+        return {"pr_group_id": group_id,
+                "pr_mailing_list_crud_strings": mailing_list_crud_strings,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3473,8 +3486,8 @@ class PRAddressModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(pr_address_type_opts = pr_address_type_opts,
-                    )
+        return {"pr_address_type_opts": pr_address_type_opts,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3792,8 +3805,8 @@ class PRContactModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(pr_contact_represent = contact_represent,
-                    )
+        return {"pr_contact_represent": contact_represent,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4253,12 +4266,12 @@ class PRPresenceModel(S3Model):
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #
-        return dict(pr_trackable_types=pr_trackable_types,
-                    pr_default_trackable=pr_default_trackable,
-                    pr_presence_opts=pr_presence_opts,
-                    pr_presence_conditions=pr_presence_conditions,
-                    pr_default_presence=pr_default_presence
-                    )
+        return {"pr_trackable_types": pr_trackable_types,
+                "pr_default_trackable": pr_default_trackable,
+                "pr_presence_opts": pr_presence_opts,
+                "pr_presence_conditions": pr_presence_conditions,
+                "pr_default_presence": pr_default_presence
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4989,9 +5002,9 @@ class PRDescriptionModel(S3Model):
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #
-        return dict(pr_age_group = pr_age_group,
-                    pr_age_group_opts = pr_age_group_opts,
-                    )
+        return {"pr_age_group": pr_age_group,
+                "pr_age_group_opts": pr_age_group_opts,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5774,9 +5787,9 @@ class S3ImageLibraryModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(pr_image_size = self.pr_image_size,
-                    pr_image_delete_all = self.pr_image_delete_all,
-                    )
+        return {"pr_image_size": self.pr_image_size,
+                "pr_image_delete_all": self.pr_image_delete_all,
+                }
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -5893,7 +5906,8 @@ class S3SavedFilterModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(pr_filter_id = filter_id)
+        return {"pr_filter_id": filter_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -6074,8 +6088,8 @@ class S3SubscriptionModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(pr_subscription_check_intervals = check_intervals,
-                    )
+        return {"pr_subscription_check_intervals": check_intervals,
+                }
 
 # =============================================================================
 # Representation Methods
@@ -7804,6 +7818,151 @@ class pr_Contacts(S3Method):
         return form
 
 # =============================================================================
+class pr_Templates(S3Method):
+    """
+        Custom Method to select a Word Template to merge Person data into
+
+        - used by DRKCM
+    """
+
+    def apply_method(self, r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        if r.http == "GET":
+            if r.representation == "html":
+
+                s3db = current.s3db
+
+                person_id = r.id
+
+                root_org = s3db.org_root_organisation(current.auth.user.organisation_id)
+                table = s3db.doc_document
+                query = (table.organisation_id == root_org) & \
+                        (table.is_template == True)
+                templates = current.db(query).select(table.name,
+                                                     table.id)
+
+                buttons = UL()
+                bappend = buttons.append
+                for t in templates:
+                    bappend(LI(A(t.name,
+                                 #_class = "action-btn",
+                                 _href = URL(args = [person_id, "template.docx"],
+                                             vars = {"template": t.id},
+                                             ),
+                                 _target = "_top",
+                                 )))
+
+                output = {"title": "%s:" % current.T("Select Template"),
+                          "item": buttons,
+                          }
+                current.response.view = "plain.html"
+                return output
+
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+
+# =============================================================================
+class pr_Template(S3Method):
+    """
+        Custom Method to merge Person data into a Word Template
+
+        - used by DRKCM
+    """
+
+    def apply_method(self, r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        if r.http == "GET":
+            if r.representation == "docx":
+
+                person_id = r.id
+                if not person_id:
+                    current.session.error = T("No Person selected")
+                    redirect(URL(args = None))
+
+                try:
+                    from mailmerge import MailMerge
+                except ImportError:
+                    current.session.error = T("Need to install docx-mailmerge")
+                    redirect(URL(args = person_id))
+
+                # Find Template
+                document_id = r.get_vars.get("template")
+                if not document_id:
+                    r.error(400, current.ERROR.BAD_REQUEST)
+
+                table = current.s3db.doc_document
+                template = current.db(table.id == document_id).select(table.file,
+                                                                      table.name,
+                                                                      limitby = (0, 1)
+                                                                      ).first()
+
+                template_path = os.path.join(r.folder, "uploads", template.file)
+
+                # Extract Data
+                mailmerge_fields = current.deployment_settings.get_doc_mailmerge_fields()
+
+                data = r.resource.select(mailmerge_fields.values(),
+                                         represent = True,
+                                         show_links = False,
+                                         raw_data = True,
+                                         ).rows[0]
+
+                # Format Data
+                doc_data = {}
+                for field in mailmerge_fields:
+                    selector = mailmerge_fields[field]
+                    if "." not in selector:
+                        selector = "pr_person.%s" % selector
+                    doc_data[field] = data[selector]
+
+                #data = {"ID": "123456",
+                #        "Vorname": "Fran",
+                #        "Name": "Boon",
+                #        "Geburtsdatum": "11/3/1971",
+                #        "Land": "UK",
+                #        "Registrierungsdatum": "1/1/2018",
+                #        }
+
+                # Merge
+                filename = "%s_%s.docx" % (template.name, person_id)
+                with MailMerge(template_path) as document:
+                    document.merge(**doc_data)
+                    document.write(filename)
+
+                # Output
+                from gluon.contenttype import contenttype
+                from gluon.streamer import DEFAULT_CHUNK_SIZE
+
+                # Response headers
+                disposition = "attachment; filename=\"%s\"" % filename
+                response = current.response
+                response.headers["Content-Type"] = contenttype(".docx")
+                response.headers["Content-disposition"] = disposition
+
+                stream = open(filename, "rb")
+                return response.stream(stream, chunk_size=DEFAULT_CHUNK_SIZE,
+                                       request=r)
+
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+
+# =============================================================================
 # Hierarchy Manipulation
 # =============================================================================
 #
@@ -8307,8 +8466,10 @@ def pr_remove_from_role(role_id, pe_id):
                 "pe_id": None,
                 "deleted_fk": json.dumps(deleted_fk)}
         affiliation.update_record(**data)
+
         # Clear descendant paths
         pr_rebuild_path(pe_id, clear=True)
+
     return
 
 # =============================================================================

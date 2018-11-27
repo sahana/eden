@@ -202,6 +202,17 @@ def config(settings):
     settings.ui.calendar_clear_icon = True
 
     # -------------------------------------------------------------------------
+    # Document settings
+    #
+    settings.doc.mailmerge_fields = {"ID": "pe_label",
+                                     "Vorname": "first_name",
+                                     "Name": "last_name",
+                                     "Geburtsdatum": "date_of_birth",
+                                     "Land": "pr_person_details.nationality",
+                                     "Registrierungsdatum": "dvr_case.date",
+                                     }
+
+    # -------------------------------------------------------------------------
     # Realm Rules
     #
     def drk_realm_entity(table, row):
@@ -638,6 +649,17 @@ def config(settings):
             s3db.configure("pr_person",
                            anonymize = drk_person_anonymize(),
                            )
+                           
+            if current.auth.s3_has_role("CASE_MANAGEMENT"):
+                # Allow use of Document Templates
+                s3db.set_method("pr", "person",
+                                method = "templates",
+                                action = s3db.pr_Templates(),
+                                )
+                s3db.set_method("pr", "person",
+                                method = "template",
+                                action = s3db.pr_Template(),
+                                )
 
         # Configure components to inherit realm_entity
         # from the person record
@@ -2837,10 +2859,13 @@ def config(settings):
                 r.resource.configure(insertable = insertable)
 
             if r.component_name == "document":
+                s3.crud_strings["doc_document"].label_create = T("Add Case Document Template")
                 # Done in customise_doc_document_resource
                 #f = current.s3db.doc_document.url
                 #f.readable = f.writable = False
-                s3.crud_strings["doc_document"].label_create = T("Add Case Document Template")
+                current.s3db.doc_document.is_template.default = True
+                from s3 import FS
+                r.resource.add_component_filter("document", FS("is_template") == True)
 
             return result
 
@@ -3350,7 +3375,7 @@ def drk_dvr_rheader(r, tabs=None):
                 if ui_opts_get("case_document_templates") and current.auth.s3_has_role("CASE_MANAGEMENT"):
                     templates_btn = A(T("Export using Template"),
                                       _class = "action-btn s3_modal",
-                                      _href = URL(args=[record_id, "template"]),
+                                      _href = URL(args=[record_id, "templates"]),
                                       )
                 else:
                     templates_btn = None

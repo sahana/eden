@@ -169,6 +169,12 @@ class S3DocumentLibrary(S3Model):
                            readable = False,
                            writable = False,
                            ),
+                     # Mailmerge template?
+                     Field("is_template", "boolean",
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
                      person_id(
                         # Enable when-required
                         label = T("Author"),
