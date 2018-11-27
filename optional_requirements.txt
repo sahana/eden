@@ -43,3 +43,5 @@ boto>=2.32.1
 pyparsing>=2.0.1
 # Warning: URL shortener unresolved dependency: pyshorteners required to shorten the url (currently used by SAMBRO)
 #pyshorteners>=0.6.1
+# Warning: S3Doc unresolved dependency: docx-mailmerge required to merge into docx templates (currently used by DRKCM)
+#docx-mailmerge>=0.4.0

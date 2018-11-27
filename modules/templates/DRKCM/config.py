@@ -14,6 +14,7 @@ from s3dal import original_tablename
 # UI options per organisation
 #
 UI_DEFAULTS = {"case_bamf_first": False,
+               "case_document_templates": False,
                "case_hide_default_org": False,
                "case_use_action_tab": False,
                "case_use_address": True,
@@ -35,6 +36,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
                }
 
 UI_OPTIONS = {"LEA": {"case_bamf_first": True,
+                      "case_document_templates": True,
                       "case_hide_default_org": True,
                       "case_use_action_tab": True,
                       "case_use_address": False,
@@ -417,7 +419,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_doc_document_resource(r, tablename):
 
-        if r.controller == "dvr":
+        if r.controller == "dvr" or r.function == "organisation":
 
             s3db = current.s3db
             table = s3db.doc_document
@@ -2788,6 +2790,12 @@ def config(settings):
                                                 ))
                 r.resource.configure(insertable = insertable)
 
+            if r.component_name == "document":
+                # Done in customise_doc_document_resource
+                #f = current.s3db.doc_document.url
+                #f.readable = f.writable = False
+                s3.crud_strings["doc_document"].label_create = T("Add Case Document Template")
+
             return result
 
         s3.prep = custom_prep
@@ -3225,8 +3233,9 @@ def drk_dvr_rheader(r, tabs=None):
                    s3_fullname
 
     tablename, record = s3_rheader_resource(r)
+    record_id = record.id
     if tablename != r.tablename:
-        resource = current.s3db.resource(tablename, id=record.id)
+        resource = current.s3db.resource(tablename, id=record_id)
     else:
         resource = r.resource
 
@@ -3256,6 +3265,7 @@ def drk_dvr_rheader(r, tabs=None):
             else:
 
                 ui_opts = get_ui_options()
+                ui_opts_get = ui_opts.get
 
                 if not tabs:
                     tabs = [(T("Basic Details"), None),
@@ -3268,14 +3278,14 @@ def drk_dvr_rheader(r, tabs=None):
                             (T("Documents"), "document/"),
                             #(T("Notes"), "case_note"),
                             ]
-                    if ui_opts.get("case_use_action_tab"):
+                    if ui_opts_get("case_use_action_tab"):
                         tabs.insert(4, (T("Actions"), "response_action/"))
-                    if ui_opts.get("case_use_service_contacts"):
+                    if ui_opts_get("case_use_service_contacts"):
                         tabs.insert(5, (T("Service Contacts"), "service_contact"))
-                    if ui_opts.get("case_use_notes"):
+                    if ui_opts_get("case_use_notes"):
                         tabs.append((T("Notes"), "case_note"))
 
-                lodging_opt = ui_opts.get("case_lodging")
+                lodging_opt = ui_opts_get("case_lodging")
                 if lodging_opt == "site":
                     lodging_sel = "dvr_case.site_id"
                     lodging_col = "dvr_case.site_id"
@@ -3286,10 +3296,18 @@ def drk_dvr_rheader(r, tabs=None):
                     lodging_sel = None
                     lodging_col = None
 
-                if ui_opts.get("case_use_flags"):
+                if ui_opts_get("case_use_flags"):
                     flags_sel = "dvr_case_flag_case.flag_id"
                 else:
                     flags_sel = None
+
+                if ui_opts_get("case_document_templates") and current.auth.s3_has_role("CASE_MANAGEMENT"):
+                    templates_btn = A(T("Export using Template"),
+                                      _class = "action-btn s3_modal",
+                                      _href = URL(args=[record_id, "template"]),
+                                      )
+                else:
+                    templates_btn = None
 
                 case = resource.select(["first_name",
                                         "last_name",
@@ -3350,7 +3368,6 @@ def drk_dvr_rheader(r, tabs=None):
 
                 # Add profile picture
                 from s3 import s3_avatar_represent
-                record_id = record.id
                 rheader.insert(0, A(s3_avatar_represent(record_id,
                                                         "pr_person",
                                                         _class = "rheader-avatar",
@@ -3410,6 +3427,12 @@ def drk_org_rheader(r, tabs=None):
 
             table = resource.table
 
+            record_id = record.id
+            if record.root_organisation == record_id:
+                branch = False
+            else:
+                branch = True
+
             # Custom tabs
             tabs = [(T("Basic Details"), None),
                     (T("Branches"), "branch"),
@@ -3418,6 +3441,11 @@ def drk_org_rheader(r, tabs=None):
                     #(T("Projects"), "project"),
                     (T("Counseling Themes"), "response_theme"),
                     ]
+
+            if not branch:
+                ui_options = get_ui_options()
+                if ui_options.get("case_document_templates") and current.auth.s3_has_role("ORG_ADMIN"):
+                    tabs.append((T("Case Document Templates"), "document"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
@@ -3432,8 +3460,7 @@ def drk_org_rheader(r, tabs=None):
                                 )
 
             # Parent Organisation
-            record_id = record.id
-            if record.root_organisation != record_id:
+            if branch:
                 btable = s3db.org_organisation_branch
                 query = (btable.branch_id == record_id) & \
                         (btable.organisation_id == table.id)
