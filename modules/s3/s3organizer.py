@@ -247,6 +247,7 @@ class S3Organizer(S3Method):
             @param r: the S3Request instance
             @param attr: controller attributes
 
+            TODO correct documentation!
             @returns: JSON string containing an array of items, format:
                       [{"id": the record ID,
                         "title": the record title,
@@ -293,6 +294,21 @@ class S3Organizer(S3Method):
             columns = [rfield.colname for rfield in description]
         else:
             columns = None
+
+        # Add date filter
+        start, end = self.parse_interval(r.get_vars.get("$interval"))
+        if start and end:
+            from s3query import FS
+            start_fs = FS(start_rfield.selector)
+            if not end_rfield:
+                query = (start_fs >= start) & (start_fs < end)
+            else:
+                end_fs = FS(end_rfield.selector)
+                query = (start_fs < end) & (end_fs >= start) | \
+                        (start_fs >= start) & (start_fs < end) & (end_fs == None)
+            resource.add_filter(query)
+        else:
+            r.error(400, "Invalid interval parameter")
 
         # Extract the records
         data = resource.select(fields,
@@ -626,6 +642,36 @@ class S3Organizer(S3Method):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def parse_interval(intervalstr):
+        """
+            Parse an interval string of the format "<ISO8601>--<ISO8601>"
+            into a pair of datetimes
+
+            @param intervalstr: the interval string
+
+            @returns: tuple of datetimes (start, end)
+        """
+
+        start = end = None
+
+        if intervalstr:
+            dates = intervalstr.split("--")
+            if len(dates) != 2:
+                return start, end
+
+            try:
+                start = s3_decode_iso_datetime(dates[0])
+            except ValueError:
+                pass
+            try:
+                end = s3_decode_iso_datetime(dates[1])
+            except ValueError:
+                pass
+
+        return start, end
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def prefix_selector(resource, selector):
         """
             Helper method to prefix an unprefixed field selector
@@ -712,6 +758,8 @@ class S3OrganizerWidget(object):
             @param widget_id: the container's DOM ID
         """
 
+        T = current.T
+
         if not widget_id:
             widget_id = "organizer"
 
@@ -730,6 +778,9 @@ class S3OrganizerWidget(object):
         # Inject script and widget instantiation
         script_opts = {"resources": resource_configs,
                        "useTime": use_time,
+                       "labelEdit": s3_str(T("Edit")),
+                       "labelDelete": s3_str(T("Delete")),
+                       "deleteConfirmation": s3_str(T("Do you want to delete this entry?")),
                        }
         self.inject_script(widget_id, script_opts)
 

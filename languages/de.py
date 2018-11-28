@@ -1454,6 +1454,7 @@
 'Distribution groups': 'Verteilergruppen',
 'Distribution': 'Verteilung',
 'District': 'Bezirk',
+'Do you want to delete this entry?': 'Wollen Sie diesen Eintrag löschen?',
 'Do you really want to delete these records?': 'Sollen diese Datensätze wirklich gelöscht werden?',
 'Do you want to cancel this received shipment? The items will be removed from the Inventory. This action CANNOT be undone!': 'Möchten Sie diese erhaltene Lieferung stornieren? Die Artikel werden aus dem Bestand entfernt werden. Diese Aktion kann NICHT rückgängig gemacht werden!',
 'Do you want to cancel this sent shipment? The items will be returned to the Inventory. This action CANNOT be undone!': 'Möchten Sie diese abgeschickte Sendung wirklich stornieren? Die Artikel werden an die Bestandserfassung zurückgegeben werden. Diese Aktion kann NICHT rückgängig gemacht werden!',

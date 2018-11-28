@@ -137,7 +137,13 @@
     };
 
     /**
-     * Update an item in the cache
+     * Update an item in the cache after it has been dragged&dropped
+     * to another date, or resized.
+     *
+     * NB moving the item to another slice is unnecessary because
+     *    items can only ever be moved between or resized within
+     *    dates that are visible at the same time, and hence belong
+     *    to the same slice (due to slice-merging in store())
      *
      * @param {integer} itemID - the item record ID
      * @param {object} data - the data to update the item with
@@ -152,11 +158,25 @@
     };
 
     /**
+     * Remove an item from the cache
+     *
+     * @param {integer} itemID - the item record ID
+     */
+    EventCache.prototype.deleteItem = function(itemID) {
+
+        this.slices.forEach(function(slice) {
+            delete slice[2][itemID];
+        });
+        delete this.items[itemID];
+    };
+
+    /**
      * Clear the cache
      */
     EventCache.prototype.clear = function() {
 
         this.slices = [];
+        this.items = {};
     };
 
     // ------------------------------------------------------------------------
@@ -176,7 +196,11 @@
 
             locale: 'en',
             timeout: 10000,
-            resources: null
+            resources: null,
+
+            labelEdit: 'Edit',
+            labelDelete: 'Delete',
+            deleteConfirmation: 'Do you want to delete this entry?'
         },
 
         /**
@@ -481,33 +505,39 @@
             // Edit/Delete Buttons
             var widgetID = $(this.element).attr('id'),
                 ns = this.eventNamespace,
+                self = this,
                 buttons = [],
                 btn,
                 baseURL = resource.baseURL,
                 url;
             if (baseURL) {
+                // Edit button
                 if (resource.editable && item.editable !== false) {
                     url = baseURL + '/' + item.id + '/update.popup?refresh=' + widgetID;
-                    // TODO i18n
-                    btn = $('<a class="action-btn s3_modal">').text('Edit')
-                                                              .attr('href', url)
-                                                              .on('click' + ns, function() {
-                                                                api.hide();
-                                                              });
+                    btn = $('<a class="action-btn s3_modal">').text(opts.labelEdit)
+                                                              .attr('href', url);
+                    btn.on('click' + ns, function() {
+                        api.hide();
+                    });
                     buttons.push(btn);
                 }
+                // Delete button
                 if (resource.deletable && item.deletable !== false) {
-                    // TODO i18n
-                    // TODO bind Ajax-deletion method
-                    btn = $('<a class="action-btn delete-btn-ajax">').text('Delete');
+                    btn = $('<a class="action-btn delete-btn-ajax">').text(opts.labelDelete);
+                    btn.on('click' + ns, function() {
+                        if (confirm(opts.deleteConfirmation)) {
+                            api.hide();
+                            self._deleteItem(item, function() {
+                                api.destroy();
+                            });
+                        }
+                        return false;
+                    });
                     buttons.push(btn);
                 }
             }
             if (buttons.length) {
-                var buttonArea = $('<div>').appendTo(contents);
-                buttons.forEach(function(btn) {
-                    btn.appendTo(buttonArea);
-                });
+                $('<div>').append(buttons).appendTo(contents);
             }
 
             return contents;
@@ -648,26 +678,11 @@
             }
             var currentFilters = S3.search.getCurrentFilters(filterForm);
 
-            // Remove other filters for start/end
+            // Remove filters for start/end
             var filters = currentFilters.filter(function(query) {
                 var selector = query[0].split('__')[0];
                 return selector !== resource.start && selector !== resource.end;
             });
-
-            // Add date filters for start/end
-            // (record start date or end date must be within the interval)
-            var selectors = [];
-            if (resource.start) {
-                selectors.push(resource.start);
-            }
-            if (resource.end) {
-                selectors.push(resource.end);
-            }
-            if (selectors.length) {
-                selectors = selectors.join('|');
-                filters.push([selectors + '__ge', start.toISOString()]);
-                filters.push([selectors + '__lt', end.toISOString()]);
-            }
 
             // Update ajax URL
             var ajaxURL = resource.ajaxURL;
@@ -675,6 +690,14 @@
                 return;
             } else {
                 ajaxURL = S3.search.filterURL(ajaxURL, filters);
+            }
+
+            // Add interval
+            var interval = encodeURIComponent(start.toISOString() + '--' + end.toISOString());
+            if (ajaxURL.indexOf('?') != -1) {
+                ajaxURL += '&$interval=' + interval;
+            } else {
+                ajaxURL += '?$interval=' + interval;
             }
 
             // SearchS3 or AjaxS3?
@@ -824,6 +847,31 @@
                     });
                 }
             }, revertFunc);
+        },
+
+        /**
+         * Delete a calendar item
+         *
+         * @param {object} item - the item (fullCalendar event object)
+         * @param {function} callback - the callback to invoke upon success
+         */
+        _deleteItem: function(item, callback) {
+
+            var resource = this.resources[item.source.id],
+                data = {'id': item.id},
+                el = $(this.element);
+
+            this._sendItems(resource, {d: [data]}, function() {
+                // Remove the item from the calendar
+                el.fullCalendar('removeEvents', function(eventObj) {
+                    return eventObj.source.id == item.source.id && eventObj.id == item.id;
+                });
+                // Remove the item from the cache
+                resource._cache.deleteItem(item.id);
+                if (typeof callback === 'function') {
+                    callback();
+                }
+            });
         },
 
         /**
