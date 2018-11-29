@@ -33,6 +33,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
                "activity_use_sector": True,
                "activity_need_details": True,
                "appointments_staff_link": False,
+               "appointments_use_organizer": False,
                "response_planning": True,
                "response_themes_sectors": False,
                "response_themes_needs": False,
@@ -58,6 +59,7 @@ UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "activity_use_sector": False,
                       "activity_need_details": False,
                       "appointments_staff_link": True,
+                      "appointments_use_organizer": True,
                       "response_planning": False,
                       "response_themes_sectors": True,
                       "response_themes_needs": True,
@@ -425,7 +427,7 @@ def config(settings):
     # Appointments with personal presence update last_seen_on
     settings.dvr.appointments_update_last_seen_on = False
     # Automatically update the case status when appointments are completed
-    settings.dvr.appointments_update_case_status = False
+    settings.dvr.appointments_update_case_status = True
     # Automatically close appointments when registering certain case events
     settings.dvr.case_events_close_appointments = True
 
@@ -1158,6 +1160,12 @@ def config(settings):
                         list_fields.insert(-1, "dvr_case.organisation_id")
 
                     configure(list_fields = list_fields)
+
+                elif r.component_name == "case_appointment":
+
+                    if ui_options.get("appointments_use_organizer") and \
+                       r.interactive and r.method is None and not r.component_id:
+                        r.method = "organize"
 
             elif r.controller == "default":
 
@@ -2143,10 +2151,26 @@ def config(settings):
         else:
             title = description = None
 
+        table = s3db.dvr_case_appointment
+
+        field = table.status
+        # Using only a subset of the standard status opts
+        appointment_status_opts = {#1: T("Planning"),
+                                   2: T("Planned"),
+                                   #3: T("In Progress"),
+                                   4: T("Completed##appointment"),
+                                   5: T("Missed"),
+                                   6: T("Cancelled"),
+                                   #7: T("Not Required"),
+                                   }
+        field.default = 2
+        field.requires = IS_IN_SET(appointment_status_opts,
+                                   zero = None,
+                                   )
+
         ui_options = get_ui_options()
         if ui_options.get("appointments_staff_link"):
             # Enable staff link and default to logged-in user
-            table = s3db.dvr_case_appointment
             field = table.human_resource_id
             field.readable = field.writable = True
             field.default = current.auth.s3_logged_in_human_resource()

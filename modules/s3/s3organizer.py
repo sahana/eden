@@ -120,6 +120,8 @@ class S3Organizer(S3Method):
             fw = []
             prefix_selector = self.prefix_selector
             for filter_widget in filter_widgets:
+                if not filter_widget:
+                    continue
                 filter_field = filter_widget.field
                 if isinstance(filter_field, basestring):
                     filter_field = prefix_selector(resource, filter_field)

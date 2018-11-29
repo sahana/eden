@@ -274,8 +274,9 @@
             $(this.element).fullCalendar({
 
                 // General options
-                aspectRatio: 1.8,               // TODO make configurable (default 1.8)
+                aspectRatio: 2.1,               // TODO make configurable (default 1.8)
                 nowIndicator: true,             // TODO make configurable (default on)
+                eventLimit: 4,
                 slotDuration: '00:30:00',       // TODO make configurable (default 30min)
                 snapDuration: '00:15:00',       // TODO make configurable (default 15min)
                 defaultTimedEventDuration: '00:30:00',
@@ -508,14 +509,20 @@
                 self = this,
                 buttons = [],
                 btn,
-                baseURL = resource.baseURL,
-                url;
+                baseURL = resource.baseURL;
             if (baseURL) {
                 // Edit button
                 if (resource.editable && item.editable !== false) {
-                    url = baseURL + '/' + item.id + '/update.popup?refresh=' + widgetID;
+                    var link = document.createElement('a');
+                    link.href = baseURL;
+                    link.pathname += '/update.popup';
+                    if (link.search) {
+                        link.search += '&refresh=' + widgetID;
+                    } else {
+                        link.search = '?refresh=' + widgetID;
+                    }
                     btn = $('<a class="action-btn s3_modal">').text(opts.labelEdit)
-                                                              .attr('href', url);
+                                                              .attr('href', link.href);
                     btn.on('click' + ns, function() {
                         api.hide();
                     });

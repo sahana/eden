@@ -9,6 +9,8 @@ except ImportError:
     pass
 import s3menus as default
 
+from .config import get_ui_options
+
 # =============================================================================
 class S3MainMenu(default.S3MainMenu):
     """ Custom Application Main Menu """
@@ -202,6 +204,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         all_due_followups = due_followups() or "0"
 
+        ui_options = get_ui_options()
+
         human_resource_id = auth.s3_logged_in_human_resource()
         if human_resource_id and auth.s3_has_role("CASE_MANAGEMENT"):
 
@@ -251,6 +255,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return menu(M("Appointments", f="case_appointment")(
                         M("Overview"),
+                        M("My Appointments",
+                          m = "organize",
+                          p = "read",
+                          vars = {"mine": "1"},
+                          check = ui_options.get("appointments_staff_link"),
+                          ),
                         ),
                     M("Statistics", c="dvr", link=False)(
                         M("Actions", f="response_action", t="dvr_response_action", m="report"),

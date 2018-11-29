@@ -1057,6 +1057,17 @@ def case_appointment():
             # reaching the deduplicator, so remove the validator here:
             ptable = s3db.pr_person
             ptable.pe_label.requires = None
+
+        else:
+            mine = True if r.get_vars.get("mine") == "1" else False
+            if mine:
+                human_resource_id = auth.s3_logged_in_human_resource()
+                if human_resource_id:
+                    query = (FS("human_resource_id") == human_resource_id)
+                else:
+                    query = (FS("human_resource_id").belongs(set()))
+                r.resource.add_filter(query)
+
         return True
     s3.prep = prep
 
