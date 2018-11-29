@@ -3256,6 +3256,12 @@ class S3Config(Storage):
         """
         return self.dvr.get("case_activity_needs_multiple", False)
 
+    def get_dvr_case_activity_follow_up(self):
+        """
+            Enable/disable fields to schedule case activities for follow-up
+        """
+        return self.__lazy("dvr", "case_activity_follow_up", default=True)
+
     def get_dvr_case_include_activity_docs(self):
         """
             Documents-tab of beneficiaries includes case

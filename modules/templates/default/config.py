@@ -556,6 +556,8 @@ def config(settings):
     #settings.dvr.activity_types_hierarchical = True
     # Uncomment this to use status field in case activities
     #settings.dvr.case_activity_use_status = True
+    # Uncomment this to disable follow-up fields in case activities
+    #settings.dvr.case_activity_follow_up = False
 
     # Uncomment this if Case activities use multiple Needs
     #settings.dvr.case_activity_needs_multiple = True
