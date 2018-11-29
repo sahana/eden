@@ -2591,6 +2591,16 @@ def config(settings):
                                    list_fields = list_fields,
                                    )
 
+        # TODO Complete this (perspective? status?)
+        s3db.configure("dvr_response_action",
+                       organize = {"title": "case_activity_id$person_id",
+                                   "description": ["response_theme_ids",
+                                                   "comments",
+                                                   "human_resource_id",
+                                                   ],
+                                   },
+                       )
+
     settings.customise_dvr_response_action_resource = customise_dvr_response_action_resource
 
     # -------------------------------------------------------------------------
