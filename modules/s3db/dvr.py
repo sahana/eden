@@ -50,6 +50,7 @@ __all__ = ("DVRCaseModel",
            "dvr_ActivityRepresent",
            "dvr_CaseActivityRepresent",
            "dvr_DocEntityRepresent",
+           "dvr_ResponseThemeRepresent",
            "dvr_AssignMethod",
            "dvr_case_default_status",
            "dvr_case_activity_default_status",
@@ -1478,12 +1479,11 @@ class DVRResponseModel(S3Model):
         )
 
         # Reusable field
-        theme_represent = S3Represent(lookup = tablename,
-                                      multiple = True,
-                                      translate = True,
-                                      )
+        themes_represent = dvr_ResponseThemeRepresent(multiple = True,
+                                                      translate = True,
+                                                      )
         requires = IS_ONE_OF(db, "%s.id" % tablename,
-                             theme_represent,
+                             themes_represent,
                              multiple = True,
                              )
         if settings.get_dvr_response_themes_org_specific():
@@ -1497,7 +1497,7 @@ class DVRResponseModel(S3Model):
                                 "list:reference %s" % tablename,
                                 label = T("Themes"),
                                 ondelete = "RESTRICT",
-                                represent = theme_represent,
+                                represent = themes_represent,
                                 requires = IS_EMPTY_OR(requires),
                                 sortby = "name",
                                 widget = S3MultiSelectWidget(header = False,
@@ -1804,6 +1804,9 @@ class DVRResponseModel(S3Model):
         #   - for filtering/reporting by extended theme attributes
         #   - not exposed directly, populated onaccept from response_theme_ids
         #
+        theme_represent = S3Represent(lookup = tablename,
+                                      translate = True,
+                                      )
         tablename = "dvr_response_action_theme"
         define_table(tablename,
                      Field("action_id", "reference dvr_response_action",
@@ -5937,6 +5940,92 @@ class dvr_ActivityRepresent(S3Represent):
         url = URL(c="dvr", f="activity", args=[k], extension="")
 
         return A(v, _href = url)
+
+# =============================================================================
+class dvr_ResponseThemeRepresent(S3Represent):
+    """ Representation of response themes """
+
+    def __init__(self, multiple=False, translate=True, show_need=False):
+
+        super(dvr_ResponseThemeRepresent, self).__init__(
+                                                lookup = "dvr_response_theme",
+                                                multiple = multiple,
+                                                translate = translate,
+                                                )
+        self.show_need = show_need
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        table = self.table
+
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+
+        if self.show_need:
+            ntable = current.s3db.dvr_need
+            left = ntable.on(ntable.id == table.need_id)
+            rows = current.db(query).select(table.id,
+                                            table.name,
+                                            ntable.id,
+                                            ntable.name,
+                                            left = left,
+                                            limitby = (0, count),
+                                            )
+        else:
+            rows = current.db(query).select(table.id,
+                                            table.name,
+                                            limitby = (0, count),
+                                            )
+        self.queries += 1
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        T = current.T
+        translate = self.translate
+
+        if self.show_need:
+
+            theme = row.dvr_response_theme.name
+            if theme:
+                theme = T(theme) if translate else theme
+            else:
+                theme = self.none
+
+            need = row.dvr_need.name
+            if need:
+                need = T(need) if translate else need
+
+            if need:
+                reprstr = "%s: %s" % (need, theme)
+            else:
+                reprstr = theme
+        else:
+            theme = row.name
+            if theme:
+                reprstr = T(theme) if translate else theme
+            else:
+                reprstr = self.none
+
+        return reprstr
 
 # =============================================================================
 class dvr_CaseActivityRepresent(S3Represent):

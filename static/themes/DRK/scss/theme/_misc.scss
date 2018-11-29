@@ -219,4 +219,16 @@ body.rtl {
     }
 }
 
+/* Response Theme Selector */
+#dvr_response_action_response_theme_ids__row,
+#sub-defaultresponse_action {
+    .ui-multiselect.ui-widget {
+        width: 28rem!important;
+        max-width: 100%;
+    }
+}
+.ui-widget-content {
+    max-width: 100%;
+}
+
 // END ========================================================================

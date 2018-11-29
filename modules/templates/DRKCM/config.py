@@ -30,7 +30,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
                "case_lodging_dates": True,
                "activity_closure": True,
                "activity_comments": True,
-               "activity_default_sector": False,
+               "activity_use_sector": True,
                "activity_need_details": True,
                "appointments_staff_link": False,
                "response_planning": True,
@@ -55,7 +55,7 @@ UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "case_lodging_dates": False,
                       "activity_closure": False,
                       "activity_comments": False,
-                      "activity_default_sector": True,
+                      "activity_use_sector": False,
                       "activity_need_details": False,
                       "appointments_staff_link": True,
                       "response_planning": False,
@@ -1730,54 +1730,55 @@ def config(settings):
             # Configure sector_id
             field = table.sector_id
             field.comment = None
+            if ui_options.get("activity_use_sector"):
 
-            # Get the root org for sector selection
-            if case_root_org:
-                sector_root_org = case_root_org
-            else:
-                sector_root_org = auth.root_org()
-
-            if sector_root_org:
-                # Limit the sector selection
-                ltable = s3db.org_sector_organisation
-                query = (ltable.organisation_id == sector_root_org) & \
-                        (ltable.deleted == False)
-                rows = db(query).select(ltable.sector_id)
-                sector_ids = set(row.sector_id for row in rows)
-
-                # Default sector
-                if len(sector_ids) == 1:
-                    default_sector_id = rows.first().sector_id
+                # Get the root org for sector selection
+                if case_root_org:
+                    sector_root_org = case_root_org
                 else:
-                    default_sector_id = None
+                    sector_root_org = auth.root_org()
 
-                # Include the sector_id of the current record (if any)
-                record = None
-                component = r.component
-                if not component:
-                    if r.tablename == "dvr_case_activity":
-                        record = r.record
-                elif component.tablename == "dvr_case_activity" and r.component_id:
-                    query = table.id == r.component_id
-                    record = db(query).select(table.sector_id,
-                                              limitby = (0, 1),
-                                              ).first()
-                if record and record.sector_id:
-                    sector_ids.add(record.sector_id)
+                if sector_root_org:
+                    # Limit the sector selection
+                    ltable = s3db.org_sector_organisation
+                    query = (ltable.organisation_id == sector_root_org) & \
+                            (ltable.deleted == False)
+                    rows = db(query).select(ltable.sector_id)
+                    sector_ids = set(row.sector_id for row in rows)
 
-                # Set selectable sectors
-                subset = db(s3db.org_sector.id.belongs(sector_ids))
-                field.requires = IS_EMPTY_OR(IS_ONE_OF(subset, "org_sector.id",
-                                                       field.represent,
-                                                       ))
+                    # Default sector
+                    if len(sector_ids) == 1:
+                        default_sector_id = rows.first().sector_id
+                    else:
+                        default_sector_id = None
 
-                # Default selection?
-                if ui_options.get("activity_default_sector") and \
-                   (not sector_ids or len(sector_ids) == 1 and default_sector_id):
-                    # No selectable sectors or single option
-                    # => auto-select and hide the field
-                    field.default = default_sector_id
-                    field.readable = field.writable = False
+                    # Include the sector_id of the current record (if any)
+                    record = None
+                    component = r.component
+                    if not component:
+                        if r.tablename == "dvr_case_activity":
+                            record = r.record
+                    elif component.tablename == "dvr_case_activity" and r.component_id:
+                        query = table.id == r.component_id
+                        record = db(query).select(table.sector_id,
+                                                  limitby = (0, 1),
+                                                  ).first()
+                    if record and record.sector_id:
+                        sector_ids.add(record.sector_id)
+
+                    # Set selectable sectors
+                    subset = db(s3db.org_sector.id.belongs(sector_ids))
+                    field.requires = IS_EMPTY_OR(IS_ONE_OF(subset, "org_sector.id",
+                                                           field.represent,
+                                                           ))
+
+                    # Default selection?
+                    if len(sector_ids) == 1 and default_sector_id:
+                        # Single option => set as default and hide selector
+                        field.default = default_sector_id
+                        field.readable = field.writable = False
+            else:
+                field.readable = field.writable = False
 
             # Show subject field
             field = table.subject
@@ -1831,6 +1832,9 @@ def config(settings):
             #field.label = T("Assigned to")
             field.default = human_resource_id
             field.widget = field.comment = None
+
+            if settings.get_dvr_response_themes_needs():
+                response_theme_selector_include_need()
 
             if settings.get_dvr_response_planning():
                 response_action_fields = ["response_theme_ids",
@@ -2313,6 +2317,34 @@ def config(settings):
     settings.customise_dvr_need_resource = customise_dvr_need_resource
 
     # -------------------------------------------------------------------------
+    def response_theme_selector_include_need():
+        """
+            Include the need in the themes-selector
+                - helps to find themes using the selector search field
+        """
+
+        s3db = current.s3db
+        table = s3db.dvr_response_action
+
+        field = table.response_theme_ids
+        represent = s3db.dvr_ResponseThemeRepresent(multiple = True,
+                                                    translate = True,
+                                                    show_need = True,
+                                                    )
+        root_org = current.auth.root_org()
+        if root_org:
+            filterby = "organisation_id",
+            filter_opts = (root_org,)
+        else:
+            filterby = filter_opts = None
+        field.requires = IS_ONE_OF(current.db, "dvr_response_theme.id",
+                                   represent,
+                                   filterby = filterby,
+                                   filter_opts = filter_opts,
+                                   multiple = True,
+                                   )
+
+    # -------------------------------------------------------------------------
     def customise_dvr_response_action_resource(r, tablename):
 
         db = current.db
@@ -2402,6 +2434,10 @@ def config(settings):
             if response_planning:
                 list_fields.insert(-3, "date_due")
                 list_fields.append("status_id")
+
+            # Include need in themes selector if using needs
+            if settings.get_dvr_response_themes_needs():
+                response_theme_selector_include_need()
 
             get_vars = r.get_vars
             if r.tablename == "dvr_response_action" and "viewing" in get_vars:
@@ -2566,7 +2602,6 @@ def config(settings):
         if r.tablename == "org_organisation" and r.id:
 
             s3db = current.s3db
-
 
             ttable = s3db.dvr_response_theme
 
@@ -3366,7 +3401,8 @@ def get_protection_themes(person):
     theme_list = [row.theme_id for row in rows]
 
     # Return presented as list
-    return rtable.response_theme_ids.represent(theme_list)
+    represent = rtable.response_theme_ids.represent
+    return represent(theme_list)
 
 # =============================================================================
 def drk_dvr_rheader(r, tabs=None):
