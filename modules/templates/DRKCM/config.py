@@ -15,6 +15,7 @@ from s3dal import original_tablename
 #
 UI_DEFAULTS = {"case_bamf_first": False,
                "case_document_templates": False,
+               "case_header_protection_themes": False,
                "case_hide_default_org": False,
                "case_use_action_tab": False,
                "case_use_address": True,
@@ -39,6 +40,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
 
 UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "case_document_templates": True,
+                      "case_header_protection_themes": True,
                       "case_hide_default_org": True,
                       "case_use_action_tab": True,
                       "case_use_address": False,
@@ -2304,6 +2306,10 @@ def config(settings):
         field = table.organisation_id
         field.readable = field.writable = True
 
+        # Expose protection flag
+        field = table.protection
+        field.readable = field.writable = True
+
     settings.customise_dvr_need_resource = customise_dvr_need_resource
 
     # -------------------------------------------------------------------------
@@ -2891,7 +2897,6 @@ def config(settings):
                 #f = current.s3db.doc_document.url
                 #f.readable = f.writable = False
                 current.s3db.doc_document.is_template.default = True
-                from s3 import FS
                 r.resource.add_component_filter("document", FS("is_template") == True)
 
             return result
@@ -3319,6 +3324,51 @@ def drk_cr_rheader(r, tabs=None):
     return rheader
 
 # =============================================================================
+def get_protection_themes(person):
+    """
+        Get response themes of a case that are linked to protection needs
+
+        @param person: the beneficiary record (pr_person Row)
+
+        @returns: list-representation of response themes
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    # Get all theme_ids that are linked to protection needs
+    ntable = s3db.dvr_need
+    ttable = s3db.dvr_response_theme
+
+    query = (ntable.protection == True) & \
+            (ntable.id == ttable.need_id) & \
+            (ttable.deleted == False)
+    themes = db(query).select(ttable.id,
+                              cache = s3db.cache,
+                              )
+    theme_ids = set(theme.id for theme in themes)
+
+    # Find out which of these themes are linked to the person
+    atable = s3db.dvr_case_activity
+    rtable = s3db.dvr_response_action
+    ltable = s3db.dvr_response_action_theme
+
+    query = (ltable.theme_id.belongs(theme_ids)) & \
+            (ltable.action_id == rtable.id) & \
+            (ltable.deleted == False) & \
+            (rtable.case_activity_id == atable.id) & \
+            (rtable.deleted == False) & \
+            (atable.person_id == person.id) & \
+            (atable.deleted == False)
+    rows = db(query).select(ltable.theme_id,
+                            groupby = ltable.theme_id,
+                            )
+    theme_list = [row.theme_id for row in rows]
+
+    # Return presented as list
+    return rtable.response_theme_ids.represent(theme_list)
+
+# =============================================================================
 def drk_dvr_rheader(r, tabs=None):
     """ DVR custom resource headers """
 
@@ -3446,6 +3496,11 @@ def drk_dvr_rheader(r, tabs=None):
 
                 if flags_sel:
                     rheader_fields.append([(T("Flags"), flags, 5)])
+                if ui_opts_get("case_header_protection_themes"):
+                    rheader_fields.append([(T("Protection Need"),
+                                            get_protection_themes,
+                                            5,
+                                            )])
                 if archived:
                     rheader_fields.insert(0, [(None, hint)])
 

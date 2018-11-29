@@ -3651,6 +3651,7 @@
 'Proposed': 'Vorgeschlagen',
 'Protected resource': 'Geschützte Ressource',
 'Protection': 'Schutz',
+'Protection Need': 'Schutzbedarf',
 'Provide Metadata for your media files': 'Stellen Sie Metadaten für Ihre Mediadateien zur Verfügung.',
 'Provide an optional sketch of the entire building or damage points. Indicate damage points.': 'Stekllen Sie optional eine Skizze des gesamten Gebäudes oder der beschädigten Objekte. Markieren Sie dabei die beschädigte Stellen.',
 'Providing Agency': 'Leistungsträger',
