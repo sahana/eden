@@ -515,7 +515,7 @@
                 if (resource.editable && item.editable !== false) {
                     var link = document.createElement('a');
                     link.href = baseURL;
-                    link.pathname += '/update.popup';
+                    link.pathname += '/' + item.id + '/update.popup';
                     if (link.search) {
                         link.search += '&refresh=' + widgetID;
                     } else {
