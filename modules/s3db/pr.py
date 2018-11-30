@@ -1057,6 +1057,7 @@ class PRPersonModel(S3Model):
                             dvr_case_activity = "person_id",
                             project_activity_person = "person_id",
                             supply_distribution_person = "person_id",
+                            dvr_response_action = "person_id",
                             dvr_case_appointment = "person_id",
                             dvr_case_details = {"joinby": "person_id",
                                                 "multiple": False,

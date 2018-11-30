@@ -210,7 +210,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         human_resource_id = auth.s3_logged_in_human_resource()
         if human_resource_id and auth.s3_has_role("CASE_MANAGEMENT"):
-
+            # Extended menu for case managers
             if followups:
                 my_due_followups = due_followups(human_resource_id = human_resource_id) or "0"
                 my_due_followups_label = "%s (%s)" % (due_followups_label,
@@ -222,6 +222,17 @@ class S3OptionsMenu(default.S3OptionsMenu):
             else:
                 my_due_followups_label = all_due_followups_label = due_followups_label
 
+            if ui_options.get("response_use_organizer"):
+                my_actions = M("My Actions", c="dvr", f="response_action",
+                               t="dvr_response_action", vars={"mine": "a"})(
+                                M("Calendar", m="organize", vars={"mine": "a"}),
+                                )
+            else:
+                my_actions = M("Actions", c="dvr", f="response_action", t="dvr_response_action", link=False)(
+                                M("Assigned to me", vars = {"mine": "a"}),
+                                M("Managed by me", vars = {"mine": "r"}),
+                                )
+
             menu = M(c="dvr")(
                     M("My Cases", c=("dvr", "pr"), f="person", t="dvr_case",
                       vars = {"closed": "0", "mine": "1"})(
@@ -231,10 +242,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M(my_due_followups_label, c="dvr", f="due_followups",
                           vars = {"mine": 1}, check = followups),
                         ),
-                    M("Actions", c="dvr", f="response_action", t="dvr_response_action")(
-                        M("Assigned to me", vars = {"mine": "a"}),
-                        M("Managed by me", vars = {"mine": "r"}),
-                        ),
+                    my_actions,
                     M("Overviews", c=("dvr", "pr"), link=False)(
                         M("Current Cases", f="person", t="dvr_case", vars = {"closed": "0"}),
                         M("All Cases", f="person", t="dvr_case"),
@@ -245,6 +253,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                     )
         else:
+            # Reduced menu for other users
             if followups:
                 all_due_followups_label = "%s (%s)" % (due_followups_label,
                                                        all_due_followups,
@@ -264,16 +273,23 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                     )
 
-        return menu(M("Appointments", f="case_appointment")(
-                        M("Overview"),
-                        M("My Appointments",
-                          m = "organize",
-                          p = "read",
-                          vars = {"mine": "1"},
-                          check = ui_options.get("appointments_staff_link"),
-                          ),
-                        ),
-                    M("Statistics", c="dvr", link=False)(
+        # Appointments sub-menu (optional)
+        if ui_options.get("case_use_appointments"):
+            appointments_menu = M("Appointments", f="case_appointment")(
+                                    M("Overview"),
+                                    )
+            # Show personal calendar if using staff link and organizer
+            if ui_options.get("appointments_staff_link") and \
+               ui_options.get("appointments_use_organizer"):
+                appointments_menu(M("My Appointments", m="organize", p="read",
+                                    vars = {"mine": "1"},
+                                    check = ui_options.get("appointments_staff_link"),
+                                    )
+                                  )
+
+            menu(appointments_menu)
+
+        return menu(M("Statistics", c="dvr", link=False)(
                         M("Actions", f="response_action", t="dvr_response_action", m="report"),
                         M("Activities", f="case_activity", t="dvr_case_activity", m="report"),
                         M("Cases", f="person", m="report", t="dvr_case", vars={"closed": "0"}),

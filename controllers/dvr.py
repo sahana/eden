@@ -841,7 +841,21 @@ def response_action():
     def prep(r):
 
         resource = r.resource
-        r.table.status_id.default = s3db.dvr_response_default_status()
+        table = resource.table
+
+        # Beneficiary is required and must have a case file
+        ptable = s3db.pr_person
+        ctable = s3db.dvr_case
+        dbset = db((ptable.id == ctable.person_id) & \
+                   (ctable.archived == False) & \
+                   (ctable.deleted == False))
+        field = table.person_id
+        field.requires = IS_ONE_OF(dbset, "pr_person.id",
+                                   field.represent,
+                                   )
+
+        # Set initial status
+        table.status_id.default = s3db.dvr_response_default_status()
 
         # Create/delete requires context perspective
         insertable = deletable = False
@@ -857,7 +871,7 @@ def response_action():
             if vtablename == "pr_person":
                 if not has_permission("read", "pr_person", record_id):
                     r.unauthorised()
-                query = (FS("case_activity_id$person_id") == record_id)
+                query = (FS("person_id") == record_id)
                 resource.add_filter(query)
 
                 field = r.table.case_activity_id
@@ -878,7 +892,7 @@ def response_action():
         elif not r.record:
 
             # Filter out response actions of archived cases
-            query = (FS("case_activity_id$person_id$dvr_case.archived") == False)
+            query = (FS("person_id$dvr_case.archived") == False)
             resource.add_filter(query)
 
         # Filter for "mine"

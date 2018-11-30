@@ -3300,6 +3300,13 @@ class S3Config(Storage):
         """
         return self.__lazy("dvr", "response_planning", default=False)
 
+    def get_dvr_response_due_date(self):
+        """
+            Response planning uses separate due-date field
+        """
+        return self.get_dvr_response_planning() and \
+               self.__lazy("dvr", "response_due_date", default=False)
+
     def get_dvr_response_types(self):
         """
             Use response type categories
@@ -3335,6 +3342,14 @@ class S3Config(Storage):
             Response themes are linked to needs
         """
         return self.__lazy("dvr", "response_themes_needs", default=False)
+
+    def get_dvr_response_activity_autolink(self):
+        """
+            Automatically link response actions to case activities
+            based on matching needs
+        """
+        return self.get_dvr_response_themes_needs() and \
+               self.__lazy("dvr", "response_activity_autolink", default=False)
 
     # -------------------------------------------------------------------------
     # Education

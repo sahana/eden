@@ -274,9 +274,8 @@
             $(this.element).fullCalendar({
 
                 // General options
-                aspectRatio: 2.1,               // TODO make configurable (default 1.8)
+                aspectRatio: 1.8,               // TODO make configurable (default 1.8)
                 nowIndicator: true,             // TODO make configurable (default on)
-                eventLimit: 4,
                 slotDuration: '00:30:00',       // TODO make configurable (default 30min)
                 snapDuration: '00:15:00',       // TODO make configurable (default 15min)
                 defaultTimedEventDuration: '00:30:00',

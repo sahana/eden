@@ -580,6 +580,12 @@ def config(settings):
     #settings.dvr.response_themes_sectors = True
     # Uncomment this to link response themes to needs
     #settings.dvr.response_themes_needs = True
+    # Uncomment this to automatically link responses to case activities
+    #settings.dvr.response_activity_autolink = True
+    # Uncomment this to activate features for response planning
+    #settings.dvr.response_planning = True
+    # Uncomment this to use a separate due-date for responses
+    #settings.dvr.response_due_date = True
 
     # Configure a regular expression pattern for ID Codes (QR Codes)
     #settings.dvr.id_code_pattern = "(?P<label>[^,]*),(?P<first_name>[^,]*),(?P<last_name>[^,]*),(?P<date_of_birth>[^,]*)"
