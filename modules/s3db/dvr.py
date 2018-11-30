@@ -2006,7 +2006,8 @@ class DVRResponseModel(S3Model):
 
                 if not activity_id:
                     # Get the latest activity that matches these needs
-                    query = (catable.need_id.belongs(need_ids)) & \
+                    query = (catable.person_id == record.person_id) & \
+                            (catable.need_id.belongs(need_ids)) & \
                             (catable.deleted == False)
                     activity = db(query).select(catable.id,
                                                 orderby = ~catable.start_date,
