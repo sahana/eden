@@ -32,6 +32,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
                "activity_comments": True,
                "activity_use_sector": True,
                "activity_need_details": True,
+               "activity_follow_up": True,
                "appointments_staff_link": False,
                "appointments_use_organizer": False,
                "response_planning": True,
@@ -58,6 +59,7 @@ UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "activity_comments": False,
                       "activity_use_sector": False,
                       "activity_need_details": False,
+                      "activity_follow_up": False,
                       "appointments_staff_link": True,
                       "appointments_use_organizer": True,
                       "response_planning": False,
@@ -402,6 +404,8 @@ def config(settings):
     settings.dvr.case_activity_use_status = True
     # Case activities cover multiple needs
     settings.dvr.case_activity_needs_multiple = True
+    # Case activities use follow-up fields
+    settings.dvr.case_activity_follow_up = get_ui_option("activity_follow_up")
     # Beneficiary documents-tab includes case activity attachments
     settings.dvr.case_include_activity_docs = True
 

@@ -2480,8 +2480,10 @@ class DVRCaseActivityModel(S3Model):
         # Case Activity (case-specific)
         #
         twoweeks = current.request.utcnow + datetime.timedelta(days=14)
+
         multiple_needs = settings.get_dvr_case_activity_needs_multiple()
         use_status = settings.get_dvr_case_activity_use_status()
+        follow_up = settings.get_dvr_case_activity_follow_up()
 
         # Priority options
         priority_opts = [#(0, T("Urgent")),
@@ -2621,13 +2623,17 @@ class DVRCaseActivityModel(S3Model):
 
                      # Follow-up
                      Field("followup", "boolean",
-                           default = True,
+                           default = True if follow_up else None,
                            label = T("Follow up"),
                            represent = s3_yes_no_represent,
+                           readable = follow_up,
+                           writable = follow_up,
                            ),
                      s3_date("followup_date",
-                             default = twoweeks,
+                             default = twoweeks if follow_up else None,
                              label = T("Date for Follow-up"),
+                             readable = follow_up,
+                             writable = follow_up,
                              ),
 
                      # Status, type of exit
@@ -2715,10 +2721,10 @@ class DVRCaseActivityModel(S3Model):
                        "need_details",
                        "emergency",
                        "activity_details",
-                       "followup",
-                       "followup_date",
                        "completed",
                        ]
+        if follow_up:
+            list_fields[-1:-1] = ["followup", "followup_date"]
 
         # Filter widgets
         filter_widgets = [S3TextFilter(["person_id$pe_label",
@@ -2748,31 +2754,33 @@ class DVRCaseActivityModel(S3Model):
                                                      },
                                           cols = 2,
                                           ),
-                          S3OptionsFilter("followup",
-                                          label = T("Follow-up required"),
-                                          options = {True: T("Yes"),
-                                                     False: T("No"),
-                                                     },
-                                          cols = 2,
-                                          hidden = True,
-                                          ),
-                          S3DateFilter("followup_date",
-                                       cols = 2,
-                                       hidden = True,
-                                       ),
                           ]
+        if follow_up:
+            filter_widgets.extend([S3OptionsFilter("followup",
+                                                   label = T("Follow-up required"),
+                                                   options = {True: T("Yes"),
+                                                              False: T("No"),
+                                                              },
+                                                   cols = 2,
+                                                   hidden = True,
+                                                   ),
+                                   S3DateFilter("followup_date",
+                                                cols = 2,
+                                                hidden = True,
+                                                ),
+                                   ])
 
         if service_type:
-            filter_widgets.insert(3, S3OptionsFilter("service_id",
-                                                     ))
+            filter_widgets.insert(3, S3OptionsFilter("service_id"))
 
         # Report options
         axes = [need_field,
                 (T("Case Status"), "case_id$status_id"),
                 "emergency",
-                "followup",
                 "completed",
                 ]
+        if follow_up:
+            axes.insert(-1, "followup")
         if service_type:
             axes.insert(2, "service_id")
 

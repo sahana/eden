@@ -200,19 +200,27 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ORG_ADMIN = sysroles.ORG_ADMIN
         ORG_GROUP_ADMIN = sysroles.ORG_GROUP_ADMIN
 
-        due_followups = current.s3db.dvr_due_followups
-
-        all_due_followups = due_followups() or "0"
-
         ui_options = get_ui_options()
+
+        due_followups_label = T("Due Follow-ups")
+        followups = ui_options.get("activity_follow_up")
+        if followups:
+            due_followups = current.s3db.dvr_due_followups
+            all_due_followups = due_followups() or "0"
 
         human_resource_id = auth.s3_logged_in_human_resource()
         if human_resource_id and auth.s3_has_role("CASE_MANAGEMENT"):
 
-            my_due_followups = due_followups(human_resource_id = human_resource_id) or "0"
-            my_due_followups_label = "%s (%s)" % (T("Due Follow-ups"), my_due_followups)
-
-            all_due_followups_label = "%s (%s)" % (T("All Follow-ups"), all_due_followups)
+            if followups:
+                my_due_followups = due_followups(human_resource_id = human_resource_id) or "0"
+                my_due_followups_label = "%s (%s)" % (due_followups_label,
+                                                      my_due_followups,
+                                                      )
+                all_due_followups_label = "%s (%s)" % (T("All Follow-ups"),
+                                                       all_due_followups,
+                                                       )
+            else:
+                my_due_followups_label = all_due_followups_label = due_followups_label
 
             menu = M(c="dvr")(
                     M("My Cases", c=("dvr", "pr"), f="person", t="dvr_case",
@@ -221,7 +229,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("My Activities", c="dvr", f="case_activity",
                           vars = {"mine": "1"}),
                         M(my_due_followups_label, c="dvr", f="due_followups",
-                          vars = {"mine": 1}),
+                          vars = {"mine": 1}, check = followups),
                         ),
                     M("Actions", c="dvr", f="response_action", t="dvr_response_action")(
                         M("Assigned to me", vars = {"mine": "a"}),
@@ -231,13 +239,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Current Cases", f="person", t="dvr_case", vars = {"closed": "0"}),
                         M("All Cases", f="person", t="dvr_case"),
                         M("All Activities", f="case_activity", t="dvr_case_activity"),
-                        M(all_due_followups_label, f="due_followups"),
+                        M(all_due_followups_label, f="due_followups", check=followups),
                         M("Emergencies", f="case_activity", vars = {"~.priority": "0"}),
                         M("All Actions", f="response_action"),
                         ),
                     )
         else:
-            all_due_followups_label = "%s (%s)" % (T("Due Follow-ups"), all_due_followups)
+            if followups:
+                all_due_followups_label = "%s (%s)" % (due_followups_label,
+                                                       all_due_followups,
+                                                       )
 
             menu = M(c="dvr")(
                     M("Current Cases", c=("dvr", "pr"), f="person", t="dvr_case",
@@ -248,7 +259,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                     M("Activities", f="case_activity")(
                         M("Emergencies", f="case_activity", vars = {"~.priority": "0"}),
-                        M(all_due_followups_label, f="due_followups"),
+                        M(due_followups_label, f="due_followups", check=followups),
                         M("All Activities"),
                         ),
                     )
@@ -279,8 +290,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Administration", restrict=(ADMIN, ORG_GROUP_ADMIN))(
                         M("Flags", f="case_flag"),
                         M("Case Status", f="case_status"),
-                        #M("Need Types", f="need"),
-                        #M("Intervention Types", f="response_type", m="hierarchy"),
                         M("Appointment Types", f="case_appointment_type"),
                         M("Residence Status Types", f="residence_status_type"),
                         M("Residence Permit Types", f="residence_permit_type"),
