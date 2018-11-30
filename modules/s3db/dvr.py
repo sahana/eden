@@ -1989,23 +1989,25 @@ class DVRResponseModel(S3Model):
             if not need_ids:
                 # Response is not linked to any needs
                 # => Remove activity link
-                record.update_record(case_activity_id = None)
+                activity_id = None
 
             else:
                 catable = s3db.dvr_case_activity
 
                 activity_id = record.case_activity_id
                 if activity_id:
-                    # Verify that the case activity's need matches the theme
-                    query = (catable.id == activity_id)
+                    # Verify that the case activity's need matches person+theme
+                    query = (catable.id == activity_id) & \
+                            (catable.person_id == record.person_id) & \
+                            (catable.deleted == False)
                     activity = db(query).select(catable.need_id,
                                                 limitby = (0, 1),
                                                 ).first()
-                    if activity.need_id not in need_ids:
+                    if not activity or activity.need_id not in need_ids:
                         activity_id = None
 
                 if not activity_id:
-                    # Get the latest activity that matches these needs
+                    # Find the latest activity that matches person+theme
                     query = (catable.person_id == record.person_id) & \
                             (catable.need_id.belongs(need_ids)) & \
                             (catable.deleted == False)
@@ -2015,7 +2017,7 @@ class DVRResponseModel(S3Model):
                                                 ).first()
                     if activity:
                         # Link to this activity
-                        record.update_record(case_activity_id = activity.id)
+                        activity_id = activity.id
                     elif len(need_ids) == 1:
                         # Create an activity for the case
                         activity_id = catable.insert(
@@ -2024,9 +2026,8 @@ class DVRResponseModel(S3Model):
                                         start_date = current.request.utcnow,
                                         human_resource_id = record.human_resource_id,
                                         )
-                        if activity_id:
-                            # Link to the new activity
-                            record.update_record(case_activity_id = activity_id)
+            # Update the activity link
+            record.update_record(case_activity_id = activity_id)
 
         # Get all selected themes
         selected = set(theme_ids)
