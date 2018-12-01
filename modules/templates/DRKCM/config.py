@@ -2525,7 +2525,9 @@ def config(settings):
 
             # Needs Axis
             if settings.get_dvr_response_themes_needs():
-                need = "dvr_response_action_theme.theme_id$need_id"
+                need = (T("Counseling Motive"),
+                        "dvr_response_action_theme.theme_id$need_id",
+                        )
             else:
                 need = None
 
@@ -2539,8 +2541,8 @@ def config(settings):
                     "person_id$person_details.nationality",
                     "person_id$person_details.marital_status",
                     (T("Theme"), "response_theme_ids"),
-                    sector,
                     need,
+                    sector,
                     "human_resource_id",
                     )
             if multiple_orgs:
