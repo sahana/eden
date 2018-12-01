@@ -2748,7 +2748,10 @@ def config(settings):
                                    "description": ["response_theme_ids",
                                                    "comments",
                                                    "human_resource_id",
+                                                   "status_id",
                                                    ],
+                                   "color": "status_id",
+                                   "colors": s3db.dvr_response_status_colors,
                                    },
                        )
 

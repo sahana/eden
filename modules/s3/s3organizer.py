@@ -222,6 +222,12 @@ class S3Organizer(S3Method):
             labels.append((rfield.colname, label))
         resource_config["columns"] = labels
 
+        # Colors
+        color = config.get("color")
+        if color:
+            resource_config["color"] = color.colname
+            resource_config["colors"] = config.get("colors")
+
         # Generate form key
         formkey = uuid.uuid4().get_hex()
 
@@ -296,6 +302,10 @@ class S3Organizer(S3Method):
             columns = [rfield.colname for rfield in description]
         else:
             columns = None
+
+        color = config["color"]
+        if color:
+            fields.append(color)
 
         # Add date filter
         start, end = self.parse_interval(r.get_vars.get("$interval"))
@@ -389,6 +399,9 @@ class S3Organizer(S3Method):
                         value = s3_str(value)
                     data.append(value)
                 item["d"] = data
+
+            if color:
+                item["c"] = raw[color.colname]
 
             items.append(item)
 
@@ -635,11 +648,23 @@ class S3Organizer(S3Method):
                     rfield.label = label
                 description.append(rfield)
 
+        # Colors
+        color = config.get("color")
+        if color:
+            colors = config.get("colors")
+            if callable(colors):
+                colors = colors(resource, color)
+            color = resource.resolve_selector(prefix(color))
+        else:
+            colors = None
+
         return {"start": start_rfield,
                 "end": end_rfield,
                 "use_time": use_time,
                 "title": represent,
                 "description": description,
+                "color": color,
+                "colors": colors,
                 }
 
     # -------------------------------------------------------------------------

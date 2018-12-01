@@ -56,6 +56,7 @@ __all__ = ("DVRCaseModel",
            "dvr_case_activity_default_status",
            "dvr_case_status_filter_opts",
            "dvr_response_default_status",
+           "dvr_response_status_colors",
            "dvr_case_household_size",
            "dvr_due_followups",
            "dvr_get_flag_instructions",
@@ -1596,6 +1597,10 @@ class DVRResponseModel(S3Model):
                      Field("is_default_closure", "boolean",
                            default = False,
                            label = T("Default Closure Status"),
+                           ),
+                     Field("color",
+                           requires = IS_HTML_COLOUR(),
+                           widget = S3ColorPickerWidget(),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -5820,6 +5825,25 @@ def dvr_response_default_status():
             default = field.default = row.id
 
     return default
+
+# =============================================================================
+def dvr_response_status_colors(resource, selector):
+    """
+        Get colors for response statuses
+
+        @param resource: the S3Resource the caller is looking at
+        @param selector: the Field selector (usually "status_id")
+
+        @returns: a dict with colors {field_value: "#RRGGBB", ...}
+    """
+
+    table = current.s3db.dvr_response_status
+    query = (table.color != None)
+
+    rows = current.db(query).select(table.id,
+                                    table.color,
+                                    )
+    return {row.id: ("#%s" % row.color) for row in rows if row.color}
 
 # =============================================================================
 def dvr_case_household_size(group_id):

@@ -765,7 +765,8 @@
             var columns = data.c,
                 records = data.r,
                 items = [],
-                translateCols = 0;
+                translateCols = 0,
+                colors = resource.colors;
 
             if (columns && columns.constructor === Array) {
                 translateCols = columns.length;
@@ -802,7 +803,7 @@
                     title: record.t,
                     start: record.s,
                     end: end,
-                    description: description
+                    description: description,
                 };
 
                 // Permission overrides (skip if true to let resource-default apply)
@@ -811,6 +812,14 @@
                 }
                 if (!record.pd) {
                     item.deletable = false;
+                }
+
+                // Item color
+                if (colors && record.c) {
+                    var itemColor = colors[record.c];
+                    if (itemColor !== undefined) {
+                        item.color = itemColor;
+                    }
                 }
 
                 items.push(item);

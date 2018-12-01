@@ -13,6 +13,7 @@
                                               true|false
          Closed...............string..........cases with this status are closed
                                               true|false
+         Color................string..........color code (rrggbb)
          Comments.............string..........Comments
 
     *********************************************************************** -->
@@ -31,11 +32,11 @@
         <resource name="dvr_response_status">
 
             <data field="workflow_position">
-                <xsl:value-of select="col[@field='Position']"/>
+                <xsl:value-of select="col[@field='Position']/text()"/>
             </data>
 
             <data field="name">
-                <xsl:value-of select="col[@field='Status']"/>
+                <xsl:value-of select="col[@field='Status']/text()"/>
             </data>
 
             <xsl:call-template name="Boolean">
@@ -53,8 +54,12 @@
                 <xsl:with-param name="field">is_default_closure</xsl:with-param>
             </xsl:call-template>
 
+            <data field="color">
+                <xsl:value-of select="col[@field='Color']/text()"/>
+            </data>
+
             <data field="comments">
-                <xsl:value-of select="col[@field='Comments']"/>
+                <xsl:value-of select="col[@field='Comments']/text()"/>
             </data>
 
         </resource>
