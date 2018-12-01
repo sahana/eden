@@ -1690,7 +1690,7 @@ def config(settings):
         if ui_options.get("activity_use_need"):
             # Use need type
             subject_field = "need_id"
-            subject_list_field = (T("Counseling Motive"), "need_id")
+            subject_list_field = (T("Counseling Reason"), "need_id")
         else:
             # Use free-text field
             subject_list_field = subject_field = "subject"
@@ -1836,7 +1836,7 @@ def config(settings):
 
                 # Expose need_id
                 field = table.need_id
-                field.label = T("Counseling Motive")
+                field.label = T("Counseling Reason")
                 field.readable = True
                 field.writable = not activity_id or not autolink
 
@@ -2427,16 +2427,16 @@ def config(settings):
 
         # Custom CRUD Strings
         current.response.s3.crud_strings["dvr_need"] = Storage(
-            label_create = T("Create Counseling Motive"),
-            title_display = T("Counseling Motive Details"),
-            title_list = T("Counseling Motive"),
-            title_update = T("Edit Counseling Motive"),
-            label_list_button = T("List Counseling Motives"),
-            label_delete_button = T("Delete Counseling Motive"),
-            msg_record_created = T("Counseling Motive created"),
-            msg_record_modified = T("Counseling Motive updated"),
-            msg_record_deleted = T("Counseling Motive deleted"),
-            msg_list_empty = T("No Counseling Motives currently defined"),
+            label_create = T("Create Counseling Reason"),
+            title_display = T("Counseling Reason Details"),
+            title_list = T("Counseling Reason"),
+            title_update = T("Edit Counseling Reason"),
+            label_list_button = T("List Counseling Reasons"),
+            label_delete_button = T("Delete Counseling Reason"),
+            msg_record_created = T("Counseling Reason created"),
+            msg_record_modified = T("Counseling Reason updated"),
+            msg_record_deleted = T("Counseling Reason deleted"),
+            msg_list_empty = T("No Counseling Reasons currently defined"),
         )
 
     settings.customise_dvr_need_resource = customise_dvr_need_resource
@@ -2525,7 +2525,7 @@ def config(settings):
 
             # Needs Axis
             if settings.get_dvr_response_themes_needs():
-                need = (T("Counseling Motive"),
+                need = (T("Counseling Reason"),
                         "dvr_response_action_theme.theme_id$need_id",
                         )
             else:
@@ -2598,7 +2598,7 @@ def config(settings):
                 field.readable = True
                 field.writable = False
                 if ui_options.get("activity_use_need"):
-                    field.label = T("Counseling Motive")
+                    field.label = T("Counseling Reason")
                     show_as = "need"
                 else:
                     field.label = T("Subject")
@@ -2812,7 +2812,7 @@ def config(settings):
 
                 dbset = current.db(ntable.organisation_id == r.id)
                 field = ttable.need_id
-                field.label = T("Counseling Motive")
+                field.label = T("Counseling Reason")
                 field.comment = None
                 field.readable = field.writable = True
                 field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "dvr_need.id",
@@ -3637,7 +3637,7 @@ def drk_dvr_rheader(r, tabs=None):
                 if not tabs:
                     response_tab = ui_opts_get("case_use_response_tab")
                     if response_tab and ui_opts_get("activity_use_need"):
-                        ACTIVITIES = T("Counseling Motives")
+                        ACTIVITIES = T("Counseling Reasons")
                     else:
                         ACTIVITIES = T("Activities")
 
@@ -3823,7 +3823,7 @@ def drk_org_rheader(r, tabs=None):
             if is_admin or ui_options.get("response_themes_needs"):
                 # Ability to manage org-specific need types
                 # as they are used in themes:
-                tabs.append((T("Counseling Motives"), "need"))
+                tabs.append((T("Counseling Reasons"), "need"))
 
             if not branch and \
                (is_admin or \
