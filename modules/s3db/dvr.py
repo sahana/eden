@@ -1442,17 +1442,17 @@ class DVRResponseModel(S3Model):
         #
         tablename = "dvr_response_theme"
         define_table(tablename,
+                     self.org_organisation_id(),
                      Field("name",
                            label = T("Theme"),
                            requires = IS_NOT_EMPTY(),
                            ),
-                     self.org_organisation_id(),
-                     self.org_sector_id(readable = themes_sectors,
-                                        writable = themes_sectors,
-                                        ),
                      self.dvr_need_id(readable = themes_needs,
                                       writable = themes_needs,
                                       ),
+                     self.org_sector_id(readable = themes_sectors,
+                                        writable = themes_sectors,
+                                        ),
                      s3_comments(),
                      *s3_meta_fields())
 

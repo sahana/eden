@@ -17,7 +17,7 @@ UI_DEFAULTS = {"case_bamf_first": False,
                "case_document_templates": False,
                "case_header_protection_themes": False,
                "case_hide_default_org": False,
-               "case_use_action_tab": False,
+               "case_use_response_tab": False,
                "case_use_address": True,
                "case_use_arrival_date": True,
                "case_use_appointments": True,
@@ -50,7 +50,7 @@ UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "case_document_templates": True,
                       "case_header_protection_themes": True,
                       "case_hide_default_org": True,
-                      "case_use_action_tab": True,
+                      "case_use_response_tab": True,
                       "case_use_address": False,
                       "case_use_arrival_date": False,
                       "case_use_appointments": False,
@@ -1690,9 +1690,10 @@ def config(settings):
         if ui_options.get("activity_use_need"):
             # Use need type
             subject_field = "need_id"
+            subject_list_field = (T("Counseling Motive"), "need_id")
         else:
             # Use free-text field
-            subject_field = "subject"
+            subject_list_field = subject_field = "subject"
 
         if r.method == "report":
 
@@ -1823,23 +1824,50 @@ def config(settings):
 
             # Configure subject field (alternatives)
             if subject_field == "need_id":
-                # Expose need_id, limit to org-specific need types
+
+                # Are we looking at a particular case activity?
+                if r.tablename != "dvr_case_activity":
+                    activity_id = r.component_id
+                else:
+                    activity_id = r.id
+
+                # Shall we automatically link responses to activities?
+                autolink = ui_options.get("response_activity_autolink")
+
+                # Expose need_id
                 field = table.need_id
+                field.label = T("Counseling Motive")
                 field.readable = True
-                # TODO if auto-link and not r.record:
-                #      filter additionally to needs that do not yet have an
-                #      activity for this case
-                field.writable = not ui_options.get("response_activity_autolink") or \
-                                 not r.record
+                field.writable = not activity_id or not autolink
+
+                # Limit to org-specific need types
                 if case_root_org:
                     needs_root_org = case_root_org
                 else:
                     needs_root_org = auth.root_org()
+                ntable = s3db.dvr_need
                 if needs_root_org:
-                    ntable = s3db.dvr_need
-                    dbset = db(ntable.organisation_id == needs_root_org)
-                    field.requires = IS_ONE_OF(dbset, "dvr_need.id",
+                    query = (ntable.organisation_id == needs_root_org)
+                else:
+                    query = None
+
+                # With autolink, prevent multiple activities per need type
+                if autolink:
+                    joinq = (table.need_id == ntable.id) & \
+                            (table.person_id == person_id) & \
+                            (table.deleted == False)
+                    if activity_id:
+                        joinq &= (table.activity_id != activity_id)
+                    left = table.on(joinq)
+                    q = (table.id == None)
+                    query = query & q if query else q
+                else:
+                    left = None
+
+                if query:
+                    field.requires = IS_ONE_OF(db(query), "dvr_need.id",
                                                field.represent,
+                                               left = left,
                                                )
             else:
                 # Expose simple free-text subject
@@ -1995,7 +2023,7 @@ def config(settings):
         if r.tablename != "dvr_case_activity":
             list_fields = ["priority",
                            #"sector_id",
-                           subject_field,
+                           subject_list_field,
                            #"followup",
                            #"followup_date",
                            "start_date",
@@ -2397,6 +2425,20 @@ def config(settings):
         field = table.protection
         field.readable = field.writable = True
 
+        # Custom CRUD Strings
+        current.response.s3.crud_strings["dvr_need"] = Storage(
+            label_create = T("Create Counseling Motive"),
+            title_display = T("Counseling Motive Details"),
+            title_list = T("Counseling Motive"),
+            title_update = T("Edit Counseling Motive"),
+            label_list_button = T("List Counseling Motives"),
+            label_delete_button = T("Delete Counseling Motive"),
+            msg_record_created = T("Counseling Motive created"),
+            msg_record_modified = T("Counseling Motive updated"),
+            msg_record_deleted = T("Counseling Motive deleted"),
+            msg_list_empty = T("No Counseling Motives currently defined"),
+        )
+
     settings.customise_dvr_need_resource = customise_dvr_need_resource
 
     # -------------------------------------------------------------------------
@@ -2554,7 +2596,7 @@ def config(settings):
                 field.readable = True
                 field.writable = False
                 if ui_options.get("activity_use_need"):
-                    field.label = T("Need Type")
+                    field.label = T("Counseling Motive")
                     show_as = "need"
                 else:
                     field.label = T("Subject")
@@ -2751,8 +2793,6 @@ def config(settings):
                 stable = s3db.org_sector
                 ltable = s3db.org_sector_organisation
 
-
-
                 dbset = current.db((ltable.sector_id == stable.id) & \
                                    (ltable.organisation_id == r.id) & \
                                    (ltable.deleted == False))
@@ -2770,6 +2810,7 @@ def config(settings):
 
                 dbset = current.db(ntable.organisation_id == r.id)
                 field = ttable.need_id
+                field.label = T("Counseling Motive")
                 field.comment = None
                 field.readable = field.writable = True
                 field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "dvr_need.id",
@@ -3592,15 +3633,21 @@ def drk_dvr_rheader(r, tabs=None):
                 ui_opts_get = ui_opts.get
 
                 if not tabs:
+                    response_tab = ui_opts_get("case_use_response_tab")
+                    if response_tab and ui_opts_get("activity_use_need"):
+                        ACTIVITIES = T("Counseling Motives")
+                    else:
+                        ACTIVITIES = T("Activities")
+
                     # Basic Case Documentation
                     tabs = [(T("Basic Details"), None),
                             (T("Contact Info"), "contacts"),
                             (T("Family Members"), "group_membership/"),
-                            (T("Activities"), "case_activity"),
+                            (ACTIVITIES, "case_activity"),
                             ]
 
                     # Optional Case Documentation
-                    if ui_opts_get("case_use_action_tab"):
+                    if response_tab:
                         tabs.append((T("Actions"), "response_action"))
                     if ui_opts_get("case_use_appointments"):
                         tabs.append((T("Appointments"), "case_appointment"))
@@ -3774,7 +3821,7 @@ def drk_org_rheader(r, tabs=None):
             if is_admin or ui_options.get("response_themes_needs"):
                 # Ability to manage org-specific need types
                 # as they are used in themes:
-                tabs.append((T("Need Types"), "need"))
+                tabs.append((T("Counseling Motives"), "need"))
 
             if not branch and \
                (is_admin or \
