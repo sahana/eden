@@ -2811,7 +2811,7 @@ class S3CRUD(S3Method):
 
         xml = current.xml
 
-        prefix, name, table, tablename = r.target()
+        table = r.target()[2]
 
         record = r.record
         resource = r.resource
@@ -3046,7 +3046,7 @@ class S3CRUD(S3Method):
 
         s3db = current.s3db
 
-        prefix, name, table, tablename = r.target()
+        prefix, name, _, tablename = r.target()
         permit = current.auth.s3_has_permission
 
         if authorised is None:
@@ -3081,6 +3081,7 @@ class S3CRUD(S3Method):
                     url = linkto % record_id
             else:
                 get_vars = self._linkto_vars(r)
+
                 if r.component:
                     if r.link and not r.actuate_link():
                         # We're rendering a link table here, but must
@@ -3097,34 +3098,25 @@ class S3CRUD(S3Method):
                             # record_id, so we replace that too just in case
                             # the action button cannot be displayed
                             record_id = r.link.component_id(r.id, record_id)
+
                     if c and f:
                         args = [record_id]
                     else:
                         c = r.controller
                         f = r.function
                         args = [r.id, r.component_name, record_id]
-                    if update:
-                        url = str(URL(r=r, c=c, f=f,
-                                      args = args + ["update"],
-                                      vars = get_vars
-                                      ))
-                    else:
-                        url = str(URL(r=r, c=c, f=f,
-                                      args = args + ["read"],
-                                      vars = get_vars
-                                      ))
                 else:
                     args = [record_id]
+
+                # Add explicit open-method if required
+                if update != "auto":
                     if update:
-                        url = str(URL(r=r, c=c, f=f,
-                                      args = args + ["update"],
-                                      vars = get_vars
-                                      ))
+                        args = args + ["update"]
                     else:
-                        url = str(URL(r=r, c=c, f=f,
-                                      args = args + ["read"],
-                                      vars = get_vars
-                                      ))
+                        args = args + ["read"]
+
+                url = str(URL(r=r, c=c, f=f, args=args, vars=get_vars))
+
             if iframe_safe:
                 url = iframe_safe(url)
             return url
@@ -3250,7 +3242,6 @@ class S3CRUD(S3Method):
             if len(dates) != 2:
                 return
 
-            from s3datetime import s3_decode_iso_datetime
             from s3organizer import S3Organizer
 
             try:

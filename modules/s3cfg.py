@@ -1983,6 +1983,11 @@ class S3Config(Storage):
 
         return self.ui.get("datatables_double_scroll", False)
 
+    def get_ui_auto_open_update(self):
+        """ Render "Open" action buttons without explicit CRUD-method """
+
+        return self.ui.get("auto_open_update", False)
+
     def get_ui_default_cancel_button(self):
         """
             Whether to show a default cancel button in standalone

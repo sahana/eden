@@ -263,15 +263,16 @@ s3_formstyle = settings.get_ui_formstyle()
 s3_formstyle_read = settings.get_ui_formstyle_read()
 s3_formstyle_mobile = s3_formstyle
 submit_button = T("Save")
-_crud = s3.crud
-_crud.formstyle = s3_formstyle
-_crud.formstyle_read = s3_formstyle_read
-_crud.submit_button = submit_button
+s3_crud = s3.crud
+s3_crud.formstyle = s3_formstyle
+s3_crud.formstyle_read = s3_formstyle_read
+s3_crud.submit_button = submit_button
 # Optional class for Submit buttons
-#_crud.submit_style = "submit-button"
-_crud.confirm_delete = T("Do you really want to delete these records?")
-_crud.archive_not_delete = settings.get_security_archive_not_delete()
-_crud.navigate_away_confirm = settings.get_ui_navigate_away_confirm()
+#s3_crud.submit_style = "submit-button"
+s3_crud.confirm_delete = T("Do you really want to delete these records?")
+s3_crud.archive_not_delete = settings.get_security_archive_not_delete()
+s3_crud.navigate_away_confirm = settings.get_ui_navigate_away_confirm()
+s3_crud.auto_open_update = settings.get_ui_auto_open_update()
 
 # Content Type Headers, default is application/xml for XML formats
 # and text/x-json for JSON formats, other content types must be

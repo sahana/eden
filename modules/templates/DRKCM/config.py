@@ -220,6 +220,7 @@ def config(settings):
     # General UI settings
     #
     settings.ui.calendar_clear_icon = True
+    #settings.ui.auto_open_update = True
 
     # -------------------------------------------------------------------------
     # Document settings

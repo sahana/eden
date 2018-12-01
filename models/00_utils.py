@@ -267,8 +267,14 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
             # Get table config
             get_config = s3db.get_config
             listadd = get_config(tablename, "listadd", True)
-            editable = get_config(tablename, "editable", True) and \
-                       not auth.permission.ownership_required("update", table)
+            editable = get_config(tablename, "editable", True)
+            if s3.crud.auto_open_update:
+                # "Open" action button without explicit method
+                editable = editable and "auto"
+            else:
+                # "Open" action button with explicit read|update method
+                editable = editable and \
+                           not auth.permission.ownership_required("update", table)
             deletable = get_config(tablename, "deletable", True)
             copyable = get_config(tablename, "copyable", False)
 
