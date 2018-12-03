@@ -190,13 +190,49 @@
         /**
          * Default options
          *
-         * TODO document options
+         * @prop {string} locale - the locale to use
+         *                         (one of those in fullcalendar/locale)
+         * @prop {integer} timeout - the Ajax timeout (in milliseconds)
+         * @prop {Array} resources - the resources, array of resource objects:
+         *
+         *   @prop {string} resource.start - start date column name
+         *   @prop {string} resource.end - end date column name
+         *   @prop {string} resource.ajaxURL - URL for Ajax-lookups
+         *   @prop {string} resource.baseURL - base URL for modals (create/update)
+         *   @prop {boolean} resource.useTime - use time (and hence, agenda views)
+         *   @prop {boolean} resource.insertable - new items can be created
+         *   @prop {string} resource.labelCreate - CRUD label for create
+         *   @prop {boolean} resource.editable - items can be edited
+         *   @prop {boolean} resource.startEditable - item start can be changed
+         *   @prop {boolean} resource.durationEditable - item duration can be changed
+         *   @prop {boolean} resource.deletable - items can be deleted
+         *   @prop {boolean} resource.reloadOnUpdate - reload all items after
+         *                                             updating start/duration
+         *   @prop {string} resource.color - column name to determine item color
+         *   @prop {object} resource.colors - mapping of color-column value to color:
+         *                                    {value: '#rrggbb'}
+         *
+         * @prop {float} aspectRatio: the aspect ratio of the calendar
+         * @prop {boolean} nowIndicator: show the now-indicator in agenda views
+         * @prop {string} slotDuration: the slot size in agenda views
+         * @prop {string} defaultTimedEventDuration: the default event duration for
+         *                                           timed events without explicit end
+         * @prop {string} labelEdit: label for Edit-button
+         * @prop {string} labelDelete: label for the Delete-button
+         * @prop {string} deleteConfirmation: the question for the delete-confirmation
+         *
          */
         options: {
 
             locale: 'en',
             timeout: 10000,
             resources: null,
+
+            aspectRatio: 1.8,
+            nowIndicator: true,
+            slotDuration: '00:30:00',
+            snapDuration: '00:15:00',
+            defaultTimedEventDuration: '00:30:00',
 
             labelEdit: 'Edit',
             labelDelete: 'Delete',
@@ -274,11 +310,11 @@
             $(this.element).fullCalendar({
 
                 // General options
-                aspectRatio: 1.8,               // TODO make configurable (default 1.8)
-                nowIndicator: true,             // TODO make configurable (default on)
-                slotDuration: '00:30:00',       // TODO make configurable (default 30min)
-                snapDuration: '00:15:00',       // TODO make configurable (default 15min)
-                defaultTimedEventDuration: '00:30:00',
+                aspectRatio: opts.aspectRatio,
+                nowIndicator: opts.nowIndicator,
+                slotDuration: opts.slotDuration,
+                snapDuration: opts.snapDuration,
+                defaultTimedEventDuration: opts.defaultTimedEventDuration,
                 allDaySlot: allDaySlot,
 
                 // Permitted actions
