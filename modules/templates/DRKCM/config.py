@@ -1734,41 +1734,28 @@ def config(settings):
 
             # Represent person_id as link
             field = table.person_id
-            #fmt = "%(pe_label)s %(last_name)s, %(first_name)s"
-            field.represent = s3db.pr_PersonRepresent(#fields = ("pe_label",
-                                                      #          "last_name",
-                                                      #          "first_name",
-                                                      #          ),
-                                                      #labels = fmt,
-                                                      show_link = True,
-                                                      )
+            field.represent = s3db.pr_PersonRepresent(show_link = True)
 
-            # If looking at a particular case, get the person_id
+            # Get person_id, case_activity_id and case activity record
+            person_id = case_activity_id = case_activity = None
             if r.tablename == "pr_person":
+                # On activities-tab of a case
                 person_id = r.record.id if r.record else None
+                component = r.component
+                if component and component.tablename == "dvr_case_activity":
+                    case_activity_id = r.component_id
+
             elif r.tablename == "dvr_case_activity":
-                person_id = r.record.person_id if r.record else None
-            else:
-                person_id = None
+                # Primary case activity controller
+                case_activity = r.record
+                if case_activity:
+                    person_id = case_activity.person_id
+                    case_activity_id = r.id
 
             db = current.db
 
             # Get the root org of the case
-            if person_id:
-                ctable = s3db.dvr_case
-                otable = s3db.org_organisation
-                left = otable.on(otable.id == ctable.organisation_id)
-                query = (ctable.person_id == person_id) & \
-                        (ctable.archived == False) & \
-                        (ctable.deleted == False)
-                row = db(query).select(otable.root_organisation,
-                                       left = left,
-                                       limitby = (0, 1),
-                                       orderby = ~ctable.modified_on,
-                                       ).first()
-                case_root_org = row.root_organisation if row else None
-            else:
-                case_root_org = None
+            case_root_org = get_case_root_org(person_id)
 
             # Configure sector_id
             field = table.sector_id
@@ -1929,7 +1916,11 @@ def config(settings):
             field.default = human_resource_id
             field.widget = field.comment = None
 
-            configure_response_theme_selector(ui_options)
+            configure_response_theme_selector(ui_options,
+                                              case_root_org = case_root_org,
+                                              case_activity = case_activity,
+                                              case_activity_id = case_activity_id,
+                                              )
 
             response_action_fields = ["response_theme_ids",
                                       "comments",
@@ -1940,18 +1931,6 @@ def config(settings):
                                       ]
             if settings.get_dvr_response_due_date():
                 response_action_fields[1:1] = ["date_due"]
-
-            # Filter themes-options to themes of the case root org
-            # TODO if auto-link and r.record:
-            #      filter to themes matching the need_id of the record
-            if case_root_org and r.tablename == "pr_person" and r.record:
-                requires = rtable.response_theme_ids.requires
-                if isinstance(requires, IS_EMPTY_OR):
-                    requires = requires.other
-                if hasattr(requires, "set_filter"):
-                    requires.set_filter(filterby = "organisation_id",
-                                        filter_opts = (case_root_org,),
-                                        )
 
             # Inline-updates
             utable = current.s3db.dvr_case_activity_update
@@ -2443,37 +2422,106 @@ def config(settings):
     settings.customise_dvr_need_resource = customise_dvr_need_resource
 
     # -------------------------------------------------------------------------
-    def configure_response_theme_selector(ui_options):
+    def get_case_root_org(person_id):
+        """
+            Get the root organisation managing a case
+
+            @param person_id: the person record ID
+
+            @returns: the root organisation record ID
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        if person_id:
+            ctable = s3db.dvr_case
+            otable = s3db.org_organisation
+            left = otable.on(otable.id == ctable.organisation_id)
+            query = (ctable.person_id == person_id) & \
+                    (ctable.archived == False) & \
+                    (ctable.deleted == False)
+            row = db(query).select(otable.root_organisation,
+                                   left = left,
+                                   limitby = (0, 1),
+                                   orderby = ~ctable.modified_on,
+                                   ).first()
+            case_root_org = row.root_organisation if row else None
+        else:
+            case_root_org = None
+
+        return case_root_org
+
+    # -------------------------------------------------------------------------
+    def configure_response_theme_selector(ui_options,
+                                          case_root_org = None,
+                                          person_id = None,
+                                          case_activity = None,
+                                          case_activity_id = None,
+                                          ):
         """
             Configure response theme selector
 
             @param ui_options: the UI options for the current org
+            @param case_root_org: the case root organisation
+            @param person_id: the person record ID (to look up the root org)
+            @param case_activity: the case activity record
+            @param case_activity_id: the case activity record ID
+                                     (to look up the case activity record)
         """
 
+        db = current.db
         s3db = current.s3db
-        table = s3db.dvr_response_action
 
+        ttable = s3db.dvr_response_theme
+        query = None
+
+        # Limit themes to the themes of the case root organisation
+        if not case_root_org:
+            case_root_org = get_case_root_org(person_id)
+            if not case_root_org:
+                case_root_org = current.auth.root_org()
+        if case_root_org:
+            query = (ttable.organisation_id == case_root_org)
+
+        themes_needs = settings.get_dvr_response_themes_needs()
+        if ui_options.get("activity_use_need") and themes_needs:
+
+            # Limit themes to those matching the need of the activity
+            if case_activity:
+                need_id = case_activity.need_id
+            elif case_activity_id:
+                # Look up the parent record
+                catable = s3db.dvr_case_activity
+                case_activity = db(catable.id == case_activity_id).select(catable.need_id,
+                                                                          limitby = (0, 1),
+                                                                          ).first()
+                need_id = case_activity.need_id if case_activity else None
+            else:
+                need_id = None
+            if need_id:
+                q = (ttable.need_id == need_id)
+                query = query & q if query else q
+
+        dbset = db(query) if query else db
+
+        table = s3db.dvr_response_action
         field = table.response_theme_ids
 
-        if settings.get_dvr_response_themes_needs():
+        if themes_needs:
             # Include the need in the themes-selector
             # - helps to find themes using the selector search field
             represent = s3db.dvr_ResponseThemeRepresent(multiple = True,
                                                         translate = True,
                                                         show_need = True,
                                                         )
-            root_org = current.auth.root_org()
-            if root_org:
-                filterby = "organisation_id",
-                filter_opts = (root_org,)
-            else:
-                filterby = filter_opts = None
-            field.requires = IS_ONE_OF(current.db, "dvr_response_theme.id",
-                                       represent,
-                                       filterby = filterby,
-                                       filter_opts = filter_opts,
-                                       multiple = True,
-                                       )
+        else:
+            represent = field.represent
+
+        field.requires = IS_ONE_OF(dbset, "dvr_response_theme.id",
+                                   represent,
+                                   multiple = True,
+                                   )
 
         requires = field.requires
         if ui_options.get("response_themes_optional"):
@@ -2582,13 +2630,21 @@ def config(settings):
             date_due = "date_due" if use_due_date else None
 
             # Configure theme selector
-            configure_response_theme_selector(ui_options)
+            if r.tablename == "dvr_response_action":
+                is_master = True
+                person_id = r.record.person_id if r.record else None
+            elif r.tablename == "pr_person" and \
+                 r.component and r.component.tablename == "dvr_response_action":
+                is_master = False
+                person_id = r.record.id if r.record else None
+
+            configure_response_theme_selector(ui_options,
+                                              person_id = person_id,
+                                              )
 
             get_vars = r.get_vars
-            if r.component and r.component.tablename == "dvr_response_action" or \
-               r.tablename == "dvr_response_action" and "viewing" in get_vars:
-
-                # Component tab of case
+            if not is_master or "viewing" in get_vars:
+                # Component tab (or viewing-tab) of case
 
                 # Hide person_id
                 field = table.person_id
@@ -2609,6 +2665,7 @@ def config(settings):
                                             show_link=True,
                                             )
 
+                # Adapt list-fields to perspective
                 list_fields = ["case_activity_id",
                                "response_theme_ids",
                                "comments",
@@ -2630,7 +2687,7 @@ def config(settings):
                                    update_next = r.url(id="", method=""),
                                    )
             else:
-                # Primary controller
+                # Primary dvr/response_action controller
 
                 # Adapt list-fields to perspective
                 list_fields = [(T("ID"), "person_id$pe_label"),
