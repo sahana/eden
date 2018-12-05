@@ -911,6 +911,7 @@ def config(settings):
                         if human_resource_id:
                             field.default = human_resource_id
                         field.readable = field.writable = True
+                        field.represent = s3db.hrm_HumanResourceRepresent(show_link=False)
                         field.widget = None
 
                         # Optional: Case Flags
@@ -1696,6 +1697,9 @@ def config(settings):
             # Use free-text field
             subject_list_field = subject_field = "subject"
 
+        # Using sectors?
+        activity_use_sector = ui_options.get("activity_use_sector")
+
         if r.method == "report":
 
             # Custom Report Options
@@ -1706,17 +1710,31 @@ def config(settings):
                     "person_id$person_details.nationality",
                     "person_id$person_details.marital_status",
                     "priority",
-                    "sector_id",
                     (T("Theme"), "response_action.response_theme_ids"),
                     ]
+
+            default_rows = "response_action.response_theme_ids"
+            default_cols = "person_id$person_details.nationality"
+
+            # Add the sector_id axis when using sectors
+            if activity_use_sector:
+                axes.insert(-1, "sector_id")
+                default_rows = "sector_id"
+
+            # Add the need_id axis when using needs
+            if subject_field == "need_id":
+                axes.insert(-1, "need_id")
+                default_rows = "need_id"
+
+            # Add status_id axis when using status
             if status_id == "status_id":
                 axes.insert(3, status_id)
             report_options = {
                 "rows": axes,
                 "cols": axes,
                 "fact": facts,
-                "defaults": {"rows": "sector_id",
-                             "cols": "person_id$person_details.nationality",
+                "defaults": {"rows": default_rows,
+                             "cols": default_cols,
                              "fact": "count(id)",
                              "totals": True,
                              },
@@ -1886,12 +1904,14 @@ def config(settings):
                                                  }).represent
 
             # Show human_resource_id
+            hr_represent = s3db.hrm_HumanResourceRepresent(show_link=False)
             field = table.human_resource_id
-            field.readable = field.writable = True
-            field.label = T("Consultant in charge")
-            field.default = human_resource_id
-            field.widget = None
             field.comment = None
+            field.default = human_resource_id
+            field.label = T("Consultant in charge")
+            field.readable = field.writable = True
+            field.represent = hr_represent
+            field.widget = None
 
             # Show end_date field (read-only)
             if end_date is not None:
@@ -1914,6 +1934,7 @@ def config(settings):
 
             field = rtable.human_resource_id
             field.default = human_resource_id
+            field.represent = hr_represent
             field.widget = field.comment = None
 
             configure_response_theme_selector(ui_options,
@@ -1937,6 +1958,7 @@ def config(settings):
 
             field = utable.human_resource_id
             field.default = human_resource_id
+            field.represent = hr_represent
             field.widget = field.comment = None
 
             # Custom CRUD form
@@ -2239,8 +2261,9 @@ def config(settings):
         if ui_options.get("appointments_staff_link"):
             # Enable staff link and default to logged-in user
             field = table.human_resource_id
-            field.readable = field.writable = True
             field.default = current.auth.s3_logged_in_human_resource()
+            field.readable = field.writable = True
+            field.represent = s3db.hrm_HumanResourceRepresent(show_link=False)
             field.widget = None
             # Also show staff link in organizer popup
             if description:
@@ -2622,8 +2645,9 @@ def config(settings):
 
             # Use drop-down for human_resource_id
             field = table.human_resource_id
-            field.widget = None
             field.default = current.auth.s3_logged_in_human_resource()
+            field.represent = s3db.hrm_HumanResourceRepresent(show_link=False)
+            field.widget = None
 
             # Use separate due-date field?
             use_due_date = settings.get_dvr_response_due_date()
