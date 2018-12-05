@@ -37,13 +37,14 @@ UI_DEFAULTS = {"case_bamf_first": False,
                "activity_use_need": False,
                "appointments_staff_link": False,
                "appointments_use_organizer": False,
+               "response_activity_autolink": False,
                "response_due_date": True,
-               "response_use_organizer": False,
+               "response_planning": True,
                "response_themes_sectors": False,
                "response_themes_needs": False,
                "response_themes_single": False,
                "response_themes_optional": False,
-               "response_activity_autolink": False,
+               "response_use_organizer": False,
                }
 
 UI_OPTIONS = {"LEA": {"case_bamf_first": True,
@@ -70,13 +71,14 @@ UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "activity_use_need": True,
                       "appointments_staff_link": True,
                       "appointments_use_organizer": True,
+                      "response_activity_autolink": True,
                       "response_due_date": False,
-                      "response_use_organizer": True,
+                      "response_planning": False,
                       "response_themes_sectors": True,
                       "response_themes_needs": True,
                       "response_themes_single": True,
                       "response_themes_optional": True,
-                      "response_activity_autolink": True,
+                      "response_use_organizer": True,
                       },
               }
 
@@ -425,7 +427,7 @@ def config(settings):
     # Manage individual response actions in case activities
     settings.dvr.manage_response_actions = True
     # Planning response actions, or just documenting them?
-    settings.dvr.response_planning = True
+    settings.dvr.response_planning = get_ui_option("response_planning")
     # Response planning uses separate due-date
     settings.dvr.response_due_date = get_ui_option("response_due_date")
     # Use response themes

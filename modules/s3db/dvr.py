@@ -5818,7 +5818,10 @@ def dvr_response_default_status():
 
         # Look up the default status
         query = query & (stable.deleted != True)
-        row = current.db(query).select(stable.id, limitby=(0, 1)).first()
+        row = current.db(query).select(stable.id,
+                                       cache = s3db.cache,
+                                       limitby = (0, 1),
+                                       ).first()
 
         if row:
             # Set as field default in responses table
