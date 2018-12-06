@@ -2754,6 +2754,10 @@ def config(settings):
                     field.writable = False
                     list_fields.insert(1, "case_activity_id")
 
+                s3db.configure("dvr_response_action",
+                               list_fields = list_fields,
+                               )
+
                 # Custom Filter Options
                 if r.interactive:
                     from s3 import S3AgeFilter, \
@@ -2820,10 +2824,9 @@ def config(settings):
                                                                  options = org_filter_opts,
                                                                  ))
 
-                s3db.configure("dvr_response_action",
-                               filter_widgets = filter_widgets,
-                               list_fields = list_fields,
-                               )
+                    s3db.configure("dvr_response_action",
+                                   filter_widgets = filter_widgets,
+                                   )
 
         # TODO Complete this (perspective? status?)
         s3db.configure("dvr_response_action",
