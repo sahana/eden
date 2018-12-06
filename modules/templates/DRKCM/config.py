@@ -2614,6 +2614,7 @@ def config(settings):
             axes = ("person_id$gender",
                     "person_id$person_details.nationality",
                     "person_id$person_details.marital_status",
+                    (T("Size of Family"), "person_id$dvr_case.household_size"),
                     (T("Theme"), "response_theme_ids"),
                     need,
                     sector,
