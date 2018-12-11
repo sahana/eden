@@ -583,357 +583,47 @@ class S3Resource(object):
 
     # -------------------------------------------------------------------------
     def update(self):
+        """
+            Bulk updater, @todo
+        """
 
         raise NotImplementedError
 
     # -------------------------------------------------------------------------
-    def delete(self, format=None, cascade=False, replaced_by=None):
+    def delete(self,
+               format=None,
+               cascade=False,
+               replaced_by=None,
+               log_errors=False,
+               ):
         """
-            Delete all (deletable) records in this resource
+            Delete all records in this resource
 
             @param format: the representation format of the request (optional)
-            @param cascade: this is a cascade delete (prevents rollbacks/commits)
+            @param cascade: this is a cascade delete (prevents commits)
             @param replaced_by: used by record merger
+            @param log_errors: log errors even when cascade=True
 
             @return: number of records deleted
+
+            NB skipping undeletable rows is no longer the default behavior,
+               process will now fail immediately for any error; use S3Delete
+               directly if skipping of undeletable rows is desired
         """
 
-        s3db = current.s3db
+        from s3delete import S3Delete
 
-        # Reset error
-        self.error = None
-        permission_error = False
+        delete = S3Delete(self, representation=format)
+        result = delete(cascade = cascade,
+                        replaced_by = replaced_by,
+                        #skip_undeletable = False,
+                        )
 
-        tablename = self.tablename
-        table = self.table
-        table_fields = table.fields
+        if log_errors and cascade:
+            # Call log_errors explicitly if suppressed by cascade
+            delete.log_errors()
 
-        get_config = self.get_config
-        pkey = self._id.name
-
-        # Determine relevant fields
-        fields = [pkey]
-        add_field = fields.append
-        supertables = get_config("super_entity")
-        if supertables:
-            # Add super-keys (avoids reloading in delete_super)
-            if not isinstance(supertables, (list, tuple)):
-                supertables = [supertables]
-            for sname in supertables:
-                stable = s3db.table(sname) \
-                         if isinstance(sname, str) else sname
-                if stable is None:
-                    continue
-                key = stable._id.name
-                if key in table_fields:
-                    add_field(key)
-        if "uuid" in table_fields:
-            add_field("uuid")
-
-        # Get all rows
-        rows = self.select(fields, as_rows=True)
-        if not rows:
-            # No rows? => that was it already :)
-            # Can't do this as breaks cascades but otherwise we see in console S3Log Error: None
-            #self.error = current.ERROR.BAD_RECORD
-            return 0
-
-        first = rows[0]
-        if hasattr(first, tablename) and isinstance(first[tablename], Row):
-            # Rows are the result of a join (due to extra_fields)
-            joined = True
-        else:
-            joined = False
-
-        numrows = 0
-
-        db = current.db
-        has_permission = current.auth.s3_has_permission
-
-        audit = current.audit
-        prefix = self.prefix
-        name = self.name
-
-        define_resource = s3db.resource
-        delete_super = s3db.delete_super
-
-        DELETED = current.xml.DELETED
-        INTEGRITY_ERROR = current.ERROR.INTEGRITY_ERROR
-
-        if current.deployment_settings.get_security_archive_not_delete() and \
-           DELETED in table:
-
-            # Find all references
-            if not cascade:
-                # Must load all models to detect dependencies
-                s3db.load_all_models()
-            if db._lazy_tables:
-                # Must roll out all lazy tables to detect dependencies
-                for tn in db._LAZY_TABLES.keys():
-                    db[tn]
-            references = table._referenced_by
-            try:
-                rfields = [f for f in references if f.ondelete == "RESTRICT"]
-            except AttributeError:
-                # older web2py
-                references = [db[tn][fn] for tn, fn in references]
-                rfields = [f for f in references if f.ondelete == "RESTRICT"]
-
-            # Determine deletable rows
-            pkey_ = str(self._id) if joined else pkey
-            deletable = set(row[pkey_] for row in rows)
-            for rfield in rfields:
-                if deletable:
-                    fn, tn = rfield.name, rfield.tablename
-                    rtable = db[tn]
-                    query = (rfield.belongs(deletable))
-                    if tn == self.tablename:
-                        query &= (rfield != rtable._id)
-                    if DELETED in rtable:
-                        query &= (rtable[DELETED] != True)
-                    rrows = db(query).select(rfield)
-                    for rrow in rrows:
-                        deletable.discard(rrow[fn])
-
-            # Get custom ondelete-cascade
-            ondelete_cascade = get_config("ondelete_cascade")
-
-            for row in rows:
-
-                if joined:
-                    row = getattr(row, tablename)
-                record_id = row[pkey]
-
-                # Check permission to delete this record
-                if not has_permission("delete", table, record_id=record_id):
-                    permission_error = True
-                    continue
-
-                error = self.error
-                self.error = None
-
-                # Run custom ondelete_cascade first
-                if ondelete_cascade:
-                    try:
-                        callback(ondelete_cascade, row, tablename=tablename)
-                    except:
-                        # Custom RESTRICT or cascade failure: row not deletable
-                        deletable.discard(record_id)
-                        continue
-                    if record_id not in deletable:
-                        # Check deletability again
-                        restricted = False
-                        for rfield in rfields:
-                            fn, tn = rfield.name, rfield.tablename
-                            rtable = db[tn]
-                            #rfield = rtable[fn]
-                            query = (rfield == record_id)
-                            if tn == self.tablename:
-                                query &= (rfield != rtable._id)
-                            if DELETED in rtable:
-                                query &= (rtable[DELETED] != True)
-                            rrow = db(query).select(rfield,
-                                                    limitby = (0, 1),
-                                                    ).first()
-                            if rrow:
-                                restricted = True
-                                break
-                        if not restricted:
-                            deletable.add(record_id)
-
-                if record_id not in deletable:
-                    # Row is not deletable
-                    self.error = INTEGRITY_ERROR
-                    continue
-
-                # Run automatic ondelete-cascade
-                for rfield in references:
-                    fn, tn = rfield.name, rfield.tablename
-                    rtable = db[tn]
-                    query = (rfield == record_id)
-                    if tn == self.tablename:
-                        query &= (rfield != rtable._id)
-
-                    rfield_ondelete = rfield.ondelete
-
-                    if rfield_ondelete == "CASCADE":
-                        rresource = define_resource(tn,
-                                                    filter = query,
-                                                    unapproved = True,
-                                                    )
-                        rresource.delete(cascade=True)
-                        if rresource.error:
-                            self.error = rresource.error
-                            break
-                    else:
-                        if rfield_ondelete == "SET NULL":
-                            rfield_default = None
-                        elif rfield_ondelete == "SET DEFAULT":
-                            rfield_default = rfield.default
-                        else:
-                            continue
-
-                        if DELETED in rtable.fields:
-                            # Disregard already-deleted references
-                            query &= rtable[DELETED] == False
-                        try:
-                            db(query).update(**{fn: rfield_default})
-                        except:
-                            self.error = INTEGRITY_ERROR
-                            break
-
-                # Unlink all super-records
-                if not self.error and not delete_super(table, row):
-                    self.error = INTEGRITY_ERROR
-
-                if self.error:
-                    # Error in deletion cascade: roll back + skip row
-                    if not cascade:
-                        db.rollback()
-                    continue
-
-                else:
-                    # Auto-delete linked records if this was the last link
-                    linked = self.linked
-                    if linked and self.autodelete and linked.autodelete:
-                        rkey = linked.rkey
-                        fkey = linked.fkey
-                        if rkey in table:
-                            query = (table._id == record_id)
-                            this = db(query).select(table._id,
-                                                    table[rkey],
-                                                    limitby = (0, 1),
-                                                    ).first()
-                            query = (table._id != this[pkey]) & \
-                                    (table[rkey] == this[rkey])
-                            if DELETED in table:
-                                query &= (table[DELETED] != True)
-                            remaining = db(query).select(table._id,
-                                                         limitby = (0, 1),
-                                                         ).first()
-                            if not remaining:
-                                linked_table = s3db.table(linked.tablename)
-                                query = (linked_table[fkey] == this[rkey])
-                                linked = define_resource(linked_table,
-                                                         filter = query,
-                                                         unapproved = True,
-                                                         )
-                                linked.delete(cascade=True)
-
-                    # Pull back prior error status
-                    self.error = error
-                    error = None
-
-                    data = {"deleted": True}
-                    record = None
-
-                    # "Park" foreign keys to resolve constraints, "un-delete"
-                    # would then restore any still-valid FKs from this field
-                    if "deleted_fk" in table_fields:
-                        record = table[record_id]
-                        fk = {}
-                        for f in table_fields:
-                            if record[f] is not None and \
-                               s3_has_foreign_key(table[f]):
-                                fk[f] = record[f]
-                                if not table[f].notnull:
-                                    data[f] = None
-                            else:
-                                continue
-                        if fk:
-                            data["deleted_fk"] = json.dumps(fk)
-
-                    # Annotate the replacement record
-                    idstr = str(record_id)
-                    if replaced_by and idstr in replaced_by and \
-                       "deleted_rb" in table_fields:
-                        data["deleted_rb"] = replaced_by[idstr]
-
-                    # Update the row, finally
-                    if table._tablename == tablename:
-                        dbset = db(table._id == record_id)
-                    else:
-                        # Must use un-aliased table for .update
-                        dbset = db(db[tablename]._id == record_id)
-                    dbset.update(**data)
-                    numrows += 1
-
-                    # Clear session
-                    if s3_get_last_record_id(tablename) == record_id:
-                        s3_remove_last_record_id(tablename)
-
-                    # Audit
-                    audit("delete", prefix, name,
-                          record=record_id, representation=format)
-
-                    # On-delete hook
-                    ondelete = get_config("ondelete")
-                    if ondelete:
-                        callback(ondelete, row)
-
-                    # Commit after each row to not have it rolled back by
-                    # subsequent cascade errors
-                    if not cascade:
-                        db.commit()
-        else:
-            # Hard delete
-            deletable = len(rows) # assume all rows deletable
-            for row in rows:
-
-                if joined:
-                    row = getattr(row, tablename)
-                record_id = row[pkey]
-
-                # Check permission to delete this row
-                if not has_permission("delete", table, record_id=record_id):
-                    permission_error = True
-                    continue
-
-                # @ToDo: ondelete_cascade?
-
-                # Delete super-entity
-                success = delete_super(table, row)
-                if not success:
-                    # Super-entity is not deletable
-                    self.error = INTEGRITY_ERROR
-                    deletable -= 1
-                    continue
-
-                # Delete the row
-                try:
-                    del table[record_id]
-                except:
-                    # Row is not deletable
-                    self.error = INTEGRITY_ERROR
-                    deletable -= 1
-                    continue
-                else:
-                    # Successfully deleted
-                    numrows += 1
-                    # Clear session
-                    if s3_get_last_record_id(tablename) == record_id:
-                        s3_remove_last_record_id(tablename)
-                    # Audit
-                    audit("delete", prefix, name,
-                          record=row[pkey], representation=format)
-                    # On-delete hook
-                    ondelete = get_config("ondelete")
-                    if ondelete:
-                        callback(ondelete, row)
-                    # Commit after each row to not have it rolled back by
-                    # subsequent cascade errors
-                    if not cascade:
-                        db.commit()
-
-        if numrows == 0:
-            if not deletable:
-                # No deletable rows found
-                self.error = INTEGRITY_ERROR
-            elif permission_error:
-                # Deletion failed due to insufficient permissions
-                self.error = current.ERROR.NOT_PERMITTED
-
-        return numrows
+        return result
 
     # -------------------------------------------------------------------------
     def approve(self, components=(), approve=True, approved_by=None):
