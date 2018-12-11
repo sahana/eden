@@ -112,6 +112,11 @@ class S3Delete(object):
 
         tablename = self.tablename
 
+        # Check the entire cascade, rather than breaking out after the
+        # first error - debug-only, this can be many errors
+        # (NB ?debug=1 alone won't help if logging is off in 000_config.py)
+        check_all = current.response.s3.debug
+
         # Look up all rows that are to be deleted
         rows = self.extract()
         if not rows:
@@ -161,9 +166,7 @@ class S3Delete(object):
             records.append(record)
 
         # Identify deletable records
-        deletable = self.check_deletable(records,
-                                         check_all = current.response.s3.debug,
-                                         )
+        deletable = self.check_deletable(records, check_all=check_all)
 
         # If on cascade or not skipping undeletable rows: exit immediately
         if self.errors and (cascade or not skip_undeletable):
@@ -190,7 +193,7 @@ class S3Delete(object):
 
             if self.archive:
                 # Run automatic deletion cascade
-                success = self.cascade(row)
+                success = self.cascade(row, check_all=check_all)
 
             if success:
                 # Unlink all super-records
@@ -351,14 +354,15 @@ class S3Delete(object):
         return [row for row in rows if row[pkey] in deletable]
 
     # -------------------------------------------------------------------------
-    def cascade(self, row):
+    def cascade(self, row, check_all=False):
         """
             Run the automatic deletion cascade: remove or update records
             referencing this row with ondelete!="RESTRICT"
 
             @param row: the Row to delete
-
-            TODO check_all option?
+            @param check_all: process the entire cascade to reveal all
+                              errors (rather than breaking out of it after
+                              the first error)
         """
 
         tablename = self.tablename
@@ -400,7 +404,10 @@ class S3Delete(object):
                 if delete.errors:
                     success = False
                     add_error(record_id, delete.errors)
-                    break
+                    if check_all:
+                        continue
+                    else:
+                        break
             else:
                 # NB no permission check on target here, i.e. the right
                 #    to delete a record overrides the right to keep an
@@ -419,7 +426,10 @@ class S3Delete(object):
                 except Exception:
                     success = False
                     add_error(record_id, sys.exc_info()[1])
-                    break
+                    if check_all:
+                        continue
+                    else:
+                        break
 
         return success
 
@@ -680,11 +690,11 @@ class S3Delete(object):
 
         key = (self.tablename, record_id)
 
-        error_ = self.errors.get(key)
-        if type(error_) is list:
-            error_.append(msg)
-        elif error_:
-            self.errors[key] = [error_, msg]
+        error = self.errors.get(key)
+        if type(error) is list:
+            error.append(msg)
+        elif error:
+            self.errors[key] = [error, msg]
         else:
             self.errors[key] = msg
 
@@ -735,12 +745,11 @@ class S3Delete(object):
                 cls._log(master, reference, e)
 
         elif isinstance(errors, dict):
-            # Tree of blocking references
+            # Cascade error (tree of blocking references)
             if not reference:
                 prefix = "undeletable reference:"
             else:
                 prefix = "%s <=" % reference
-
             for k, e in errors.items():
                 reference_ = "%s %s.%s" % (prefix, k[0], k[1])
                 cls._log(master, reference_, e)

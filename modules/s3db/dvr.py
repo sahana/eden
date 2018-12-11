@@ -1815,7 +1815,7 @@ class DVRResponseModel(S3Model):
                            requires = IS_ONE_OF(db, "dvr_response_action.id"),
                            ),
                      Field("theme_id", "reference dvr_response_theme",
-                           ondelete = "CASCADE",
+                           ondelete = "RESTRICT",
                            represent = theme_represent,
                            requires = IS_ONE_OF(db, "dvr_response_theme.id",
                                                 theme_represent,
@@ -1916,7 +1916,7 @@ class DVRResponseModel(S3Model):
             referenced_by = db(query).select(atable.id, limitby=(0, 1)).first()
             if referenced_by:
                 # Raise to stop deletion cascade
-                raise RuntimeError("Attempt to delete a theme that is referenced by another record")
+                raise RuntimeError("Attempt to delete a theme that is referenced by a response")
         else:
             referenced_by = db(query).select(atable.id, reference)
             for row in referenced_by:
