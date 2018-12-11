@@ -161,7 +161,9 @@ class S3Delete(object):
             records.append(record)
 
         # Identify deletable records
-        deletable = self.check_deletable(records)
+        deletable = self.check_deletable(records,
+                                         check_all = current.response.s3.debug,
+                                         )
 
         # If on cascade or not skipping undeletable rows: exit immediately
         if self.errors and (cascade or not skip_undeletable):
@@ -303,11 +305,11 @@ class S3Delete(object):
         if self.archive:
 
             add_error = self.add_error
+            errors = {}
 
             record_ids = set(deletable) if check_all else deletable
             for restriction in self.restrictions:
 
-                fn = restriction.name
                 tn = restriction.tablename
                 rtable = db[tn]
                 rtable_id = rtable._id
@@ -318,13 +320,33 @@ class S3Delete(object):
                 if DELETED in rtable:
                     query &= (rtable[DELETED] == False)
 
-                rrows = db(query).select(rtable_id, restriction)
+                count = rtable_id.count()
+                rrows = db(query).select(count,
+                                         restriction,
+                                         groupby = restriction,
+                                         )
+
+                fname = str(restriction)
                 for rrow in rrows:
-                    restricted = rrow[fn]
-                    add_error(restricted,
-                              "restricted by %s.%s" % (tn, rrow[rtable_id]),
-                              )
+                    # Collect errors per restricted record
+                    restricted = rrow[restriction]
+                    if restricted in errors:
+                        restrictions = errors[restricted]
+                    else:
+                        restrictions = errors[restricted] = {}
+                    restrictions[fname] = rrow[count]
+
+                    # Remove restricted record from deletables
                     deletable.discard(restricted)
+
+            # Aggregate all errors
+            if errors:
+                for record_id, restrictions in errors.items():
+                    msg = ", ".join("%s (%s records)" % (k, v)
+                                    for k, v in restrictions.items()
+                                    )
+                    add_error(record_id, "restricted by %s" % msg)
+
 
         return [row for row in rows if row[pkey] in deletable]
 
@@ -335,6 +357,8 @@ class S3Delete(object):
             referencing this row with ondelete!="RESTRICT"
 
             @param row: the Row to delete
+
+            TODO check_all option?
         """
 
         tablename = self.tablename
