@@ -6397,8 +6397,7 @@ class S3ResourceData(object):
 
         colname = rfield.colname
 
-        field_data = self.field_data
-        fvalues, frecords, joined, list_type = field_data[colname][:4]
+        fvalues, frecords, joined, list_type = self.field_data[colname][:4]
 
         # Get the renderer
         renderer = rfield.represent
@@ -6464,24 +6463,31 @@ class S3ResourceData(object):
 
             # Multiple values (joined or list-type)
             else:
-                vlist = []
-                for value in record:
-                    if value is None and not list_type:
-                        continue
-                    value = fvalues[value] \
-                            if value in fvalues else none
-                    vlist.append(value)
-
-                # Concatenate multiple values
-                if any([hasattr(v, "xml") for v in vlist]):
-                    data = TAG[""](
-                            list(
-                                chain.from_iterable(
-                                    [(v, ", ") for v in vlist])
-                                )[:-1]
-                            )
+                if hasattr(renderer, "render_list"):
+                    # Prefer S3Represent's render_list (so it can be customized)
+                    data = renderer.render_list(record.keys(),
+                                                fvalues,
+                                                show_link = show_links,
+                                                )
                 else:
-                    data = ", ".join([s3_str(v) for v in vlist])
+                    # Build comma-separated list of values
+                    vlist = []
+                    for value in record:
+                        if value is None and not list_type:
+                            continue
+                        value = fvalues[value] \
+                                if value in fvalues else none
+                        vlist.append(value)
+
+                    if any([hasattr(v, "xml") for v in vlist]):
+                        data = TAG[""](
+                                list(
+                                    chain.from_iterable(
+                                        [(v, ", ") for v in vlist])
+                                    )[:-1]
+                                )
+                    else:
+                        data = ", ".join([s3_str(v) for v in vlist])
 
                 result[colname] = data
                 if raw_data:
