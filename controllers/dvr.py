@@ -163,7 +163,8 @@ def person():
                     msg_list_empty = T("No Cases currently registered")
                     )
 
-            if not r.component:
+            component = r.component
+            if not component:
 
                 from s3 import S3SQLCustomForm, \
                                S3SQLInlineComponent, \
@@ -278,7 +279,7 @@ def person():
                                    filter_widgets = filter_widgets,
                                    )
 
-            elif r.component.tablename == "dvr_case_activity":
+            elif component.tablename == "dvr_case_activity":
 
                 # Set default statuses for components
                 if settings.get_dvr_case_activity_use_status():
@@ -287,13 +288,18 @@ def person():
                 if settings.get_dvr_manage_response_actions():
                     s3db.dvr_response_default_status()
 
+            elif component.tablename == "dvr_response_action":
+
+                if settings.get_dvr_manage_response_actions():
+                    s3db.dvr_response_default_status()
+
             elif r.component_name == "allowance" and \
                  r.method in (None, "update"):
 
-                records = r.component.select(["status"], as_rows=True)
+                records = component.select(["status"], as_rows=True)
                 if len(records) == 1:
                     record = records[0]
-                    table = r.component.table
+                    table = component.table
                     readonly = []
                     if record.status == 2:
                         # Can't change payment details if already paid
