@@ -1120,7 +1120,7 @@ class S3CRUD(S3Method):
 
             if numrows is None:
                 # Delete the records and return a JSON message
-                numrows = self.resource.delete(format=r.representation)
+                numrows = resource.delete(format=r.representation)
 
             if numrows > 1:
                 message = "%s %s" % (numrows, current.T("records deleted"))

@@ -7,12 +7,9 @@ from gluon.storage import Storage
 
 def config(settings):
     """
-        Template settings: 'Skeleton' designed to be copied to quickly create
-                           custom templates
+        Template settings for SaFiRe: Sahana First Response
 
-        All settings which are to configure a specific template are located
-        here. Deployers should ideally not need to edit any other files outside
-        of their template folder.
+        http://eden.sahanafoundation.org/wiki/BluePrint/SAFIRE
     """
 
     T = current.T
