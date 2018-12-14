@@ -4,7 +4,7 @@ import datetime
 
 from collections import OrderedDict
 
-from gluon import current, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, SPAN, TAG, URL
+from gluon import current, A, DIV,IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, SPAN, TAG, URL
 from gluon.storage import Storage
 
 from s3 import FS, IS_ONE_OF
@@ -40,9 +40,9 @@ UI_DEFAULTS = {"case_bamf_first": False,
                "response_activity_autolink": False,
                "response_due_date": True,
                "response_planning": True,
+               "response_themes_details": False,
                "response_themes_sectors": False,
                "response_themes_needs": False,
-               "response_themes_single": False,
                "response_themes_optional": False,
                "response_use_organizer": False,
                }
@@ -74,9 +74,9 @@ UI_OPTIONS = {"LEA": {"case_bamf_first": True,
                       "response_activity_autolink": True,
                       "response_due_date": False,
                       "response_planning": False,
+                      "response_themes_details": True,
                       "response_themes_sectors": True,
                       "response_themes_needs": True,
-                      "response_themes_single": True,
                       "response_themes_optional": True,
                       "response_use_organizer": True,
                       },
@@ -432,6 +432,8 @@ def config(settings):
     settings.dvr.response_due_date = get_ui_option("response_due_date")
     # Use response themes
     settings.dvr.response_themes = True
+    # Document response details per theme
+    settings.dvr.response_themes_details = get_ui_option("response_themes_details")
     # Response themes are org-specific
     settings.dvr.response_themes_org_specific = True
     # Do not use response types
@@ -1747,10 +1749,11 @@ def config(settings):
             crud_strings = current.response.s3.crud_strings["dvr_case_activity"]
             crud_strings["title_report"] = T("Activity Statistic")
 
-        if r.interactive or r.representation == "aadata":
+        if r.interactive or r.representation in ("aadata", "json"):
 
             from s3 import S3SQLCustomForm, \
-                           S3SQLInlineComponent
+                           S3SQLInlineComponent, \
+                           S3SQLVerticalSubFormLayout
 
             # Represent person_id as link
             field = table.person_id
@@ -1927,33 +1930,64 @@ def config(settings):
 
             # Inline-responses
             rtable = s3db.dvr_response_action
-
-            if person_id:
-                # Set the person_id for inline responses (does not not happen
-                # automatically since using case_activity_id as component key)
-                field = rtable.person_id
-                field.default = person_id
-
-            field = rtable.human_resource_id
-            field.default = human_resource_id
-            field.represent = hr_represent
-            field.widget = field.comment = None
-
             configure_response_theme_selector(ui_options,
                                               case_root_org = case_root_org,
                                               case_activity = case_activity,
                                               case_activity_id = case_activity_id,
                                               )
 
-            response_action_fields = ["response_theme_ids",
-                                      "comments",
-                                      "human_resource_id",
-                                      "date",
-                                      "status_id",
-                                      "hours",
-                                      ]
-            if settings.get_dvr_response_due_date():
-                response_action_fields[1:1] = ["date_due"]
+            if settings.get_dvr_response_themes_details():
+                # Embed response action themes
+                inline_responses = S3SQLInlineComponent(
+                                        "response_action_theme",
+                                        fields = ["action_id",
+                                                  "theme_id",
+                                                  "comments",
+                                                  ],
+                                        label = T("Themes"),
+                                        orderby = "action_id",
+                                        )
+
+                # Filter action_id in inline response_themes to same beneficiary
+                ltable = s3db.dvr_response_action_theme
+                field = ltable.action_id
+                dbset = db(rtable.person_id == person_id) if person_id else db
+                field.requires = IS_EMPTY_OR(IS_ONE_OF(
+                                                dbset, "dvr_response_action.id",
+                                                field.represent,
+                                                orderby = ~rtable.date,
+                                                sort = False,
+                                                ))
+            else:
+                if person_id:
+                    # Set the person_id for inline responses (does not not happen
+                    # automatically since using case_activity_id as component key)
+                    field = rtable.person_id
+                    field.default = person_id
+
+                field = rtable.human_resource_id
+                field.default = human_resource_id
+                field.represent = hr_represent
+                field.widget = field.comment = None
+
+                # Embed response actions
+                response_action_fields = ["response_theme_ids",
+                                          "comments",
+                                          "human_resource_id",
+                                          "date",
+                                          "status_id",
+                                          "hours",
+                                          ]
+                if settings.get_dvr_response_due_date():
+                    response_action_fields[1:1] = ["date_due"]
+
+                inline_responses = S3SQLInlineComponent(
+                                            "response_action",
+                                            label = T("Actions"),
+                                            fields = response_action_fields,
+                                            layout = S3SQLVerticalSubFormLayout,
+                                            explicit_add = T("Add Action"),
+                                            )
 
             # Inline-updates
             utable = current.s3db.dvr_case_activity_update
@@ -1964,7 +1998,6 @@ def config(settings):
             field.widget = field.comment = None
 
             # Custom CRUD form
-            from s3 import S3SQLVerticalSubFormLayout
             crud_form = S3SQLCustomForm(
                             "person_id",
 
@@ -1977,12 +2010,13 @@ def config(settings):
                             "priority",
                             "human_resource_id",
 
-                            S3SQLInlineComponent("response_action",
-                                                 label = T("Actions"),
-                                                 fields = response_action_fields,
-                                                 layout = S3SQLVerticalSubFormLayout,
-                                                 explicit_add = T("Add Action"),
-                                                 ),
+                            inline_responses,
+                            #S3SQLInlineComponent("response_action",
+                            #                     label = T("Actions"),
+                            #                     fields = response_action_fields,
+                            #                     layout = S3SQLVerticalSubFormLayout,
+                            #                     explicit_add = T("Add Action"),
+                            #                     ),
 
                             "followup",
                             "followup_date",
@@ -2547,27 +2581,17 @@ def config(settings):
                                    represent,
                                    multiple = True,
                                    )
-
-        requires = field.requires
         if ui_options.get("response_themes_optional"):
             # Allow responses without theme
-            if not isinstance(requires, IS_EMPTY_OR):
-                requires = field.requires = IS_EMPTY_OR(requires)
-        else:
-            # Make theme-selection mandatory
-            if isinstance(requires, IS_EMPTY_OR):
-                requires = field.requires = requires.other
+            field.requires = IS_EMPTY_OR(field.requires)
 
-        if ui_options.get("response_themes_single"):
-            # Make theme-selector single-option
-            field.label = T("Theme")
-            from s3 import S3MultiSelectWidget
-            field.widget = S3MultiSelectWidget(header = False,
-                                               multiple = False,
-                                               )
-            if isinstance(requires, IS_EMPTY_OR):
-                # Override IS_EMPTY_OR.multiple to get empty option
-                requires.multiple = False
+        table = s3db.dvr_response_action_theme
+        field = table.theme_id
+        field.requires = IS_ONE_OF(dbset, "dvr_response_theme.id",
+                                   represent,
+                                   )
+        if ui_options.get("response_themes_optional"):
+            field.requires = IS_EMPTY_OR(field.requires)
 
     # -------------------------------------------------------------------------
     def customise_dvr_response_action_resource(r, tablename):
@@ -2585,6 +2609,15 @@ def config(settings):
             multiple_orgs = False
 
         org_context = "person_id$dvr_case.organisation_id"
+
+        # Represent for dvr_response_action_theme.id
+        response_themes_details = settings.get_dvr_response_themes_details()
+        if response_themes_details:
+            ltable = s3db.dvr_response_action_theme
+            ltable.id.represent = s3db.dvr_ResponseActionThemeRepresent(
+                                            paragraph = True,
+                                            details = True,
+                                            )
 
         is_report = r.method == "report"
         if is_report:
@@ -2677,31 +2710,39 @@ def config(settings):
                 field = table.person_id
                 field.readable = field.writable = False
 
-                # Show activity_id (read-only), represent by subject
-                field = table.case_activity_id
-                field.readable = True
-                field.writable = False
-                if ui_options.get("activity_use_need"):
-                    field.label = T("Counseling Reason")
-                    show_as = "need"
+                if response_themes_details:
+                    list_fields = ["date",
+                                   (T("Themes"), "dvr_response_action_theme.id"),
+                                   "human_resource_id",
+                                   "hours",
+                                   "status_id",
+                                   ]
                 else:
-                    field.label = T("Subject")
-                    show_as = "subject"
-                field.represent = s3db.dvr_CaseActivityRepresent(
-                                            show_as=show_as,
-                                            show_link=True,
-                                            )
+                    # Show activity_id (read-only), represent by subject
+                    field = table.case_activity_id
+                    field.readable = True
+                    field.writable = False
+                    if ui_options.get("activity_use_need"):
+                        field.label = T("Counseling Reason")
+                        show_as = "need"
+                    else:
+                        field.label = T("Subject")
+                        show_as = "subject"
+                    field.represent = s3db.dvr_CaseActivityRepresent(
+                                                show_as=show_as,
+                                                show_link=True,
+                                                )
 
-                # Adapt list-fields to perspective
-                list_fields = ["case_activity_id",
-                               "response_theme_ids",
-                               "comments",
-                               "human_resource_id",
-                               date_due,
-                               "date",
-                               "hours",
-                               "status_id",
-                               ]
+                    # Adapt list-fields to perspective
+                    list_fields = ["case_activity_id",
+                                   "response_theme_ids",
+                                   "comments",
+                                   "human_resource_id",
+                                   date_due,
+                                   "date",
+                                   "hours",
+                                   "status_id",
+                                   ]
 
                 s3db.configure("dvr_response_action",
                                list_fields = list_fields,
@@ -2718,14 +2759,17 @@ def config(settings):
 
                 # Adapt list-fields to perspective
                 list_fields = [(T("ID"), "person_id$pe_label"),
-                               "response_theme_ids",
-                               "comments",
                                "human_resource_id",
                                date_due,
                                "date",
                                "hours",
                                "status_id",
                                ]
+
+                if response_themes_details:
+                    list_fields[1:1] = [(T("Themes"), "dvr_response_action_theme.id")]
+                else:
+                    list_fields[1:1] = ["response_theme_ids", "comments"]
 
                 if ui_options.get("response_themes_optional"):
                     # Show person_id (read-only)
@@ -2829,14 +2873,21 @@ def config(settings):
                                    filter_widgets = filter_widgets,
                                    )
 
-        # TODO Complete this (perspective? status?)
+        # Organizer
+        if response_themes_details:
+            description = [(T("Themes"), "response_action_theme.id"),
+                           "human_resource_id",
+                           "status_id",
+                           ]
+        else:
+            description = ["response_theme_ids",
+                           "comments",
+                           "human_resource_id",
+                           "status_id",
+                           ]
         s3db.configure("dvr_response_action",
                        organize = {"title": "person_id",
-                                   "description": ["response_theme_ids",
-                                                   "comments",
-                                                   "human_resource_id",
-                                                   "status_id",
-                                                   ],
+                                   "description": description,
                                    "color": "status_id",
                                    "colors": s3db.dvr_response_status_colors,
                                    },
@@ -3588,7 +3639,6 @@ def config(settings):
            module_type = None,
         )),
     ])
-
 
 # =============================================================================
 def drk_cr_rheader(r, tabs=None):

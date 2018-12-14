@@ -114,6 +114,7 @@
 'Account Registered - Please Check Your Email': 'Benutzerkonto registriert - Bitte überprüfen Sie Ihre E-Mail',
 'Account SID': 'SID des Accounts',
 'Acronym': 'Abkürzung',
+'Action': 'Maßnahme',
 'Action Details': 'Details zur Maßnahme',
 'Action Statistic': 'Maßnahmenstatistik',
 'Action Type': 'Maßnahmenart',

@@ -231,4 +231,17 @@ body.rtl {
     max-width: 100%;
 }
 
+.dvr-response-action-theme {
+    font-size: 0.8rem;
+    h6 {
+        font-size: 0.9rem;
+        font-weight: bold;
+        color: black;
+        margin: 0;
+    }
+    .text-body {
+        margin: 0.125rem 0.25rem 0.5rem 0.25rem;
+    }
+}
+
 // END ========================================================================

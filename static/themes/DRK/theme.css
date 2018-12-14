@@ -2048,3 +2048,19 @@ body.rtl .event-type-header {
 .ui-widget-content {
   max-width: 100%;
 }
+
+/* line 234, ../scss/theme/_misc.scss */
+.dvr-response-action-theme {
+  font-size: 0.8rem;
+}
+/* line 236, ../scss/theme/_misc.scss */
+.dvr-response-action-theme h6 {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: black;
+  margin: 0;
+}
+/* line 242, ../scss/theme/_misc.scss */
+.dvr-response-action-theme .text-body {
+  margin: 0.125rem 0.25rem 0.5rem 0.25rem;
+}
