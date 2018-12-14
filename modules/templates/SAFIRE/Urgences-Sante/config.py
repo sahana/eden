@@ -11,6 +11,10 @@ def config(settings):
     """
 
     #settings.L10n.default_language = "fr"
-    pass
+
+    # Users should not be allowed to register themselves
+    settings.security.self_registration = False
+
+    settings.ui.menu_logo = "/%s/static/themes/Urgences-Sante/img/logo.png" % current.request.application
 
 # END =========================================================================
