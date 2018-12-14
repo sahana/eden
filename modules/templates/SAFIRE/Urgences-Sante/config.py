@@ -14,9 +14,10 @@ def config(settings):
 
     settings.ui.menu_logo = "/%s/static/themes/Urgences-Sante/img/logo.png" % current.request.application
 
-    #settings.L10n.default_language = "fr"
+    settings.L10n.default_language = "fr"
     settings.L10n.translate_gis_location = True
     settings.L10n.name_alt_gis_location = True
+    settings.L10n.translate_org_organisation = True
 
     # Users should not be allowed to register themselves
     settings.security.self_registration = False
