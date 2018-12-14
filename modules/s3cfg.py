@@ -2346,6 +2346,13 @@ class S3Config(Storage):
         self.ui.inline_component_layout = layout
         return layout
 
+    def get_ui_inline_cancel_edit(self):
+        """
+            Behavior of inline components when switching edit rows
+            without explicit submit/cancel: cancel|submit|ask|refuse
+        """
+        return self.ui.get("inline_cancel_edit", "ask")
+
     def get_ui_profile_header(self, r):
         """
             What Header should be shown in the Profile page

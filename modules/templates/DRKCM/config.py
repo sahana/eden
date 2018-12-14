@@ -224,6 +224,9 @@ def config(settings):
     settings.ui.calendar_clear_icon = True
     #settings.ui.auto_open_update = True
 
+    # TODO discuss: questionable UX, default "ask" is better
+    #settings.ui.inline_cancel_edit = "submit"
+
     # -------------------------------------------------------------------------
     # Document settings
     #

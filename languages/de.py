@@ -1447,6 +1447,7 @@
 'Disaster Victim Identification': 'Katastrophen Opferidentifikation',
 'Disaster Victim Registry': 'Katastrophen Opferverzeichnis',
 'Disaster clean-up/repairs': 'Katastrophen Reinigung/Reparaturen',
+'Discard changes?': 'Änderungen verwerfen?',
 'Discharge (cusecs)': 'Ausfluss',
 'Discharges/24hrs': 'Abfluss/24 Stunden',
 'Discussion Forum on item': 'Diskussionsforum über Eintrag',

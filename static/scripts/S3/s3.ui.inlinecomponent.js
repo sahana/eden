@@ -32,10 +32,17 @@
         /**
          * Default options
          *
-         * @todo implement/document options
+         * @prop {string} implicitCancelEdit - behavior when use attempts to switch edit
+         *                                     rows without explicit submit|cancel:
+         *                                       'refuse' - require explicit submit|cancel
+         *                                       'submit' - auto-submit changes
+         *                                       'cancel' - cancel edit, discard changes
+         *                                       'ask' - ask the user whether to discard
          */
         options: {
 
+            implicitCancelEdit: 'ask',
+            confirmCancelEdit: 'Discard changes?'
         },
 
         /**
@@ -893,18 +900,49 @@
          */
         _editRow: function(rowindex) {
 
-            var formname = this.formname,
+            var opts = this.options,
+                formname = this.formname,
                 rowname = formname + '-' + rowindex;
 
             this._removeErrors();
 
             var data = this._deserialize(),
-                fields = data.fields,
                 row = data.data[rowindex];
-
             if (row._readonly) {
                 // Can't edit the row if it is read-only
                 return;
+            }
+
+            var editRow = $('#edit-row-' + formname),
+                editIndex = editRow.data('rowindex');
+            if (editIndex && editRow.hasClass('changed')) {
+                // Edit row already open, changed but not confirmed
+                var discard = false;
+                switch(opts.implicitCancelEdit) {
+                    case 'refuse':
+                        // Refuse to switch edit-rows without explicit user action
+                        break;
+                    case 'submit':
+                        // Auto-validate and accept pending changes
+                        var self = this;
+                        this._updateRow(editIndex).then(function() {
+                            self._editRow(rowindex);
+                        });
+                        break;
+                    case 'cancel':
+                        // Discard pending changes
+                        discard = true;
+                        break;
+                    default:
+                        // Ask the user whether to discard
+                        if (confirm(opts.confirmCancelEdit)) {
+                            discard = true;
+                        }
+                        break;
+                }
+                if (!discard) {
+                    return;
+                }
             }
 
             // Show all read rows for this field
@@ -915,7 +953,8 @@
             }
 
             // Populate the edit row with the data for this rowindex
-            var fieldname,
+            var fields = data.fields,
+                fieldname,
                 element,
                 input,
                 text,
@@ -1010,15 +1049,15 @@
                 }
             }
 
-            // Insert the edit row after this read row
-            var edit_row = $('#edit-row-' + formname);
-            edit_row.insertAfter('#read-row-' + rowname);
-
-            // Remember the current row index in the edit row & show it
-            edit_row.data('rowindex', rowindex).removeClass('hide').show();
+            // Remember the current row index in the edit row,
+            // insert the edit row after this read row & show it
+            editRow.data('rowindex', rowindex)
+                   .insertAfter('#read-row-' + rowname)
+                   .removeClass('hide')
+                   .show();
 
             // Trigger the dropdown change event
-            $('#edit-row-' + formname + ' select:not(".lx-select")').change();
+            $('select:not(".lx-select")', editRow).change();
 
             // Disable the add-row while editing
             this._disableAddRow();
@@ -1765,5 +1804,5 @@
 
 $(document).ready(function() {
     // Activate on all inline-components in the current page
-    $('.inline-component').inlinecomponent({});
+    $('.inline-component').inlinecomponent(S3.inlineComponentsOpts || {});
 });

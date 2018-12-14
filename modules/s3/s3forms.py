@@ -2610,6 +2610,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
             @param attributes: keyword attributes for this widget
         """
 
+        T = current.T
+        settings = current.deployment_settings
+
         options = self.options
         if options.readonly is True:
             # Render read-only
@@ -2771,7 +2774,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 # Hide add-row for explicit open-action
                 _class = "%s hide" % _class
                 if explicit_add is True:
-                    label = current.T("Add another")
+                    label = T("Add another")
                 else:
                     label = explicit_add
                 inline_open_add = A(label,
@@ -2855,6 +2858,15 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         # Reset the layout
         layout.set_columns(None)
+
+        # Script options
+        js_opts = {"implicitCancelEdit": settings.get_ui_inline_cancel_edit(),
+                   "confirmCancelEdit": s3_str(T("Discard changes?")),
+                   }
+        script = '''S3.inlineComponentsOpts=%s''' % json.dumps(js_opts)
+        js_global = current.response.s3.js_global
+        if script not in js_global:
+            js_global.append(script)
 
         return output
 
