@@ -151,18 +151,18 @@ class FaceBookAccount(OAuthAccount):
             table = current.auth.settings.table_user
 
             query = (table.email == user["email"])
-            exists = current.db(query).select(table.id,
-                                              table.password,
-                                              limitby=(0, 1)).first()
-            if exists:
-                #session["%s_setpassword" % existent.id] = existent.password
+            existing = current.db(query).select(table.id,
+                                                table.password,
+                                                limitby=(0, 1)).first()
+            if existing:
+                #session["%s_setpassword" % existing.id] = existing.password
 
                 user_dict = {"first_name": user.get("first_name", ""),
                              "last_name": user.get("last_name", ""),
                              "facebookid": user["id"],
                              "facebook": user.get("username", user["id"]),
                              "email": user["email"],
-                             "password": existent.password,
+                             "password": existing.password,
                              }
 
             else:
@@ -346,7 +346,7 @@ class GooglePlusAccount(OAuthAccount):
         user = None
         try:
             user = self.call_api(token)
-        except Exception, e:
+        except Exception:
             current.session.token = None
 
         user_dict = None
@@ -356,17 +356,17 @@ class GooglePlusAccount(OAuthAccount):
 
             table = current.auth.settings.table_user
             query = (table.email == user["email"])
-            exists = current.db(query).select(table.id,
-                                              table.password,
-                                              limitby=(0, 1)).first()
-            if exists:
-                #session["%s_setpassword" % existent.id] = existent.password
+            existing = current.db(query).select(table.id,
+                                                table.password,
+                                                limitby=(0, 1)).first()
+            if existing:
+                #session["%s_setpassword" % existing.id] = existing.password
 
                 user_dict = {#"first_name": user.get("given_name", user["name"]),
                              #"last_name": user.get("family_name", user["name"]),
                              "googleid": user["id"],
                              "email": user["email"],
-                             "password": existent.password
+                             "password": existing.password
                              }
             else:
                 # b = user["birthday"]
@@ -571,7 +571,7 @@ class HumanitarianIDAccount(OAuthAccount):
         user = None
         try:
             user = self.call_api(token)
-        except Exception, e:
+        except Exception:
             session.token = None
 
         user_dict = None
@@ -581,17 +581,17 @@ class HumanitarianIDAccount(OAuthAccount):
 
             table = current.auth.settings.table_user
             query = (table.email == user["email"])
-            existent = current.db(query).select(table.id,
+            existing = current.db(query).select(table.id,
                                                 table.password,
                                                 limitby=(0, 1)).first()
-            if existent:
-                #session["%s_setpassword" % existent.id] = existent.password
+            if existing:
+                #session["%s_setpassword" % existing.id] = existing.password
 
                 user_dict = {#"first_name": user.get("name_given", ""),
                              #"last_name": user.get("name_family", ""),
                              "humanitarian_id": user["user_id"],
                              "email": user["email"],
-                             "password": existent.password
+                             "password": existing.password
                              }
             else:
                 #session["is_new_from"] = "humanitarian_id"
@@ -619,6 +619,203 @@ class HumanitarianIDAccount(OAuthAccount):
         """
 
         api_response = urllib.urlopen("%s?access_token=%s" % (cls.API_URL, token))
+
+        user = json.loads(api_response.read())
+        if not user:
+            user = None
+            current.session.token = None
+
+        return user
+
+# =============================================================================
+class OpenIDConnectAccount(OAuthAccount):
+    """
+        OAuth implementation for OpenID Connect
+    """
+
+    def __init__(self, channel):
+        """
+            Constructor
+
+            @param channel: dict with OpenID Connect API parameters:
+                                {"auth_url": authURL,
+                                 "token_url": tokenURL,
+                                 "userinfo_url": userinfoURL,
+                                 "id": clientID,
+                                 "secret": clientSecret,
+                                 }
+        """
+
+        request = current.request
+        settings = current.deployment_settings
+
+        scope = "openid"
+
+        # Set the redirect URI to the default/openid_connect controller
+        redirect_uri = channel.get("redirect_uri")
+        if not redirect_uri:
+            redirect_uri = "%s/%s/default/openid_connect" % \
+                           (settings.get_base_public_url(), request.application)
+
+        OAuthAccount.__init__(self,
+                              client_id = channel["id"],
+                              client_secret = channel["secret"],
+                              auth_url = channel["auth_url"],
+                              token_url = channel["token_url"],
+                              scope = scope,
+                              response_type = "code",
+                              redirect_uri = redirect_uri,
+                              state = "openid_connect"
+                              )
+
+        self.userinfo_url = channel["userinfo_url"]
+        self.graph = None
+
+    # -------------------------------------------------------------------------
+    def __build_url_opener(self, uri):
+        """
+            Build the url opener for managing HTTP Basic Authentication
+        """
+
+        # Create an OpenerDirector with support
+        # for Basic HTTP Authentication...
+        auth_handler = urllib2.HTTPBasicAuthHandler()
+        auth_handler.add_password(None,
+                                  uri,
+                                  self.client_id,
+                                  self.client_secret)
+        opener = urllib2.build_opener(auth_handler)
+        return opener
+
+    # -------------------------------------------------------------------------
+    def accessToken(self):
+        """
+            Return the access token generated by the authenticating server.
+
+            If token is already in the session that one will be used.
+            Otherwise the token is fetched from the auth server.
+        """
+
+        session = current.session
+
+        token = session.token
+        if token and "expires" in token:
+            expires = token["expires"]
+            # reuse token until expiration
+            if expires == 0 or expires > time.time():
+                return token["access_token"]
+
+        code = session.code
+        if code:
+            data = {"client_id": self.client_id,
+                    "client_secret": self.client_secret,
+                    "redirect_uri": self.args["redirect_uri"],
+                    "code": code,
+                    "grant_type": "authorization_code",
+                    "scope": self.args["scope"],
+                    }
+
+            open_url = None
+            opener = self.__build_url_opener(self.token_url)
+            try:
+                open_url = opener.open(self.token_url, urllib.urlencode(data))
+            except urllib2.HTTPError, e:
+                raise Exception(e.read())
+            finally:
+                del session.code # throw it away
+
+            if open_url:
+                try:
+                    token = json.loads(open_url.read())
+                    token["expires"] = int(token["expires_in"]) + time.time()
+                finally:
+                    opener.close()
+                session.token = token
+                return token["access_token"]
+
+        session.token = None
+        return None
+
+    # -------------------------------------------------------------------------
+    def login_url(self, next="/"):
+        """ Overriding to produce a different redirect_uri """
+
+        if not self.accessToken():
+
+            request = current.request
+            session = current.session
+            if not request.vars.code:
+
+                session.redirect_uri = self.args["redirect_uri"]
+
+                data = {"redirect_uri": session.redirect_uri,
+                        "response_type": "code",
+                        "client_id": self.client_id,
+                        }
+
+                if self.args:
+                    data.update(self.args)
+
+                auth_request_url = "%s?%s" % (self.auth_url,
+                                              urllib.urlencode(data),
+                                              )
+                raise HTTP(307,
+                           REDIRECT_MSG % auth_request_url,
+                           Location = auth_request_url,
+                           )
+            else:
+                session.code = request.vars.code
+                self.accessToken()
+
+        return next
+
+    # -------------------------------------------------------------------------
+    def get_user(self):
+        """ Returns the user info """
+
+        token = self.accessToken()
+        if not token:
+            return None
+
+        session = current.session
+        user = None
+        try:
+            user = self.call_api(token)
+        except Exception:
+            session.token = None
+
+        user_dict = None
+        if user:
+            # Check if a user with this email has already registered
+            table = current.auth.settings.table_user
+            query = (table.email == user["email"])
+            existing = current.db(query).select(table.id,
+                                                table.password,
+                                                limitby=(0, 1)).first()
+            if existing:
+                user_dict = {#"first_name": user.get("given_name", ""),
+                             #"last_name": user.get("name", ""),
+                             "email": user["email"],
+                             "password": existing.password
+                             }
+            else:
+                user_dict = {"first_name": user.get("given_name", ""),
+                             "last_name": user.get("name", ""),
+                             "email": user["email"],
+                             }
+
+        return user_dict
+
+    # -------------------------------------------------------------------------
+    def call_api(self, token):
+        """
+            Get the user info from the API
+
+            @param token: the current access token
+            @return: user info (dict)
+        """
+
+        api_response = urllib.urlopen("%s?access_token=%s" % (self.userinfo_url, token))
 
         user = json.loads(api_response.read())
         if not user:

@@ -606,6 +606,22 @@ class S3Config(Storage):
         """ Use OpenID for Authentication """
         return self.auth.get("openid", False)
 
+    def get_auth_openid_connect(self):
+        """
+            Use an OpenID Connect authentication service
+                - must be configured with a dict like:
+                    {"auth_url": authURL,
+                     "token_url": tokenURL,
+                     "userinfo_url": userinfoURL,
+                     "id": clientID,
+                     "secret": clientSecret,
+                     }
+        """
+        required = ("auth_url", "token_url", "userinfo_url", "id", "secret")
+
+        setting = self.auth.get("openid_connect")
+        return setting if all(setting.get(k) for k in required) else None
+
     def get_security_self_registration(self):
         """
             Whether Users can register themselves

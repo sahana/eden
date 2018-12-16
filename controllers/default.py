@@ -1016,6 +1016,20 @@ def humanitarian_id():
     return {"form": form}
 
 # -----------------------------------------------------------------------------
+def openid_connect():
+    """ Login using OpenID Connect """
+
+    channel = settings.get_auth_openid_connect()
+    if not channel:
+        redirect(URL(f="user", args=request.args, vars=get_vars))
+
+    from s3oauth import OpenIDConnectAccount
+    auth.settings.login_form = OpenIDConnectAccount(channel)
+    form = auth()
+
+    return {"form": form}
+
+# -----------------------------------------------------------------------------
 # About Sahana
 def apath(path=""):
     """ Application path """
