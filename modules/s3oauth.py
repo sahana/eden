@@ -649,7 +649,7 @@ class OpenIDConnectAccount(OAuthAccount):
         request = current.request
         settings = current.deployment_settings
 
-        scope = "openid"
+        scope = "openid profile email"
 
         # Set the redirect URI to the default/openid_connect controller
         redirect_uri = channel.get("redirect_uri")
@@ -786,22 +786,27 @@ class OpenIDConnectAccount(OAuthAccount):
 
         user_dict = None
         if user:
+            email = user.get("email")
+            if not email:
+                current.log.warning("OpenID Connect: unidentifiable user %s" % user.get("sub"))
+                return user_dict
+
             # Check if a user with this email has already registered
             table = current.auth.settings.table_user
-            query = (table.email == user["email"])
+            query = (table.email == email)
             existing = current.db(query).select(table.id,
                                                 table.password,
                                                 limitby=(0, 1)).first()
             if existing:
                 user_dict = {#"first_name": user.get("given_name", ""),
                              #"last_name": user.get("name", ""),
-                             "email": user["email"],
+                             "email": email,
                              "password": existing.password
                              }
             else:
                 user_dict = {"first_name": user.get("given_name", ""),
                              "last_name": user.get("name", ""),
-                             "email": user["email"],
+                             "email": email,
                              }
 
         return user_dict
