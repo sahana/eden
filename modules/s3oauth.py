@@ -39,7 +39,7 @@ import time
 import urllib
 import urllib2
 
-from gluon import current, HTTP, IS_SLUG
+from gluon import current, HTTP, IS_SLUG, redirect, URL
 from gluon.contrib.login_methods.oauth20_account import OAuthAccount
 
 REDIRECT_MSG = "You are not authenticated: you are being redirected " \
@@ -788,8 +788,10 @@ class OpenIDConnectAccount(OAuthAccount):
         if user:
             email = user.get("email")
             if not email:
-                current.log.warning("OpenID Connect: unidentifiable user %s" % user.get("sub"))
-                return user_dict
+                msg = "OpenID Connect: unidentifiable user %s" % user.get("sub")
+                current.session.warning = msg
+                current.log.warning(msg)
+                redirect(URL(c="default", f="user", args=["login"]))
 
             # Check if a user with this email has already registered
             table = current.auth.settings.table_user
@@ -797,15 +799,16 @@ class OpenIDConnectAccount(OAuthAccount):
             existing = current.db(query).select(table.id,
                                                 table.password,
                                                 limitby=(0, 1)).first()
+
             if existing:
                 user_dict = {#"first_name": user.get("given_name", ""),
-                             #"last_name": user.get("name", ""),
+                             #"last_name": user.get("family_name", ""),
                              "email": email,
                              "password": existing.password
                              }
             else:
                 user_dict = {"first_name": user.get("given_name", ""),
-                             "last_name": user.get("name", ""),
+                             "last_name": user.get("family_name", ""),
                              "email": email,
                              }
 
