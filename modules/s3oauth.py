@@ -815,13 +815,25 @@ class OpenIDConnectAccount(OAuthAccount):
             @return: user info (dict)
         """
 
-        api_response = urllib.urlopen("%s?access_token=%s" % (self.userinfo_url, token))
+        req = urllib2.Request(url=self.userinfo_url)
+        req.add_header("Authorization", "Bearer %s" % token)
+        req.add_header("Accept", "application/json")
 
-        user = json.loads(api_response.read())
-        if not user:
-            user = None
-            current.session.token = None
+        userinfo = None
 
-        return user
+        try:
+            f = urllib2.urlopen(req)
+        except urllib2.HTTPError, e:
+            message = "HTTP %s: %s" % (e.code, e.reason)
+            current.log.error(message)
+        else:
+            try:
+                userinfo = json.load(f)
+            except ValueError, e:
+                import sys
+                message = sys.exc_info()[1]
+                current.log.error(message)
+
+        return userinfo
 
 # END =========================================================================

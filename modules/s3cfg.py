@@ -620,7 +620,10 @@ class S3Config(Storage):
         required = ("auth_url", "token_url", "userinfo_url", "id", "secret")
 
         setting = self.auth.get("openid_connect")
-        return setting if all(setting.get(k) for k in required) else None
+        if setting and all(setting.get(k) for k in required):
+            return setting
+        else:
+            return None
 
     def get_security_self_registration(self):
         """
