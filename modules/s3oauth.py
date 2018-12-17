@@ -32,6 +32,7 @@
 __all__ = ("FaceBookAccount",
            "GooglePlusAccount",
            "HumanitarianIDAccount",
+           "OpenIDConnectAccount",
            )
 
 import json
@@ -786,7 +787,11 @@ class OpenIDConnectAccount(OAuthAccount):
 
         user_dict = None
         if user:
-            email = user.get("email")
+            if "email" not in user:
+                # Non-standard key for "email" claim
+                email = user.get("mail")
+            else:
+                email = user.get("email")
             if not email:
                 msg = "OpenID Connect: unidentifiable user %s" % user.get("sub")
                 current.session.warning = msg
