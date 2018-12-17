@@ -41,7 +41,10 @@ class S3MainMenu(default.S3MainMenu):
     # -------------------------------------------------------------------------
     @classmethod
     def menu_auth(cls, **attr):
-        """ Auth Menu """
+        """
+            Auth Menu
+            - switch Login to use OpenID Connect
+        """
 
         auth = current.auth
         logged_in = auth.is_logged_in()

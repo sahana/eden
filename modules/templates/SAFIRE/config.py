@@ -1084,6 +1084,7 @@ def config(settings):
                              )
             instance_type = s3db.pr_instance_type(pe_id)
             if instance_type == "org_organisation":
+                # Notify the Duty Number for the Organisation, not everyone in the Organisation!
                 otable = s3db.org_organisation
                 ottable = s3db.org_organisation_tag
                 query = (otable.pe_id == pe_id) & \
@@ -1096,10 +1097,12 @@ def config(settings):
                     current.msg.send_sms_via_api(duty.value,
                                                  message)
             else:
-                current.msg.send_by_pe_id(pe_id,
-                                          subject = "",
-                                          message = message,
-                                          contact_method = "SMS")
+                task_notification = settings.get_event_task_notification()
+                if task_notification:
+                    current.msg.send_by_pe_id(pe_id,
+                                              subject = "%s: Task assigned to you" % settings.get_system_name_short(),
+                                              message = message,
+                                              contact_method = task_notification)
             
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from collections import OrderedDict
+#from collections import OrderedDict
 
 from gluon import current, URL
-from gluon.storage import Storage
+#from gluon.storage import Storage
 
 def config(settings):
     """

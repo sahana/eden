@@ -3455,6 +3455,15 @@ class S3Config(Storage):
         """
         return self.event.get("incident_types_hierarchical", False)
 
+    def get_event_task_notification(self):
+        """
+            Whether to send Notifications for Tasks linked to Events
+            - only used in SaFiRe template currently
+
+            Options: None, contact_method (e.g. "SMS", "EMAIL")
+        """
+        return self.event.get("task_notification", "EMAIL")
+
     def get_event_dc_response_tab(self):
         """
             Whether to show the DC response tab for events
