@@ -6556,7 +6556,6 @@ def event_notification_dispatcher(r, **attr):
         r.id and not r.component:
 
         T = current.T
-        msg = current.msg
         s3db = current.s3db
 
         #ctable = s3db.pr_contact
@@ -6570,14 +6569,14 @@ def event_notification_dispatcher(r, **attr):
 
             record = r.record
             record_id = record.id
-            eventName = record.start_name
+            event_name = record.start_name
             startDate = record.date
             exercise = record.exercise
 
             text += "************************************************"
             text += "\n%s " % T("Automatic Message")
             text += "\n%s: %s, " % (T("Event ID"), record_id)
-            text += " %s: %s" % (T("Event name"), eventName)
+            text += " %s: %s" % (T("Event name"), event_name)
             text += "\n%s: %s " % (T("Event started"), startDate)
             text += "\n%s= %s, " % (T("Exercise"), exercise)
             text += "%s= %s" % (T("Status open"), exercise)
@@ -6590,8 +6589,8 @@ def event_notification_dispatcher(r, **attr):
 
             record = r.record
             record_id = record.id
-            incName = record.name
-            zeroHour = record.date
+            inc_name = record.name
+            zero_hour = record.date
             exercise = record.exercise
             event_id = record.event_id
             closed = record.closed
@@ -6600,16 +6599,16 @@ def event_notification_dispatcher(r, **attr):
                 event = current.db(itable.id == event_id).select(etable.name,
                                                                  limitby=(0, 1),
                                                                  ).first()
-                eventName = event.name
+                event_name = event.name
             else:
-                eventName = T("Not Defined")
+                event_name = T("Not Defined")
 
             text += "************************************************"
             text += "\n%s " % T("Automatic Message")
             text += "\n%s: %s,  " % (T("Incident ID"), record_id)
-            text += " %s: %s" % (T("Incident name"), incName)
-            text += "\n%s: %s " % (T("Related event"), eventName)
-            text += "\n%s: %s " % (T("Incident started"), zeroHour)
+            text += " %s: %s" % (T("Incident name"), inc_name)
+            text += "\n%s: %s " % (T("Related event"), event_name)
+            text += "\n%s: %s " % (T("Incident started"), zero_hour)
             text += "\n%s %s, " % (T("Exercise?"), exercise)
             text += "%s %s" % (T("Closed?"), closed)
             text += "\n************************************************\n"
@@ -6646,7 +6645,7 @@ def event_notification_dispatcher(r, **attr):
         #            # Provide an Autocomplete to select the person to send the notice to
         #            opts["recipient_type"] = "pr_person"
 
-        output = msg.compose(**opts)
+        output = current.msg.compose(**opts)
 
         # Maintain RHeader for consistency
         if attr.get("rheader"):

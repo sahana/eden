@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Authentication via Facebook & Google
+""" Authentication via OAuth2 (e.g. Facebook & Google)
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
@@ -32,6 +32,7 @@
 __all__ = ("FaceBookAccount",
            "GooglePlusAccount",
            "HumanitarianIDAccount",
+           "OpenIDConnectAccount",
            )
 
 import json

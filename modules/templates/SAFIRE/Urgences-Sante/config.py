@@ -217,13 +217,85 @@ def config(settings):
         return rheader
 
     # -------------------------------------------------------------------------
+    def event_notification_dispatcher(r, **attr):
+        """
+            Send a Dispatch notice from an Incident Report
+                - this will be formatted as an OpenGeoSMS
+        """
+
+        if r.representation == "html" and \
+            r.id and not r.component:
+
+            T = current.T
+            s3db = current.s3db
+
+            itable = s3db.event_incident
+            etable = s3db.event_event
+
+            record = r.record
+            record_id = record.id
+            inc_name = record.name
+            zero_hour = record.date
+            exercise = record.exercise
+            event_id = record.event_id
+            closed = record.closed
+
+            if event_id != None:
+                event = current.db(itable.id == event_id).select(etable.name,
+                                                                 limitby=(0, 1),
+                                                                 ).first()
+                event_name = event.name
+            else:
+                event_name = T("Not Defined")
+
+            message = "************************************************"
+            message += "\n%s " % T("Automatic Message")
+            message += "\n%s: %s,  " % (T("Incident ID"), record_id)
+            message += " %s: %s" % (T("Incident name"), inc_name)
+            message += "\n%s: %s " % (T("Related event"), event_name)
+            message += "\n%s: %s " % (T("Incident started"), zero_hour)
+            message += "\n%s %s, " % (T("Exercise?"), exercise)
+            message += "%s %s" % (T("Closed?"), closed)
+            message += "\n************************************************\n"
+
+            url = URL(c="event", f="incident", args=r.id)
+
+            # Create the form
+            opts = {"type": "EMAIL",
+                    "subject": inc_name,
+                    "message": message,
+                    "url": url,
+                    }
+
+            output = current.msg.compose(**opts)
+
+            # Maintain RHeader for consistency
+            if attr.get("rheader"):
+                rheader = attr["rheader"](r)
+                if rheader:
+                    output["rheader"] = rheader
+
+            output["title"] = T("Send Event Update")
+            current.response.view = "msg/compose.html"
+            return output
+
+        else:
+            r.error(405, current.messages.BAD_METHOD)
+
+    # -------------------------------------------------------------------------
     def customise_event_incident_controller(**attr):
         """
-            Copy from base SAFIRE template to use custom rheader
+            Copy from base SAFIRE template to use custom rheader & notification dispatcher
         """
 
         s3db = current.s3db
         s3 = current.response.s3
+
+        # Load normal model to allow override
+        s3db.event_incident
+        s3db.set_method("event", "incident",
+                        method = "dispatch",
+                        action = event_notification_dispatcher)
 
         # Custom prep
         standard_prep = s3.prep

@@ -2645,7 +2645,7 @@ class S3Compose(S3CRUD):
 
         #_vars = r.get_vars
 
-        # Set defaults (used if coming via msg.compose())
+        # Set defaults for when not coming via msg.compose()
         self.contact_method = None
         self.recipient = None
         self.recipients = None
@@ -2761,10 +2761,12 @@ class S3Compose(S3CRUD):
         get_vars = request.get_vars
 
         mtable = s3db.msg_message
+        etable = s3db.msg_email
         otable = s3db.msg_outbox
 
         mtable.body.label = T("Message")
         mtable.body.default = self.message
+        etable.subject.default = self.subject
         mtable.inbound.default = False
         mtable.inbound.writable = False
 
