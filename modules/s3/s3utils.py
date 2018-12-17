@@ -329,7 +329,7 @@ def s3_dev_toolbar():
 
     # Filter out sensitive session details
     def no_sensitives(key):
-        if key in ("hmac_key", "password") or \
+        if key in ("hmac_key", "password", "token") or \
            key[:8] == "_formkey" or \
            key[-4:] == "_key":
             return None
