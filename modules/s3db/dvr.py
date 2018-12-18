@@ -2169,6 +2169,7 @@ class DVRResponseModel(S3Model):
         record = db(query).select(table.id,
                                   table.action_id,
                                   table.theme_id,
+                                  table.comments,
                                   limitby = (0, 1),
                                   ).first()
         if not record:
@@ -2191,12 +2192,37 @@ class DVRResponseModel(S3Model):
                 action = None
 
             if action:
-                # Update response theme ids in response action
+                theme_id = record.theme_id
+
+                if theme_id:
+                    # Merge duplicate action<=>theme links
+                    query = (table.id != record.id) & \
+                            (table.action_id == action_id) & \
+                            (table.theme_id == record.theme_id) & \
+                            current.auth.s3_accessible_query("delete", table) & \
+                            (table.deleted == False)
+                    rows = db(query).select(table.id,
+                                            table.comments,
+                                            orderby = table.created_on,
+                                            )
+                    duplicates = []
+                    details = []
+                    for row in rows:
+                        if row.comments:
+                            details.append(row.comments.strip())
+                        duplicates.append(row.id)
+                    if record.comments:
+                        details.append(record.comments.strip())
+
+                    record.update_record(comments="\n\n".join(c for c in details if c))
+                    s3db.resource("dvr_response_action_theme", id=duplicates).delete()
+
+                # Update response_theme_ids in response action
                 query = (table.action_id == action_id) & \
                         (table.deleted == False)
                 rows = db(query).select(table.theme_id)
                 theme_ids = [row.theme_id for row in rows if row.theme_id]
-                action.update_record(response_theme_ids = theme_ids)
+                action.update_record(response_theme_ids=theme_ids)
 
                 # Auto-link to case activity
                 if settings.get_dvr_response_themes_needs() and \
