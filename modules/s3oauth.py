@@ -787,11 +787,11 @@ class OpenIDConnectAccount(OAuthAccount):
 
         user_dict = None
         if user:
-            if "email" not in user:
-                # Non-standard key for "email" claim
-                email = user.get("mail")
-            else:
-                email = user.get("email")
+            #if "email" not in user:
+            #    # Non-standard key for "email" claim
+            #    email = user.get("mail")
+            #else:
+            email = user.get("email")
             if not email:
                 msg = "OpenID Connect: unidentifiable user %s" % user.get("sub")
                 current.session.warning = msg
@@ -806,14 +806,20 @@ class OpenIDConnectAccount(OAuthAccount):
                                                 limitby=(0, 1)).first()
 
             if existing:
-                user_dict = {#"first_name": user.get("given_name", ""),
-                             #"last_name": user.get("family_name", ""),
-                             "email": email,
+                user_dict = {"email": email,
                              "password": existing.password
                              }
             else:
-                user_dict = {"first_name": user.get("given_name", ""),
-                             "last_name": user.get("family_name", ""),
+                first_name = user.get("given_name", "")
+                last_name = user.get("family_name", "")
+                if not first_name & not last_name and "name" in user:
+                    # Try to parse the combined 'name' field
+                    from nameparser import HumanName
+                    name = HumanName(user.get("name", ""))
+                    first_name = name.first
+                    last_name = name.last
+                user_dict = {"first_name": first_name,
+                             "last_name": last_name,
                              "email": email,
                              }
 
