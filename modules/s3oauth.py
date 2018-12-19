@@ -812,7 +812,7 @@ class OpenIDConnectAccount(OAuthAccount):
             else:
                 first_name = user.get("given_name", "")
                 last_name = user.get("family_name", "")
-                if not first_name & not last_name and "name" in user:
+                if not first_name and not last_name and "name" in user:
                     # Try to parse the combined 'name' field
                     from nameparser import HumanName
                     name = HumanName(user.get("name", ""))
