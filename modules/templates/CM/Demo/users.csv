@@ -1,24 +1,24 @@
-First Name,Last Name,Email,Password,Role,Organisation,Language
-HD,Case Manager,hd_case_manager@example.com,eden,CASE_MANAGEMENT,DRK Kreisverband Rhein-Neckar / Heidelberg,de
-HD,Registration,hd_registration@example.com,eden,REGISTRATION,DRK Kreisverband Rhein-Neckar / Heidelberg,de
-HD,Tracing,hd_tracing@example.com,eden,TRACING,DRK Kreisverband Rhein-Neckar / Heidelberg,de
-HD,Admin,hd_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Rhein-Neckar / Heidelberg,de
-KA,Case Manager,ka_case_manager@example.com,eden,CASE_MANAGEMENT,DRK Kreisverband Karlsruhe,de
-KA,Registration,ka_registration@example.com,eden,REGISTRATION,DRK Kreisverband Karlsruhe,de
-KA,Tracing,ka_tracing@example.com,eden,TRACING,DRK Kreisverband Karlsruhe,de
-KA,Admin,ka_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Karlsruhe,de
-LV,Group Admin,lv_admin@example.com,eden,ORG_GROUP_ADMIN/0,DRK Landesverband Baden-Württemberg,de
-MA,Case Manager,ma_case_manager@example.com,eden,CASE_MANAGEMENT,DRK Kreisverband Mannheim,de
-MA,Registration,ma_registration@example.com,eden,REGISTRATION,DRK Kreisverband Mannheim,de
-MA,Tracing,ma_tracing@example.com,eden,TRACING,DRK Kreisverband Mannheim,de
-MA,Admin,ma_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Mannheim,de
-S,Case Manager,s_case_manager@example.com,eden,CASE_MANAGEMENT,DRK Kreisverband Stuttgart,de
-S,Registration,s_registration@example.com,eden,REGISTRATION,DRK Kreisverband Stuttgart,de
-S,Tracing,s_tracing@example.com,eden,TRACING,DRK Kreisverband Stuttgart,de
-S,Admin,s_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Stuttgart,de
-WN,Case Manager,wn_case_manager@example.com,eden,CASE_MANAGEMENT,DRK Kreisverband Rems-Murr,de
-WN,Registration,wn_registration@example.com,eden,REGISTRATION,DRK Kreisverband Rems-Murr,de
-WN,Tracing,wn_tracing@example.com,eden,TRACING,DRK Kreisverband Rems-Murr,de
-WN,Admin,wn_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Rems-Murr,de
-LEA,Case Manager,lea_case_manager@example.com,eden,CASE_MANAGEMENT,LEA Ellwangen,de
-LEA,Admin,lea_admin@example.com,eden,ORG_ADMIN,LEA Ellwangen,de
+First Name,Last Name,Email,Password,Role,Organisation
+HD,Case Manager,hd_case_manager@example.com,eden,CASE_MANAGEMENT,DRK Kreisverband Rhein-Neckar / Heidelberg
+HD,Registration,hd_registration@example.com,eden,REGISTRATION,DRK Kreisverband Rhein-Neckar / Heidelberg
+HD,Tracing,hd_tracing@example.com,eden,TRACING,DRK Kreisverband Rhein-Neckar / Heidelberg
+HD,Admin,hd_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Rhein-Neckar / Heidelberg
+KA,Case Manager,ka_case_manager@example.com,eden,CASE_MANAGEMENT,DRK Kreisverband Karlsruhe
+KA,Registration,ka_registration@example.com,eden,REGISTRATION,DRK Kreisverband Karlsruhe
+KA,Tracing,ka_tracing@example.com,eden,TRACING,DRK Kreisverband Karlsruhe
+KA,Admin,ka_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Karlsruhe
+LV,Group Admin,lv_admin@example.com,eden,ORG_GROUP_ADMIN/0,DRK Landesverband Baden-Württemberg
+MA,Case Manager,ma_case_manager@example.com,eden,CASE_MANAGEMENT,DRK Kreisverband Mannheim
+MA,Registration,ma_registration@example.com,eden,REGISTRATION,DRK Kreisverband Mannheim
+MA,Tracing,ma_tracing@example.com,eden,TRACING,DRK Kreisverband Mannheim
+MA,Admin,ma_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Mannheim
+S,Case Manager,s_case_manager@example.com,eden,CASE_MANAGEMENT,DRK Kreisverband Stuttgart
+S,Registration,s_registration@example.com,eden,REGISTRATION,DRK Kreisverband Stuttgart
+S,Tracing,s_tracing@example.com,eden,TRACING,DRK Kreisverband Stuttgart
+S,Admin,s_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Stuttgart
+WN,Case Manager,wn_case_manager@example.com,eden,CASE_MANAGEMENT,DRK Kreisverband Rems-Murr
+WN,Registration,wn_registration@example.com,eden,REGISTRATION,DRK Kreisverband Rems-Murr
+WN,Tracing,wn_tracing@example.com,eden,TRACING,DRK Kreisverband Rems-Murr
+WN,Admin,wn_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Rems-Murr
+LEA,Case Manager,lea_case_manager@example.com,eden,CASE_MANAGEMENT,LEA Ellwangen
+LEA,Admin,lea_admin@example.com,eden,ORG_ADMIN,LEA Ellwangen

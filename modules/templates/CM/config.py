@@ -104,7 +104,9 @@ def get_ui_option(key):
 # =============================================================================
 def config(settings):
     """
-        DRKCM Template: Case Management, German Red Cross
+        Case Management Template
+        - based on the DRKCM Template
+        - will be completely replaced by a new copy of a revised DRKCM with DRK being a sub-template
     """
 
     T = current.T
