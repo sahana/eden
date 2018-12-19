@@ -4850,7 +4850,7 @@
 'To': 'Bis',
 'Tools': 'Arbeitsmittel',
 'Top 5 Counseling Reasons': 'Fünf häufigste Beratungsgründe',
-'Top 5 Countries of Origin': 'Fünf häufigste Herkunfsländer',
+'Top 5 Countries of Origin': 'Fünf häufigste Herkunftsländer',
 'Tornado': 'Wirbelsturm',
 'Total # of Target Beneficiaries': 'Gesamtzahl der Nutznießer',
 'Total # of households of site visited': 'Gesamtzahl der Haushalte des besuchten Geländes',
