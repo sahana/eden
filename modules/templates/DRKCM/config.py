@@ -222,9 +222,8 @@ def config(settings):
     # General UI settings
     #
     settings.ui.calendar_clear_icon = True
-    #settings.ui.auto_open_update = True
 
-    # TODO discuss: questionable UX, default "ask" is better
+    #settings.ui.auto_open_update = True
     #settings.ui.inline_cancel_edit = "submit"
 
     # -------------------------------------------------------------------------
@@ -2876,6 +2875,7 @@ def config(settings):
                                    filter_widgets = filter_widgets,
                                    )
 
+
         # Organizer
         if response_themes_details:
             description = [(T("Themes"), "response_action_theme.id"),
@@ -2901,6 +2901,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dvr_response_action_controller(**attr):
 
+        s3 = current.response.s3
         s3db = current.s3db
 
         if "viewing" in current.request.get_vars:
@@ -2912,6 +2913,31 @@ def config(settings):
 
         else:
             settings.base.bigtable = True
+
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+                if not result:
+                    return False
+
+            if not r.id:
+                from stats import ResponsePerformanceIndicators
+                s3db.set_method("dvr", "response_action",
+                                method = "indicators",
+                                action = ResponsePerformanceIndicators,
+                                )
+                export_formats = list(settings.get_ui_export_formats())
+                export_formats.append(("indicators.xls",
+                                       "fa fa-line-chart",
+                                       T("Performance Indicators"),
+                                       ))
+                s3.formats["indicators.xls"] = r.url(method="indicators")
+                settings.ui.export_formats = export_formats
+            return result
+        s3.prep = custom_prep
+
 
         # Custom rheader tabs
         if current.request.controller == "dvr":

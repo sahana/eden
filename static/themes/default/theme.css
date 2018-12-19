@@ -1143,28 +1143,40 @@ table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child::before, tab
 /* line 141, ../scss/theme/_tables.scss */
 .dt-export-options .list_formats {
   padding-top: 0;
-  margin-left: 5px;
+  margin: 0 0.2rem;
 }
 /* line 145, ../scss/theme/_tables.scss */
 .dt-export-options .dt-export {
-  margin: 0 0.085rem;
+  margin: 0 0.1rem;
+}
+/* line 147, ../scss/theme/_tables.scss */
+.dt-export-options .dt-export.fa {
+  font-size: 14px;
+  padding: 0;
+  padding-top: 2px;
 }
 
-/* line 150, ../scss/theme/_tables.scss */
+/* line 155, ../scss/theme/_tables.scss */
 body.rtl .dt-export-options,
 body.rtl .list_formats div {
   float: left;
 }
-/* line 155, ../scss/theme/_tables.scss */
+/* line 160, ../scss/theme/_tables.scss */
 body.rtl .dataTable .group .group-collapse,
 body.rtl .dataTable .group .group-expand {
   float: left;
 }
 
-/* line 161, ../scss/theme/_tables.scss */
+/* line 166, ../scss/theme/_tables.scss */
 .empty {
   font-style: italic;
   font-size: 0.825rem;
+}
+
+/* line 171, ../scss/theme/_tables.scss */
+.fc table,
+.fc table tr {
+  background: transparent;
 }
 
 /* Data Lists */
@@ -1590,122 +1602,146 @@ form.anonymize-form,
 /* line 280, ../scss/theme/_widgets.scss */
 .s3-anonymize {
   display: inline-block;
+  margin: 0.2rem;
 }
 
 /* Role Manager */
-/* line 286, ../scss/theme/_widgets.scss */
+/* line 287, ../scss/theme/_widgets.scss */
 .rm-form .controls {
   width: 100%;
 }
-/* line 289, ../scss/theme/_widgets.scss */
+/* line 290, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign .action-lnk,
 .rm-form .rm-rules .action-lnk {
   display: inline-block;
   color: #2ba6cb;
   font-style: normal;
 }
-/* line 295, ../scss/theme/_widgets.scss */
+/* line 296, ../scss/theme/_widgets.scss */
 .rm-form .rm-toggle-all {
   margin-top: 0.2rem;
   margin-bottom: 0.5rem;
 }
-/* line 299, ../scss/theme/_widgets.scss */
+/* line 300, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign {
   width: 80%;
   border-collapse: separate;
   border-spacing: 0;
 }
-/* line 303, ../scss/theme/_widgets.scss */
+/* line 304, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign th {
   min-width: 10rem;
 }
-/* line 306, ../scss/theme/_widgets.scss */
+/* line 307, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign th:first-child {
   width: 25%;
 }
-/* line 309, ../scss/theme/_widgets.scss */
+/* line 310, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign td {
   padding: 0.5rem;
 }
-/* line 312, ../scss/theme/_widgets.scss */
+/* line 313, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign tfoot td {
   border-top: 1px solid #C0C0C0;
 }
-/* line 315, ../scss/theme/_widgets.scss */
+/* line 316, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-item-name,
 .rm-form .rm-assign .rm-item-title {
   display: block;
 }
-/* line 319, ../scss/theme/_widgets.scss */
+/* line 320, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-item-title {
   font-size: 0.8rem;
   font-style: italic;
   color: #A0A0A0;
 }
-/* line 325, ../scss/theme/_widgets.scss */
+/* line 326, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-duplicate td {
   border-top: 1px solid red;
   border-bottom: 1px solid red;
 }
-/* line 328, ../scss/theme/_widgets.scss */
+/* line 329, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 1px solid red;
 }
-/* line 331, ../scss/theme/_widgets.scss */
+/* line 332, ../scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 1px solid red;
 }
-/* line 337, ../scss/theme/_widgets.scss */
+/* line 338, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules {
   width: 100%;
 }
-/* line 339, ../scss/theme/_widgets.scss */
+/* line 340, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header {
   cursor: pointer;
   background-color: #F0F0F0;
 }
-/* line 342, ../scss/theme/_widgets.scss */
+/* line 343, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0.3rem;
   display: inline-block;
 }
-/* line 346, ../scss/theme/_widgets.scss */
+/* line 347, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header .rm-module-toggle {
   width: 0.5rem;
 }
-/* line 349, ../scss/theme/_widgets.scss */
+/* line 350, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header .rm-module-prefix {
   width: 6.5rem;
 }
-/* line 352, ../scss/theme/_widgets.scss */
+/* line 353, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header .rm-module-numrules {
   font-weight: normal;
 }
-/* line 356, ../scss/theme/_widgets.scss */
+/* line 357, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules.hasrules .rm-module-header {
   background-color: #D0D0D0;
 }
-/* line 360, ../scss/theme/_widgets.scss */
+/* line 361, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules th, .rm-form .rm-module-rules td {
   padding: 0.5rem;
 }
-/* line 364, ../scss/theme/_widgets.scss */
+/* line 365, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-default-rule td,
 .rm-form .rm-module-rules .rm-default-permissions td {
   font-style: italic;
   color: #a0a0a0;
 }
-/* line 369, ../scss/theme/_widgets.scss */
+/* line 370, ../scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-rule-target {
   width: 20%;
 }
-/* line 373, ../scss/theme/_widgets.scss */
+/* line 374, ../scss/theme/_widgets.scss */
 .rm-form input.rm-invalid {
   background-color: #FFA0A0;
 }
 
+/* Organizer */
+/* line 381, ../scss/theme/_widgets.scss */
+.s3-organizer-popup label {
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+/* line 385, ../scss/theme/_widgets.scss */
+.s3-organizer-popup p {
+  font-size: 0.8rem;
+  font-weight: normal;
+  margin-bottom: 0.3rem;
+}
+/* line 390, ../scss/theme/_widgets.scss */
+.s3-organizer-popup .action-btn {
+  margin-left: 0;
+  margin-right: 0.3rem;
+}
+
+/* line 396, ../scss/theme/_widgets.scss */
+.s3-organizer-create .action-btn {
+  display: block;
+}
+
 /* Priority Representation */
-/* line 379, ../scss/theme/_widgets.scss */
+/* line 402, ../scss/theme/_widgets.scss */
 .prio {
   padding: 0 4px;
   border: 1px solid black;
@@ -1714,50 +1750,50 @@ form.anonymize-form,
   font-weight: normal;
 }
 
-/* line 386, ../scss/theme/_widgets.scss */
+/* line 409, ../scss/theme/_widgets.scss */
 .prio-red {
   color: white;
   background-color: #d10000;
 }
 
-/* line 390, ../scss/theme/_widgets.scss */
+/* line 413, ../scss/theme/_widgets.scss */
 .prio-blue {
   color: white;
   background-color: #10427b;
 }
 
-/* line 394, ../scss/theme/_widgets.scss */
+/* line 417, ../scss/theme/_widgets.scss */
 .prio-lightblue {
   background-color: #b7ddff;
 }
 
-/* line 397, ../scss/theme/_widgets.scss */
+/* line 420, ../scss/theme/_widgets.scss */
 .prio-grey {
   background-color: silver;
 }
 
-/* line 404, ../scss/theme/_widgets.scss */
+/* line 427, ../scss/theme/_widgets.scss */
 body.rtl .range-filter-widget input.date-filter-input {
   margin-right: 0;
   margin-left: 2px;
 }
-/* line 409, ../scss/theme/_widgets.scss */
+/* line 432, ../scss/theme/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
   margin-right: 0;
   margin-left: 1rem;
 }
-/* line 415, ../scss/theme/_widgets.scss */
+/* line 438, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0;
   margin-left: 0.3rem;
 }
-/* line 421, ../scss/theme/_widgets.scss */
+/* line 444, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 0;
   border-right: 1px solid red;
 }
-/* line 425, ../scss/theme/_widgets.scss */
+/* line 448, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;

@@ -1123,31 +1123,37 @@ table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child::before, tab
 /* line 141, ../../default/scss/theme/_tables.scss */
 .dt-export-options .list_formats {
   padding-top: 0;
-  margin-left: 5px;
+  margin: 0 0.2rem;
 }
 /* line 145, ../../default/scss/theme/_tables.scss */
 .dt-export-options .dt-export {
-  margin: 0 0.085rem;
+  margin: 0 0.1rem;
+}
+/* line 147, ../../default/scss/theme/_tables.scss */
+.dt-export-options .dt-export.fa {
+  font-size: 14px;
+  padding: 0;
+  padding-top: 2px;
 }
 
-/* line 150, ../../default/scss/theme/_tables.scss */
+/* line 155, ../../default/scss/theme/_tables.scss */
 body.rtl .dt-export-options,
 body.rtl .list_formats div {
   float: left;
 }
-/* line 155, ../../default/scss/theme/_tables.scss */
+/* line 160, ../../default/scss/theme/_tables.scss */
 body.rtl .dataTable .group .group-collapse,
 body.rtl .dataTable .group .group-expand {
   float: left;
 }
 
-/* line 161, ../../default/scss/theme/_tables.scss */
+/* line 166, ../../default/scss/theme/_tables.scss */
 .empty {
   font-style: italic;
   font-size: 0.825rem;
 }
 
-/* line 166, ../../default/scss/theme/_tables.scss */
+/* line 171, ../../default/scss/theme/_tables.scss */
 .fc table,
 .fc table tr {
   background: transparent;

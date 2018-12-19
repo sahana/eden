@@ -140,10 +140,15 @@ table.dataTable {
     float: right;
     .list_formats {
         padding-top: 0;
-        margin-left: 5px;
+        margin: 0 0.2rem;
     }
     .dt-export {
-        margin: 0 0.085rem;
+        margin: 0 0.1rem;
+        &.fa {
+            font-size: 14px;
+            padding: 0;
+            padding-top: 2px;
+        }
     }
 }
 body.rtl {
