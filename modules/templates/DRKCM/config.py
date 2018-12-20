@@ -528,13 +528,44 @@ def config(settings):
                 result = standard_prep(r)
             else:
                 result = True
+            if not result:
+                return False
 
-            if r.controller == "dvr" and r.interactive:
+            if r.controller == "dvr" and \
+               (r.interactive or r.representation == "aadata"):
 
                 table = r.table
                 field = table.doc_id
-                field.represent = s3db.dvr_DocEntityRepresent(show_link=True)
 
+                # Representation of doc entity
+                ui_opts = get_ui_options()
+                if ui_opts.get("activity_use_need"):
+                    use_need = True
+                    activity_label = T("Counseling Reason")
+                else:
+                    use_need = False
+                    activity_label = None
+                field.represent = s3db.dvr_DocEntityRepresent(
+                                            show_link=True,
+                                            use_need=use_need,
+                                            activity_label=activity_label,
+                                            )
+
+                # Also update requires with this represent
+                # => retain viewing-filters from standard prep
+                requires = field.requires
+                if isinstance(requires, IS_EMPTY_OR):
+                    requires = requires.other
+                if hasattr(requires, "filterby"):
+                    filterby = requires.filterby
+                    filter_opts = requires.filter_opts
+                else:
+                    filterby = filter_opts = None
+                field.requires = IS_ONE_OF(current.db, "doc_entity.doc_id",
+                                           field.represent,
+                                           filterby = filterby,
+                                           filter_opts = filter_opts,
+                                           )
             return result
         s3.prep = custom_prep
 

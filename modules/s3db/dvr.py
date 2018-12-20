@@ -1991,7 +1991,8 @@ class DVRResponseModel(S3Model):
         if not person_id:
             return None
 
-        table = current.s3db.dvr_case_activity
+        s3db = current.s3db
+        table = s3db.dvr_case_activity
 
         # Look up a matching case activity for this beneficiary
         query = (table.person_id == person_id)
@@ -2015,6 +2016,7 @@ class DVRResponseModel(S3Model):
                                        start_date = current.request.utcnow,
                                        human_resource_id = hr_id,
                                        )
+            s3db.update_super(table, {"id": activity_id})
         else:
             activity_id = None
 
@@ -6693,6 +6695,7 @@ class dvr_DocEntityRepresent(S3Represent):
                  case_label=None,
                  activity_label=None,
                  use_sector=True,
+                 use_need=False,
                  show_link=False,
                  ):
         """
@@ -6701,6 +6704,7 @@ class dvr_DocEntityRepresent(S3Represent):
             @param case_label: label for cases (default: "Case")
             @param activity_label: label for case activities
                                    (default: "Activity")
+            @param use_need: use need if available instead of subject
             @param use_sector: use sector if available instead of
                                activity label
             @param show_link: show representation as clickable link
@@ -6722,6 +6726,7 @@ class dvr_DocEntityRepresent(S3Represent):
         else:
             self.activity_label = T("Activity")
 
+        self.use_need = use_need
         self.use_sector = use_sector
 
     # -------------------------------------------------------------------------
@@ -6763,6 +6768,7 @@ class dvr_DocEntityRepresent(S3Represent):
             else:
                 doc_ids[instance_type][doc_id] = row
 
+        need_ids = set()
         sector_ids = set()
         for instance_type in ("dvr_case", "dvr_case_activity"):
 
@@ -6786,6 +6792,7 @@ class dvr_DocEntityRepresent(S3Represent):
             if instance_type == "dvr_case_activity":
                 fields.extend((itable.sector_id,
                                itable.subject,
+                               itable.need_id,
                                ))
             irows = db(query).select(left=left, *fields)
             self.queries += 1
@@ -6797,6 +6804,8 @@ class dvr_DocEntityRepresent(S3Represent):
 
                 if hasattr(instance, "sector_id"):
                     sector_ids.add(instance.sector_id)
+                if hasattr(instance, "need_id"):
+                    need_ids.add(instance.need_id)
 
                 entity[instance_type] = instance
                 entity.pr_person = irow.pr_person
@@ -6806,6 +6815,12 @@ class dvr_DocEntityRepresent(S3Represent):
                 represent = itable.sector_id.represent
                 if represent and hasattr(represent, "bulk"):
                     represent.bulk(list(sector_ids))
+
+            # Bulk represent any need ids
+            if need_ids:
+                represent = itable.need_id.represent
+                if represent and hasattr(represent, "bulk"):
+                    represent.bulk(list(need_ids))
 
         return rows
 
@@ -6830,17 +6845,22 @@ class dvr_DocEntityRepresent(S3Represent):
 
             elif instance_type == "dvr_case_activity":
 
+                table = current.s3db.dvr_case_activity
                 activity = row.dvr_case_activity
-                title = s3_str(activity.subject)
-                label = self.activity_label
 
+                title = s3_str(activity.subject)
+                if self.use_need:
+                    need_id = activity.need_id
+                    if need_id:
+                        represent = table.need_id.represent
+                        title = represent(need_id)
+
+                label = self.activity_label
                 if self.use_sector:
                     sector_id = activity.sector_id
                     if sector_id:
-                        table = current.s3db.dvr_case_activity
                         represent = table.sector_id.represent
-                        label = represent(activity.sector_id)
-
+                        label = represent(sector_id)
             else:
                 title = None
                 label = None

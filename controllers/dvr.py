@@ -448,7 +448,7 @@ def document():
                                 orderby = ~ctable.modified_on,
                                 ).first()
         if case:
-            doc_ids = [case.doc_id]
+            doc_ids = [case.doc_id] if case.doc_id else []
         else:
             # No case found
             r.error(404, "Case not found")
@@ -468,7 +468,8 @@ def document():
 
             # Append the doc_ids
             for row in rows:
-                doc_ids.append(row.doc_id)
+                if row.doc_id:
+                    doc_ids.append(row.doc_id)
 
             # Make doc_id readable and visible in table
             field.represent = s3db.dvr_DocEntityRepresent()
