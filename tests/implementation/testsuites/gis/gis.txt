@@ -1,0 +1,59 @@
+*** Settings ***
+Documentation     Test cases for gis module
+Resource          ../../resources/main.txt
+
+*** Variables ***
+${GIS URL}              http://${BASEURL}/gis
+
+${LocationName}         gis_location_name
+${LatField}             gis_location_lat
+${LogFiled}             gis_loaction_lon
+${LevelSelector}        gis_location_level
+${FeatureType}          gis_feature_type_opts
+${CountrySelector}      s3_import_upload_country
+
+${LocTextFilter}        location-gis_location_name-gis_location_comments-gis_location_tag_value-gis_location_L0-gis_location_L1-gis_location_L2-gis_location_L3-gis_location_L4-text-filter              
+
+*** Test Cases ***
+
+Create Location
+    Login To Eden If Not Logged In   ${VALID USER}   ${VALID PASSWORD}
+    Go To  ${GIS URL}/location/create
+    Input Text   ${LocationName}   New Place
+    Select Option   ${LevelSelector}   L3
+    Submit CRUD Form
+    
+Find Location by name
+    Login To Eden If Not Logged In   ${VALID USER}   ${VALID PASSWORD}
+    Go To  ${GIS URL}/location
+    Input Text   ${LocTextFilter}  New Pla
+    Wait For Filter Result
+    Should Give X Results  1
+    DataTable Row Should Contain  1  Name  New Location
+
+Import Location 
+    Login To Eden If Not Logged In   ${VALID USER}   ${VALID PASSWORD}
+    Go To   ${GIS URL}/location/import
+    Choose File  s3_import_upload_file   /eden/uploads/file.txt    
+    Select Option  ${CountrySelector}  India
+    Submit Crud Form 
+    
+	
+Create Marker 
+     Login To Eden If Not Logged In  ${VALID USER}   ${VALID PASSWORD}
+     Go To  ${GIS URL}/marker
+     Click Element   show-add-btn
+     Wait Until Element Is Visible  gis_marker_name   3
+     Input Text  gis_marker_name   New Marker
+     Choose File   gis_marker_image   /eden/uploads/yash.jpg
+     Submit Crud Form 
+     
+
+	
+
+       	 
+	 
+     	 
+     
+    
+	

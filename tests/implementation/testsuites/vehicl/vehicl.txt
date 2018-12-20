@@ -1,0 +1,32 @@
+*** Settings ***
+Documentation     Test cases for vehicl  module
+Resource          ../../resources/main.txt
+
+*** Variables ***
+${VEHICL URL}           http://${BASEURL}/vehicl 
+
+${AssetNoField}         asset_asset_number
+${VehiclTypeCode}       vehicle_vehicle_type_code
+${VehiclTypeName}       vehicle_vehicle_type_name
+${VehiclSelector }      asset_asset_item_id 
+${OrganizationSelector}  asset_asset_organisation_id
+${SupplierSelector}     asset_asset_supply_org_id 
+
+*** Test Cases ***
+Add Vehicl Type 
+  Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
+  Go To ${VEHICL URL}/vehicl_type/ceate
+  Input Text  ${VehiclTypeCode}  1234
+  Input Text  ${VehiclTypeName}  New Type 
+  Submit Crud Form
+  	
+    
+Add Vehicl
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
+    Go To ${VEHICL URL}/vehicl/create
+    Input Text  ${AssetNoField}
+    Select Option  ${VehiclSelector}  New Type 	
+    Select Option  ${OrganizationSeletor}  New Oraganization
+    Select Option  ${SupplierSelector}  New Organization
+    Submit CRUD Form
+    Should Show Confirmation

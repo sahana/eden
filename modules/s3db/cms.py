@@ -70,6 +70,7 @@ class S3ContentModel(S3Model):
              "cms_tag_id",
              "cms_tag_post",
              "cms_comment",
+             "cms_attachment",
              )
 
     def model(self):
@@ -424,6 +425,7 @@ class S3ContentModel(S3Model):
         # Components
         add_components(tablename,
                        cms_comment = "post_id",
+                       cms_attachment = "post_id",
                        cms_post_layer = "post_id",
                        cms_post_module = "post_id",
                        cms_post_forum = "post_id",
@@ -646,7 +648,29 @@ class S3ContentModel(S3Model):
                                  "modified_on"
                                  ],
                   )
+        # ---------------------------------------------------------------------
+        # Attachments
+        # - threaded Attachments on Posts
+        #
+        tablename = "cms_attachment"
+        define_table(tablename,
+                     Field("attachments","upload",
+                           label = T("Attachments"),
+                           readable = False,
+                           ),
+                     post_id(empty=False),
+                     Field("body", "text", notnull=True,
+                           label = T("Comment"),
+                           ),
+                     *s3_meta_fields())
 
+        # Resource Configuration
+        configure(tablename,
+                  list_fields = ["id",
+                                 "post_id",
+                                 "created_by"
+                                 ],
+                  )
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #

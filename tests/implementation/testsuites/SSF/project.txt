@@ -3,35 +3,54 @@ Documentation  Run using "python web2py.py --no-banner -M -S eden -R application
 ...            Test cases for project module
 Resource  ../../resources/main.txt
 
+*** Variables ***
+${PROJECT URL}          http://${BASEURL}/project
+
+${ProjectTextFilter}    project-project_project_name-project_project_code-project_project_description-text-filter
+${ProjectOrgSelector}   project_project_organisation_id
+${ProjectNameField}     project_project_name
+
+${MilestoneNameFiled}   project_milestone_name
+${MilestoneProjectSelector}   project_milestone_project_id     
+
+${TaskNameFiled}        project_task_name
+${TaskProjectSelector}  sub_defaulttask_project_defaulttask_project_i_project_id_edit_none
+${TaskMilestoneSelector}      sub_defaulttask_milestone_defaulttask_milestone_i_milestone_id_edit_none
+
 *** Test Cases ***
 
-Create A Task Under A Project And Assign A Milestone
+Create a project
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
-
-    # Create a project
-    Go To  ${BASE URL}/project/project?sector.name=None,Project
-    Click Element  show-add-btn
-    Wait Until Page Contains Element  xpath=//div[@class='form-container']
-    Select From List  project_project_organisation_id  Sahana Software Foundation (SSF)
-    Input Text  project_project_name  Test Project
-    Click Element  xpath=//input[contains(@class,"btn") and @type="submit"]
+    Go To  ${PROJECT URL}/project/create
+    Select From List  ${ProjectOrgSelector}  Sahana Software Foundation (SSF)
+    Input Text  ${ProjectNameField}  Test Project
+    Submit CRUD Form 
     Should Show Confirmation
-    Click Element  ${CONFIRMATION}
-
-    # Create a milestone under the project
-    Click Element  show-add-btn
-    Wait Until Page Contains Element  xpath=//div[@class='form-container']
-    Input Text  project_milestone_name  Test Milestone
-    Click Element  xpath=//input[contains(@class,"btn") and @type="submit"]
+   
+Serach a Project
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD} 
+    Go To  ${PROJECT URL}/project   	
+    Input Text  ${PorjecTextFilter}  Test Pro
+    Wait For Filter Result
+    Should Give X Results  1
+    DataTable Row Should Contain  1  Name  Test Project
+	
+Create a milestone under the project
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
+    Go To  ${PROJECT URL}/milestone/create 
+    Select Option  ${MilestoneProjectSelector}  Test Project
+    Intput Text ${MilestoneNameField}  Its Demo Milestone  
+    Submit CRUD Form
     Should Show Confirmation
-    Click Element  ${CONFIRMATION}
 
-    # Create a task within the project with the above milestone
+Create a task within the project with the above milestone
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
+    Go To  ${PROJECT URL}/task/create
+    Select Option  ${TaskProjectSelector}  Test Project	
     Click Element  rheader_tab_task
-    Click Element  show-add-btn
     Wait Until Page Contains Element  xpath=//div[@class='form-container']
-    Select From List  defaulttask_milestone_i_milestone_id_edit_none  Test Milestone: None
-    Input Text  project_task_name  Test Task
-    Click Element  xpath=//input[contains(@class,"btn") and @type="submit"]
+    Select Option  ${TaskMilestoneSelector}  Its Demo Milestone
+    Input Text  ${TaskNameField}  Test Task
+    Submit CRUD Form
     Should Show Confirmation
-    Click Element  ${CONFIRMATION}
+    
