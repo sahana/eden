@@ -276,6 +276,7 @@ class S3MainMenu(object):
                                 MM("Settings", f="setting"),
                                 MM("Users", f="user"),
                                 MM("Person Registry", c="pr"),
+                                MM("CMS", c="cms", f="post"),
                                 MM("Database", c="appadmin", f="index"),
                                 MM("Error Tickets", f="errors"),
                                 MM("Synchronization", c="sync", f="index"),
@@ -468,6 +469,8 @@ class S3OptionsMenu(object):
                         M("List All Organization Approvers & Whitelists", f="organisation"),
                         #M("Roles", f="group"),
                         #M("Membership", f="membership"),
+                    ),
+                    M("CMS", c="cms", f="post")(
                     ),
                     M("Database", c="appadmin", f="index")(
                         M("Raw Database access", c="appadmin", f="index")

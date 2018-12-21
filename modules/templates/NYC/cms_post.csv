@@ -23,5 +23,5 @@ Register,default,register,"<h2>Criteria for Admittance</h2>
 <div>
 <p>Please note that by registering, your name and organizational affiliation will be publicly available and that you will receive emails from our computer system.</p>
 </div>"
-Services,default,services,"<h1>Services<h1><p>This page can be edited by site administrators</p>"
-Data,default,data,"<h1>Data</h1><p>This page can be edited by site administrators</p>"
+Services,default,services,"<iframe height="1000px" src="http://app.mygov.nyc/services" width="1000"></iframe>"
+Data,default,data,"<iframe height="1000px" src="http://data.beta.nyc" width="1000"></iframe>"

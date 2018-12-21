@@ -333,7 +333,8 @@ class S3ContentModel(S3Model):
                                   sortby = "name",
                                   )
 
-        list_fields = ["title",
+        list_fields = ["post_module.module",
+                       "title",
                        "body",
                        "location_id",
                        "date",
