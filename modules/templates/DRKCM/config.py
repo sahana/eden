@@ -146,6 +146,9 @@ def config(settings):
     # Disable password-retrieval feature
     settings.auth.password_retrieval = False
 
+    # Define which entity types to use as realm entities in role manager
+    settings.auth.realm_entity_types = ("org_organisation",)
+
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
 
