@@ -22,8 +22,25 @@ def config(settings):
     #settings.L10n.languages["es"] = "Spanish"
     # Default timezone for users
     settings.L10n.utc_offset = "-0500"
+    # Uncomment these to use US-style dates in English
+    settings.L10n.date_format = "%m-%d-%Y"
+    # Start week on Sunday
+    settings.L10n.firstDOW = 0
+    # Number formats (defaults to ISO 31-0)
+    # Decimal separator for numbers (defaults to ,)
+    settings.L10n.decimal_separator = "."
+    # Thousands separator for numbers (defaults to space)
+    settings.L10n.thousands_separator = ","
     # Default Country Code for telephone numbers
     settings.L10n.default_country_code = 1
+
+    # Enable this to change the label for 'Mobile Phone'
+    settings.ui.label_mobile_phone = "Cell Phone"
+    # Enable this to change the label for 'Postcode'
+    settings.ui.label_postcode = "ZIP Code"
+
+    # PDF default size Letter
+    settings.base.pdf_size = "Letter"
 
     settings.fin.currencies["USD"] = "United States Dollars"
     settings.fin.currency_default = "USD"
