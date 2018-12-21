@@ -3392,8 +3392,12 @@ $.filterOptionsS3({
             @param password: optional password to include in a custom welcome_email
         """
 
-        messages = self.messages
         settings = current.deployment_settings
+        if not settings.get_auth_registration_welcome_email():
+            # Welcome-email disabled
+            return
+
+        messages = self.messages
         if not settings.get_mail_sender():
             current.response.error = messages.unable_send_email
             return

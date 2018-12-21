@@ -658,6 +658,12 @@ class S3Config(Storage):
     def get_auth_registration_requires_approval(self):
         return self.auth.get("registration_requires_approval", False)
 
+    def get_auth_registration_welcome_email(self):
+        """
+            Send a welcome-email to newly registered users
+        """
+        return self.auth.get("registration_welcome_email", True)
+
     def get_auth_always_notify_approver(self):
         return self.auth.get("always_notify_approver", True)
 
