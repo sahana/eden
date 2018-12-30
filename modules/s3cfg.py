@@ -37,23 +37,12 @@ from collections import OrderedDict
 from gluon import current, URL
 from gluon.storage import Storage
 
-from s3theme import *
+from s3theme import FORMSTYLES
 
 class S3Config(Storage):
     """
         Deployment Settings Helper Class
     """
-
-    # Used by modules/s3theme.py
-    FORMSTYLE = {"default": formstyle_foundation,
-                 "default_inline": formstyle_foundation_inline,
-                 "bootstrap": formstyle_bootstrap,
-                 "foundation": formstyle_foundation,
-                 "foundation_2col": formstyle_foundation_2col,
-                 "foundation_inline": formstyle_foundation_inline,
-                 "table": formstyle_table,
-                 "table_inline": formstyle_table_inline,
-                 }
 
     # Formats from static/scripts/ui/i18n converted to Python style
     date_formats = {"af": "%d/%m/%Y",
@@ -161,6 +150,9 @@ class S3Config(Storage):
              }
 
     def __init__(self):
+
+        super(S3Config, self).__init__()
+
         self.asset = Storage()
         self.auth = Storage()
         self.auth.email_domains = []
@@ -178,7 +170,6 @@ class S3Config(Storage):
         self.dvr = Storage()
         self.edu = Storage()
         self.event = Storage()
-        self.evr = Storage()
         self.fin = Storage()
         # Allow templates to append rather than replace
         self.fin.currencies = {}
@@ -360,9 +351,7 @@ class S3Config(Storage):
 
         s3 = current.response.s3
 
-        #import os
-        path_to = lambda names: "/".join(names) #os.path.join(*names)
-
+        path_to = "/".join
         default = self.base.get("theme", "default")
 
         theme = default.split(".")
@@ -739,7 +728,7 @@ class S3Config(Storage):
         if organisation_id:
             try:
                 int(organisation_id)
-            except:
+            except (ValueError, TypeError):
                 # Must be a Name
                 table = current.s3db.org_organisation
                 row = current.db(table.name == organisation_id).select(table.id,
@@ -1912,14 +1901,12 @@ class S3Config(Storage):
     def _get_formstyle(cls, setting):
         """ Helper function to identify a formstyle """
 
-        formstyles = cls.FORMSTYLE
-
         if callable(setting):
             # A custom formstyle defined in the template
             formstyle = setting
-        if setting in formstyles:
+        if setting in FORMSTYLES:
             # One of the standard supported formstyles
-            formstyle = formstyles[setting]
+            formstyle = FORMSTYLES[setting]
         else:
             # A default web2py formstyle
             formstyle = setting
@@ -1959,12 +1946,10 @@ class S3Config(Storage):
 
         setting = self.ui.get("formstyle", "default")
 
-        formstyles = self.FORMSTYLE
-
         if isinstance(setting, basestring):
             # Try to find the corresponding _inline formstyle
             inline_formstyle_name = "%s_inline" % setting
-            formstyle = formstyles.get(inline_formstyle_name)
+            formstyle = FORMSTYLES.get(inline_formstyle_name)
         else:
             formstyle = None
 
@@ -3518,38 +3503,6 @@ class S3Config(Storage):
             define the label of the tab or True to use default label
         """
         return self.event.get("incident_teams_tab", False)
-
-    # -------------------------------------------------------------------------
-    # Evacuees
-    #
-    def get_evr_group_types(self):
-        """
-            Evacuees Group Types
-        """
-        T = current.T
-        return self.evr.get("group_types", {1: T("other"),
-                                            2: T("Family"),
-                                            3: T("Tourist group"),
-                                            4: T("Society"),
-                                            5: T("Company"),
-                                            6: T("Convent"),
-                                            7: T("Hotel"),
-                                            8 :T("Hospital"),
-                                            9 :T("Orphanage")
-                                            })
-
-    def get_evr_show_physical_description(self):
-        """
-            Show Evacuees physical description
-        """
-        return self.evr.get("physical_description", True)
-
-    def get_evr_link_to_organisation(self):
-        """
-            Link evacuees to Organisations.
-        """
-        return self.evr.get("link_to_organisation", False)
-
 
     # -------------------------------------------------------------------------
     # Fire

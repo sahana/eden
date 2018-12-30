@@ -326,7 +326,7 @@ class CRShelterModel(S3Model):
                      #Static field
                      Field("population", "integer",
                            label = T("Estimated Population"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            readable = not dynamic,
                            writable = not dynamic,
@@ -337,14 +337,14 @@ class CRShelterModel(S3Model):
                      Field("capacity_day", "integer",
                            default = 0,
                            label = T("Capacity (Day)") if day_and_night else T("Capacity"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            comment = capacity_day_comment,
                            ),
                      Field("capacity_night", "integer",
                            default = 0,
                            label = T("Capacity (Night)"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            readable = day_and_night,
                            writable = day_and_night,
@@ -354,7 +354,7 @@ class CRShelterModel(S3Model):
                      Field("available_capacity_day", "integer",
                            default = 0,
                            label = T("Available Capacity (Day)") if day_and_night else T("Available Capacity"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            readable = dynamic and day_and_night,
                            # Automatically updated
@@ -364,7 +364,7 @@ class CRShelterModel(S3Model):
                      Field("available_capacity_night", "integer",
                            default = 0,
                            label = T("Available Capacity (Night)"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            readable = dynamic and day_and_night,
                            # Automatically updated
@@ -374,7 +374,7 @@ class CRShelterModel(S3Model):
                      Field("population_day", "integer",
                            default = 0,
                            label = T("Current Population (Day)") if day_and_night else T("Current Population"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Population (Day)"),
@@ -387,7 +387,7 @@ class CRShelterModel(S3Model):
                      Field("population_night", "integer",
                            default = 0,
                            label = T("Current Population (Night)"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Population (Night)"),
@@ -423,7 +423,6 @@ class CRShelterModel(S3Model):
                                             "joinby": "shelter_id",
                                             },
                        event_event_shelter = "shelter_id",
-                       evr_case = "shelter_id",
                        )
 
         # Fields for pivot table reports
@@ -651,7 +650,7 @@ class CRShelterModel(S3Model):
                            ),
                      Field("population", "integer",
                            label = T("Population"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            ),
                      s3_comments(),
@@ -777,7 +776,7 @@ class CRShelterModel(S3Model):
                      Field("capacity_day", "integer",
                            default = 0,
                            label = T("Housing Unit Capacity (Day)") if day_and_night else T("Housing Unit Capacity"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Housing Unit Capacity (Day)"),
@@ -788,7 +787,7 @@ class CRShelterModel(S3Model):
                      Field("capacity_night", "integer",
                            default = 0,
                            label = T("Housing Unit Capacity (Night)"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            readable = day_and_night,
                            writable = day_and_night,
@@ -801,7 +800,7 @@ class CRShelterModel(S3Model):
                      Field("available_capacity_day", "integer",
                            default = 0,
                            label = T("Available Capacity (Day)") if day_and_night else T("Available Capacity"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            comment = DIV(_class = "tooltip",
                                          _title = T("Currently Available Capacity (Day)"),
@@ -813,7 +812,7 @@ class CRShelterModel(S3Model):
                      Field("available_capacity_night", "integer",
                            default = 0,
                            label = T("Population Availability (Night)"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            comment = DIV(_class = "tooltip",
                                          _title = T("Currently Available Capacity (Night)"),
@@ -825,7 +824,7 @@ class CRShelterModel(S3Model):
                      Field("population_day", "integer",
                            default = 0,
                            label = T("Current Population (Day)") if day_and_night else T("Current Population"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Housing Unit Current Population"),
@@ -839,7 +838,7 @@ class CRShelterModel(S3Model):
                      Field("population_night", "integer",
                            default = 0,
                            label = T("Current Population (Night)"),
-                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Housing Unit Current Population"),
@@ -1745,17 +1744,14 @@ class CRShelterRegistrationModel(S3Model):
             return
 
         unit_id = None
+        shelter_id = None
 
         if type(form) is Row:
             form_vars = form
         else:
             form_vars = form.vars
 
-        if controller == "evr":
-            # Registration form includes the Shelter
-            shelter_id = form_vars.shelter_id
-            unit_id = form_vars.shelter_unit_id
-        elif controller == "cr":
+        if controller == "cr":
             # Registration form doesn't include the Shelter
             # @ToDo: don't assume that we are running as component of the shelter
             shelter_id = form_vars.shelter_id or (form.record and form.record.shelter_id) or request.args[0]
@@ -1958,7 +1954,7 @@ class CRShelterRegistrationModel(S3Model):
                                                  )
 
 # =============================================================================
-def cr_shelter_rheader(r, tabs=[]):
+def cr_shelter_rheader(r, tabs=None):
     """ Resource Headers """
 
     if r.representation != "html":
@@ -2361,11 +2357,7 @@ def cr_notification_dispatcher(r, **attr):
 
         T = current.T
         msg = current.msg
-        s3db = current.s3db
         record = r.record
-
-        ctable = s3db.pr_contact
-        stable = s3db.cr_shelter
 
         message = ""
         text = ""
@@ -2448,7 +2440,7 @@ class cr_AssignUnit(S3CRUD):
 
         try:
             person_id = int(r.get_vars["person_id"])
-        except:
+        except (AttributeError, ValueError, TypeError):
             r.error(400, current.messages.BAD_REQUEST)
 
         self.settings = current.response.s3.crud
@@ -2915,9 +2907,9 @@ class CRShelterInspection(S3Method):
         # Static JS
         scripts = s3.scripts
         if s3.debug:
-           script = "/%s/static/scripts/S3/s3.shelter_inspection.js" % appname
+            script = "/%s/static/scripts/S3/s3.shelter_inspection.js" % appname
         else:
-           script = "/%s/static/scripts/S3/s3.shelter_inspection.min.js" % appname
+            script = "/%s/static/scripts/S3/s3.shelter_inspection.min.js" % appname
         scripts.append(script)
 
         # Instantiate widget

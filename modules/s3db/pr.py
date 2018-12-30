@@ -1096,17 +1096,6 @@ class PRPersonModel(S3Model):
                                               "actuate": "hide",
                                               },
 
-                            # Evacuee Registry
-                            evr_case = {"joinby": "person_id",
-                                        "multiple": False,
-                                        },
-                            evr_medical_details = {"joinby": "person_id",
-                                                   "multiple": False,
-                                                   },
-                            evr_background = {"joinby": "person_id",
-                                              "multiple": False,
-                                              },
-
                             # HR Records
                             hrm_human_resource = "person_id",
                             # HR Documents
@@ -6288,7 +6277,7 @@ class pr_RoleRepresent(S3Represent):
             table = self.table
             fields = [table[f] for f in self.fields]
 
-        rows = self._lookup_rows(key, values, fields=fields)
+        rows = super(pr_RoleRepresent, self).lookup_rows(key, values, fields=fields)
 
         # Bulk represent the pe_ids: this stores the representations
         # in current.s3db.pr_pentity_represent, thereby preventing

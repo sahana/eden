@@ -683,8 +683,6 @@ class S3OrganisationModel(S3Model):
                        dvr_need = "organisation_id",
                        # DVR response themes
                        dvr_response_theme = "organisation_id",
-                       # Evacuees
-                       evr_case = "organisation_id",
                        # Locations served
                        gis_location = {"link": "org_organisation_location",
                                        "joinby": "organisation_id",
@@ -1111,7 +1109,7 @@ class S3OrganisationModel(S3Model):
                      (FS("name.acronym_l10n").lower().like(value + "%"))
 
         if "link" in _vars:
-            link_filter = S3EmbeddedComponentWidget.link_filter(table, _vars.link)
+            link_filter = S3EmbeddedComponentWidget.link_filter_query(table, _vars.link)
             if link_filter:
                 query &= link_filter
 
@@ -5478,7 +5476,7 @@ class org_SiteRepresent(S3Represent):
         show_link = show_link and self.show_link
         if show_link and not rows:
             # Retrieve the rows
-            rows = self.custom_lookup_rows(None, values)
+            rows = self.lookup_rows(None, values)
 
         self._setup()
 

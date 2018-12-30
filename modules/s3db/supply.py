@@ -1762,7 +1762,6 @@ class supply_ItemRepresent(S3Represent):
         self.truncate = truncate
 
         # Need a custom lookup to join with Brand
-        self.lookup_rows = self.custom_lookup_rows
         fields = ["supply_item.id",
                   "supply_item.name",
                   "supply_item.model",
@@ -1779,7 +1778,7 @@ class supply_ItemRepresent(S3Represent):
                              multiple=multiple)
 
     # -------------------------------------------------------------------------
-    def custom_lookup_rows(self, key, values, fields=None):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom lookup method for item rows, does a
             left join with the brand. Parameters
@@ -1923,7 +1922,6 @@ class supply_ItemCategoryRepresent(S3Represent):
         self.use_code = use_code
 
         # Need a custom lookup to join with Parent/Catalog
-        self.lookup_rows = self.custom_lookup_rows
         fields = ["supply_item_category.id",
                   "supply_item_category.name",
                   # Always-included since used as fallback if no name
@@ -1943,7 +1941,7 @@ class supply_ItemCategoryRepresent(S3Represent):
                              multiple = multiple)
 
     # -------------------------------------------------------------------------
-    def custom_lookup_rows(self, key, values, fields=None):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom lookup method for item category rows, does a
             left join with the parent category. Parameters

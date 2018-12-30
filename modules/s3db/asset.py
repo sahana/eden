@@ -1317,9 +1317,6 @@ class asset_AssetRepresent(S3Represent):
                  multiple = False,
                  ):
 
-        # Need a custom lookup
-        self.lookup_rows = self.custom_lookup_rows
-
         super(asset_AssetRepresent,
               self).__init__(lookup="asset_asset",
                              fields=fields,
@@ -1328,7 +1325,7 @@ class asset_AssetRepresent(S3Represent):
                              multiple=multiple)
 
     # -------------------------------------------------------------------------
-    def custom_lookup_rows(self, key, values, fields=None):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom lookup method for organisation rows, does a
             left join with the parent organisation. Parameters

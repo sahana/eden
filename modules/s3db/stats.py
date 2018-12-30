@@ -1695,7 +1695,7 @@ class stats_SourceRepresent(S3Represent):
         show_link = show_link and self.show_link
         if show_link and not rows:
             # Retrieve the rows
-            rows = self.custom_lookup_rows(None, values)
+            rows = self.lookup_rows(None, values)
 
         self._setup()
 

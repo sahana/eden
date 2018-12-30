@@ -30,7 +30,17 @@
 
 """
 
-from gluon.html import *
+__all__ = ("formstyle_bootstrap",
+           "formstyle_foundation",
+           "formstyle_foundation_2col",
+           "formstyle_foundation_inline",
+           "formstyle_table",
+           "formstyle_table_inline",
+           "FORMSTYLES",
+           )
+
+from gluon import CAT, DIV, FIELDSET, INPUT, LABEL, SELECT, \
+                  TABLE, TAG, TD, TEXTAREA, TR
 from gluon.languages import lazyT
 
 # =============================================================================
@@ -51,10 +61,10 @@ def formstyle_bootstrap(form, fields, *args, **kwargs):
         Formstyle for Bootstrap 2.x themes: http://getbootstrap.com/2.3.2/
     """
 
-    def render_row(id, label, controls, help, hidden=False):
+    def render_row(row_id, label, controls, comment, hidden=False):
         # Based on web2py/gluon/sqhtml.py
         # wrappers
-        _help = DIV(help, _class="help-block")
+        _help = DIV(comment, _class="help-block")
         # embed _help into _controls
         _controls = DIV(controls, _help, _class="controls")
         # submit unflag by default
@@ -91,12 +101,10 @@ def formstyle_bootstrap(form, fields, *args, **kwargs):
 
         if _submit:
             # submit button has unwrapped label and controls, different class
-            return DIV(label, controls, _class="%sform-actions" % _class, _id=id)
-            # unflag submit (possible side effect)
-            _submit = False
+            return DIV(label, controls, _class="%sform-actions" % _class, _id=row_id)
         else:
             # unwrapped label
-            return DIV(label, _controls, _class="%scontrol-group" % _class, _id=id)
+            return DIV(label, _controls, _class="%scontrol-group" % _class, _id=row_id)
 
     if args:
         row_id = form
@@ -340,5 +348,18 @@ def render_tooltip(label, comment, _class="tooltip"):
     else:
         tooltip = comment
     return tooltip
+
+# =============================================================================
+# All formstyles
+#
+FORMSTYLES = {"default": formstyle_foundation,
+              "default_inline": formstyle_foundation_inline,
+              "bootstrap": formstyle_bootstrap,
+              "foundation": formstyle_foundation,
+              "foundation_2col": formstyle_foundation_2col,
+              "foundation_inline": formstyle_foundation_inline,
+              "table": formstyle_table,
+              "table_inline": formstyle_table_inline,
+              }
 
 # END =========================================================================

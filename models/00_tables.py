@@ -28,7 +28,6 @@ import s3db.doc
 import s3db.dvi
 import s3db.dvr
 import s3db.edu
-import s3db.evr
 import s3db.event
 import s3db.fin
 import s3db.fire

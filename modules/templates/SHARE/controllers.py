@@ -302,7 +302,6 @@ class project_ActivityRepresent(S3Represent):
                  multiple = False,
                  ):
 
-        self.lookup_rows = self.custom_lookup_rows
         self.org_represent = current.s3db.org_OrganisationRepresent() # show_link=False
 
         super(project_ActivityRepresent,
@@ -315,7 +314,7 @@ class project_ActivityRepresent(S3Represent):
                              )
 
     # -------------------------------------------------------------------------
-    def custom_lookup_rows(self, key, values, fields=None):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom lookup method for activity rows, does a
             left join with the tag. Parameters
@@ -377,8 +376,6 @@ class req_NeedRepresent(S3Represent):
                  multiple = False,
                  ):
 
-        self.lookup_rows = self.custom_lookup_rows
-
         super(req_NeedRepresent,
               self).__init__(lookup = "req_need",
                              fields = ["req_need.name",
@@ -389,7 +386,7 @@ class req_NeedRepresent(S3Represent):
                              )
 
     # -------------------------------------------------------------------------
-    def custom_lookup_rows(self, key, values, fields=None):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom lookup method for need rows, does a
             left join with the tag. Parameters

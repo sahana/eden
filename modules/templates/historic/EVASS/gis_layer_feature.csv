@@ -1,8 +1,0 @@
-Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Trackable,Folder,Visible,Enabled
-Offices,All Active Offices,org,office,DPC,"Navaid, Red",{name} (T('Office'))<br />{organisation_id}<br />{location_id}<br />{phone1},"name,organisation_id,location_id,phone1",~.obsolete=False,,Assets,False,True
-Facilities,All Active Facilities,org,facility,DPC,"Navaid, Red",{name} (T('Facility'))<br />{organisation_id}<br />{location_id}<br />{phone1},"name,organisation_id,location_id,phone1",~.obsolete=False,,Assets,False,True
-Shelters,All Active Shelters,cr,shelter,shelter,"Navaid, Red",{name} (T('Shelter'))<br />T('Population') {population}<br />T('Capacity') {capacity_night},"name,population,capacity_night,population",~.obsolete=False,,Assets,False,True
-Staff,All Active Staff,hrm,staff,staff,"Contact, Dreadlocks",{person_id} (T('Staff'))<br />{organisation_id},"person_id,organisation_id",~.status=1,True,Human Resources,False,True
-Volunteers,All Active Volunteers,vol,volunteer,volunteer,"Contact, Dreadlocks",{person_id} (T('Volunteer'))<br />{organisation_id},"person_id,organisation_id",~.status=1,True,Human Resources,False,True
-PointOfInterest,All Points of interest,gis,poi,marker_green,"Navaid, Red",{name} (T('POI')),name,,,Application Points,False,True
-Incidents,All Open Incidents,event,incident,incident_red,"Navaid, Red",{name} (T('Active Incidents'))<br />{event_id}<br />{incident_type_id}<br />{exercise}<br />{date}<br />{organisation_id}<br />{closed},"name,event_id,incident_type_id,exercise,date,organisation_id,closed",~.closed=0,True,Incidents,False,True

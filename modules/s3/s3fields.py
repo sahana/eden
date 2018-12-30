@@ -300,14 +300,14 @@ class S3Represent(object):
         self.func_code = Storage(co_argcount = 1)
         self.func_defaults = None
 
-        if hasattr(self, "lookup_rows"):
+        # Detect lookup_rows override
+        if self.lookup_rows.__func__ is not S3Represent.lookup_rows.__func__:
             self.custom_lookup = True
         else:
-            self.lookup_rows = self._lookup_rows
             self.custom_lookup = False
 
     # -------------------------------------------------------------------------
-    def _lookup_rows(self, key, values, fields=None):
+    def lookup_rows(self, key, values, fields=None):
         """
             Lookup all rows referenced by values.
             (in foreign key representations)

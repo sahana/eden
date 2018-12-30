@@ -12284,8 +12284,6 @@ class project_LocationRepresent(S3Represent):
             self.multi_country = True
         self.use_codes = settings.get_project_codes()
 
-        self.lookup_rows = self.custom_lookup_rows
-
         super(project_LocationRepresent,
               self).__init__(lookup="project_location",
                              show_link=show_link,
@@ -12293,7 +12291,7 @@ class project_LocationRepresent(S3Represent):
                              multiple=multiple)
 
     # -------------------------------------------------------------------------
-    def custom_lookup_rows(self, key, values, fields=None):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom lookup method for organisation rows, does a
             join with the projects and locations. Parameters
@@ -13136,8 +13134,6 @@ class project_IndicatorActivityRepresent(S3Represent):
                  translate = True,
                  ):
 
-        self.lookup_rows = self.custom_lookup_rows
-
         super(project_IndicatorActivityRepresent,
               self).__init__(lookup = "project_indicator_activity",
                              fields = None,
@@ -13148,7 +13144,7 @@ class project_IndicatorActivityRepresent(S3Represent):
                              )
 
     # -------------------------------------------------------------------------
-    def custom_lookup_rows(self, key, values, fields=None):
+    def lookup_rows(self, key, values, fields=None):
         """
             Custom lookup method for indicator_activity rows, does a join with
             the activity. Parameters key and fields are not used, but are kept
