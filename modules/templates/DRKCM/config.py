@@ -3773,17 +3773,14 @@ def get_protection_themes(person):
     theme_ids = set(theme.id for theme in themes)
 
     # Find out which of these themes are linked to the person
-    atable = s3db.dvr_case_activity
     rtable = s3db.dvr_response_action
     ltable = s3db.dvr_response_action_theme
 
     query = (ltable.theme_id.belongs(theme_ids)) & \
             (ltable.action_id == rtable.id) & \
             (ltable.deleted == False) & \
-            (rtable.case_activity_id == atable.id) & \
-            (rtable.deleted == False) & \
-            (atable.person_id == person.id) & \
-            (atable.deleted == False)
+            (rtable.person_id == person.id) & \
+            (rtable.deleted == False)
     rows = db(query).select(ltable.theme_id,
                             groupby = ltable.theme_id,
                             )
