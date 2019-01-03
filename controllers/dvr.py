@@ -425,17 +425,21 @@ def document():
         ctable = s3db.dvr_case
         auth = current.auth
         has_permission = auth.s3_has_permission
+        accessible_query = auth.s3_accessible_query
+
         if vtablename == "pr_person":
             if not has_permission("read", "pr_person", record_id):
                 r.unauthorised()
             include_activity_docs = settings.get_dvr_case_include_activity_docs()
-            query = auth.s3_accessible_query("read", ctable) & \
+            include_group_docs = settings.get_dvr_case_include_group_docs()
+            query = accessible_query("read", ctable) & \
                     (ctable.person_id == record_id) & \
                     (ctable.deleted == False)
 
         elif vtablename == "dvr_case":
             include_activity_docs = False
-            query = auth.s3_accessible_query("read", ctable) & \
+            include_group_docs = False
+            query = accessible_query("read", ctable) & \
                     (ctable.id == record_id) & \
                     (ctable.deleted == False)
         else:
@@ -453,13 +457,33 @@ def document():
             # No case found
             r.error(404, "Case not found")
 
+        # Include case groups
+        if include_group_docs:
+
+            # Look up relevant case groups
+            mtable = s3db.pr_group_membership
+            gtable = s3db.pr_group
+            join = gtable.on((gtable.id == mtable.group_id) & \
+                             (gtable.group_type == 7))
+            query = accessible_query("read", mtable) & \
+                    (mtable.person_id == record_id) & \
+                    (mtable.deleted == False)
+            rows = db(query).select(gtable.doc_id,
+                                    join = join,
+                                    orderby = ~mtable.created_on,
+                                    )
+
+            # Append the doc_ids
+            for row in rows:
+                if row.doc_id:
+                    doc_ids.append(row.doc_id)
+
         # Include case activities
-        field = r.table.doc_id
         if include_activity_docs:
 
             # Look up relevant case activities
             atable = s3db.dvr_case_activity
-            query = auth.s3_accessible_query("read", atable) & \
+            query = accessible_query("read", atable) & \
                     (atable.person_id == record_id) & \
                     (atable.deleted == False)
             rows = db(query).select(atable.doc_id,
@@ -470,6 +494,9 @@ def document():
             for row in rows:
                 if row.doc_id:
                     doc_ids.append(row.doc_id)
+
+        field = r.table.doc_id
+        if include_activity_docs or include_group_docs:
 
             # Make doc_id readable and visible in table
             field.represent = s3db.dvr_DocEntityRepresent()
@@ -499,6 +526,8 @@ def document():
                                        field.represent,
                                        filterby = "doc_id",
                                        filter_opts = doc_ids,
+                                       orderby = "instance_type",
+                                       sort = False,
                                        )
             r.resource.add_filter(FS("doc_id").belongs(doc_ids))
 

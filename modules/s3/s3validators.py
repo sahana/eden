@@ -637,7 +637,8 @@ class IS_ONE_OF_EMPTY(Validator):
                 # Represent uses a custom lookup, so we only
                 # retrieve the keys here
                 fields = [kfield]
-                orderby = field
+                if orderby is None:
+                    orderby = field
             else:
                 # Represent uses a standard field lookup, so
                 # we can do that right here
@@ -713,6 +714,9 @@ class IS_ONE_OF_EMPTY(Validator):
 
     # -------------------------------------------------------------------------
     def build_set(self):
+        """
+            Look up selectable options from the database
+        """
 
         dbset = self.dbset
         db = dbset._db
@@ -722,53 +726,61 @@ class IS_ONE_OF_EMPTY(Validator):
             table = current.s3db.table(ktablename, db_only=True)
         else:
             table = db[ktablename]
+
         if table:
             if self.fields == "all":
                 fields = [table[f] for f in table.fields if f not in ("wkt", "the_geom")]
             else:
                 fieldnames = [f.split(".")[1] if "." in f else f for f in self.fields]
                 fields = [table[k] for k in fieldnames if k in table.fields]
+
             if db._dbname not in ("gql", "gae"):
+
                 orderby = self.orderby or reduce(lambda a, b: a|b, fields)
                 groupby = self.groupby
 
-                dd = dict(orderby=orderby, groupby=groupby)
-                query, left = self.query(table, fields=fields, dd=dd)
+                left = self.left
 
-                if left is not None:
-                    if self.left is not None:
-                        if not isinstance(left, list):
-                            left = [left]
-                        ljoins = [str(join) for join in self.left]
-                        for join in left:
+                dd = {"orderby": orderby, "groupby": groupby}
+                query, qleft = self.query(table, fields=fields, dd=dd)
+                if qleft is not None:
+                    if left is not None:
+                        if not isinstance(qleft, list):
+                            qleft = [qleft]
+                        ljoins = [str(join) for join in left]
+                        for join in qleft:
                             ljoin = str(join)
                             if ljoin not in ljoins:
-                                self.left.append(join)
+                                left.append(join)
                                 ljoins.append(ljoin)
                     else:
-                        self.left = left
-                if self.left is not None:
-                    dd.update(left=self.left)
+                        left = qleft
+                if left is not None:
+                    dd["left"] = left
 
                 # Make sure we have all ORDERBY fields in the query
-                # (otherwise postgresql will complain)
-                fieldnames = [str(f) for f in fields]
+                # - required with distinct=True (PostgreSQL)
+                fieldnames = set(str(f) for f in fields)
                 for f in s3_orderby_fields(table, dd.get("orderby")):
-                    if str(f) not in fieldnames:
+                    fieldname = str(f)
+                    if fieldname not in fieldnames:
                         fields.append(f)
-                        fieldnames.append(str(f))
+                        fieldnames.add(fieldname)
 
                 records = dbset(query).select(distinct=True, *fields, **dd)
+
             else:
                 # Note this does not support filtering.
                 orderby = self.orderby or \
-                          reduce(lambda a, b: a|b, (f for f in fields
-                                                    if f.type != "id"))
-                # Caching breaks Colorbox dropdown refreshes
-                #dd = dict(orderby=orderby, cache=(current.cache.ram, 60))
-                dd = dict(orderby=orderby)
-                records = dbset.select(db[self.ktable].ALL, **dd)
+                          reduce(lambda a, b: a|b, (f for f in fields if f.type != "id"))
+                records = dbset.select(table.ALL,
+                                       # Caching breaks Colorbox dropdown refreshes
+                                       #cache=(current.cache.ram, 60),
+                                       orderby = orderby,
+                                       )
+
             self.theset = [str(r[self.kfield]) for r in records]
+
             label = self.label
             try:
                 # Is callable
@@ -799,21 +811,6 @@ class IS_ONE_OF_EMPTY(Validator):
             if labels and self.sort:
 
                 items = zip(self.theset, self.labels)
-
-                # Alternative variant that handles generator objects,
-                # doesn't seem necessary, retained here just in case:
-                #orig_labels = self.labels
-                #orig_theset = self.theset
-                #items = []
-                #for i in xrange(len(orig_theset)):
-                    #label = orig_labels[i]
-                    ##if hasattr(label, "flatten"):
-                        ##try:
-                            ##label = label.flatten()
-                        ##except:
-                            ##pass
-                    #items.append((orig_theset[i], label))
-
                 items.sort(key=lambda item: s3_unicode(item[1]).lower())
                 self.theset, self.labels = zip(*items)
 

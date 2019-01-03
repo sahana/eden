@@ -3286,10 +3286,15 @@ class S3Config(Storage):
 
     def get_dvr_case_include_activity_docs(self):
         """
-            Documents-tab of beneficiaries includes case
-            activity attachments
+            Documents-tab of beneficiaries includes case activity attachments
         """
         return self.dvr.get("case_include_activity_docs", False)
+
+    def get_dvr_case_include_group_docs(self):
+        """
+            Documents-tab of beneficiaries includes case group attachments
+        """
+        return self.dvr.get("case_include_group_docs", False)
 
     def get_dvr_needs_use_service_type(self):
         """

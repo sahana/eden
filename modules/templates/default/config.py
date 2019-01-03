@@ -561,6 +561,11 @@ def config(settings):
     # Uncomment this to disable follow-up fields in case activities
     #settings.dvr.case_activity_follow_up = False
 
+    # Uncomment this to include case activity docs on beneficiary documents-tab
+    #settings.dvr.case_include_activity_docs = True
+    # Uncomment this to include case group docs on beneficiary documents-tab
+    #settings.dvr.case_include_group_docs = True
+
     # Uncomment this if Case activities use multiple Needs
     #settings.dvr.case_activity_needs_multiple = True
     # Uncomment this to use service types for needs

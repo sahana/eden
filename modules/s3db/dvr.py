@@ -6693,6 +6693,7 @@ class dvr_DocEntityRepresent(S3Represent):
 
     def __init__(self,
                  case_label=None,
+                 case_group_label=None,
                  activity_label=None,
                  use_sector=True,
                  use_need=False,
@@ -6702,6 +6703,7 @@ class dvr_DocEntityRepresent(S3Represent):
             Constructor
 
             @param case_label: label for cases (default: "Case")
+            @param case_group_label: label for case groups (default: "Case Group")
             @param activity_label: label for case activities
                                    (default: "Activity")
             @param use_need: use need if available instead of subject
@@ -6720,6 +6722,11 @@ class dvr_DocEntityRepresent(S3Represent):
             self.case_label = case_label
         else:
             self.case_label = T("Case")
+
+        if case_group_label:
+            self.case_group_label = case_group_label
+        else:
+            self.case_group_label = T("Case Group")
 
         if activity_label:
             self.activity_label = activity_label
@@ -6770,7 +6777,7 @@ class dvr_DocEntityRepresent(S3Represent):
 
         need_ids = set()
         sector_ids = set()
-        for instance_type in ("dvr_case", "dvr_case_activity"):
+        for instance_type in ("dvr_case", "dvr_case_activity", "pr_group"):
 
             doc_entities = doc_ids.get(instance_type)
             if not doc_entities:
@@ -6781,7 +6788,14 @@ class dvr_DocEntityRepresent(S3Represent):
 
             # Look up person and instance data
             query = itable.doc_id.belongs(doc_entities.keys())
-            left = ptable.on(ptable.id == itable.person_id)
+            if instance_type == "pr_group":
+                mtable = s3db.pr_group_membership
+                left = [mtable.on((mtable.group_id == itable.id) & \
+                                  (mtable.deleted == False)),
+                        ptable.on(ptable.id == mtable.person_id),
+                        ]
+            else:
+                left = ptable.on(ptable.id == itable.person_id)
             fields = [itable.id,
                       itable.doc_id,
                       ptable.id,
@@ -6793,6 +6807,10 @@ class dvr_DocEntityRepresent(S3Represent):
                 fields.extend((itable.sector_id,
                                itable.subject,
                                itable.need_id,
+                               ))
+            if instance_type == "pr_group":
+                fields.extend((itable.name,
+                               itable.group_type,
                                ))
             irows = db(query).select(left=left, *fields)
             self.queries += 1
@@ -6811,13 +6829,13 @@ class dvr_DocEntityRepresent(S3Represent):
                 entity.pr_person = irow.pr_person
 
             # Bulk represent any sector ids
-            if sector_ids:
+            if sector_ids and "sector_id" in itable.fields:
                 represent = itable.sector_id.represent
                 if represent and hasattr(represent, "bulk"):
                     represent.bulk(list(sector_ids))
 
             # Bulk represent any need ids
-            if need_ids:
+            if need_ids and "need_id" in itable.fields:
                 represent = itable.need_id.represent
                 if represent and hasattr(represent, "bulk"):
                     represent.bulk(list(need_ids))
@@ -6840,7 +6858,7 @@ class dvr_DocEntityRepresent(S3Represent):
             if instance_type == "dvr_case":
 
                 person = row.pr_person
-                title = s3_str(s3_fullname(person))
+                title = s3_fullname(person)
                 label = self.case_label
 
             elif instance_type == "dvr_case_activity":
@@ -6848,7 +6866,7 @@ class dvr_DocEntityRepresent(S3Represent):
                 table = current.s3db.dvr_case_activity
                 activity = row.dvr_case_activity
 
-                title = s3_str(activity.subject)
+                title = activity.subject
                 if self.use_need:
                     need_id = activity.need_id
                     if need_id:
@@ -6861,12 +6879,27 @@ class dvr_DocEntityRepresent(S3Represent):
                     if sector_id:
                         represent = table.sector_id.represent
                         label = represent(sector_id)
+
+            elif instance_type == "pr_group":
+
+                group = row.pr_group
+
+                if group.group_type == 7:
+                    label = self.case_group_label
+                    if group.name:
+                        title = group.name
+                    else:
+                        person = row.pr_person
+                        title = s3_fullname(person)
+                else:
+                    label = current.T("Group")
+                    title = group.name or self.default
             else:
                 title = None
                 label = None
 
             if title:
-                reprstr = "%s (%s)" % (title, s3_str(label))
+                reprstr = "%s (%s)" % (s3_str(title), s3_str(label))
 
         return reprstr
 

@@ -430,6 +430,8 @@ def config(settings):
     settings.dvr.case_activity_follow_up = get_ui_option("activity_follow_up")
     # Beneficiary documents-tab includes case activity attachments
     settings.dvr.case_include_activity_docs = True
+    # Beneficiary documents-tab includes case group attachments
+    settings.dvr.case_include_group_docs = True
 
     # Manage individual response actions in case activities
     settings.dvr.manage_response_actions = True
@@ -551,9 +553,10 @@ def config(settings):
                     use_need = False
                     activity_label = None
                 field.represent = s3db.dvr_DocEntityRepresent(
-                                            show_link=True,
-                                            use_need=use_need,
-                                            activity_label=activity_label,
+                                            show_link = True,
+                                            use_need = use_need,
+                                            case_group_label = T("Family"),
+                                            activity_label = activity_label,
                                             )
 
                 # Also update requires with this represent
@@ -570,6 +573,8 @@ def config(settings):
                                            field.represent,
                                            filterby = filterby,
                                            filter_opts = filter_opts,
+                                           orderby = "instance_type",
+                                           sort = False,
                                            )
             return result
         s3.prep = custom_prep
