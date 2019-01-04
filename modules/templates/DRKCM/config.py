@@ -780,6 +780,28 @@ def config(settings):
                                     )
 
     # -------------------------------------------------------------------------
+    def case_read_multiple_orgs():
+        """
+            Check if the user has read access to cases of more than one org
+
+            @returns: tuple (multiple_orgs, org_ids)
+        """
+
+        realms = current.auth.permission.permitted_realms("dvr_case", "read")
+        if realms is None:
+            multiple_orgs = True
+            org_ids = []
+        else:
+            otable = current.s3db.org_organisation
+            query = (otable.pe_id.belongs(realms)) & \
+                    (otable.deleted == False)
+            rows = current.db(query).select(otable.id)
+            multiple_orgs = len(rows) > 1
+            org_ids = [row.id for row in rows]
+
+        return multiple_orgs, org_ids
+
+    # -------------------------------------------------------------------------
     def case_default_org():
         """
             Determine the default organisation for new cases
@@ -879,11 +901,7 @@ def config(settings):
                 if not r.component:
 
                     # Can the user see cases from more than one org?
-                    realms = auth.permission.permitted_realms("dvr_case", "read")
-                    if realms is None or len(realms) > 1:
-                        multiple_orgs = True
-                    else:
-                        multiple_orgs = False
+                    multiple_orgs = case_read_multiple_orgs()[0]
 
                     configure_person_tags()
 
@@ -944,6 +962,8 @@ def config(settings):
                             if ui_options.get("case_hide_default_org"):
                                 field.writable = selectable
                                 field.readable = selectable or multiple_orgs
+                        if field.readable and not field.writable:
+                            field.comment = None
                         field.default = default_org
 
                         # Organisation is required
@@ -2137,7 +2157,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dvr_case_activity_controller(**attr):
 
-        auth = current.auth
         s3db = current.s3db
 
         s3 = current.response.s3
@@ -2248,17 +2267,7 @@ def config(settings):
                     filter_widgets.insert(2, priority_filter)
 
                 # Can the user see cases from more than one org?
-                realms = auth.permission.permitted_realms("dvr_case", "read")
-                if realms is None:
-                    multiple_orgs = True
-                elif len(realms) > 1:
-                    otable = s3db.org_organisation
-                    query = (otable.pe_id.belongs(realms)) & \
-                            (otable.deleted == False)
-                    rows = db(query).select(otable.id)
-                    multiple_orgs = len(rows) > 1
-                else:
-                    multiple_orgs = False
+                multiple_orgs = case_read_multiple_orgs()[0]
                 if multiple_orgs:
                     # Add org-filter widget
                     filter_widgets.insert(1,
@@ -2643,17 +2652,13 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dvr_response_action_resource(r, tablename):
 
-        db = current.db
+        #db = current.db
         s3db = current.s3db
 
         table = s3db.dvr_response_action
 
         # Can the user see cases from more than one org?
-        realms = current.auth.permission.permitted_realms("dvr_case", "read")
-        if realms is None or len(realms) > 1:
-            multiple_orgs = True
-        else:
-            multiple_orgs = False
+        multiple_orgs, org_ids = case_read_multiple_orgs()
 
         org_context = "person_id$dvr_case.organisation_id"
 
@@ -2900,14 +2905,12 @@ def config(settings):
 
                     if multiple_orgs:
                         # Add case organisation filter
-                        if realms:
-                            # Provide the realms as filter options
-                            otable = s3db.org_organisation
-                            orgs = db(otable.pe_id.belongs(realms)).select(otable.id)
+                        if org_ids:
+                            # Provide the permitted organisations as filter options
                             org_filter_opts = s3db.org_organisation_represent.bulk(
-                                                    [org.id for org in orgs],
-                                                    show_link = False,
-                                                    )
+                                                                org_ids,
+                                                                show_link = False,
+                                                                )
                             org_filter_opts.pop(None, None)
                         else:
                             # Look up from records
