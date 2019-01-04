@@ -7826,6 +7826,7 @@ class pr_Templates(S3Method):
         if r.http == "GET":
             if r.representation == "html":
 
+                T = current.T
                 s3db = current.s3db
 
                 person_id = r.id
@@ -7881,6 +7882,8 @@ class pr_Template(S3Method):
 
         if r.http == "GET":
             if r.representation == "docx":
+
+                T = current.T
 
                 person_id = r.id
                 if not person_id:

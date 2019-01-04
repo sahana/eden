@@ -306,32 +306,33 @@ form .form-row .controls span.postfix .fa {
   line-height: inherit;
 }
 /* line 54, ../scss/theme/_forms.scss */
-form .form-row > .s3-hierarchy-widget {
+form .form-row .s3-hierarchy-widget,
+form .form-row .calendar-widget-container {
   display: inline-block;
   vertical-align: middle;
 }
-/* line 58, ../scss/theme/_forms.scss */
+/* line 59, ../scss/theme/_forms.scss */
 form .form-row .inline-component {
   overflow: auto;
 }
-/* line 62, ../scss/theme/_forms.scss */
+/* line 63, ../scss/theme/_forms.scss */
 form .jstree-anchor {
   font-size: 0.9rem;
 }
-/* line 65, ../scss/theme/_forms.scss */
+/* line 66, ../scss/theme/_forms.scss */
 form label.inline {
   padding: 0;
 }
-/* line 68, ../scss/theme/_forms.scss */
+/* line 69, ../scss/theme/_forms.scss */
 form .gis_loc_select_btn {
   font-size: 0.8em;
 }
-/* line 70, ../scss/theme/_forms.scss */
+/* line 71, ../scss/theme/_forms.scss */
 form .gis_loc_select_btn i {
   font-size: 1.0em;
   margin-right: 4px;
 }
-/* line 75, ../scss/theme/_forms.scss */
+/* line 76, ../scss/theme/_forms.scss */
 form .error {
   display: block;
   padding: 0.375rem 0.5625rem 0.5625rem;
@@ -342,96 +343,96 @@ form .error {
   background: #c60f13;
   color: white;
 }
-/* line 85, ../scss/theme/_forms.scss */
+/* line 86, ../scss/theme/_forms.scss */
 form .date-clear-btn {
   font-size: 0.75rem;
   margin-left: 0.15rem !important;
 }
-/* line 89, ../scss/theme/_forms.scss */
+/* line 90, ../scss/theme/_forms.scss */
 form .action-lnk {
   font-weight: normal;
   font-size: 0.75rem;
 }
-/* line 95, ../scss/theme/_forms.scss */
+/* line 96, ../scss/theme/_forms.scss */
 form table.embeddedComponent {
   margin-top: 0.125rem;
   margin-bottom: 0.125rem;
   border: 1px solid #dddddd;
   border-collapse: separate;
 }
-/* line 101, ../scss/theme/_forms.scss */
+/* line 102, ../scss/theme/_forms.scss */
 form table.embeddedComponent td {
   border: none;
   padding-bottom: 0.05rem;
   padding-top: 0.15rem;
   vertical-align: top;
 }
-/* line 109, ../scss/theme/_forms.scss */
+/* line 110, ../scss/theme/_forms.scss */
 form table.embeddedComponent.subform-vertical .add-row td, form table.embeddedComponent.subform-vertical .edit-row td {
   border-top: 1px solid #dddddd;
 }
-/* line 111, ../scss/theme/_forms.scss */
+/* line 112, ../scss/theme/_forms.scss */
 form table.embeddedComponent.subform-vertical .add-row td.subform-action, form table.embeddedComponent.subform-vertical .edit-row td.subform-action {
   vertical-align: bottom;
 }
-/* line 118, ../scss/theme/_forms.scss */
+/* line 119, ../scss/theme/_forms.scss */
 form table.embeddedComponent .label-row td {
   border-bottom: 1px solid #dddddd;
 }
-/* line 120, ../scss/theme/_forms.scss */
+/* line 121, ../scss/theme/_forms.scss */
 form table.embeddedComponent .label-row td:empty {
   padding: 0;
 }
-/* line 124, ../scss/theme/_forms.scss */
+/* line 125, ../scss/theme/_forms.scss */
 form table.embeddedComponent .label-row label {
   color: black;
 }
-/* line 129, ../scss/theme/_forms.scss */
+/* line 130, ../scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form input,
 form table.embeddedComponent tr.inline-form .btn.date-clear-btn,
 form table.embeddedComponent tr.inline-form .postfix.calendar-clear-btn {
   margin-top: 0;
 }
-/* line 134, ../scss/theme/_forms.scss */
+/* line 135, ../scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form.single td:only-child {
   padding: 0;
 }
-/* line 136, ../scss/theme/_forms.scss */
+/* line 137, ../scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form.single td:only-child div.form-row {
   padding: 0 0.2rem 0.2rem;
 }
-/* line 140, ../scss/theme/_forms.scss */
+/* line 141, ../scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form select {
   max-width: 18rem;
 }
-/* line 143, ../scss/theme/_forms.scss */
+/* line 144, ../scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form .s3_inline_add_resource_link {
   padding: 0.1rem;
 }
-/* line 149, ../scss/theme/_forms.scss */
+/* line 150, ../scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form .zoom img,
 form table.embeddedComponent tr.read-row .zoom img {
   max-height: 8rem;
 }
-/* line 154, ../scss/theme/_forms.scss */
+/* line 155, ../scss/theme/_forms.scss */
 form .inline-open-add {
   display: inline-block;
   margin-bottom: 1.25rem;
   margin-left: 0;
 }
-/* line 161, ../scss/theme/_forms.scss */
+/* line 162, ../scss/theme/_forms.scss */
 form.auth_login #submit_record__row {
   white-space: pre;
 }
 
 /* S3SQLInlineLink read-only list representation */
-/* line 167, ../scss/theme/_forms.scss */
+/* line 168, ../scss/theme/_forms.scss */
 ul.s3-inline-link {
   font-size: inherit;
 }
 
 /* General Widgets */
-/* line 172, ../scss/theme/_forms.scss */
+/* line 173, ../scss/theme/_forms.scss */
 input[type="text"],
 input[type="password"],
 input[type="date"],
@@ -453,7 +454,7 @@ select {
   font-weight: normal;
 }
 
-/* line 192, ../scss/theme/_forms.scss */
+/* line 193, ../scss/theme/_forms.scss */
 input[type="text"],
 input[type="password"],
 input[type="date"],
@@ -472,24 +473,24 @@ select {
   max-width: 100%;
 }
 
-/* line 209, ../scss/theme/_forms.scss */
+/* line 210, ../scss/theme/_forms.scss */
 textarea {
   resize: both;
   max-width: 100%;
 }
 
-/* line 213, ../scss/theme/_forms.scss */
+/* line 214, ../scss/theme/_forms.scss */
 input.datetimepicker {
   max-width: 8rem;
 }
 
-/* line 216, ../scss/theme/_forms.scss */
+/* line 217, ../scss/theme/_forms.scss */
 select {
   padding-right: 1rem !important;
 }
 
 /* Form and Item containers */
-/* line 221, ../scss/theme/_forms.scss */
+/* line 222, ../scss/theme/_forms.scss */
 #last_update,
 #markDuplicate {
   float: none;
@@ -497,66 +498,66 @@ select {
   text-align: right;
 }
 
-/* line 228, ../scss/theme/_forms.scss */
+/* line 229, ../scss/theme/_forms.scss */
 body.rtl #last_update,
 body.rtl #markDuplicate {
   text-align: left;
 }
 
-/* line 233, ../scss/theme/_forms.scss */
+/* line 234, ../scss/theme/_forms.scss */
 .form-container,
 .item-container {
   width: auto;
   overflow: inherit;
 }
-/* line 235, ../scss/theme/_forms.scss */
+/* line 236, ../scss/theme/_forms.scss */
 .form-container form,
 .item-container form {
   background: #fefefe;
   padding: 5px 10px;
 }
-/* line 238, ../scss/theme/_forms.scss */
+/* line 239, ../scss/theme/_forms.scss */
 .form-container form tr td,
 .item-container form tr td {
   padding: 0.1875rem;
 }
-/* line 241, ../scss/theme/_forms.scss */
+/* line 242, ../scss/theme/_forms.scss */
 .form-container form .embeddedComponent td,
 .item-container form .embeddedComponent td {
   padding-right: 0.5625rem;
 }
-/* line 247, ../scss/theme/_forms.scss */
+/* line 248, ../scss/theme/_forms.scss */
 .form-container .controls,
 .item-container .controls {
   display: inline-block;
 }
-/* line 249, ../scss/theme/_forms.scss */
+/* line 250, ../scss/theme/_forms.scss */
 .form-container .controls:not(.columns),
 .item-container .controls:not(.columns) {
   max-width: 100%;
 }
 
-/* line 254, ../scss/theme/_forms.scss */
+/* line 255, ../scss/theme/_forms.scss */
 .form-container {
   margin-top: 0.125rem;
   margin-bottom: 0.875rem;
 }
-/* line 258, ../scss/theme/_forms.scss */
+/* line 259, ../scss/theme/_forms.scss */
 .form-container form select,
 .form-container form input.string:not(.date),
 .form-container form textarea {
   margin: 0;
 }
-/* line 263, ../scss/theme/_forms.scss */
+/* line 264, ../scss/theme/_forms.scss */
 .form-container form .ui-multiselect {
   max-width: 100%;
 }
-/* line 267, ../scss/theme/_forms.scss */
+/* line 268, ../scss/theme/_forms.scss */
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register):not(.rm-form) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.hours):not(.dms-input) {
   width: 20rem !important;
 }
 
-/* line 274, ../scss/theme/_forms.scss */
+/* line 275, ../scss/theme/_forms.scss */
 .item-container .controls {
   background: #fafafa;
   padding: 0.35rem;
@@ -564,24 +565,24 @@ body.rtl #markDuplicate {
 }
 
 /* Filter Forms & Report Options */
-/* line 284, ../scss/theme/_forms.scss */
+/* line 285, ../scss/theme/_forms.scss */
 .filter-form table tr,
 .filter-form .ui-multiselect,
 .report-options table tr,
 .report-options .ui-multiselect {
   max-width: 60%;
 }
-/* line 288, ../scss/theme/_forms.scss */
+/* line 289, ../scss/theme/_forms.scss */
 .filter-form table.s3-groupedopts-widget,
 .report-options table.s3-groupedopts-widget {
   display: inline-block;
 }
-/* line 291, ../scss/theme/_forms.scss */
+/* line 292, ../scss/theme/_forms.scss */
 .filter-form .inline-tooltip,
 .report-options .inline-tooltip {
   padding-top: 0.2rem;
 }
-/* line 294, ../scss/theme/_forms.scss */
+/* line 295, ../scss/theme/_forms.scss */
 .filter-form label.inline,
 .report-options label.inline {
   line-height: normal;
@@ -589,7 +590,7 @@ body.rtl #markDuplicate {
 }
 
 /* Login/Registration box */
-/* line 301, ../scss/theme/_forms.scss */
+/* line 302, ../scss/theme/_forms.scss */
 #login_form,
 #register_form,
 #login_box {
@@ -597,13 +598,13 @@ body.rtl #markDuplicate {
 }
 
 /* Help Popup */
-/* line 308, ../scss/theme/_forms.scss */
+/* line 309, ../scss/theme/_forms.scss */
 .inline-tooltip {
   display: inline-block;
   vertical-align: top;
   padding-left: 0.75rem;
 }
-/* line 312, ../scss/theme/_forms.scss */
+/* line 313, ../scss/theme/_forms.scss */
 .inline-tooltip .tooltip,
 .inline-tooltip .tooltipbody,
 .inline-tooltip .stickytip,
@@ -612,7 +613,7 @@ body.rtl #markDuplicate {
   padding: 0;
   width: 60px;
 }
-/* line 320, ../scss/theme/_forms.scss */
+/* line 321, ../scss/theme/_forms.scss */
 .inline-tooltip .s3_add_resource_link {
   display: inline-block;
   margin: -3px 0 -3px 5px;

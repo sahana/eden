@@ -51,7 +51,8 @@ form {
                 line-height: inherit;
             }
         }
-        & > .s3-hierarchy-widget {
+        .s3-hierarchy-widget,
+        .calendar-widget-container {
             display: inline-block;
             vertical-align: middle;
         }
