@@ -25,6 +25,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "case_use_flags": True,
                "case_use_notes": True,
                "case_use_occupation": True,
+               "case_use_place_of_birth": False,
                "case_use_residence_status": True,
                "case_use_service_contacts": True,
                "case_lodging": "site", # "site"|"text"|None
@@ -59,6 +60,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "case_use_flags": False,
                       "case_use_notes": False,
                       "case_use_occupation": False,
+                      "case_use_place_of_birth": True,
                       "case_use_residence_status": False,
                       "case_use_service_contacts": False,
                       "case_lodging": "text",
@@ -238,6 +240,7 @@ def config(settings):
                                      "Vorname": "first_name",
                                      "Name": "last_name",
                                      "Geburtsdatum": "date_of_birth",
+                                     "Geburtsort": "pr_person_details.place_of_birth",
                                      "Land": "pr_person_details.nationality",
                                      "Registrierungsdatum": "dvr_case.date",
                                      }
@@ -992,8 +995,16 @@ def config(settings):
                         else:
                             case_flags = None
 
-                        # Make marital status mandatory, remove "other"
+                        # Optional: place of birth
                         dtable = s3db.pr_person_details
+                        if ui_options.get("case_use_place_of_birth"):
+                            field = dtable.place_of_birth
+                            field.readable = field.writable = True
+                            place_of_birth = "person_details.place_of_birth"
+                        else:
+                            place_of_birth = None
+
+                        # Make marital status mandatory, remove "other"
                         field = dtable.marital_status
                         options = dict(s3db.pr_marital_status_opts)
                         del options[9] # Remove "other"
@@ -1121,8 +1132,9 @@ def config(settings):
                             "last_name",
                             "first_name",
                             "person_details.nationality",
-                            "date_of_birth",
                             "gender",
+                            "date_of_birth",
+                            place_of_birth,
                             "person_details.marital_status",
 
                             # Process Data ----------------------------

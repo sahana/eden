@@ -3547,6 +3547,7 @@
 'Physical Safety': 'Physische Sicherheit',
 'Picture upload and finger print upload facility': 'Einrichtung um Foto und Fingerabdruck hochzuladen',
 'Picture': 'Bild',
+'Place of Birth': 'Geburtsort',
 'Place of Recovery': 'Ort der Wiederherstellung',
 'Place on Map': 'Auf Karte plazieren',
 'Places for defecation': 'Plätze für Kotablagerung',
