@@ -1745,13 +1745,14 @@ class S3ScriptItem(S3NavigationItem):
 class S3ResourceHeader(object):
     """ Simple Generic Resource Header for tabbed component views """
 
-    def __init__(self, fields=None, tabs=None):
+    def __init__(self, fields=None, tabs=None, title=None):
         """
             Constructor
 
-            @param fields: the fields to display as list of lists of
+            @param fields: the fields to display, list of lists of
                            fieldnames, Field instances or callables
             @param tabs: the tabs
+            @param title: the title fieldname, Field or callable
 
             Fields are specified in order rows->cols, i.e. if written
             like:
@@ -1794,6 +1795,7 @@ class S3ResourceHeader(object):
 
         self.fields = fields
         self.tabs = tabs
+        self.title = title
 
     # -------------------------------------------------------------------------
     def __call__(self, r, tabs=None, table=None, record=None, as_div=True):
@@ -1835,75 +1837,105 @@ class S3ResourceHeader(object):
             for row in fields:
                 tr = TR()
                 for col in row:
-                    field = None
-                    label = True
-                    value = ""
-                    colspan = None
-
-                    # Parse column spec:
-                    # fieldname|(label, fieldname)|(label,fieldname,colspan)
-                    # label can be either a T(), str, HTML, or:
-                    #       True        => automatic (use field label, default)
-                    #       None        => no label column
-                    #       "" or False => empty label
                     if col is None:
                         continue
-                    elif isinstance(col, (tuple, list)):
-                        if len(col) == 2:
-                            label, f = col
-                        elif len(col) > 2:
-                            label, f, colspan = col
-                        else:
-                            f = col[0]
-                    else:
-                        f = col
-
-                    # Get value:
-                    # value can be a fieldname, a Field instance or a callable to
-                    # extract the value from the record
-                    if callable(f):
-                        try:
-                            value = f(record)
-                        except:
-                            pass
-                    else:
-                        if isinstance(f, str):
-                            fn = f
-                            if "." in fn:
-                                fn = f.split(".", 1)[1]
-                            if fn not in record or fn not in table:
-                                continue
-                            field = table[fn]
-                            value = record[fn]
-                            # Field.Method?
-                            if callable(value):
-                                value = value()
-                        elif isinstance(f, Field) and f.name in record:
-                            field = f
-                            value = record[f.name]
-                    if hasattr(field, "represent") and field.represent is not None:
-                        value = field.represent(value)
-
-                    # Render label
-                    if label is True:
-                        label = field.label if field is not None else False
+                    label, value, colspan = self.render_field(table, record, col)
+                    if value is False:
+                        continue
                     if label is not None:
                         tr.append(TH(("%s: " % label) if label else ""))
-
-                    # Render value
-                    v = value
-                    if not isinstance(v, basestring) and \
-                       not isinstance(value, DIV):
-                        v = s3_str(v)
-                    tr.append(TD(v, _colspan=colspan) if colspan else TD(v))
-
+                    tr.append(TD(value, _colspan=colspan) if colspan else TD(value))
                 trs.append(tr)
-            if as_div:
-                rheader = DIV(TABLE(trs), rheader_tabs)
-            else:
-                rheader = (TABLE(trs), rheader_tabs)
-            return rheader
 
-        return None
+            title = self.title
+            if title:
+                title = self.render_field(table, record, title)[1]
+
+            if title:
+                content = DIV(H6(title, _class="rheader-title"),
+                              TABLE(trs),
+                              _class="rheader-content",
+                              )
+            else:
+                content = TABLE(trs, _class="rheader-content")
+
+            rheader = (content, rheader_tabs)
+            if as_div:
+                rheader = DIV(*rheader)
+
+        else:
+            rheader = None
+
+        return rheader
+
+    # -------------------------------------------------------------------------
+    def render_field(self, table, record, col):
+        """
+            Render an rheader field
+
+            @param table: the table
+            @param record: the record
+            @param col: the column spec (field name or tuple (label, fieldname))
+
+            @returns: tuple (label, value)
+        """
+
+        field = None
+        label = True
+        value = ""
+        colspan = None
+
+        # Parse column spec:
+        # fieldname|(label, fieldname)|(label,fieldname,colspan)
+        # label can be either a T(), str, HTML, or:
+        #       True        => automatic (use field label, default)
+        #       None        => no label column
+        #       "" or False => empty label
+        if isinstance(col, (tuple, list)):
+            if len(col) == 2:
+                label, f = col
+            elif len(col) > 2:
+                label, f, colspan = col
+            else:
+                f = col[0]
+        else:
+            f = col
+
+        # Get value
+        # - value can be a fieldname, a Field instance or a callable to
+        #   extract the value from the record
+        if callable(f):
+            try:
+                value = f(record)
+            except:
+                pass
+        else:
+            if isinstance(f, str):
+                fn = f
+                if "." in fn:
+                    fn = f.split(".", 1)[1]
+                if fn not in record or fn not in table:
+                    return None, False, None
+                field = table[fn]
+                value = record[fn]
+                # Field.Method?
+                if callable(value):
+                    value = value()
+            elif isinstance(f, Field) and f.name in record:
+                field = f
+                value = record[f.name]
+        if hasattr(field, "represent") and field.represent is not None:
+            value = field.represent(value)
+
+        # Render label
+        if label is True:
+            label = field.label if field is not None else False
+
+        # Render value
+        if not isinstance(value, basestring) and \
+           not isinstance(value, DIV):
+            value = s3_str(value)
+
+        return label, value, colspan
 
 # END =========================================================================

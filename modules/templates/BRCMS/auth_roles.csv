@@ -1,0 +1,193 @@
+uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
+AUTHENTICATED,Authenticated,,gis,location,,CREATE|READ,READ|UPDATE|DELETE,,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
+AUTHENTICATED,Authenticated,,gis,,,READ,READ|UPDATE|DELETE,,,,Authenticated users can see the Map
+AUTHENTICATED,Authenticated,,hrm,group,,NONE,,,,,Normal users have no access to teams
+AUTHENTICATED,Authenticated,,hrm,index,,NONE,,,,,Hides the Staff menu item
+AUTHENTICATED,Authenticated,,hrm,person,,,READ,,,,Normal users can see their own staff record
+AUTHENTICATED,Authenticated,,hrm,staff,,NONE,,,,,Normal users have no access to staff data
+AUTHENTICATED,Authenticated,,hrm,,,NONE,,,,,Default rule for HRM
+AUTHENTICATED,Authenticated,,msg,search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
+AUTHENTICATED,Authenticated,,org,,,NONE,,,,,Normal users don't see org menu entries
+AUTHENTICATED,Authenticated,,pr,pentity,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
+AUTHENTICATED,Authenticated,,pr,person,,,READ|UPDATE,,,,But need to be able to add/edit addresses
+AUTHENTICATED,Authenticated,,pr,person_search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
+AUTHENTICATED,Authenticated,,pr,,,CREATE,READ|UPDATE,,,,Authenticated users can only see/edit their own PR records
+AUTHENTICATED,Authenticated,,,,cr_shelter_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,br_case_activity_status,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,br_case_activity_update_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,br_case_flag,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,br_need,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,br_note_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,br_residence_permit_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,br_residence_status_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,br_response_status,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,br_response_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,br_response_theme,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,br_service_contact_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,hrm_job_title,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,org_facility_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,org_organisation_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,org_sector,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,org_sector_organisation,READ,,,,,All users can read organisation sector links
+AUTHENTICATED,Authenticated,,,,org_site_facility_type,READ,,,,,Normal users can read facility type links
+AUTHENTICATED,Authenticated,,,,org_site_facility_type,READ,,,,,All users can read taxonomies
+AUTHENTICATED,Authenticated,,,,pr_address,CREATE,READ|UPDATE|DELETE,,,,Normal users can manage their own addresses
+AUTHENTICATED,Authenticated,,,,pr_contact,CREATE,READ|UPDATE|DELETE,,,,Normal users can manage their own contact information
+AUTHENTICATED,Authenticated,,,,pr_contact_emergency,CREATE,READ|UPDATE|DELETE,,,,Normal users can manage their own emergency contact information
+AUTHENTICATED,Authenticated,,,,pr_person,,READ|UPDATE,,,,Normal users can only see/edit their own PR records
+AUTHENTICATED,Authenticated,,,,pr_person_details,CREATE,READ|UPDATE|DELETE,,,,Normal users can only see/edit their own PR records
+CASE_MANAGEMENT,Case Manager,,br,case,,NONE,,,,,Case Managers can not access the case controller
+CASE_MANAGEMENT,Case Manager,,br,case_activity,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can manage case activities
+CASE_MANAGEMENT,Case Manager,,br,case_activity_status,,NONE,,,,,Case Managers can not manage BR taxonomies
+CASE_MANAGEMENT,Case Manager,,br,case_activity_update_type,,NONE,,,,,Case Managers can not manage BR taxonomies
+CASE_MANAGEMENT,Case Manager,,br,case_appointment,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can manage case appointments
+CASE_MANAGEMENT,Case Manager,,br,case_appointment_type,,NONE,,,,,Case Managers can not manage BR taxonomies
+CASE_MANAGEMENT,Case Manager,,br,case_flag,,NONE,,,,,Case Managers can not manage BR taxonomies
+CASE_MANAGEMENT,Case Manager,,br,case_status,,NONE,,,,,Case Managers can not manage BR taxonomies
+CASE_MANAGEMENT,Case Manager,,br,document,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can manage case documents
+CASE_MANAGEMENT,Case Manager,,br,due_followups,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can manage case activities
+CASE_MANAGEMENT,Case Manager,,br,group_membership,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can add family members
+CASE_MANAGEMENT,Case Manager,,br,index,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can see the BR index page
+CASE_MANAGEMENT,Case Manager,,br,need,,NONE,,,,,Case Managers can not manage BR taxonomies
+CASE_MANAGEMENT,Case Manager,,br,person,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can manage case files
+CASE_MANAGEMENT,Case Manager,,br,response_action,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can manage response actions
+CASE_MANAGEMENT,Case Manager,,br,response_status,,NONE,,,,,Case Managers can not manage BR taxonomies
+CASE_MANAGEMENT,Case Manager,,br,response_type,,NONE,,,,,Case Managers can not manage BR taxonomies
+CASE_MANAGEMENT,Case Manager,,br,service_contact_type,,NONE,,,,,Case Managers can not manage BR taxonomies
+CASE_MANAGEMENT,Case Manager,,br,,,READ,,,,,Default rule for BR module
+CASE_MANAGEMENT,Case Manager,,msg,,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can send messages
+CASE_MANAGEMENT,Case Manager,,project,comment,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can comment on tasks
+CASE_MANAGEMENT,Case Manager,,project,comments,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can read task comments
+CASE_MANAGEMENT,Case Manager,,project,project,,NONE,,,,,Case Managers have no access to projects
+CASE_MANAGEMENT,Case Manager,,project,task,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can manage tasks
+CASE_MANAGEMENT,Case Manager,,project,,,READ,,,,,Default rule for PROJECT module
+CASE_MANAGEMENT,Case Manager,,,,cr_shelter,READ|UPDATE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,doc_document,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,br_case,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,br_case_activity,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,br_case_activity_need,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,br_case_activity_update,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,br_case_appointment,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,br_case_appointment_type,READ,,,,,
+CASE_MANAGEMENT,Case Manager,,,,br_case_details,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,br_case_flag_case,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,br_case_language,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,br_case_status,READ,,,,,
+CASE_MANAGEMENT,Case Manager,,,,br_note,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,br_residence_status,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,br_response_action,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,hrm_human_resource,READ,,,,,
+CASE_MANAGEMENT,Case Manager,,,,org_facility,READ,,,,,
+CASE_MANAGEMENT,Case Manager,,,,org_organisation,READ,,,,,
+CASE_MANAGEMENT,Case Manager,,,,org_site,READ|UPDATE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_address,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_group,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_image,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,pr_person_tag,CREATE|READ|UPDATE|DELETE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,project_project,NONE,,,,,
+CASE_MANAGEMENT,Case Manager,,,,project_task,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,admin,user,,ALL,,,,,
+ORG_ADMIN,Organisation Admin,,cr,shelter,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,cr,shelter_type,,NONE,,,,,
+ORG_ADMIN,Organisation Admin,,cr,,,READ,,,,,
+ORG_ADMIN,Organisation Admin,,hrm,group,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,hrm,index,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,hrm,job_title,,NONE,,,,,
+ORG_ADMIN,Organisation Admin,,hrm,person,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,hrm,staff,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,hrm,,,READ,,,,,
+ORG_ADMIN,Organisation Admin,,msg,,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,org,facility,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,org,facility_type,,NONE,,,,,
+ORG_ADMIN,Organisation Admin,,org,organisation,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,org,organisation_type,,NONE,,,,,
+ORG_ADMIN,Organisation Admin,,org,sector,,NONE,,,,,
+ORG_ADMIN,Organisation Admin,,org,,,READ,,,,,
+ORG_ADMIN,Organisation Admin,,project,comment,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,project,comments,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,project,project,,NONE,,,,,
+ORG_ADMIN,Organisation Admin,,project,task,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,project,,,READ,,,,,
+ORG_ADMIN,Organisation Admin,,vol,group,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,vol,index,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,vol,job_title,,NONE,,,,,
+ORG_ADMIN,Organisation Admin,,vol,person,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,vol,volunteer,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,vol,,,READ,,,,,
+ORG_ADMIN,Organisation Admin,,,,cr_shelter,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,br_response_theme,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,br_need,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,doc_document,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,hrm_human_resource,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,org_facility,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,org_organisation,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,org_sector_organisation,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,org_site,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,org_site_facility_type,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,pr_address,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,pr_contact,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,pr_group,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,,,,project_project,NONE,,,,,
+ORG_ADMIN,Organisation Admin,,,,project_task,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,case,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,case_activity,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,case_activity_status,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,case_activity_update_type,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,case_appointment,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,case_appointment_type,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,case_flag,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,case_status,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,document,,NONE,,,,,Case Managers can manage case documents
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,due_followups,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,group_membership,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,index,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,need,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,person,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,residence_status_type,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,residence_permit_type,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,response_action,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,response_status,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,response_type,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,service_contact_type,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,msg,,,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,org,facility,,READ,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,org,facility_type,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,org,organisation,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,org,organisation_type,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,org,sector,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,org,,,READ,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,cr_shelter,READ,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,cr_shelter_type,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,doc_document,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,br_case_appointment,NONE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,br_case_appointment_type,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,br_case_flag,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,br_need,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,br_residence_status_type,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,br_residence_permit_type,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,br_response_type,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,br_response_theme,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,hrm_job_title,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_facility,READ,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_facility_type,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_organisation,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_organisation_type,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_sector,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_sector_organisation,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_site,READ,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,org_site_facility_type,READ,,,,,
+ORG_GROUP_ADMIN,Organisation Group Admin,,,,project_project,NONE,,,,,
+STAFF,Staff Member,,br,person,,READ,,,,,Staff members can see records of their org in case views
+STAFF,Staff Member,,,,hrm_human_resource,NONE,READ,,,,Staff members can see their own HR record
+STAFF,Staff Member,,,,br_response_theme,READ,,,,,Staff members can see the response themes of their organisation
+STAFF,Staff Member,,br,case_activity,,READ,,,,,Staff members can see records of their org in case activity views
+STAFF,Staff Member,,br,response_action,,READ,,,,,Staff members can see records of their org in response action views

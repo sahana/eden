@@ -477,6 +477,11 @@ def config(settings):
     #settings.asset.telephones = True
 
     # -------------------------------------------------------------------------
+    # Beneficiary Registry
+    # Terminology to use when referring to cases (Beneficiary|Client|Case)
+    #settings.br.terminology = "Beneficiary"
+
+    # -------------------------------------------------------------------------
     # CMS
     # Uncomment this to hide CMS from module index pages
     #settings.cms.hide_index = True
@@ -524,9 +529,6 @@ def config(settings):
 
     # Uncomment to use the term Beneficiary instead of Case
     #settings.dvr.label = "Beneficiary"
-
-    # Uncomment this to allow cases to belong to multiple case groups ("households")
-    #settings.dvr.multiple_case_groups = True
 
     # Uncomment this to enable tracking of transfer origin/destination sites
     #settings.dvr.track_transfer_sites = True
@@ -664,6 +666,8 @@ def config(settings):
     #settings.pr.use_address = False
     # Show separate Public and Private Contacts Tabs
     #settings.pr.contacts_tabs = ("public", "private")
+    # Uncomment this to allow persons to belong to multiple case groups ("households")
+    #settings.pr.multiple_case_groups = True
 
     # -------------------------------------------------------------------------
     # Organisations
@@ -1260,11 +1264,17 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10
         #)),
+        #("br", Storage(
+        #    name_nice = T("Beneficiary Registry"),
+        #    #description = "Beneficiary Registry and Case Management",
+        #    restricted = True,
+        #    module_type = 10,
+        #)),
         ("dvr", Storage(
-        name_nice = T("Disaster Victim Registry"),
-        #description = "Allow affected individuals & households to register to receive compensation and distributions",
-        restricted = True,
-        module_type = 10,
+            name_nice = T("Disaster Victim Registry"),
+            #description = "Allow affected individuals & households to register to receive compensation and distributions",
+            restricted = True,
+            module_type = 10,
         )),
         ("event", Storage(
             name_nice = T("Events"),
@@ -1273,9 +1283,9 @@ def config(settings):
             module_type = 10,
         )),
         ("transport", Storage(
-        name_nice = T("Transport"),
-        restricted = True,
-        module_type = 10,
+            name_nice = T("Transport"),
+            restricted = True,
+            module_type = 10,
         )),
         ("stats", Storage(
             name_nice = T("Statistics"),
@@ -1284,10 +1294,10 @@ def config(settings):
             module_type = None,
         )),
         ("member", Storage(
-        name_nice = T("Members"),
-        #description = "Membership Management System",
-        restricted = True,
-        module_type = 10,
+            name_nice = T("Members"),
+            #description = "Membership Management System",
+            restricted = True,
+            module_type = 10,
         )),
         ("budget", Storage(
             name_nice = T("Budgeting Module"),

@@ -635,25 +635,39 @@ body.rtl #markDuplicate {
 /* line 36, ../scss/theme/_rheader.scss */
 #rheader .rheader-avatar {
   clear: none;
-  display: inline;
+  display: inline-block;
   float: none;
-  margin-right: 1rem;
   padding: 0;
-  vertical-align: text-top;
+  vertical-align: top;
 }
-/* line 44, ../scss/theme/_rheader.scss */
+/* line 43, ../scss/theme/_rheader.scss */
+#rheader img.rheader-avatar {
+  margin-right: 0.8rem;
+}
+/* line 46, ../scss/theme/_rheader.scss */
+#rheader .rheader-content {
+  display: inline-block;
+}
+/* line 49, ../scss/theme/_rheader.scss */
+#rheader .rheader-title {
+  color: #333;
+  font-weight: bold;
+  font-size: 1.1rem;
+  line-height: 1.0;
+}
+/* line 55, ../scss/theme/_rheader.scss */
 #rheader table {
   display: inline;
   margin-bottom: 10px;
   border: none;
 }
-/* line 48, ../scss/theme/_rheader.scss */
+/* line 59, ../scss/theme/_rheader.scss */
 #rheader table tr {
   background: none;
 }
 
 /* Rheader Tabs */
-/* line 55, ../scss/theme/_rheader.scss */
+/* line 66, ../scss/theme/_rheader.scss */
 div.tabs {
   display: block;
   clear: none;
@@ -665,7 +679,7 @@ div.tabs {
   text-align: left;
   border-bottom: 1px solid #2ba6cb;
 }
-/* line 71, ../scss/theme/_rheader.scss */
+/* line 82, ../scss/theme/_rheader.scss */
 div.tabs span {
   float: left;
   display: inline;
@@ -674,17 +688,17 @@ div.tabs span {
   padding: 0.1rem 0.3rem 0.1rem;
   border-radius: 3px 3px 0 0;
 }
-/* line 82, ../scss/theme/_rheader.scss */
+/* line 93, ../scss/theme/_rheader.scss */
 div.tabs span a {
   color: #ffffff !important;
   text-decoration: none !important;
   background: transparent !important;
 }
-/* line 86, ../scss/theme/_rheader.scss */
+/* line 97, ../scss/theme/_rheader.scss */
 div.tabs span a:hover {
   background: transparent !important;
 }
-/* line 92, ../scss/theme/_rheader.scss */
+/* line 103, ../scss/theme/_rheader.scss */
 div.tabs span.tab_here {
   font-size: 1rem;
   font-weight: bold;
@@ -697,19 +711,19 @@ div.tabs span.tab_here {
   border-bottom-style: solid;
   border-bottom-color: #ffffff;
 }
-/* line 110, ../scss/theme/_rheader.scss */
+/* line 121, ../scss/theme/_rheader.scss */
 div.tabs span.tab_here:hover {
   background-color: #f1edec;
 }
-/* line 113, ../scss/theme/_rheader.scss */
+/* line 124, ../scss/theme/_rheader.scss */
 div.tabs span.tab_here a {
   color: #666666 !important;
 }
-/* line 115, ../scss/theme/_rheader.scss */
+/* line 126, ../scss/theme/_rheader.scss */
 div.tabs span.tab_here a:hover {
   color: #666666 !important;
 }
-/* line 122, ../scss/theme/_rheader.scss */
+/* line 133, ../scss/theme/_rheader.scss */
 div.tabs span.tab_last, div.tabs span.tab_other {
   font-size: 0.9rem;
   margin: 0.35rem 0.2rem 0 0;
@@ -719,16 +733,16 @@ div.tabs span.tab_last, div.tabs span.tab_other {
   border-width: 0.0625rem 1px 0.0625rem 2px;
   border-style: solid;
 }
-/* line 136, ../scss/theme/_rheader.scss */
+/* line 147, ../scss/theme/_rheader.scss */
 div.tabs span.tab_last:hover, div.tabs span.tab_other:hover {
   background-color: #2285a2;
   border-color: #2285a2;
 }
-/* line 140, ../scss/theme/_rheader.scss */
+/* line 151, ../scss/theme/_rheader.scss */
 div.tabs span.tab_last a, div.tabs span.tab_other a {
   color: #ffffff !important;
 }
-/* line 142, ../scss/theme/_rheader.scss */
+/* line 153, ../scss/theme/_rheader.scss */
 div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
   color: #ffffff !important;
 }
@@ -1315,7 +1329,7 @@ h4.profile-sub-header {
 /* line 55, ../scss/theme/_widgets.scss */
 #list-btn-add {
   float: right;
-  margin-right: 1rem;
+  margin-right: 0.35rem;
 }
 
 /* Summary tabs */
@@ -1782,7 +1796,7 @@ body.rtl .range-filter-widget input.date-filter-input {
 body.rtl #list-btn-add {
   float: left;
   margin-right: 0;
-  margin-left: 1rem;
+  margin-left: 0.35rem;
 }
 /* line 438, ../scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-module-rules .rm-module-header div {

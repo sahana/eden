@@ -900,8 +900,6 @@ def config(settings):
     settings.dvr.appointments_update_case_status = True
     # Uncomment this to automatically close appointments when registering certain case events
     settings.dvr.case_events_close_appointments = True
-    # Uncomment this to allow cases to belong to multiple case groups ("households")
-    #settings.dvr.multiple_case_groups = True
     # Configure a regular expression pattern for ID Codes (QR Codes)
     settings.dvr.id_code_pattern = "(?P<label>[^,]*),(?P<family>[^,]*),(?P<last_name>[^,]*),(?P<first_name>[^,]*),(?P<date_of_birth>[^,]*),.*"
     # Issue a "not checked-in" warning in case event registration

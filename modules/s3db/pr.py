@@ -1040,6 +1040,10 @@ class PRPersonModel(S3Model):
                                          "fkey": "id",
                                          "pkey": "pe_id",
                                          },
+                            # Beneficiary Registry
+                            br_case = {"joinby": "person_id",
+                                       "multiple": False,
+                                       },
                             # Shelter (Camp) Registry
                             cr_shelter_registration = {"joinby": "person_id",
                                                        # A person can be assigned to only one shelter
@@ -1795,7 +1799,9 @@ class PRPersonModel(S3Model):
                   ]
 
         separate_name_fields = settings.get_pr_separate_name_fields()
-        if separate_name_fields or site_contact_person:
+        get_name = separate_name_fields or get_vars.get("name") == "1"
+
+        if get_name or site_contact_person:
             middle_name = separate_name_fields == 3
             fields.extend((ptable.first_name,
                            ptable.middle_name,
@@ -1840,7 +1846,7 @@ class PRPersonModel(S3Model):
             last_name = row.last_name
             if middle_name:
                 middle_name = row.middle_name
-        elif site_contact_person:
+        elif get_name or site_contact_person:
             name = s3_fullname(row)
         pe_label = row.pe_label if get_pe_label else None
         if request_dob:
@@ -1894,7 +1900,7 @@ class PRPersonModel(S3Model):
             item["last_name"] = last_name
             if middle_name:
                 item["middle_name"] = middle_name
-        elif site_contact_person:
+        elif get_name or site_contact_person:
             item["name"] = name
         if pe_label:
             item["pe_label"] = pe_label
@@ -2772,7 +2778,7 @@ class PRGroupModel(S3Model):
                 (table.group_id == group_id)
 
         multiple_case_groups = current.deployment_settings \
-                                      .get_dvr_multiple_case_groups()
+                                      .get_pr_multiple_case_groups()
         if not multiple_case_groups:
             # Check if group is a case group
             gtable = s3db.pr_group
@@ -2885,6 +2891,11 @@ class PRGroupModel(S3Model):
 
         # Update PE hierarchy affiliations
         pr_update_affiliations(table, record)
+
+        # BR extensions
+        s3db = current.s3db
+        if settings.has_module("br"):
+            s3db.br_group_membership_onaccept(record, row.pr_group, group_id, person_id)
 
         # DVR extensions
         s3db = current.s3db
@@ -6510,6 +6521,8 @@ class pr_PersonRepresent(S3Represent):
                     controller = "hrm"
                 elif c == "vol":
                     controller = "vol"
+                elif c == "br":
+                    controller = "br"
                 elif c == "dvr":
                     controller = "dvr"
                 else:

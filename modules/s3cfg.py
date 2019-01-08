@@ -160,6 +160,7 @@ class S3Config(Storage):
         # Allow templates to append rather than replace
         self.base.prepopulate = ["default/base"]
         self.base.prepopulate_demo = ["default/users"]
+        self.br = Storage()
         self.cap = Storage()
         self.cms = Storage()
         self.cr = Storage()
@@ -2679,6 +2680,31 @@ class S3Config(Storage):
         return self.asset.get("telephones", False)
 
     # -------------------------------------------------------------------------
+    # BR: Beneficiary Registry
+    #
+    def get_br_terminology(self):
+        """
+            Terminology to use when referring to cases: Beneficiary|Client|Case
+        """
+        return self.br.get("terminology", "Case")
+
+    def get_br_case_hide_default_org(self):
+        """
+            Hide the organisation field in cases if only one allowed
+        """
+        return self.br.get("case_hide_default_org", True)
+
+    def get_br_household_size(self):
+        """
+            Track the number of persons per household (family)
+
+            False = off
+            True = manual
+            "auto" = count family members automatically
+        """
+        return self.br.get("household_size", "auto")
+
+    # -------------------------------------------------------------------------
     # CAP: Common Alerting Protocol
     #
     def get_cap_identifier_oid(self):
@@ -3157,12 +3183,6 @@ class S3Config(Storage):
             Enable features to manage transferability of cases
         """
         return self.dvr.get("manage_transferability", False)
-
-    def get_dvr_multiple_case_groups(self):
-        """
-            Whether a case can belong to multiple case groups at the same time
-        """
-        return self.dvr.get("multiple_case_groups", False)
 
     def get_dvr_household_size(self):
         """
@@ -4729,6 +4749,12 @@ class S3Config(Storage):
             label = defaults.get(group)
 
         return current.T(label) if label else label
+
+    def get_pr_multiple_case_groups(self):
+        """
+            Whether a person can belong to multiple case groups at the same time
+        """
+        return self.pr.get("multiple_case_groups", False)
 
     # -------------------------------------------------------------------------
     # Proc

@@ -15,6 +15,7 @@ current.models = models
 import s3db.assess
 import s3db.asset
 import s3db.auth
+import s3db.br
 import s3db.budget
 import s3db.cap
 import s3db.climate

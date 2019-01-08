@@ -33,10 +33,11 @@ __all__ = ("S3MainMenu",
 
 import re
 
-from gluon import *
+from gluon import current, URL
 from gluon.storage import Storage
-from s3 import *
-from s3layouts import *
+
+from s3 import IS_ISO639_2_LANGUAGE_CODE
+from s3layouts import M, MM, MOA, S3BreadcrumbsLayout, SEP
 
 # =============================================================================
 class S3MainMenu(object):
@@ -91,7 +92,7 @@ class S3MainMenu(object):
                     if not _module.access:
                         menu_modules.append(MM(_module.name_nice, c=module, f="index"))
                     else:
-                        groups = re.split("\|", _module.access)[1:-1]
+                        groups = re.split(r"\|", _module.access)[1:-1]
                         menu_modules.append(MM(_module.name_nice,
                                                c=module,
                                                f="index",
@@ -107,7 +108,7 @@ class S3MainMenu(object):
                 if not _module.access:
                     modules_submenu.append(MM(_module.name_nice, c=module, f="index"))
                 else:
-                    groups = re.split("\|", _module.access)[1:-1]
+                    groups = re.split(r"\|", _module.access)[1:-1]
                     modules_submenu.append(MM(_module.name_nice,
                                               c=module,
                                               f="index",
@@ -129,7 +130,6 @@ class S3MainMenu(object):
         if not settings.get_L10n_display_toolbar():
             return None
 
-        T = current.T
         request = current.request
         languages = settings.get_L10n_languages()
         represent_local = IS_ISO639_2_LANGUAGE_CODE.represent_local
@@ -583,6 +583,35 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def br():
+        """ Beneficiary Registry """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        s3db = current.s3db
+        LABELS = s3db.br_terminology()
+        crud_strings = s3db.br_crud_strings("pr_person")
+
+        return M(c="br")(
+                    M(LABELS.CURRENT, f="person", vars={"closed": "0"})(
+                        M(crud_strings.label_create, m="create"),
+                        ),
+                    M("Archive", link=False)(
+                        M(LABELS.CLOSED, f="person",
+                          vars = {"closed": "1"},
+                          ),
+                        M("Invalid Cases", f="person",
+                          vars = {"invalid": "1"},
+                          restrict = [ADMIN],
+                          ),
+                        ),
+                    M("Administration", link=False, restrict=[ADMIN])(
+                        M("Case Statuses", f="case_status"),
+                        ),
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def budget():
         """ BUDGET Controller """
 
@@ -720,7 +749,7 @@ class S3OptionsMenu(object):
     def delphi():
         """ DELPHI / Delphi Decision Maker """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        #ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="delphi")(
                     M("Active Problems", f="problem")(
@@ -1111,15 +1140,10 @@ class S3OptionsMenu(object):
     def hrm():
         """ HRM / Human Resources Management """
 
-        s3 = current.session.s3
-        ADMIN = s3.system_roles.ADMIN
-
         # Custom conditions for the check-hook, as lambdas in order
         # to have them checked only immediately before rendering:
         skills = lambda i: settings.get_hrm_use_skills()
-        certificates = lambda i: settings.get_hrm_use_certificates()
-        is_org_admin = lambda i: s3.hrm.orgs and True or \
-                                 ADMIN in s3.roles
+
         settings = current.deployment_settings
         teams = settings.get_hrm_teams()
         use_teams = lambda i: teams
@@ -1178,18 +1202,10 @@ class S3OptionsMenu(object):
     def vol():
         """ Volunteer Management """
 
-        s3 = current.session.s3
-        ADMIN = s3.system_roles.ADMIN
-
         # Custom conditions for the check-hook, as lambdas in order
         # to have them checked only immediately before rendering:
-        is_org_admin = lambda i: s3.hrm.orgs and True or \
-                                 ADMIN in s3.roles
-
         settings = current.deployment_settings
         show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
-        show_tasks = lambda i: settings.has_module("project") and \
-                               settings.get_project_mode_task()
         skills = lambda i: settings.get_hrm_use_skills()
         certificates = lambda i: settings.get_hrm_use_certificates()
         teams = settings.get_hrm_teams()

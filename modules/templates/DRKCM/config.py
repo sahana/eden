@@ -417,8 +417,6 @@ def config(settings):
     #
     # Enable features to manage case flags
     settings.dvr.case_flags = True
-    # Allow cases to belong to multiple case groups ("households")
-    #settings.dvr.multiple_case_groups = True
 
     # Enable household size in cases, "auto" for automatic counting
     settings.dvr.household_size = "auto"

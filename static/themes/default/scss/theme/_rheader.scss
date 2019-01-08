@@ -35,11 +35,22 @@ $rheader_tabs_fgcolor_inactive_hover: #ffffff !default;
     }
     .rheader-avatar {
         clear: none;
-        display: inline;
+        display: inline-block;
         float: none;
-        margin-right: 1rem;
         padding: 0;
-        vertical-align: text-top;
+        vertical-align: top;
+    }
+    img.rheader-avatar {
+        margin-right: 0.8rem;
+    }
+    .rheader-content {
+        display: inline-block;
+    }
+    .rheader-title {
+        color: #333;
+        font-weight: bold;
+        font-size: 1.1rem;
+        line-height: 1.0;
     }
     table {
         display: inline;

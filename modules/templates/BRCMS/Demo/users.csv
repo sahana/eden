@@ -1,0 +1,4 @@
+First Name,Last Name,Email,Password,Role,Organisation,Language
+Example,Case Manager,case_manager@example.com,eden,CASE_MANAGEMENT,Example Organisation,en
+Example,OrgAdmin,org_admin@example.com,eden,ORG_ADMIN,Example Organisation,en
+Example,OrgGroupAdmin,org_group_admin@example.com,eden,ORG_GROUP_ADMIN/0,Example Organisation,en

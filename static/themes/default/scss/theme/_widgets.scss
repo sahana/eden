@@ -54,7 +54,7 @@ $anonymize_button_bgcolor_hover: $alert-button-bg-hover !default;
 /* List-Add Button */
 #list-btn-add {
     float: right;
-    margin-right: 1rem;
+    margin-right: 0.35rem;
 }
 
 /* Summary tabs */
@@ -432,7 +432,7 @@ body.rtl {
     #list-btn-add {
         float: left;
         margin-right: 0;
-        margin-left: 1rem;
+        margin-left: 0.35rem;
     }
     .rm-form {
         .rm-module-rules .rm-module-header div {
