@@ -2704,6 +2704,18 @@ class S3Config(Storage):
         """
         return self.br.get("household_size", "auto")
 
+    def get_br_case_include_activity_docs(self):
+        """
+            Documents-tab of case files includes activity attachments
+        """
+        return self.dvr.get("case_include_activity_docs", False)
+
+    def get_br_case_include_group_docs(self):
+        """
+            Documents-tab of case includes case group attachments
+        """
+        return self.dvr.get("case_include_group_docs", True)
+
     # -------------------------------------------------------------------------
     # CAP: Common Alerting Protocol
     #

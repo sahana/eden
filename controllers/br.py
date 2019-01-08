@@ -313,7 +313,7 @@ def group_membership():
                            "person_id$date_of_birth",
                            "group_head",
                            (ROLE, "role_id"),
-                           (T("Case Status"), "person_id$dvr_case.status_id"),
+                           (T("Case Status"), "person_id$case.status_id"),
                            ]
 
             if len(group_ids) == 0:
@@ -363,6 +363,161 @@ def group_membership():
     settings.hrm.email_required = False
 
     return s3_rest_controller("pr", "group_membership",
+                              rheader = s3db.br_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def document():
+
+    def prep(r):
+
+        table = r.table
+        resource = r.resource
+
+        get_vars = r.get_vars
+        if "viewing" in get_vars:
+            try:
+                vtablename, record_id = get_vars["viewing"].split(".")
+            except ValueError:
+                return False
+        else:
+            return False
+
+        ctable = s3db.br_case
+        auth = current.auth
+        has_permission = auth.s3_has_permission
+        accessible_query = auth.s3_accessible_query
+
+        if vtablename == "pr_person":
+
+            # Check permission to read the case
+            if not has_permission("read", "pr_person", record_id):
+                r.unauthorised()
+
+            # Set contacts-method to retain the tab
+            s3db.set_method("pr", "person",
+                            method = "contacts",
+                            action = s3db.pr_Contacts,
+                            )
+
+            include_activity_docs = settings.get_br_case_include_activity_docs()
+            include_group_docs = settings.get_br_case_include_group_docs()
+            query = accessible_query("read", ctable) & \
+                    (ctable.person_id == record_id) & \
+                    (ctable.deleted == False)
+
+        else:
+            # Unsupported
+            return False
+
+        # Get the case doc_id
+        case = db(query).select(ctable.doc_id,
+                                limitby = (0, 1),
+                                orderby = ~ctable.modified_on,
+                                ).first()
+        if not case:
+            # No case found
+            r.error(404, "Case not found")
+        elif not case.doc_id:
+            # Case has no doc_id (invalid)
+            r.error(404, "Invalid Case")
+
+        case_doc_id = case.doc_id
+        doc_ids = [case_doc_id]
+
+        # Include case groups
+        if include_group_docs:
+
+            # Look up relevant case groups
+            mtable = s3db.pr_group_membership
+            gtable = s3db.pr_group
+            join = gtable.on((gtable.id == mtable.group_id) & \
+                             (gtable.group_type == 7))
+            query = accessible_query("read", mtable) & \
+                    (mtable.person_id == record_id) & \
+                    (mtable.deleted == False)
+            rows = db(query).select(gtable.doc_id,
+                                    join = join,
+                                    orderby = ~mtable.created_on,
+                                    )
+
+            # Append the doc_ids
+            for row in rows:
+                if row.doc_id:
+                    doc_ids.append(row.doc_id)
+
+        # Include case activities
+        #if include_activity_docs:
+        #
+        #    # Look up relevant case activities
+        #    atable = s3db.br_case_activity
+        #    query = accessible_query("read", atable) & \
+        #            (atable.person_id == record_id) & \
+        #            (atable.deleted == False)
+        #    rows = db(query).select(atable.doc_id,
+        #                            orderby = ~atable.created_on,
+        #                            )
+        #
+        #    # Append the doc_ids
+        #    for row in rows:
+        #        if row.doc_id:
+        #            doc_ids.append(row.doc_id)
+
+        # Hide URL field
+        field = table.url
+        field.readable = field.writable = False
+
+        # Custom label for date-field
+        field = table.date
+        field.label = T("Uploaded on")
+        field.default = r.utcnow.date()
+        field.writable = False
+
+        # Custom label for name-field
+        field = table.name
+        field.label = T("Title")
+
+        # List fields
+        list_fields = ["id", "name", "file", "date", "comments"]
+
+        if include_activity_docs or include_group_docs:
+
+            # Make doc_id readable and visible in table
+            field = table.doc_id
+            field.represent = s3db.br_DocEntityRepresent()
+            field.label = T("Attachment of")
+            field.readable = True
+            list_fields.insert(1, (T("Attachment of"), "doc_id"))
+
+        s3db.configure("doc_document",
+                       list_fields = list_fields,
+                       # Newest documents first
+                       orderby = "doc_document.date desc",
+                       )
+
+        # Apply filter and defaults
+        field = table.doc_id
+        field.default = case_doc_id
+        if len(doc_ids) == 1:
+            # Single doc_id => set default, hide field
+            field.readable = field.writable = False
+            r.resource.add_filter(FS("doc_id") == case_doc_id)
+        else:
+            # Multiple doc_ids => default to case, make selectable
+            field.readable = field.writable = True
+            field.requires = IS_ONE_OF(db, "doc_entity.doc_id",
+                                       field.represent,
+                                       filterby = "doc_id",
+                                       filter_opts = doc_ids,
+                                       orderby = "instance_type",
+                                       sort = False,
+                                       )
+            r.resource.add_filter(FS("doc_id").belongs(doc_ids))
+
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("doc", "document",
                               rheader = s3db.br_rheader,
                               )
 

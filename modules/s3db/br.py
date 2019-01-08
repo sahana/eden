@@ -40,6 +40,7 @@ __all__ = ("BRCaseModel",
            "BRServiceContactModel",
            "BRReferralModel",
            "BRVulnerabilityModel",
+           "br_DocEntityRepresent",
            "br_case_read_orgs",
            "br_case_default_org",
            "br_case_default_status",
@@ -453,6 +454,255 @@ class BRVulnerabilityModel(S3Model):
 
 # =============================================================================
 # =============================================================================
+class br_DocEntityRepresent(S3Represent):
+    """ Module context-specific representation of doc-entities """
+
+    def __init__(self,
+                 case_label=None,
+                 case_group_label=None,
+                 activity_label=None,
+                 use_sector=True,
+                 use_need=False,
+                 show_link=False,
+                 ):
+        """
+            Constructor
+
+            @param case_label: label for cases (default: "Case")
+            @param case_group_label: label for case groups (default: "Case Group")
+            @param activity_label: label for case activities
+                                   (default: "Activity")
+            @param use_need: use need if available instead of subject
+            @param use_sector: use sector if available instead of
+                               activity label
+            @param show_link: show representation as clickable link
+        """
+
+        super(br_DocEntityRepresent, self).__init__(lookup = "doc_entity",
+                                                    show_link = show_link,
+                                                    )
+
+        T = current.T
+
+        if case_label:
+            self.case_label = case_label
+        else:
+            self.case_label = br_terminology().CASE
+
+        if case_group_label:
+            self.case_group_label = case_group_label
+        else:
+            self.case_group_label = T("Family")
+
+        if activity_label:
+            self.activity_label = activity_label
+        else:
+            self.activity_label = T("Activity")
+
+        self.use_need = use_need
+        self.use_sector = use_sector
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = self.table
+        ptable = s3db.pr_person
+
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+
+        rows = db(query).select(table.doc_id,
+                                table.instance_type,
+                                limitby = (0, count),
+                                orderby = table.instance_type,
+                                )
+        self.queries += 1
+
+        # Sort by instance type
+        doc_ids = {}
+        for row in rows:
+            doc_id = row.doc_id
+            instance_type = row.instance_type
+            if instance_type not in doc_ids:
+                doc_ids[instance_type] = {doc_id: row}
+            else:
+                doc_ids[instance_type][doc_id] = row
+
+        need_ids = set()
+        sector_ids = set()
+        for instance_type in ("br_case", "br_case_activity", "pr_group"):
+
+            doc_entities = doc_ids.get(instance_type)
+            if not doc_entities:
+                continue
+
+            # The instance table
+            itable = s3db[instance_type]
+
+            # Look up person and instance data
+            query = itable.doc_id.belongs(doc_entities.keys())
+            if instance_type == "pr_group":
+                mtable = s3db.pr_group_membership
+                left = [mtable.on((mtable.group_id == itable.id) & \
+                                  (mtable.deleted == False)),
+                        ptable.on(ptable.id == mtable.person_id),
+                        ]
+            else:
+                left = ptable.on(ptable.id == itable.person_id)
+            fields = [itable.id,
+                      itable.doc_id,
+                      ptable.id,
+                      ptable.first_name,
+                      ptable.middle_name,
+                      ptable.last_name,
+                      ]
+            if instance_type == "br_case_activity":
+                fields.extend((itable.sector_id,
+                               itable.subject,
+                               itable.need_id,
+                               ))
+            if instance_type == "pr_group":
+                fields.extend((itable.name,
+                               itable.group_type,
+                               ))
+            irows = db(query).select(left=left, *fields)
+            self.queries += 1
+
+            # Add the person+instance data to the entity rows
+            for irow in irows:
+                instance = irow[instance_type]
+                entity = doc_entities[instance.doc_id]
+
+                if hasattr(instance, "sector_id"):
+                    sector_ids.add(instance.sector_id)
+                if hasattr(instance, "need_id"):
+                    need_ids.add(instance.need_id)
+
+                entity[instance_type] = instance
+                entity.pr_person = irow.pr_person
+
+            # Bulk represent any sector ids
+            if sector_ids and "sector_id" in itable.fields:
+                represent = itable.sector_id.represent
+                if represent and hasattr(represent, "bulk"):
+                    represent.bulk(list(sector_ids))
+
+            # Bulk represent any need ids
+            if need_ids and "need_id" in itable.fields:
+                represent = itable.need_id.represent
+                if represent and hasattr(represent, "bulk"):
+                    represent.bulk(list(need_ids))
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        reprstr = self.default
+
+        instance_type = row.instance_type
+        if hasattr(row, "pr_person"):
+
+            if instance_type == "br_case":
+
+                person = row.pr_person
+                title = s3_fullname(person)
+                label = self.case_label
+
+            elif instance_type == "br_case_activity":
+
+                table = current.s3db.br_case_activity
+                activity = row.br_case_activity
+
+                title = activity.subject
+                if self.use_need:
+                    need_id = activity.need_id
+                    if need_id:
+                        represent = table.need_id.represent
+                        title = represent(need_id)
+
+                label = self.activity_label
+                if self.use_sector:
+                    sector_id = activity.sector_id
+                    if sector_id:
+                        represent = table.sector_id.represent
+                        label = represent(sector_id)
+
+            elif instance_type == "pr_group":
+
+                group = row.pr_group
+
+                if group.group_type == 7:
+                    label = self.case_group_label
+                    if group.name:
+                        title = group.name
+                    else:
+                        person = row.pr_person
+                        title = s3_fullname(person)
+                else:
+                    label = current.T("Group")
+                    title = group.name or self.default
+            else:
+                title = None
+                label = None
+
+            if title:
+                reprstr = "%s (%s)" % (s3_str(title), s3_str(label))
+
+        return reprstr
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, row=None):
+        """
+            Represent a (key, value) as hypertext link
+
+            @param k: the key (doc_entity.doc_id)
+            @param v: the representation of the key
+            @param row: the row with this key
+        """
+
+        link = v
+
+        if row:
+            if row.instance_type == "br_case_activity":
+                try:
+                    person_id = row.pr_person.id
+                    case_activity_id = row.br_case_activity.id
+                except AttributeError:
+                    pass
+                else:
+                    url = URL(c = "br",
+                              f = "person",
+                              args = [person_id,
+                                      "case_activity",
+                                      case_activity_id,
+                                      ],
+                              extension="",
+                              )
+                    link = A(v, _href=url)
+
+        return link
+
+# =============================================================================
+# =============================================================================
 def br_case_default_status():
     """
         Helper to get/set the default status for case records
@@ -746,7 +996,7 @@ def br_rheader(r, tabs=None):
                         # optional ID-tab TODO
                         (T("Family Members"), "group_membership/"), # TODO make optional
                         (T("Photos"), "image"), # TODO make optional
-                        #(T("Documents"), "document/"),
+                        (T("Documents"), "document/"), # TODO make optional
                         ]
 
             case = resource.select(["first_name",
@@ -829,16 +1079,19 @@ def br_terminology():
         labels = Messages(current.T)
 
         if terminology == "Beneficiary":
+            labels.CASE = "Beneficiary"
             labels.CASES = "Beneficiaries"
             labels.CURRENT = "Current Beneficiaries"
             labels.CLOSED = "Former Beneficiaries"
 
         elif terminology == "Client":
+            labels.CASE = "Client"
             labels.CASES = "Clients"
             labels.CURRENT = "Current Clients"
             labels.CLOSED = "Former Clients"
 
         else:
+            labels.CASE = "Case"
             labels.CASES = "Cases"
             labels.CURRENT = "Current Cases"
             labels.CLOSED = "Closed Cases"
