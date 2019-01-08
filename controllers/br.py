@@ -126,6 +126,11 @@ def person():
             if isinstance(requires, IS_EMPTY_OR):
                 field.requires = requires.other
 
+            # Size of family
+            if settings.get_br_household_size() in (False, "auto"):
+                field = ctable.household_size
+                field.readable = field.writable = False
+
             # Expose the "invalid"-flag? (update forms only)
             if r.record and r.method != "read":
                 field = ctable.invalid
@@ -141,6 +146,7 @@ def person():
                            "person_details.nationality",
                            "date_of_birth",
                            "person_details.marital_status",
+                           "case.household_size",
                            s3base.S3SQLInlineComponent(
                                 "contact",
                                 fields = [("", "value")],
@@ -215,11 +221,12 @@ def person_search():
 
     return s3_rest_controller("pr", "person")
 
-# -----------------------------------------------------------------------------
+# =============================================================================
+# Module-specific controllers for entities from other modules
+#
 def group_membership():
     """
-        RESTful CRUD controller for person<=>group links, normally called
-        only from component tab in person perspective (e.g. family members)
+        Case File Family-Tab: RESTful CRUD controller
     """
 
     def prep(r):
@@ -368,6 +375,9 @@ def group_membership():
 
 # -----------------------------------------------------------------------------
 def document():
+    """
+        Case File Documents-Tab: RESTful CRUD controller
+    """
 
     def prep(r):
 

@@ -18,7 +18,7 @@ def config(settings):
 
     T = current.T
 
-    settings.base.system_name = "SAHANA Beneficiary Registry"
+    settings.base.system_name = "SAHANA Case Management"
     settings.base.system_name_short = "Sahana BRCMS"
 
     # PrePopulate data

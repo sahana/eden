@@ -2698,11 +2698,44 @@ class S3Config(Storage):
         """
             Track the number of persons per household (family)
 
-            False = off
-            True = manual
-            "auto" = count family members automatically
+            - False = off
+            - True = manual
+            - "auto" = count family members automatically
         """
         return self.br.get("household_size", "auto")
+
+    def get_br_case_contacts_tab(self):
+        """
+            Case file use tab to track beneficiary contact information
+        """
+        return self.br.get("case_contacts_tab", True)
+
+    def get_br_case_id_tab(self):
+        """
+            Case file use tab to track identity documents
+        """
+        return self.br.get("case_id_tab", False)
+
+    def get_br_case_family_tab(self):
+        """
+            Case file use tab to track family members
+        """
+        return self.br.get("case_family_tab", True)
+
+    def get_br_case_photos_tab(self):
+        """
+            Case file use tab to upload photos
+
+            NB image-component can also be reached by clicking on the
+               profile photo (or the placeholder, respectively)
+        """
+        return self.br.get("case_photos_tab", False)
+
+    def get_br_case_documents_tab(self):
+        """
+            Case file use tab to upload documents
+        """
+        return self.br.get("case_documents_tab", True)
 
     def get_br_case_include_activity_docs(self):
         """

@@ -984,6 +984,8 @@ def br_rheader(r, tabs=None):
     if record:
 
         T = current.T
+        settings = current.deployment_settings
+
         record_id = record.id
 
         if tablename == "pr_person":
@@ -992,12 +994,19 @@ def br_rheader(r, tabs=None):
 
                 # Basic Case Documentation
                 tabs = [(T("Basic Details"), None),
-                        (T("Contact Info"), "contacts"), # TODO make optional
-                        # optional ID-tab TODO
-                        (T("Family Members"), "group_membership/"), # TODO make optional
-                        (T("Photos"), "image"), # TODO make optional
-                        (T("Documents"), "document/"), # TODO make optional
                         ]
+                append = tabs.append
+
+                if settings.get_br_case_contacts_tab():
+                    append((T("Contact Info"), "contacts"))
+                if settings.get_br_case_id_tab():
+                    append((T("ID"), "identity"))
+                if settings.get_br_case_family_tab():
+                    append((T("Family Members"), "group_membership/"))
+                if settings.get_br_case_photos_tab():
+                    append((T("Photos"), "image"))
+                if settings.get_br_case_documents_tab():
+                    append((T("Documents"), "document/"))
 
             case = resource.select(["first_name",
                                     "middle_name",
@@ -1020,15 +1029,26 @@ def br_rheader(r, tabs=None):
 
             name = s3_fullname
             case_status = lambda row: case["br_case.status_id"]
-            household_size = lambda row: case["br_case.household_size"]
             organisation = lambda row: case["br_case.organisation_id"]
+
+            household = settings.get_br_household_size()
+            if household:
+                if household == "auto":
+                    label = T("Size of Family")
+                else:
+                    label = T("Household Size")
+                household_size = (label,
+                                  lambda row: case["br_case.household_size"],
+                                  )
+            else:
+                household_size = None
 
             rheader_fields = [[(T("ID"), "pe_label"),
                                (T("Case Status"), case_status),
                                (T("Organisation"), organisation),
                                ],
                               ["date_of_birth",
-                               (T("Size of Family"), household_size),
+                               household_size,
                                ],
                               ]
 
