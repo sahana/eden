@@ -433,7 +433,64 @@ class BRNotesModel(S3Model):
 # =============================================================================
 # =============================================================================
 class BRLanguageModel(S3Model):
-    pass
+    """
+        Model to document language options for communication
+        with a beneficiary
+    """
+
+    names = ("br_case_language",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Case Language: languages that can be used to communicate with
+        #                a case beneficiary, intended as inline-component
+        #                of beneficiary form
+
+        # Quality/Mode of communication:
+        lang_quality_opts = (("N", T("native")),
+                             ("F", T("fluent")),
+                             ("S", T("simplified/slow")),
+                             ("W", T("written-only")),
+                             ("I", T("interpreter required")),
+                             )
+
+        tablename = "br_case_language"
+        self.define_table(tablename,
+                          self.pr_person_id(empty = False,
+                                            ondelete = "CASCADE",
+                                            ),
+                          s3_language(list_from_settings = False),
+                          Field("quality",
+                                default = "N",
+                                label = T("Quality/Mode"),
+                                represent = S3Represent(options=dict(lang_quality_opts)),
+                                requires = IS_IN_SET(lang_quality_opts,
+                                                     sort = False,
+                                                     zero = None,
+                                                     ),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       orderby = "language",
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        return {}
 
 # =============================================================================
 class BRLegalStatusModel(S3Model):

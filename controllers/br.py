@@ -24,7 +24,7 @@ def index_alt():
     s3_redirect_default(URL(f="person"))
 
 # =============================================================================
-# Beneficiaries
+# Case File and Component Tabs
 #
 def person():
     """ Case File: RESTful CRUD Controller """
@@ -96,6 +96,9 @@ def person():
 
         if not r.component:
 
+            # Module-specific field and form configuration
+            from s3 import S3SQLInlineComponent
+
             # Adapt fields to module context
             table = resource.table
             ctable = s3db.br_case
@@ -131,6 +134,19 @@ def person():
                 field = ctable.household_size
                 field.readable = field.writable = False
 
+            # Language details
+            if settings.get_br_case_language_details():
+                language_details = S3SQLInlineComponent(
+                                        "case_language",
+                                        fields = ["language",
+                                                  "quality",
+                                                  "comments",
+                                                  ],
+                                        label = T("Language / Communication Mode"),
+                                        )
+            else:
+                language_details = None
+
             # Expose the "invalid"-flag? (update forms only)
             if r.record and r.method != "read":
                 field = ctable.invalid
@@ -147,7 +163,7 @@ def person():
                            "date_of_birth",
                            "person_details.marital_status",
                            "case.household_size",
-                           s3base.S3SQLInlineComponent(
+                           S3SQLInlineComponent(
                                 "contact",
                                 fields = [("", "value")],
                                 filterby = {"field": "contact_method",
@@ -158,6 +174,7 @@ def person():
                                 name = "phone",
                                 ),
                            "person_details.literacy",
+                           language_details,
                            "case.comments",
                            "case.invalid",
                            ]
@@ -221,9 +238,7 @@ def person_search():
 
     return s3_rest_controller("pr", "person")
 
-# =============================================================================
-# Module-specific controllers for entities from other modules
-#
+# -----------------------------------------------------------------------------
 def group_membership():
     """
         Case File Family-Tab: RESTful CRUD controller

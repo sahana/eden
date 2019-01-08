@@ -2694,6 +2694,13 @@ class S3Config(Storage):
         """
         return self.br.get("case_hide_default_org", True)
 
+    def get_br_case_language_details(self):
+        """
+            Document languages that can be used when communicating with
+            a beneficiary
+        """
+        return self.br.get("case_language_details", True)
+
     def get_br_household_size(self):
         """
             Track the number of persons per household (family)
