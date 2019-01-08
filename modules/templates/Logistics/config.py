@@ -7,7 +7,7 @@ from gluon.storage import Storage
 
 def config(settings):
     """
-        Template settings for Logistics
+        Logistics generic template
 
         Based on:
         Relief Goods and Inventory Management System
@@ -16,14 +16,15 @@ def config(settings):
 
     T = current.T
 
-    settings.base.system_name = "Sahana Shelter Requests"
-    #settings.base.system_name_short = "Sahana"
+    settings.base.system_name = "Sahana Logistics Management"
+    settings.base.system_name_short = "Sahana Logs"
 
     # Pre-Populate
-    settings.base.prepopulate += ("Requests", "default/users")
+    settings.base.prepopulate += ("Logistics",)
+    #settings.base.prepopulate_demo += ("Projects/Demo",)
 
     # Theme
-    #settings.base.theme = "Requests"
+    #settings.base.theme = "Logistics"
 
     settings.auth.registration_requests_organisation = True
     settings.auth.registration_requests_site = True
@@ -57,7 +58,7 @@ def config(settings):
     settings.auth.realm_entity = rgims_realm_entity
 
     # Enable this for a UN-style deployment
-    settings.ui.cluster = True
+    #settings.ui.cluster = True
     # Enable this to use the label 'Camp' instead of 'Shelter'
     #settings.ui.camp = True
 
@@ -87,6 +88,18 @@ def config(settings):
     #    35: T("Confiscated Goods from Bureau Of Customs")
     #    }
 
+    # -------------------------------------------------------------------------
+    # Setup
+    settings.setup.wizard_questions += [{"question": "Will you record data for multiple Organisations?",
+                                         "setting": "hrm.multiple_orgs",
+                                         "options": {True: "Yes", False: "No"},
+                                         },
+                                        {"question": "Do you need support for Branch Organisations?",
+                                         "setting": "org.branches",
+                                         "options": {True: "Yes", False: "No"},
+                                         },
+                                        ]
+
     # Comment/uncomment modules here to disable/enable them
     settings.modules = OrderedDict([
         # Core modules which shouldn't be disabled
@@ -115,18 +128,24 @@ def config(settings):
                 restricted = False,
                 module_type = None  # No Menu
             )),
-        ("sync", Storage(
-                name_nice = T("Synchronization"),
-                #description = "Synchronization",
-                restricted = True,
-                access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
-                module_type = None  # This item is handled separately for the menu
-            )),
+        ("setup", Storage(
+            name_nice = T("Setup"),
+            #description = "Configuration Wizard",
+            restricted = False,
+            module_type = None  # No Menu
+        )),
+        #("sync", Storage(
+        #        name_nice = T("Synchronization"),
+        #        #description = "Synchronization",
+        #        restricted = True,
+        #        access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
+        #        module_type = None  # This item is handled separately for the menu
+        #    )),
         ("gis", Storage(
                 name_nice = T("Map"),
                 #description = "Situation Awareness & Geospatial Analysis",
                 restricted = True,
-                module_type = 6,     # 6th item in the menu
+                module_type = 10,
             )),
         ("pr", Storage(
                 name_nice = T("Person Registry"),
@@ -177,62 +196,39 @@ def config(settings):
                 name_nice = T("Warehouses"),
                 #description = "Receiving and Sending Items",
                 restricted = True,
-                module_type = 10
+                module_type = 1
             )),
-        #("proc", Storage(
-        #        name_nice = T("Procurement"),
-        #        #description = "Ordering & Purchasing of Goods & Services",
-        #        restricted = True,
-        #        module_type = 10
-        #    )),
-        #("asset", Storage(
-        #        name_nice = T("Assets"),
-        #        #description = "Recording and Assigning Assets",
-        #        restricted = True,
-        #        module_type = 10,
-        #    )),
+        ("asset", Storage(
+                name_nice = T("Assets"),
+                #description = "Recording and Assigning Assets",
+                restricted = True,
+                module_type = 3,
+            )),
         # Vehicle depends on Assets
-        #("vehicle", Storage(
-        #        name_nice = T("Vehicles"),
-        #        #description = "Manage Vehicles",
-        #        restricted = True,
-        #        module_type = 10,
-        #    )),
+        ("vehicle", Storage(
+                name_nice = T("Vehicles"),
+                #description = "Manage Vehicles",
+                restricted = True,
+                module_type = 10,
+            )),
+        # Very basic module: Needs work to be useful
+        ("proc", Storage(
+                name_nice = T("Procurement"),
+                #description = "Ordering & Purchasing of Goods & Services",
+                restricted = True,
+                module_type = 10,
+            )),
         ("req", Storage(
             name_nice = T("Requests"),
             #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
             restricted = True,
             module_type = 2,
         )),
-        #("project", Storage(
-        #        name_nice = T("Projects"),
-        #        #description = "Tracking of Projects, Activities and Tasks",
+        #("cr", Storage(
+        #        name_nice = T("Shelters"),
+        #        #description = "Tracks the location, capacity and breakdown of victims in Shelters",
         #        restricted = True,
-        #        module_type = 10
-        #    )),
-        #("survey", Storage(
-        #        name_nice = T("Surveys"),
-        #        #description = "Create, enter, and manage surveys.",
-        #        restricted = True,
-        #        module_type = 10,
-        #    )),
-        ("cr", Storage(
-                name_nice = T("Shelters"),
-                #description = "Tracks the location, capacity and breakdown of victims in Shelters",
-                restricted = True,
-               module_type = 1,
-            )),
-        #("hms", Storage(
-        #        name_nice = T("Hospitals"),
-        #        #description = "Helps to monitor status of hospitals",
-        #        restricted = True,
-        #        module_type = 10
-        #    )),
-        #("irs", Storage(
-        #        name_nice = T("Incidents"),
-        #        #description = "Incident Reporting System",
-        #        restricted = False,
-        #        module_type = 10
+        #       module_type = 1,
         #    )),
     ])
 
