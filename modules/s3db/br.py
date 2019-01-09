@@ -586,6 +586,7 @@ class BRCaseActivityModel(S3Model):
                            label = T("Need Details"),
                            represent = s3_text_represent,
                            widget = s3_comments_widget,
+                           # TODO tooltip
                            ),
                      Field("activity_details", "text",
                            label = T("Support provided"),
@@ -597,16 +598,16 @@ class BRCaseActivityModel(S3Model):
                      status_id(),
 
                      # Dates
-                     s3_date("start_date",
-                             label = T("Date"),
+                     s3_date(label = T("Date"),
                              default = "now",
                              set_min = "#br_case_activity_end_date",
                              ),
                      s3_date("end_date",
-                             label = T("Completed on"),
+                             label = T("Closed on"),
+                             # TODO make optional CRUD field
                              readable = False,
                              writable = False,
-                             set_max = "#br_case_activity_start_date",
+                             set_max = "#br_case_activity_date",
                              ),
 
                      # Outcome
@@ -640,46 +641,57 @@ class BRCaseActivityModel(S3Model):
         crud_fields = ["person_id",
                        human_resource_id,
                        "priority",
-                       "subject",
-                       "need_details",
-                       "activity_details",
-                       "status_id",
-                       "start_date",
-                       "end_date",
-                       "outcome",
+                       "date",
+                       "subject",           # TODO alternative: need
+                       "need_details",      # TODO make optional
+                       "activity_details",  # TODO alternative: responses
+                       "status_id",         # TODO make optional
+                       #"end_date",         # TODO make optional
+                       "outcome",           # TODO make optional
                        attachments,
                        "comments",
                        ]
 
-        # List fields
-        list_fields = ["person_id",
-                       "priority",
-                       "subject",
-                       "start_date",
+        # List fields (for case file tab)
+        list_fields = ["priority",
+                       "date",
+                       "subject",           # TODO alternative: need
                        human_resource_id,
-                       "status_id",
+                       "status_id",         # TODO make optional
+                       #"end_date",         # TODO make optional
                        ]
 
-        # Filter widgets TODO
-        #filter_widgets = [S3TextFilter(["person_id$pe_label",
-        #                                "person_id$first_name",
-        #                                "person_id$last_name",
-        #                                "need_details",
-        #                                "activity_details",
-        #                                ],
-        #                                label = T("Search"),
-        #                                ),
-        #                  ]
+        # Filter widgets
+        filter_widgets = [S3TextFilter(["person_id$pe_label",
+                                        "person_id$first_name",
+                                        "person_id$middle_name",
+                                        "person_id$last_name",
+                                        "subject",
+                                        ],
+                                        label = T("Search"),
+                                        ),
+                          S3DateFilter("date",
+                                       hidden = True,
+                                       ),
+                          S3OptionsFilter("status_id",
+                                          cols = 4,
+                                          hidden = True,
+                                          sort = False,
+                                          options = s3_get_filter_opts(
+                                                      "br_case_activity_status",
+                                                      orderby = "br_case_activity_status.workflow_position",
+                                                      ),
+                                          ),
+                         ]
 
         # Report options TODO
 
         # Table configuration
         configure(tablename,
                   crud_form = S3SQLCustomForm(*crud_fields),
-                  #filter_widgets = filter_widgets,
+                  filter_widgets = filter_widgets,
                   list_fields = list_fields,
-                  #onaccept = self.case_activity_onaccept,
-                  #onvalidation = self.case_activity_onvalidation,
+                  onaccept = self.case_activity_onaccept,
                   orderby = "br_case_activity.priority",
                   #report_options = report_options,
                   # TODO
@@ -752,6 +764,54 @@ class BRCaseActivityModel(S3Model):
         if "is_default" in form_vars and form_vars.is_default:
             table = current.s3db.br_case_activity_status
             current.db(table.id != record_id).update(is_default = False)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_activity_onaccept(form):
+        """
+            Onaccept-callback for case activites:
+                - set end date when marked as completed
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Read form data
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        # Get current status and end_date of the record
+        atable = s3db.br_case_activity
+        stable = s3db.br_case_activity_status
+
+        join = stable.on(atable.status_id == stable.id)
+        query = (atable.id == record_id)
+
+        row = db(query).select(atable.id,
+                               atable.end_date,
+                               stable.is_closed,
+                               join = join,
+                               limitby = (0, 1),
+                               ).first()
+        if row:
+            data = {}
+            activity = row.br_case_activity
+
+            if row.br_case_activity_status.is_closed:
+                # Set the end-date if it hasn't been set before
+                if not activity.end_date:
+                    data["end_date"] = current.request.utcnow.date()
+            elif activity.end_date:
+                # Remove the end-date
+                data["end_date"] = None
+
+            if data:
+                activity.update_record(**data)
 
 # =============================================================================
 class BRResponseModel(S3Model):

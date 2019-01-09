@@ -3913,6 +3913,7 @@ def s3_get_filter_opts(tablename,
                        org_filter = False,
                        key = "id",
                        none = False,
+                       orderby = None,
                        translate = False,
                        ):
     """
@@ -3931,6 +3932,8 @@ def s3_get_filter_opts(tablename,
         @param org_filter: whether to filter the values by root_org
         @param key: the option key field (if not "id", e.g. a super key)
         @param none: whether to include an option for None
+        @param orderby: orderby-expression as alternative to alpha-sorting
+                        of options in widget (=> set widget sort=False)
         @param translate: whether to translate the values
     """
 
@@ -3952,16 +3955,22 @@ def s3_get_filter_opts(tablename,
                           (table.organisation_id == None))
             #else:
             #    query &= (table.organisation_id == None)
+        if orderby is None:
+            # Options are alpha-sorted later in widget
+            odict = dict
+        else:
+            # Options-dict to retain order
+            odict = OrderedDict
         rows = current.db(query).select(table[key],
                                         table[fieldname],
-                                        # Options are sorted later
-                                        #orderby = table[fieldname]
+                                        orderby = orderby,
                                         )
+
         if translate:
             T = current.T
-            opts = dict((row[key], T(row[fieldname])) for row in rows)
+            opts = odict((row[key], T(row[fieldname])) for row in rows)
         else:
-            opts = dict((row[key], row[fieldname]) for row in rows)
+            opts = odict((row[key], row[fieldname]) for row in rows)
         if none:
             opts[None] = current.messages["NONE"]
     else:

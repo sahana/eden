@@ -630,6 +630,49 @@ def document():
                               )
 
 # =============================================================================
+# Case Activities
+#
+def case_activity():
+    """ Case Activities: RESTful CRUD controller """
+
+    def prep(r):
+
+        resource = r.resource
+        table = resource.table
+
+        labels = s3db.br_terminology()
+
+        # Filter for valid+open cases
+        query = (FS("person_id$case.id") != None) & \
+                (FS("person_id$case.invalid") == False) & \
+                (FS("person_id$case.status_id$is_closed") == False)
+
+        # TODO mine-filter
+
+        resource.add_filter(query)
+
+        # Represent person_id as link to case file
+        field = table.person_id
+        field.label = labels.CASE
+        field.represent = s3db.pr_PersonRepresent(show_link=True)
+
+        # Add case data to list fields
+        list_fields = resource.get_config("list_fields")
+        list_fields[1:1] = [(T("ID"), "person_id$pe_label"),
+                            "person_id",
+                            ]
+
+        # Create/delete must happen on case file tab, not here
+        resource.configure(insertable = False,
+                           deletable = False,
+                           )
+
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# =============================================================================
 # Look-up Tables
 #
 def case_status():

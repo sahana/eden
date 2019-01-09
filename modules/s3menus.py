@@ -598,6 +598,9 @@ class S3OptionsMenu(object):
                     M(LABELS.CURRENT, f="person", vars={"closed": "0"})(
                         M(crud_strings.label_create, m="create"),
                         ),
+                    M("Overviews", link=False)(
+                        M("All Activities", f="case_activity"),
+                        ),
                     M("Archive", link=False)(
                         M(LABELS.CLOSED, f="person",
                           vars = {"closed": "1"},
