@@ -220,10 +220,10 @@ def config(settings):
                                                  case.organisation_id,
                                                  )
 
-        elif tablename in (#"br_case_activity",
+        elif tablename in ("br_case_activity",
                            #"br_case_details",
                            #"br_case_flag_case",
-                           #"br_case_language",
+                           "br_case_language",
                            #"br_note",
                            #"br_residence_status",
                            "pr_group_membership",

@@ -592,6 +592,8 @@ class S3OptionsMenu(object):
         LABELS = s3db.br_terminology()
         crud_strings = s3db.br_crud_strings("pr_person")
 
+        settings = current.deployment_settings
+
         return M(c="br")(
                     M(LABELS.CURRENT, f="person", vars={"closed": "0"})(
                         M(crud_strings.label_create, m="create"),
@@ -607,6 +609,9 @@ class S3OptionsMenu(object):
                         ),
                     M("Administration", link=False, restrict=[ADMIN])(
                         M("Case Statuses", f="case_status"),
+                        M("Case Activity Statuses", f="case_activity_status",
+                          check = lambda i: settings.get_br_case_activities(),
+                          ),
                         ),
                     )
 

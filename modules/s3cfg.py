@@ -2694,6 +2694,18 @@ class S3Config(Storage):
         """
         return self.br.get("case_hide_default_org", True)
 
+    def get_br_case_manager(self):
+        """
+            Assign cases to individual case managers (staff members)
+        """
+        return self.br.get("case_manager", True)
+
+    def get_br_case_address(self):
+        """
+            Document the current address of beneficiaries
+        """
+        return self.br.get("case_address", False)
+
     def get_br_case_language_details(self):
         """
             Document languages that can be used when communicating with
@@ -2748,13 +2760,32 @@ class S3Config(Storage):
         """
             Documents-tab of case files includes activity attachments
         """
-        return self.dvr.get("case_include_activity_docs", False)
+        return self.get_br_case_activity_documents() and \
+               self.br.get("case_include_activity_docs", True)
 
     def get_br_case_include_group_docs(self):
         """
-            Documents-tab of case includes case group attachments
+            Documents-tab of case files includes case group attachments
         """
-        return self.dvr.get("case_include_group_docs", True)
+        return self.br.get("case_include_group_docs", True)
+
+    def get_br_case_activities(self):
+        """
+            Track case activities
+        """
+        return self.br.get("case_activities", True)
+
+    def get_br_case_activity_manager(self):
+        """
+            Assign case activities to individual staff members
+        """
+        return self.br.get("case_activity_manager", True)
+
+    def get_br_case_activity_documents(self):
+        """
+            Case activities have attachments
+        """
+        return self.br.get("case_activity_documents", False)
 
     # -------------------------------------------------------------------------
     # CAP: Common Alerting Protocol

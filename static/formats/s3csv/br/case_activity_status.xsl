@@ -3,12 +3,11 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         BR Case Status - CSV Import Stylesheet
+         BR Case Activity Status - CSV Import Stylesheet
 
          CSV column...........Format..........Content
 
          Position.............integer.........Workflow Position
-         Code.................string..........Status Code
          Status...............string..........Status Name
          Default..............string..........is default status
                                               true|false
@@ -28,14 +27,10 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-        <resource name="br_case_status">
+        <resource name="br_case_activity_status">
 
             <data field="workflow_position">
                 <xsl:value-of select="col[@field='Position']/text()"/>
-            </data>
-
-            <data field="code">
-                <xsl:value-of select="col[@field='Code']/text()"/>
             </data>
 
             <data field="name">

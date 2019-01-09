@@ -954,6 +954,11 @@ class PRPersonModel(S3Model):
                        onaccept = self.pr_person_onaccept,
                        realm_components = ("address",
                                            "contact",
+                                           "contact_emergency",
+                                           "identity",
+                                           "image",
+                                           "person_details",
+                                           "person_tag",
                                            "presence",
                                            ),
                        super_entity = ("pr_pentity", "sit_trackable"),
@@ -1137,6 +1142,7 @@ class PRPersonModel(S3Model):
                                       "multiple": False,
                                       },
                            br_case_language = "person_id",
+                           br_case_activity = "person_id",
                            )
         else:
             # Use DVR for case management

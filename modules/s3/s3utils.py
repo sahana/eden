@@ -1783,6 +1783,43 @@ def sort_dict_by_values(adict):
     return OrderedDict(sorted(adict.items(), key = lambda item: item[1]))
 
 # =============================================================================
+class S3PriorityRepresent(object):
+    """
+        Color-coded representation of priorities
+    """
+
+    def __init__(self, options, classes=None):
+        """
+            Constructor
+
+            @param options: the options (as dict or anything that can be
+                            converted into a dict)
+            @param classes: a dict mapping keys to CSS class suffixes
+        """
+
+        self.options = dict(options)
+        self.classes = classes
+
+    def represent(self, value, row=None):
+        """
+            Representation function
+
+            @param value: the value to represent
+        """
+
+        css_class = base_class = "prio"
+
+        classes = self.classes
+        if classes:
+            suffix = classes.get(value)
+            if suffix:
+                css_class = "%s %s-%s" % (css_class, base_class, suffix)
+
+        label = self.options.get(value)
+
+        return DIV(label, _class=css_class)
+
+# =============================================================================
 class Traceback(object):
     """ Generate the traceback for viewing error Tickets """
 

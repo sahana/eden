@@ -29,7 +29,7 @@
 
 __all__ = ("BRCaseModel",
            "BRNeedsModel",
-           "BRInstanceModel",
+           "BRCaseActivityModel",
            "BRResponseModel",
            "BRAppointmentModel",
            "BRCaseEventModel",
@@ -44,6 +44,7 @@ __all__ = ("BRCaseModel",
            "br_case_read_orgs",
            "br_case_default_org",
            "br_case_default_status",
+           "br_case_status_filter_opts",
            "br_group_membership_onaccept",
            "br_household_size",
            "br_rheader",
@@ -97,16 +98,6 @@ class BRCaseModel(S3Model):
         #
         tablename = "br_case_status"
         define_table(tablename,
-                     Field("workflow_position", "integer",
-                           default = 1,
-                           label = T("Workflow Position"),
-                           requires = IS_INT_IN_RANGE(1, None),
-                           comment = DIV(_class = "tooltip",
-                                         _title = "%s|%s" % (T("Workflow Position"),
-                                                             T("Rank when ordering cases by status"),
-                                                             ),
-                                         ),
-                           ),
                      Field("code", length=64, notnull=True, unique=True,
                            label = T("Status Code"),
                            requires = [IS_NOT_EMPTY(),
@@ -125,6 +116,16 @@ class BRCaseModel(S3Model):
                            label = T("Status"),
                            # Prep only, to allow single column imports of cases:
                            #requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("workflow_position", "integer",
+                           default = 1,
+                           label = T("Workflow Position"),
+                           requires = IS_INT_IN_RANGE(1, None),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Workflow Position"),
+                                                             T("Rank when ordering cases by status"),
+                                                             ),
+                                         ),
                            ),
                      Field("is_default", "boolean",
                            default = False,
@@ -176,12 +177,13 @@ class BRCaseModel(S3Model):
                                             ignore_deleted = True,
                                             ),
                   onaccept = self.case_status_onaccept,
+                  orderby = "%s.workflow_position" % tablename,
                   )
 
         # Reusable field
         represent = S3Represent(lookup=tablename, translate=True)
         status_id = S3ReusableField("status_id", "reference %s" % tablename,
-                                    label = T("Status"),
+                                    label = T("Case Status"),
                                     ondelete = "RESTRICT",
                                     represent = represent,
                                     requires = IS_EMPTY_OR(
@@ -196,7 +198,10 @@ class BRCaseModel(S3Model):
         # ---------------------------------------------------------------------
         # Case: TODO explain entity
         #
+
+        # Case assignment options
         default_organisation = settings.get_org_default_organisation()
+        case_manager = settings.get_br_case_manager()
 
         # Household size tracking
         household_size = settings.get_br_household_size()
@@ -211,6 +216,18 @@ class BRCaseModel(S3Model):
                             default = default_organisation,
                             readable = not default_organisation,
                             writable = not default_organisation,
+                            ),
+                     self.hrm_human_resource_id(
+                            label = T("Assigned To"),
+                            comment = DIV(_class = "tooltip",
+                                          _title = "%s|%s" % (T("Assigned To"),
+                                                              T("The staff member managing this case"),
+                                                              ),
+                                          ),
+                            represent = self.hrm_HumanResourceRepresent(show_link=False),
+                            widget = None,
+                            readable = case_manager,
+                            writable = case_manager,
                             ),
 
                      # The beneficiary
@@ -258,6 +275,7 @@ class BRCaseModel(S3Model):
         self.configure(tablename,
                        create_onaccept = self.case_create_onaccept,
                        update_onaccept = self.case_onaccept,
+                       update_realm = True,
                        super_entity = ("doc_entity",),
                        )
 
@@ -372,43 +390,368 @@ class BRCaseModel(S3Model):
         # Get the person ID
         person_id = case.person_id
 
-        # Auto-create standard appointments TODO
-        #atable = s3db.br_case_appointment
-        #ttable = s3db.br_case_appointment_type
-        #left = atable.on((atable.type_id == ttable.id) &
-        #                 (atable.person_id == person_id) &
-        #                 (atable.deleted != True))
-        #query = (atable.id == None) & \
-        #        (ttable.active == True) & \
-        #        (ttable.deleted != True)
-        #rows = db(query).select(ttable.id, left=left)
-        #for row in rows:
-        #    atable.insert(case_id = record_id,
-        #                  person_id = person_id,
-        #                  type_id = row.id,
-        #                  )
+        if person_id:
+            # Update realm entity throughout the case file
+            # in case the org/branch has changed:
+            set_realm_entity = current.auth.set_realm_entity
 
-        if create and \
-           current.deployment_settings.get_br_household_size() == "auto":
-            # Count household size for newly created cases, in order
-            # to catch pre-existing case group memberships
-            gtable = s3db.pr_group
-            mtable = s3db.pr_group_membership
-            query = ((mtable.person_id == person_id) & \
-                     (mtable.deleted != True) & \
-                     (gtable.id == mtable.group_id) & \
-                     (gtable.group_type == 7))
-            rows = db(query).select(gtable.id)
-            for row in rows:
-                br_household_size(row.id)
+            # Force-update the realm entity for the person record
+            # and its primary components
+            s3db.configure("pr_person",
+                           realm_components = (#"case_details",
+                                               "case_language",
+                                               "address",
+                                               "contact",
+                                               "contact_emergency",
+                                               "group_membership",
+                                               "identity",
+                                               "image",
+                                               "person_details",
+                                               "person_tag",
+                                               # TODO
+                                               # appointments
+                                               # case events
+                                               # notes
+                                               ),
+                           )
+            set_realm_entity("pr_person", person_id, force_update=True)
+
+            # Force-update the realm entity for all related activities
+            atable = s3db.br_case_activity
+            query = (atable.person_id == person_id)
+            set_realm_entity(atable, query, force_update=True)
+
+            # Force-update the realm entity for all related responses (TODO)
+
+            # Auto-create standard appointments (if create) TODO
+
+            if create and \
+               current.deployment_settings.get_br_household_size() == "auto":
+                # Count household size for newly created cases, in order
+                # to catch pre-existing case group memberships
+                gtable = s3db.pr_group
+                mtable = s3db.pr_group_membership
+                query = ((mtable.person_id == person_id) & \
+                         (mtable.deleted != True) & \
+                         (gtable.id == mtable.group_id) & \
+                         (gtable.group_type == 7))
+                rows = db(query).select(gtable.id)
+                for row in rows:
+                    br_household_size(row.id)
 
 # =============================================================================
 class BRNeedsModel(S3Model):
     pass
 
 # =============================================================================
-class BRInstanceModel(S3Model):
-    pass
+class BRCaseActivityModel(S3Model):
+    """ Model for case activities """
+
+    names = ("br_case_activity",
+             "br_case_activity_status",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+        settings = current.deployment_settings
+
+        define_table = self.define_table
+        configure = self.configure
+        crud_strings = s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Activity Status
+        #
+        tablename = "br_case_activity_status"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Status"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("workflow_position", "integer",
+                           label = T("Workflow Position"),
+                           requires = IS_INT_IN_RANGE(0, None),
+                           ),
+                     Field("is_default", "boolean",
+                           default = False,
+                           label = T("Default Status"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     Field("is_closed", "boolean",
+                           default = False,
+                           label = T("Closes Activity"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table Configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            ignore_deleted = True,
+                                            ),
+                  onaccept = self.case_activity_status_onaccept,
+                  orderby = "%s.workflow_position" % tablename,
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Activity Status"),
+            title_display = T("Activity Status Details"),
+            title_list = T("Activity Statuses"),
+            title_update = T("Edit Activity Status"),
+            label_list_button = T("List Activity Statuses"),
+            label_delete_button = T("Delete Activity Status"),
+            msg_record_created = T("Activity Status created"),
+            msg_record_modified = T("Activity Status updated"),
+            msg_record_deleted = T("Activity Status deleted"),
+            msg_list_empty = T("No Activity Statuses currently defined"),
+        )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        status_id = S3ReusableField("status_id",
+                                    "reference %s" % tablename,
+                                    label = T("Status"),
+                                    represent = represent,
+                                    requires = IS_ONE_OF(db, "%s.id" % tablename,
+                                                         represent,
+                                                         orderby = "workflow_position",
+                                                         sort = False,
+                                                         zero = None,
+                                                         ),
+                                    sortby = "workflow_position",
+                                    )
+
+        # ---------------------------------------------------------------------
+        # Activity: generic problem container to track beneficiary support
+        #           (subject-based/need-based)
+        #
+        case_activity_manager = settings.get_br_case_activity_manager()
+
+        # Priority options
+        priority_opts = [#(0, T("Urgent")),
+                         (1, T("High")),
+                         (2, T("Normal")),
+                         (3, T("Low")),
+                         ]
+
+        tablename = "br_case_activity"
+        define_table(tablename,
+                     self.super_link("doc_id", "doc_entity"),
+
+                     # Beneficiary
+                     self.pr_person_id(comment = None,
+                                       empty = False,
+                                       ondelete = "CASCADE",
+                                       writable = False,
+                                       ),
+
+                     # Case Manager
+                     self.hrm_human_resource_id(
+                            label = T("Assigned To"),
+                            comment = DIV(_class = "tooltip",
+                                          _title = "%s|%s" % (T("Assigned To"),
+                                                              T("The staff member managing this activity"),
+                                                              ),
+                                          ),
+                            represent = self.hrm_HumanResourceRepresent(show_link=False),
+                            widget = None,
+                            readable = case_activity_manager,
+                            writable = case_activity_manager,
+                            ),
+
+                     # Priority
+                     Field("priority", "integer",
+                           label = T("Priority"),
+                           represent = S3PriorityRepresent(priority_opts,
+                                                           {0: "red",
+                                                            1: "blue",
+                                                            2: "lightblue",
+                                                            3: "grey",
+                                                            }).represent,
+                           requires = IS_IN_SET(priority_opts, sort=False, zero=None),
+                           default = 2, # normal
+                           ),
+
+                     # Subject and Details
+                     Field("subject",
+                           label = T("Subject / Occasion"),
+                           ),
+                     Field("need_details", "text",
+                           label = T("Need Details"),
+                           represent = s3_text_represent,
+                           widget = s3_comments_widget,
+                           ),
+                     Field("activity_details", "text",
+                           label = T("Support provided"),
+                           represent = s3_text_represent,
+                           widget = s3_comments_widget,
+                           ),
+
+                     # Status
+                     status_id(),
+
+                     # Dates
+                     s3_date("start_date",
+                             label = T("Date"),
+                             default = "now",
+                             set_min = "#br_case_activity_end_date",
+                             ),
+                     s3_date("end_date",
+                             label = T("Completed on"),
+                             readable = False,
+                             writable = False,
+                             set_max = "#br_case_activity_start_date",
+                             ),
+
+                     # Outcome
+                     Field("outcome", "text",
+                           label = T("Outcome"),
+                           represent = s3_text_represent,
+                           widget = s3_comments_widget,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD form
+        if settings.get_br_case_activity_documents():
+            attachments = S3SQLInlineComponent("document",
+                                               name = "file",
+                                               label = T("Attachments"),
+                                               fields = ["file", "comments"],
+                                               filterby = {"field": "file",
+                                                           "options": "",
+                                                           "invert": True,
+                                                           },
+                                               )
+        else:
+            attachments = None
+
+        if case_activity_manager:
+            human_resource_id = "human_resource_id"
+        else:
+            human_resource_id = None
+
+        crud_fields = ["person_id",
+                       human_resource_id,
+                       "priority",
+                       "subject",
+                       "need_details",
+                       "activity_details",
+                       "status_id",
+                       "start_date",
+                       "end_date",
+                       "outcome",
+                       attachments,
+                       "comments",
+                       ]
+
+        # List fields
+        list_fields = ["person_id",
+                       "priority",
+                       "subject",
+                       "start_date",
+                       human_resource_id,
+                       "status_id",
+                       ]
+
+        # Filter widgets TODO
+        #filter_widgets = [S3TextFilter(["person_id$pe_label",
+        #                                "person_id$first_name",
+        #                                "person_id$last_name",
+        #                                "need_details",
+        #                                "activity_details",
+        #                                ],
+        #                                label = T("Search"),
+        #                                ),
+        #                  ]
+
+        # Report options TODO
+
+        # Table configuration
+        configure(tablename,
+                  crud_form = S3SQLCustomForm(*crud_fields),
+                  #filter_widgets = filter_widgets,
+                  list_fields = list_fields,
+                  #onaccept = self.case_activity_onaccept,
+                  #onvalidation = self.case_activity_onvalidation,
+                  orderby = "br_case_activity.priority",
+                  #report_options = report_options,
+                  # TODO
+                  # realm_components
+                  super_entity = "doc_entity",
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Activity"),
+            title_display = T("Activity Details"),
+            title_list = T("Activities"),
+            title_update = T("Edit Activity"),
+            label_list_button = T("List Activities"),
+            label_delete_button = T("Delete Activity"),
+            msg_record_created = T("Activity added"),
+            msg_record_modified = T("Activity updated"),
+            msg_record_deleted = T("Activity deleted"),
+            msg_list_empty = T("No Activities currently registered"),
+            )
+
+        # Reusable field TODO
+        #represent = dvr_CaseActivityRepresent(show_link=True)
+        #activity_id = S3ReusableField("case_activity_id",
+        #                              "reference %s" % tablename,
+        #                              ondelete = "CASCADE",
+        #                              represent = represent,
+        #                              requires = IS_EMPTY_OR(
+        #                                            IS_ONE_OF(db, "%s.id" % tablename,
+        #                                                      represent,
+        #                                                      )),
+        #                                            )
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        #dummy = S3ReusableField("dummy_id", "integer",
+        #                        readable = False,
+        #                        writable = False,
+        #                        )
+
+        return {#"example_example_id": lambda **attr: dummy("example_id"),
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_activity_status_onaccept(form):
+        """
+            Onaccept routine for activity statuses:
+            - only one status can be the default
+
+            @param form: the FORM
+        """
+
+        form_vars = form.vars
+        try:
+            record_id = form_vars.id
+        except AttributeError:
+            record_id = None
+        if not record_id:
+            return
+
+        # Ensure that there is only one default status
+        if "is_default" in form_vars and form_vars.is_default:
+            table = current.s3db.br_case_activity_status
+            current.db(table.id != record_id).update(is_default = False)
 
 # =============================================================================
 class BRResponseModel(S3Model):
@@ -420,6 +763,10 @@ class BRAppointmentModel(S3Model):
 
 # =============================================================================
 class BRCaseEventModel(S3Model):
+    pass
+
+# =============================================================================
+class BRDistributionModel(S3Model):
     pass
 
 # =============================================================================
@@ -627,9 +974,9 @@ class br_DocEntityRepresent(S3Represent):
                       ptable.last_name,
                       ]
             if instance_type == "br_case_activity":
-                fields.extend((itable.sector_id,
+                fields.extend((#itable.sector_id, # TODO
                                itable.subject,
-                               itable.need_id,
+                               #itable.need_id,   # TODO
                                ))
             if instance_type == "pr_group":
                 fields.extend((itable.name,
@@ -686,22 +1033,24 @@ class br_DocEntityRepresent(S3Represent):
 
             elif instance_type == "br_case_activity":
 
-                table = current.s3db.br_case_activity
+                #table = current.s3db.br_case_activity
                 activity = row.br_case_activity
 
                 title = activity.subject
-                if self.use_need:
-                    need_id = activity.need_id
-                    if need_id:
-                        represent = table.need_id.represent
-                        title = represent(need_id)
+                # TODO
+                #if self.use_need:
+                #    need_id = activity.need_id
+                #    if need_id:
+                #        represent = table.need_id.represent
+                #        title = represent(need_id)
 
                 label = self.activity_label
-                if self.use_sector:
-                    sector_id = activity.sector_id
-                    if sector_id:
-                        represent = table.sector_id.represent
-                        label = represent(sector_id)
+                # TODO
+                #if self.use_sector:
+                #    sector_id = activity.sector_id
+                #    if sector_id:
+                #        represent = table.sector_id.represent
+                #        label = represent(sector_id)
 
             elif instance_type == "pr_group":
 
@@ -760,34 +1109,6 @@ class br_DocEntityRepresent(S3Represent):
 
 # =============================================================================
 # =============================================================================
-def br_case_default_status():
-    """
-        Helper to get/set the default status for case records
-
-        @return: the default status_id
-    """
-
-    s3db = current.s3db
-
-    ctable = s3db.br_case
-    field = ctable.status_id
-
-    default = field.default
-    if not default:
-
-        # Look up the default status
-        stable = s3db.br_case_status
-        query = (stable.is_default == True) & \
-                (stable.deleted != True)
-        row = current.db(query).select(stable.id, limitby=(0, 1)).first()
-
-        if row:
-            # Set as field default in case table
-            default = field.default = row.id
-
-    return default
-
-# -------------------------------------------------------------------------
 def br_case_read_orgs():
     """
         Check if the user has read access to cases of more than one org
@@ -809,7 +1130,7 @@ def br_case_read_orgs():
 
     return multiple_orgs, org_ids
 
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def br_case_default_org():
     """
         Determine the default organisation for new cases
@@ -844,6 +1165,62 @@ def br_case_default_org():
         default_org = orgs[0]
 
     return default_org, multiple_orgs
+
+# -----------------------------------------------------------------------------
+def br_case_default_status():
+    """
+        Helper to get/set the default status for case records
+
+        @return: the default status_id
+    """
+
+    s3db = current.s3db
+
+    ctable = s3db.br_case
+    field = ctable.status_id
+
+    default = field.default
+    if not default:
+
+        # Look up the default status
+        stable = s3db.br_case_status
+        query = (stable.is_default == True) & \
+                (stable.deleted != True)
+        row = current.db(query).select(stable.id, limitby=(0, 1)).first()
+
+        if row:
+            # Set as field default in case table
+            default = field.default = row.id
+
+    return default
+
+# -----------------------------------------------------------------------------
+def br_case_status_filter_opts(closed=None):
+    """
+        Get filter options for case status, ordered by workflow position
+
+        @return: OrderedDict of options
+
+        @note: set sort=False for filter widget to retain this order
+    """
+
+    table = current.s3db.br_case_status
+    query = (table.deleted != True)
+    if closed is not None:
+        if closed:
+            query &= (table.is_closed == True)
+        else:
+            query &= ((table.is_closed == False) | (table.is_closed == None))
+    rows = current.db(query).select(table.id,
+                                    table.name,
+                                    orderby = "workflow_position",
+                                    )
+
+    if not rows:
+        return {}
+
+    T = current.T
+    return OrderedDict((row.id, T(row.name)) for row in rows)
 
 # =============================================================================
 def br_household_size(group_id):
@@ -1060,6 +1437,8 @@ def br_rheader(r, tabs=None):
                     append((T("ID"), "identity"))
                 if settings.get_br_case_family_tab():
                     append((T("Family Members"), "group_membership/"))
+                if settings.get_br_case_activities():
+                    append((T("Activities"), "case_activity"))
                 if settings.get_br_case_photos_tab():
                     append((T("Photos"), "image"))
                 if settings.get_br_case_documents_tab():

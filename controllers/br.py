@@ -47,6 +47,7 @@ def person():
         labels = s3db.br_terminology()
         CASES = labels.CASES
 
+        human_resource_id = auth.s3_logged_in_human_resource()
         insertable = True
 
         if not r.record:
@@ -55,18 +56,22 @@ def person():
 
             # Filter to open/closed cases
             closed = get_vars.get("closed")
+            get_status_filter_opts = s3db.br_case_status_filter_opts
             if closed == "1":
                 # Only closed cases
                 query = FS("case.status_id$is_closed") == True
                 CASES = labels.CLOSED
                 insertable = False
+                status_filter_opts = lambda: get_status_filter_opts(closed=True)
             elif closed == "0":
                 # Only open cases
                 query = (FS("case.status_id$is_closed") == False) | \
                         (FS("case.status_id$is_closed") == None)
                 CASES = labels.CURRENT
+                status_filter_opts = lambda: get_status_filter_opts(closed=False)
             else:
                 query = None
+                status_filter_opts = get_status_filter_opts
 
             # TODO mine URL option
 
@@ -102,6 +107,7 @@ def person():
             # Adapt fields to module context
             table = resource.table
             ctable = s3db.br_case
+            multiple_orgs = s3db.br_case_read_orgs()[0]
 
             # Configure pe_label
             field = table.pe_label
@@ -119,7 +125,6 @@ def person():
             field = ctable.organisation_id
             field.comment = None
             if not field.default:
-                multiple_orgs = s3db.br_case_read_orgs()[0]
                 default_org, selectable = s3db.br_case_default_org()
                 if default_org and settings.get_br_case_hide_default_org():
                     field.writable = selectable
@@ -129,12 +134,36 @@ def person():
             if isinstance(requires, IS_EMPTY_OR):
                 field.requires = requires.other
 
+            # Configure case.human_resource_id
+            field = ctable.human_resource_id
+            if settings.get_br_case_manager():
+                if human_resource_id:
+                    field.default = human_resource_id
+                field.readable = field.writable = True
+            else:
+                field.readable = field.writable = False
+
             # Size of family
             if settings.get_br_household_size() in (False, "auto"):
                 field = ctable.household_size
                 field.readable = field.writable = False
 
-            # Language details
+            # Address (optional)
+            if settings.get_br_case_address():
+                address = S3SQLInlineComponent(
+                                "address",
+                                label = T("Current Address"),
+                                fields = [("", "location_id")],
+                                filterby = {"field": "type",
+                                            "options": "1",
+                                            },
+                                link = False,
+                                multiple = False,
+                                )
+            else:
+                address = None
+
+            # Language details (optional)
             if settings.get_br_case_language_details():
                 language_details = S3SQLInlineComponent(
                                         "case_language",
@@ -155,14 +184,16 @@ def person():
             # Custom CRUD form
             crud_fields = ["case.date",
                            "case.organisation_id",
+                           "case.human_resource_id",
                            "case.status_id",
                            "pe_label",
                            # +name fields
-                           "gender",
                            "person_details.nationality",
                            "date_of_birth",
+                           "gender",
                            "person_details.marital_status",
                            "case.household_size",
+                           address,
                            S3SQLInlineComponent(
                                 "contact",
                                 fields = [("", "value")],
@@ -189,12 +220,58 @@ def person():
                            "case.status_id",
                            ]
 
+            # Add organisation if user can see cases from multiple orgs
+            if multiple_orgs:
+                list_fields.insert(-2, "case.organisation_id")
+
             # Insert name fields in name-format order
             NAMES = ("first_name", "middle_name", "last_name")
             keys = s3base.StringTemplateParser.keys(settings.get_pr_name_format())
             name_fields = [fn for fn in keys if fn in NAMES]
-            crud_fields[3:3] = name_fields
+            crud_fields[5:5] = name_fields
             list_fields[1:1] = name_fields
+
+            resource.configure(crud_form = s3base.S3SQLCustomForm(*crud_fields),
+                               list_fields = list_fields,
+                               )
+
+            # Filter Widgets
+            if not r.record:
+                from s3 import S3TextFilter, S3DateFilter, S3OptionsFilter
+                filter_widgets = [
+                    S3TextFilter(["pe_label",
+                                  "first_name",
+                                  "middle_name",
+                                  "last_name",
+                                  "case.comments",
+                                  ],
+                                  label = T("Search"),
+                                  comment = T("You can search by name, ID or comments"),
+                                  ),
+                    S3DateFilter("date_of_birth",
+                                 hidden = True,
+                                 ),
+                    S3OptionsFilter("case.status_id",
+                                   cols = 3,
+                                   options = status_filter_opts,
+                                   sort = False,
+                                   hidden = True,
+                                   ),
+                    S3OptionsFilter("person_details.nationality",
+                                    hidden = True,
+                                    ),
+                    S3DateFilter("case.date",
+                                 hidden = True,
+                                 ),
+                    ]
+
+                # Org-filter if user can see cases from multiple orgs/branches
+                if multiple_orgs:
+                    filter_widgets.insert(1,
+                                          S3OptionsFilter("case.organisation_id"),
+                                          )
+
+                resource.configure(filter_widgets = filter_widgets)
 
             # Autocomplete search-method
             if r.function == "person_search":
@@ -208,10 +285,13 @@ def person():
                             action = s3db.pr_PersonSearchAutocomplete(search_fields),
                             )
 
-            resource.configure(crud_form = s3base.S3SQLCustomForm(*crud_fields),
-                               list_fields = list_fields,
-                               )
+        elif r.component_name == "case_activity":
 
+            # Configure case_activity.human_resource_id
+            atable = r.component.table
+            if settings.get_br_case_activity_manager() and human_resource_id:
+                field = atable.human_resource_id
+                field.default = human_resource_id
 
         return True
     s3.prep = prep
@@ -472,21 +552,21 @@ def document():
                     doc_ids.append(row.doc_id)
 
         # Include case activities
-        #if include_activity_docs:
-        #
-        #    # Look up relevant case activities
-        #    atable = s3db.br_case_activity
-        #    query = accessible_query("read", atable) & \
-        #            (atable.person_id == record_id) & \
-        #            (atable.deleted == False)
-        #    rows = db(query).select(atable.doc_id,
-        #                            orderby = ~atable.created_on,
-        #                            )
-        #
-        #    # Append the doc_ids
-        #    for row in rows:
-        #        if row.doc_id:
-        #            doc_ids.append(row.doc_id)
+        if include_activity_docs:
+
+           # Look up relevant case activities
+           atable = s3db.br_case_activity
+           query = accessible_query("read", atable) & \
+                   (atable.person_id == record_id) & \
+                   (atable.deleted == False)
+           rows = db(query).select(atable.doc_id,
+                                   orderby = ~atable.created_on,
+                                   )
+
+           # Append the doc_ids
+           for row in rows:
+               if row.doc_id:
+                   doc_ids.append(row.doc_id)
 
         # Hide URL field
         field = table.url
@@ -498,12 +578,15 @@ def document():
         field.default = r.utcnow.date()
         field.writable = False
 
-        # Custom label for name-field
+        # Hide name-field in this context
         field = table.name
-        field.label = T("Title")
+        field.readable = field.writable = False
 
         # List fields
-        list_fields = ["id", "name", "file", "date", "comments"]
+        list_fields = ["id", "file", "date", "comments"]
+
+        # Default order: newest document first
+        orderby = ["doc_document.date desc"]
 
         if include_activity_docs or include_group_docs:
 
@@ -513,11 +596,11 @@ def document():
             field.label = T("Attachment of")
             field.readable = True
             list_fields.insert(1, (T("Attachment of"), "doc_id"))
+            orderby.insert(0, "doc_document.doc_id")
 
         s3db.configure("doc_document",
                        list_fields = list_fields,
-                       # Newest documents first
-                       orderby = "doc_document.date desc",
+                       orderby = orderby,
                        )
 
         # Apply filter and defaults
@@ -560,6 +643,12 @@ def case_status():
 
         return True
     s3.prep = prep
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def case_activity_status():
+    """ Activity Statuses: RESTful CRUD Controller """
 
     return s3_rest_controller()
 
