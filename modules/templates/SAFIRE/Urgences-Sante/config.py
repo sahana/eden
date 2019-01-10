@@ -238,17 +238,17 @@ def config(settings):
             s3db = current.s3db
 
             itable = s3db.event_incident
-            etable = s3db.event_event
 
             record = r.record
             record_id = record.id
             inc_name = record.name
-            zero_hour = record.date
+            zero_hour = itable.zero_hour.represent(record.date)
             exercise = record.exercise
             event_id = record.event_id
             closed = record.closed
 
             if event_id != None:
+                etable = s3db.event_event
                 event = current.db(itable.id == event_id).select(etable.name,
                                                                  limitby=(0, 1),
                                                                  ).first()
