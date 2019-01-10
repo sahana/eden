@@ -2548,7 +2548,7 @@ class S3IncidentLogModel(S3Model):
                           on_define = lambda table: \
                             [table.created_by.set_attributes(represent = s3_auth_user_represent_name),
                              table.created_on.set_attributes(represent = lambda dt: \
-                                                             S3DateTime.datetime_represent(utc=True)),
+                                                             S3DateTime.datetime_represent(dt, utc=True)),
                              ]
                           )
 
@@ -6589,7 +6589,7 @@ def event_notification_dispatcher(r, **attr):
             record = r.record
             record_id = record.id
             inc_name = record.name
-            zero_hour = itable.zero_hour.represent(record.date)
+            zero_hour = itable.date.represent(record.date)
             exercise = record.exercise
             event_id = record.event_id
             closed = record.closed
