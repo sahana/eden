@@ -2547,7 +2547,8 @@ class S3IncidentLogModel(S3Model):
                           *s3_meta_fields(),
                           on_define = lambda table: \
                             [table.created_by.set_attributes(represent = s3_auth_user_represent_name),
-                             table.created_on.set_attributes(represent = S3DateTime.datetime_represent),
+                             table.created_on.set_attributes(represent = lambda dt: \
+                                                             S3DateTime.datetime_represent(utc=True)),
                              ]
                           )
 
@@ -6558,10 +6559,6 @@ def event_notification_dispatcher(r, **attr):
         T = current.T
         s3db = current.s3db
 
-        #ctable = s3db.pr_contact
-        itable = s3db.event_incident
-        etable = s3db.event_event
-
         message = ""
         text = ""
 
@@ -6587,15 +6584,18 @@ def event_notification_dispatcher(r, **attr):
 
         if r.name == "incident":
 
+            itable = s3db.event_incident
+
             record = r.record
             record_id = record.id
             inc_name = record.name
-            zero_hour = record.date
+            zero_hour = itable.zero_hour.represent(record.date)
             exercise = record.exercise
             event_id = record.event_id
             closed = record.closed
 
             if event_id != None:
+                etable = s3db.event_event
                 event = current.db(itable.id == event_id).select(etable.name,
                                                                  limitby=(0, 1),
                                                                  ).first()
@@ -6623,6 +6623,7 @@ def event_notification_dispatcher(r, **attr):
                 "url": url,
                 }
 
+        #ctable = s3db.pr_contact
         #query = (ctable.pe_id == id)
         #recipients = current.db(query).select(ctable.pe_id)
 
