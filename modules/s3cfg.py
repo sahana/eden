@@ -2781,11 +2781,23 @@ class S3Config(Storage):
         """
         return self.br.get("case_activity_manager", True)
 
+    def get_br_case_activity_updates(self):
+        """
+            Use case activity update journal (inline-component)
+        """
+        return self.br.get("case_activity_updates", True)
+
     def get_br_case_activity_documents(self):
         """
             Case activities have attachments
         """
         return self.br.get("case_activity_documents", False)
+
+    def get_br_needs_hierarchical(self):
+        """
+            Need categories are hierarchical
+        """
+        return self.br.get("needs_hierarchical", False)
 
     # -------------------------------------------------------------------------
     # CAP: Common Alerting Protocol

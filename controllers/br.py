@@ -289,9 +289,14 @@ def person():
 
             # Configure case_activity.human_resource_id
             atable = r.component.table
-            if settings.get_br_case_activity_manager() and human_resource_id:
-                field = atable.human_resource_id
-                field.default = human_resource_id
+
+            if human_resource_id:
+                if settings.get_br_case_activity_manager():
+                    atable.human_resource_id.default = human_resource_id
+
+                if settings.get_br_case_activity_updates():
+                    utable = s3db.br_case_activity_update
+                    utable.human_resource_id.default = human_resource_id
 
         return True
     s3.prep = prep
@@ -645,6 +650,7 @@ def case_activity():
         table = resource.table
 
         labels = s3db.br_terminology()
+        human_resource_id = auth.s3_logged_in_human_resource()
 
         # Filter for valid+open cases
         query = (FS("person_id$case.id") != None) & \
@@ -654,6 +660,13 @@ def case_activity():
         # TODO mine-filter
 
         resource.add_filter(query)
+
+        # Set default for human_resource_ids
+        if human_resource_id:
+            table.human_resource_id.default = human_resource_id
+
+            utable = s3db.br_case_activity_update
+            utable.human_resource_id.default = human_resource_id
 
         # Represent person_id as link to case file
         field = table.person_id
@@ -696,6 +709,18 @@ def case_status():
 # -----------------------------------------------------------------------------
 def case_activity_status():
     """ Activity Statuses: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def case_activity_update_type():
+    """ Activity Update Types: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def need():
+    """ Needs: RESTful CRUD Controller """
 
     return s3_rest_controller()
 

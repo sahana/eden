@@ -109,6 +109,7 @@ form {
             .add-row, .edit-row {
                 td {
                     border-top: 1px solid #dddddd;
+                    padding: 0 0.4rem 0.4rem 0.4rem;
                     &.subform-action {
                         vertical-align: bottom;
                     }

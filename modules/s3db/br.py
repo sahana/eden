@@ -52,25 +52,22 @@ __all__ = ("BRCaseModel",
            "br_crud_strings",
            )
 
-#import datetime
-
-#from collections import OrderedDict
+from collections import OrderedDict
 
 from gluon import *
 from gluon.storage import Messages, Storage
 
 from ..s3 import *
-#from s3layouts import S3PopupLink
+from s3layouts import S3PopupLink
 
 CASE_GROUP = 7
 
 # =============================================================================
 class BRCaseModel(S3Model):
     """
-        Model for BR Cases
+        Model to register cases ("case registry") and track their processing
+        status; uses pr_person for beneficiary person data
     """
-
-    # TODO separate table for transferability
 
     names = ("br_case",
              "br_case_status",
@@ -196,7 +193,8 @@ class BRCaseModel(S3Model):
                                     )
 
         # ---------------------------------------------------------------------
-        # Case: TODO explain entity
+        # Case: establishes a case file for the beneficiary (=pr_person),
+        #       thereby linking the person record to the registry
         #
 
         # Case assignment options
@@ -440,15 +438,17 @@ class BRCaseModel(S3Model):
                     br_household_size(row.id)
 
 # =============================================================================
-class BRNeedsModel(S3Model):
-    pass
-
+# Process Models
 # =============================================================================
 class BRCaseActivityModel(S3Model):
-    """ Model for case activities """
+    """
+        Model for problem/needs-oriented case processing: activities taking
+        place in response to individual needs of the beneficiary
+    """
 
     names = ("br_case_activity",
              "br_case_activity_status",
+             "br_case_activity_update_type",
              )
 
     def model(self):
@@ -462,6 +462,8 @@ class BRCaseActivityModel(S3Model):
         define_table = self.define_table
         configure = self.configure
         crud_strings = s3.crud_strings
+
+        hr_represent = self.hrm_HumanResourceRepresent(show_link=False)
 
         # ---------------------------------------------------------------------
         # Activity Status
@@ -559,7 +561,7 @@ class BRCaseActivityModel(S3Model):
                                                               T("The staff member managing this activity"),
                                                               ),
                                           ),
-                            represent = self.hrm_HumanResourceRepresent(show_link=False),
+                            represent = hr_represent,
                             widget = None,
                             readable = case_activity_manager,
                             writable = case_activity_manager,
@@ -619,7 +621,31 @@ class BRCaseActivityModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # Components
+        self.add_components(tablename,
+                            br_case_activity_update = "case_activity_id",
+                            )
+
         # CRUD form
+        if case_activity_manager:
+            human_resource_id = "human_resource_id"
+        else:
+            human_resource_id = None
+
+        if settings.get_br_case_activity_updates():
+            updates = S3SQLInlineComponent("case_activity_update",
+                                           label = T("Progress"),
+                                           fields = ["date",
+                                                     "update_type_id",
+                                                     "human_resource_id",
+                                                     "comments",
+                                                     ],
+                                           layout = S3SQLVerticalSubFormLayout,
+                                           explicit_add = T("Add Entry"),
+                                           )
+        else:
+            updates = None
+
         if settings.get_br_case_activity_documents():
             attachments = S3SQLInlineComponent("document",
                                                name = "file",
@@ -633,11 +659,6 @@ class BRCaseActivityModel(S3Model):
         else:
             attachments = None
 
-        if case_activity_manager:
-            human_resource_id = "human_resource_id"
-        else:
-            human_resource_id = None
-
         crud_fields = ["person_id",
                        human_resource_id,
                        "priority",
@@ -646,6 +667,7 @@ class BRCaseActivityModel(S3Model):
                        "need_details",      # TODO make optional
                        "activity_details",  # TODO alternative: responses
                        "status_id",         # TODO make optional
+                       updates,
                        #"end_date",         # TODO make optional
                        "outcome",           # TODO make optional
                        attachments,
@@ -694,8 +716,8 @@ class BRCaseActivityModel(S3Model):
                   onaccept = self.case_activity_onaccept,
                   orderby = "br_case_activity.priority",
                   #report_options = report_options,
-                  # TODO
-                  # realm_components
+                  realm_components = ("case_activity_update",
+                                      ),
                   super_entity = "doc_entity",
                   )
 
@@ -713,17 +735,93 @@ class BRCaseActivityModel(S3Model):
             msg_list_empty = T("No Activities currently registered"),
             )
 
-        # Reusable field TODO
-        #represent = dvr_CaseActivityRepresent(show_link=True)
-        #activity_id = S3ReusableField("case_activity_id",
-        #                              "reference %s" % tablename,
-        #                              ondelete = "CASCADE",
-        #                              represent = represent,
-        #                              requires = IS_EMPTY_OR(
-        #                                            IS_ONE_OF(db, "%s.id" % tablename,
-        #                                                      represent,
-        #                                                      )),
-        #                                            )
+        # Reusable field
+        # TODO switch default representation between subject and need
+        #      based on deployment setting
+        represent = br_CaseActivityRepresent(show_link=True,
+                                             show_as = "subject",
+                                             )
+        case_activity_id = S3ReusableField("case_activity_id",
+                                           "reference %s" % tablename,
+                                           ondelete = "CASCADE",
+                                           represent = represent,
+                                           requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "%s.id" % tablename,
+                                                                  represent,
+                                                                  )),
+                                                        )
+
+        # ---------------------------------------------------------------------
+        # Activity Update Type:
+        # - describes the occasion (reason) for an update entry
+        #
+        tablename = "br_case_activity_update_type"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Occasion"),
+                           requires = IS_NOT_EMPTY(),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Occasion"),
+                                                             T("The occasion (reason) for an activity update"),
+                                                             ),
+                                         ),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Update Type"),
+            title_display = T("Update Type Details"),
+            title_list = T("Update Types"),
+            title_update = T("Edit Update Type"),
+            label_list_button = T("List Update Types"),
+            label_delete_button = T("Delete Update Type"),
+            msg_record_created = T("Update Type added"),
+            msg_record_modified = T("Update Type updated"),
+            msg_record_deleted = T("Update Type deleted"),
+            msg_list_empty = T("No Update Types currently defined"),
+            )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        update_type_id = S3ReusableField("update_type_id",
+                                         "reference %s" % tablename,
+                                         label = T("Occasion"),
+                                         represent = represent,
+                                         requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "%s.id" % tablename,
+                                                                  represent,
+                                                                  )),
+                                         sortby = "name",
+                                         )
+
+        # ---------------------------------------------------------------------
+        # Activity Updates: inline-journal to document progress
+        #
+        tablename = "br_case_activity_update"
+        define_table(tablename,
+                     case_activity_id(),
+                     s3_date(default = "now",
+                             ),
+                     update_type_id(),
+                     self.hrm_human_resource_id(
+                            represent = hr_represent,
+                            widget = None,
+                            ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table configuration
+        configure(tablename,
+                  orderby = "%s.date" % tablename,
+                  )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -814,30 +912,332 @@ class BRCaseActivityModel(S3Model):
                 activity.update_record(**data)
 
 # =============================================================================
-class BRResponseModel(S3Model):
-    pass
-
-# =============================================================================
 class BRAppointmentModel(S3Model):
+    """
+        Model for workflow-oriented case processing: cases must pass a number
+        of predefined processing steps (=appointments) in order to achieve a
+        certain outcome/status
+    """
+
+    names = ("br_appointment",
+             "br_appointment_type",
+             )
+
+    def model(self):
+
+        # TODO explain entities
+        # TODO controllers
+        # TODO case file tab
+        # TODO auto-create when creating cases
+        # TODO import option/prepop for appointment types
+        # TODO automatic case status updates
+        # TODO mandatory appointments
+        # TODO presence_required and last_seen
+
+        T = current.T
+        db = current.db
+        #settings = current.deployment_settings
+
+        crud_strings = current.response.s3.crud_strings
+
+        configure = self.configure
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Appointment Type
+        #
+        tablename = "br_appointment_type"
+        define_table(tablename,
+                     Field("name", length=64, notnull=True, unique=True,
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       IS_NOT_ONE_OF(db,
+                                                     "%s.name" % tablename,
+                                                     ),
+                                       ],
+                           ),
+                     Field("autocreate", "boolean",
+                           default = True,
+                           label = T("Create automatically"),
+                           represent = s3_yes_no_represent,
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Create automatically"),
+                                                             T("Automatically create this appointment for new cases"),
+                                                             ),
+                                         ),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Appointment Type"),
+            title_display = T("Appointment Type Details"),
+            title_list = T("Appointment Types"),
+            title_update = T("Edit Appointment Type"),
+            label_list_button = T("List Appointment Types"),
+            label_delete_button = T("Delete Appointment Type"),
+            msg_record_created = T("Appointment Type added"),
+            msg_record_modified = T("Appointment Type updated"),
+            msg_record_deleted = T("Appointment Type deleted"),
+            msg_list_empty = T("No Appointment Types currently registered"),
+            )
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename, translate=True)
+        appointment_type_id = S3ReusableField("type_id", "reference %s" % tablename,
+                                              label = T("Appointment Type"),
+                                              ondelete = "RESTRICT",
+                                              represent = represent,
+                                              requires = IS_EMPTY_OR(
+                                                              IS_ONE_OF(db, "dvr_case_appointment_type.id",
+                                                                        represent,
+                                                                        )),
+                                              )
+
+        # ---------------------------------------------------------------------
+        # Appointment
+        #
+        # TODO reduce statuses
+        appointment_status_opts = {1: T("Planning"),
+                                   2: T("Planned"),
+                                   3: T("In Progress"),
+                                   4: T("Completed"),
+                                   5: T("Missed"),
+                                   6: T("Cancelled"),
+                                   7: T("Not Required"),
+                                   }
+
+        tablename = "br_appointment"
+        define_table(tablename,
+                     self.pr_person_id(comment = None,
+                                       empty = False,
+                                       ondelete = "CASCADE",
+                                       writable = False,
+                                       ),
+                     appointment_type_id(empty = False,
+                                         ),
+                     s3_date(),
+                     # Activate in template as needed:
+                     self.hrm_human_resource_id(readable=False,
+                                                writable=False,
+                                                ),
+                     Field("status", "integer",
+                           default = 1, # Planning
+                           requires = IS_IN_SET(appointment_status_opts,
+                                                zero = None,
+                                                ),
+                           represent = S3Represent(options = appointment_status_opts,
+                                                   ),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Appointment"),
+            title_display = T("Appointment Details"),
+            title_list = T("Appointments"),
+            title_update = T("Edit Appointment"),
+            label_list_button = T("List Appointments"),
+            label_delete_button = T("Delete Appointment"),
+            msg_record_created = T("Appointment added"),
+            msg_record_modified = T("Appointment updated"),
+            msg_record_deleted = T("Appointment deleted"),
+            msg_list_empty = T("No Appointments currently registered"),
+            )
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("person_id",
+                                                       "type_id",
+                                                       ),
+                                            ),
+                  )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        #dummy = S3ReusableField("dummy_id", "integer",
+        #                        readable = False,
+        #                        writable = False,
+        #                        )
+
+        return {}
+
+# =============================================================================
+# Category Models
+# =============================================================================
+class BRNeedsModel(S3Model):
+    """ Model for Need Categories """
+
+    names = ("br_need",
+             "br_need_id",
+             )
+
+    def model(self):
+
+        # TODO controller
+        # TODO Make org component
+        # TODO Admin menu item resp. org tab
+        # TODO Import/Prepop
+
+        T = current.T
+        db = current.db
+
+        settings = current.deployment_settings
+        crud_strings = current.response.s3.crud_strings
+
+        hierarchical_needs = settings.get_br_needs_hierarchical()
+        # TODO setting for org-specific need types
+
+        # ---------------------------------------------------------------------
+        # Needs: categories of things a beneficiary needs, e.g. shelter,
+        #        protection, water, food, psychological support...
+        #
+        tablename = "br_need"
+        self.define_table(tablename,
+                          Field("name",
+                                label = T("Need"),
+                                requires = IS_NOT_EMPTY(),
+                                ),
+                          # This form of hierarchy may not work on all Databases:
+                          Field("parent", "reference br_need",
+                                label = T("Subtype of"),
+                                ondelete = "RESTRICT",
+                                readable = hierarchical_needs,
+                                writable = hierarchical_needs,
+                                ),
+                          # Activate in template as needed:
+                          self.org_organisation_id(readable = False,
+                                                   writable = False,
+                                                   ),
+                          Field("protection", "boolean",
+                                default = False,
+                                label = T("Protection Need"),
+                                represent = s3_yes_no_represent,
+                                readable = False,
+                                writable = False,
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # Hierarchy
+        if hierarchical_needs:
+            hierarchy = "parent"
+            widget = S3HierarchyWidget(multiple = False,
+                                       leafonly = False,
+                                       )
+        else:
+            hierarchy = None
+            widget = None
+
+        # Table configuration
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("name",),
+                                                 secondary = ("parent",
+                                                              "organisation_id",
+                                                              ),
+                                                 ),
+                       hierarchy = hierarchy,
+                       )
+
+        # CRUD Strings
+        ADD_NEED = T("Create Need Type")
+        crud_strings[tablename] = Storage(
+            label_create = ADD_NEED,
+            title_display = T("Need Type Details"),
+            title_list = T("Need Types"),
+            title_update = T("Edit Need Type"),
+            label_list_button = T("List Need Types"),
+            label_delete_button = T("Delete Need Type"),
+            msg_record_created = T("Need Type added"),
+            msg_record_modified = T("Need Type updated"),
+            msg_record_deleted = T("Need Type deleted"),
+            msg_list_empty = T("No Need Types found"),
+            )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        need_id = S3ReusableField("need_id", "reference %s" % tablename,
+                                  label = T("Need Type"),
+                                  ondelete = "RESTRICT",
+                                  represent = represent,
+                                  requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "%s.id" % tablename,
+                                                          represent,
+                                                          )),
+                                  comment = S3PopupLink(c = "br",
+                                                        f = "need",
+                                                        title = ADD_NEED,
+                                                        tooltip = T("Choose the need type from the drop-down, or click the link to create a new type"),
+                                                        ),
+                                  widget = widget,
+                                  )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"br_need_id": need_id,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
+
+        return {"br_need_id": lambda **attr: dummy("need_id", **attr),
+                }
+
+# =============================================================================
+class BRVulnerabilityModel(S3Model):
     pass
 
 # =============================================================================
-class BRCaseEventModel(S3Model):
+# Response Action Models
+# =============================================================================
+class BRResponseModel(S3Model):
+    """
+        Model to document individual measures taken in support of a case
+    """
     pass
 
 # =============================================================================
 class BRDistributionModel(S3Model):
+    """
+        Model to process+track item distributions to beneficiaries
+    """
     pass
 
 # =============================================================================
 class BRPaymentModel(S3Model):
+    """
+        Model to process+track benefits payments to beneficiaries
+    """
     pass
 
 # =============================================================================
-class BRNotesModel(S3Model):
+# Tracking Models
+# =============================================================================
+class BRCaseEventModel(S3Model):
+    """
+        Model for checkpoint-style tracking of beneficiaries
+    """
     pass
 
 # =============================================================================
+# Case Documentation Models
 # =============================================================================
 class BRLanguageModel(S3Model):
     """
@@ -908,16 +1308,156 @@ class BRServiceContactModel(S3Model):
     pass
 
 # =============================================================================
+class BRNotesModel(S3Model):
+    pass
+
 # =============================================================================
 class BRReferralModel(S3Model):
     pass
 
 # =============================================================================
-class BRVulnerabilityModel(S3Model):
-    pass
+# Representation Methods
+# =============================================================================
+class br_CaseActivityRepresent(S3Represent):
+    """ Representation of case activity IDs """
 
-# =============================================================================
-# =============================================================================
+    def __init__(self, show_as=None, fmt=None, show_link=False, linkto=None):
+        """
+            Constructor
+
+            @param show_as: alternative representations:
+                            "beneficiary"|"need"|"subject"
+            @param show_link: show representation as clickable link
+            @param fmt: string format template for person record
+        """
+
+        super(br_CaseActivityRepresent, self).__init__(
+                                                lookup = "br_case_activity",
+                                                show_link = show_link,
+                                                linkto = linkto,
+                                                )
+
+        if show_as is None:
+            self.show_as = "beneficiary"
+        else:
+            self.show_as = show_as
+
+        if fmt:
+            self.fmt = fmt
+        else:
+            self.fmt = "%(first_name)s %(last_name)s"
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        table = self.table
+
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+
+        ptable = current.s3db.pr_person
+        left = [ptable.on(ptable.id == table.person_id)]
+
+        show_as = self.show_as
+        if show_as == "beneficiary":
+            rows = current.db(query).select(table.id,
+                                            ptable.id,
+                                            ptable.pe_label,
+                                            ptable.first_name,
+                                            ptable.middle_name,
+                                            ptable.last_name,
+                                            left = left,
+                                            limitby = (0, count),
+                                            )
+
+        # TODO
+        #elif show_as == "need":
+        #    ntable = current.s3db.br_need
+        #    left.append(ntable.on(ntable.id == table.need_id))
+        #    rows = current.db(query).select(table.id,
+        #                                    ptable.id,
+        #                                    ntable.name,
+        #                                    left = left,
+        #                                    limitby = (0, count),
+        #                                    )
+        else:
+            # Subject line (default)
+            rows = current.db(query).select(table.id,
+                                            table.subject,
+                                            ptable.id,
+                                            left = left,
+                                            limitby = (0, count),
+                                            )
+
+        self.queries += 1
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        show_as = self.show_as
+        if show_as == "beneficiary":
+            beneficiary = dict(row.pr_person)
+
+            # Do not show "None" for no label
+            if beneficiary.get("pe_label") is None:
+                beneficiary["pe_label"] = ""
+
+            return self.fmt % beneficiary
+
+        # TODO
+        #elif show_as == "need":
+        #
+        #    need = row.br_need.name
+        #    if self.translate:
+        #        need = current.T(need) if need else self.none
+        #
+        #    return need
+
+        else:
+
+            return row.dvr_case_activity.subject
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, row=None):
+        """
+            Represent a (key, value) as hypertext link
+
+            @param k: the key (dvr_case_activity.id)
+            @param v: the representation of the key
+            @param row: the row with this key
+        """
+
+        try:
+            beneficiary = row.pr_person
+        except AttributeError:
+            return v
+
+        url = URL(c = "br",
+                  f = "person",
+                  args = [beneficiary.id, "case_activity", k],
+                  extension = "",
+                  )
+
+        return A(v, _href = url)
+
+# -----------------------------------------------------------------------------
 class br_DocEntityRepresent(S3Represent):
     """ Module context-specific representation of doc-entities """
 
@@ -1168,6 +1708,7 @@ class br_DocEntityRepresent(S3Represent):
         return link
 
 # =============================================================================
+# Utility Functions
 # =============================================================================
 def br_case_read_orgs():
     """
@@ -1282,7 +1823,7 @@ def br_case_status_filter_opts(closed=None):
     T = current.T
     return OrderedDict((row.id, T(row.name)) for row in rows)
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def br_household_size(group_id):
     """
         Update the household_size for all cases in the given case group,
@@ -1346,7 +1887,7 @@ def br_household_size(group_id):
             number_of_members = len(members)
             db(ctable.id == case_id).update(household_size = number_of_members)
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def br_group_membership_onaccept(membership, group, group_id, person_id):
     """
         Module-specific extensions for pr_group_membership_onaccept
@@ -1458,6 +1999,8 @@ def br_group_membership_onaccept(membership, group, group_id, person_id):
         if update_household_size:
             recount(group_id)
 
+# =============================================================================
+# User Interface
 # =============================================================================
 def br_rheader(r, tabs=None):
     """ BR Resource Headers """
