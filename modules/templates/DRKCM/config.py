@@ -1451,7 +1451,10 @@ def config(settings):
                     field = table.role_id
                     field.readable = field.writable = True
                     field.label = ROLE
-                    field.comment = None
+                    field.comment = DIV(_class="tooltip",
+                                        _title="%s|%s" % (T("Role"),
+                                                          T("The role of the person within the family"),
+                                                          ))
                     field.requires = IS_EMPTY_OR(
                                         IS_ONE_OF(current.db, "pr_group_member_role.id",
                                                   field.represent,
@@ -1483,6 +1486,7 @@ def config(settings):
                                "group_head",
                                (ROLE, "role_id"),
                                (T("Case Status"), "person_id$dvr_case.status_id"),
+                               "comments",
                                ]
                 # Retain group_id in list_fields if added in standard prep
                 lfields = resource.get_config("list_fields")
