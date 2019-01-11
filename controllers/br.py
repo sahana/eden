@@ -387,7 +387,10 @@ def group_membership():
             field = table.role_id
             field.readable = field.writable = True
             field.label = ROLE
-            field.comment = None
+            field.comment = DIV(_class="tooltip",
+                                _title="%s|%s" % (T("Role"),
+                                                  T("The role of the person within the family"),
+                                                  ))
             field.requires = IS_EMPTY_OR(
                                 IS_ONE_OF(db, "pr_group_member_role.id",
                                           field.represent,
@@ -416,6 +419,7 @@ def group_membership():
                            "group_head",
                            (ROLE, "role_id"),
                            (T("Case Status"), "person_id$case.status_id"),
+                           "comments",
                            ]
 
             if len(group_ids) == 0:

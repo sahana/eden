@@ -4762,7 +4762,7 @@
 'The post variable containing the phone number': 'Der POST Parameter, der die Telefonnummer beinhaltet',
 'The post variable on the URL used for sending messages': 'Der POST Parameter, der die Nachricht beinhaltet.',
 'The post variables other than the ones containing the message and the phone number': 'Die POST Parameter, die nicht die Nachricht oder Telefonnummer beinhalten',
-'The role of this person within the family': 'Die Rolle dieser Person innerhalb der Familie',
+'The role of the person within the family': 'Die Rolle der Person innerhalb der Familie',
 'The serial port at which the modem is connected - /dev/ttyUSB0, etc on linux and com1, com2, etc on Windows': 'Der serielle Anschluss mit dem das Modem verbunden ist - /dev/ttyUSB0, etc unter linux und com1, com2, etc unter Windows',
 'The server did not receive a timely response from another server that it was accessing to fill the request by the browser.': 'Der Server hat keine rechtzeitige Antwort von einem anderen Server erhalten, um die Anfrage des Clients beantworten zu können.',
 'The server received an incorrect response from another server that it was accessing to fill the request by the browser.': 'Der Server hat eine ungültige Antwort von einem anderen Server erhalten, dass er zugreift um die Anfrage vom Browser zu erfüllen.',
