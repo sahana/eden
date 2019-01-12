@@ -244,17 +244,38 @@ def config(settings):
             inc_name = record.name
             zero_hour = itable.date.represent(record.date)
             exercise = record.exercise
-            event_id = record.event_id
             closed = record.closed
 
+            event_id = record.event_id
             if event_id != None:
                 etable = s3db.event_event
-                event = current.db(itable.id == event_id).select(etable.name,
+                event = current.db(etable.id == event_id).select(etable.name,
                                                                  limitby=(0, 1),
                                                                  ).first()
                 event_name = event.name
             else:
                 event_name = T("Not Defined")
+
+            location_id = record.location_id
+            if location_id != None:
+                gtable = s3db.gis_location
+                loc = current.db(gtable.id == location_id).select(gtable.L1,
+                                                                  gtable.addr_street,
+                                                                  gtable.addr_postcode,
+                                                                  limitby=(0, 1),
+                                                                  ).first()
+                L1 = loc.L1
+                addr_street = loc.addr_street
+                postcode = loc.addr_postcode
+            else:
+                L1 = addr_street = postcode = T("Not Defined")
+
+            person_id = record.person_id
+            if person_id != None:
+                from s3 import s3_fullname
+                commander = s3_fullname(person_id)
+            else:
+                commander = T("Not Defined")
 
             message = "************************************************"
             message += "\n%s " % T("Automatic Message")
@@ -262,6 +283,10 @@ def config(settings):
             message += " %s: %s" % (T("Incident name"), inc_name)
             message += "\n%s: %s " % (T("Related event"), event_name)
             message += "\n%s: %s " % (T("Incident started"), zero_hour)
+            message += "\n%s: %s" % (T("Province/Territory"), L1)
+            message += "\n%s: %s" % (T("Street Address"), addr_street)
+            message += "\n%s: %s" % (T("Postcode"), postcode)
+            message += "\n%s: %s" % (T("Incident Commander"), commander)
             message += "\n%s %s, " % (T("Exercise?"), exercise)
             message += "%s %s" % (T("Closed?"), closed)
             message += "\n************************************************\n"

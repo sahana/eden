@@ -6596,7 +6596,7 @@ def event_notification_dispatcher(r, **attr):
 
             if event_id != None:
                 etable = s3db.event_event
-                event = current.db(itable.id == event_id).select(etable.name,
+                event = current.db(etable.id == event_id).select(etable.name,
                                                                  limitby=(0, 1),
                                                                  ).first()
                 event_name = event.name
