@@ -59,6 +59,7 @@ class S3MainMenu(default.S3MainMenu):
                MM("About", c="default", f="about"),
                MM("Help", c="default", f="help"),
                MM("More", link=False)(
+                MM("Bulletin Board", c="pr", f="forum", args=[1, "post", "datalist"]),
                 MM("Documents", c="doc", f="document"),
                 MM("Disasters", c="event", f="event"),
                 MM("Items", c="supply", f="item"),
@@ -239,6 +240,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
         #            #    M("Create", m="create"),
         #            #),
         #        )
+
+        return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr():
+        """ Person Registry """
 
         return None
 

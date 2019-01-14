@@ -33,6 +33,8 @@ ORG_ADMIN,Organisation Admin,User can update their organization-specific informa
 ORG_ADMIN,Organisation Admin,User can update their organization-specific information,org,facility,,,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,User can update their organization-specific information,org,organisation,,,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,User can update their organization-specific information,,,org_organisation,,CREATE|READ|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,User can update their organization-specific information,pr,forum,,,CREATE|READ,CREATE|READ|UPDATE|DELETE,,,,
+ORG_ADMIN,Organisation Admin,User can update their organization-specific information,,,pr_forum,,READ,,,,,
 ORG_ADMIN,Organisation Admin,User can update their organization-specific information,req,need,,,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,User can update their organization-specific information,req,need_line,,,CREATE|READ|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,User can update their organization-specific information,req,need_response,,,CREATE|READ|UPDATE|DELETE,,,,,

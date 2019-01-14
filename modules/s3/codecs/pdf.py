@@ -1074,10 +1074,10 @@ class S3PDFTable(object):
             paragraph = main_document.addParagraph
             for i, label in enumerate(self.labels):
 
-                # Wrap "Comments" in paragraphs to make text wrap
-                # @todo: consider doing this for any column
+                # Wrap cells in paragraphs to make text wrap
                 # @todo: requires row height management when splitting table!
-                if label.lower() == "comments" and col_widths[i] > min_width:
+                #if label.lower() == "comments" and col_widths[i] > min_width:
+                if col_widths[i] > min_width:
                     for row in data[1:]:
                         try:
                             comments = row[i]

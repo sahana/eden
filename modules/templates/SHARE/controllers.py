@@ -29,6 +29,7 @@ class index(S3CustomController):
         stable = s3db.event_sitrep
         query = (stable.deleted == False)
         fields = [etable.name,
+                  stable.id,
                   stable.date,
                   stable.name,
                   stable.summary,
@@ -69,7 +70,12 @@ class index(S3CustomController):
                     event_name = s["event_event.name"]
                 if not event_name:
                     event_name = s["event_sitrep.name"]
-                rappend(H3(event_name))
+                rappend(H3(A(event_name,
+                             _href = URL(c = "event",
+                                         f = "sitrep",
+                                         args = [s["event_sitrep.id"]],
+                                         ),
+                             )))
                 rappend(P(XML(s["event_sitrep.summary"])))
                 if count != len_sitreps:
                     rappend(HR())

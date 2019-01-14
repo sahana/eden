@@ -548,6 +548,35 @@ def config(settings):
     settings.customise_org_sector_controller = customise_org_sector_controller
 
     # -------------------------------------------------------------------------
+    def customise_pr_forum_controller(**attr):
+
+        s3db = current.s3db
+
+        s3db.pr_forum
+        current.response.s3.crud_strings["pr_forum"].title_display = T("Bulletin Board")
+
+        s3db.cms_post
+
+        from s3 import S3SQLCustomForm
+        crud_form = S3SQLCustomForm("title",
+                                    "body",
+                                    "date",
+                                    "location_id",
+                                    )
+
+        s3db.configure("cms_post",
+                       create_next = URL(args = [1, "post", "datalist"]),
+                       crud_form = crud_form,
+                       #list_layout = list_layout,
+                       )
+
+        attr["rheader"] = None
+
+        return attr
+
+    settings.customise_pr_forum_controller = customise_pr_forum_controller
+
+    # -------------------------------------------------------------------------
     def req_need_commit(r, **attr):
         """
             Custom method to Commit to a Need by creating an Activity Group
@@ -1013,24 +1042,10 @@ def config(settings):
 
         # Custom Filtered Components
         s3db.add_components(tablename,
-                            req_need_tag = (# Req Number
-                                            {"name": "req_number",
+                            req_need_tag = (# Address
+                                            {"name": "address",
                                              "joinby": "need_id",
-                                             "filterby": {"tag": "req_number",
-                                                          },
-                                             "multiple": False,
-                                             },
-                                            # Issue
-                                            {"name": "issue",
-                                             "joinby": "need_id",
-                                             "filterby": {"tag": "issue",
-                                                          },
-                                             "multiple": False,
-                                             },
-                                            # Verified
-                                            {"name": "verified",
-                                             "joinby": "need_id",
-                                             "filterby": {"tag": "verified",
+                                             "filterby": {"tag": "address",
                                                           },
                                              "multiple": False,
                                              },
@@ -1041,10 +1056,31 @@ def config(settings):
                                                           },
                                              "multiple": False,
                                              },
-                                            # Address
-                                            {"name": "address",
+                                            # Issue
+                                            {"name": "issue",
                                              "joinby": "need_id",
-                                             "filterby": {"tag": "address",
+                                             "filterby": {"tag": "issue",
+                                                          },
+                                             "multiple": False,
+                                             },
+                                            # Req Number
+                                            {"name": "req_number",
+                                             "joinby": "need_id",
+                                             "filterby": {"tag": "req_number",
+                                                          },
+                                             "multiple": False,
+                                             },
+                                            # Original Request From
+                                            {"name": "request_from",
+                                             "joinby": "need_id",
+                                             "filterby": {"tag": "request_from",
+                                                          },
+                                             "multiple": False,
+                                             },
+                                            # Verified
+                                            {"name": "verified",
+                                             "joinby": "need_id",
+                                             "filterby": {"tag": "verified",
                                                           },
                                              "multiple": False,
                                              },
@@ -1067,6 +1103,11 @@ def config(settings):
         f = issue.table.value
         f.widget = lambda f, v: \
             s3_comments_widget(f, v, _placeholder = "e.g. Lack of accessibility and contaminated wells due to heavy rainfall.")
+
+        request_from = components_get("request_from")
+        f = request_from.table.value
+        f.widget = lambda f, v: \
+            s3_comments_widget(f, v, _placeholder = "Please indicate the requesting organisation/ministry.")
 
         verified = components_get("verified")
         f = verified.table.value
@@ -1234,6 +1275,7 @@ def config(settings):
                        #                multiple = False,
                        #                ),
                        "name",
+                       (T("Original Request From"), "request_from.value"),
                        (T("Issue/cause"), "issue.value"),
                        #demographic,
                        #need_item,
@@ -1515,6 +1557,13 @@ def config(settings):
                                                           },
                                              "multiple": False,
                                              },
+                                            # Original Request From
+                                            {"name": "request_from",
+                                             "joinby": "need_id",
+                                             "filterby": {"tag": "request_from",
+                                                          },
+                                             "multiple": False,
+                                             },
                                             # Verified
                                             {"name": "verified",
                                              "joinby": "need_id",
@@ -1591,7 +1640,8 @@ def config(settings):
                        list_fields = [(T("Status"), "status"),
                                       (T("Orgs responding"), "need_response_line.need_response_id$agency.organisation_id"),
                                       "need_id$date",
-                                      "need_id$organisation__link.organisation_id",
+                                      (T("Need entered by"), "need_id$organisation__link.organisation_id"),
+                                      (T("Original Request From"), "need_id$request_from.value"),
                                       # These levels/Labels are for SHARE/LK
                                       (T("District"), "need_id$location_id$L2"),
                                       #(T("DS"), "location_id$L3"),
