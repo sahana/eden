@@ -5486,11 +5486,10 @@ class PRPersonDetailsModel(S3Model):
     def model(self):
 
         T = current.T
-        gis = current.gis
         settings = current.deployment_settings
         messages = current.messages
+
         NONE = messages["NONE"]
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         # ---------------------------------------------------------------------
         # Person Details
@@ -5516,14 +5515,8 @@ class PRPersonDetailsModel(S3Model):
         }
 
         # Nationality Options
-        STATELESS = T("Stateless")
-        def nationality_opts():
-            opts = gis.get_countries(key_type="code")
-            opts["XX"] = STATELESS
-            return opts
-        nationality_repr = lambda code: STATELESS if code == "XX" else \
-                                        gis.get_country(code, key_type="code") or \
-                                        UNKNOWN_OPT
+        nationality_opts = pr_nationality_opts
+        nationality_repr = pr_nationality_prepresent
 
         # Religion Options
         religion_opts = settings.get_L10n_religions()
@@ -7043,6 +7036,47 @@ def pr_rheader(r, tabs=None):
                 return rheader
 
     return None
+
+# =============================================================================
+def pr_nationality_opts():
+    """
+        Nationality options
+
+        @returns: a sorted list of nationality options
+    """
+
+    T = current.T
+
+    countries = current.gis.get_countries(key_type="code")
+    opts = sorted([(k, T(countries[k])) for k in countries.keys()],
+                  # NB applies server locale's sorting rules, not
+                  #    the user's chosen language (not easily doable
+                  #    in Python, would require pyICU or similar)
+                  key=lambda x: x[1],
+                  )
+
+    # Stateless always last
+    opts.append(("XX", T("Stateless")))
+
+    return opts
+
+def pr_nationality_prepresent(code):
+    """
+        Representation of Nationality
+
+        @param code: ISO2 country code
+
+        @returns: T-translated name of the country
+    """
+
+    if code == "XX":
+        return current.T("Stateless")
+    else:
+        country_name = current.gis.get_country(code, key_type="code")
+        if country_name:
+            return current.T(country_name)
+
+    return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 # Custom Resource Methods
