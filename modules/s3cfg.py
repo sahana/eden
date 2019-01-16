@@ -1083,6 +1083,8 @@ class S3Config(Storage):
             if default:
                 return default
 
+        return None
+
     # -------------------------------------------------------------------------
     # Logger settings
     def get_log_level(self):
@@ -1869,19 +1871,16 @@ class S3Config(Storage):
         """
             Optical Character Recognition (OCR)
         """
-        excluded_fields_dict = {
-            "hms_hospital" : [
-                "hrm_human_resource",
-                ],
 
-            "pr_group" : [
-                "pr_group_membership",
-                ],
-            }
-        excluded_fields =\
-                excluded_fields_dict.get(resourcename, [])
+        excluded_fields = self.pdf.get("excluded_fields")
+        if excluded_fields is None:
+            excluded_fields = {"hms_hospital" : ["hrm_human_resource",
+                                                 ],
+                               "pr_group" : ["pr_group_membership",
+                                             ],
+                               }
 
-        return excluded_fields
+        return excluded_fields.get(resourcename, [])
 
     # -------------------------------------------------------------------------
     # XLS Export Settings
@@ -2798,6 +2797,12 @@ class S3Config(Storage):
             Need categories are hierarchical
         """
         return self.br.get("needs_hierarchical", False)
+
+    def get_br_needs_org_specific(self):
+        """
+            Need categories are specific per root organisation
+        """
+        return self.br.get("needs_org_specific", True)
 
     # -------------------------------------------------------------------------
     # CAP: Common Alerting Protocol

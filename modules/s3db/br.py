@@ -1083,10 +1083,8 @@ class BRNeedsModel(S3Model):
 
     def model(self):
 
-        # TODO controller
         # TODO Make org component
         # TODO Admin menu item resp. org tab
-        # TODO Import/Prepop
 
         T = current.T
         db = current.db
@@ -1095,7 +1093,7 @@ class BRNeedsModel(S3Model):
         crud_strings = current.response.s3.crud_strings
 
         hierarchical_needs = settings.get_br_needs_hierarchical()
-        # TODO setting for org-specific need types
+        org_specific_needs = settings.get_br_needs_org_specific()
 
         # ---------------------------------------------------------------------
         # Needs: categories of things a beneficiary needs, e.g. shelter,
@@ -1114,13 +1112,18 @@ class BRNeedsModel(S3Model):
                                 readable = hierarchical_needs,
                                 writable = hierarchical_needs,
                                 ),
-                          # Activate in template as needed:
-                          self.org_organisation_id(readable = False,
-                                                   writable = False,
+                          self.org_organisation_id(readable = org_specific_needs,
+                                                   writable = org_specific_needs,
                                                    ),
+                          # Activate in template as needed:
                           Field("protection", "boolean",
                                 default = False,
                                 label = T("Protection Need"),
+                                comment = DIV(_class = "tooltip",
+                                              _title = "%s|%s" % (T("Protection Need"),
+                                                                  T("This need type indicates a particular need for protection"),
+                                                                  ),
+                                              ),
                                 represent = s3_yes_no_represent,
                                 readable = False,
                                 writable = False,
