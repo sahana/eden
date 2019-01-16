@@ -419,8 +419,8 @@ class S3RL_PDF(S3Codec):
 
         # Now generate the PDF table
         pdf_table = S3PDFTable(doc,
-                               result["rfields"],
-                               result["rows"],
+                               result.rfields,
+                               result.rows,
                                groupby = self.pdf_groupby,
                                autogrow = self.table_autogrow,
                                body_height = doc.body_height,
@@ -718,151 +718,167 @@ class S3PDFTable(object):
         doesn't need to be called directly. Rather see S3PDF.addTable()
     """
 
+    MIN_COL_WIDTH = 200
+    MIN_ROW_HEIGHT = 20
+
     def __init__(self,
                  document,
                  rfields,
-                 raw_data,
+                 rows,
                  groupby = None,
-                 hide_comments = False,
                  autogrow = False,
                  body_height = 0,
                  ):
         """
-            Method to create a table object
+            Constructor
 
             @param document: the EdenDocTemplate instance in which the table
                              shall be rendered
-            @param raw_data: A list of rows
-            @param rfields: A list of field selectors
-            @param groupby: A field name that is to be used as a sub-group
-                   All the records that share the same pdf_groupby value
-                   will be clustered together
-            @param hide_comments: Any comment field will be hidden
+            @param rows: the represented rows (S3ResourceData.rows)
+            @param rfields: list of resolved field selectors for
+                            the columns (S3ResourceData.rfields)
+            @param groupby: a field name that is to be used as a sub-group
+                            - all records with the same value in that the
+                              groupby column will be clustered together
         """
 
+        rtl = current.response.s3.rtl
+
         # The main document
-        self.pdf = document
+        self.doc = document
 
-        # A temp document to test and adjust table size
-        orientation = "Auto" if document.auto_orientation else document.page_orientation
-        self.tempDoc = EdenDocTemplate(orientation = orientation,
-                                       size = document.paper_size,
-                                       )
+        # Parameters for rendering
+        self.body_height = body_height
+        self.autogrow = autogrow
 
-        # Fonts
+        # Set fonts
         self.font_name = None
         self.font_name_bold = None
         set_fonts(self)
 
-        # @todo: Change the code to use raw_data directly rather than this
-        #        conversion to an ordered list of values
-        self.rfields = rfields
-        rtl = current.response.s3.rtl
-        rdata = []
-        rappend = rdata.append
-        for row in raw_data:
-            data = []
-            dappend = data.append
-            for selector in rfields:
-                value = row[selector.colname]
-
-                # Try to convert Web2py elements to ReportLab equivalents
-                dvalue = None
-                while True:
-                    if isinstance(value, (basestring, lazyT)):
-                        dvalue = biDiText(value)
-                    elif isinstance(value, IMG):
-                        dvalue = S3html2pdf.parse_img(value, selector.field.uploadfolder)
-                        if dvalue:
-                            dvalue = dvalue[0]
-                    elif isinstance(value, DIV):
-                        if len(value.components) > 0:
-                            value = value.components[0]
-                            continue
-                        else:
-                            dvalue = biDiText(value)
-                    else:
-                        dvalue = biDiText(value)
-                    break
-                dappend(dvalue)
-            if rtl:
-                data.reverse()
-            rappend(data)
-        self.raw_data = rdata
-        labels = [biDiText(selector.label) for selector in self.rfields]
-        if rtl:
-            labels.reverse()
-        self.labels = labels
-        list_fields = [selector.fname for selector in self.rfields]
+        # Determine list fields and collect the labels
+        list_fields = []
+        labels = []
+        for rfield in rfields:
+            list_fields.append(rfield.fname)
+            labels.append(biDiText(rfield.label))
         if rtl:
             list_fields.reverse()
+            labels.reverse()
         self.list_fields = list_fields
-        self.pdf_groupby = groupby
-        self.hideComments = hide_comments
-        self.autogrow = autogrow
-        self.body_height = body_height
-        self.data = []
-        self.subheadingList = []
-        self.subheadingLevel = {}
-        self.pages = []
-        self.colWidths = []
-        self.newColWidth = [] # @todo: remove this (but see presentation)
-        self.rowHeights = []
+        self.labels = labels
 
-        # Set up style constants
-        self.headerColour = Color(0.73, 0.76, 1)
-        self.oddColour = Color(0.92, 0.92, 1)
-        self.evenColour = Color(0.83, 0.84, 1)
-        self.MIN_COMMENT_COL_WIDTH = 200
+        # Convert the input data into suitable ReportLab elements
+        convert = self.convert
+        data = []
+        append = data.append
+        for row in rows:
+            row_data = [convert(rfield, row[rfield.colname]) for rfield in rfields]
+            if rtl:
+                row_data.reverse()
+            append(row_data)
+        self.data = data
+
+        # Initialize style parameters (can be changed by caller after init)
+        self.header_color = Color(0.73, 0.76, 1)
+        self.odd_color = Color(0.92, 0.92, 1)
+        self.even_color = Color(0.83, 0.84, 1)
         self.fontsize = 12
+
+        # Initialize groups
+        self.groupby = groupby
+        self.subheading_rows = []
+        self.subheading_level = {}
+
+        # Initialize output
+        self.pdf_data = []
+        self.parts = []
+        self.col_widths = []
+        self.row_heights = []
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def convert(cls, rfield, value):
+        """
+            Convert represented field value into a suitable
+            ReportLab element
+
+            @param rfield: the S3ResourceField
+            @param value: the field value
+        """
+
+        if isinstance(value, (basestring, lazyT)):
+
+            pdf_value = biDiText(value)
+
+        elif isinstance(value, IMG):
+
+            field = rfield.field
+            if field:
+                pdf_value = S3html2pdf.parse_img(value, field.uploadfolder)
+                if pdf_value:
+                    pdf_value = pdf_value[0]
+            else:
+                pdf_value = ""
+
+        elif isinstance(value, DIV):
+
+            if len(value.components) > 0:
+                pdf_value = cls.convert(rfield, value.components[0])
+            else:
+                pdf_value = biDiText(value)
+
+        else:
+
+            pdf_value = biDiText(value)
+
+        return pdf_value
 
     # -------------------------------------------------------------------------
     def build(self):
         """
             Method to build the table.
 
-            @return: A list of Table objects. Normally this will be a list with
-                     just one table object, but if the table needs to be split
-                     across columns then one object per page will be created.
+            @returns: a list of ReportLab Table instances
+                      - if the table fits into the page width, this list will
+                        contain a single Table, otherwise it will contain the
+                        parts of the split table in the order in which they
+                        shall be inserted into the main document
         """
 
-        if self.pdf_groupby:
+        if self.groupby:
             data = self.group_data()
             data = [self.labels] + data
-        elif self.raw_data != None:
-            data = [self.labels] + self.raw_data
+        elif self.data != None:
+            data = [self.labels] + self.data
+        self.pdf_data = data
 
         # Only build the table if we have some data
         if not data or not (data[0]):
             return None
 
-        endCol = len(self.labels) - 1
-        rowCnt = len(data)
+        style = self.table_style(0, len(data), len(self.labels) - 1)
 
-        style = self.tableStyle(0, rowCnt, endCol)
-        tempTable = Table(data,
-                          repeatRows=1,
-                          style=style,
-                          hAlign="LEFT"
-                          )
-        self.data = data
-        self.tempDoc.build(None, [tempTable], None)
-        self.newColWidth = [tempTable._colWidths]
-        self.rowHeights = [tempTable._rowHeights]
-        self.pages.append(data)
-        if not self.tweakDoc(tempTable):
-            # Need to split the table
-            self.pages = self.splitTable(tempTable)
+        self.parts = self.calc(data, style)
+
         return self.presentation()
 
     # -------------------------------------------------------------------------
     def group_data(self):
         """
+            Group the rows
+
+            @returns: the PDF-formatted data with grouping headers
+
+            FIXME: will not work with RTL-biDiText or any non-text
+                   representation, rewrite to use raw resource data
+
+            FIXME: naming conventions!
         """
 
-        groups = self.pdf_groupby.split(",")
+        groups = self.groupby.split(",")
         newData = []
-        data = self.raw_data
+        data = self.data
         level = 0
         list_fields = self.list_fields
         for field in groups:
@@ -881,7 +897,7 @@ class S3PDFTable(object):
             currentGroup = None
             r = 0
             for row in data:
-                if r + 1 in self.subheadingList:
+                if r + 1 in self.subheading_rows:
                     newData.append(row)
                     r += 1
                 else:
@@ -892,17 +908,17 @@ class S3PDFTable(object):
                             newData.append(line)
                             r += 1
                             currentGroup = group
-                            self.subheadingList.append(r)
-                            self.subheadingLevel[r] = level
+                            self.subheading_rows.append(r)
+                            self.subheading_level[r] = level
                             # All existing subheadings after this point need to
                             # be shuffled down one place.
-                            for x in range (len(self.subheadingList)):
-                                if self.subheadingList[x] > r:
-                                    posn = self.subheadingList[x]
-                                    self.subheadingList[x] = posn + 1
-                                    oldlevel = self.subheadingLevel[posn]
-                                    del self.subheadingLevel[posn]
-                                    self.subheadingLevel[posn + 1] = oldlevel
+                            for x in range (len(self.subheading_rows)):
+                                if self.subheading_rows[x] > r:
+                                    posn = self.subheading_rows[x]
+                                    self.subheading_rows[x] = posn + 1
+                                    oldlevel = self.subheading_level[posn]
+                                    del self.subheading_level[posn]
+                                    self.subheading_level[posn + 1] = oldlevel
                         line = row[0:i] + row[i + 1:]
                         newData.append(line)
                         r += 1
@@ -916,291 +932,353 @@ class S3PDFTable(object):
         return data
 
     # -------------------------------------------------------------------------
+    def calc(self, data, style):
+        """
+            Compute rendering parameters:
+                 - formatted output data
+                 - row heights and column widths
+                 - font-size
+
+            @returns: the table parts, a list of row data arrays:
+                      [ [[value1, value2, value3, ...], ...], ...]
+        """
+
+        main_doc = self.doc
+
+        # A temporary document to test and adjust rendering parameters
+        if main_doc.auto_orientation:
+            orientation = "Auto"
+        else:
+            orientation = main_doc.page_orientatiom
+        temp_doc = EdenDocTemplate(orientation = orientation,
+                                   size = main_doc.paper_size,
+                                   )
+
+        # Make a copy so it can be changed
+        style = style[:]
+
+        # Build the table to determine row heights and column widths
+        table = Table(data, repeatRows=1, style=style, hAlign="LEFT")
+        temp_doc.build(None, [table], None)
+        col_widths = table._colWidths
+        row_heights = table._rowHeights
+
+        # Determine the overall table width and whether it fits into the page
+        table_width = sum(col_widths)
+        fit = table_width <= temp_doc.printable_width
+
+        # Prepare possible adjustments
+        min_width = self.MIN_COL_WIDTH
+        if not fit:
+            # Determine which columns should be wrapped in Paragraphs
+            # for automatic line breaks (=primary means to reduce width)
+            para_cols = set(i for i, _ in enumerate(self.labels)
+                              if col_widths[i] > min_width)
+        else:
+            para_cols = ()
+
+        fontsize = self.fontsize
+        min_fontsize = fontsize - 3
+
+        styleSheet = getSampleStyleSheet()
+        para_style = styleSheet["Normal"]
+
+        adj_data = data = self.pdf_data
+        while not fit:
+
+            # Adjust margins
+            available_margin_space = main_doc.leftMargin + \
+                                     main_doc.rightMargin - \
+                                     2 * main_doc.MINIMUM_MARGIN_SIZE
+
+            overlap = table_width - temp_doc.printable_width
+            if overlap < available_margin_space:
+                # This will work => exit with current adjustments
+                fit = True
+                main_doc.leftMargin -= overlap / 2
+                main_doc.rightMargin -= overlap / 2
+                break
+
+            # Wrap wide columns in Paragraphs (for automatic line breaks)
+            adj_data = []
+            para_style.fontSize = fontsize
+
+            for row_index, row in enumerate(data):
+                if row_index == 0:
+                    adj_data.append(row)
+                else:
+                    temp_row = []
+                    for col_index, item in enumerate(row):
+                        if col_index in para_cols:
+                            col_widths[col_index] = min_width
+                            para = main_doc.addParagraph(item,
+                                                              style=para_style,
+                                                              append=False,
+                                                              )
+                            temp_row.append(para)
+                        else:
+                            temp_row.append(item)
+                    adj_data.append(temp_row)
+
+            # Rebuild temp_doc to re-calculate col widths and row heights
+            style[1] = ("FONTSIZE", (0, 0), (-1, -1), fontsize)
+            table = Table(adj_data,
+                          repeatRows = 1,
+                          style = style,
+                          colWidths = col_widths,
+                          hAlign = "LEFT",
+                          )
+            temp_doc.build(None, [table], None)
+
+            col_widths = table._colWidths
+            row_heights = table._rowHeights
+
+            # Check if table fits into page
+            table_width = sum(col_widths)
+            if table_width > temp_doc.printable_width:
+
+                if fontsize <= min_fontsize:
+                    # Last resort: try changing page orientation
+                    if main_doc.page_orientation == "Portrait" and \
+                       main_doc.auto_orientation:
+
+                        # Switch to Landscape
+                        temp_doc.page_orientation = \
+                        main_doc.page_orientation = "Landscape"
+
+                        # Width becomes height
+                        self.body_height = temp_doc.printable_width
+
+                        # Re-calculate page size and margins
+                        temp_doc._calc()
+                        main_doc._calc()
+
+                        # Reset font-size
+                        fontsize = self.fontsize
+                    else:
+                        break
+                else:
+                    # Reduce font-size
+                    fontsize -= 1
+            else:
+                fit = True
+                break
+
+        # Store adjusted rendering parameters
+        self.pdf_data = adj_data
+        self.fontsize = fontsize
+        self.col_widths = [col_widths]
+        self.row_heights = [row_heights]
+
+        return [adj_data] if fit else self.split(temp_doc)
+
+    # -------------------------------------------------------------------------
     def presentation(self):
         """
-            This will convert the S3PDFTABLE object to a format that can be
-            used to add to a S3PDF document object.
+            Render all data parts (self.parts) as a list of ReportLab Tables.
 
-            This is only used internally but could be used to generate a copy
-            of a previously generated table
+            @returns: a list of ReportLab Table instances
+
+            FIXME: clean up, naming conventions!
         """
 
         # Build the tables
-        content = []
-        currentPage = 0
-        totalPagesAcross = len(self.newColWidth)
+        tables = []
 
+        main_doc = self.doc
         autogrow = self.autogrow
+        body_height = self.body_height
+        default_row_height = self.MIN_ROW_HEIGHT
+
+        num_parts = len(self.parts)
+        num_horz_parts = len(self.col_widths)
+
+        # Auto-grow horizontally (=make columns wider to fill page width)
         if autogrow == "H" or autogrow == "B":
 
-            printable_width = self.pdf.printable_width
+            printable_width = self.doc.printable_width
+            new_col_widths = []
 
-            newColWidth = []
-
-            for widths in self.newColWidth:
+            for widths in self.col_widths:
                 total_width = sum(widths)
                 if total_width and total_width < printable_width:
-                    # Expand the columns to use all the available space
                     factor = 1 + (printable_width - total_width) / total_width
-                    newColWidth.append([width * factor for width in widths])
+                    new_col_widths.append([width * factor for width in widths])
                 else:
-                    newColWidth.append(widths)
+                    new_col_widths.append(widths)
 
-            self.newColWidth = newColWidth
+            self.col_widths = new_col_widths
 
+        # Render each part
         startRow = 0
-        for page in self.pages:
-            if page == []:
-                currentPage += 1
+        for current_part, part in enumerate(self.parts):
+
+            if part == []:
                 continue
-            colWidths = self.newColWidth[currentPage % totalPagesAcross]
+            num_rows = len(part)
+
+            col_widths = self.col_widths[current_part % num_horz_parts]
+            row_heights = self.row_heights[int(current_part / num_horz_parts)]
+
+            # Auto-grow vertically (=add empty extra rows)
             if autogrow == "V" or autogrow == "B":
-                row_height = self.rowHeights[0][0]
-                rows = len(page)
-                if self.body_height > row_height * rows:
-                    rowCnt = int(self.body_height / row_height)
-                    extra_rows = rowCnt - rows
-                    if extra_rows:
-                        cells = len(colWidths)
-                        row = [""] * cells
-                        extra = [row] * extra_rows
-                        page = page + extra
-            endCol = len(colWidths) - 1
-            rowCnt = len(page)
-            style = self.tableStyle(startRow, rowCnt, endCol)
-            (page, style) = self.pdf.addCellStyling(page, style)
-            p = Table(page, repeatRows=1,
-                      style=style,
-                      hAlign="LEFT",
-                      colWidths=colWidths,
-                      emptyTableAction="indicate"
+
+                total_height = sum(row_heights)
+                available_height = total_height - body_height
+
+                if available_height > default_row_height:
+                    num_extra_rows = int(available_height / default_row_height)
+                    if num_extra_rows:
+                        row = [""] * len(col_widths)
+                        part += [row] * num_extra_rows
+
+            style = self.table_style(startRow, num_rows, len(col_widths) - 1)
+            (part, style) = main_doc.addCellStyling(part, style)
+
+            p = Table(part,
+                      repeatRows = 1,
+                      style = style,
+                      hAlign = "LEFT",
+                      colWidths = col_widths,
+                      rowHeights = row_heights,
+                      emptyTableAction = "indicate",
                       )
-            content.append(p)
-            # Add a page break, except for the last page.
-            if currentPage + 1 < len(self.pages):
-                content.append(PageBreak())
-            currentPage += 1
-            if currentPage % totalPagesAcross == 0:
-                startRow += rowCnt - 1 # Don't include the heading
-        return content
+            tables.append(p)
+
+            # Add a page break, except for the last part
+            next_part = current_part + 1
+            if next_part < num_parts:
+                tables.append(PageBreak())
+            if next_part % num_horz_parts == 0:
+                startRow += num_rows - 1 # Don't include the heading
+
+        # Return a list of table objects
+        return tables
 
     # -------------------------------------------------------------------------
-    def getAvailableMarginSpace(self):
+    def split(self, temp_doc):
         """
-            Internally used method to calculate the amount of space available
-            on the width of a page.
-        """
+            Helper for calc(): split the table horizontally so that each
+            part fits into the page width
 
-        _pdf =  self.pdf
-        availableMarginSpace = _pdf.leftMargin \
-                             + _pdf.rightMargin \
-                             - 2 * _pdf.MINIMUM_MARGIN_SIZE
-        return availableMarginSpace
+            @param temp_doc: the temporary doc
 
-    # -------------------------------------------------------------------------
-    def tweakMargin(self, tableWidth):
-        """
-            Internally used method to adjust the document margins so that the
-            table will fit into the available space
+            @returns: the data slices for each part
         """
 
-        availableMarginSpace = self.getAvailableMarginSpace()
-        currentOverlap = tableWidth - self.tempDoc.printable_width
+        col_widths = self.col_widths[0]
+        row_heights = self.row_heights[0]
 
-        # Check margins
-        if currentOverlap < availableMarginSpace:
-            _pdf = self.pdf
-            _pdf.leftMargin -= currentOverlap / 2
-            _pdf.rightMargin -= currentOverlap / 2
-            return True
-        return False
-
-    # -------------------------------------------------------------------------
-    def tweakFont(self, tableWidth, newFontSize, colWidths):
-        """
-            Internally used method to adjust the font size used so that the
-            table will fit into the available space on the page.
-        """
-
-        # Check font
-        adjustedWidth = tableWidth * newFontSize / self.fontsize
-        if (adjustedWidth - self.tempDoc.printable_width) < self.getAvailableMarginSpace():
-            for i in range(len(colWidths)):
-                colWidths[i] *= float(newFontSize) / float(self.fontsize)
-            self.newColWidth = [colWidths]
-            self.fontsize = newFontSize
-            return self.tweakMargin(adjustedWidth)
-        return False
-
-    # -------------------------------------------------------------------------
-    def minorTweaks(self, tableWidth, colWidths):
-        """
-            Internally used method to tweak the formatting so that the table
-            will fit into the available space on the page.
-        """
-
-        if self.tweakMargin(tableWidth):
-            return True
-        originalFont = self.fontsize
-        if self.tweakFont(tableWidth, originalFont -1, colWidths):
-            return True
-        if self.tweakFont(tableWidth, originalFont -2, colWidths):
-            return True
-        if self.tweakFont(tableWidth, originalFont -3, colWidths):
-            return True
-        return False
-
-    # -------------------------------------------------------------------------
-    def tweakDoc(self, table):
-        """
-            Adjust table and/or document so as to make the table fit inside
-            the printable width
-
-            @return: True if successful, False otherwise
-        """
-
-        col_widths = table._colWidths
-        table_width = sum(col_widths)
-
-        main_document = self.pdf
-        temp_document = self.tempDoc
-
-        if table_width > temp_document.printable_width:
-            # Table too wide for page => try adjusting
-
-            # Adjust contents
-            data = self.data
-            min_width = self.MIN_COMMENT_COL_WIDTH
-            paragraph = main_document.addParagraph
-            for i, label in enumerate(self.labels):
-
-                # Wrap cells in paragraphs to make text wrap
-                # @todo: requires row height management when splitting table!
-                #if label.lower() == "comments" and col_widths[i] > min_width:
-                if col_widths[i] > min_width:
-                    for row in data[1:]:
-                        try:
-                            comments = row[i]
-                        except IndexError:
-                            pass
-                        else:
-                            if comments:
-                                row[i] = paragraph(comments, append=False)
-                    # Enforce min_width for this column
-                    col_widths[i] = min_width
-
-            table_width = sum(col_widths)
-
-            # Adjust margins and font-size
-            tweak = self.minorTweaks
-            if not tweak(table_width, col_widths):
-
-                if main_document.page_orientation == "Portrait" and \
-                   main_document.auto_orientation:
-
-                    # Switch to Landscape
-                    temp_document.page_orientation = \
-                    main_document.page_orientation = "Landscape"
-
-                    # Re-calculate page size and margins
-                    temp_document._calc()
-                    main_document._calc()
-
-                    # Tweak again
-                    return tweak(table_width, col_widths)
-                else:
-                    return False
-
-        return True
-
-    # -------------------------------------------------------------------------
-    def splitTable(self, tempTable):
-        """
-            Internally used method to split the table across columns so that it
-            will fit into the available space on the page.
-        """
-
-        colWidths = tempTable._colWidths
-        rowHeights = tempTable._rowHeights
+        # Split columns
         total = 0
-        colNo = 0
-        colSplit = []
-        newColWidth = []
-        pageColWidth = []
-        for colW in colWidths:
-            if colNo > 0 and total + colW > self.tempDoc.printable_width:
+        split_cols = []
+        new_col_widths = []
+        part_col_widths = []
+
+        for i, col_width in enumerate(col_widths):
+            if i > 0 and total + col_width > temp_doc.printable_width:
                 # Split before this column...
-                colSplit.append(colNo)
-                newColWidth.append(pageColWidth)
-                # ...and put it on a new page
-                pageColWidth = [colW]
-                total = colW
+                split_cols.append(i)
+                new_col_widths.append(part_col_widths)
+                # ...and start a new part
+                part_col_widths = [col_width]
+                total = col_width
             else:
-                # Append this column to the current page
-                pageColWidth.append(colW)
-                total += colW
-            colNo += 1
-        colSplit.append(len(colWidths))
-        newColWidth.append(pageColWidth)
-        self.newColWidth = newColWidth
+                # Append this column to the current part
+                part_col_widths.append(col_width)
+                total += col_width
 
+        split_cols.append(len(col_widths))
+        new_col_widths.append(part_col_widths)
+        self.col_widths = new_col_widths
+
+        # Split rows
         total = 0
-        rowNo = 0
-        lastKnownHeight = 20 # Not all row heights get calculated.
-        rowSplit = []
-        for rowH in rowHeights:
-            if rowH == None:
-                rowH = lastKnownHeight
-            else:
-                lastKnownHeight = rowH
-            if total + rowH > self.body_height:
-                rowSplit.append(rowNo)
-                total = 2 * rowH # 2* is needed to take into account the repeated header row
-            else:
-                total += rowH
-            rowNo += 1
-        rowSplit.append(rowNo)
+        split_rows = []
+        new_row_heights = []
+        page_row_heights = []
 
-        # Build the pages of data
-        pages = []
+        body_height = self.body_height
+        header_height = 20 # default
+        for i, row_height in enumerate(row_heights):
 
-        startRow = 1 # Skip the first row (the heading) because we'll generate our own
-        for endRow in rowSplit:
-            startCol = 0
-            for endCol in colSplit:
-                page = []
-                pappend = page.append
-                label = []
-                lappend = label.append
-                for colIndex in range(startCol, endCol):
+            # Remember the actual header height
+            if i == 0:
+                header_height = row_height
+
+            if total + row_height > body_height:
+                # Split before this row
+                new_row_heights.append(page_row_heights)
+                # ...and start a new page
+                page_row_heights = [header_height, row_height] if i > 0 else [row_height]
+                total = sum(page_row_heights)
+                split_rows.append(i)
+            else:
+                page_row_heights.append(row_height)
+                total += row_height
+
+        split_rows.append(len(row_heights))
+        new_row_heights.append(page_row_heights)
+        self.row_heights = new_row_heights
+
+        # Split the data into slices (parts)
+        pdf_data = self.pdf_data
+        all_labels = self.labels
+        subheading_rows = self.subheading_rows
+        parts = []
+
+        start_row = 1 # skip labels => generating new partial label-rows
+        for end_row in split_rows:
+
+            start_col = 0
+
+            for end_col in split_cols:
+
+                part = []
+                pappend = part.append
+
+                # Add the labels-row to the part
+                labels = []
+                lappend = labels.append
+                for col_index in range(start_col, end_col):
                     try:
-                        lappend(self.labels[colIndex])
+                        lappend(all_labels[col_index])
                     except IndexError:
                         lappend("")
-                pappend(label)
-                for rowIndex in range(startRow, endRow):
-                    line = []
-                    lappend = line.append
-                    for colIndex in range(startCol, endCol):
+                pappend(labels)
+
+                # Add all other rows
+                for row_index in range(start_row, end_row):
+
+                    row_data = pdf_data[row_index]
+
+                    out_row = []
+                    oappend = out_row.append
+
+                    for col_index in range(start_col, end_col):
                         try:
-                            lappend(self.data[rowIndex][colIndex])
-                        except IndexError: # No data to add.
-                            # If this is the first column of a subheading row then repeat the subheading
-                            if len(line) == 0 and rowIndex in self.subheadingList:
+                            oappend(row_data[col_index])
+                        except IndexError:
+                            # If this is the first column of a subheading row then
+                            # repeat the subheading:
+                            if len(out_row) == 0 and row_index in subheading_rows:
                                 try:
-                                    lappend(self.data[rowIndex][0])
+                                    oappend(row_data[0])
                                 except IndexError:
-                                    lappend("")
+                                    oappend("")
                             else:
-                                lappend("")
-                    pappend(line)
-                pages.append(page)
-                startCol = endCol
-            startRow = endRow
-        return pages
+                                oappend("")
+
+                    pappend(out_row)
+
+                parts.append(part)
+                start_col = end_col
+            start_row = end_row
+
+        return parts
 
     # -------------------------------------------------------------------------
-    def tableStyle(self, startRow, rowCnt, endCol, colour_required=False):
+    def table_style(self, startRow, rowCnt, endCol, colour_required=False):
         """
             Internally used method to assign a style to the table
 
@@ -1212,8 +1290,10 @@ class S3PDFTable(object):
             @param rowCnt: The number of rows in the table
             @param endCol: The last column in the table
 
-            @todo: replace endCol with -1
+            FIXME: replace endCol with -1
                    (should work but need to test with a split table)
+
+            FIXME: naming conventions!
         """
 
         font_name_bold = self.font_name_bold
@@ -1226,20 +1306,21 @@ class S3PDFTable(object):
                  ]
         sappend = style.append
         if colour_required:
-            sappend(("BACKGROUND", (0, 0), (endCol, 0), self.headerColour))
+            sappend(("BACKGROUND", (0, 0), (endCol, 0), self.header_color))
         else:
             sappend(("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey))
             sappend(("INNERGRID", (0, 0), (-1, -1), 0.2, colors.lightgrey))
-        if self.pdf_groupby != None:
+        if self.groupby != None:
             sappend(("LEFTPADDING", (0, 0), (-1, -1), 20))
+
         rowColourCnt = 0 # used to alternate the colours correctly when we have subheadings
         for i in range(rowCnt):
             # If subheading
-            if startRow + i in self.subheadingList:
-                level = self.subheadingLevel[startRow + i]
+            if startRow + i in self.subheading_rows:
+                level = self.subheading_level[startRow + i]
                 if colour_required:
                     sappend(("BACKGROUND", (0, i), (endCol, i),
-                             self.headerColour))
+                             self.header_color))
                 sappend(("FONTNAME", (0, i), (endCol, i), font_name_bold))
                 sappend(("SPAN", (0, i), (endCol, i)))
                 sappend(("LEFTPADDING", (0, i), (endCol, i), 6 * level))
@@ -1247,11 +1328,11 @@ class S3PDFTable(object):
                 if colour_required:
                     if rowColourCnt % 2 == 0:
                         sappend(("BACKGROUND", (0, i), (endCol, i),
-                                 self.evenColour))
+                                 self.even_color))
                         rowColourCnt += 1
                     else:
                         sappend(("BACKGROUND", (0, i), (endCol, i),
-                                 self.oddColour))
+                                 self.odd_color))
                         rowColourCnt += 1
         sappend(("BOX", (0, 0), (-1, -1), 1, Color(0, 0, 0)))
         return style
