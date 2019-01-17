@@ -180,13 +180,14 @@ main {
 }
 
 /* Footer */
+/* Messes with Cards in Bulletin Board
 footer::before {
     height: $footer-height;
     padding-bottom: $footer-height;
 }
 footer {
     margin-top: -($footer-height);
-}
+}*/
 #footer {
     background: $footer_bgcolor;
     padding-top: 0.7rem;

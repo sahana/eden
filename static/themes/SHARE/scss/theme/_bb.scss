@@ -1,0 +1,124 @@
+// Partial copy from WACOP without alteration
+
+// -------------------------------------
+// Data List
+/* Data Lists (including profile) */
+.dl {
+    .dl-header {
+        float: none;
+        text-align: right;
+    }
+    .card_1_line {
+        height: auto;
+    }
+    .empty_card-holder {
+        text-align: center;
+    }
+    .dl-row {
+        border: 0;
+    }
+    .dl-1-cols {
+        width: 100%;
+    }
+}
+.dl-item {
+    .dropdown .caret {
+        margin-left: 0.2rem;
+        margin-top: 0.4rem;
+    }
+    .attachments {
+        margin-right: 0.2rem;
+    }
+}
+
+ul.data-list,
+ul.dl {
+  list-style-type: none;
+  margin: 0;
+  li,
+  ol {
+    margin: 0;
+    list-style: none;
+  }
+}
+
+div.dl { border: 0; }
+
+.data-list,
+.dl {
+  .dl-row {
+    border: 0;
+    &.odd,
+    &.odd .dl-item {
+      background-color: #FFF;
+    }
+  }
+}
+
+// -------------------------------------
+// Widgets
+
+// tagit
+ul.tagit {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  li.tagit-choice {
+    margin-right: 5px;
+  }
+  li.tagit-new {
+    padding: 0;
+    margin-right:0;
+    input[type="text"] {
+      background-color: $input-bg-color;
+      border: 1px solid $input-border-color;
+      box-shadow: $input-box-shadow;
+      border-radius: $input-border-radius;
+      height: auto;
+      line-height: inherit;
+      padding: .25em 4px;
+    }
+    input[disabled] { display: none; }
+  }
+}
+
+// -------------------------------------
+// Post Card
+
+.card-post {
+  @include card($bkg:#FFF);
+  padding: 0;
+  float: none;
+  width:100%;
+  .body {
+    .meta-update {
+      width: 50%;
+    }
+    .meta-comments {
+      &::before {
+        content: "\00a0\00a0";
+      }
+      white-space: nowrap;
+    }
+  }
+  .card-post-comments {
+    margin-left: 0;
+    list-style: none;
+  }
+  .card-post-comment {
+    background-color: $silver;
+    margin-bottom: $global-padding / 2;
+    padding: $global-padding;
+    textarea {
+      min-height: 10em;
+    }
+    p:last-child {
+      margin-bottom: 0;
+    }
+  }
+  .add-comment,
+  .submit {
+    @include meta-label;
+  }
+}

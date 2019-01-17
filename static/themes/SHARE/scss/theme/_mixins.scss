@@ -1,0 +1,474 @@
+@import "fa-icons";
+
+// Copied from WACOP without alteration (some can probably be removed)
+
+// =====================================
+// 0. Utility
+// =====================================
+
+@mixin icon($name:fa-circle,$position:before,$color:false,$margin:rem-calc(5)){
+  $position: if($position == before or $position == after,$position,before);
+
+  // Are they asking for a Font Awesome icon
+  @if str-slice($name,1,2) == "fa" {
+
+    $name: map-get($fa-icons,$name);
+    // If request isn't in $fa-icons deliver a default
+    @if $name == null {
+      $name: map-get($fa-icons,fa-circle);
+    }
+  }
+
+
+  &::#{$position} {
+    content: $name;
+    @if $color { color: $color; }
+    @if $position == after {
+      margin-left: $margin;
+    } @else {
+      margin-right: $margin;
+    }
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@mixin priority-icon($type:'I') {
+  &::before {
+    color: $darksteel;
+    display: inline-block;
+    font-size: small;
+    font-weight: bold;
+    text-align: center;
+    width: 20px;
+    line-height: 20px;
+  }
+  @if $type == 'D' {
+    &::before {
+      content: "D";
+      background-color: $green;
+      border-radius: 30px;
+    }
+  } @else if $type == 'A' {
+    @include icon(fa-exclamation-triangle,$color:$red,$margin:0);
+  } @else {
+    &::before {
+      content: 'I';
+      background-color: $yellow;
+    }
+  }
+}
+
+@mixin input-placeholder {
+    &.placeholder { @content; }
+    &:-moz-placeholder { @content; }
+    &::-moz-placeholder { @content; }
+    &:-ms-input-placeholder { @content; }
+    &::-webkit-input-placeholder { @content; }
+}
+
+// =====================================
+// 1. Atoms
+// =====================================
+
+// Label
+@mixin meta-label($color:false,$size:rem-calc(12),$weight:$font-weight-normal){
+  font-family: $font-family-sans-serif;
+  font-size: $size;
+  @if $color { color: $color; }
+  letter-spacing: rem-calc(0.16);
+  text-transform: uppercase;
+  font-weight: $weight;
+  p, ul, h1, h2, h3, h4, h5, h6 {
+    font-size: inherit;
+  }
+}
+
+// More
+// read more link
+@mixin read-more {
+  &::before {
+    content: '>> ';
+    vertical-align: text-bottom;
+  }
+  @include meta-label;
+}
+
+// Location one line
+@mixin location-inline {
+  @include icon(fa-map-marker,$color:$red);
+}
+
+// Input with button
+@mixin input-button($input-width:9) {
+  // If input is greater than 11 reduce it to 10
+  $input-width: if($input-width > 11, 10, $input-width);
+  $btn-width: 12 - $input-width;
+
+  @include grid-row();
+  input {
+    @include grid-column($input-width);
+  }
+
+  .btn,
+  .button,
+  button {
+    @include grid-column($btn-width);
+    border-radius: $global-radius 0 0 $global-radius;
+    font-size: rem-calc(11);
+  }
+
+  input ~ .btn,
+  input ~ .button,
+  input ~ button {
+    border-radius: 0 $global-radius $global-radius 0;
+  }
+}
+
+@mixin fieldset($side-padding: $global-padding){
+  fieldset {
+    border-left-width: 0;
+    border-right-width: 0;
+    margin-left: -$side-padding;
+    margin-right: -$side-padding;
+  }
+}
+
+// =====================================
+// 2. MOLECULES
+// =====================================
+
+// -------------------------------------
+// Filter box
+@mixin filter($bkg: $silver, $padding: $global-padding) {
+  background-color: $bkg;
+  padding: $padding;
+  .button {
+    @include meta-label;
+  }
+  > .row:last-child {
+    input,
+    .button { margin-bottom: 0; }
+  }
+
+  .input-button-wrapper {
+    @include input-button(10);
+  }
+
+  .calendar-widget-container {
+    @include input-button(9);
+  }
+
+  @include fieldset();
+
+  .controls {
+    .ui-multiselect {
+      max-width: 100%;
+    }
+  }
+
+  // Filter s3 widgets
+  .s3-groupedopts-widget {
+    margin-bottom: 0;
+    width: 100%;
+    input {
+      vertical-align: inherit;
+    }
+    td {
+      label {
+        display: block;
+      }
+      input {
+          float: left;
+          margin-bottom: 0;
+          margin-right: 6px;
+      }
+    }
+  }
+
+}
+
+// -------------------------------------
+// Filter group
+@mixin filter-group($bkg: $silver, $padding: $global-padding) {
+  background-color: $bkg;
+  padding: $padding;
+  .title {
+    font-size: $h4-font-size;
+    font-weight: bold;
+    a {
+      @include meta-label($size:$small-font-size,$weight:bold);
+      line-height: 0;
+      margin-left: $padding;
+    }
+  }
+  .sub-title {
+    @include meta-label($color:$darksteel);
+  }
+  > ul,
+  ul.item-group {
+    margin: 0;
+    li { list-style: none; }
+  }
+
+  label { display: inline; }
+
+  .drop {
+    background-color: $gainsboro;
+    padding: 2px 6px;
+    font-weight: bold;
+    border-radius: 3px;
+  }
+
+}
+
+// -------------------------------------
+// Status Bar
+// Molecule that appears at the top of cards
+@mixin status-bar($bkg: $darksteel,$color:white) {
+  @include clearfix;
+  background-color: $bkg;
+  color: $color;
+  padding: 0 $global-padding;
+
+  a {
+    color: $color;
+    &:hover {
+
+    }
+  }
+
+  &.highlight {
+    background-color: $mint;
+  }
+  &.mute {
+    background-color: #888;
+  }
+
+  // items in bar should be list items
+  ul {
+    margin: 0;
+    line-height: 2;
+    > li {
+      display: inline-block;
+      list-style: none;
+      margin-left: rem-calc(12);
+    }
+    &:first-child > li.icon:first-child {
+      margin-left: rem-calc(-10);
+    }
+  }
+
+  .item {
+    color: $color;
+    font-weight: normal;
+    text-transform: uppercase;
+  }
+  .item.primary {
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+  .item.secondary {
+    text-transform: lowercase;
+    font-variant: small-caps;
+  }
+  .item.border {
+    border-style: solid;
+    border-color: rgba(255,255,255,.25);
+    border-width: 0 1px;
+    padding: 0 rem-calc(12);
+    & + .item.border {
+      margin-left: -1pt;
+      border-left: none;
+    }
+  }
+  .item.icon {}
+
+  // Status Icons
+  &.alert .item.icon {
+    @include priority-icon($type:'A')
+  }
+  &.important .item.icon {
+    @include priority-icon($type:'I')
+  }
+  &.description .item.icon {
+    @include priority-icon($type:'D')
+  }
+
+
+  .status-bar-left {
+    float: left;
+    > li:first-child {
+      margin-left: 0;
+    }
+  }
+
+  // Interactivity
+  // interactive icons that appear on the right of status bar
+  .controls {
+    float: right;
+    .item {
+      cursor: pointer;
+      &:after {
+        content: ' ';
+        white-space: pre;
+      }
+    }
+  }
+}
+
+// -------------------------------------
+// Data Table
+
+@mixin data-table(){
+  .dataTables_processing {}
+  .dataTables_info { float:left; }
+  .dataTables_length {
+    float: right;
+    margin: rem-calc(-6) rem-calc(10) rem-calc(6) 0;
+    select {
+      width: auto;
+      padding-right: 25px;
+      margin: 0;
+    }
+  }
+  .dataTable_table {
+    clear:both;
+    table { width: 100%; }
+  }
+  .dt-export-options {
+    float: right;
+    .dt-export {
+      display: inline;
+      cursor: pointer;
+      margin-left: rem-calc(5);
+      &.export_kml { @include icon(fa-map-o,$color:$blue,$margin:0); }
+      &.export_pdf { @include icon(fa-file-pdf-o,$color:$blue,$margin:0); }
+      &.export_rss { @include icon(fa-rss,$color:$blue,$margin:0); }
+      &.export_xls { @include icon(fa-file-excel-o,$color:$blue,$margin:0); }
+      &.export_xml { @include icon(fa-file-text-o,$color:$blue,$margin:0); }
+    }
+  }
+  .dataTables_paginate {
+    text-align: center;
+  }
+}
+
+// -------------------------------------
+// Data List
+
+// -------------------------------------
+// Date & Location
+// call out boxes
+
+  // Date Location box
+  @mixin box-date-location($bkg: $gainsboro, $padding: $global-padding) {
+    background-color: $bkg;
+    padding: $padding;
+    .adr {
+      @include location-inline;
+    }
+    .date-label {
+      @include meta-label;
+    }
+    .date {}
+  }
+
+  // Date box
+  @mixin box-date($bkg: $gainsboro, $padding: $global-padding) {
+    background-color: $bkg;
+    padding: $padding;
+    .date-label {
+      @include meta-label;
+    }
+    .data {}
+  }
+
+  // Location box
+  @mixin box-location($bkg: $gainsboro, $padding: $global-padding) {
+    background-color: $bkg;
+    padding: $padding;
+    .adr {}
+    .geo-location {
+      @include meta-label;
+      @include location-inline;
+    }
+  }
+
+// -------------------------------------
+// Search Input
+
+@mixin search {
+  position: relative;
+  input {
+    padding-right: rem-calc(30);
+    @include input-placeholder {
+      @include meta-label;
+    }
+  }
+  .search-button,
+  .search-icon {
+    font-size: $input-font-size;
+    position: absolute;
+    padding: $form-spacing / 2;
+    right:0;
+    top:0;
+    .fa {
+      line-height: inherit;
+    }
+  }
+  &.column,
+  &.columns {
+    .search-button,
+    .search-icon {
+      right:$column-gutter / 2;
+    }
+  }
+}
+
+// =====================================
+// 3. ORGANISMS
+// =====================================
+
+// -------------------------------------
+// Callout
+$callout-bg: $base;
+
+@mixin callout($bg:$callout-bg) {
+  @include clearfix;
+  @include panel($bg:lighten($bg, 30%),$border:false);
+  border-top: 4px solid $bg;
+  .callout-left {
+    @include grid-column(6,$collapse:true);
+  }
+  .callout-right {
+    @include grid-column(6,$collapse:true);
+  }
+}
+
+// -------------------------------------
+// Card
+// a box that displays information
+@mixin card($bkg:$silver) {
+  @include clearfix;
+  background-color: $bkg;
+  margin-bottom: $global-padding;
+  .status-bar {
+    @include status-bar;
+  }
+
+  > .body,
+  > .dl-body,
+  > .footer {
+    padding: 0 $global-padding;
+  }
+  .dl-body,
+  .body {
+    padding-top: $global-padding;
+  }
+  .footer {}
+}

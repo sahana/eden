@@ -132,6 +132,16 @@ $alert-color: $darkrose;
 // $warning-color: #f08a24;
 // $info-color: #a0d3e8;
 
+// Currently used by mixins/bb brought in from WACOP
+$warning-color  : #f08a24;
+$success-color  : #43AC6A;
+
+$darksteel      : #4D4D4D;
+$mint           : #4DB988;
+$red            : $alert-color;
+$yellow         : $warning-color;
+$green          : $success-color;
+
 // We use these to control various global styles
 // $body-bg: $white;
 // $body-font-color: $jet;
@@ -151,6 +161,7 @@ $alert-color: $darkrose;
 // We use these to make sure border radius matches unless we want it different.
 // $global-radius: 3px;
 // $global-rounded: 1000px;
+$global-padding: rem-calc(20);
 
 // We use these to control inset shadow shiny edges and depressions.
 // $shiny-edge-size: 0 1px 0;

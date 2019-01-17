@@ -110,6 +110,13 @@ def config(settings):
                            )
 
     # -------------------------------------------------------------------------
+    # CMS Content Management
+    #
+    settings.cms.bookmarks = True
+    settings.cms.richtext = True
+    settings.cms.show_tags = True
+
+    # -------------------------------------------------------------------------
     # Events
     settings.event.label = "Disaster"
     # Uncomment to not use Incidents under Events
@@ -321,6 +328,134 @@ def config(settings):
             module_type = None,
         )),
     ])
+
+    # -------------------------------------------------------------------------
+    def customise_cms_post_resource(r, tablename):
+
+        import json
+
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, \
+                       S3DateFilter, S3OptionsFilter, S3TextFilter, \
+                       s3_fieldmethod
+
+        s3db = current.s3db
+
+        # Virtual Field for Comments
+        # - otherwise need to do per-record DB calls inside cms_post_list_layout
+        #   as direct list_fields come in unsorted, so can't match up to records
+        ctable = s3db.cms_comment
+
+        def comment_as_json(row):
+            body = row["cms_comment.body"]
+            if not body:
+                return None
+            return json.dumps({"body": body,
+                               "created_by": row["cms_comment.created_by"],
+                               "created_on": row["cms_comment.created_on"].isoformat(),
+                               })
+
+        ctable.json_dump = s3_fieldmethod("json_dump",
+                                          comment_as_json,
+                                          # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                          #represent = lambda v: v,
+                                          )
+
+        s3db.configure("cms_comment",
+                       extra_fields = ["body",
+                                       "created_by",
+                                       "created_on",
+                                       ],
+                       # Doesn't seem to have any impact
+                       #orderby = "cms_comment.created_on asc",
+                       )
+
+        
+        table = s3db.cms_post
+        table.priority.readable = table.priority.writable = True
+        table.series_id.readable = table.series_id.writable = True
+        table.status_id.readable = table.status_id.writable = True
+
+        crud_form = S3SQLCustomForm((T("Type"), "series_id"),
+                                    (T("Priority"), "priority"),
+                                    (T("Status"), "status_id"),
+                                    (T("Title"), "title"),
+                                    (T("Text"), "body"),
+                                    #(T("Location"), "location_id"),
+                                    # Tags are added client-side
+                                    S3SQLInlineComponent("document",
+                                                         name = "file",
+                                                         label = T("Files"),
+                                                         fields = [("", "file"),
+                                                                   #"comments",
+                                                                   ],
+                                                         ),
+                                    )
+
+        date_filter = S3DateFilter("date",
+                                   # If we introduce an end_date on Posts:
+                                   #["date", "end_date"],
+                                   label = "",
+                                   #hide_time = True,
+                                   #slider = True,
+                                   clear_text = "X",
+                                   )
+        date_filter.input_labels = {"ge": "Start Time/Date", "le": "End Time/Date"}
+
+        filter_widgets = [S3TextFilter(["body",
+                                        ],
+                                       #formstyle = text_filter_formstyle,
+                                       label = T("Search"),
+                                       _placeholder = T("Enter search term…"),
+                                       ),
+                          S3OptionsFilter("series_id",
+                                          label = "",
+                                          noneSelectedText = "Type", # T() added in widget
+                                          no_opts = "",
+                                          ),
+                          S3OptionsFilter("priority",
+                                          label = "",
+                                          noneSelectedText = "Priority", # T() added in widget
+                                          no_opts = "",
+                                          ),
+                          S3OptionsFilter("status_id",
+                                          label = "",
+                                          noneSelectedText = "Status", # T() added in widget
+                                          no_opts = "",
+                                          ),
+                          S3OptionsFilter("created_by$organisation_id",
+                                          label = "",
+                                          noneSelectedText = "Source", # T() added in widget
+                                          no_opts = "",
+                                          ),
+                          S3OptionsFilter("tag_post.tag_id",
+                                          label = "",
+                                          noneSelectedText = "Tag", # T() added in widget
+                                          no_opts = "",
+                                          ),
+                          date_filter,
+                          ]
+
+        from templates.SHARE.controllers import cms_post_list_layout
+
+        s3db.configure("cms_post",
+                       create_next = URL(args = [1, "post", "datalist"]),
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = ["series_id",
+                                      "priority",
+                                      "status_id",
+                                      "date",
+                                      "title",
+                                      "body",
+                                      "created_by",
+                                      "tag.name",
+                                      "document.file",
+                                      "comment.json_dump",
+                                      ],
+                       list_layout = cms_post_list_layout,
+                       )
+
+    settings.customise_cms_post_resource = customise_cms_post_resource
 
     # -------------------------------------------------------------------------
     def customise_event_sitrep_resource(r, tablename):
@@ -551,26 +686,51 @@ def config(settings):
     def customise_pr_forum_controller(**attr):
 
         s3db = current.s3db
+        s3 = current.response.s3
 
         s3db.pr_forum
-        current.response.s3.crud_strings["pr_forum"].title_display = T("Bulletin Board")
+        s3.crud_strings["pr_forum"].title_display = T("Bulletin Board")
+        s3.dl_no_header = True
 
-        s3db.cms_post
+        # Comments
+        appname = current.request.application
+        s3.scripts.append("/%s/static/themes/WACOP/js/update_comments.js" % appname)
+        script = '''S3.wacop_comments()
+S3.redraw_fns.push('wacop_comments')'''
+        s3.jquery_ready.append(script)
 
-        from s3 import S3SQLCustomForm
-        crud_form = S3SQLCustomForm("title",
-                                    "body",
-                                    "date",
-                                    "location_id",
-                                    )
-
-        s3db.configure("cms_post",
-                       create_next = URL(args = [1, "post", "datalist"]),
-                       crud_form = crud_form,
-                       #list_layout = list_layout,
-                       )
+        # Tags for Updates
+        if s3.debug:
+            s3.scripts.append("/%s/static/scripts/tag-it.js" % appname)
+        else:
+            s3.scripts.append("/%s/static/scripts/tag-it.min.js" % appname)
+        if current.auth.s3_has_permission("update", s3db.cms_tag_post):
+            # @ToDo: Move the ajaxUpdateOptions into callback of getS3?
+            readonly = '''afterTagAdded:function(event,ui){
+if(ui.duringInitialization){return}
+var post_id=$(this).attr('data-post_id')
+var url=S3.Ap.concat('/cms/post/',post_id,'/add_tag/',ui.tagLabel)
+$.getS3(url)
+S3.search.ajaxUpdateOptions('#updates_datalist-filter-form')
+},afterTagRemoved:function(event,ui){
+var post_id=$(this).attr('data-post_id')
+var url=S3.Ap.concat('/cms/post/',post_id,'/remove_tag/',ui.tagLabel)
+$.getS3(url)
+S3.search.ajaxUpdateOptions('#updates_datalist-filter-form')
+},'''
+        else:
+            readonly = '''readOnly:true'''
+        script = \
+'''S3.tagit=function(){$('.s3-tags').tagit({placeholderText:'%s',autocomplete:{source:'%s'},%s})}
+S3.tagit()
+S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
+                                  URL(c="cms", f="tag",
+                                      args="tag_list.json"),
+                                  readonly)
+        s3.jquery_ready.append(script)
 
         attr["rheader"] = None
+        attr["hide_filter"] = False
 
         return attr
 
@@ -1650,6 +1810,7 @@ def config(settings):
                                       "parameter_id",
                                       "item_id",
                                       "quantity",
+                                      (T("Quantity Outstanding"),"quantity_uncommitted"),
                                       "timeframe",
                                       (T("Request Number"), "need_id$req_number.value"),
                                       ],

@@ -530,6 +530,7 @@ def open_tasks_for_project():
     return s3_rest_controller(module, "project",
                               hide_filter = False,
                               )
+
 # -----------------------------------------------------------------------------
 def set_theme_requires(sector_ids):
     """
@@ -941,7 +942,8 @@ def demographic_data():
 def location_contact():
     """ RESTful CRUD controller for Community Contacts """
 
-    return s3_rest_controller(hide_filter=False)
+    return s3_rest_controller(hide_filter = False,
+                              )
 
 # -----------------------------------------------------------------------------
 def report():
