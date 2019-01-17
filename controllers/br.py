@@ -239,15 +239,10 @@ def person():
             if not r.record:
                 from s3 import S3TextFilter, S3DateFilter, S3OptionsFilter
                 filter_widgets = [
-                    S3TextFilter(["pe_label",
-                                  "first_name",
-                                  "middle_name",
-                                  "last_name",
-                                  "case.comments",
-                                  ],
-                                  label = T("Search"),
-                                  comment = T("You can search by name, ID or comments"),
-                                  ),
+                    S3TextFilter(name_fields + ["pe_label", "case.comments"],
+                                 label = T("Search"),
+                                 comment = T("You can search by name, ID or comments"),
+                                 ),
                     S3DateFilter("date_of_birth",
                                  hidden = True,
                                  ),
@@ -297,6 +292,26 @@ def person():
                 if settings.get_br_case_activity_updates():
                     utable = s3db.br_case_activity_update
                     utable.human_resource_id.default = human_resource_id
+
+            root_org = None
+            org_specific_needs = settings.get_br_case_activity_need() and \
+                                 settings.get_br_needs_org_specific()
+
+            if org_specific_needs:
+                root_org = s3db.br_case_root_org(r.id)
+                if not root_org:
+                    root_org = auth.root_org()
+
+            if org_specific_needs and root_org:
+                # Limit selectable need types to the case root org
+                field = atable.need_id
+                field.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(db, "br_need.id",
+                                              field.represent,
+                                              filterby = "organisation_id",
+                                              filter_opts = (root_org,),
+                                              ))
+            # TODO when using inline responses, filter themes to root org
 
         return True
     s3.prep = prep

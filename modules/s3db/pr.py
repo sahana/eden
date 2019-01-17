@@ -1134,6 +1134,7 @@ class PRPersonModel(S3Model):
                        security_seized_item = "person_id",
                        )
 
+        # Beneficiary/Case Management
         if settings.has_module("br"):
             # Use BR for case management
             add_components(tablename,
@@ -7141,10 +7142,7 @@ class pr_AssignMethod(S3Method):
         #    controller = "vol"
         #else:
         #    controller = "hrm"
-        if tablename == "pr_forum_membership":
-            USERS = True
-        else:
-            USERS = False
+        USERS = tablename == "pr_forum_membership"
         controller = "pr"
 
         T = current.T
@@ -7655,27 +7653,18 @@ class pr_Contacts(S3Method):
 
         # Use field.readable to hide fields if-required
         r.customise_resource(tablename)
-        if table.comments.readable:
-            comments_readable = True
-        else:
-            comments_readable = False
-        if table.contact_description.readable:
-            description_readable = True
-        else:
-            description_readable = False
-        if table.priority.readable:
-            priority_readable = True
-        else:
-            priority_readable = False
+        comments_readable = table.comments.readable
+        description_readable = table.contact_description.readable
+        priority_readable = table.priority.readable
 
         # Contact information by contact method
         opts = current.msg.CONTACT_OPTS
         action_buttons = self.action_buttons
         inline_edit_hint = T("Click to edit")
-        for method, contacts in groups:
+        for contact_method, contacts in groups:
 
             # Subtitle
-            form.append(H3(opts[method]))
+            form.append(H3(opts[contact_method]))
 
             # Individual Rows
             for contact in contacts:

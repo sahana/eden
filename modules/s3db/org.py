@@ -679,10 +679,6 @@ class S3OrganisationModel(S3Model):
                        hrm_human_resource = "organisation_id",
                        # Members
                        member_membership = "organisation_id",
-                       # DVR needs
-                       dvr_need = "organisation_id",
-                       # DVR response themes
-                       dvr_response_theme = "organisation_id",
                        # Locations served
                        gis_location = {"link": "org_organisation_location",
                                        "joinby": "organisation_id",
@@ -794,6 +790,20 @@ class S3OrganisationModel(S3Model):
                        po_organisation_household = "organisation_id",
                        po_referral_organisation = "organisation_id",
                        )
+
+        # Beneficiary/Case Management
+        if settings.has_module("br"):
+            # Use BR for org-specific categories in case management
+            add_components(tablename,
+                           br_need = "organisation_id",
+                           #br_response_theme = "organisation_id",
+                           )
+        else:
+            # Use DVR for org-specific categories in case management
+            add_components(tablename,
+                           dvr_need = "organisation_id",
+                           dvr_response_theme = "organisation_id",
+                           )
 
         # Projects
         if settings.get_project_multiple_organisations():
@@ -6407,6 +6417,13 @@ def org_rheader(r, tabs=None):
                     append_tab((T("Documents"), "document"))
                 if settings.get_org_pdf_card_configs():
                     append_tab((T("Cards"), "card_config"))
+
+                # Org-specific categories for beneficiary/case management
+                if settings.has_module("br"):
+                    if settings.get_br_needs_org_specific():
+                        append_tab((T("Need Types"), "need"))
+                    # TODO org-specific response types/themes
+
                 # Org Role Manager always last
                 append_tab((T("User Roles"), "roles"))
 

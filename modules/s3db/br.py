@@ -43,6 +43,7 @@ __all__ = ("BRCaseModel",
            "br_DocEntityRepresent",
            "br_case_read_orgs",
            "br_case_default_org",
+           "br_case_root_org",
            "br_case_default_status",
            "br_case_status_filter_opts",
            "br_group_membership_onaccept",
@@ -534,6 +535,9 @@ class BRCaseActivityModel(S3Model):
         #           (subject-based/need-based)
         #
         case_activity_manager = settings.get_br_case_activity_manager()
+        case_activity_need = settings.get_br_case_activity_need()
+        case_activity_subject = settings.get_br_case_activity_subject()
+        case_activity_need_details = settings.get_br_case_activity_need_details()
 
         # Priority options
         priority_opts = [#(0, T("Urgent")),
@@ -581,13 +585,21 @@ class BRCaseActivityModel(S3Model):
                            ),
 
                      # Subject and Details
+                     self.br_need_id(
+                            readable = case_activity_need,
+                            writable = case_activity_need,
+                            ),
                      Field("subject",
                            label = T("Subject / Occasion"),
+                           readable = case_activity_subject,
+                           writable = case_activity_subject,
                            ),
                      Field("need_details", "text",
                            label = T("Need Details"),
                            represent = s3_text_represent,
                            widget = s3_comments_widget,
+                           readable = case_activity_need_details,
+                           writable = case_activity_need_details,
                            # TODO tooltip
                            ),
                      Field("activity_details", "text",
@@ -626,12 +638,7 @@ class BRCaseActivityModel(S3Model):
                             br_case_activity_update = "case_activity_id",
                             )
 
-        # CRUD form
-        if case_activity_manager:
-            human_resource_id = "human_resource_id"
-        else:
-            human_resource_id = None
-
+        # Optional inline components
         if settings.get_br_case_activity_updates():
             updates = S3SQLInlineComponent("case_activity_update",
                                            label = T("Progress"),
@@ -659,12 +666,14 @@ class BRCaseActivityModel(S3Model):
         else:
             attachments = None
 
+        # CRUD form
         crud_fields = ["person_id",
-                       human_resource_id,
+                       "human_resource_id",
                        "priority",
                        "date",
-                       "subject",           # TODO alternative: need
-                       "need_details",      # TODO make optional
+                       "need_id",
+                       "subject",
+                       "need_details",
                        "activity_details",  # TODO alternative: responses
                        "status_id",         # TODO make optional
                        updates,
@@ -677,24 +686,32 @@ class BRCaseActivityModel(S3Model):
         # List fields (for case file tab)
         list_fields = ["priority",
                        "date",
-                       "subject",           # TODO alternative: need
-                       human_resource_id,
                        "status_id",         # TODO make optional
                        #"end_date",         # TODO make optional
                        ]
+        if case_activity_manager:
+            list_fields.insert(2, "human_resource_id")
+        if case_activity_subject:
+            list_fields.insert(2, "subject")
+        if case_activity_need:
+            list_fields.insert(2, "need_id")
 
         # Filter widgets
-        filter_widgets = [S3TextFilter(["person_id$pe_label",
-                                        "person_id$first_name",
-                                        "person_id$middle_name",
-                                        "person_id$last_name",
-                                        "subject",
-                                        ],
-                                        label = T("Search"),
-                                        ),
+        text_filter_fields = ["person_id$pe_label",
+                              "person_id$first_name",
+                              "person_id$middle_name",
+                              "person_id$last_name",
+                              ]
+        if case_activity_subject:
+            text_filter_fields.append("subject")
+
+        filter_widgets = [S3TextFilter(text_filter_fields,
+                                       label = T("Search"),
+                                       ),
                           S3DateFilter("date",
                                        hidden = True,
                                        ),
+                          # TODO needs-filter
                           S3OptionsFilter("status_id",
                                           cols = 4,
                                           hidden = True,
@@ -1082,9 +1099,6 @@ class BRNeedsModel(S3Model):
              )
 
     def model(self):
-
-        # TODO Make org component
-        # TODO Admin menu item resp. org tab
 
         T = current.T
         db = current.db
@@ -1769,6 +1783,37 @@ def br_case_default_org():
         default_org = orgs[0]
 
     return default_org, multiple_orgs
+
+# -----------------------------------------------------------------------------
+def br_case_root_org(person_id):
+    """
+        Get the root organisation managing a case
+
+        @param person_id: the person record ID
+
+        @returns: the root organisation record ID
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    if person_id:
+        ctable = s3db.br_case
+        otable = s3db.org_organisation
+        left = otable.on(otable.id == ctable.organisation_id)
+        query = (ctable.person_id == person_id) & \
+                (ctable.invalid == False) & \
+                (ctable.deleted == False)
+        row = db(query).select(otable.root_organisation,
+                               left = left,
+                               limitby = (0, 1),
+                               orderby = ~ctable.modified_on,
+                               ).first()
+        case_root_org = row.root_organisation if row else None
+    else:
+        case_root_org = None
+
+    return case_root_org
 
 # -----------------------------------------------------------------------------
 def br_case_default_status():

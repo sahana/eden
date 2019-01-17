@@ -615,6 +615,9 @@ class S3OptionsMenu(object):
                         M("Case Activity Statuses", f="case_activity_status",
                           check = lambda i: settings.get_br_case_activities(),
                           ),
+                        M("Need Types", f="need",
+                          check = lambda i: not settings.get_br_needs_org_specific(),
+                          )
                         ),
                     )
 
@@ -1050,21 +1053,19 @@ class S3OptionsMenu(object):
         def config_menu(i):
             auth = current.auth
             if not auth.is_logged_in():
-                # Anonymous users can never cofnigure the Map
+                # Anonymous users can never configure the Map
                 return False
             s3db = current.s3db
-            if auth.s3_has_permission("create",
-                                      s3db.gis_config):
+            table = s3db.gis_config
+            if auth.s3_has_permission("create", table):
                 # If users can create configs then they can see the menu item
                 return True
             # Look for this user's config
-            table = s3db.gis_config
             query = (table.pe_id == auth.user.pe_id)
             config = current.db(query).select(table.id,
                                               limitby=(0, 1),
                                               cache=s3db.cache).first()
-            if config:
-                return True
+            return True if config else False
 
         def config_args():
             auth = current.auth

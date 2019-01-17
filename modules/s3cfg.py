@@ -2780,6 +2780,24 @@ class S3Config(Storage):
         """
         return self.br.get("case_activity_manager", True)
 
+    def get_br_case_activity_need(self):
+        """
+            Use need categories for case activities
+        """
+        return self.br.get("case_activity_need", True)
+
+    def get_br_case_activity_subject(self):
+        """
+            Have a subject line (title) for case activities
+        """
+        return self.br.get("case_activity_subject", False)
+
+    def get_br_case_activity_need_details(self):
+        """
+            Have a text field to document need details in case activities
+        """
+        return self.br.get("case_activity_need_details", False)
+
     def get_br_case_activity_updates(self):
         """
             Use case activity update journal (inline-component)
