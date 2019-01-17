@@ -949,7 +949,7 @@ class S3PDFTable(object):
         if main_doc.auto_orientation:
             orientation = "Auto"
         else:
-            orientation = main_doc.page_orientatiom
+            orientation = main_doc.page_orientation
         temp_doc = EdenDocTemplate(orientation = orientation,
                                    size = main_doc.paper_size,
                                    )
