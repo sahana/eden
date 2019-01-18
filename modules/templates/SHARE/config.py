@@ -2314,8 +2314,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                           ),
                           ]
 
-        list_fields = [#(T("Disaster"), "need_response_id$event__link.event_id"),
-                       (T("Organization"), "need_response_id$agency.organisation_id"),
+        list_fields = [(T("Organization"), "need_response_id$agency.organisation_id"),
                        (T("Implementing Partner"), "need_response_id$partner.organisation_id"),
                        (T("Donor"), "need_response_id$donor.organisation_id"),
                        # These levels/labels are for SHARE/LK
@@ -2332,6 +2331,8 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                        (T("Activity Date (Planned"), "date"),
                        (T("Activity Status"), "status_id"),
                        ]
+        if current.auth.permission.format != "pdf":
+            list_fields.insert(0, (T("Disaster"), "need_response_id$event__link.event_id"))
 
         s3db.configure("req_need_response_line",
                        filter_widgets = filter_widgets,
