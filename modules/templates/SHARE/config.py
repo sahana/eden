@@ -689,7 +689,7 @@ def config(settings):
         s3 = current.response.s3
 
         s3db.pr_forum
-        s3.crud_strings["pr_forum"].title_display = T("Bulletin Board")
+        s3.crud_strings["pr_forum"].title_display = T("Database Access")
         s3.dl_no_header = True
 
         # Comments

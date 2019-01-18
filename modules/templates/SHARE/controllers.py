@@ -243,7 +243,8 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                      "record": record_id}
                                ),
                      _class="s3_modal",
-                     _title=T("Edit %(type)s") % dict(type=series_title),
+                     #_title=T("Edit %(type)s") % dict(type=series_title),
+                     _title=T("Edit"),
                      )
     else:
         edit_btn = ""
