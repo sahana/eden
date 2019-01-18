@@ -372,12 +372,12 @@ def config(settings):
         
         table = s3db.cms_post
         table.priority.readable = table.priority.writable = True
-        table.series_id.readable = table.series_id.writable = True
-        table.status_id.readable = table.status_id.writable = True
+        #table.series_id.readable = table.series_id.writable = True
+        #table.status_id.readable = table.status_id.writable = True
 
-        crud_form = S3SQLCustomForm((T("Type"), "series_id"),
+        crud_form = S3SQLCustomForm(#(T("Type"), "series_id"),
                                     (T("Priority"), "priority"),
-                                    (T("Status"), "status_id"),
+                                    #(T("Status"), "status_id"),
                                     (T("Title"), "title"),
                                     (T("Text"), "body"),
                                     #(T("Location"), "location_id"),
@@ -407,21 +407,21 @@ def config(settings):
                                        label = T("Search"),
                                        _placeholder = T("Enter search term…"),
                                        ),
-                          S3OptionsFilter("series_id",
-                                          label = "",
-                                          noneSelectedText = "Type", # T() added in widget
-                                          no_opts = "",
-                                          ),
+                          #S3OptionsFilter("series_id",
+                          #                label = "",
+                          #                noneSelectedText = "Type", # T() added in widget
+                          #                no_opts = "",
+                          #                ),
                           S3OptionsFilter("priority",
                                           label = "",
                                           noneSelectedText = "Priority", # T() added in widget
                                           no_opts = "",
                                           ),
-                          S3OptionsFilter("status_id",
-                                          label = "",
-                                          noneSelectedText = "Status", # T() added in widget
-                                          no_opts = "",
-                                          ),
+                          #S3OptionsFilter("status_id",
+                          #                label = "",
+                          #                noneSelectedText = "Status", # T() added in widget
+                          #                no_opts = "",
+                          #                ),
                           S3OptionsFilter("created_by$organisation_id",
                                           label = "",
                                           noneSelectedText = "Source", # T() added in widget
@@ -441,9 +441,9 @@ def config(settings):
                        create_next = URL(args = [1, "post", "datalist"]),
                        crud_form = crud_form,
                        filter_widgets = filter_widgets,
-                       list_fields = ["series_id",
+                       list_fields = [#"series_id",
                                       "priority",
-                                      "status_id",
+                                      #"status_id",
                                       "date",
                                       "title",
                                       "body",
@@ -2314,28 +2314,30 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                           ),
                           ]
 
-        s3db.configure("req_need_response_line",
+        list_fields = [#(T("Disaster"), "need_response_id$event__link.event_id"),
+                       (T("Organization"), "need_response_id$agency.organisation_id"),
+                       (T("Implementing Partner"), "need_response_id$partner.organisation_id"),
+                       (T("Donor"), "need_response_id$donor.organisation_id"),
+                       # These levels/labels are for SHARE/LK
+                       (T("District"), "need_response_id$location_id$L1"),
+                       "coarse_location_id",
+                       "location_id",
+                       (T("Sector"), "sector_id"),
+                       (T("Item"), "item_id"),
+                       (T("Items Planned"), "quantity"),
+                       (T("Items Delivered"), "quantity_delivered"),
+                       (T("Modality"), "modality"),
+                       (T("Beneficiaries Planned"), "value"),
+                       (T("Beneficiaries Reached"), "value_reached"),
+                       (T("Activity Date (Planned"), "date"),
+                       (T("Activity Status"), "status_id"),
+                       ]
+
+       s3db.configure("req_need_response_line",
                        filter_widgets = filter_widgets,
                        # We create a custom Create Button to create a Need Response not a Need Response Line
                        listadd = False,
-                       list_fields = [(T("Disaster"), "need_response_id$event__link.event_id"),
-                                      (T("Organization"), "need_response_id$agency.organisation_id"),
-                                      (T("Implementing Partner"), "need_response_id$partner.organisation_id"),
-                                      (T("Donor"), "need_response_id$donor.organisation_id"),
-                                      # These levels/labels are for SHARE/LK
-                                      (T("District"), "need_response_id$location_id$L1"),
-                                      "coarse_location_id",
-                                      "location_id",
-                                      (T("Sector"), "sector_id"),
-                                      (T("Item"), "item_id"),
-                                      (T("Items Planned"), "quantity"),
-                                      (T("Items Delivered"), "quantity_delivered"),
-                                      (T("Modality"), "modality"),
-                                      (T("Beneficiaries Planned"), "value"),
-                                      (T("Beneficiaries Reached"), "value_reached"),
-                                      (T("Activity Date (Planned"), "date"),
-                                      (T("Activity Status"), "status_id"),
-                                      ],
+                       list_fields = list_fields,
                        )
 
         s3 = current.response.s3

@@ -183,7 +183,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     date = record["cms_post.date"]
     title = record["cms_post.title"]
     body = record["cms_post.body"]
-    series_id = raw["cms_post.series_id"]
+    #series_id = raw["cms_post.series_id"]
 
     # Allow records to be truncated
     # (not yet working for HTML)
@@ -191,17 +191,17 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                _class="s3-truncate",
                )
 
-    if series_id:
-        series = record["cms_post.series_id"]
-        translate = settings.get_L10n_translate_cms_series()
-        if translate:
-            series_title = T(series)
-        else:
-            series_title = series
-    else:
-        series_title = series = ""
+    #if series_id:
+    #    series = record["cms_post.series_id"]
+    #    translate = settings.get_L10n_translate_cms_series()
+    #    if translate:
+    #        series_title = T(series)
+    #    else:
+    #        series_title = series
+    #else:
+    #    series_title = series = ""
 
-    status = record["cms_post.status_id"]
+    #status = record["cms_post.status_id"]
 
     author_id = raw["cms_post.created_by"]
     person = record["cms_post.created_by"]
@@ -453,13 +453,13 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                          LI(_class="item icon",
                                             ),
                                          # post type title
-                                         LI(series_title,
-                                            _class="item primary",
-                                            ),
+                                         #LI(series_title,
+                                         #   _class="item primary",
+                                         #   ),
                                          # post status
-                                         LI(status,
-                                            _class="item secondary border status",
-                                            ),
+                                         #LI(status,
+                                         #   _class="item secondary border status",
+                                         #   ),
                                          # post visibility
                                          # @ToDo: Read the visibility
                                          #LI(T("Public"),
