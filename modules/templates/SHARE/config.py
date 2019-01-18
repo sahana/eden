@@ -369,7 +369,7 @@ def config(settings):
                        #orderby = "cms_comment.created_on asc",
                        )
 
-        
+
         table = s3db.cms_post
         table.priority.readable = table.priority.writable = True
         #table.series_id.readable = table.series_id.writable = True
@@ -2333,8 +2333,8 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                        (T("Activity Date (Planned"), "date"),
                        (T("Activity Status"), "status_id"),
                        ]
-        #if current.auth.permission.format != "pdf":
-        list_fields.insert(0, (T("Disaster"), "need_response_id$event__link.event_id"))
+        if current.auth.permission.format != "pdf":
+            list_fields.insert(0, (T("Disaster"), "need_response_id$event__link.event_id"))
 
         s3db.configure("req_need_response_line",
                        filter_widgets = filter_widgets,
