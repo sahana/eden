@@ -2333,7 +2333,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                        (T("Activity Status"), "status_id"),
                        ]
 
-       s3db.configure("req_need_response_line",
+        s3db.configure("req_need_response_line",
                        filter_widgets = filter_widgets,
                        # We create a custom Create Button to create a Need Response not a Need Response Line
                        listadd = False,
