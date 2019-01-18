@@ -2331,8 +2331,8 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                        (T("Activity Date (Planned"), "date"),
                        (T("Activity Status"), "status_id"),
                        ]
-        if current.auth.permission.format != "pdf":
-            list_fields.insert(0, (T("Disaster"), "need_response_id$event__link.event_id"))
+        #if current.auth.permission.format != "pdf":
+        list_fields.insert(0, (T("Disaster"), "need_response_id$event__link.event_id"))
 
         s3db.configure("req_need_response_line",
                        filter_widgets = filter_widgets,
