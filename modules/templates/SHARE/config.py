@@ -730,7 +730,7 @@ def config(settings):
         s3 = current.response.s3
 
         s3db.pr_forum
-        s3.crud_strings["pr_forum"].title_display = T("Database Access")
+        s3.crud_strings["pr_forum"].title_display = T("HCT Coordination Folders")
         s3.dl_no_header = True
 
         # Comments
