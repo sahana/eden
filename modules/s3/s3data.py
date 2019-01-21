@@ -655,6 +655,10 @@ class S3DataTable(object):
                               for example:
                               {"warning" : [1,3,6,7,9],
                                "alert" : [2,10,13]}
+                   dt_col_widths: dictionary of columns to apply a width to
+                                  for example:
+                                  {1 : 15,
+                                   2 : 20}
                    dt_text_maximum_len: The maximum length of text before it is condensed
                    dt_text_condense_len: The length displayed text is condensed down to
                    dt_double_scroll: Render double scroll bars (top+bottom), only available
@@ -710,6 +714,13 @@ class S3DataTable(object):
         config.ajaxUrl = ajaxUrl
 
         config.rowStyles = attr_get("dt_styles", [])
+
+        colWidths = attr_get("dt_col_widths")
+        if colWidths is not None:
+            # NB This requires "table-layout:fixed" in your CSS
+            # You will likely need to specify all column widths if you do this
+            # & won't have responsiveness
+            config.colWidths = colWidths
 
         rowActions = attr_get("dt_row_actions", s3.actions)
         if rowActions:

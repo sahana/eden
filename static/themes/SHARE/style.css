@@ -10,3 +10,7 @@
     font-size: 0.7rem;
     padding-bottom: 0.2rem;
 }
+/* SitRep page wants a wider Summary column, which needs fixed layout */
+#sitrep .dataTable {
+    table-layout: fixed;
+}

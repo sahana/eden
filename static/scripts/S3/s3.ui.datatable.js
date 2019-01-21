@@ -456,6 +456,19 @@
                     'bSortable': false
                 };
             }
+            if (tableConfig.colWidths) {
+                var col,
+                    _colWidths = tableConfig.colWidths;
+                for (col in _colWidths) {
+                    if (columnConfig[col] != null) {
+                        columnConfig[col]['sWidth'] = _colWidths[col];
+                    } else {
+                        columnConfig[col] = {
+                            'sWidth': _colWidths[col]
+                        };
+                    }
+                }
+            }
             this.columnConfigs = columnConfig;
 
             return tableConfig;

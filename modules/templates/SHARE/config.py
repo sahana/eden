@@ -486,6 +486,47 @@ def config(settings):
 
     settings.customise_event_sitrep_resource = customise_event_sitrep_resource
     # -----------------------------------------------------------------------------
+    def customise_event_sitrep_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_postp = s3.postp
+        def postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.interactive:
+                # Mark this page to have differential CSS
+                s3.jquery_ready.append('''$('main').attr('id', 'sitrep')''')
+
+            return output
+        s3.postp = postp
+
+        # Extend the width of the Summary column
+        dt_col_widths = {0: 110,
+                         1: 95,
+                         2: 100,
+                         3: 100,
+                         4: 100,
+                         5: 100,
+                         6: 110,
+                         7: 80,
+                         8: 90,
+                         9: 300,
+                         10: 110,
+                         }
+        if "dtargs" in attr:
+            attr["dtargs"]["dt_col_widths"] = dt_col_widths
+        else:
+            attr["dtargs"] = {"dt_col_widths": dt_col_widths,
+                              }
+
+        return attr
+
+    settings.customise_event_sitrep_controller = customise_event_sitrep_controller
+    # -----------------------------------------------------------------------------
     def customise_gis_location_controller(**attr):
 
         s3 = current.response.s3
@@ -2224,6 +2265,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         from s3 import S3OptionsFilter #, S3DateFilter, S3LocationFilter, S3TextFilter
 
         s3db = current.s3db
+        table = s3db.req_need_response_line
 
         settings.base.pdf_orientation = "Landscape"
 
@@ -2279,85 +2321,129 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                                                               ),
                             )
 
-        filter_widgets = [S3OptionsFilter("need_response_id$agency.organisation_id",
-                                          label = T("Organization"),
-                                          ),
-                          #S3OptionsFilter("need_response_id$event.event_type_id",
-                          #                #hidden = True,
-                          #                ),
-                          # @ToDo: Filter this list dynamically based on Event Type (if-used):
-                          S3OptionsFilter("need_response_id$event__link.event_id",
-                                          #hidden = True,
-                                          ),
-                          S3OptionsFilter("sector_id"),
-                          #S3LocationFilter("location_id",
-                          #                 label = T("Location"),
-                          #                 # These levels are for SHARE/LK
-                          #                 levels = ("L2", "L3", "L4"),
-                          #                 ),
-                          S3OptionsFilter("need_response_id$location_id",
-                                          label = T("District"),
-                                          ),
-                          S3OptionsFilter("need_response_id$donor.organisation_id",
-                                          label = T("Donor"),
-                                          ),
-                          S3OptionsFilter("need_response_id$partner.organisation_id",
-                                          label = T("Partner"),
-                                          ),
-                          S3OptionsFilter("parameter_id"),
-                          S3OptionsFilter("item_id"),
-                          #S3OptionsFilter("modality"),
-                          #S3DateFilter("date"),
-                          S3OptionsFilter("status_id",
-                                          cols = 4,
-                                          label = T("Status"),
-                                          #hidden = True,
-                                          ),
-                          ]
-
-        list_fields = [(T("Organization"), "need_response_id$agency.organisation_id"),
-                       (T("Implementing Partner"), "need_response_id$partner.organisation_id"),
-                       (T("Donor"), "need_response_id$donor.organisation_id"),
-                       # These levels/labels are for SHARE/LK
-                       #(T("Province"), "need_response_id$location_id$L1"),
-                       (T("District"), "need_response_id$location_id$L2"),
-                       "coarse_location_id",
-                       "location_id",
-                       (T("Sector"), "sector_id"),
-                       (T("Item"), "item_id"),
-                       (T("Items Planned"), "quantity"),
-                       (T("Items Delivered"), "quantity_delivered"),
-                       (T("Modality"), "modality"),
-                       (T("Beneficiaries Planned"), "value"),
-                       (T("Beneficiaries Reached"), "value_reached"),
-                       (T("Activity Date (Planned"), "date"),
-                       (T("Activity Status"), "status_id"),
-                       ]
-        #if current.auth.permission.format != "pdf":
-        list_fields.insert(0, (T("Disaster"), "need_response_id$event__link.event_id"))
-
-        s3db.configure("req_need_response_line",
-                       filter_widgets = filter_widgets,
-                       # We create a custom Create Button to create a Need Response not a Need Response Line
-                       listadd = False,
-                       list_fields = list_fields,
-                       )
-
         s3 = current.response.s3
 
-        s3.crud_strings["req_need_response_line"] = Storage(
-            #label_create = T("Add Activity"),
-            title_list = T("Activities"),
-            #title_display = T("Activity"),
-            #title_update = T("Edit Activity"),
-            #title_upload = T("Import Activities"),
-            #label_list_button = T("List Activities"),
-            #label_delete_button = T("Delete Activity"),
-            #msg_record_created = T("Activity added"),
-            #msg_record_modified = T("Activity updated"),
-            msg_record_deleted = T("Activity deleted"),
-            msg_list_empty = T("No Activities currently registered"),
-            )
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_postp(r)
+            else:
+                result = True
+
+            filter_widgets = [S3OptionsFilter("need_response_id$agency.organisation_id",
+                                              label = T("Organization"),
+                                              ),
+                              #S3OptionsFilter("need_response_id$event.event_type_id",
+                              #                #hidden = True,
+                              #                ),
+                              # @ToDo: Filter this list dynamically based on Event Type (if-used):
+                              S3OptionsFilter("need_response_id$event__link.event_id",
+                                              #hidden = True,
+                                              ),
+                              S3OptionsFilter("sector_id"),
+                              #S3LocationFilter("location_id",
+                              #                 label = T("Location"),
+                              #                 # These levels are for SHARE/LK
+                              #                 levels = ("L2", "L3", "L4"),
+                              #                 ),
+                              S3OptionsFilter("need_response_id$location_id",
+                                              label = T("District"),
+                                              ),
+                              S3OptionsFilter("need_response_id$donor.organisation_id",
+                                              label = T("Donor"),
+                                              ),
+                              S3OptionsFilter("need_response_id$partner.organisation_id",
+                                              label = T("Partner"),
+                                              ),
+                              S3OptionsFilter("parameter_id"),
+                              S3OptionsFilter("item_id"),
+                              #S3OptionsFilter("modality"),
+                              #S3DateFilter("date"),
+                              S3OptionsFilter("status_id",
+                                              cols = 4,
+                                              label = T("Status"),
+                                              #hidden = True,
+                                              ),
+                              ]
+
+            list_fields = [(T("Organization"), "need_response_id$agency.organisation_id"),
+                           (T("Implementing Partner"), "need_response_id$partner.organisation_id"),
+                           (T("Donor"), "need_response_id$donor.organisation_id"),
+                           # These levels/labels are for SHARE/LK
+                           #(T("Province"), "need_response_id$location_id$L1"),
+                           (T("District"), "need_response_id$location_id$L2"),
+                           "coarse_location_id",
+                           "location_id",
+                           (T("Sector"), "sector_id"),
+                           (T("Item"), "item_id"),
+                           (T("Items Planned"), "quantity"),
+                           #(T("Items Delivered"), "quantity_delivered"),
+                           (T("Modality"), "modality"),
+                           (T("Beneficiaries Planned"), "value"),
+                           (T("Beneficiaries Reached"), "value_reached"),
+                           (T("Activity Date (Planned"), "date"),
+                           (T("Activity Status"), "status_id"),
+                           ]
+
+            if r.interactive:
+                s3.crud_strings["req_need_response_line"] = Storage(
+                    #label_create = T("Add Activity"),
+                    title_list = T("Activities"),
+                    #title_display = T("Activity"),
+                    #title_update = T("Edit Activity"),
+                    #title_upload = T("Import Activities"),
+                    #label_list_button = T("List Activities"),
+                    #label_delete_button = T("Delete Activity"),
+                    #msg_record_created = T("Activity added"),
+                    #msg_record_modified = T("Activity updated"),
+                    msg_record_deleted = T("Activity deleted"),
+                    msg_list_empty = T("No Activities currently registered"),
+                    )
+
+            if r.method == "report":
+                # In report drilldown, include the (Location) after quantity_delivered
+                # => Needs to be a VF as we can't read the record from within represents
+                #table.quantity_delivered.represent = 
+
+                from s3 import s3_fieldmethod
+
+                # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
+                gis_represent = S3Represent(lookup = "gis_location")
+
+                def quantity_delivered_w_location(row):
+                    quantity_delivered = row["req_need_response_line.quantity_delivered"]
+                    location_id = row["req_need_response_line.location_id"]
+                    if not location_id:
+                        location_id = row["req_need_response_line.coarse_location_id"]
+                    if not location_id:
+                        location_id = row["req_need_response.location_id"]
+                    location = gis_represent(location_id)
+                    return "%s (%s)" % (quantity_delivered, location)
+
+                table.quantity_delivered_w_location = s3_fieldmethod("quantity_delivered_w_location",
+                                                                     quantity_delivered_w_location,
+                                                                     # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                                                     #represent = lambda v: v,
+                                                                     )
+                list_fields.insert(9, (T("Items Delivered"), "quantity_delivered_w_location"))
+            else:
+                list_fields.insert(9, (T("Items Delivered"), "quantity_delivered"))
+
+            # Exclude the Disaster column from PDF exports
+            #if r.representation != "pdf":
+            list_fields.insert(0, (T("Disaster"), "need_response_id$event__link.event_id"))
+
+            s3db.configure("req_need_response_line",
+                           filter_widgets = filter_widgets,
+                           # We create a custom Create Button to create a Need Response not a Need Response Line
+                           listadd = False,
+                           list_fields = list_fields,
+                           )
+
+            return result
+        s3.prep = prep
 
         # Custom postp
         standard_postp = s3.postp
@@ -2374,7 +2460,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                 #S3CRUD.action_buttons(r)
                 # Custom Action Buttons
                 auth = current.auth
-                deletable = current.db(auth.s3_accessible_query("delete", "req_need_response_line")).select(s3db.req_need_response_line.id)
+                deletable = current.db(auth.s3_accessible_query("delete", "req_need_response_line")).select(table.id)
                 restrict_d = [str(row.id) for row in deletable]
                 s3.actions = [{"label": s3_str(T("Open")),
                                "_class": "action-btn",
