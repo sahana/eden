@@ -752,12 +752,12 @@ if(ui.duringInitialization){return}
 var post_id=$(this).attr('data-post_id')
 var url=S3.Ap.concat('/cms/post/',post_id,'/add_tag/',ui.tagLabel)
 $.getS3(url)
-S3.search.ajaxUpdateOptions('#updates_datalist-filter-form')
+S3.search.ajaxUpdateOptions('#datalist-filter-form')
 },afterTagRemoved:function(event,ui){
 var post_id=$(this).attr('data-post_id')
 var url=S3.Ap.concat('/cms/post/',post_id,'/remove_tag/',ui.tagLabel)
 $.getS3(url)
-S3.search.ajaxUpdateOptions('#updates_datalist-filter-form')
+S3.search.ajaxUpdateOptions('#datalist-filter-form')
 },'''
         else:
             readonly = '''readOnly:true'''
