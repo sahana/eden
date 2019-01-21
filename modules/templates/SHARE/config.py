@@ -2238,7 +2238,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         s3db = current.s3db
         table = s3db.req_need_response_line
 
-        current.response.s3.crud_strings["req_need_response_line"]["title_map"] = T("Map of Activities")
+        #current.response.s3.crud_strings["req_need_response_line"] = Storage(title_map = T("Map of Activities"),)
 
         # Settings for Map Popups
         f = table.coarse_location_id
