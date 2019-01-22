@@ -5,7 +5,7 @@ ANONYMOUS,Anonymous,,gis,,,,READ,,,,,
 ANONYMOUS,Anonymous,,org,organisation,,,READ,,,,,
 ANONYMOUS,Anonymous,,org,facility_type,,,NONE,,,,,Hide menu
 ANONYMOUS,Anonymous,,org,organisation_type,,,NONE,,,,,Hide menu
-ANONYMOUS,Anonymous,,org,sector,,,NONE,,,,,Hide menu
+ANONYMOUS,Anonymous,,org,sector,,,READ,,,,,Needed for Map Icons & Filters
 ANONYMOUS,Anonymous,,org,service,,,NONE,,,,,Hide menu
 ANONYMOUS,Anonymous,,,,org_organisation,,READ,,,,,Required for self-registration
 ANONYMOUS,Anonymous,,,,org_organisation_organisation_type,,READ,,,,,Required for self-registration
@@ -15,7 +15,6 @@ ANONYMOUS,Anonymous,,req,need_response_line,,,READ,,,,,
 ANONYMOUS,Anonymous,,req,need,,,READ,,,,,
 ANONYMOUS,Anonymous,,req,need_line,,,READ,,,,,
 ANONYMOUS,Anonymous,,supply,item,,,NONE,,,,,Hide menu
-AUTHENTICATED,Authenticated,,org,sector,,,READ,,,,,
 AUTHENTICATED,Authenticated,,supply,item,,,READ,,,,,
 AUTHENTICATED,Authenticated,,supply,item_category,,,READ,,,,,
 AUTHENTICATED,Authenticated,,supply,item_pack,,,READ,,,,,

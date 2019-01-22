@@ -58,12 +58,13 @@ class S3MainMenu(default.S3MainMenu):
                ),
                MM("About", c="default", f="about"),
                MM("Help", c="default", f="help"),
-               MM("More", link=False)(
+               MM("More", link=False,
+                  check = current.auth.s3_logged_in())(
                 MM("HCT Coordination Folders", c="pr", f="forum", args=[1, "post", "datalist"]),
                 MM("Documents", c="doc", f="document"),
                 MM("Disasters", c="event", f="event"),
                 MM("Items", c="supply", f="item"),
-                MM("Sectors", c="org", f="sector"),
+                MM("Sectors", c="org", f="sector"), #,check = current.auth.s3_logged_in()
                 #MM("Services", c="org", f="service"),
                 ),
                ]
