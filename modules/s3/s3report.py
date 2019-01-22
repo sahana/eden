@@ -648,17 +648,19 @@ class S3Report(S3Method):
 
             fact = facts[0]
             rfield = resource.resolve_selector(fact.selector)
+            field = rfield.field
             key = None
+            aggregate = True
 
             if fact.method == "count":
                 # Include key for client-side deduplication
                 key = rfield.colname
 
-                field = rfield.field
                 if field:
                     if s3_has_foreign_key(field, m2m=False):
-                        # Represent only the field value
+                        # Represent only the field value, do not aggregate
                         represent = None
+                        aggregate = False
                     elif str(field) == pkey_colname:
                         # Represent only the record
                         rfield = None
@@ -680,7 +682,17 @@ class S3Report(S3Method):
                 if records_repr is not None:
                     repr_items.append(records_repr.get(record_id, UNKNOWN_OPT))
                 if rfield:
-                    repr_items.append(record[rfield.colname])
+                    if aggregate:
+                        value = raw[rfield.colname]
+                        if type(value) is list:
+                            value = fact.compute(value)
+                        else:
+                            value = fact.compute([value])
+                        if field.represent:
+                            value = field.represent(value)
+                    else:
+                        value = record[rfield.colname]
+                    repr_items.append(value)
                 if not repr_items:
                     continue
                 elif len(repr_items) == 2:
@@ -1354,7 +1366,7 @@ class S3ReportRepresent(object):
             # Standard representation methods can be listed here
             # (if they don't normally depend on the report context)
             if resource.tablename == "pr_person":
-                represent = s3db.pr_PersonRepresent(link=False)
+                represent = s3db.pr_PersonRepresent()
 
         return represent
 

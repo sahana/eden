@@ -2405,34 +2405,34 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                     msg_list_empty = T("No Activities currently registered"),
                     )
 
-            if r.method == "report":
-                # In report drilldown, include the (Location) after quantity_delivered
-                # => Needs to be a VF as we can't read the record from within represents
-                #table.quantity_delivered.represent =
-
-                from s3 import S3Represent, s3_fieldmethod
-
-                # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
-                gis_represent = S3Represent(lookup = "gis_location")
-
-                def quantity_delivered_w_location(row):
-                    quantity_delivered = row["req_need_response_line.quantity_delivered"]
-                    location_id = row["req_need_response_line.location_id"]
-                    if not location_id:
-                        location_id = row["req_need_response_line.coarse_location_id"]
-                    if not location_id:
-                        location_id = row["req_need_response.location_id"]
-                    location = gis_represent(location_id)
-                    return "%s (%s)" % (quantity_delivered, location)
-
-                table.quantity_delivered_w_location = s3_fieldmethod("quantity_delivered_w_location",
-                                                                     quantity_delivered_w_location,
-                                                                     # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
-                                                                     #represent = lambda v: v,
-                                                                     )
-                list_fields.insert(9, (T("Items Delivered"), "quantity_delivered_w_location"))
-            else:
-                list_fields.insert(9, (T("Items Delivered"), "quantity_delivered"))
+            #if r.method == "report":
+            #    # In report drilldown, include the (Location) after quantity_delivered
+            #    # => Needs to be a VF as we can't read the record from within represents
+            #    #table.quantity_delivered.represent =
+            #
+            #    from s3 import S3Represent, s3_fieldmethod
+            #
+            #    # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
+            #    gis_represent = S3Represent(lookup = "gis_location")
+            #
+            #    def quantity_delivered_w_location(row):
+            #        quantity_delivered = row["req_need_response_line.quantity_delivered"]
+            #        location_id = row["req_need_response_line.location_id"]
+            #        if not location_id:
+            #            location_id = row["req_need_response_line.coarse_location_id"]
+            #        if not location_id:
+            #            location_id = row["req_need_response.location_id"]
+            #        location = gis_represent(location_id)
+            #        return "%s (%s)" % (quantity_delivered, location)
+            #
+            #    table.quantity_delivered_w_location = s3_fieldmethod("quantity_delivered_w_location",
+            #                                                         quantity_delivered_w_location,
+            #                                                         # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+            #                                                         #represent = lambda v: v,
+            #                                                         )
+            #    list_fields.insert(9, (T("Items Delivered"), "quantity_delivered_w_location"))
+            #else:
+            list_fields.insert(9, (T("Items Delivered"), "quantity_delivered"))
 
             # Exclude the Disaster column from PDF exports
             if r.representation != "pdf":
