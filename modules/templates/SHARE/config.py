@@ -5,6 +5,8 @@ from collections import OrderedDict
 from gluon import current, URL
 from gluon.storage import Storage
 
+from s3 import S3ReportRepresent
+
 def config(settings):
     """
         Settings for the SHARE Teamplate
@@ -2255,6 +2257,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                        popup_url = URL(c="req", f="need_response",
                                        vars = {"line": "[id]"}
                                        ),
+                       report_represent = NeedResponseLineReportRepresent,
                        )
 
     settings.customise_req_need_response_line_resource = customise_req_need_response_line_resource
@@ -2492,5 +2495,45 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
         return attr
 
     settings.customise_req_need_response_line_controller = customise_req_need_response_line_controller
+
+# =============================================================================
+class NeedResponseLineReportRepresent(S3ReportRepresent):
+    """
+        Custom representation of need response line records in
+        pivot table reports:
+            - show as location name
+    """
+
+    def __call__(self, record_ids):
+        """
+            Represent record_ids (custom)
+
+            @param record_ids: req_need_response_line record IDs
+
+            @returns: a JSON-serializable dict {recordID: representation}
+        """
+
+        # Represent the location IDs
+        resource = current.s3db.resource("req_need_response_line",
+                                         id = record_ids,
+                                         )
+
+        rows = resource.select(["id", "coarse_location_id", "location_id"],
+                               represent = True,
+                               raw_data = True,
+                               limit = None,
+                               ).rows
+
+        output = {}
+        for row in rows:
+            raw = row["_row"]
+            if raw["req_need_response_line.location_id"]:
+                repr_str = row["req_need_response_line.location_id"]
+            else:
+                # Fall back to coarse_location_id if no GN available
+                repr_str = row["req_need_response_line.coarse_location_id"]
+            output[raw["req_need_response_line.id"]] = repr_str
+
+        return output
 
 # END =========================================================================

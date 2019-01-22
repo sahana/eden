@@ -78,7 +78,8 @@
             thousandGrouping: '3',
             minTickSize: null,
             precision: null,
-            textAll: 'All'
+            textAll: 'All',
+            labelRecords: 'Records',
         },
 
         /**
@@ -220,6 +221,9 @@
                 this.options.minTickSize = 1;
             }
             this.data = data;
+
+            // Cache for cell record representations
+            this.lookups = {};
 
             if (data.nodata) {
                 $el.find('.pt-table')
@@ -496,9 +500,8 @@
         _renderCell: function(data, index, labels) {
 
             var column = d3.select(this),
-                items = data.items,
-                layer,
-                layer_keys;
+                items = data.i,
+                layer;
 
             for (var i=0, len=items.length; i<len; i++) {
                 layer = items[i];
@@ -517,17 +520,74 @@
                 } else {
                     value.text(layer);
                 }
-                layer_keys = data.keys[i];
-                if (items && layer_keys && layer_keys.length) {
-                    $(value.node()).data('keys', layer_keys)
-                                   .data('fact', i);
-                    value.append('div')
-                         .attr('class', 'pt-cell-zoom');
-                }
                 if (len - i > 1) {
-                    value.append('span')
-                         .text(' / ');
+                    value.append('span').text(' / ');
                 }
+            }
+
+            var recordIDs = data.k;
+            if (recordIDs && recordIDs.length) {
+                $(column.node()).data('recordIDs', recordIDs);
+                // TODO CSS to place cell-zoom icon at the top right of the cell
+                column.append('div').attr('class', 'pt-cell-zoom');
+            }
+        },
+
+        /**
+         * Render a list of contributing records inside a pivot table cell,
+         * normally called from _cellExplore
+         *
+         * @param {jQuery} cell - the picot table cell (td.pt-cell)
+         * @param {Array} recordIDs - the record IDs to look up their
+         *                            representations from this.lookups,
+         *                            or a falsy value to just remove the list
+         */
+        _renderCellRecords: function(cell, recordIDs) {
+
+            var zoom = $('.pt-cell-zoom', cell).removeClass('opened'),
+                records = $('.pt-cell-records', cell).remove();
+
+            if (recordIDs) {
+
+                var lookups = this.lookups,
+                    recordList = [],
+                    recordRepr,
+                    keys = [];
+
+                recordIDs.forEach(function(recordID) {
+                    recordRepr = lookups[recordID];
+                    if (!recordRepr) {
+                        return;
+                    }
+                    if (recordRepr.constructor === Array) {
+                        var key = recordRepr[1];
+                        if (keys.indexOf(key) != -1) {
+                            return;
+                        } else {
+                            keys.push(key);
+                        }
+                        recordRepr = recordRepr[0];
+                    }
+                    if (recordRepr) {
+                        recordList.push(recordRepr);
+                    }
+                });
+
+                records = $('<div class="pt-cell-records">');
+
+                var list = $('<ul>').appendTo(records);
+                if (recordList.length) {
+                    recordList.sort(function(a, b) {
+                        return a.localeCompare(b);
+                    });
+                    recordList.forEach(function(recordRepr) {
+                        $('<li>').html(recordRepr).appendTo(list);
+                    });
+                } else {
+                    // Fallback if no representations are available
+                    $('<li>').text(recordIDs.length + ' ' + this.options.textRecords).appendTo(list);
+                }
+                zoom.addClass('opened').after(records);
             }
         },
 
@@ -668,11 +728,11 @@
                 data = this.data;
 
             // Hide the chart contents section initially
-            $el.find('.pt-chart-contents').hide();
+            $('.pt-chart-contents', $el).hide();
 
             var chart = this.chart;
             if (chart) {
-                $(chart).unbind('plothover').unbind('plotclick').empty();
+                $(chart).off('plothover').off('plotclick').empty();
             } else {
                 return;
             }
@@ -1028,7 +1088,7 @@
                 cdim = data.cols;
                 getData = function(i, j) {
                     var ri = ridx[i], ci = cidx[j];
-                    return cells[ri][ci].values[0];
+                    return cells[ri][ci].v[0];
                 };
                 rowsSelector = selectors[0];
                 colsSelector = selectors[1];
@@ -1037,7 +1097,7 @@
                 cdim = data.rows;
                 getData = function(i, j) {
                     var ri = ridx[i], ci = cidx[j];
-                    return cells[ci][ri].values[0];
+                    return cells[ci][ri].v[0];
                 };
                 rowsSelector = selectors[1];
                 colsSelector = selectors[0];
@@ -1095,13 +1155,17 @@
             // Callback function to render the chart tooltip
             var tooltipContent = function(data) {
 
-                data = data.data;
+                var series = data.series[0],
+                    item = data.data,
+                    seriesLabel = item.series;
+                if (series) {
+                    seriesLabel = series.key;
+                }
 
-                var color = nv.utils.defaultColor()({}, data.index);
-
-                var tooltip = '<div class="pt-tooltip">' +
-                              '<div class="pt-tooltip-label" style="color:' + color + '">' + data.series + '</div>' +
-                              '<div class="pt-tooltip-text">' + data.label + ': <span class="pt-tooltip-value">' + data.value + '</span></div>' +
+                var color = nv.utils.defaultColor()({}, item.index),
+                    tooltip = '<div class="pt-tooltip">' +
+                              '<div class="pt-tooltip-label" style="color:' + color + '">' + series.key + '</div>' +
+                              '<div class="pt-tooltip-text">' + item.label + ': <span class="pt-tooltip-value">' + item.value + '</span></div>' +
                               '</div>';
                 return tooltip;
             };
@@ -1251,7 +1315,7 @@
                     if (xIndex === null) {
                         value = item[2][0];
                     } else {
-                        value = getData(xIndex, i).values[0];
+                        value = getData(xIndex, i).v[0];
                     }
                     if (!item[1] && item[2][0] >= 0) {
                         items.push({
@@ -1583,6 +1647,72 @@
                 }
             }
             return;
+        },
+
+        /**
+         * Show a list of records contributing to a pivot table cell,
+         * expects the recordIDs to be stored in the cell data dict
+         *
+         * @param {jQuery} cell: the pivot table cell (td.pt-cell)
+         */
+        _cellExplore: function(cell) {
+
+            var records = $('.pt-cell-records', cell);
+            if (records.length) {
+                this._renderCellRecords(cell, false);
+                return;
+            }
+
+            var recordIDs = cell.data('recordIDs');
+            if (recordIDs.length){
+
+                var dfd = $.Deferred(),
+                    self = this;
+
+                dfd.promise().then(function() {
+                    self._renderCellRecords(cell, recordIDs);
+                });
+
+                var ajaxURL = this._updateAjaxURL({'explore': '1'}, null, true),
+                    lookups = this.lookups;
+
+                // Only request the record IDs that are not cached yet
+                var unknowns = recordIDs.filter(function(recordID) {
+                    return !lookups.hasOwnProperty(recordID);
+                });
+                if (!unknowns.length) {
+
+                    // No need for server call, we have all items cached
+                    dfd.resolve();
+
+                } else {
+
+                    var zoom = $('.pt-cell-zoom', cell).hide(),
+                        throbber = $('<div class="inline-throbber">');
+
+                    throbber.css({'display': 'inline-block'})
+                            .insertAfter(zoom);
+
+                    $.ajaxS3({
+                        type: 'POST',
+                        url: ajaxURL,
+                        data: JSON.stringify(unknowns),
+                        dataType: 'json',
+                        contentType: 'application/json; charset=utf-8',
+                        success: function(data) {
+                            $.extend(self.lookups, data);
+                            dfd.resolve();
+                            throbber.remove();
+                            zoom.show();
+                        },
+                        error: function() {
+                            dfd.reject();
+                            throbber.remove();
+                            zoom.show();
+                        }
+                    });
+                }
+            }
         },
 
         /**
@@ -2041,44 +2171,41 @@
         _bindEvents: function() {
 
             var pt = this,
-                $el = $(this.element),
-                data = this.data,
-                ns = this.eventNamespace;
-            var widgetID = '#' + $el.attr('id');
+                el = $(this.element),
+                ns = this.eventNamespace,
+                widgetID = '#' + el.attr('id');
 
             // Show/hide report options
-            $(widgetID + '-options legend').click(function() {
+            $(widgetID + '-options legend').on('click' + ns, function() {
                 $(this).siblings().toggle();
                 $(this).children().toggle();
             });
-            $(widgetID + '-filters legend').click(function() {
+            $(widgetID + '-filters legend').on('click' + ns, function() {
                 $(this).siblings().toggle();
                 $(this).children().toggle();
             });
 
             // Show/hide pivot table
-            $el.find('.pt-hide-table').click(function() {
+            $('.pt-hide-table', el).on('click' + ns, function() {
                 pt.table_options.hidden = true;
-                $el.find('.pt-table').hide();
-                $(this).siblings('.pt-show-table').show();
-                $el.find('.pt-export-opt').hide();
-                $(this).hide();
+                $('.pt-table', el).hide();
+                $('.pt-export-opt', el).hide();
+                $(this).hide().siblings('.pt-show-table').show();
             });
-            $el.find('.pt-show-table').click(function() {
+            $('.pt-show-table', el).on('click' + ns, function() {
                 pt.table_options.hidden = false;
-                $el.find('.pt-table').show();
-                $(this).siblings('.pt-hide-table').show();
-                $el.find('.pt-export-opt').show();
-                $(this).hide();
+                $('.pt-table', el).show();
+                $('.pt-export-opt', el).show();
+                $(this).hide().siblings('.pt-hide-table').show();
             });
 
             // Exports
-            $el.find('.pt-export-xls').on('click' + ns, function() {
+            $('.pt-export-xls', el).on('click' + ns, function() {
                 pt._downloadXLS();
             });
 
             // Totals-option doesn't need Ajax-refresh
-            $(widgetID + '-totals').click(function() {
+            $(widgetID + '-totals').on('click' + ns, function() {
                 var show_totals = $(this).is(':checked');
                 if (pt.options.showTotals != show_totals) {
                     pt.reload({totals: show_totals}, null, false);
@@ -2115,7 +2242,7 @@
                 });
             } else {
                 // Manual submit
-                $(widgetID + '-pt-form input.pt-submit').click(function() {
+                $(widgetID + '-pt-form input.pt-submit').on('click' + ns, function() {
                     var options = pt._getOptions(),
                         filters = pt._getFilters();
                     pt.reload(options, filters, false);
@@ -2123,58 +2250,40 @@
             }
 
             // Zoom in
-            $(widgetID + ' div.pt-table div.pt-cell-zoom').click(function(event) {
-
-                var zoom = $(event.currentTarget);
-                var cell = zoom.closest('.pt-cell-value'); //parent();
-                var values = cell.find('.pt-cell-records');
-
-                if (values.length > 0) {
-                    values.remove();
-                    zoom.removeClass('opened');
-                } else {
-                    var keys = cell.data('keys'),
-                        fact = cell.data('fact');
-                    var selector = data.facts[fact][0];
-                    var lookup = data.lookups[selector];
-
-                    values = $('<div/>').addClass('pt-cell-records');
-
-                    var list = $('<ul/>');
-                    for (var i=0; i < keys.length; i++) {
-                        list.append('<li>' + lookup[keys[i]] + '</li>');
-                    }
-                    values.append(list);
-                    zoom.addClass('opened').after(values);
+            $(widgetID + ' .pt-table .pt-cell-zoom').on('click' + ns, function(event) {
+                var zoom = $(event.currentTarget),
+                    cell = zoom.closest('.pt-cell');
+                if (cell.length) {
+                    pt._cellExplore(cell);
                 }
             });
 
             // Charts
-            $(widgetID + '-pchart-rows').click(function() {
+            $(widgetID + '-pchart-rows').on('click' + ns, function() {
                 pt._renderChart({type: 'piechart', axis: 'rows'});
             });
-            $(widgetID + '-vchart-rows').click(function() {
+            $(widgetID + '-vchart-rows').on('click' + ns, function() {
                 pt._renderChart({type: 'barchart', axis: 'rows'});
             });
-            $(widgetID + '-schart-rows').click(function() {
+            $(widgetID + '-schart-rows').on('click' + ns, function() {
                 pt._renderChart({type: 'spectrum', axis: 'rows'});
             });
-            $(widgetID + '-hchart-rows').click(function() {
+            $(widgetID + '-hchart-rows').on('click' + ns, function() {
                 pt._renderChart({type: 'breakdown', axis: 'rows'});
             });
-            $(widgetID + '-pchart-cols').click(function() {
+            $(widgetID + '-pchart-cols').on('click' + ns, function() {
                 pt._renderChart({type: 'piechart', axis: 'cols'});
             });
-            $(widgetID + '-vchart-cols').click(function() {
+            $(widgetID + '-vchart-cols').on('click' + ns, function() {
                 pt._renderChart({type: 'barchart', axis: 'cols'});
             });
-            $(widgetID + '-schart-cols').click(function() {
+            $(widgetID + '-schart-cols').on('click' + ns, function() {
                 pt._renderChart({type: 'spectrum', axis: 'cols'});
             });
-            $(widgetID + '-hchart-cols').click(function() {
+            $(widgetID + '-hchart-cols').on('click' + ns, function() {
                 pt._renderChart({type: 'breakdown', axis: 'cols'});
             });
-            $el.find('.pt-hide-chart').click(function () {
+            $('.pt-hide-chart', el).on('click' + ns, function () {
                 pt._renderChart(false);
             });
         },
@@ -2184,24 +2293,23 @@
          */
         _unbindEvents: function() {
 
-            var $el = $(this.element);
-            var widgetID = '#' + $el.attr('id');
-            var ns = this.eventNamespace;
+            var el = $(this.element),
+                widgetID = '#' + el.attr('id'),
+                ns = this.eventNamespace;
 
-            $(widgetID + ' div.pt-table div.pt-cell-zoom').unbind('click');
-            $(widgetID + '-options legend').unbind('click');
-            $(widgetID + '-filters legend').unbind('click');
+            $(widgetID + ' .pt-table .pt-cell-zoom').off(ns);
+            $(widgetID + '-options legend').off(ns);
+            $(widgetID + '-filters legend').off(ns);
 
-            $(widgetID + '-totals').unbind('click');
+            $(widgetID + '-totals').off(ns);
 
             $(widgetID + '-rows,' +
               widgetID + '-cols,' +
-              widgetID + '-fact').unbind('change.autosubmit');
+              widgetID + '-fact').off('change.autosubmit');
 
-            $(widgetID + '-pt-form').unbind('optionChanged');
-            $el.find('input.pt-submit').unbind('click');
+            $(widgetID + '-pt-form').off('optionChanged');
 
-            $el.find('.pt-export-xls').off('click' + ns);
+            $('input.pt-submit, .pt-export-xls', el).off(ns);
 
             $(widgetID + '-pchart-rows,' +
               widgetID + '-vchart-rows,' +
@@ -2210,11 +2318,9 @@
               widgetID + '-pchart-cols,' +
               widgetID + '-vchart-cols,' +
               widgetID + '-schart-cols,' +
-              widgetID + '-hchart-cols').unbind('click');
+              widgetID + '-hchart-cols').off(ns);
 
-            $el.find('.pt-hide-table').unbind('click');
-            $el.find('.pt-show-table').unbind('click');
-            $el.find('.pt-hide-chart').unbind('click');
+            $('.pt-hide-table, .pt-show-table, .pt-hide-chart', el).off(ns);
         }
     });
 })(jQuery);
