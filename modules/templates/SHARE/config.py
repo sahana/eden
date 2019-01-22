@@ -2407,7 +2407,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                 # => Needs to be a VF as we can't read the record from within represents
                 #table.quantity_delivered.represent =
 
-                from s3 import s3_fieldmethod
+                from s3 import S3Represent, s3_fieldmethod
 
                 # @ToDo: Option for gis_LocationRepresent which doesn't show level/parent, but supports translation
                 gis_represent = S3Represent(lookup = "gis_location")
