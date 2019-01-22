@@ -813,15 +813,24 @@ class HomepageStatistics(object):
     def needs_by_status(cls):
         """
             Count need lines per status
+            - for all open Events
         """
 
         db = current.db
+        s3db = current.s3db
+
+        table = s3db.req_need_line
+        etable = s3db.event_event
+        ltable = s3db.event_event_need
 
         # Extract the data
-        table = current.s3db.req_need_line
         status = table.status
         number = table.id.count()
-        query = (table.deleted == False)
+        query = (etable.closed == False) & \
+                (etable.id == ltable.event_id) & \
+                (ltable.need_id == table.need_id) & \
+                (table.deleted == False)
+
         rows = db(query).select(status, number, groupby = status)
 
         # Build data structure for chart renderer
@@ -842,28 +851,32 @@ class HomepageStatistics(object):
     def needs_by_district(cls):
         """
             Count need lines per district and status (top 5 districts)
+            - for all open Events
         """
 
         T = current.T
-
         db = current.db
         s3db = current.s3db
 
         table = s3db.req_need_line
         ntable = s3db.req_need
-
-        left = ntable.on(ntable.id == table.need_id)
+        etable = s3db.event_event
+        ltable = s3db.event_event_need
 
         status = table.status
         number = table.id.count()
         location = ntable.location_id
 
+        base_query = (etable.closed == False) & \
+                     (etable.id == ltable.event_id) & \
+                     (ltable.need_id == ntable.id) & \
+                     (ntable.id == table.need_id) & \
+                     (table.deleted == False)
+
         # Get the top-5 locations by number of need lines
-        query = (table.deleted == False) & \
-                (location != None)
+        query = base_query & (location != None)
         rows = db(query).select(location,
                                 number,
-                                left = left,
                                 groupby = location,
                                 orderby = ~(number),
                                 limitby = (0, 5),
@@ -877,12 +890,10 @@ class HomepageStatistics(object):
             location_labels = location_represent.bulk(locations)
 
             # Count need lines per status and location
-            query = (table.deleted == False) & \
-                    (location.belongs(locations))
+            query = base_query & (location.belongs(locations))
             rows = db(query).select(location,
                                     status,
                                     number,
-                                    left = left,
                                     groupby = (status, location),
                                     )
 
@@ -926,14 +937,21 @@ class HomepageStatistics(object):
     def people_affected(cls):
         """
             Count total number of affected people by demographic type
+            - for all open Events
         """
 
         db = current.db
         s3db = current.s3db
 
         table = s3db.req_need_line
+        etable = s3db.event_event
+        ltable = s3db.event_event_need
+        
+        query = (etable.closed == False) & \
+                (etable.id == ltable.event_id) & \
+                (ltable.need_id == table.need_id) & \
+                (table.deleted == False)
 
-        query = (table.deleted == False)
         demographic = table.parameter_id
         represent = demographic.represent
         total = table.value.sum()
