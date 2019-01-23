@@ -1224,7 +1224,7 @@ class S3OptionsMenu(object):
         return M(c="vol")(
                     M("Volunteers", f="volunteer", m="summary")(
                         M("Create", m="create"),
-                        M("Search by skills", f="competency", check=skills),
+                        M("Search by Skills", f="competency", check=skills),
                         M("Import", f="person", m="import",
                           vars = {"group": "volunteer"},
                           p = "create",
