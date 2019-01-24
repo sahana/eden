@@ -594,27 +594,30 @@ class S3Report(S3Method):
         if not isinstance(record_ids, list):
             r.error(404, current.ERROR.BAD_RECORD)
 
-        s3db = current.s3db
 
         # Helper to prefix selectors for comparison
         prefix = lambda s: "~.%s" % s \
                            if "." not in s.split("$", 1)[0] else s
 
-        # parse cols, rows, facts
-        get_vars = r.get_vars
-
         # Create filtered resource
-        resource = s3db.resource(self.tablename, id=record_ids)
+        resource = current.s3db.resource(self.tablename, id=record_ids)
         pkey = prefix(resource._id.name)
         pkey_colname = str(resource._id)
 
-        # Extract the records
+        # Parse the facts
+        get_vars = r.get_vars
         facts = S3PivotTableFact.parse(get_vars.get("fact"))
-        selectors = set()
+
+        selectors = set()   # all fact selectors other than "id"
+        ofacts = []         # all facts other than "count(id)"
+
         for fact in facts:
             selector = prefix(fact.selector)
-            if selector != pkey:
+            is_pkey = selector == pkey
+            if not is_pkey:
                 selectors.add(selector)
+            if not is_pkey or fact.method != "count":
+                ofacts.append(fact)
 
         # Extract the data
         if len(selectors):
@@ -641,72 +644,101 @@ class S3Report(S3Method):
             cols = get_vars.get("cols")
             represent = represent(resource, rows=rows, cols=cols, facts=facts)
 
-        output = {}
+        # Determine what the items list should contain
 
-        # TODO remove "or True" when else-branch implemented
-        if len(facts) == 1 or True:
+        rfields = {} # resolved fact selectors
 
-            fact = facts[0]
-            rfield = resource.resolve_selector(fact.selector)
-            field = rfield.field
-            key = None
-            aggregate = True
+        key = None
+        aggregate = True
+        if len(ofacts) == 1:
+
+            fact = ofacts[0]
 
             if fact.method == "count":
-                # Include key for client-side deduplication
-                key = rfield.colname
 
-                if field:
-                    if s3_has_foreign_key(field, m2m=False):
-                        # Represent only the field value, do not aggregate
-                        represent = None
-                        aggregate = False
-                    elif str(field) == pkey_colname:
-                        # Represent only the record
-                        rfield = None
+                # When counting foreign keys in the master record, then
+                # show a list of all unique values of that foreign key
+                # rather than the number of unique values per master
+                # record (as that would always be 1)
 
-            if represent:
-                # Get the record representations
-                records_repr = represent(record_ids)
-            else:
-                records_repr = None
-
-            UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-            for record in records:
-
-                raw = record._row
-
-                record_id = raw[pkey_colname]
-
-                repr_items = []
-                if records_repr is not None:
-                    repr_items.append(records_repr.get(record_id, UNKNOWN_OPT))
-                if rfield:
-                    if aggregate:
-                        value = raw[rfield.colname]
-                        if type(value) is list:
-                            value = fact.compute(value)
-                        else:
-                            value = fact.compute([value])
-                        if field.represent:
-                            value = field.represent(value)
+                selector = prefix(fact.selector)
+                rfield = resource.resolve_selector(selector)
+                field = rfield.field
+                if field and s3_has_foreign_key(field):
+                    multiple = True
+                    if rfield.tname == resource.tablename or \
+                       selector[:2] == "~." and "." not in selector[2:]:
+                        multiple = False
                     else:
-                        value = record[rfield.colname]
-                    repr_items.append(value)
-                if not repr_items:
-                    continue
-                elif len(repr_items) == 2:
-                    repr_items[1:1] = ": "
+                        # Get the component prefix
+                        alias = selector.split("$", 1)[0].split(".", 1)[0]
+                        component = resource.components.get(alias)
+                        if component:
+                            multiple = component.multiple
 
-                repr_str = TAG[""](repr_items).xml()
-                if key:
-                    output[record_id] = [repr_str, s3_str(raw[key])]
+                    if not multiple:
+                        represent = None
+                        key = rfield.colname
+                        aggregate = False
+                rfields[selector] = rfield
+
+        # Get the record representations
+        records_repr = represent(record_ids) if represent else None
+
+        # Build the output items (as dict, will be alpha-sorted on client-side)
+        output = {}
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        for record in records:
+
+            raw = record._row
+            record_id = raw[pkey_colname]
+
+            values = []
+            for fact in ofacts:
+
+                # Resolve the selector
+                selector = prefix(fact.selector)
+                rfield = rfields.get(selector)
+                if not rfield:
+                    rfield = rfields[selector] = resource.resolve_selector(selector)
+
+                # Get the value, sub-aggregate
+                if aggregate:
+                    value = raw[rfield.colname]
+                    if type(value) is list:
+                        value = fact.compute(value)
+                    else:
+                        value = fact.compute([value])
+                    if fact.method != "count":
+                        field = rfield.field
+                        if field and field.represent:
+                            value = field.represent(value)
                 else:
-                    output[record_id] = repr_str
-        else:
-            # Represent record + field label:field value, ... for every fact except count(id)
-            # TODO implement this
-            pass
+                    value = record[rfield.colname]
+
+                # Extend values list
+                if len(values):
+                    values.extend([" / ", value])
+                else:
+                    values.append(value)
+
+            repr_items = [TAG[""](values)] if values else []
+
+            # Add the record representation
+            if records_repr is not None:
+                repr_items.insert(0, records_repr.get(record_id, UNKNOWN_OPT))
+            if len(repr_items) == 2:
+                repr_items.insert(1, ": ")
+
+            # Build output item
+            # - using TAG not str.join() to allow representations to contain
+            #   XML helpers like A, SPAN or DIV
+            repr_str = TAG[""](repr_items).xml()
+            if key:
+                # Include raw field value for client-side de-duplication
+                output[record_id] = [repr_str, s3_str(raw[key])]
+            else:
+                output[record_id] = repr_str
 
         current.response.headers["Content-Type"] = "application/json"
         return json.dumps(output, separators=SEPARATORS)
