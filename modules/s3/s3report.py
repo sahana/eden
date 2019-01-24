@@ -594,13 +594,10 @@ class S3Report(S3Method):
         if not isinstance(record_ids, list):
             r.error(404, current.ERROR.BAD_RECORD)
 
-
-        # Helper to prefix selectors for comparison
-        prefix = lambda s: "~.%s" % s \
-                           if "." not in s.split("$", 1)[0] else s
-
         # Create filtered resource
         resource = current.s3db.resource(self.tablename, id=record_ids)
+
+        prefix = resource.prefix_selector
         pkey = prefix(resource._id.name)
         pkey_colname = str(resource._id)
 
