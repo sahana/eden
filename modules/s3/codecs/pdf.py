@@ -423,7 +423,6 @@ class S3RL_PDF(S3Codec):
                                result.rows,
                                groupby = self.pdf_groupby,
                                autogrow = self.table_autogrow,
-                               body_height = doc.body_height,
                                ).build()
 
         return pdf_table
@@ -727,19 +726,23 @@ class S3PDFTable(object):
                  rows,
                  groupby = None,
                  autogrow = False,
-                 body_height = 0,
                  ):
         """
             Constructor
 
             @param document: the EdenDocTemplate instance in which the table
                              shall be rendered
-            @param rows: the represented rows (S3ResourceData.rows)
             @param rfields: list of resolved field selectors for
                             the columns (S3ResourceData.rfields)
+            @param rows: the represented rows (S3ResourceData.rows)
             @param groupby: a field name that is to be used as a sub-group
                             - all records with the same value in that the
                               groupby column will be clustered together
+            @param autogrow: what to do about empty space on the page:
+                             "H" - make columns wider to fill horizontally
+                             "V" - add extra (empty) rows to fill vertically
+                             "B" - do both
+                             False - do nothing
         """
 
         rtl = current.response.s3.rtl
@@ -748,7 +751,7 @@ class S3PDFTable(object):
         self.doc = document
 
         # Parameters for rendering
-        self.body_height = body_height
+        self.body_height = document.body_height
         self.autogrow = autogrow
 
         # Set fonts
@@ -872,12 +875,10 @@ class S3PDFTable(object):
 
             FIXME: will not work with RTL-biDiText or any non-text
                    representation, rewrite to use raw resource data
-
-            FIXME: naming conventions!
         """
 
         groups = self.groupby.split(",")
-        newData = []
+        new_data = []
         data = self.data
         level = 0
         list_fields = self.list_fields
@@ -894,20 +895,20 @@ class S3PDFTable(object):
             list_fields = list_fields[0:i] + list_fields[i + 1:]
             labels = self.labels[0:i] + self.labels[i + 1:]
             self.labels = labels
-            currentGroup = None
+            current_group = None
             r = 0
             for row in data:
                 if r + 1 in self.subheading_rows:
-                    newData.append(row)
+                    new_data.append(row)
                     r += 1
                 else:
                     try:
                         group = row[i]
-                        if group != currentGroup:
+                        if group != current_group:
                             line = [group]
-                            newData.append(line)
+                            new_data.append(line)
                             r += 1
-                            currentGroup = group
+                            current_group = group
                             self.subheading_rows.append(r)
                             self.subheading_level[r] = level
                             # All existing subheadings after this point need to
@@ -920,13 +921,13 @@ class S3PDFTable(object):
                                     del self.subheading_level[posn]
                                     self.subheading_level[posn + 1] = oldlevel
                         line = row[0:i] + row[i + 1:]
-                        newData.append(line)
+                        new_data.append(line)
                         r += 1
                     except:
-                        newData.append(row)
+                        new_data.append(row)
                         r += 1
-            data = newData
-            newData = []
+            data = new_data
+            new_data = []
 
         self.list_fields = list_fields
         return data
@@ -980,8 +981,8 @@ class S3PDFTable(object):
         fontsize = self.fontsize
         min_fontsize = fontsize - 3
 
-        styleSheet = getSampleStyleSheet()
-        para_style = styleSheet["Normal"]
+        stylesheet = getSampleStyleSheet()
+        para_style = stylesheet["Normal"]
 
         adj_data = data = self.pdf_data
         while not fit:
@@ -1046,12 +1047,12 @@ class S3PDFTable(object):
                         temp_doc.page_orientation = \
                         main_doc.page_orientation = "Landscape"
 
-                        # Width becomes height
-                        self.body_height = temp_doc.printable_width
-
                         # Re-calculate page size and margins
                         temp_doc._calc()
                         main_doc._calc()
+                        self.body_height = main_doc.printable_height - \
+                                           main_doc.header_height - \
+                                           main_doc.footer_height
 
                         # Reset font-size
                         fontsize = self.fontsize
@@ -1078,8 +1079,6 @@ class S3PDFTable(object):
             Render all data parts (self.parts) as a list of ReportLab Tables.
 
             @returns: a list of ReportLab Table instances
-
-            FIXME: clean up, naming conventions!
         """
 
         # Build the tables
@@ -1110,7 +1109,7 @@ class S3PDFTable(object):
             self.col_widths = new_col_widths
 
         # Render each part
-        startRow = 0
+        start_row = 0
         for current_part, part in enumerate(self.parts):
 
             if part == []:
@@ -1124,15 +1123,16 @@ class S3PDFTable(object):
             if autogrow == "V" or autogrow == "B":
 
                 total_height = sum(row_heights)
-                available_height = total_height - body_height
+                available_height = body_height - total_height
 
                 if available_height > default_row_height:
                     num_extra_rows = int(available_height / default_row_height)
                     if num_extra_rows:
-                        row = [""] * len(col_widths)
-                        part += [row] * num_extra_rows
+                        part += [[""] * len(col_widths)] * num_extra_rows
+                        row_heights = list(row_heights) + \
+                                      [default_row_height] * num_extra_rows
 
-            style = self.table_style(startRow, num_rows, len(col_widths) - 1)
+            style = self.table_style(start_row, num_rows, len(col_widths) - 1)
             (part, style) = main_doc.addCellStyling(part, style)
 
             p = Table(part,
@@ -1150,7 +1150,7 @@ class S3PDFTable(object):
             if next_part < num_parts:
                 tables.append(PageBreak())
             if next_part % num_horz_parts == 0:
-                startRow += num_rows - 1 # Don't include the heading
+                start_row += num_rows - 1 # Don't include the heading
 
         # Return a list of table objects
         return tables
@@ -1278,22 +1278,20 @@ class S3PDFTable(object):
         return parts
 
     # -------------------------------------------------------------------------
-    def table_style(self, startRow, rowCnt, endCol, colour_required=False):
+    def table_style(self, start_row, row_cnt, end_col, colour_required=False):
         """
             Internally used method to assign a style to the table
 
-            @param startRow: The row from the data that the first data row in
+            @param start_row: The row from the data that the first data row in
             the table refers to. When a table is split the first row in the
             table (ignoring the label header row) will not always be the first row
             in the data. This is needed to align the two. Currently this parameter
             is used to identify sub headings and give them an emphasised styling
-            @param rowCnt: The number of rows in the table
-            @param endCol: The last column in the table
+            @param row_cnt: The number of rows in the table
+            @param end_col: The last column in the table
 
-            FIXME: replace endCol with -1
+            FIXME: replace end_col with -1
                    (should work but need to test with a split table)
-
-            FIXME: naming conventions!
         """
 
         font_name_bold = self.font_name_bold
@@ -1301,39 +1299,39 @@ class S3PDFTable(object):
         style = [("FONTNAME", (0, 0), (-1, -1), self.font_name),
                  ("FONTSIZE", (0, 0), (-1, -1), self.fontsize),
                  ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                 ("LINEBELOW", (0, 0), (endCol, 0), 1, Color(0, 0, 0)),
-                 ("FONTNAME", (0, 0), (endCol, 0), font_name_bold),
+                 ("LINEBELOW", (0, 0), (end_col, 0), 1, Color(0, 0, 0)),
+                 ("FONTNAME", (0, 0), (end_col, 0), font_name_bold),
                  ]
         sappend = style.append
         if colour_required:
-            sappend(("BACKGROUND", (0, 0), (endCol, 0), self.header_color))
+            sappend(("BACKGROUND", (0, 0), (end_col, 0), self.header_color))
         else:
             sappend(("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey))
             sappend(("INNERGRID", (0, 0), (-1, -1), 0.2, colors.lightgrey))
         if self.groupby != None:
             sappend(("LEFTPADDING", (0, 0), (-1, -1), 20))
 
-        rowColourCnt = 0 # used to alternate the colours correctly when we have subheadings
-        for i in range(rowCnt):
+        row_color_cnt = 0 # used to alternate the colours correctly when we have subheadings
+        for i in range(row_cnt):
             # If subheading
-            if startRow + i in self.subheading_rows:
-                level = self.subheading_level[startRow + i]
+            if start_row + i in self.subheading_rows:
+                level = self.subheading_level[start_row + i]
                 if colour_required:
-                    sappend(("BACKGROUND", (0, i), (endCol, i),
+                    sappend(("BACKGROUND", (0, i), (end_col, i),
                              self.header_color))
-                sappend(("FONTNAME", (0, i), (endCol, i), font_name_bold))
-                sappend(("SPAN", (0, i), (endCol, i)))
-                sappend(("LEFTPADDING", (0, i), (endCol, i), 6 * level))
+                sappend(("FONTNAME", (0, i), (end_col, i), font_name_bold))
+                sappend(("SPAN", (0, i), (end_col, i)))
+                sappend(("LEFTPADDING", (0, i), (end_col, i), 6 * level))
             elif i > 0:
                 if colour_required:
-                    if rowColourCnt % 2 == 0:
-                        sappend(("BACKGROUND", (0, i), (endCol, i),
+                    if row_color_cnt % 2 == 0:
+                        sappend(("BACKGROUND", (0, i), (end_col, i),
                                  self.even_color))
-                        rowColourCnt += 1
+                        row_color_cnt += 1
                     else:
-                        sappend(("BACKGROUND", (0, i), (endCol, i),
+                        sappend(("BACKGROUND", (0, i), (end_col, i),
                                  self.odd_color))
-                        rowColourCnt += 1
+                        row_color_cnt += 1
         sappend(("BOX", (0, 0), (-1, -1), 1, Color(0, 0, 0)))
         return style
 
