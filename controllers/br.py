@@ -52,8 +52,8 @@ def person():
 
         if not r.record:
 
-            ## Enable bigtable strategies for better performance
-            #settings.base.bigtable = True
+            # Enable bigtable strategies for better performance
+            settings.base.bigtable = True
 
             get_vars = r.get_vars
 
