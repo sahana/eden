@@ -39,9 +39,9 @@ class S3MainMenu(default.S3MainMenu):
         auth = current.auth
 
         case_vars = {"closed": "0"}
-        #if auth.s3_logged_in_human_resource() and \
-        #   auth.s3_has_role("CASE_MANAGEMENT"):
-        #    case_vars["mine"] = "1"
+        if auth.s3_logged_in_human_resource() and \
+           auth.s3_has_role("CASE_MANAGEMENT"):
+            case_vars["mine"] = "1"
 
         LABELS = current.s3db.br_terminology()
 
@@ -162,6 +162,92 @@ class S3MainMenu(default.S3MainMenu):
 # =============================================================================
 class S3OptionsMenu(default.S3OptionsMenu):
     """ Custom Controller Menus """
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def br():
+        """ Beneficiary Registry """
+
+        auth = current.auth
+        has_role = auth.s3_has_role
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        s3db = current.s3db
+        LABELS = s3db.br_terminology()
+        crud_strings = s3db.br_crud_strings("pr_person")
+
+        settings = current.deployment_settings
+        use_activities = settings.get_br_case_activities()
+
+        menu = M(c="br")
+
+        # Statistics sub-memnu (common for all roles)
+        statistics = M("Statistics", link=False)(
+                        M("Cases", f="person", m="report"),
+                        M("Activities", f="case_activity", m="report", check=use_activities),
+                        #M("Responses"),
+                        )
+
+        # Registry sub-menu
+        human_resource_id = auth.s3_logged_in_human_resource()
+        if human_resource_id and has_role("CASE_MANAGEMENT"):
+
+            # Side menu for case managers (including "my"-sections)
+            menu(M(LABELS.CURRENT_MINE, f="person", vars={"closed": "0", "mine": "1"})(
+                    M(crud_strings.label_create, m="create"),
+                    M("My Activities", f="case_activity", vars={"mine": "1"}, check=use_activities,
+                      ),
+                    #M("Emergencies"),
+                    ),
+                 #M("My Responses")(
+                 #   M("Calendar"),
+                 #   ),
+                 #M("Appointments"),
+                 statistics,
+                 M("Compilations", link=False)(
+                    M("Current Cases", f="person", vars={"closed": "0"}),
+                    M("All Cases", f="person"),
+                    M("All Activities", f="case_activity", check=use_activities),
+                    #M("All Responses"),
+                    ),
+                 )
+        else:
+
+            # Default side menu (without "my"-sections)
+            menu(M(LABELS.CURRENT, f="person", vars={"closed": "0"})(
+                    M(crud_strings.label_create, m="create"),
+                    M("Activities", f="case_activity", check=use_activities,
+                      ),
+                    #M("Emergencies"),
+                    ),
+                 #M("Responses")(
+                 #   M("Overview"),
+                 #   ),
+                 #M("Appointments"),
+                 statistics,
+                 M("Compilations", link=False)(
+                    M("All Cases", f="person"),
+                    ),
+                 )
+
+        # Archive- and Administration sub-menus (common for all roles)
+        menu(M("Archive", link=False)(
+                M(LABELS.CLOSED, f="person", vars={"closed": "1"}),
+                M("Invalid Cases", f="person", vars={"invalid": "1"}, restrict=[ADMIN]),
+                ),
+             M("Administration", link=False, restrict=[ADMIN])(
+                M("Case Statuses", f="case_status"),
+                M("Case Activity Statuses", f="case_activity_status",
+                  check = use_activities,
+                  ),
+                M("Need Types", f="need",
+                  check = lambda i: not settings.get_br_needs_org_specific(),
+                  ),
+                ),
+             )
+
+        return menu
 
     # -------------------------------------------------------------------------
     @staticmethod

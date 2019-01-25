@@ -2188,19 +2188,25 @@ def br_terminology():
         if terminology == "Beneficiary":
             labels.CASE = "Beneficiary"
             labels.CASES = "Beneficiaries"
+            labels.CASES_MINE = "My Beneficiaries"
             labels.CURRENT = "Current Beneficiaries"
+            labels.CURRENT_MINE = "My Current Beneficiaries"
             labels.CLOSED = "Former Beneficiaries"
 
         elif terminology == "Client":
             labels.CASE = "Client"
             labels.CASES = "Clients"
+            labels.CASES_MINE = "My Clients"
             labels.CURRENT = "Current Clients"
+            labels.CURRENT_MINE = "My Current Clients"
             labels.CLOSED = "Former Clients"
 
         else:
             labels.CASE = "Case"
             labels.CASES = "Cases"
+            labels.CASES_MINE = "My Cases"
             labels.CURRENT = "Current Cases"
+            labels.CURRENT_MINE = "My Current Cases"
             labels.CLOSED = "Closed Cases"
 
         current.response.s3.br_labels = labels

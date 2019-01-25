@@ -20,8 +20,8 @@ def index():
 def index_alt():
     """ Default Module Homepage """
 
-    # Just redirect to the person list
-    s3_redirect_default(URL(f="person"))
+    # Just redirect to list of current cases
+    s3_redirect_default(URL(f="person", vars={"closed": "0"}))
 
 # =============================================================================
 # Case File and Component Tabs
@@ -52,42 +52,57 @@ def person():
 
         if not r.record:
 
+            ## Enable bigtable strategies for better performance
+            #settings.base.bigtable = True
+
             get_vars = r.get_vars
+
+            queries = []
+
+            # Filter for "my cases"
+            mine = get_vars.get("mine")
+            if mine == "1":
+                if human_resource_id:
+                    queries.append(FS("case.human_resource_id") == human_resource_id)
+                else:
+                    queries.append(FS("case.human_resource_id").belongs(set()))
+                CURRENT = labels.CURRENT_MINE
+                CASES = labels.CASES_MINE
+            else:
+                query = None
+                CURRENT = labels.CURRENT
 
             # Filter to open/closed cases
             closed = get_vars.get("closed")
             get_status_filter_opts = s3db.br_case_status_filter_opts
             if closed == "1":
                 # Only closed cases
-                query = FS("case.status_id$is_closed") == True
+                queries.append(FS("case.status_id$is_closed") == True)
                 CASES = labels.CLOSED
                 insertable = False
                 status_filter_opts = lambda: get_status_filter_opts(closed=True)
             elif closed == "0":
                 # Only open cases
-                query = (FS("case.status_id$is_closed") == False) | \
-                        (FS("case.status_id$is_closed") == None)
-                CASES = labels.CURRENT
+                queries.append((FS("case.status_id$is_closed") == False) | \
+                               (FS("case.status_id$is_closed") == None))
+                CASES = CURRENT
                 status_filter_opts = lambda: get_status_filter_opts(closed=False)
             else:
-                query = None
                 status_filter_opts = get_status_filter_opts
-
-            # TODO mine URL option
 
             # Filter to valid/invalid cases
             invalid = get_vars.get("invalid")
             if invalid == "1":
-                q = FS("case.invalid") == True
-                query = query & q if query is not None else q
+                queries.append(FS("case.invalid") == True)
                 CASES = T("Invalid Cases")
                 insertable = False
             else:
-                q = (FS("case.invalid") == False) | \
-                    (FS("case.invalid") == None)
-                query = query & q if query is not None else q
+                queries.append((FS("case.invalid") == False) | \
+                               (FS("case.invalid") == None))
 
-            resource.add_filter(query)
+            if queries:
+                query = reduce(lambda a, b: a & b, queries)
+                resource.add_filter(query)
 
         # Adapt CRUD strings to perspective (& terminology)
         crud_strings = s3db.br_crud_strings("pr_person")
@@ -672,9 +687,23 @@ def case_activity():
                 (FS("person_id$case.invalid") == False) & \
                 (FS("person_id$case.status_id$is_closed") == False)
 
-        # TODO mine-filter
-
         resource.add_filter(query)
+
+        if not r.record:
+
+            # Enable bigtable features for better performance
+            settings.base.bigtable = True
+
+            # Filter for "my activities"
+            mine = r.get_vars.get("mine")
+            if mine == "1":
+                if human_resource_id:
+                    query = FS("human_resource_id") == human_resource_id
+                else:
+                    query = FS("human_resource_id").belongs(set())
+                resource.add_filter(query)
+                crud_strings = response.s3.crud_strings["br_case_activity"]
+                crud_strings.title_list = T("My Activities")
 
         # Set default for human_resource_ids
         if human_resource_id:
