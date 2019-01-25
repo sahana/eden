@@ -694,16 +694,22 @@ def case_activity():
             # Enable bigtable features for better performance
             settings.base.bigtable = True
 
+            get_vars = r.get_vars
+            crud_strings = response.s3.crud_strings["br_case_activity"]
+
             # Filter for "my activities"
-            mine = r.get_vars.get("mine")
+            mine = get_vars.get("mine")
             if mine == "1":
                 if human_resource_id:
                     query = FS("human_resource_id") == human_resource_id
                 else:
                     query = FS("human_resource_id").belongs(set())
                 resource.add_filter(query)
-                crud_strings = response.s3.crud_strings["br_case_activity"]
                 crud_strings.title_list = T("My Activities")
+
+            # Adapt list title when filtering for priority 0 (Emergency)
+            if get_vars.get("~.priority") == "0":
+                crud_strings.title_list = T("Emergencies")
 
         # Set default for human_resource_ids
         if human_resource_id:

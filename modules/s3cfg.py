@@ -2780,6 +2780,12 @@ class S3Config(Storage):
         """
         return self.br.get("case_activity_manager", True)
 
+    def get_br_case_activity_urgent_option(self):
+        """
+            Expose features for urgent case activities ("emergencies")
+        """
+        return self.br.get("case_activity_urgent_option", False)
+
     def get_br_case_activity_need(self):
         """
             Use need categories for case activities

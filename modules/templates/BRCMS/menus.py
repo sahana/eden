@@ -179,6 +179,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         settings = current.deployment_settings
         use_activities = settings.get_br_case_activities()
+        urgent_activities = use_activities and settings.get_br_case_activity_urgent_option()
 
         menu = M(c="br")
 
@@ -196,9 +197,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
             # Side menu for case managers (including "my"-sections)
             menu(M(LABELS.CURRENT_MINE, f="person", vars={"closed": "0", "mine": "1"})(
                     M(crud_strings.label_create, m="create"),
-                    M("My Activities", f="case_activity", vars={"mine": "1"}, check=use_activities,
+                    M("My Activities", f="case_activity",
+                      vars={"mine": "1"}, check=use_activities,
                       ),
-                    #M("Emergencies"),
+                    M("Emergencies", f="case_activity",
+                      vars={"mine": "1", "~.priority": "0"}, check=urgent_activities
+                      ),
                     ),
                  #M("My Responses")(
                  #   M("Calendar"),
@@ -219,7 +223,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M(crud_strings.label_create, m="create"),
                     M("Activities", f="case_activity", check=use_activities,
                       ),
-                    #M("Emergencies"),
+                    M("Emergencies", f="case_activity",
+                      vars={"~.priority": "0"}, check=urgent_activities,
+                      ),
                     ),
                  #M("Responses")(
                  #   M("Overview"),

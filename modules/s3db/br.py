@@ -545,6 +545,8 @@ class BRCaseActivityModel(S3Model):
                          (2, T("Normal")),
                          (3, T("Low")),
                          ]
+        if settings.get_br_case_activity_urgent_option():
+            priority_opts.insert(0, (0, T("Urgent")))
 
         tablename = "br_case_activity"
         define_table(tablename,
