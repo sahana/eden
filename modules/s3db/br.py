@@ -713,17 +713,28 @@ class BRCaseActivityModel(S3Model):
                           S3DateFilter("date",
                                        hidden = True,
                                        ),
-                          # TODO needs-filter
                           S3OptionsFilter("status_id",
                                           cols = 4,
                                           hidden = True,
                                           sort = False,
-                                          options = s3_get_filter_opts(
+                                          options = lambda: \
+                                                    s3_get_filter_opts(
                                                       "br_case_activity_status",
                                                       orderby = "br_case_activity_status.workflow_position",
                                                       ),
                                           ),
                          ]
+        if case_activity_need:
+            org_specific_needs = settings.get_br_needs_org_specific()
+            filter_widgets.append(S3OptionsFilter("need_id",
+                                                  hidden = True,
+                                                  header = True,
+                                                  options = lambda: \
+                                                            s3_get_filter_opts(
+                                                              "br_need",
+                                                              org_filter = org_specific_needs
+                                                              ),
+                                                  ))
 
         # Report options TODO
 
