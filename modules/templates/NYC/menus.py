@@ -90,7 +90,7 @@ class S3MainMenu(default.S3MainMenu):
     def menu_help(cls, **attr):
         """ Help Menu """
 
-        ADMIN = current.auth.get_system_roles().ADMIN
+        #ADMIN = current.auth.get_system_roles().ADMIN
 
         menu_help = MM("Help", c="default", f="help", link=False, **attr)(
             MM("User Guide", f="help"),
