@@ -7942,21 +7942,27 @@ class pr_Template(S3Method):
                 template_path = os.path.join(r.folder, "uploads", template.file)
 
                 # Extract Data
+                resource = r.resource
                 mailmerge_fields = current.deployment_settings.get_doc_mailmerge_fields()
-
-                data = r.resource.select(mailmerge_fields.values(),
-                                         represent = True,
-                                         show_links = False,
-                                         raw_data = True,
-                                         ).rows[0]
+                data = resource.select(mailmerge_fields.values(),
+                                       represent = True,
+                                       show_links = False,
+                                       )
+                record = data.rows[0]
+                rfields = {rfield.selector: rfield for rfield in data.rfields}
 
                 # Format Data
+                NONE = current.messages["NONE"]
+                prefix = resource.prefix_selector
+
                 doc_data = {}
-                for field in mailmerge_fields:
-                    selector = mailmerge_fields[field]
-                    if "." not in selector:
-                        selector = "pr_person.%s" % selector
-                    doc_data[field] = data[selector]
+                for key, selector in mailmerge_fields.items():
+                    rfield = rfields.get(prefix(selector))
+                    if rfield:
+                        value = record[rfield.colname]
+                        doc_data[key] = s3_unicode(value)
+                    else:
+                        doc_data[key] = NONE
 
                 # Merge
                 filename = "%s_%s.docx" % (template.name, person_id)

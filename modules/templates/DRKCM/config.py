@@ -242,7 +242,10 @@ def config(settings):
                                      "Geburtsdatum": "date_of_birth",
                                      "Geburtsort": "pr_person_details.place_of_birth",
                                      "Land": "pr_person_details.nationality",
-                                     "Registrierungsdatum": "dvr_case.date",
+                                     "Registrierungsdatum": "case_details.arrival_date",
+                                     "AKN-Datum": "case_details.arrival_date",
+                                     "Falldatum": "dvr_case.date",
+                                     "BAMF-Az": "bamf.value",
                                      }
 
     # -------------------------------------------------------------------------
