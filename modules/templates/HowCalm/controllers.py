@@ -31,27 +31,27 @@ class index(S3CustomController):
         auth = current.auth
         if not auth.s3_logged_in():
             jqappend = current.response.s3.jquery_ready.append
-            login_buttons = DIV(A(T("Login"),
-                                  _id="show-login",
-                                  _class="tiny secondary button"),
-                                _id="login-buttons"
-                                )
+            #login_buttons = DIV(A(T("Login"),
+            #                      _id="show-login",
+            #                      _class="tiny secondary button"),
+            #                    _id="login-buttons"
+            #                    )
             # @ToDo: Move JS to static
-            script = '''
-$('#show-intro').click(function(e){
- e.preventDefault()
- $('#intro').slideDown(400, function() {
-   $('#login_box').hide()
- });
-})
-$('#show-login').click(function(e){
- e.preventDefault()
- $('#login_form').show()
- $('#register_form').hide()
- $('#login_box').show()
- $('#intro').slideUp()
-})'''
-            jqappend(script)
+            #script = '''
+#$('#show-intro').click(function(e){
+# e.preventDefault()
+# $('#intro').slideDown(400, function() {
+#   $('#login_box').hide()
+# });
+#})
+#$('#show-login').click(function(e){
+# e.preventDefault()
+# $('#login_form').show()
+# $('#register_form').hide()
+# $('#login_box').show()
+# $('#intro').slideUp()
+#})'''
+            #jqappend(script)
 
             # This user isn't yet logged-in
             if current.request.cookies.has_key("registered"):
@@ -60,20 +60,20 @@ $('#show-login').click(function(e){
 
             if self_registration is True:
                 # Provide a Registration box on front page
-                login_buttons.append(A(T("Register"),
-                                       _id="show-register",
-                                       _class="tiny secondary button",
-                                       # @ToDo: Move to CSS
-                                       _style="margin-left:5px"))
-                script = '''
-$('#show-register').click(function(e){
- e.preventDefault()
- $('#login_form').hide()
- $('#register_form').show()
- $('#login_box').show()
- $('#intro').slideUp()
-})'''
-                jqappend(script)
+                #login_buttons.append(A(T("Register"),
+                #                       _id="show-register",
+                #                       _class="tiny secondary button",
+                #                       # @ToDo: Move to CSS
+                #                       _style="margin-left:5px"))
+                #script = '''
+#$('#show-register').click(function(e){
+# e.preventDefault()
+# $('#login_form').hide()
+# $('#register_form').show()
+# $('#login_box').show()
+# $('#intro').slideUp()
+#})'''
+                #jqappend(script)
 
                 register_form = auth.register()
                 register_div = DIV(H3(T("Register")),
@@ -100,10 +100,10 @@ $('#login-btn').click(function(e){
                             P(XML(T("Registered users can %(login)s to access the system") % \
                               {"login": B(T("login"))})))
 
-        else:
-            login_buttons = ""
+        #else:
+        #    login_buttons = ""
 
-        output["login_buttons"] = login_buttons
+        #output["login_buttons"] = login_buttons
         output["self_registration"] = self_registration
         output["registered"] = registered
         output["login_div"] = login_div

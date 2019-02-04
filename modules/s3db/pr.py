@@ -33,13 +33,13 @@ __all__ = (# PR Base Entities
            "PRGroupModel",
            "PRForumModel",
 
-            # Person Entity Components
+           # Person Entity Components
            "PRAddressModel",
            "PRContactModel",
            "PRImageModel",
            "PRPresenceModel",
 
-            # Person Components
+           # Person Components
            "PRAvailabilityModel",
            "PRDescriptionModel",
            "PREducationModel",

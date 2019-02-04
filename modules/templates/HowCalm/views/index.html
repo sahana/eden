@@ -10,14 +10,14 @@
   </div>
   <div class='medium-6 columns'>
   {{if not auth.s3_logged_in():}}
-   {{=login_buttons}}
-   <div id='login_box' class='panel' style='display:none'>
-    <div id='login_form'>
+   {{#=login_buttons}}
+   <div id='login_box' class='panel'> <!--style='display:none'-->
+    <div id='login_form' {{if not registered:}}style='display:none'{{pass}}>
      {{=login_div}}
      {{include "auth/_login.html"}}
     </div>
     {{if self_registration:}}
-    <div id='register_form'>
+    <div id='register_form' {{if registered:}}style='display:none'{{pass}}>
      {{=register_div}}
      {{include "auth/_register.html"}}
     </div>

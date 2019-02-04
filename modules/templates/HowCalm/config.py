@@ -167,4 +167,374 @@ def config(settings):
         #)),
     ])
 
+    settings.hrm.staff_label = "Contacts"
+    settings.org.organisation_types_hierarchical = True
+    settings.ui.export_formats = ("pdf", "xls")
+
+    # -------------------------------------------------------------------------
+    def howcalm_rheader(r):
+
+        if r.representation != "html":
+            # RHeaders only used in interactive views
+            return None
+
+        # Need to use this format as otherwise req_match?viewing=org_office.x
+        # doesn't have an rheader
+        from s3 import s3_rheader_resource
+        tablename, record = s3_rheader_resource(r)
+
+        if record is None:
+            # List or Create form: rheader makes no sense here
+            return None
+
+        T = current.T
+
+        if tablename == "org_organisation":
+            tabs = [(T("Basic Details"), None),
+                    (T("Contacts"), "human_resource"),
+                    (T("Facilities"), "facility"),
+                    ]
+
+            from s3 import s3_rheader_tabs
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            from gluon import A, DIV, TABLE, TR, TH
+
+            db = current.db
+            s3db = current.s3db
+
+            table = s3db.org_organisation
+
+            record_data = TABLE(TR(TH(record.name)))
+            record_data_append = record_data.append
+
+            record_id = record.id
+
+            otagtable = s3db.org_organisation_tag
+            query = (otagtable.organisation_id == record_id) & \
+                    (otagtable.tag == "org_id")
+            org_id = db(query).select(otagtable.value,
+                                      limitby = (0, 1)
+                                      ).first()
+            if org_id:
+                record_data_append(TR(TH("%s: " % T("Organization ID")),
+                                      org_id.value))
+
+            otypetable = s3db.org_organisation_type
+            ltable = s3db.org_organisation_organisation_type
+            query = (ltable.organisation_id == record_id) & \
+                    (ltable.organisation_type_id == otypetable.id)
+            religion = db(query).select(otypetable.name,
+                                        limitby = (0, 1)
+                                        ).first()
+            if religion:
+                record_data_append(TR(TH("%s: " % T("Religion")),
+                                      religion.name))
+
+            website = record.website
+            if website:
+                record_data_append(TR(TH("%s: " % table.website.label),
+                                      A(website, _href=website)))
+
+            ctable = s3db.pr_contact
+            query = (table.id == record_id) & \
+                    (table.pe_id == ctable.pe_id) & \
+                    (ctable.contact_method == "FACEBOOK")
+            facebook = db(query).select(ctable.value,
+                                        limitby = (0, 1)
+                                        ).first()
+            if facebook:
+                url = facebook.value
+                record_data_append(TR(TH("%s: " % T("Facebook")),
+                                      A(url, _href=url)))
+
+            rheader = DIV(record_data,
+                          rheader_tabs,
+                          )
+
+        elif tablename == "org_facility":
+
+            settings = current.deployment_settings
+            STAFF = settings.get_hrm_staff_label()
+            tabs = [(T("Basic Details"), None),
+                    (STAFF, "human_resource"),
+                    ]
+            permitted = current.auth.s3_has_permission
+            if permitted("update", tablename, r.id) and \
+               permitted("create", "hrm_human_resource_site"):
+                tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
+
+            def facility_type_lookup(record):
+                db = current.db
+                ltable = db.org_site_facility_type
+                ttable = db.org_facility_type
+                query = (ltable.site_id == record.site_id) & \
+                        (ltable.facility_type_id == ttable.id)
+                rows = db(query).select(ttable.name)
+                if rows:
+                    return ", ".join([row.name for row in rows])
+                else:
+                    return current.messages["NONE"]
+            rheader_fields = [["name",
+                               "organisation_id",
+                               "email",
+                               ],
+                              [(T("Facility Type"), facility_type_lookup),
+                               "location_id",
+                               "phone1",
+                               ],
+                              ]
+
+            from s3 import S3ResourceHeader
+            rheader_fields, rheader_tabs = S3ResourceHeader(rheader_fields,
+                                                            tabs)(r, as_div=True)
+
+            rheader = DIV(rheader_fields)
+            rheader.append(rheader_tabs)
+
+        return rheader
+
+    # -------------------------------------------------------------------------
+    def customise_org_organisation_resource(r, tablename):
+
+        from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE
+
+        from s3 import IS_INT_AMOUNT, \
+                       S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+
+        s3db = current.s3db
+
+        # Filtered components
+        s3db.add_components("org_organisation",
+                            org_organisation_tag = ({"name": "org_id",
+                                                     "joinby": "organisation_id",
+                                                     "filterby": {"tag": "org_id"},
+                                                     },
+                                                    {"name": "congregants",
+                                                     "joinby": "organisation_id",
+                                                     "filterby": {"tag": "congregants"},
+                                                     },
+                                                    {"name": "clergy_staff",
+                                                     "joinby": "organisation_id",
+                                                     "filterby": {"tag": "clergy_staff"},
+                                                     },
+                                                    {"name": "lay_staff",
+                                                     "joinby": "organisation_id",
+                                                     "filterby": {"tag": "lay_staff"},
+                                                     },
+                                                    {"name": "religious_staff",
+                                                     "joinby": "organisation_id",
+                                                     "filterby": {"tag": "religious_staff"},
+                                                     },
+                                                    {"name": "volunteers",
+                                                     "joinby": "organisation_id",
+                                                     "filterby": {"tag": "volunteers"},
+                                                     },
+                                                    {"name": "board",
+                                                     "joinby": "organisation_id",
+                                                     "filterby": {"tag": "board"},
+                                                     },
+                                                    {"name": "internet",
+                                                     "joinby": "organisation_id",
+                                                     "filterby": {"tag": "internet"},
+                                                     },
+                                                    ),
+                            )
+
+        # Individual settings for specific tag components
+        components_get = s3db.resource(tablename).components.get
+
+        integer_represent = IS_INT_AMOUNT.represent
+
+        congregants = components_get("congregants")
+        f = congregants.table.value
+        f.represent = integer_represent
+        f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
+
+        clergy_staff = components_get("clergy_staff")
+        f = clergy_staff.table.value
+        f.represent = integer_represent
+        f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
+
+        lay_staff = components_get("lay_staff")
+        f = lay_staff.table.value
+        f.represent = integer_represent
+        f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
+
+        religious_staff = components_get("religious_staff")
+        f = religious_staff.table.value
+        f.represent = integer_represent
+        f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
+
+        volunteers = components_get("volunteers")
+        f = volunteers.table.value
+        f.represent = integer_represent
+        f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
+
+        board = components_get("board")
+        f = board.table.value
+        f.represent = integer_represent
+        f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
+
+        internet = components_get("internet")
+        f = internet.table.value
+        f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
+        f.represent = lambda v: T("yes") if v == "Y" else T("no")
+        from s3 import S3TagCheckboxWidget
+        f.widget = S3TagCheckboxWidget(on="Y", off="N")
+        f.default = "N"
+
+        crud_fields = ["name",
+                       S3SQLInlineComponent(
+                            "org_id",
+                            label = T("Organization ID"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = dict(field = "tag",
+                            #                options = "org_id",
+                            #                ),
+                            ),
+                       S3SQLInlineLink("organisation_type",
+                                       field = "organisation_type_id",
+                                       label = T("Religion"),
+                                       multiple = False,
+                                       widget = "hierarchy",
+                                       ),
+                       "website",
+                       S3SQLInlineComponent(
+                            "facebook",
+                            name = "facebook",
+                            label = T("Facebook"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = dict(field = "contact_method",
+                            #                options = "FACEBOOK",
+                            #                ),
+                            ),
+                       S3SQLInlineComponent(
+                            "congregants",
+                            name = "congregants",
+                            label = T("# Congregants"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = dict(field = "tag",
+                            #                options = "congregants",
+                            #                ),
+                            ),
+                       S3SQLInlineComponent(
+                            "clergy_staff",
+                            name = "clergy_staff",
+                            label = T("# Clergy Staff"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = dict(field = "tag",
+                            #                options = "clergy_staff",
+                            #                ),
+                            ),
+                       S3SQLInlineComponent(
+                            "lay_staff",
+                            name = "lay_staff",
+                            label = T("# Lay Staff"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = dict(field = "tag",
+                            #                options = "lay_staff",
+                            #                ),
+                            ),
+                       S3SQLInlineComponent(
+                            "religious_staff",
+                            name = "religious_staff",
+                            label = T("# Religious Staff"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = dict(field = "tag",
+                            #                options = "religious_staff",
+                            #                ),
+                            ),
+                       S3SQLInlineComponent(
+                            "volunteers",
+                            name = "volunteers",
+                            label = T("# Volunteers"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = dict(field = "tag",
+                            #                options = "volunteers",
+                            #                ),
+                            ),
+                       S3SQLInlineComponent(
+                            "board",
+                            name = "board",
+                            label = T("# C. Board"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = dict(field = "tag",
+                            #                options = "board",
+                            #                ),
+                            ),
+                       S3SQLInlineComponent(
+                            "internet",
+                            name = "internet",
+                            label = T("Internet Access"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = dict(field = "tag",
+                            #                options = "internet",
+                            #                ),
+                            ),
+                       "comments",
+                       ]
+
+        crud_form = S3SQLCustomForm(*crud_fields)
+
+        from s3 import S3HierarchyFilter, S3LocationFilter, S3TextFilter#, S3OptionsFilter
+        filter_widgets = [
+            S3TextFilter(["name", "org_id.value"],
+                         label = T("Search"),
+                         comment = T("Search by organization name or ID. You can use * as wildcard."),
+                         _class = "filter-search",
+                         ),
+            S3HierarchyFilter("organisation_organisation_type.organisation_type_id",
+                              label = T("Religion"),
+                              ),
+            S3LocationFilter("org_facility.location_id",
+                             label = T("Location"),
+                             levels = gis_levels,
+                             #hidden = True,
+                             ),
+            ]
+
+        if r.method == "review":
+            from s3 import S3DateTime
+            s3db.org_organisation.created_on.represent = \
+                lambda dt: S3DateTime.date_represent(dt, utc=True)
+            list_fields = [(T("ID"), "org_id.value"),
+                           "name",
+                           (T("Religion"), "organisation_organisation_type.organisation_type_id"),
+                           (T("Date Registered"), "created_on"),
+                           # @ToDo: Address
+                           ]
+        else:
+            list_fields = [(T("ID"), "org_id.value"),
+                           "name",
+                           (T("Religion"), "organisation_organisation_type.organisation_type_id"),
+                           # @ToDo: Address
+                           ]
+
+        s3db.configure("org_organisation",
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_org_organisation_resource = customise_org_organisation_resource
+
+    # -------------------------------------------------------------------------
+    def customise_org_organisation_controller(**attr):
+
+        attr["rheader"] = howcalm_rheader
+
+        return attr
+    
+    settings.customise_org_organisation_controller = customise_org_organisation_controller
+
 # END =========================================================================

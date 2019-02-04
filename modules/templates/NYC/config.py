@@ -623,9 +623,9 @@ def config(settings):
                 # Create form: Default
                 rss_import = None
 
-        s3db.org_organisation_location.location_id.widget = S3LocationSelector(levels=gis_levels,
-                                                                               show_map=False,
-                                                                               labels=False,
+        s3db.org_organisation_location.location_id.widget = S3LocationSelector(levels = gis_levels,
+                                                                               show_map = False,
+                                                                               labels = False,
                                                                                )
         s3db.org_organisation_tag.value.widget = s3_comments_widget
         mtable = s3db.org_group_membership
@@ -861,10 +861,10 @@ def config(settings):
                         field = table.location_id
                         if r.method in ("create", "update"):
                             field.label = "" # Gets replaced by widget
-                        field.widget = S3LocationSelector(levels=gis_levels,
-                                                          show_address=True,
+                        field.widget = S3LocationSelector(levels = gis_levels,
+                                                          show_address = True,
                                                           # Using L4 instead
-                                                          show_postcode=False,
+                                                          show_postcode = False,
                                                           )
                 elif r.component_name == "human_resource":
                     # Don't assume that user is from same org/site as Contacts they create

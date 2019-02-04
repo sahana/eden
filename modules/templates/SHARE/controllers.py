@@ -156,8 +156,6 @@ class index(S3CustomController):
 
         return output
 
-
-
 # =============================================================================
 def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     """
