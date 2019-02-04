@@ -435,12 +435,18 @@ class S3OrganisationModel(S3Model):
                        S3SQLInlineLink(
                             "organisation_type",
                             field = "organisation_type_id",
-                            # Default 10 options just triggers which adds unnecessary complexity to a commonly-used form & commonly an early one (create Org when registering)
-                            filter = False,
+                            # Disable "Search"-field in multi-select widget:
+                            # - default "auto" shows Search field at 10 or more options,
+                            #   which adds unnecessary complexity to a commonly and
+                            #   often early used form (e.g. create Org when registering)
+                            # - NB "filter" option has a different meaning with hierarchy
+                            #   widgets (=filter query to show only a subset of options,
+                            #   so False would filter out all options)
+                            filter = None if hierarchical_organisation_types else False,
                             label = T("Type"),
                             multiple = multiple_organisation_types,
                             widget = type_widget,
-                       ),
+                            ),
                        "region_id",
                        "country" if use_country else None,
                        "phone",
