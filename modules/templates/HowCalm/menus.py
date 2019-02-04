@@ -46,7 +46,7 @@ class S3MainMenu(default.S3MainMenu):
         if auth.s3_has_role("MANAGER"):
             return [MM("Organizations", c="org", f="organisation",
                        ),
-                    MM("Contacts", c="hrm", f="staff",
+                    MM("Contacts", c="pr", f="person",
                        ),
                     MM("Facilities", c="org", f="facility",
                        ),
@@ -105,18 +105,18 @@ class S3OptionsMenu(default.S3OptionsMenu):
         if auth.s3_has_role("MANAGER"):
             return M()(M("Manage", showlink=False)(
                         M("My Organizations", c="org", f="organisation", vars={"mine": 1}),
-                        M("My Contacts", c="hrm", f="staff", vars={"mine": 1}),
+                        M("My Contacts", c="pr", f="person", vars={"mine": 1}),
                         M("My Facilities", c="org", f="facility", vars={"mine": 1}),
                         ),
                        M("Create", showlink=False)(
                          M("Organization", c="org", f="organisation", m="create"),
-                         M("Contact", c="hrm", f="staff", m="create"),
+                         M("Contact", c="pr", f="person", m="create"),
                          M("Facility", c="org", f="facility", m="create"),
                          ),
                        )
         else:
             return M()(M("Manage", showlink=False)(
-                        M("My Personal Profile", c="hrm", f="staff", vars={"mine": 1}),
+                        M("My Personal Profile", c="pr", f="person", vars={"mine": 1}),
                         M("My Organizations", c="org", f="organisation", vars={"mine": 1}),
                         M("My Facilities", c="org", f="facility", vars={"mine": 1}),
                         ),
@@ -130,13 +130,19 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
     # -------------------------------------------------------------------------
     def hrm(self):
-        """ Organisation Registry """
+        """ Human Resources """
 
         return self.howcalm()
 
     # -------------------------------------------------------------------------
     def org(self):
         """ Organisation Registry """
+
+        return self.howcalm()
+
+    # -------------------------------------------------------------------------
+    def pr(self):
+        """ Person Registry """
 
         return self.howcalm()
 

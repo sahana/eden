@@ -69,6 +69,11 @@ def config(settings):
     #
     settings.security.policy = 7 # Organisation-ACLs
 
+    # Record Approval
+    settings.auth.record_approval = True
+    settings.auth.record_approval_required_for = ("org_organisation",
+                                                  )
+
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
@@ -189,7 +194,48 @@ def config(settings):
 
         T = current.T
 
-        if tablename == "org_organisation":
+        if tablename == "pr_person":
+            #tabs = [(T("Basic Details"), None),
+            #        ]
+
+            #from s3 import s3_rheader_tabs
+            #rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            from gluon import DIV, TABLE, TR, TH
+
+            from s3 import s3_fullname
+            record_data = TABLE(TR(TH(s3_fullname(record))))
+            record_data_append = record_data.append
+
+            record_id = record.id
+
+            db = current.db
+            s3db = current.s3db
+
+            ptagtable = current.s3db.pr_person_tag
+            query = (ptagtable.person_id == record_id) & \
+                    (ptagtable.tag == "religious_title")
+            religious_title = db(query).select(ptagtable.value,
+                                               limitby = (0, 1)
+                                               ).first()
+            if religious_title:
+                record_data_append(TR(TH("%s: " % T("Religious Title")),
+                                      religious_title.value))
+
+            query = (ptagtable.person_id == record_id) & \
+                    (ptagtable.tag == "position_title")
+            position_title = db(query).select(ptagtable.value,
+                                              limitby = (0, 1)
+                                              ).first()
+            if position_title:
+                record_data_append(TR(TH("%s: " % T("Position Title")),
+                                      position_title.value))
+
+            rheader = DIV(record_data,
+                          #rheader_tabs,
+                          )
+
+        elif tablename == "org_organisation":
             tabs = [(T("Basic Details"), None),
                     (T("Contacts"), "human_resource"),
                     (T("Facilities"), "facility"),
@@ -253,46 +299,207 @@ def config(settings):
                           )
 
         elif tablename == "org_facility":
+            #tabs = [(T("Basic Details"), None),
+            #        ]
 
-            settings = current.deployment_settings
-            STAFF = settings.get_hrm_staff_label()
-            tabs = [(T("Basic Details"), None),
-                    (STAFF, "human_resource"),
-                    ]
-            permitted = current.auth.s3_has_permission
-            if permitted("update", tablename, r.id) and \
-               permitted("create", "hrm_human_resource_site"):
-                tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
+            #from s3 import s3_rheader_tabs
+            #rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            def facility_type_lookup(record):
-                db = current.db
-                ltable = db.org_site_facility_type
-                ttable = db.org_facility_type
-                query = (ltable.site_id == record.site_id) & \
-                        (ltable.facility_type_id == ttable.id)
-                rows = db(query).select(ttable.name)
-                if rows:
-                    return ", ".join([row.name for row in rows])
-                else:
-                    return current.messages["NONE"]
-            rheader_fields = [["name",
-                               "organisation_id",
-                               "email",
-                               ],
-                              [(T("Facility Type"), facility_type_lookup),
-                               "location_id",
-                               "phone1",
-                               ],
-                              ]
+            from gluon import DIV, TABLE, TR, TH
 
-            from s3 import S3ResourceHeader
-            rheader_fields, rheader_tabs = S3ResourceHeader(rheader_fields,
-                                                            tabs)(r, as_div=True)
+            record_data = TABLE(TR(TH(record.name)))
+            record_data_append = record_data.append
 
-            rheader = DIV(rheader_fields)
-            rheader.append(rheader_tabs)
+            #record_id = record.id
+            site_id = record.site_id
+
+            db = current.db
+            s3db = current.s3db
+
+            stagtable = current.s3db.org_site_tag
+            query = (stagtable.site_id == site_id) & \
+                    (stagtable.tag == "oem_ready")
+            oem_ready = db(query).select(stagtable.value,
+                                         limitby = (0, 1)
+                                         ).first()
+            if oem_ready:
+                record_data_append(TR(TH("%s: " % T("OEM Ready Receiving Center")),
+                                      oem_ready.value))
+
+            rheader = DIV(record_data,
+                          #rheader_tabs,
+                          )
 
         return rheader
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_human_resource_resource(r, tablename):
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Type"),
+            title_display = T("Type Details"),
+            title_list = T("Type Catalog"),
+            title_update = T("Edit Type"),
+            label_list_button = T("List Types"),
+            label_delete_button = T("Delete Type"),
+            msg_record_created = T("Type added"),
+            msg_record_modified = T("Type updated"),
+            msg_record_deleted = T("Type deleted"),
+            msg_list_empty = T("Currently no entries in the catalog"))
+
+    settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
+
+    # -------------------------------------------------------------------------
+    def customise_org_facility_resource(r, tablename):
+
+        from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE
+
+        from s3 import IS_INT_AMOUNT, \
+                       S3LocationSelector, \
+                       S3SQLCustomForm, S3SQLInlineComponent
+
+        s3db = current.s3db
+
+        s3db.org_facility.location_id.widget = S3LocationSelector(levels = gis_levels,
+                                                                  show_address = True,
+                                                                  )
+
+        # Filtered components
+        s3db.add_components("org_facility",
+                            org_site_tag = ({"name": "congregations",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "congregations"},
+                                             },
+                                            {"name": "cross_streets",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "cross_streets"},
+                                             },
+                                            {"name": "em_call",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "em_call"},
+                                             },
+                                            {"name": "oem_ready",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "oem_ready"},
+                                             },
+                                            ),
+                            )
+
+        # Individual settings for specific tag components
+        components_get = s3db.resource(tablename).components.get
+
+        integer_represent = IS_INT_AMOUNT.represent
+
+        congregations = components_get("congregations")
+        f = congregations.table.value
+        f.represent = integer_represent
+        f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
+
+        em_call = components_get("em_call")
+        f = em_call.table.value
+        f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
+        f.represent = lambda v: T("yes") if v == "Y" else T("no")
+        from s3 import S3TagCheckboxWidget
+        f.widget = S3TagCheckboxWidget(on="Y", off="N")
+        f.default = "N"
+
+        oem_ready = components_get("oem_ready")
+        f = oem_ready.table.value
+        f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
+        f.represent = lambda v: T("yes") if v == "Y" else T("no")
+        from s3 import S3TagCheckboxWidget
+        f.widget = S3TagCheckboxWidget(on="Y", off="N")
+        f.default = "N"
+
+        crud_fields = ["organisation_id",
+                       "name",
+                       "location_id",
+                       S3SQLInlineComponent(
+                            "congregations",
+                            label = T("# of Congregations"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = {"field": "tag",
+                            #            "options": "congregations",
+                            #            },
+                            ),
+                       S3SQLInlineComponent(
+                            "cross_streets",
+                            label = T("Cross Streets"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = {"field": "tag",
+                            #            "options": "cross_streets",
+                            #            },
+                            ),
+                       (T("Building Status"), "status.facility_status"),
+                       S3SQLInlineComponent(
+                            "em_call",
+                            name = "em_call",
+                            label = T("Call in Emergency"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = {"field": "tag",
+                            #            "options": "em_call",
+                            #            },
+                            ),
+                       S3SQLInlineComponent(
+                            "oem_ready",
+                            name = "oem_ready",
+                            label = T("OEM Ready Receiving Center"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = {"field": "tag",
+                            #            "options": "oem_ready",
+                            #            },
+                            ),
+                       "comments",
+                       ]
+
+        crud_form = S3SQLCustomForm(*crud_fields)
+
+        list_fields = ["organisation_id",
+                       "name",
+                       (T("# of Congregations"), "congregations.value"),
+                       (T("OEM Ready Receiving Center"), "oem_ready.value"),
+                       ]
+
+        s3db.configure("org_facility",
+                       crud_form = crud_form,
+                       # Defaults seem OK for now
+                       #filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_org_facility_resource = customise_org_facility_resource
+
+    # -------------------------------------------------------------------------
+    def customise_org_facility_controller(**attr):
+
+        s3 = current.response.s3
+
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            mine = r.get_vars.get("mine")
+            if mine:
+                from s3 import FS
+                _filter = (FS("organisation_id") == current.auth.user.organisation_id)
+                r.resource.add_filter(_filter)
+
+            return result
+        s3.prep = custom_prep
+
+        attr["rheader"] = howcalm_rheader
+
+        return attr
+    
+    settings.customise_org_facility_controller = customise_org_facility_controller
 
     # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
@@ -390,9 +597,9 @@ def config(settings):
                             label = T("Organization ID"),
                             multiple = False,
                             fields = [("", "value")],
-                            #filterby = dict(field = "tag",
-                            #                options = "org_id",
-                            #                ),
+                            #filterby = {"field": "tag",
+                            #            "options": "org_id",
+                            #            },
                             ),
                        S3SQLInlineLink("organisation_type",
                                        field = "organisation_type_id",
@@ -407,9 +614,9 @@ def config(settings):
                             label = T("Facebook"),
                             multiple = False,
                             fields = [("", "value")],
-                            #filterby = dict(field = "contact_method",
-                            #                options = "FACEBOOK",
-                            #                ),
+                            #filterby = {"field": "contact_method",
+                            #            "options": "FACEBOOK",
+                            #            },
                             ),
                        S3SQLInlineComponent(
                             "congregants",
@@ -417,9 +624,9 @@ def config(settings):
                             label = T("# Congregants"),
                             multiple = False,
                             fields = [("", "value")],
-                            #filterby = dict(field = "tag",
-                            #                options = "congregants",
-                            #                ),
+                            #filterby = {"field": "tag",
+                            #            "options": "congregants",
+                            #            },
                             ),
                        S3SQLInlineComponent(
                             "clergy_staff",
@@ -427,9 +634,9 @@ def config(settings):
                             label = T("# Clergy Staff"),
                             multiple = False,
                             fields = [("", "value")],
-                            #filterby = dict(field = "tag",
-                            #                options = "clergy_staff",
-                            #                ),
+                            #filterby = {"field": "tag",
+                            #            "options": "clergy_staff",
+                            #            },
                             ),
                        S3SQLInlineComponent(
                             "lay_staff",
@@ -437,9 +644,9 @@ def config(settings):
                             label = T("# Lay Staff"),
                             multiple = False,
                             fields = [("", "value")],
-                            #filterby = dict(field = "tag",
-                            #                options = "lay_staff",
-                            #                ),
+                            #filterby = {"field": "tag",
+                            #            "options": "lay_staff",
+                            #            },
                             ),
                        S3SQLInlineComponent(
                             "religious_staff",
@@ -447,9 +654,9 @@ def config(settings):
                             label = T("# Religious Staff"),
                             multiple = False,
                             fields = [("", "value")],
-                            #filterby = dict(field = "tag",
-                            #                options = "religious_staff",
-                            #                ),
+                            #filterby = {"field": "tag",
+                            #            "options": "religious_staff",
+                            #            },
                             ),
                        S3SQLInlineComponent(
                             "volunteers",
@@ -457,9 +664,9 @@ def config(settings):
                             label = T("# Volunteers"),
                             multiple = False,
                             fields = [("", "value")],
-                            #filterby = dict(field = "tag",
-                            #                options = "volunteers",
-                            #                ),
+                            #filterby = {"field": "tag",
+                            #            "options": "volunteers",
+                            #            },
                             ),
                        S3SQLInlineComponent(
                             "board",
@@ -467,9 +674,9 @@ def config(settings):
                             label = T("# C. Board"),
                             multiple = False,
                             fields = [("", "value")],
-                            #filterby = dict(field = "tag",
-                            #                options = "board",
-                            #                ),
+                            #filterby = {"field": "tag",
+                            #            "options": "board",
+                            #            },
                             ),
                        S3SQLInlineComponent(
                             "internet",
@@ -477,9 +684,9 @@ def config(settings):
                             label = T("Internet Access"),
                             multiple = False,
                             fields = [("", "value")],
-                            #filterby = dict(field = "tag",
-                            #                options = "internet",
-                            #                ),
+                            #filterby = {"field": "tag",
+                            #            "options": "internet",
+                            #            },
                             ),
                        "comments",
                        ]
@@ -531,10 +738,328 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_org_organisation_controller(**attr):
 
+        s3 = current.response.s3
+
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            mine = r.get_vars.get("mine")
+            if mine:
+                from s3 import FS
+                _filter = (FS("id") == current.auth.user.organisation_id)
+                r.resource.add_filter(_filter)
+
+            return result
+        s3.prep = custom_prep
+
         attr["rheader"] = howcalm_rheader
 
         return attr
     
     settings.customise_org_organisation_controller = customise_org_organisation_controller
+
+    # -------------------------------------------------------------------------
+    def customise_pr_person_resource(r, tablename):
+
+        from gluon import IS_EMPTY_OR, IS_IN_SET
+
+        from s3 import S3LocationSelector, \
+                       S3Represent, \
+                       S3SQLCustomForm, S3SQLInlineComponent
+        from s3layouts import S3PopupLink
+
+        s3db = current.s3db
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Contact"),
+            title_display = T("Contact Details"),
+            title_list = T("Contacts"),
+            title_update = T("Edit Contact Details"),
+            label_list_button = T("List Contacts"),
+            label_delete_button = T("Delete Contact"),
+            msg_record_created = T("Contact added"),
+            msg_record_modified = T("Contact details updated"),
+            msg_record_deleted = T("Contact deleted"),
+            msg_list_empty = T("No Contacts currently registered"))
+
+        # Filtered components
+        s3db.add_components("pr_person",
+                            pr_person_tag = ({"name": "languages_spoken",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "languages_spoken"},
+                                              },
+                                             {"name": "other_languages",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "other_languages"},
+                                              },
+                                             {"name": "religious_title",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "religious_title"},
+                                              },
+                                             {"name": "position_title",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "position_title"},
+                                              },
+                                             {"name": "em_comms",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "em_comms"},
+                                              },
+                                             ),
+                            )
+
+        # Individual settings for specific tag components
+        components_get = s3db.resource(tablename).components.get
+
+        languages_spoken = components_get("languages_spoken")
+        f = languages_spoken.table.value
+        language_opts = {1: T("English"),
+                         2: T("Spanish"),
+                         3: T("Chinese"),
+                         4: T("Indic Languages (Hindi, Urdu or Gujarati)"),
+                         5: T("Russian"),
+                         }
+        f.requires = IS_EMPTY_OR(IS_IN_SET(language_opts, multiple = True))
+        f.represent = S3Represent(options = language_opts, multiple = True)
+
+        em_comms = components_get("em_comms")
+        f = em_comms.table.value
+        f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
+        f.represent = lambda v: T("yes") if v == "Y" else T("no")
+        from s3 import S3TagCheckboxWidget
+        f.widget = S3TagCheckboxWidget(on="Y", off="N")
+        f.default = "N"
+
+        s3db.hrm_human_resource.job_title_id.comment = S3PopupLink(c = "hrm",
+                                                                   f = "job_title",
+                                                                   # Add this for usecases where this is no special controller for an options lookup
+                                                                   #vars = {"prefix": "hrm",
+                                                                   #        "parent": "human_resource",
+                                                                   #        },
+                                                                   label = T("Create Type"),
+                                                                   title = T("Type"),
+                                                                   tooltip = T("The contact's type"),
+                                                                   )
+
+        #s3db.gis_location.addr_street.label = T("Mailing Address")
+        s3db.gis_location.addr_street.label = ""
+        s3db.pr_address.location_id.widget = S3LocationSelector(levels = False,
+                                                                show_address = True,
+                                                                show_postcode = False,
+                                                                show_map = False,
+                                                                )
+
+        crud_fields = ("first_name",
+                       "middle_name",
+                       "last_name",
+                       #(T("ID"), "pe_label"),
+                       S3SQLInlineComponent(
+                            "human_resource",
+                            name = "human_resource",
+                            label = "",
+                            multiple = False,
+                            fields = ["organisation_id",
+                                      (T("Type"), "job_title_id"),
+                                      ],
+                            ),
+                       S3SQLInlineComponent(
+                            "languages_spoken",
+                            name = "languages_spoken",
+                            label = T("Languages Spoken"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = {"field": "tag",
+                            #            "options": "languages_spoken",
+                            #            },
+                            ),
+                       S3SQLInlineComponent(
+                            "other_languages",
+                            name = "other_languages",
+                            label = T("Other Languages"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = {"field": "tag",
+                            #            "options": "other_languages",
+                            #            },
+                            ),
+                       S3SQLInlineComponent(
+                            "religious_title",
+                            name = "religious_title",
+                            label = T("Religious Title"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = {"field": "tag",
+                            #            "options": "religious_title",
+                            #            },
+                            ),
+                       S3SQLInlineComponent(
+                            "position_title",
+                            name = "position_title",
+                            label = T("Position Title"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = {"field": "tag",
+                            #            "options": "position_title",
+                            #            },
+                            ),
+                       S3SQLInlineComponent(
+                            "address",
+                            name = "address",
+                            label = T("Mailing Address"),
+                            #label = "",
+                            multiple = False,
+                            fields = [("", "location_id")],
+                            #filterby = {"field": "type",
+                            #            "options": 1,
+                            #            },
+                            ),
+                       S3SQLInlineComponent(
+                            "phone",
+                            name = "phone",
+                            label = T("Cell Phone"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = {"field": "contact_method",
+                            #            "options": "SMS",
+                            #            },
+                            ),
+                       S3SQLInlineComponent(
+                            "contact",
+                            name = "work_phone",
+                            label = T("Office Phone"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            filterby = {"field": "contact_method",
+                                        "options": "WORK_PHONE",
+                                        },
+                            ),
+                       S3SQLInlineComponent(
+                            "contact",
+                            name = "home_phone",
+                            label = T("Emergency Phone"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            filterby = {"field": "contact_method",
+                                        "options": "HOME_PHONE",
+                                        },
+                            ),
+                       S3SQLInlineComponent(
+                            "contact",
+                            name = "fax",
+                            label = T("Office Fax"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            filterby = {"field": "contact_method",
+                                        "options": "FAX",
+                                        },
+                            ),
+                       S3SQLInlineComponent(
+                            "contact",
+                            name = "personal_email",
+                            label = T("Personal Email"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            filterby = ({"field": "contact_method",
+                                         "options": "EMAIL",
+                                         },
+                                        {"field": "priority",
+                                         "options": 2,
+                                         },
+                                        ),
+                            ),
+                       S3SQLInlineComponent(
+                            "contact",
+                            name = "work_email",
+                            label = T("Work Email"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            filterby = ({"field": "contact_method",
+                                         "options": "EMAIL",
+                                         },
+                                        {"field": "priority",
+                                         "options": 1,
+                                         },
+                                        ),
+                            ),
+                       S3SQLInlineComponent(
+                            "em_comms",
+                            name = "em_comms",
+                            label = T("Emergency Communications Decision-maker"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = {"field": "tag",
+                            #            "options": "em_comms",
+                            #            },
+                            ),
+                       )
+
+        crud_form = S3SQLCustomForm(*crud_fields)
+
+        from s3 import S3TextFilter#, S3OptionsFilter, S3HierarchyFilter, S3LocationFilter, 
+        filter_widgets = [
+            S3TextFilter(["first_name", "middle_name", "last_name"],
+                         label = T("Search"),
+                         comment = T("Search by person name. You can use * as wildcard."),
+                         _class = "filter-search",
+                         ),
+            #S3HierarchyFilter("organisation_organisation_type.organisation_type_id",
+            #                  label = T("Religion"),
+            #                  ),
+            #S3LocationFilter("org_facility.location_id",
+            #                 label = T("Location"),
+            #                 levels = gis_levels,
+            #                 #hidden = True,
+            #                 ),
+            ]
+
+        list_fields = ["first_name",
+                       "middle_name",
+                       "last_name",
+                       (T("Type"), "human_resource.job_title_id"),
+                       (T("Languages Spoken"), "languages_spoken.value"),
+                       (T("Religious Title"), "religious_title.value"),
+                       (T("Position Title"), "position_title.value"),
+                       (T("Emergency Communications Decision-maker"), "em_comms.value"),
+                       ]
+
+        s3db.configure("pr_person",
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_pr_person_resource = customise_pr_person_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_person_controller(**attr):
+
+        s3 = current.response.s3
+
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            mine = r.get_vars.get("mine")
+            if mine:
+                from s3 import FS
+                _filter = (FS("human_resource.organisation_id") == current.auth.user.organisation_id)
+                r.resource.add_filter(_filter)
+
+            return result
+        s3.prep = custom_prep
+
+        attr["rheader"] = howcalm_rheader
+
+        return attr
+    
+    settings.customise_pr_person_controller = customise_pr_person_controller
 
 # END =========================================================================

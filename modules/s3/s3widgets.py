@@ -4519,6 +4519,7 @@ class S3LocationSelector(S3Selector):
 
             @param levels: list or tuple of hierarchy levels (names) to expose,
                            in order (e.g. ("L0", "L1", "L2"))
+                           or False to disable completely
             @param required_levels: list or tuple of required hierarchy levels (if empty,
                                     only the highest selectable Lx will be required)
             @param hide_lx: hide Lx selectors until higher level has been selected
@@ -4614,11 +4615,13 @@ class S3LocationSelector(S3Selector):
         levels = self._levels
         if self._initlx:
             lx = []
-            if not levels:
+            if levels is False:
+                levels = []
+            elif not levels:
                 # Which levels of Hierarchy are we using?
                 levels = current.gis.get_relevant_hierarchy_levels()
-            if levels is None:
-                levels = []
+                if levels is None:
+                    levels = []
             if not isinstance(levels, (tuple, list)):
                 levels = [levels]
             for level in levels:
@@ -5475,11 +5478,11 @@ class S3LocationSelector(S3Selector):
 
         input_id = "%s_%s" % (fieldname, name)
 
-        if self.labels:
+        if label and self.labels:
             _label = LABEL("%s:" % label, _for=input_id)
         else:
             _label = ""
-        if self.placeholders:
+        if label and self.placeholders:
             _placeholder = label
         else:
             _placeholder = None
