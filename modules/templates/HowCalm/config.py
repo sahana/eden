@@ -337,6 +337,7 @@ def config(settings):
                                                     {"name": "internet",
                                                      "joinby": "organisation_id",
                                                      "filterby": {"tag": "internet"},
+                                                     "multiple": False,
                                                      },
                                                     ),
                             )
@@ -471,16 +472,7 @@ def config(settings):
                             #                options = "board",
                             #                ),
                             ),
-                       S3SQLInlineComponent(
-                            "internet",
-                            name = "internet",
-                            label = T("Internet Access"),
-                            multiple = False,
-                            fields = [("", "value")],
-                            #filterby = dict(field = "tag",
-                            #                options = "internet",
-                            #                ),
-                            ),
+                       (T("Internet Access"), "internet.value"),
                        "comments",
                        ]
 
@@ -534,7 +526,7 @@ def config(settings):
         attr["rheader"] = howcalm_rheader
 
         return attr
-    
+
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # END =========================================================================
