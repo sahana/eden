@@ -36,7 +36,7 @@ import json
 from gluon import *
 from gluon.storage import Storage
 from gluon.tools import callback
-from s3utils import s3_unicode
+from s3utils import s3_str
 from s3rest import S3Method
 from s3widgets import SEPARATORS
 
@@ -1422,7 +1422,7 @@ class S3Hierarchy(object):
                 self.represent = renderer = S3Represent(lookup = tablename,
                                                         key = self.pkey.name)
             else:
-                renderer = s3_unicode
+                renderer = s3_str
         if hasattr(renderer, "bulk"):
             labels = renderer.bulk(list(pending), list_type = False)
             for node_id, label in labels.items():
@@ -1433,7 +1433,7 @@ class S3Hierarchy(object):
                 try:
                     label = renderer(node_id)
                 except:
-                    label = s3_unicode(node_id)
+                    label = s3_str(node_id)
                 theset[node_id][LABEL] = label
         return
 
@@ -1464,6 +1464,79 @@ class S3Hierarchy(object):
                     pass
             return label
         return None
+
+    # -------------------------------------------------------------------------
+    def _json(self, node_id, represent=None, depth=0, max_depth=None):
+        """
+            Represent a node as JSON-serializable array
+
+            @param node_id: the node ID
+            @param represent: the representation method
+            @param depth: the current recursion depth
+            @param max_depth: the maximum recursion depth
+
+            @returns: the node as [label, category, subnodes],
+                      with subnodes as:
+                        - False: if there are no subnodes
+                        - True: if there are subnodes beyond max_depth
+                        - otherwise: {node_id: [label, category, subnodes], ...}
+        """
+
+        node = self.nodes.get(node_id)
+        if not node:
+            return None
+
+        label = self.label(node_id, represent=represent)
+        if label is None:
+            label = node_id
+
+        category = node["c"]
+        subnode_ids = node["s"]
+        if subnode_ids:
+            if max_depth and depth == max_depth:
+                subnodes = True
+            else:
+                subnodes = {}
+                for subnode_id in subnode_ids:
+                    item = self._json(subnode_id,
+                                      represent = represent,
+                                      depth = depth + 1,
+                                      max_depth = max_depth,
+                                      )
+                    if item:
+                        subnodes[subnode_id] = item
+        else:
+            subnodes = False
+
+        return [s3_str(label), category, subnodes]
+
+    # -------------------------------------------------------------------------
+    def json(self, root=None, represent=None, max_depth=None):
+        """
+            Represent the hierarchy as JSON-serializable dict
+
+            @param root: the root node ID (or array of root node IDs)
+            @param represent: the representation method
+            @param max_depth: maximum recursion depth
+
+            @returns: the hierarchy as dict:
+                         {node_id: [label, category, subnodes], ...}
+        """
+
+        self._represent(renderer=represent)
+
+        roots = [root] if root else self.roots
+
+        output = {}
+        for node_id in roots:
+            item = self._json(node_id,
+                              represent = represent,
+                              max_depth = max_depth,
+                              )
+            if item:
+                output[node_id] = item
+
+        return output
 
     # -------------------------------------------------------------------------
     def html(self,
@@ -1528,7 +1601,7 @@ class S3Hierarchy(object):
 
         label = self.label(node_id, represent=represent)
         if label is None:
-            label = s3_unicode(node_id)
+            label = s3_str(node_id)
 
         subnodes = node["s"]
         item = LI(label,

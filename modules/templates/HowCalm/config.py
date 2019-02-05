@@ -526,7 +526,7 @@ def config(settings):
         attr["rheader"] = howcalm_rheader
 
         return attr
-    
+
     settings.customise_org_facility_controller = customise_org_facility_controller
 
     # -------------------------------------------------------------------------
@@ -678,6 +678,9 @@ def config(settings):
                                        label = T("Religion"),
                                        multiple = False,
                                        widget = "hierarchy",
+                                       # TODO switch to cascade:
+                                       #widget = "cascade",
+                                       #levels = ["Level 1", "Level 2", "Level 3"],
                                        ),
                        S3SQLInlineComponent(
                             "facebook",
@@ -782,7 +785,7 @@ def config(settings):
         attr["rheader"] = howcalm_rheader
 
         return attr
-    
+
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # -------------------------------------------------------------------------
@@ -991,7 +994,7 @@ def config(settings):
 
         crud_form = S3SQLCustomForm(*crud_fields)
 
-        from s3 import S3TextFilter#, S3OptionsFilter, S3HierarchyFilter, S3LocationFilter, 
+        from s3 import S3TextFilter#, S3OptionsFilter, S3HierarchyFilter, S3LocationFilter,
         filter_widgets = [
             S3TextFilter(["first_name", "middle_name", "last_name"],
                          label = T("Search"),
@@ -1051,7 +1054,7 @@ def config(settings):
         attr["rheader"] = howcalm_rheader
 
         return attr
-    
+
     settings.customise_pr_person_controller = customise_pr_person_controller
 
 # END =========================================================================

@@ -38,6 +38,7 @@ __all__ = ("S3ACLWidget",
            "S3AgeWidget",
            "S3AutocompleteWidget",
            "S3BooleanWidget",
+           "S3CascadeSelectWidget",
            "S3ColorPickerWidget",
            "S3CalendarWidget",
            "S3DateWidget",
@@ -6432,6 +6433,102 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         return location_id, None
 
 # =============================================================================
+class S3SelectWidget(OptionsWidget):
+    """
+        Standard OptionsWidget, but using the jQuery UI SelectMenu:
+            http://jqueryui.com/selectmenu/
+
+        Useful for showing Icons against the Options.
+    """
+
+    def __init__(self,
+                 icons = False
+                 ):
+        """
+            Constructor
+
+            @param icons: show icons next to options,
+                           can be:
+                                - False (don't show icons)
+                                - function (function to call add Icon URLs, height and width to the options)
+        """
+
+        self.icons = icons
+
+    def __call__(self, field, value, **attr):
+
+        if isinstance(field, Field):
+            selector = str(field).replace(".", "_")
+        else:
+            selector = field.name.replace(".", "_")
+
+        # Widget
+        _class = attr.get("_class", None)
+        if _class:
+            if "select-widget" not in _class:
+                attr["_class"] = "%s select-widget" % _class
+        else:
+            attr["_class"] = "select-widget"
+
+        widget = TAG[""](self.widget(field, value, **attr),
+                         requires = field.requires)
+
+        if self.icons:
+            # Use custom subclass in S3.js
+            fn = "iconselectmenu().iconselectmenu('menuWidget').addClass('customicons')"
+        else:
+            # Use default
+            fn = "selectmenu()"
+        script = '''$('#%s').%s''' % (selector, fn)
+
+        jquery_ready = current.response.s3.jquery_ready
+        if script not in jquery_ready: # Prevents loading twice when form has errors
+            jquery_ready.append(script)
+
+        return widget
+
+    # -------------------------------------------------------------------------
+    def widget(self, field, value, **attributes):
+        """
+            Generates a SELECT tag, including OPTIONs (only 1 option allowed)
+            see also: `FormWidget.widget`
+        """
+
+        default = dict(value=value)
+        attr = self._attributes(field, default,
+                               **attributes)
+        requires = field.requires
+        if not isinstance(requires, (list, tuple)):
+            requires = [requires]
+        if requires:
+            if hasattr(requires[0], "options"):
+                options = requires[0].options()
+            else:
+                raise SyntaxError(
+                    "widget cannot determine options of %s" % field)
+        icons = self.icons
+        if icons:
+            # Options including Icons
+            # Add the Icons to the Options
+            options = icons(options)
+            opts = []
+            oappend = opts.append
+            for (k, v, i) in options:
+                oattr = {"_value": k,
+                         #"_data-class": "select-widget-icon",
+                         }
+                if i:
+                    oattr["_data-style"] = "background-image:url('%s');height:%spx;width:%spx" % \
+                        (i[0], i[1], i[2])
+                opt = OPTION(v, **oattr)
+                oappend(opt)
+        else:
+            # Standard Options
+            opts = [OPTION(v, _value=k) for (k, v) in options]
+
+        return SELECT(*opts, **attr)
+
+# =============================================================================
 class S3MultiSelectWidget(MultipleOptionsWidget):
     """
         Standard MultipleOptionsWidget, but using the jQuery UI:
@@ -6577,100 +6674,232 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         return widget
 
 # =============================================================================
-class S3SelectWidget(OptionsWidget):
-    """
-        Standard OptionsWidget, but using the jQuery UI SelectMenu:
-            http://jqueryui.com/selectmenu/
-
-        Useful for showing Icons against the Options.
-    """
+class S3CascadeSelectWidget(FormWidget):
+    """ Cascade Selector for Hierarchies """
 
     def __init__(self,
-                 icons = False
+                 lookup=None,
+                 formstyle=None,
+                 levels=None,
+                 multiple=False,
+                 filter=None,
+                 leafonly=True,
+                 represent=None,
                  ):
         """
-            Constructor
-
-            @param icons: show icons next to options,
-                           can be:
-                                - False (don't show icons)
-                                - function (function to call add Icon URLs, height and width to the options)
+            TODO docstring
         """
 
-        self.icons = icons
+        self.lookup = lookup
+        self.levels = levels
 
+        self.multiple = multiple
+
+        self.filter = filter
+        self.leafonly = leafonly
+
+        self.formstyle = formstyle
+        self.represent = represent
+
+    # -------------------------------------------------------------------------
     def __call__(self, field, value, **attr):
+        """
+            Widget renderer
 
-        if isinstance(field, Field):
-            selector = str(field).replace(".", "_")
-        else:
-            selector = field.name.replace(".", "_")
+            @param field: the Field
+            @param value: the current value(s)
+            @param attr: additional HTML attributes for the widget
+        """
 
-        # Widget
-        _class = attr.get("_class", None)
-        if _class:
-            if "select-widget" not in _class:
-                attr["_class"] = "%s select-widget" % _class
-        else:
-            attr["_class"] = "select-widget"
+        # Get the lookup table
+        lookup = self.lookup
+        if not lookup:
+            lookup = s3_get_foreign_key(field)[0]
+            if not lookup:
+                raise SyntaxError("No lookup table known for %s" % field)
 
-        widget = TAG[""](self.widget(field, value, **attr),
-                         requires = field.requires)
+        # Get the representation
+        represent = self.represent
+        if not represent:
+            represent = field.represent
 
-        if self.icons:
-            # Use custom subclass in S3.js
-            fn = "iconselectmenu().iconselectmenu('menuWidget').addClass('customicons')"
-        else:
-            # Use default
-            fn = "selectmenu()"
-        script = '''$('#%s').%s''' % (selector, fn)
+        # Get the hierarchy
+        from s3hierarchy import S3Hierarchy
+        h = S3Hierarchy(tablename = lookup,
+                        represent = represent,
+                        filter = self.filter,
+                        leafonly = self.leafonly,
+                        )
+        if not h.config:
+            raise AttributeError("No hierarchy configured for %s" % lookup)
 
-        jquery_ready = current.response.s3.jquery_ready
-        if script not in jquery_ready: # Prevents loading twice when form has errors
-            jquery_ready.append(script)
+        # Get the cascade levels
+        levels = self.levels
+        if not levels:
+            levels = current.s3db.get_config(lookup, "hierarchy_levels")
+        if not levels:
+            levels = [field.label]
+
+        # Get the hierarchy nodes
+        nodes = h.json(max_depth=len(levels)-1)
+
+        # Intended DOM-ID of the input field
+        input_id = attr.get("_id")
+        if not input_id:
+            if isinstance(field, Field):
+                input_id = str(field).replace(".", "_")
+            else:
+                input_id = field.name.replace(".", "_")
+
+        # Prepare labels and selectors
+        selectors = []
+        multiple = "multiple" if self.multiple else None
+        T = current.T
+        for depth, level in enumerate(levels):
+            # The selector for this level
+            selector = SELECT(data = {"level": depth},
+                              _class = "s3-cascade-select",
+                              _disabled = "disabled",
+                              _multiple = multiple,
+                              )
+
+            # The label for the selector
+            row_id = "%s_level_%s" % (input_id, depth)
+            label = LABEL(T(level) if isinstance(level, basestring) else level,
+                          _for = row_id,
+                          _id = "%s__label" % row_id,
+                          )
+            selectors.append((row_id, label, selector, None))
+
+        # Build inline-rows from labels+selectors
+        formstyle = self.formstyle
+        if not formstyle:
+            formstyle = current.response.s3.crud.formstyle
+        selector_rows = formstyle(None, selectors)
+
+        # Construct the widget
+        widget_id = "%s-cascade" % input_id
+        widget = DIV(self.hidden_input(input_id, field, value, **attr),
+                     INPUT(_type = "hidden",
+                           _class = "s3-cascade",
+                           _value = json.dumps(nodes),
+                           ),
+                     selector_rows,
+                     _class = "s3-cascade-select",
+                     _id = widget_id,
+                     )
+
+        # Inject static JS and instantiate UI widget
+        widget_opts = {} # TODO propagate leafonly-option
+        self.inject_script(widget_id, widget_opts)
 
         return widget
 
     # -------------------------------------------------------------------------
-    def widget(self, field, value, **attributes):
+    def hidden_input(self, input_id, field, value, **attr):
         """
-            Generates a SELECT tag, including OPTIONs (only 1 option allowed)
-            see also: `FormWidget.widget`
+            Construct the hidden (real) input and populate it with the
+            current field value
+
+            @param input_id: the DOM-ID for the input
+            @param field: the Field
+            @param value: the current value
+            @param attr: widget attributes from caller
         """
 
-        default = dict(value=value)
-        attr = self._attributes(field, default,
-                               **attributes)
-        requires = field.requires
-        if not isinstance(requires, (list, tuple)):
-            requires = [requires]
-        if requires:
-            if hasattr(requires[0], "options"):
-                options = requires[0].options()
-            else:
-                raise SyntaxError(
-                    "widget cannot determine options of %s" % field)
-        icons = self.icons
-        if icons:
-            # Options including Icons
-            # Add the Icons to the Options
-            options = icons(options)
-            opts = []
-            oappend = opts.append
-            for (k, v, i) in options:
-                oattr = {"_value": k,
-                         #"_data-class": "select-widget-icon",
-                         }
-                if i:
-                    oattr["_data-style"] = "background-image:url('%s');height:%spx;width:%spx" % \
-                        (i[0], i[1], i[2])
-                opt = OPTION(v, **oattr)
-                oappend(opt)
+        # Currently selected values
+        selected = []
+        append = selected.append
+        if isinstance(value, basestring) and value and not value.isdigit():
+            value = self.parse(value)[0]
+        if not isinstance(value, (list, tuple, set)):
+            values = [value]
         else:
-            # Standard Options
-            opts = [OPTION(v, _value=k) for (k, v) in options]
+            values = value
+        for v in values:
+            if isinstance(v, (int, long)) or str(v).isdigit():
+                append(v)
 
-        return SELECT(*opts, **attr)
+        # Prepend value parser to field validator
+        requires = field.requires
+        if isinstance(requires, (list, tuple)):
+            requires = [self.parse] + requires
+        elif requires is not None:
+            requires = [self.parse, requires]
+        else:
+            requires = self.parse
+
+        # The hidden input field
+        hidden_input = INPUT(_type = "hidden",
+                             _name = attr.get("_name") or field.name,
+                             _id = input_id,
+                             _class = "s3-cascade-input",
+                             requires = requires,
+                             value = json.dumps(selected),
+                             )
+
+        return hidden_input
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inject_script(widget_id, options):
+        """
+            Inject static JS and instantiate client-side UI widget
+
+            @param widget_id: the widget ID
+            @param options: JSON-serializable dict with UI widget options
+        """
+
+        request = current.request
+        s3 = current.response.s3
+
+        # Static script
+        if s3.debug or True: # TODO add minify-config
+            script = "/%s/static/scripts/S3/s3.ui.cascadeselect.js" % \
+                     request.application
+        else:
+            script = "/%s/static/scripts/S3/s3.ui.cascadeselect.min.js" % \
+                     request.application
+        scripts = s3.scripts
+        if script not in scripts:
+            scripts.append(script)
+
+        # Widget options
+        opts = {}
+        if options:
+            opts.update(options)
+
+        # Widget instantiation
+        script = '''$('#%(widget_id)s').cascadeSelect(%(options)s)''' % \
+                 {"widget_id": widget_id,
+                  "options": json.dumps(opts),
+                  }
+        jquery_ready = s3.jquery_ready
+        if script not in jquery_ready:
+            jquery_ready.append(script)
+
+    # -------------------------------------------------------------------------
+    def parse(self, value):
+        """
+            Value parser for the hidden input field of the widget
+
+            @param value: the value received from the client, JSON string
+
+            @return: a list (if multiple=True) or the value
+        """
+
+        default = [] if self.multiple else None
+
+        if value is None:
+            return None, None
+        try:
+            value = json.loads(value)
+        except ValueError:
+            return default, None
+        if not self.multiple and isinstance(value, list):
+            value = value[0] if value else None
+
+        return value, None
 
 # =============================================================================
 class S3HierarchyWidget(FormWidget):

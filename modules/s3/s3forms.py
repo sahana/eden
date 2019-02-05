@@ -3703,12 +3703,13 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         kfield = link.table[component.rkey]
         dummy_field = Storage(name = field.name,
                               type = kfield.type,
+                              label = options.label or kfield.label,
                               represent = kfield.represent,
                               )
 
         # Widget type
         widget = options.get("widget")
-        if widget != "hierarchy":
+        if widget not in ("hierarchy", "cascade"):
             requires = options.get("requires")
             if requires is None:
                 # Get the selectable entries for the widget and construct
@@ -3753,6 +3754,18 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                                   ))
             w_opts["lookup"] = component.tablename
             w = S3HierarchyWidget(**w_opts)
+        elif widget == "cascade":
+            from s3widgets import S3CascadeSelectWidget
+            # TODO propagate options
+            w_opts = widget_opts(("levels",
+                                  #"represent",
+                                  #"multiple",
+                                  #"leafonly",
+                                  #"columns",
+                                  #"filter",
+                                  ))
+            w_opts["lookup"] = component.tablename
+            w = S3CascadeSelectWidget(**w_opts)
         else:
             # Default to multiselect
             from s3widgets import S3MultiSelectWidget
