@@ -63,24 +63,24 @@ class S3SupportModel(S3Model):
         tablename = "support_req"
         self.define_table(tablename,
                           Field("name", notnull=True,
-                                label=T("Short Description")),
+                                label = T("Short Description")),
                           Field("type", "integer",
-                                label=T("Type"),
-                                requires=IS_IN_SET(support_request_types,
-                                                   zero="%s..." % T("Please select")),
-                                represent=lambda opt: \
-                                          support_request_types.get(opt,
-                                                                    UNKNOWN_OPT)),
+                                label = T("Type"),
+                                requires = IS_IN_SET(support_request_types,
+                                                     zero="%s..." % T("Please select")),
+                                represent = lambda opt: \
+                                    support_request_types.get(opt,
+                                                              UNKNOWN_OPT)),
                           Field("details", "text",
                                 label = T("Details"),
                                 comment = "%s%s" % (T("Please provide the URL of the page you are referring to, a description of what you expected to happen & what actually happened."),
                                                     T("If a ticket was issued then please provide the Ticket ID."))),
                           Field("status", "integer",
-                                label=T("Status"),
-                                default=1,
-                                requires=IS_IN_SET(support_status_opts),
-                                represent=lambda opt: \
-                                          support_status_opts.get(opt, UNKNOWN_OPT)),
+                                label = T("Status"),
+                                default = 1,
+                                requires = IS_IN_SET(support_status_opts),
+                                represent = lambda opt: \
+                                    support_status_opts.get(opt, UNKNOWN_OPT)),
                           Field("actions", "text",
                                 label = T("Actions"),
                                 comment = T("Actions taken as a result of this request.")),
@@ -101,6 +101,6 @@ class S3SupportModel(S3Model):
             msg_list_empty = T("No Support Requests currently registered"))
 
         # ---------------------------------------------------------------------
-        return Storage()
+        return {}
 
 # END =========================================================================

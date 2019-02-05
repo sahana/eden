@@ -1,0 +1,27 @@
+{{extend "layout.html"}}
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+  <p>
+  {{=T("We welcome comments, suggestions and questions. Please complete the form to contact us and our staff will respond to you as soon as possible.")}}
+  </p>
+ </div>
+</div>
+<div id='rheader' class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=XML(rheader)}}
+ </div>
+</div>
+<div id='component' class='row'>
+{{except:}}
+ </div>
+</div>
+<div class='row'>
+{{pass}}
+ <div class='small-12 columns'>
+  {{include "key.html"}}
+  <div class='form-container'>
+   {{try:}}{{=form}}{{except:}}{{pass}}
+  </div>
+ </div>
+</div>

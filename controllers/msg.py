@@ -74,6 +74,20 @@ def message():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def contact():
+    """
+        RESTful CRUD controller for the Contact Form
+    """
+    
+    def prep(r):
+        if not auth.s3_has_role("ADMIN"):
+            r.method = "create"
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
 # =============================================================================
 def mark_sender():
     """
@@ -1894,11 +1908,14 @@ def group_membership():
     return s3_rest_controller("pr", resourcename)
 
 # -----------------------------------------------------------------------------
-def contact():
-    """ Allow the user to add, update and delete their contacts """
+def contacts():
+    """
+        Allow the user to add, update and delete their contacts
+        - seems to be unused (was called 'contact' & was broken)
+    """
 
-    table = s3db.pr.contact
-    ptable = s3db.pr_person
+    table = s3db.pr_contact
+    #ptable = s3db.pr_person
 
     if auth.is_logged_in() or auth.basic():
         s3.filter = (table.pe_id == auth.user.pe_id)
@@ -1935,7 +1952,8 @@ def contact():
     s3.prep = prep
 
     response.menu_options = []
-    return s3_rest_controller("pr", resourcename)
+
+    return s3_rest_controller("pr", "contact")
 
 # -----------------------------------------------------------------------------
 def search():
@@ -2238,14 +2256,6 @@ def twitter_post():
 def tag():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
-
-    # Load all models
-    s3db.load_all_models()
-    table.resource.requires = IS_IN_SET(db.tables)
-
-    s3db.configure(tablename, listadd=False)
     return s3_rest_controller()
 
 # =============================================================================

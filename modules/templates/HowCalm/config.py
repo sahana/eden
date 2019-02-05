@@ -30,6 +30,8 @@ def config(settings):
     # Do new users need to be approved by an administrator prior to being able to login?
     settings.auth.registration_requires_approval = True
     settings.auth.registration_requests_organisation = True
+    settings.auth.registration_requests_mobile_phone = True
+    settings.auth.registration_mobile_phone_mandatory = True
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
@@ -350,13 +352,69 @@ def config(settings):
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
     # -------------------------------------------------------------------------
+    def customise_msg_contact_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm#, S3SQLInlineComponent
+
+        s3db = current.s3db
+
+        # Filtered components
+        s3db.add_components("msg_contact",
+                            msg_tag = ({"name": "position",
+                                        "joinby": "message_id",
+                                        "filterby": {"tag": "position"},
+                                        "multiple": False,
+                                        },
+                                       ),
+                            )
+
+        crud_fields = [(T("Topic"), "subject"),
+                       "name",
+                       (T("Position"), "position.value"),
+                       "phone",
+                       "from_address",
+                       "body",
+                       ]
+
+        crud_form = S3SQLCustomForm(*crud_fields)
+
+        s3db.configure("msg_contact",
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_msg_contact_resource = customise_msg_contact_resource
+
+    # -------------------------------------------------------------------------
+    def customise_msg_contact_controller(**attr):
+
+        s3 = current.response.s3
+
+        #standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            #if callable(standard_prep):
+            #    result = standard_prep(r)
+            #else:
+            result = True
+
+            if not current.auth.s3_has_role("MANAGER"):
+                r.method = "create"
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+    
+    settings.customise_msg_contact_controller = customise_msg_contact_controller
+
+    # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
 
         from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE
 
         from s3 import IS_INT_AMOUNT, \
                        S3LocationSelector, \
-                       S3SQLCustomForm, S3SQLInlineComponent
+                       S3SQLCustomForm#, S3SQLInlineComponent
 
         s3db = current.s3db
 
@@ -369,18 +427,22 @@ def config(settings):
                             org_site_tag = ({"name": "congregations",
                                              "joinby": "site_id",
                                              "filterby": {"tag": "congregations"},
+                                             "multiple": False,
                                              },
                                             {"name": "cross_streets",
                                              "joinby": "site_id",
                                              "filterby": {"tag": "cross_streets"},
+                                             "multiple": False,
                                              },
                                             {"name": "em_call",
                                              "joinby": "site_id",
                                              "filterby": {"tag": "em_call"},
+                                             "multiple": False,
                                              },
                                             {"name": "oem_ready",
                                              "joinby": "site_id",
                                              "filterby": {"tag": "oem_ready"},
+                                             "multiple": False,
                                              },
                                             ),
                             )
@@ -414,45 +476,11 @@ def config(settings):
         crud_fields = ["organisation_id",
                        "name",
                        "location_id",
-                       S3SQLInlineComponent(
-                            "congregations",
-                            label = T("# of Congregations"),
-                            multiple = False,
-                            fields = [("", "value")],
-                            #filterby = {"field": "tag",
-                            #            "options": "congregations",
-                            #            },
-                            ),
-                       S3SQLInlineComponent(
-                            "cross_streets",
-                            label = T("Cross Streets"),
-                            multiple = False,
-                            fields = [("", "value")],
-                            #filterby = {"field": "tag",
-                            #            "options": "cross_streets",
-                            #            },
-                            ),
+                       (T("# of Congregations"), "congregations.value"),
+                       (T("Cross Streets"), "cross_streets.value"),
                        (T("Building Status"), "status.facility_status"),
-                       S3SQLInlineComponent(
-                            "em_call",
-                            name = "em_call",
-                            label = T("Call in Emergency"),
-                            multiple = False,
-                            fields = [("", "value")],
-                            #filterby = {"field": "tag",
-                            #            "options": "em_call",
-                            #            },
-                            ),
-                       S3SQLInlineComponent(
-                            "oem_ready",
-                            name = "oem_ready",
-                            label = T("OEM Ready Receiving Center"),
-                            multiple = False,
-                            fields = [("", "value")],
-                            #filterby = {"field": "tag",
-                            #            "options": "oem_ready",
-                            #            },
-                            ),
+                       (T("Call in Emergency"), "em_call.value"),
+                       (T("OEM Ready Receiving Center"), "oem_ready.value"),
                        "comments",
                        ]
 
@@ -504,15 +532,18 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
 
-        from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE
-
-        from s3 import IS_INT_AMOUNT, \
-                       S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+        from s3 import S3LocationSelector
 
         s3db = current.s3db
 
         # Filtered components
         s3db.add_components("org_organisation",
+                            org_facility = ({"name": "main_facility",
+                                             "joinby": "organisation_id",
+                                             "filterby": {"main_facility": True},
+                                             "multiple": False,
+                                             },
+                                             ),
                             org_organisation_tag = ({"name": "org_id",
                                                      "joinby": "organisation_id",
                                                      "filterby": {"tag": "org_id"},
@@ -558,6 +589,47 @@ def config(settings):
 
         # Individual settings for specific tag components
         components_get = s3db.resource(tablename).components.get
+
+        main_facility = components_get("main_facility")
+        f = main_facility.table.location_id
+        f.widget = S3LocationSelector(levels = False,
+                                      show_address = True,
+                                      show_postcode = False,
+                                      show_map = False,
+                                      )
+        
+
+        if not current.auth.s3_logged_in():
+            # Simplified Form
+            from s3 import S3SQLCustomForm
+
+            s3db.gis_location.addr_street.label = T("Address of Organization or House of Worship")
+            main_facility.table.name.default = "Main"
+
+            crud_form = S3SQLCustomForm((T("Formal Name of Organization or House of Worship"), "name"),
+                                        ("", "main_facility.location_id"),
+                                        )
+
+            s3db.configure("org_organisation",
+                           crud_form = crud_form,
+                           )
+
+            def org_facility_onaccept(form):
+                # Set Facility Name to Org name
+                current.db(s3db.org_facility.id == form.vars.get("id")).update(name = current.request.post_vars.get("name"))
+
+            s3db.configure("org_facility",
+                           onaccept = org_facility_onaccept,
+                           )
+
+            return
+
+        from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE
+
+        from s3 import IS_INT_AMOUNT, \
+                       S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+
+        s3db.gis_location.addr_street.label = T("Facility Address")
 
         integer_represent = IS_INT_AMOUNT.represent
 
@@ -607,6 +679,17 @@ def config(settings):
                                        multiple = False,
                                        widget = "hierarchy",
                                        ),
+                       S3SQLInlineComponent(
+                            "facebook",
+                            name = "facebook",
+                            label = T("Facebook"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            #filterby = {"field": "contact_method",
+                            #            "options": "FACEBOOK",
+                            #            },
+                            ),
+                       ("", "main_facility.location_id"),
                        "website",
                        # Not a multiple=False component
                        #(T("Facebook"), "facebook.value"),
@@ -656,14 +739,14 @@ def config(settings):
             list_fields = [(T("ID"), "org_id.value"),
                            "name",
                            (T("Religion"), "organisation_organisation_type.organisation_type_id"),
+                           (T("Facility Address"), "main_facility.location_id"),
                            (T("Date Registered"), "created_on"),
-                           # @ToDo: Address
                            ]
         else:
             list_fields = [(T("ID"), "org_id.value"),
                            "name",
                            (T("Religion"), "organisation_organisation_type.organisation_type_id"),
-                           # @ToDo: Address
+                           (T("Facility Address"), "main_facility.location_id"),
                            ]
 
         s3db.configure("org_organisation",

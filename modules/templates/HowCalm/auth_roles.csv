@@ -1,7 +1,10 @@
 uid,role,description,controller,function,table,uacl,oacl,entity,Notes
+ANONYMOUS,Anonymous,,msg,contact,,READ|CREATE,,,Contact Form
 ANONYMOUS,Anonymous,,org,organisation,,READ|CREATE,,,Required for self-registration
 ANONYMOUS,Anonymous,,,,org_organisation,READ|CREATE,,,Required for self-registration
-ANONYMOUS,Anonymous,,,,org_organisation_organisation_type,READ,,,Required for self-registration
+ANONYMOUS,Anonymous,,,,org_facility,READ|CREATE,,,Required for self-registration
+#ANONYMOUS,Anonymous,,,,org_organisation_organisation_type,READ,,,Required for self-registration
+ANONYMOUS,Anonymous,,,,gis_location,CREATE|READ,CREATE|READ|UPDATE,,Required for self-registration
 AUTHENTICATED,Authenticated,,gis,,,READ,,,
 AUTHENTICATED,Authenticated,,gis,layer_arcrest,,READ,,,
 AUTHENTICATED,Authenticated,,gis,layer_bing,,READ,,,
@@ -19,7 +22,7 @@ AUTHENTICATED,Authenticated,,gis,layer_tms,,READ,,,
 AUTHENTICATED,Authenticated,,gis,layer_wfs,,READ,,,
 AUTHENTICATED,Authenticated,,gis,layer_wms,,READ,,,
 AUTHENTICATED,Authenticated,,gis,layer_xyz,,READ,,,
-AUTHENTICATED,Authenticated,,,,gis_location,CREATE|READ,CREATE|READ|UPDATE,,
+#AUTHENTICATED,Authenticated,,,,gis_location,CREATE|READ,CREATE|READ|UPDATE,,
 ORG_ADMIN,"Organisation Administrator",,admin,user,,ALL,,
 ORG_ADMIN,"Organisation Administrator",,,,doc_document,ALL,,,
 ORG_ADMIN,"Organisation Administrator",,hrm,person,,CREATE|READ|UPDATE|DELETE,,,
