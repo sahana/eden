@@ -3746,11 +3746,11 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             w = S3GroupedOptionsWidget(**w_opts)
         elif widget == "hierarchy":
             from s3widgets import S3HierarchyWidget
-            w_opts = widget_opts(("represent",
-                                  "multiple",
-                                  "leafonly",
-                                  "columns",
+            w_opts = widget_opts(("multiple",
                                   "filter",
+                                  "leafonly",
+                                  "cascade",
+                                  "represent",
                                   ))
             w_opts["lookup"] = component.tablename
             w = S3HierarchyWidget(**w_opts)
@@ -3758,11 +3758,11 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             from s3widgets import S3CascadeSelectWidget
             # TODO propagate options
             w_opts = widget_opts(("levels",
-                                  #"represent",
-                                  #"multiple",
-                                  #"leafonly",
-                                  #"columns",
-                                  #"filter",
+                                  "multiple",
+                                  "filter",
+                                  "leafonly",
+                                  "cascade",
+                                  "represent",
                                   ))
             w_opts["lookup"] = component.tablename
             w = S3CascadeSelectWidget(**w_opts)

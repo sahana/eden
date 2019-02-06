@@ -6684,6 +6684,7 @@ class S3CascadeSelectWidget(FormWidget):
                  multiple=False,
                  filter=None,
                  leafonly=True,
+                 cascade=None,
                  represent=None,
                  inline=False,
                  ):
@@ -6699,21 +6700,25 @@ class S3CascadeSelectWidget(FormWidget):
             @param filter: resource filter expression to filter the
                            selectable options
             @param leafonly: allow only leaf-nodes to be selected
+            @param cascade: automatically select child-nodes when a
+                            parent node is selected (override option,
+                            implied by leafonly if not set explicitly)
             @param represent: representation function for the nodes
                               (defaults to the represent of the field)
+            @param inline: formstyle uses inline-labels, so add a colon
         """
 
         self.lookup = lookup
-        self.levels = levels
+        self.formstyle = formstyle
 
+        self.levels = levels
         self.multiple = multiple
 
         self.filter = filter
         self.leafonly = leafonly
+        self.cascade = cascade
 
-        self.formstyle = formstyle
         self.represent = represent
-
         self.inline = inline
 
     # -------------------------------------------------------------------------
@@ -6739,11 +6744,12 @@ class S3CascadeSelectWidget(FormWidget):
             represent = field.represent
 
         # Get the hierarchy
+        leafonly = self.leafonly
         from s3hierarchy import S3Hierarchy
         h = S3Hierarchy(tablename = lookup,
                         represent = represent,
                         filter = self.filter,
-                        leafonly = self.leafonly,
+                        leafonly = leafonly,
                         )
         if not h.config:
             raise AttributeError("No hierarchy configured for %s" % lookup)
@@ -6805,7 +6811,14 @@ class S3CascadeSelectWidget(FormWidget):
                      )
 
         # Inject static JS and instantiate UI widget
-        widget_opts = {} # TODO propagate leafonly-option
+        cascade = self.cascade
+        if leafonly and cascade is not False:
+            cascade = True
+
+        widget_opts = {"multiple": True if multiple else False,
+                       "leafonly": leafonly,
+                       "cascade": cascade,
+                       }
         self.inject_script(widget_id, widget_opts)
 
         return widget

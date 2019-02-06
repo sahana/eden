@@ -21,13 +21,16 @@
         /**
          * Default options
          *
-         * @todo document options
+         * @prop {bool} multiple - allow selection of multiple nodes (default: true)
+         * @prop {bool} leafonly - return only leaf nodes
+         * @prop {bool} cascade - automatically select the entire branch if a
+         *                        parent node is selected
          */
         options: {
 
-            // TODO option for leaf-select-mode
-            // TODO option for automatic cascade
-
+            multiple: true,
+            leafonly: true,
+            cascade: true,
         },
 
         /**
@@ -326,9 +329,16 @@
          */
         _renderOptions: function(selector, options, selected) {
 
-            // TODO if selector is single
-            //      and leaf-mode and only a single option
-            //      => automatically select it
+            var opts = this.options;
+
+            // In single-select cascade mode, automatically select
+            // single child options
+            if (!opts.multiple && opts.cascade && options.length == 1) {
+                var singleOpt = options[0];
+                if (selected.indexOf(singleOpt) == -1) {
+                    selected.push(singleOpt);
+                }
+            }
 
             var available = selector.data('available');
 

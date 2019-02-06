@@ -2680,23 +2680,21 @@ class S3HierarchyFilter(S3FilterWidget):
             formstyle = current.deployment_settings.get_ui_filter_formstyle()
             w = S3CascadeSelectWidget(lookup = opts.get("lookup"),
                                       formstyle = formstyle,
-                                      represent = opts.get("represent"),
                                       multiple = opts.get("multiple", True),
-                                      leafonly = opts.get("leafonly", True),
-                                      #cascade = opts.get("cascade", False),
-                                      #bulk_select = bulk_select,
                                       filter = opts.get("filter"),
-                                      #none = opts.get("none"),
+                                      leafonly = opts.get("leafonly", True),
+                                      cascade = opts.get("cascade"),
+                                      represent = opts.get("represent"),
                                       inline = True,
                                       )
         else:
             w = S3HierarchyWidget(lookup = opts.get("lookup"),
-                                  represent = opts.get("represent"),
                                   multiple = opts.get("multiple", True),
+                                  filter = opts.get("filter"),
                                   leafonly = opts.get("leafonly", True),
                                   cascade = opts.get("cascade", False),
+                                  represent = opts.get("represent"),
                                   bulk_select = bulk_select,
-                                  filter = opts.get("filter"),
                                   none = opts.get("none"),
                                   )
 
