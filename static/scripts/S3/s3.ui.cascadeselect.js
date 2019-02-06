@@ -184,16 +184,24 @@
          */
         _serialize: function() {
 
-            var selection = [],
+            var opts = this.options,
+                selection = [],
                 selectors = this.selectors;
 
             for (var i = selectors.length; i--;) {
+
                 var selector = selectors[i],
                     multiple = selector.prop('multiple'),
+                    available = selector.data('available'),
                     selected = this._getSelected(selector);
+
                 for (var j = 0, len = selected.length; j < len; j++) {
-                    var value = selected[j];
-                    // TODO in leaf-mode, check that value has no children
+
+                    var value = selected[j],
+                        node = available[value];
+                    if (!node || opts.leafonly && node[3]) {
+                        continue;
+                    }
                     if (selection.indexOf(value) == -1) {
                         selection.push(value);
                     }
@@ -462,22 +470,82 @@
         },
 
         /**
+         * Get all currently hidden descendants of selected nodes
+         *
+         * @param {jQuery} selector - the selector
+         * @param {Array} values - the currently selected values
+         *
+         * @returns {Array} - the node IDs of all descendants of values that
+         *                    are not currently rolled out (and thus, not selected)
+         */
+        _hiddenBranches: function(selector, values) {
+
+            var hidden = [],
+                level = selector.data('level'),
+                nextLevel = this.selectors[level + 1];
+
+            if (nextLevel) {
+
+                var available = selector.data('available'),
+                    branches = {};
+
+                // Get all children of values
+                values.forEach(function(value) {
+                    var node = available[value];
+                    if (node) {
+                        var subNodes = node[3];
+                        if (subNodes && subNodes !== true) {
+                            for (var nodeID in subNodes) {
+                                branches['' + nodeID] = true;
+                            }
+                        }
+                    }
+                });
+
+                // Check which of the children are not selectable
+                // at the moment
+                $('option', nextLevel).each(function() {
+                    branches[$(this).val()] = false;
+                });
+
+                // Collect the hidden node IDs, recurse into next level
+                hidden = Object.keys(branches).filter(function(nodeID) {
+                    return branches[nodeID];
+                });
+                hidden = hidden.concat(this._hiddenBranches(nextLevel, hidden));
+            }
+
+            return hidden;
+        },
+
+        /**
          * Bind events to generated elements (after refresh)
          */
         _bindEvents: function() {
 
             var el = $(this.element),
                 ns = this.eventNamespace,
+                opts = this.options,
                 self = this;
 
             $('select.s3-cascade-select', el).on('change' + ns, function() {
-                var selector = $(this);
+                var selector = $(this),
+                    selected = self._getSelected(selector);
 
-                // TODO if leaf mode and multiple =>
-                //      find all descendants of the selected nodes
-                //      and add them to the selected options
+                // If in cascade-mode with multi-select: auto-select all
+                // descendants which are currently invisible but about to
+                // be rolled out due to the selection change (=auto-select
+                // the entire branch when a parent has been newly selected)
+                if (opts.multiple && opts.cascade) {
+                    var hidden = self._hiddenBranches(selector, selected);
+                    hidden.forEach(function(nodeID) {
+                        if (selected.indexOf(nodeID) == -1) {
+                            selected.push(nodeID);
+                        }
+                    });
+                }
 
-                self._updateOptions(selector, self._getSelected(selector));
+                self._updateOptions(selector, selected);
                 self._serialize();
             });
 
