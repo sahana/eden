@@ -6685,6 +6685,7 @@ class S3CascadeSelectWidget(FormWidget):
                  filter=None,
                  leafonly=True,
                  represent=None,
+                 inline=False,
                  ):
         """
             Constructor
@@ -6712,6 +6713,8 @@ class S3CascadeSelectWidget(FormWidget):
 
         self.formstyle = formstyle
         self.represent = represent
+
+        self.inline = inline
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attr):
@@ -6775,10 +6778,10 @@ class S3CascadeSelectWidget(FormWidget):
 
             # The label for the selector
             row_id = "%s_level_%s" % (input_id, depth)
-            label = LABEL(T(level) if isinstance(level, basestring) else level,
-                          _for = row_id,
-                          _id = "%s__label" % row_id,
-                          )
+            label = T(level) if isinstance(level, basestring) else level
+            if self.inline:
+                label = "%s:" % label
+            label = LABEL(label, _for=row_id, _id="%s__label" % row_id)
             selectors.append((row_id, label, selector, None))
 
         # Build inline-rows from labels+selectors

@@ -225,15 +225,17 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
             if submit:
                 submit.add_class("small primary button")
 
-        if isinstance(label, LABEL):
-            label.add_class("left inline")
+        controls_width = "medium-12" if label is False else "medium-10"
+        controls_col = DIV(widget, _class="%s columns controls" % controls_width)
 
-        controls_col = DIV(widget, _class="medium-10 columns controls")
         if label:
+            if isinstance(label, LABEL):
+                label.add_class("left inline")
             label_col = DIV(label, _class="medium-2 columns")
         else:
+            if label is not False:
+                controls_col.add_class("medium-offset-2")
             label_col = ""
-            controls_col.add_class("medium-offset-2")
 
         if comment:
             comment = render_tooltip(label,
@@ -245,9 +247,7 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
             controls_col.append(comment)
 
         _class = "form-row row hide" if hidden else "form-row row"
-        return DIV(label_col,
-                   controls_col,
-                   _class=_class, _id=row_id)
+        return DIV(label_col, controls_col, _class=_class, _id=row_id)
 
     if args:
         row_id = form
@@ -341,7 +341,9 @@ def render_tooltip(label, comment, _class="tooltip"):
     if not comment:
         tooltip = ""
     elif isinstance(comment, (lazyT, basestring)):
-        if hasattr(label, "flatten"):
+        if label is False:
+            label = ""
+        elif hasattr(label, "flatten"):
             label = label.flatten().strip("*")
         tooltip = DIV(_class = _class,
                       _title = "%s|%s" % (label, comment))

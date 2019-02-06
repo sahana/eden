@@ -2687,6 +2687,7 @@ class S3HierarchyFilter(S3FilterWidget):
                                       #bulk_select = bulk_select,
                                       filter = opts.get("filter"),
                                       #none = opts.get("none"),
+                                      inline = True,
                                       )
         else:
             w = S3HierarchyWidget(lookup = opts.get("lookup"),
@@ -3053,7 +3054,7 @@ class S3FilterForm(object):
                 label_id = None
             if label:
                 label = LABEL("%s:" % label, _id=label_id, _for=widget_id)
-            else:
+            elif label is not False:
                 label = ""
             if not comment:
                 comment = ""

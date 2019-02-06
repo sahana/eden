@@ -732,7 +732,7 @@ def config(settings):
                          _class = "filter-search",
                          ),
             S3HierarchyFilter("organisation_organisation_type.organisation_type_id",
-                              label = T("Religion"),
+                              label = False, #T("Religion"),
                               widget = "cascade",
                               ),
             S3LocationFilter("org_facility.location_id",
