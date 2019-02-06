@@ -315,7 +315,12 @@ S3.search = {};
 
         // Clear hierarchy filters
         form.find('.hierarchy-filter').each(function() {
-            $(this).hierarchicalopts('reset');
+            var $this = $(this);
+            if ($this.hasClass('s3-cascade-select')) {
+                $this.cascadeSelect('reset');
+            } else {
+                $this.hierarchicalopts('reset');
+            }
         });
 
         // Clear age filters
@@ -605,7 +610,11 @@ S3.search = {};
             urlVar = $('#' + id + '-data').val();
             value = '';
 
-            values = $this.hierarchicalopts('get');
+            if ($this.hasClass('s3-cascade-select')) {
+                values = $this.cascadeSelect('get');
+            } else {
+                values = $this.hierarchicalopts('get');
+            }
             if (values) {
                 for (i=0; i < values.length; i++) {
                     if (value === '') {
@@ -906,7 +915,11 @@ S3.search = {};
                     toggleAdvanced(form);
                 }
                 values = q[expression];
-                $this.hierarchicalopts('set', values);
+                if ($this.hasClass('s3-cascade-select')) {
+                    $this.cascadeSelect('set', values);
+                } else {
+                    $this.hierarchicalopts('set', values);
+                }
             }
         });
 

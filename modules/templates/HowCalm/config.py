@@ -404,7 +404,7 @@ def config(settings):
         s3.prep = custom_prep
 
         return attr
-    
+
     settings.customise_msg_contact_controller = customise_msg_contact_controller
 
     # -------------------------------------------------------------------------
@@ -597,7 +597,7 @@ def config(settings):
                                       show_postcode = False,
                                       show_map = False,
                                       )
-        
+
 
         if not current.auth.s3_logged_in():
             # Simplified Form
@@ -671,16 +671,22 @@ def config(settings):
         f.widget = S3TagCheckboxWidget(on="Y", off="N")
         f.default = "N"
 
+        orgtype = components_get("organisation_type")
+        orgtype.configure(hierarchy_levels = ["Religion",
+                                              "Faith Tradition",
+                                              "Denomination",
+                                              "Judicatory Budget",
+                                              ],
+                          )
+
         crud_fields = ["name",
                        (T("Organization ID"), "org_id.value"),
                        S3SQLInlineLink("organisation_type",
                                        field = "organisation_type_id",
-                                       label = T("Religion"),
+                                       label = "", #T("Religion"),
                                        multiple = False,
-                                       widget = "hierarchy",
-                                       # TODO switch to cascade:
-                                       #widget = "cascade",
-                                       #levels = ["Level 1", "Level 2", "Level 3"],
+                                       #widget = "hierarchy",
+                                       widget = "cascade",
                                        ),
                        S3SQLInlineComponent(
                             "facebook",
@@ -727,6 +733,7 @@ def config(settings):
                          ),
             S3HierarchyFilter("organisation_organisation_type.organisation_type_id",
                               label = T("Religion"),
+                              widget = "cascade",
                               ),
             S3LocationFilter("org_facility.location_id",
                              label = T("Location"),

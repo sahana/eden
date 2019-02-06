@@ -65,8 +65,9 @@ from s3rest import S3Method
 from s3timeplot import S3TimeSeries
 from s3utils import s3_get_foreign_key, s3_str, s3_unicode, S3TypeConverter
 from s3validators import IS_UTC_DATE
-from s3widgets import ICON, S3CalendarWidget, S3GroupedOptionsWidget, \
-                      S3MultiSelectWidget, S3HierarchyWidget
+from s3widgets import ICON, S3CalendarWidget, S3CascadeSelectWidget, \
+                      S3GroupedOptionsWidget, S3HierarchyWidget, \
+                      S3MultiSelectWidget
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -2674,15 +2675,29 @@ class S3HierarchyFilter(S3FilterWidget):
                              .get_ui_hierarchy_filter_bulk_select_option()
         if bulk_select is None:
             bulk_select = opts.get("bulk_select", False)
-        w = S3HierarchyWidget(lookup = opts.get("lookup"),
-                              represent = opts.get("represent"),
-                              multiple = opts.get("multiple", True),
-                              leafonly = opts.get("leafonly", True),
-                              cascade = opts.get("cascade", False),
-                              bulk_select = bulk_select,
-                              filter = opts.get("filter"),
-                              none = opts.get("none"),
-                              )
+
+        if opts.get("widget") == "cascade":
+            formstyle = current.deployment_settings.get_ui_filter_formstyle()
+            w = S3CascadeSelectWidget(lookup = opts.get("lookup"),
+                                      formstyle = formstyle,
+                                      represent = opts.get("represent"),
+                                      multiple = opts.get("multiple", True),
+                                      leafonly = opts.get("leafonly", True),
+                                      #cascade = opts.get("cascade", False),
+                                      #bulk_select = bulk_select,
+                                      filter = opts.get("filter"),
+                                      #none = opts.get("none"),
+                                      )
+        else:
+            w = S3HierarchyWidget(lookup = opts.get("lookup"),
+                                  represent = opts.get("represent"),
+                                  multiple = opts.get("multiple", True),
+                                  leafonly = opts.get("leafonly", True),
+                                  cascade = opts.get("cascade", False),
+                                  bulk_select = bulk_select,
+                                  filter = opts.get("filter"),
+                                  none = opts.get("none"),
+                                  )
 
         # Render the widget
         widget = w(rfield.field, selected, **self._attr(resource))

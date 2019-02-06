@@ -100,6 +100,67 @@
         },
 
         /**
+         * Get the currently selected values
+         *
+         * @returns {Array} - the currently selected values
+         */
+        get: function() {
+
+            return this._deserialize();
+        },
+
+        /**
+         * Programmatically set the selected value(s)
+         *
+         * @param {integer|string|Array} value - the selected value(s)
+         *
+         * @returns {Widget} - the instance, for chaining
+         */
+        set: function(value) {
+
+            this.reset();
+
+            if (!value) {
+                return;
+            }
+            if (value.constructor !== Array) {
+                value = [value];
+            }
+            value = value.map(function(v) { return '' + v; });
+
+            var selectors = this.selectors;
+            this._updateOptions(selectors[selectors.length - 1], value);
+
+            this._serialize();
+
+            return this;
+        },
+
+        /**
+         * Clear the current selection and reset the widget
+         *
+         * @returns {Widget} - the instance, for chaining
+         */
+        reset: function() {
+
+            this.selectors.forEach(function(selector, index) {
+                selector.val('');
+                if (index > 0) {
+                    $('option', selector).remove();
+                }
+                var multiSelect = selector.multiselect('instance');
+                if (multiSelect) {
+                    multiSelect.refresh();
+                }
+            });
+
+            this._serialize();
+            this._toggleSelectors();
+
+            return this;
+        },
+
+        /**
          * Read the currently selected values from the hidden input
          *
          * @returns {Array} - the currently selected values (node IDs)
@@ -143,11 +204,13 @@
             }
 
             // Update the hidden input
-            this.hiddenInput.val(JSON.stringify(selection));
+            this.hiddenInput.val(JSON.stringify(selection))
+                            .trigger('select.s3hierarchy');
         },
 
         /**
-         * TODO docstring
+         * Initialize multiselect widgets for multiple-selectors,
+         * or refresh them if instances already exist
          */
         _multiSelectInit: function() {
 
@@ -164,7 +227,10 @@
         },
 
         /**
-         * TODO docstring
+         * Parse the hierarchy JSON data from the corresponding
+         * hidden input (.s3-cascade)
+         *
+         * @returns {object} - the hierarchy data
          */
         _getHierarchy: function() {
 

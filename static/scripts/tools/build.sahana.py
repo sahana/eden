@@ -445,6 +445,7 @@ def dojs(dogis = False, warnings = True):
                      "timeline",
                      "ui.addperson",
                      "ui.anonymize",
+                     "ui.cascadeselect",
                      "ui.charts",
                      "ui.contacts",
                      "ui.dashboard",

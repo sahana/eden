@@ -6687,7 +6687,19 @@ class S3CascadeSelectWidget(FormWidget):
                  represent=None,
                  ):
         """
-            TODO docstring
+            Constructor
+
+            @param lookup: the name of the hierarchical lookup-table
+            @param formstyle: the formstyle to use for the inline-selectors
+                              (defaults to s3.crud.formstyle)
+            @param levels: list of labels for the hierarchy levels, in
+                           top-down order
+            @param multiple: allow selection of multiple options
+            @param filter: resource filter expression to filter the
+                           selectable options
+            @param leafonly: allow only leaf-nodes to be selected
+            @param represent: representation function for the nodes
+                              (defaults to the represent of the field)
         """
 
         self.lookup = lookup
@@ -6744,12 +6756,10 @@ class S3CascadeSelectWidget(FormWidget):
         nodes = h.json(max_depth=len(levels)-1)
 
         # Intended DOM-ID of the input field
-        input_id = attr.get("_id")
-        if not input_id:
-            if isinstance(field, Field):
-                input_id = str(field).replace(".", "_")
-            else:
-                input_id = field.name.replace(".", "_")
+        if isinstance(field, Field):
+            input_id = str(field).replace(".", "_")
+        else:
+            input_id = field.name.replace(".", "_")
 
         # Prepare labels and selectors
         selectors = []
@@ -6778,7 +6788,9 @@ class S3CascadeSelectWidget(FormWidget):
         selector_rows = formstyle(None, selectors)
 
         # Construct the widget
-        widget_id = "%s-cascade" % input_id
+        widget_id = attr.get("_id")
+        if not widget_id:
+            widget_id = "%s-cascade" % input_id
         widget = DIV(self.hidden_input(input_id, field, value, **attr),
                      INPUT(_type = "hidden",
                            _class = "s3-cascade",
@@ -6854,7 +6866,7 @@ class S3CascadeSelectWidget(FormWidget):
         s3 = current.response.s3
 
         # Static script
-        if s3.debug or True: # TODO add minify-config
+        if s3.debug:
             script = "/%s/static/scripts/S3/s3.ui.cascadeselect.js" % \
                      request.application
         else:
