@@ -591,35 +591,36 @@ def config(settings):
         components_get = s3db.resource(tablename).components.get
 
         main_facility = components_get("main_facility")
-        f = main_facility.table.location_id
-        f.widget = S3LocationSelector(levels = False,
-                                      show_address = True,
-                                      show_postcode = False,
-                                      show_map = False,
-                                      )
+        mftable = main_facility.table
+        mftable.name.default = "Main" # NOT_NULL field
+        mftable.location_id.widget = S3LocationSelector(levels = False,
+                                                        show_address = True,
+                                                        show_postcode = False,
+                                                        show_map = False,
+                                                        )
 
+
+        def postprocess(form):
+            # Set Facility Name to Org name
+            form_vars_get = form.vars.get
+            ftable = s3db.org_facility
+            query = (ftable.organisation_id == form_vars_get("id")) & \
+                    (ftable.name == "Main")
+            current.db(query).update(name = form_vars_get("name"))
 
         if not current.auth.s3_logged_in():
             # Simplified Form
             from s3 import S3SQLCustomForm
 
             s3db.gis_location.addr_street.label = T("Address of Organization or House of Worship")
-            main_facility.table.name.default = "Main"
 
             crud_form = S3SQLCustomForm((T("Formal Name of Organization or House of Worship"), "name"),
                                         ("", "main_facility.location_id"),
+                                        postprocess = postprocess
                                         )
 
             s3db.configure("org_organisation",
                            crud_form = crud_form,
-                           )
-
-            def org_facility_onaccept(form):
-                # Set Facility Name to Org name
-                current.db(s3db.org_facility.id == form.vars.get("id")).update(name = current.request.post_vars.get("name"))
-
-            s3db.configure("org_facility",
-                           onaccept = org_facility_onaccept,
                            )
 
             return
@@ -723,7 +724,9 @@ def config(settings):
                        "comments",
                        ]
 
-        crud_form = S3SQLCustomForm(*crud_fields)
+        crud_form = S3SQLCustomForm(*crud_fields,
+                                    postprocess = postprocess
+                                    )
 
         from s3 import S3HierarchyFilter, S3LocationFilter, S3TextFilter#, S3OptionsFilter
         filter_widgets = [
@@ -783,11 +786,14 @@ def config(settings):
             else:
                 result = True
 
-            mine = r.get_vars.get("mine")
-            if mine:
-                from s3 import FS
-                _filter = (FS("id") == current.auth.user.organisation_id)
-                r.resource.add_filter(_filter)
+            if current.auth.s3_logged_in():
+                mine = r.get_vars.get("mine")
+                if mine:
+                    from s3 import FS
+                    _filter = (FS("id") == current.auth.user.organisation_id)
+                    r.resource.add_filter(_filter)
+            else:
+                r.method = "create"
 
             return result
         s3.prep = custom_prep

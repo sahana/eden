@@ -33,7 +33,7 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- Process the type hierarchy -->
+    <!-- Process the hierarchy -->
 
     <xsl:template name="ServiceHierarchy">
         <xsl:param name="Parent"/>
