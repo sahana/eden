@@ -1261,20 +1261,26 @@ class S3LocationFilter(S3FilterWidget):
 
         Configuration options:
 
+        ** Widget appearance:
+
         @keyword label: label for the widget
         @keyword comment: comment for the widget
         @keyword hidden: render widget initially hidden (="advanced" option)
+        @keyword no_opts: text to show if no options available
+
+        ** Options-lookup:
 
         @keyword levels: list of location hierarchy levels
-        @keyword filter: show filter for options (with "multiselect" widget)
-        @keyword header: show header in widget (with "multiselect" widget)
-        @keyword selectedList: number of selected items to show before
-                               collapsing into number of items
-                               (with "multiselect" widget)
-        @keyword no_opts: text to show if no options available
         @keyword resource: alternative resource to look up options
         @keyword lookup: field in the alternative resource to look up
         @keyword options: fixed set of options (list of gis_location IDs)
+
+        ** Multiselect-dropdowns:
+
+        @keyword search: show search-field to search for options
+        @keyword header: show header with bulk-actions
+        @keyword selectedList: number of selected items to show on
+                               button before collapsing into number of items
     """
 
     _class = "location-filter"
@@ -2103,40 +2109,44 @@ class S3OptionsFilter(S3FilterWidget):
 
         Configuration options:
 
+        ** Widget appearance:
+
         @keyword label: label for the widget
         @keyword comment: comment for the widget
         @keyword hidden: render widget initially hidden (="advanced" option)
-
         @keyword widget: widget to use:
                          "select", "multiselect" (default), or "groupedopts"
-        @keyword cols: number of columns of checkboxes
-                       (with "groupedopts" widget)
-        @keyword filter: show filter for options
-                         (with "multiselect" widget)
-        @keyword header: show header in widget
-                         (with "multiselect" widget)
-        @keyword selectedList: number of selected items to show before
-                                collapsing into number of items
-                                (with "multiselect" widget)
-        @keyword size: maximum size of multi-letter options groups
-                       (with "groupedopts" widget)
-        @keyword help_field: field in the referenced table to display on
-                             hovering over a foreign key option
-                             (with "groupedopts" widget)
-
         @keyword no_opts: text to show if no options available
-        @keyword none: label for explicit None-option in many-to-many fields
+
+        ** Options-lookup:
 
         @keyword resource: alternative resource to look up options
         @keyword lookup: field in the alternative resource to look up
-        @keyword represent: custom represent for looked-up options
-                            (overrides field representation method)
-
         @keyword options: fixed set of options (of {value: label} or
                           a callable that returns one)
+
+        ** Options-representation:
+
+        @keyword represent: custom represent for looked-up options
+                            (overrides field representation method)
         @keyword translate: translate the option labels in the fixed set
                             (looked-up option sets will use the
                             field representation method instead)
+        @keyword none: label for explicit None-option in many-to-many fields
+
+        ** multiselect-specific options:
+
+        @keyword search: show search-field to search for options
+        @keyword header: show header with bulk-actions
+        @keyword selectedList: number of selected items to show on
+                               button before collapsing into number of items
+
+        ** groupedopts-specific options:
+
+        @keyword cols: number of columns of checkboxes
+        @keyword size: maximum size of multi-letter options groups
+        @keyword help_field: field in the referenced table to display on
+                             hovering over a foreign key option
     """
 
     _class = "options-filter"
