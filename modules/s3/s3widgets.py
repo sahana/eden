@@ -6537,7 +6537,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
     """
 
     def __init__(self,
-                 filter = "auto",
+                 search = "auto",
                  header = True,
                  multiple = True,
                  selectedList = 3,
@@ -6548,15 +6548,15 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         """
             Constructor
 
-            @param filter: show an input field in the widget to filter for options,
+            @param search: show an input field in the widget to search for options,
                            can be:
-                                - True (always show filter field)
-                                - False (never show the filter field)
-                                - "auto" (show filter if more than 10 options)
-                                - <number> (show filter if more than <number> options)
+                                - True (always show search field)
+                                - False (never show the search field)
+                                - "auto" (show search if more than 10 options)
+                                - <number> (show search if more than <number> options)
             @param header: show a header for the options list, can be:
                                 - True (show the default Select All/Deselect All header)
-                                - False (don't show a header unless required for filter)
+                                - False (don't show a header unless required for search field)
             @param selectedList: maximum number of individual selected options to show
                                  on the widget button (before collapsing into "<number>
                                  selected")
@@ -6574,7 +6574,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                 * Style option to make it clearer that it's an Action item
         """
 
-        self.filter = filter
+        self.search = search
         self.header = header
         self.multiple = multiple
         self.selectedList = selectedList
@@ -6616,21 +6616,21 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         widget = w.widget(field, value, **attr)
         options_len = len(widget)
 
-        # Filter and header for multiselect options list
-        filter_opt = self.filter
+        # Search field and header for multiselect options list
+        search_opt = self.search
         header_opt = self.header
         if not multiple_opt and header_opt is True:
             # Select All / Unselect All doesn't make sense if multiple == False
             header_opt = False
-        if not isinstance(filter_opt, bool) and \
-           (filter_opt == "auto" or isinstance(filter_opt, (int, long))):
-            max_options = 10 if filter_opt == "auto" else filter_opt
+        if not isinstance(search_opt, bool) and \
+           (search_opt == "auto" or isinstance(search_opt, (int, long))):
+            max_options = 10 if search_opt == "auto" else search_opt
             if options_len > max_options:
-                filter_opt = True
+                search_opt = True
             else:
-                filter_opt = False
-        if filter_opt is True and header_opt is False:
-            # Must have at least "" as header to show the filter
+                search_opt = False
+        if search_opt is True and header_opt is False:
+            # Must have at least "" as header to show the search field
             header_opt = ""
 
         # Other options:
@@ -6664,7 +6664,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                   create
                   )
 
-        if filter_opt:
+        if search_opt:
             script = '''%s.multiselectfilter({label:'',placeholder:'%s'})''' % \
                 (script, T("Search"))
         jquery_ready = current.response.s3.jquery_ready

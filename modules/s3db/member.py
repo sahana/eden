@@ -291,7 +291,7 @@ class S3MembersModel(S3Model):
             report_fields.insert(1, (settings.get_hrm_root_organisation_label(), "organisation_id$root_organisation"))
         else:
             org_filter = S3OptionsFilter("organisation_id",
-                                         filter = True,
+                                         search = True,
                                          header = "",
                                          # Can be unhidden in customise_xx_resource if there is a need to use a default_filter
                                          hidden = True,

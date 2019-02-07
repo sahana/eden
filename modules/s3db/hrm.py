@@ -9768,7 +9768,7 @@ def hrm_human_resource_filters(resource_type = None,
                                             ))
         else:
             append_filter(S3OptionsFilter("organisation_id",
-                                          filter = True,
+                                          search = True,
                                           header = "",
                                           #hidden = True,
                                           ))

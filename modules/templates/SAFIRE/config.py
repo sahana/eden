@@ -860,7 +860,7 @@ def config(settings):
                 result = standard_prep(r)
                 if not result:
                     return False
-            
+
             if r.method != "plan":
                 f = r.table.action_plan
                 f.readable = f.writable = False
@@ -963,7 +963,7 @@ def config(settings):
                                     S3SQLInlineLink("organisation_type",
                                                     field = "organisation_type_id",
                                                     # Default 10 options just triggers which adds unnecessary complexity to a commonly-used form & commonly an early one (create Org when registering)
-                                                    filter = False,
+                                                    search = False,
                                                     label = T("Type"),
                                                     multiple = False,
                                                     widget = "multiselect",
@@ -1108,7 +1108,7 @@ def config(settings):
                                               subject = "%s: Task assigned to you" % settings.get_system_name_short(),
                                               message = message,
                                               contact_method = task_notification)
-            
+
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
 

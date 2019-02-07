@@ -536,7 +536,7 @@ def alert():
                     S3OptionsFilter(
                         "human_resource_id$organisation_id",
                         widget="multiselect",
-                        filter=True,
+                        search=True,
                         header="",
                         hidden=True,
                     ),

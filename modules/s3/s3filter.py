@@ -1396,7 +1396,7 @@ class S3LocationFilter(S3FilterWidget):
                 attr["_name"] = name
                 # Find relevant values to pre-populate the widget
                 _values = values.get("%s$%s__%s" % (fname, level, operator))
-                w = S3MultiSelectWidget(filter = opts.get("filter", "auto"),
+                w = S3MultiSelectWidget(search = opts.get("search", "auto"),
                                         header = header_opt,
                                         selectedList = opts.get("selectedList", 3),
                                         noneSelectedText = T("Select %(location)s") % \
@@ -2235,7 +2235,7 @@ class S3OptionsFilter(S3FilterWidget):
         else:
             # Default widget_type = "multiselect"
             widget_class = "multiselect-filter-widget"
-            w = S3MultiSelectWidget(filter = opts_get("filter", "auto"),
+            w = S3MultiSelectWidget(search = opts_get("search", "auto"),
                                     header = opts_get("header", False),
                                     selectedList = opts_get("selectedList", 3),
                                     noneSelectedText = opts_get("noneSelectedText", "Select"),
@@ -2742,7 +2742,7 @@ class S3HierarchyFilter(S3FilterWidget):
         for key, value in get_vars.items():
 
             if key.startswith(selector):
-                selectors, op, invert = S3URLQuery.parse_expression(key)
+                selectors, op = S3URLQuery.parse_expression(key)[:2]
             else:
                 continue
             if op != "typeof" or len(selectors) != 1:
@@ -2751,7 +2751,7 @@ class S3HierarchyFilter(S3FilterWidget):
             rfield = resource.resolve_selector(selectors[0])
             if rfield.field:
                 values = S3URLQuery.parse_value(value)
-                hierarchy, field, nodeset, none = resolve(rfield.field, values)
+                field, nodeset, none = resolve(rfield.field, values)[1:]
                 if field and (nodeset or none):
                     if nodeset is None:
                         nodeset = set()
@@ -3398,7 +3398,8 @@ class S3Filter(S3Method):
         return options
 
     # -------------------------------------------------------------------------
-    def _delete(self, r, **attr):
+    @staticmethod
+    def _delete(r, **attr):
         """
             Delete a filter, responds to POST filter.json?delete=
 

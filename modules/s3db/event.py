@@ -4923,7 +4923,7 @@ class S3EventSitRepModel(S3Model):
                                            )
         else:
             org_filter = S3OptionsFilter("organisation_id",
-                                         #filter = True,
+                                         #search = True,
                                          #header = "",
                                          )
 
