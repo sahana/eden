@@ -272,7 +272,6 @@ s3_crud.submit_button = submit_button
 s3_crud.confirm_delete = T("Do you really want to delete these records?")
 s3_crud.archive_not_delete = settings.get_security_archive_not_delete()
 s3_crud.navigate_away_confirm = settings.get_ui_navigate_away_confirm()
-s3_crud.auto_open_update = settings.get_ui_auto_open_update()
 
 # Content Type Headers, default is application/xml for XML formats
 # and text/x-json for JSON formats, other content types must be

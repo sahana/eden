@@ -108,14 +108,13 @@ def staff():
             if r.id:
                 if r.method not in ("profile", "delete"):
                     # Redirect to person controller
-                    vars = {
-                        "human_resource.id": r.id,
-                        "group": "staff"
-                    }
-                    args = []
+                    vars = {"human_resource.id": r.id,
+                            "group": "staff"
+                            }
+                    args = [r.method]
                     if r.representation == "iframe":
                         vars["format"] = "iframe"
-                        args = [r.method]
+                        #args = [r.method]
                     redirect(URL(f="person", vars=vars, args=args))
             else:
                 if r.method == "import":
@@ -157,7 +156,8 @@ def staff():
     def postp(r, output):
         if r.interactive:
             if not r.component:
-                s3_action_buttons(r, deletable=settings.get_hrm_deletable())
+                s3_action_buttons(r,
+                                  deletable = settings.get_hrm_deletable())
                 if "msg" in settings.modules and \
                    settings.get_hrm_compose_button() and \
                    auth.permission.has_permission("update", c="hrm", f="compose"):

@@ -1998,6 +1998,11 @@ class S3Config(Storage):
 
         return self.ui.get("auto_open_update", False)
 
+    def get_ui_open_read(self):
+        """ Render "Open" action buttons as Read, even if user has permission to Update """
+
+        return self.ui.get("open_read", False)
+
     def get_ui_default_cancel_button(self):
         """
             Whether to show a default cancel button in standalone

@@ -76,6 +76,9 @@ def config(settings):
     settings.auth.record_approval_required_for = ("org_organisation",
                                                   )
 
+    # Open records in read mode rather then edit by default
+    settings.ui.open_read = True
+
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
@@ -268,16 +271,14 @@ def config(settings):
                 record_data_append(TR(TH("%s: " % T("Organization ID")),
                                       org_id.value))
 
-            otypetable = s3db.org_organisation_type
             ltable = s3db.org_organisation_organisation_type
-            query = (ltable.organisation_id == record_id) & \
-                    (ltable.organisation_type_id == otypetable.id)
-            religion = db(query).select(otypetable.name,
+            query = (ltable.organisation_id == record_id)
+            religion = db(query).select(ltable.organisation_type_id,
                                         limitby = (0, 1)
                                         ).first()
             if religion:
                 record_data_append(TR(TH("%s: " % T("Religion")),
-                                      religion.name))
+                                      ltable.organisation_type_id.represent(religion.organisation_type_id)))
 
             website = record.website
             if website:
@@ -338,18 +339,63 @@ def config(settings):
     def customise_hrm_human_resource_resource(r, tablename):
 
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create Type"),
-            title_display = T("Type Details"),
-            title_list = T("Type Catalog"),
-            title_update = T("Edit Type"),
-            label_list_button = T("List Types"),
-            label_delete_button = T("Delete Type"),
-            msg_record_created = T("Type added"),
-            msg_record_modified = T("Type updated"),
-            msg_record_deleted = T("Type deleted"),
+            label_create = T("Create Contact"),
+            title_display = T("Contact Details"),
+            title_list = T("Contact Catalog"),
+            title_update = T("Edit Contact"),
+            label_list_button = T("List Contacts"),
+            label_delete_button = T("Delete Contact"),
+            msg_record_created = T("Contact added"),
+            msg_record_modified = T("Contact updated"),
+            msg_record_deleted = T("Contact deleted"),
             msg_list_empty = T("Currently no entries in the catalog"))
 
+        # Ensure we have the filtered components
+        customise_pr_person_resource(r, "pr_person")
+
+        list_fields = [(T("Person Name"), "person_id"),
+                       (T("Type"), "job_title_id"),
+                       (T("Languages Spoken"), "person_id$languages_spoken.value"),
+                       (T("Religious Title"), "person_id$religious_title.value"),
+                       (T("Position Title"), "person_id$position_title.value"),
+                       (T("ECDM"), "person_id$em_comms.value"),
+                       ]
+
+        current.s3db.configure(tablename,
+                               list_fields = list_fields,
+                               )
+
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_human_resource_controller(**attr):
+
+        s3 = current.response.s3
+
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            mine = r.get_vars.get("mine")
+            if mine:
+                from s3 import FS
+                _filter = (FS("organisation_id") == current.auth.user.organisation_id)
+                r.resource.add_filter(_filter)
+                s3.crud_strings["hrm_human_resource"].title_list = T("My Contacts")
+
+            return result
+        s3.prep = custom_prep
+
+        # Never used: always open individual records in person perspective
+        #attr["rheader"] = howcalm_rheader
+
+        return attr
+
+    settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
 
     # -------------------------------------------------------------------------
     def customise_msg_contact_resource(r, tablename):
@@ -444,6 +490,11 @@ def config(settings):
                                              "filterby": {"tag": "oem_ready"},
                                              "multiple": False,
                                              },
+                                            {"name": "oem_want",
+                                             "joinby": "site_id",
+                                             "filterby": {"tag": "oem_want"},
+                                             "multiple": False,
+                                             },
                                             ),
                             )
 
@@ -469,7 +520,15 @@ def config(settings):
         f = oem_ready.table.value
         f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
         f.represent = lambda v: T("yes") if v == "Y" else T("no")
-        from s3 import S3TagCheckboxWidget
+        #from s3 import S3TagCheckboxWidget
+        f.widget = S3TagCheckboxWidget(on="Y", off="N")
+        f.default = "N"
+
+        oem_want = components_get("oem_want")
+        f = oem_want.table.value
+        f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
+        f.represent = lambda v: T("yes") if v == "Y" else T("no")
+        #from s3 import S3TagCheckboxWidget
         f.widget = S3TagCheckboxWidget(on="Y", off="N")
         f.default = "N"
 
@@ -481,16 +540,22 @@ def config(settings):
                        (T("Building Status"), "status.facility_status"),
                        (T("Call in Emergency"), "em_call.value"),
                        (T("OEM Ready Receiving Center"), "oem_ready.value"),
+                       (T("Want to be an OEM Ready Receiving Center"), "oem_want.value"),
                        "comments",
                        ]
 
         crud_form = S3SQLCustomForm(*crud_fields)
 
-        list_fields = ["organisation_id",
-                       "name",
+        list_fields = [#"organisation_id",
+                       #"name",
+                       (T("Physical Address"), "location_id$addr_street"),
                        (T("# of Congregations"), "congregations.value"),
-                       (T("OEM Ready Receiving Center"), "oem_ready.value"),
+                       (T("Building Status"), "status.facility_status"),
+                       (T("Call?"), "em_call.value"),
+                       (T("OEM RRC"), "oem_ready.value"),
                        ]
+        if r.function == "facility":
+            list_fields.insert(0, "organisation_id")
 
         s3db.configure("org_facility",
                        crud_form = crud_form,
@@ -519,6 +584,7 @@ def config(settings):
                 from s3 import FS
                 _filter = (FS("organisation_id") == current.auth.user.organisation_id)
                 r.resource.add_filter(_filter)
+                s3.crud_strings["org_facility"].title_list = T("My Facilities")
 
             return result
         s3.prep = custom_prep
@@ -628,6 +694,7 @@ def config(settings):
         from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE
 
         from s3 import IS_INT_AMOUNT, \
+                       S3Represent, \
                        S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
         s3db.gis_location.addr_street.label = T("Facility Address")
@@ -676,9 +743,13 @@ def config(settings):
         orgtype.configure(hierarchy_levels = ["Religion",
                                               "Faith Tradition",
                                               "Denomination",
-                                              "Judicatory Budget",
+                                              "Judicatory Body",
                                               ],
                           )
+
+        s3db.org_organisation_organisation_type.organisation_type_id.represent = S3Represent(lookup = "org_organisation_type",
+                                                                                             hierarchy = "%s, %s"
+                                                                                             )
 
         crud_fields = ["name",
                        (T("Organization ID"), "org_id.value"),
@@ -689,6 +760,7 @@ def config(settings):
                                        widget = "cascade",
                                        leafonly = False,
                                        #cascade = True,
+                                       represent = S3Represent(lookup = "org_organisation_type"),
                                        ),
                        S3SQLInlineComponent(
                             "facebook",
@@ -792,6 +864,7 @@ def config(settings):
                     from s3 import FS
                     _filter = (FS("id") == current.auth.user.organisation_id)
                     r.resource.add_filter(_filter)
+                    s3.crud_strings["org_organisation"].title_list = T("My Organizations")
             else:
                 r.method = "create"
 
@@ -1034,7 +1107,7 @@ def config(settings):
                        (T("Languages Spoken"), "languages_spoken.value"),
                        (T("Religious Title"), "religious_title.value"),
                        (T("Position Title"), "position_title.value"),
-                       (T("Emergency Communications Decision-maker"), "em_comms.value"),
+                       (T("ECDM"), "em_comms.value"),
                        ]
 
         s3db.configure("pr_person",
@@ -1063,6 +1136,12 @@ def config(settings):
                 from s3 import FS
                 _filter = (FS("human_resource.organisation_id") == current.auth.user.organisation_id)
                 r.resource.add_filter(_filter)
+                s3.crud_strings["pr_person"].title_list = T("My Contacts")
+
+            elif r.get_vars.get("personal"):
+                from gluon import URL
+                from gluon.tools import redirect
+                redirect(URL(args=[current.auth.s3_logged_in_person()]))
 
             return result
         s3.prep = custom_prep
