@@ -7652,7 +7652,7 @@ def hrm_human_resource_controller(extra_filter = None):
                 else:
                     fn = "person"
                 redirect(URL(f = fn,
-                             args = [r.method]
+                             args = [r.method],
                              vars = {"human_resource.id" : r.id,
                                      "group" : group
                                      },
