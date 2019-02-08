@@ -284,15 +284,9 @@ def person():
                 resource.configure(filter_widgets = filter_widgets)
 
             # Autocomplete search-method
-            if r.function == "person_search":
-                # Autocomplete-Widget (e.g. response actions)
-                search_fields = tuple(name_fields) + ("pe_label",)
-            else:
-                # Add-Person-Widget (family members)
-                search_fields = tuple(name_fields)
             s3db.set_method("pr", "person",
                             method = "search_ac",
-                            action = s3db.pr_PersonSearchAutocomplete(search_fields),
+                            action = s3db.pr_PersonSearchAutocomplete(name_fields),
                             )
 
         elif r.component_name == "case_activity":
@@ -326,7 +320,7 @@ def person():
                                               filterby = "organisation_id",
                                               filter_opts = (root_org,),
                                               ))
-            # TODO when using inline responses, filter themes to root org
+            # TODO when using inline measures, filter themes to root org
 
         return True
     s3.prep = prep
@@ -344,11 +338,24 @@ def person_search():
         if r.method != "search_ac":
             return False
 
-        # Filter to persons who have a case registered
-        resource = r.resource
-        resource.add_filter(FS("br_case.id") != None)
-        return True
+        # Filter for valid+open cases
+        query = (FS("case.id") != None) & \
+                (FS("case.invalid") == False) & \
+                (FS("case.status_id$is_closed") == False)
+        r.resource.add_filter(query)
 
+        # Auto-detect name parts from current name format
+        NAMES = ("first_name", "middle_name", "last_name")
+        keys = s3base.StringTemplateParser.keys(settings.get_pr_name_format())
+        name_fields = [fn for fn in keys if fn in NAMES]
+
+        # Autocomplete search-method including pe_label
+        search_fields = tuple(name_fields) + ("pe_label",)
+        s3db.set_method("pr", "person",
+                        method = "search_ac",
+                        action = s3db.pr_PersonSearchAutocomplete(search_fields),
+                        )
+        return True
     s3.prep = prep
 
     return s3_rest_controller("pr", "person")
@@ -733,6 +740,57 @@ def case_activity():
         resource.configure(insertable = False,
                            deletable = False,
                            )
+
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# =============================================================================
+# Assistance
+#
+def assistance_status():
+    """ Assistance Statuses: RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def assistance_type():
+    """ Types of Assistance: RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def assistance_measure():
+    """ Assistance Measures: RESTful CRUD controller """
+
+    def prep(r):
+
+        resource = r.resource
+        table = resource.table
+
+        # Populate human_resource_id with current user
+        human_resource_id = auth.s3_logged_in_human_resource()
+        if human_resource_id:
+            table.human_resource_id.default = human_resource_id
+
+        # Filter for valid+open cases
+        query = (FS("person_id$case.id") != None) & \
+                (FS("person_id$case.invalid") == False) & \
+                (FS("person_id$case.status_id$is_closed") == False)
+
+        resource.add_filter(query)
+
+        # Filter for "my measures"
+        crud_strings = response.s3.crud_strings["br_assistance_measure"]
+        mine = get_vars.get("mine")
+        if mine == "1":
+            if human_resource_id:
+                query = FS("human_resource_id") == human_resource_id
+            else:
+                query = FS("human_resource_id").belongs(set())
+            resource.add_filter(query)
+            crud_strings.title_list = T("My Measures")
 
         return True
     s3.prep = prep

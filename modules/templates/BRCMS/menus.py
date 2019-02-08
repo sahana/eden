@@ -181,13 +181,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
         use_activities = settings.get_br_case_activities()
         urgent_activities = use_activities and settings.get_br_case_activity_urgent_option()
 
+        manage_assistance = settings.get_br_manage_assistance()
+
         menu = M(c="br")
 
         # Statistics sub-memnu (common for all roles)
         statistics = M("Statistics", link=False)(
                         M("Cases", f="person", m="report"),
                         M("Activities", f="case_activity", m="report", check=use_activities),
-                        #M("Responses"),
+                        M("Measures", f="assistance_measure", m="report", check=manage_assistance),
                         )
 
         # Registry sub-menu
@@ -204,16 +206,17 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       vars={"mine": "1", "~.priority": "0"}, check=urgent_activities
                       ),
                     ),
-                 #M("My Responses")(
-                 #   M("Calendar"),
-                 #   ),
+                 M("My Measures", f="assistance_measure",
+                   vars={"mine": "1"}, check=manage_assistance)(
+                    #M("Calendar"),
+                    ),
                  #M("Appointments"),
                  statistics,
                  M("Compilations", link=False)(
                     M("Current Cases", f="person", vars={"closed": "0"}),
                     M("All Cases", f="person"),
                     M("All Activities", f="case_activity", check=use_activities),
-                    #M("All Responses"),
+                    M("All Measures", f="assistance_measure", check=manage_assistance),
                     ),
                  )
         else:
@@ -227,9 +230,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       vars={"~.priority": "0"}, check=urgent_activities,
                       ),
                     ),
-                 #M("Responses")(
-                 #   M("Overview"),
-                 #   ),
+                 M("Measures", f="assistance_measure", check=manage_assistance)(
+                    #M("Overview"),
+                    ),
                  #M("Appointments"),
                  statistics,
                  M("Compilations", link=False)(
@@ -249,6 +252,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                   ),
                 M("Need Types", f="need",
                   check = lambda i: not settings.get_br_needs_org_specific(),
+                  ),
+                M("Assistance Statuses", f="assistance_status",
+                  check = lambda i: settings.get_br_manage_assistance(),
+                  ),
+                M("Assistance Types", f="assistance_type",
+                  check = lambda i: settings.get_br_assistance_types(),
                   ),
                 ),
              )

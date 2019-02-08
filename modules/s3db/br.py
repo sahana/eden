@@ -30,7 +30,7 @@
 __all__ = ("BRCaseModel",
            "BRNeedsModel",
            "BRCaseActivityModel",
-           "BRResponseModel",
+           "BRAssistanceModel",
            "BRAppointmentModel",
            "BRCaseEventModel",
            "BRPaymentModel",
@@ -1231,22 +1231,264 @@ class BRNeedsModel(S3Model):
                 }
 
 # =============================================================================
-class BRVulnerabilityModel(S3Model):
-    pass
+# Assistance Models
+# =============================================================================
+class BRAssistanceModel(S3Model):
+    """
+        Generic model to track individual measures of assistance
+    """
 
-# =============================================================================
-# Response Action Models
-# =============================================================================
-class BRResponseModel(S3Model):
-    """
-        Model to document individual measures taken in support of a case
-    """
-    pass
+    names = ("br_assistance_measure",
+             "br_assistance_status",
+             "br_assistance_type",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        settings = current.deployment_settings
+        s3 = current.response.s3
+        crud_strings = s3.crud_strings
+
+        define_table = self.define_table
+        configure = self.configure
+
+        labels = br_terminology()
+        NONE = current.messages["NONE"]
+
+        # ---------------------------------------------------------------------
+        # Types of Assistance
+        #
+        tablename = "br_assistance_type"
+        define_table(tablename,
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Type"),
+            title_display = T("Assistance Type Details"),
+            title_list = T("Types of Assistance"),
+            title_update = T("Edit Type"),
+            label_list_button = T("List Types"),
+            label_delete_button = T("Delete Type"),
+            msg_record_created = T("Type created"),
+            msg_record_modified = T("Type updated"),
+            msg_record_deleted = T("Type deleted"),
+            msg_list_empty = T("No Types of Assistance currently defined"),
+        )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        assistance_type_id = S3ReusableField(
+                                "assistance_type_id",
+                                "reference %s" % tablename,
+                                label = T("Type of Assistance"),
+                                represent = represent,
+                                requires = IS_EMPTY_OR(
+                                            IS_ONE_OF(db, "%s.id" % tablename,
+                                                      represent,
+                                                      )),
+                                sortby = "name",
+                                )
+
+        # ---------------------------------------------------------------------
+        # Themes of Assistance TODO
+        #
+
+        # ---------------------------------------------------------------------
+        # Status of Assistance
+        #
+        tablename = "br_assistance_status"
+        define_table(tablename,
+                     Field("workflow_position", "integer",
+                           label = T("Workflow Position"),
+                           requires = IS_INT_IN_RANGE(0, None),
+                           ),
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("is_default", "boolean",
+                           default = False,
+                           label = T("Default Initial Status"),
+                           ),
+                     Field("is_termination", "boolean",
+                           default = False,
+                           label = T("Terminates the Measure"),
+                           ),
+                     Field("is_default_termination", "boolean",
+                           default = False,
+                           label = T("Default Termination"),
+                           ),
+                     Field("color",
+                           requires = IS_HTML_COLOUR(),
+                           widget = S3ColorPickerWidget(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table Configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  onaccept = self.assistance_status_onaccept,
+                  orderby = "%s.workflow_position" % tablename,
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Status"),
+            title_display = T("Status Details"),
+            title_list = T("Assistance Statuses"),
+            title_update = T("Edit Status"),
+            label_list_button = T("List Statuses"),
+            label_delete_button = T("Delete Status"),
+            msg_record_created = T("Status created"),
+            msg_record_modified = T("Status updated"),
+            msg_record_deleted = T("Status deleted"),
+            msg_list_empty = T("No Assistance Statuses currently defined"),
+        )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        assistance_status_id = S3ReusableField(
+                                "status_id",
+                                "reference %s" % tablename,
+                                label = T("Status"),
+                                represent = represent,
+                                requires = IS_ONE_OF(db, "%s.id" % tablename,
+                                                     represent,
+                                                     orderby = "workflow_position",
+                                                     sort = False,
+                                                     zero = None,
+                                                     ),
+                                sortby = "workflow_position",
+                                )
+
+        # ---------------------------------------------------------------------
+        # Measures of Assistance
+        #
+        use_type = settings.get_br_assistance_types()
+
+        tablename = "br_assistance_measure"
+        define_table(tablename,
+                     # Beneficiary
+                     self.pr_person_id(
+                         label = labels.CASE,
+                         widget = S3PersonAutocompleteWidget(controller="br"),
+                         empty = False,
+                         ),
+                     # TODO option to use start/end date-time (for calendar)
+                     s3_date(label = T("Date"),
+                             default = "now",
+                             ),
+                     assistance_type_id(
+                         readable=use_type,
+                         writable=use_type,
+                         ),
+                     assistance_status_id(),
+                     self.hrm_human_resource_id(widget=None,
+                                                ),
+                     Field("hours", "double",
+                           label = T("Effort (Hours)"),
+                           requires = IS_EMPTY_OR(
+                                       IS_FLOAT_IN_RANGE(0.0, None)),
+                           represent = lambda hours: "%.2f" % hours if hours else NONE,
+                           widget = S3HoursWidget(precision = 2,
+                                                  ),
+                           ),
+                     s3_comments(label = T("Details"),
+                                 comment = None,
+                                 represent = lambda v: s3_text_represent(v, lines=8),
+                                 ),
+                     *s3_meta_fields())
+
+        # List_fields
+        # TODO
+
+        # Filter widgets
+        # TODO
+
+        # CRUD Form
+        # TODO
+
+        # Table Configuration
+        # TODO
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Measure"),
+            title_display = T("Measure Details"),
+            title_list = T("Measures"),
+            title_update = T("Edit Measure"),
+            label_list_button = T("List Measures"),
+            label_delete_button = T("Delete Measure"),
+            msg_record_created = T("Measure created"),
+            msg_record_modified = T("Measure updated"),
+            msg_record_deleted = T("Measure deleted"),
+            msg_list_empty = T("No Measures currently registered"),
+        )
+
+        # Components
+        # TODO
+
+        # Reusable field
+        # TODO
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def assistance_status_onaccept(form):
+        """
+            Onaccept routine for assistance statuses:
+            - only one status can be the default
+            - only one status can be the default termination
+
+            @param form: the FORM
+        """
+
+        form_vars = form.vars
+        try:
+            record_id = form_vars.id
+        except AttributeError:
+            record_id = None
+        if not record_id:
+            return
+
+        table = current.s3db.br_assistance_status
+        db = current.db
+
+        if form_vars.get("is_default"):
+            db(table.id != record_id).update(is_default = False)
+
+        if form_vars.get("is_default_termination"):
+            db(table.id == record_id).update(is_termination = True)
+            db(table.id != record_id).update(is_default_termination = False)
 
 # =============================================================================
 class BRDistributionModel(S3Model):
     """
-        Model to process+track item distributions to beneficiaries
+        Model to process+track relief item distributions to beneficiaries
     """
     pass
 
@@ -1343,6 +1585,10 @@ class BRNotesModel(S3Model):
 
 # =============================================================================
 class BRReferralModel(S3Model):
+    pass
+
+# =============================================================================
+class BRVulnerabilityModel(S3Model):
     pass
 
 # =============================================================================

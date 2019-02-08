@@ -2828,6 +2828,18 @@ class S3Config(Storage):
         """
         return self.br.get("needs_org_specific", True)
 
+    def get_br_manage_assistance(self):
+        """
+            Track individual measures of assistance
+        """
+        return self.br.get("manage_assistance", True)
+
+    def get_br_assistance_types(self):
+        """
+            Use assistance type categories
+        """
+        return self.br.get("assistance_types", True)
+
     # -------------------------------------------------------------------------
     # CAP: Common Alerting Protocol
     #

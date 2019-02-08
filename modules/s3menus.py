@@ -617,7 +617,13 @@ class S3OptionsMenu(object):
                           ),
                         M("Need Types", f="need",
                           check = lambda i: not settings.get_br_needs_org_specific(),
-                          )
+                          ),
+                        M("Assistance Statuses", f="assistance_status",
+                          check = lambda i: settings.get_br_manage_assistance(),
+                          ),
+                        M("Assistance Types", f="assistance_type",
+                          check = lambda i: settings.get_br_assistance_types(),
+                          ),
                         ),
                     )
 
