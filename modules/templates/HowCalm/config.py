@@ -78,6 +78,7 @@ def config(settings):
 
     # Open records in read mode rather then edit by default
     settings.ui.open_read = True
+    settings.ui.update_label = "Edit"
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -336,6 +337,24 @@ def config(settings):
         return rheader
 
     # -------------------------------------------------------------------------
+    def hrm_list_fields():
+        """
+            DRY Helper
+        """
+
+        list_fields = [(T("Person Name"), "person_id"),
+                       (T("Type"), "job_title_id"),
+                       (T("Languages Spoken"), "person_id$languages_spoken.value"),
+                       (T("Religious Title"), "person_id$religious_title.value"),
+                       (T("Position Title"), "person_id$position_title.value"),
+                       (T("ECDM"), "person_id$em_comms.value"),
+                       ]
+
+        current.s3db.configure("hrm_human_resource",
+                               list_fields = list_fields,
+                               )
+
+    # -------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
 
         current.response.s3.crud_strings[tablename] = Storage(
@@ -353,17 +372,7 @@ def config(settings):
         # Ensure we have the filtered components
         customise_pr_person_resource(r, "pr_person")
 
-        list_fields = [(T("Person Name"), "person_id"),
-                       (T("Type"), "job_title_id"),
-                       (T("Languages Spoken"), "person_id$languages_spoken.value"),
-                       (T("Religious Title"), "person_id$religious_title.value"),
-                       (T("Position Title"), "person_id$position_title.value"),
-                       (T("ECDM"), "person_id$em_comms.value"),
-                       ]
-
-        current.s3db.configure(tablename,
-                               list_fields = list_fields,
-                               )
+        hrm_list_fields()
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
@@ -387,8 +396,35 @@ def config(settings):
                 r.resource.add_filter(_filter)
                 s3.crud_strings["hrm_human_resource"].title_list = T("My Contacts")
 
+            hrm_list_fields()
+
             return result
         s3.prep = custom_prep
+
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standardstandard_postpprep
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.interactive and r.method == "summary":
+
+                # Custom Create Button
+                from gluon import A, DIV, URL
+                add_btn = DIV(DIV(DIV(A(T("Create Contact"),
+                                        _class = "action-btn",
+                                        _href = URL(c="pr", f="person", args="create"),
+                                        ),
+                                      _id = "list-btn-add",
+                                      ),
+                                  _class = "widget-container with-tabs",
+                                  ),
+                              _class = "section-container",
+                              )
+                output["common"][0] = add_btn
+
+            return output
+        s3.postp = custom_postp
 
         # Never used: always open individual records in person perspective
         #attr["rheader"] = howcalm_rheader
@@ -678,7 +714,10 @@ def config(settings):
             # Simplified Form
             from s3 import S3SQLCustomForm
 
-            s3db.gis_location.addr_street.label = T("Address of Organization or House of Worship")
+            f = s3db.gis_location.addr_street
+            # Not Working
+            #f.default = current.messages["NONE"] # Can't be empty, otherwise widget validator assumes it's an Lx location!
+            f.label = T("Address of Organization or House of Worship")
 
             crud_form = S3SQLCustomForm((T("Formal Name of Organization or House of Worship"), "name"),
                                         ("", "main_facility.location_id"),
@@ -697,7 +736,10 @@ def config(settings):
                        S3Represent, \
                        S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
-        s3db.gis_location.addr_street.label = T("Facility Address")
+        f = s3db.gis_location.addr_street
+        # Not Working
+        #f.default = current.messages["NONE"] # Can't be empty, otherwise widget validator assumes it's an Lx location!
+        f.label =  T("Facility Address")
 
         integer_represent = IS_INT_AMOUNT.represent
 
