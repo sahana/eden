@@ -157,7 +157,22 @@ def staff():
     def postp(r, output):
         if r.interactive:
             if not r.component:
-                s3_action_buttons(r, deletable=settings.get_hrm_deletable())
+                deletable = settings.get_hrm_deletable()
+                # @ToDo: DRY with models/00_utils.py & modules/s3db/hrm.py hrm_human_resource_controller()
+                editable = s3db.get_config("hrm_human_resource", "editable", True)
+                if settings.get_ui_auto_open_update():
+                    # "Open" action button without explicit method
+                    editable = "auto" if editable else False
+                    update_url = r.resource.crud._linkto(r, update=editable)("[id]")
+                else:
+                    # "Open" action button with explicit read|update method
+                    editable = editable and \
+                               not current.auth.permission.ownership_required("update", table)
+                    update_url = None
+                s3_action_buttons(r,
+                                  deletable = deletable,
+                                  editable = editable,
+                                  update_url = update_url)
                 if "msg" in settings.modules and \
                    settings.get_hrm_compose_button() and \
                    auth.permission.has_permission("update", c="hrm", f="compose"):

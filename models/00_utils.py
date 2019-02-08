@@ -268,9 +268,9 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
             get_config = s3db.get_config
             listadd = get_config(tablename, "listadd", True)
             editable = get_config(tablename, "editable", True)
-            if s3.crud.auto_open_update:
+            if settings.get_ui_auto_open_update():
                 # "Open" action button without explicit method
-                editable = editable and "auto"
+                editable = "auto" if editable else False
             else:
                 # "Open" action button with explicit read|update method
                 editable = editable and \

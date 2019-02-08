@@ -7669,6 +7669,8 @@ def hrm_human_resource_controller(extra_filter = None):
                 if r.controller == "deploy":
                     # Application is deleted, not HR
                     deletable = True
+                    # Allow action_buttons to look up editability
+                    editable = True
                     # Open Profile page
                     read_url = URL(args = ["[id]", "profile"])
                     update_url = URL(args = ["[id]", "profile"])
@@ -7676,9 +7678,20 @@ def hrm_human_resource_controller(extra_filter = None):
                     deletable = settings.get_hrm_deletable(),
                     # Standard CRUD buttons
                     read_url = None
-                    update_url = None
+                    # @ToDo: DRY with models/00_utils.py & controllers/hrm.py staff()
+                    editable = s3db.get_config("hrm_human_resource", "editable", True)
+                    if settings.get_ui_auto_open_update():
+                        # "Open" action button without explicit method
+                        editable = "auto" if editable else False
+                        update_url = r.resource.crud._linkto(r, update=editable)("[id]")
+                    else:
+                        # "Open" action button with explicit read|update method
+                        editable = editable and \
+                                   not current.auth.permission.ownership_required("update", table)
+                        update_url = None
                 S3CRUD.action_buttons(r,
                                       deletable = deletable,
+                                      editable = editable,
                                       read_url = read_url,
                                       update_url = update_url)
                 if "msg" in settings.modules and \

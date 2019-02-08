@@ -46,7 +46,7 @@ class S3MainMenu(default.S3MainMenu):
         if auth.s3_has_role("MANAGER"):
             return [MM("Organizations", c="org", f="organisation", m="summary",
                        ),
-                    MM("Contacts", c="pr", f="person", m="summary",
+                    MM("Contacts", c="hrm", f="staff", m="summary",
                        ),
                     MM("Facilities", c="org", f="facility", m="summary",
                        ),
@@ -110,7 +110,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         if auth.s3_has_role("MANAGER"):
             return M()(M("Manage", showlink=False)(
                         M("My Organizations", c="org", f="organisation", m="summary", vars={"mine": 1}),
-                        M("My Contacts", c="pr", f="person", m="summary", vars={"mine": 1}),
+                        M("My Contacts", c="hrm", f="staff", m="summary", vars={"mine": 1}),
                         M("My Facilities", c="org", f="facility", m="summary", vars={"mine": 1}),
                         ),
                        M("Create", showlink=False)(
@@ -121,7 +121,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                        )
         else:
             return M()(M("Manage", showlink=False)(
-                        M("My Personal Profile", c="pr", f="person", m="summary", vars={"mine": 1}),
+                        M("My Personal Profile", c="pr", f="person", vars={"personal": 1}),
                         M("My Organizations", c="org", f="organisation", m="summary", vars={"mine": 1}),
                         M("My Facilities", c="org", f="facility", m="summary", vars={"mine": 1}),
                         ),
