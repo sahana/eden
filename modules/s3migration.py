@@ -523,7 +523,7 @@ class S3Migration(object):
         from s3 import S3BulkImporter
         bi = S3BulkImporter()
         templates = current.deployment_settings.get_template()
-        if not isinstance(templates, list):
+        if not isinstance(templates, (tuple, list)):
             templates = [templates]
         for t in templates:
             filename = os.path.join(current.request.folder, "modules", "templates", t, "auth_roles.csv")
