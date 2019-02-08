@@ -77,8 +77,7 @@ def config(settings):
                                                   )
 
     # Open records in read mode rather then edit by default
-    # Need new setting, not this one
-    #settings.ui.auto_open_update = True
+    settings.ui.open_read = True
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

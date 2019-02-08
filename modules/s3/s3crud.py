@@ -2636,10 +2636,12 @@ class S3CRUD(S3Method):
 
         get_vars = cls._linkto_vars(r)
 
+        settings = current.deployment_settings
+
         # If this request is in iframe-format, action URLs should be in
         # iframe-format as well
         if r.representation == "iframe":
-            if current.deployment_settings.get_ui_iframe_opens_full():
+            if settings.get_ui_iframe_opens_full():
                 iframe_safe = lambda url: url
                 # This is processed client-side in s3.ui.datatable.js
                 target = {"_target": "_blank"}
@@ -2651,13 +2653,17 @@ class S3CRUD(S3Method):
             target = {}
 
         # Open-action (Update or Read)
-        if editable and has_permission("update", table) and \
+        if not settings.get_ui_open_read() and editable and has_permission("update", table) and \
            not ownership_required("update", table):
             if not update_url:
                 # To use modals
                 #get_vars["refresh"] = "list"
-                update_url = iframe_safe(URL(args = args + ["update"], #.popup to use modals
-                                             vars = get_vars))
+                if settings.get_ui_auto_open_update():
+                    update_url = iframe_safe(URL(args = args,
+                                                 vars = get_vars))
+                else:
+                    update_url = iframe_safe(URL(args = args + ["update"], #.popup to use modals
+                                                 vars = get_vars))
             s3crud.action_button(labels.UPDATE, update_url,
                                  # To use modals
                                  #_class="action-btn s3_modal"
@@ -2667,8 +2673,12 @@ class S3CRUD(S3Method):
                                  )
         else:
             if not read_url:
-                read_url = iframe_safe(URL(args = args,
-                                           vars = get_vars))
+                if settings.get_ui_auto_open_update():
+                    read_url = iframe_safe(URL(args = args,
+                                               vars = get_vars))
+                else:
+                    read_url = iframe_safe(URL(args = args + ["read"], #.popup to use modals
+                                               vars = get_vars))
             s3crud.action_button(labels.READ, read_url,
                                  # To use modals
                                  #_class="action-btn s3_modal"

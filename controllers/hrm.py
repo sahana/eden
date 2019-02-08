@@ -108,14 +108,13 @@ def staff():
             if r.id:
                 if r.method not in ("profile", "delete"):
                     # Redirect to person controller
-                    vars = {
-                        "human_resource.id": r.id,
-                        "group": "staff"
-                    }
-                    args = []
+                    vars = {"human_resource.id": r.id,
+                            "group": "staff"
+                            }
+                    args = [r.method]
                     if r.representation == "iframe":
                         vars["format"] = "iframe"
-                        args = [r.method]
+                        #args = [r.method]
                     redirect(URL(f="person", vars=vars, args=args))
             else:
                 if r.method == "import":
@@ -159,7 +158,7 @@ def staff():
             if not r.component:
                 deletable = settings.get_hrm_deletable()
                 # @ToDo: DRY with models/00_utils.py & modules/s3db/hrm.py hrm_human_resource_controller()
-                editable = s3db.get_config("hrm_human_resource", "editable", True)
+                editable = not settings.get_ui_open_read() and s3db.get_config("hrm_human_resource", "editable", True)
                 if settings.get_ui_auto_open_update():
                     # "Open" action button without explicit method
                     editable = "auto" if editable else False

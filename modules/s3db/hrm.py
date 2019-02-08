@@ -7652,6 +7652,7 @@ def hrm_human_resource_controller(extra_filter = None):
                 else:
                     fn = "person"
                 redirect(URL(f = fn,
+                             args = [r.method]
                              vars = {"human_resource.id" : r.id,
                                      "group" : group
                                      },
@@ -7679,7 +7680,7 @@ def hrm_human_resource_controller(extra_filter = None):
                     # Standard CRUD buttons
                     read_url = None
                     # @ToDo: DRY with models/00_utils.py & controllers/hrm.py staff()
-                    editable = s3db.get_config("hrm_human_resource", "editable", True)
+                    editable = not settings.get_ui_open_read() and s3db.get_config("hrm_human_resource", "editable", True)
                     if settings.get_ui_auto_open_update():
                         # "Open" action button without explicit method
                         editable = "auto" if editable else False
