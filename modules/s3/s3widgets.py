@@ -5179,7 +5179,12 @@ class S3LocationSelector(S3Selector):
         else:
             translate = settings.get_L10n_translate_gis_location()
 
-        if query is not None:
+        if query is None:
+            locations = []
+            if levels != []:
+                # Misconfigured (e.g. no default for a hidden Lx level)
+                current.log.warning("S3LocationSelector: no default for hidden Lx level?")
+        else:
             query &= (gtable.deleted == False) & \
                      (gtable.end_date == None)
             fields = [gtable.id,
@@ -5202,10 +5207,6 @@ class S3LocationSelector(S3Selector):
             else:
                 left = None
             locations = db(query).select(*fields, left=left)
-        else:
-            # Misconfigured (e.g. no default for a hidden Lx level)
-            current.log.warning("S3LocationSelector: no default for hidden Lx level?")
-            locations = []
 
         location_dict = {}
         if default_bounds:
@@ -6271,6 +6272,11 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 ## Get lowest selected Lx
 
             if location_id:
+                levels = self.levels
+                if levels == []:
+                    # Widget set to levels=False
+                    # No Street Address specified, so skip
+                    return (None, None)
                 query = (table.id == location_id) & \
                         (table.deleted == False)
                 location = current.db(query).select(table.level,
@@ -6281,7 +6287,6 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 level = location.level
                 if level:
                     # Accept all levels above and including the lowest selectable level
-                    levels = self.levels
                     for i in xrange(5,-1,-1):
                         if "L%s" % i in levels:
                             accepted_levels = set("L%s" % l for l in xrange(i,-1,-1))

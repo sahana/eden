@@ -42,7 +42,7 @@ def config(settings):
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
     # e.g. Activities filtered to those of parent Project
-    settings.gis.countries = ("US",)
+    #settings.gis.countries = ("US",)
     gis_levels = ("L2", "L3", "L4")
 
     settings.L10n.languages = OrderedDict([
