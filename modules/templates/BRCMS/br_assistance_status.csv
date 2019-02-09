@@ -1,0 +1,6 @@
+Position,Status,Default,Termination,Default Termination,Color,Comments
+0,Planned,true,false,false,8f3d5e,Measure is planned
+1,In Progress,false,false,false,c85583,Measure is currently in progress
+2,Completed,false,true,true,d8e6d8,Measure is completed
+3,Canceled,false,true,false,e0e0e0,Measure has been canceled
+4,Obsolete,false,true,false,e0e0e0,Measure is no longer required

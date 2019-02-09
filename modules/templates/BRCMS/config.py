@@ -221,11 +221,8 @@ def config(settings):
                                                  )
 
         elif tablename in ("br_case_activity",
-                           #"br_case_details",
-                           #"br_case_flag_case",
+                           "br_assistance_measure",
                            "br_case_language",
-                           #"br_note",
-                           #"br_residence_status",
                            "pr_group_membership",
                            "pr_person_details",
                            "pr_person_tag",
@@ -262,7 +259,7 @@ def config(settings):
         # TODO
         #elif tablename in ("br_case_activity_need",
         #                   "br_case_activity_update",
-        #                   "br_response_action",
+        #                   "br_assistance_measure",
         #                   ):
         #
         #    # Inherit from case activity

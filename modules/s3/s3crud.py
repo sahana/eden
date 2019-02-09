@@ -2591,7 +2591,7 @@ class S3CRUD(S3Method):
     def action_buttons(cls,
                        r,
                        deletable=True,
-                       editable=True,
+                       editable=None,
                        copyable=False,
                        read_url=None,
                        delete_url=None,
@@ -2652,18 +2652,19 @@ class S3CRUD(S3Method):
             iframe_safe = lambda url: url
             target = {}
 
+        if editable is None:
+            # Fall back to settings if caller didn't override
+            editable = False if settings.get_ui_open_read() else \
+                       "auto" if settings.get_ui_auto_open_update() else True
+
         # Open-action (Update or Read)
-        if not settings.get_ui_open_read() and editable and has_permission("update", table) and \
-           not ownership_required("update", table):
+        authorised = has_permission("update", table)
+        if editable and authorised and not ownership_required("update", table):
+            # User has permission to edit all records, and caller allows edit
             if not update_url:
-                # To use modals
-                #get_vars["refresh"] = "list"
-                if settings.get_ui_auto_open_update():
-                    update_url = iframe_safe(URL(args = args,
-                                                 vars = get_vars))
-                else:
-                    update_url = iframe_safe(URL(args = args + ["update"], #.popup to use modals
-                                                 vars = get_vars))
+                update_url = iframe_safe(URL(args = args + ["update"], #.popup to use modals
+                                             vars = get_vars,
+                                             ))
             s3crud.action_button(labels.UPDATE, update_url,
                                  # To use modals
                                  #_class="action-btn s3_modal"
@@ -2672,13 +2673,12 @@ class S3CRUD(S3Method):
                                  **target
                                  )
         else:
-            if not read_url:
-                if settings.get_ui_auto_open_update():
-                    read_url = iframe_safe(URL(args = args,
-                                               vars = get_vars))
-                else:
-                    read_url = iframe_safe(URL(args = args + ["read"], #.popup to use modals
-                                               vars = get_vars))
+            # User is not permitted to edit at least some of the records,
+            # or caller doesn't allow edit
+            method = ["read"] if not editable or not authorised else []
+            read_url = iframe_safe(URL(args = args + method, #.popup to use modals
+                                       vars = get_vars,
+                                       ))
             s3crud.action_button(labels.READ, read_url,
                                  # To use modals
                                  #_class="action-btn s3_modal"

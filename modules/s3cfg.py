@@ -1994,14 +1994,22 @@ class S3Config(Storage):
         return self.ui.get("datatables_double_scroll", False)
 
     def get_ui_auto_open_update(self):
-        """ Render "Open" action buttons without explicit CRUD-method """
-
+        """
+            Render "Open" action buttons in datatables without explicit
+            CRUD-method => this allows automatic per-record decision
+            whether to open as update- or read-form based on permissions,
+            e.g. if the user doesn't have permission to update for all
+            records in the datatable due to oACL or realm-restriction
+        """
         return self.ui.get("auto_open_update", False)
 
-    def get_ui_open_read(self):
-        """ Render "Open" action buttons as Read, even if user has permission to Update """
-
-        return self.ui.get("open_read", False)
+    def get_ui_open_read_first(self):
+        """
+            Render "Open" action buttons with explicit "read" method
+            irrespective permissions (i.e. always, even if the user
+            were permitted to edit records)
+        """
+        return self.ui.get("open_read_first", False)
 
     def get_ui_default_cancel_button(self):
         """
@@ -2832,6 +2840,18 @@ class S3Config(Storage):
             Need categories are specific per root organisation
         """
         return self.br.get("needs_org_specific", True)
+
+    def get_br_manage_assistance(self):
+        """
+            Track individual measures of assistance
+        """
+        return self.br.get("manage_assistance", True)
+
+    def get_br_assistance_types(self):
+        """
+            Use assistance type categories
+        """
+        return self.br.get("assistance_types", True)
 
     # -------------------------------------------------------------------------
     # CAP: Common Alerting Protocol

@@ -267,14 +267,23 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
             # Get table config
             get_config = s3db.get_config
             listadd = get_config(tablename, "listadd", True)
-            editable = not settings.get_ui_open_read() and get_config(tablename, "editable", True)
-            if settings.get_ui_auto_open_update():
-                # "Open" action button without explicit method
-                editable = "auto" if editable else False
+
+            # Which is the standard open-action?
+            if settings.get_ui_open_read_first():
+                # Always read, irrespective permissions
+                editable = False
             else:
-                # "Open" action button with explicit read|update method
-                editable = editable and \
-                           not auth.permission.ownership_required("update", table)
+                editable = get_config(tablename, "editable", True)
+                if editable and \
+                   auth.permission.ownership_required("update", table):
+                    # User cannot edit all records in the table
+                    if settings.get_ui_auto_open_update():
+                        # Decide automatically per-record (implicit method)
+                        editable = "auto"
+                    else:
+                        # Always open read first (explicit read)
+                        editable = False
+
             deletable = get_config(tablename, "deletable", True)
             copyable = get_config(tablename, "copyable", False)
 
