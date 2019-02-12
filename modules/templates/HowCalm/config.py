@@ -38,6 +38,7 @@ def config(settings):
 
     # Uncomment to display the Map Legend as a floating DIV
     settings.gis.legend = "float"
+    settings.gis.poi_create_resources = []
 
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
