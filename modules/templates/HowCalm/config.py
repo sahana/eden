@@ -490,6 +490,55 @@ def config(settings):
     settings.customise_msg_contact_controller = customise_msg_contact_controller
 
     # -------------------------------------------------------------------------
+    def org_facility_onaccept(form):
+        """
+            Geocode Street Addresses blindly
+        """
+
+        location_id = form.vars.get("location_id")
+        if not location_id:
+            return
+
+        db = current.db
+        gis = current.gis
+        gtable = current.s3db.gis_location
+        location = db(gtable.id == location_id).select(gtable.id,
+                                                       gtable.addr_street,
+                                                       gtable.addr_postcode,
+                                                       gtable.parent,
+                                                       limitby = (0, 1)
+                                                       ).first()
+
+        parent = location.parent
+        if parent:
+            Lx_ids = gis.get_parents(parent, ids_only=True)
+            if Lx_ids:
+                Lx_ids.append(parent)
+            else:
+                Lx_ids = [parent]
+        else:
+            query = (gtable.name == "New York City") & \
+                    (gtable.level == "L2")
+            NYC = db(query).select(gtable.id,
+                                   limitby = (0, 1)
+                                   ).first()
+            parent = NYC.id
+            Lx_ids = [parent]
+
+        results = gis.geocode(location.addr_street,
+                              location.addr_postcode,
+                              Lx_ids)
+        if isinstance(results, basestring):
+            # Error, Warn
+            current.log.warning("Geocoder: %s" % results)
+        else:
+            location.update_record(lat = results["lat"],
+                                   lon = results["lon"],
+                                   parent = parent,
+                                   )
+            gis.update_location_tree({"id": location.id})
+
+    # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
 
         from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE
@@ -599,6 +648,9 @@ def config(settings):
                        #filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        )
+
+        s3db.add_custom_callback("org_facility", "onaccept",
+                                 org_facility_onaccept)
 
     settings.customise_org_facility_resource = customise_org_facility_resource
 

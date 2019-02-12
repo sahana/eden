@@ -6,6 +6,8 @@ Shapely>=1.2.14 #shapely
 PIL>=1.1.7 #from PIL import Image
 # Warning: S3GIS unresolved dependency: GDAL required for Shapefile support
 GDAL>=1.9.0 #from osgeo import ogr
+# Warning: S3GIS unresolved dependency: geopy required for Geocoder support
+geopy>=1.18.1 #from geopy import geocoders
 # Warning: S3PDF unresolved dependency: reportlab required for PDF export
 reportlab>=2.5
 pyserial>=2.6

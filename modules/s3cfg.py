@@ -1314,6 +1314,15 @@ class S3Config(Storage):
         """
         return self.gis.get("edit_GR", False)
 
+    def get_gis_geocode_service(self):
+        """
+            Which Geocoder Service should be used?
+            Supported options:
+                "nominatim" (default)
+                "google"
+        """
+        return self.gis.get("geocode_service", "nominatim")
+
     def get_gis_geocode_imported_addresses(self):
         """
             Should Addresses imported from CSV be passed to a

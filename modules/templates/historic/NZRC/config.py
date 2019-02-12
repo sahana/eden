@@ -585,7 +585,7 @@ def config(settings):
         # Make Volunteer deployable
         s3db.deploy_application.insert(human_resource_id=form.vars.id)
 
-        # Fire nromal onaccept
+        # Fire normal onaccept
         s3db.hrm_human_resource_onaccept(form)
 
 

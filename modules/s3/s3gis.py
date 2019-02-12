@@ -252,7 +252,7 @@ class GIS(object):
 
         self.relevant_hierarchy_levels = None
 
-        self.google_geocode_retry = True
+        #self.google_geocode_retry = True
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -484,7 +484,7 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def geocode(address, postcode=None, Lx_ids=None, geocoder="google"):
+    def geocode(address, postcode=None, Lx_ids=None, geocoder=None):
         """
             Geocode an Address
             - used by S3LocationSelector
@@ -496,34 +496,45 @@ class GIS(object):
             @param geocoder: which geocoder service to use
         """
 
-        from geopy import geocoders
+        try:
+            from geopy import geocoders
+        except ImportError:
+            current.log.error("S3GIS unresolved dependency: geopy required for Geocoder support")
+            return "S3GIS unresolved dependency: geopy required for Geocoder support"
 
-        if geocoder == "google" or geocoder is True:
-            g = geocoders.GoogleV3()
-            if current.gis.google_geocode_retry:
-                # Retry when reaching maximum requests per second
-                import time
-                from geopy.geocoders.googlev3 import GTooManyQueriesError
-                def geocode_(names, g=g, **kwargs):
-                    attempts = 0
-                    while attempts < 3:
-                        try:
-                            result = g.geocode(names, **kwargs)
-                        except GTooManyQueriesError:
-                            if attempts == 2:
-                                # Daily limit reached
-                                current.gis.google_geocode_retry = False
-                                raise
-                            time.sleep(1)
-                        else:
-                            break
-                        attempts += 1
-                    return result
-            else:
-                geocode_ = lambda names, g=g, **kwargs: g.geocode(names, **kwargs)
-        elif geocoder == "yahoo":
-            apikey = current.deployment_settings.get_gis_api_yahoo()
-            g = geocoders.Yahoo(apikey)
+        settings = current.deployment_settings
+        if geocoder is None:
+            geocoder = settings.get_gis_geocode_service()
+
+        if geocoder == "nominatim":
+            g = geocoders.Nominatim(user_agent = "Sahana Eden")
+            geocode_ = lambda names, g=g, **kwargs: g.geocode(names, **kwargs)
+        elif geocoder == "google":
+            api_key = settings.get_gis_api_google()
+            if not api_key:
+                current.log.error("Geocoder: No API Key")
+                return "No API Key"
+            g = geocoders.GoogleV3(api_key = api_key)
+            #if current.gis.google_geocode_retry:
+            #    # Retry when reaching maximum requests per second
+            #    import time
+            #    from geopy.geocoders.googlev3 import GTooManyQueriesError
+            #    def geocode_(names, g=g, **kwargs):
+            #        attempts = 0
+            #        while attempts < 3:
+            #            try:
+            #                result = g.geocode(names, **kwargs)
+            #            except GTooManyQueriesError:
+            #                if attempts == 2:
+            #                    # Daily limit reached
+            #                    current.gis.google_geocode_retry = False
+            #                    raise
+            #                time.sleep(1)
+            #            else:
+            #                break
+            #            attempts += 1
+            #        return result
+            #else:
             geocode_ = lambda names, g=g, **kwargs: g.geocode(names, **kwargs)
         else:
             # @ToDo
@@ -582,7 +593,16 @@ class GIS(object):
 
         try:
             results = geocode_(location, exactly_one=False)
-            if len(results) == 1:
+        except:
+            error = sys.exc_info()[1]
+            output = str(error)
+        else:
+            if results is None:
+                output = "No results found"
+            elif len(results) > 1:
+                output = "Multiple results found"
+                # @ToDo: Iterate through the results to see if just 1 is within the right bounds
+            else:
                 place, (lat, lon) = results[0]
                 if Lx:
                     output = None
@@ -671,18 +691,14 @@ class GIS(object):
                             # We'll just have to trust it!
                             ok = True
                         if ok:
-                            output = dict(lat=lat, lon=lon)
+                            output = {"lat": lat,
+                                      "lon": lon,
+                                      }
                 else:
                     # We'll just have to trust it!
-                    output = dict(lat=lat, lon=lon)
-            elif len(results):
-                output = "Multiple results found"
-                # @ToDo: Iterate through the results to see if just 1 is within the right bounds
-            else:
-                output = "No results found"
-        except:
-            error = sys.exc_info()[1]
-            output = str(error)
+                    output = {"lat": lat,
+                              "lon": lon,
+                              }
 
         return output
 
@@ -4650,7 +4666,6 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             table = db.gis_location
         except:
             table = current.s3db.gis_location
-        spatial = current.deployment_settings.get_gis_spatialdb()
         update_location_tree = GIS.update_location_tree
         wkt_centroid = GIS.wkt_centroid
 

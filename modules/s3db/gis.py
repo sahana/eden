@@ -514,7 +514,7 @@ class S3LocationModel(S3Model):
                         Lx_ids = [parent]
                 else:
                     Lx_ids = None
-                results = gis.geocode(addr_street, postcode, Lx_ids, geocoder)
+                results = gis.geocode(addr_street, postcode, Lx_ids)
                 if isinstance(results, basestring):
                     # Error
                     if settings.get_gis_ignore_geocode_errors():
