@@ -398,6 +398,30 @@ def config(settings):
 
             hrm_list_fields()
 
+            from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
+
+            filter_widgets = [S3TextFilter(["person_id$first_name",
+                                            "person_id$middle_name",
+                                            "person_id$last_name",
+                                            "person_id$email.value",
+                                            ],
+                                           label = T("Search"),
+                                           ),
+                              S3OptionsFilter("organisation_id",
+                                              search = True,
+                                              header = "",
+                                              #hidden = True,
+                                              ),
+                              S3LocationFilter("location_id",
+                                               label = T("Location"),
+                                               hidden = True,
+                                               ),
+                              ]
+
+            current.s3db.configure("hrm_human_resource",
+                                   filter_widgets = filter_widgets,
+                                   )
+
             return result
         s3.prep = custom_prep
 

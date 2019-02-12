@@ -2654,7 +2654,7 @@ class S3CRUD(S3Method):
 
         if editable is None:
             # Fall back to settings if caller didn't override
-            editable = False if settings.get_ui_open_read() else \
+            editable = False if settings.get_ui_open_read_first() else \
                        "auto" if settings.get_ui_auto_open_update() else True
 
         # Open-action (Update or Read)
