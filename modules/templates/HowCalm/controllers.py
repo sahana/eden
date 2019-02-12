@@ -12,12 +12,55 @@ class index(S3CustomController):
     def __call__(self):
 
         T = current.T
+        auth = current.auth
+        s3 = current.response.s3
 
         output = {}
+        roles = current.session.s3.roles
+        system_roles = auth.get_system_roles()
 
-        text = T("HOWCALM™ provides essential information to help coordinate response and manage long-term recovery in a disaster. Participation in HOWCALM™ enables us to provide you with emergency information before, during and after a disaster. We also will send you geographically tailored information about evacuation zones, relevant news, and information about preparedness trainings for your staff and house of worship.")
-        output["text"] = text
-        output["img_url"] = URL(c="static", f="themes", args=[THEME, "img", "logo.gif"])
+        # Allow editing of page content from browser using CMS module
+        if current.deployment_settings.has_module("cms"):
+            ADMIN = system_roles.ADMIN in roles
+            s3db = current.s3db
+            table = s3db.cms_post
+            ltable = s3db.cms_post_module
+            module = "default"
+            resource = "index"
+            query = (ltable.module == module) & \
+                    ((ltable.resource == None) | \
+                     (ltable.resource == resource)) & \
+                    (ltable.post_id == table.id) & \
+                    (table.deleted != True)
+            item = current.db(query).select(table.id,
+                                            table.body,
+                                            limitby=(0, 1)).first()
+            if item:
+                if ADMIN:
+                    item = DIV(XML(item.body),
+                               BR(),
+                               A(current.T("Edit"),
+                                 _href=URL(c="cms", f="post",
+                                           args=[item.id, "update"]),
+                                 _class="action-btn"))
+                else:
+                    item = DIV(XML(item.body))
+            elif ADMIN:
+                if s3.crud.formstyle == "bootstrap":
+                    _class = "btn"
+                else:
+                    _class = "action-btn"
+                item = A(T("Edit"),
+                         _href=URL(c="cms", f="post", args="create",
+                                   vars={"module": module,
+                                         "resource": resource
+                                         }),
+                         _class="%s cms-edit" % _class)
+            else:
+                item = ""
+        else:
+            item = ""
+        output["item"] = item
 
         # Login/Registration forms
         self_registration = current.deployment_settings.get_security_registration_visible()
@@ -28,9 +71,8 @@ class index(S3CustomController):
         register_div = None
 
         # Check logged in and permissions
-        auth = current.auth
         if not auth.s3_logged_in():
-            jqappend = current.response.s3.jquery_ready.append
+            jqappend = s3.jquery_ready.append
             #login_buttons = DIV(A(T("Login"),
             #                      _id="show-login",
             #                      _class="tiny secondary button"),
