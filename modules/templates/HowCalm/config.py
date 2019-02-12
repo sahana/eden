@@ -559,6 +559,7 @@ def config(settings):
         else:
             location.update_record(lat = results["lat"],
                                    lon = results["lon"],
+                                   inherited = False,
                                    parent = parent,
                                    )
             gis.update_location_tree({"id": location.id})
