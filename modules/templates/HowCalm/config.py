@@ -39,6 +39,7 @@ def config(settings):
     # Uncomment to display the Map Legend as a floating DIV
     settings.gis.legend = "float"
     settings.gis.poi_create_resources = []
+    settings.gis.location_represent_address_only = True
 
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
@@ -599,11 +600,16 @@ def config(settings):
 
         s3db = current.s3db
 
-        s3db.org_facility.location_id.widget = S3LocationSelector(levels = False,
-                                                                  show_address = True,
-                                                                  show_postcode = False,
-                                                                  show_map = False,
-                                                                  )
+        f = s3db.org_facility.location_id
+        f.represent = s3db.gis_LocationRepresent(show_link = True,
+                                                 controller = "org",
+                                                 func = "facility",
+                                                 )
+        f.widget = S3LocationSelector(levels = False,
+                                      show_address = True,
+                                      show_postcode = False,
+                                      show_map = False,
+                                      )
 
         # Filtered components
         s3db.add_components("org_facility",

@@ -891,28 +891,35 @@ S3.unmask = function(table, field) {
     }
 };
 // ============================================================================
-var s3_viewMap = function(feature_id, iframe_height, popup) {
+var s3_viewMap = function(location_id, iframe_height, popup, controller, func) {
     // Display a Feature on a BaseMap within an iframe
-    var url = S3.Ap.concat('/gis/display_feature/') + feature_id,
+    var url = S3.Ap.concat('/gis/display_feature/') + location_id,
         $map = $('#map'),
         $iframe_map = $('#iframe-map'),
-        curl = document.location.pathname.split("/"),
-        controller = curl[2],
-        func = curl[3];
+        curl = document.location.pathname.split("/");
 
-    url += '?controller=' + controller + '&function=' + func;
-    if (curl.length > 4) {
-        // Record id
-        if ($.isNumeric(curl[4])) {
-            url += '&rid=' + curl[4];
-        }
+    if (controller === undefined) {
+        // Default to Master Record's Controller
+        controller = curl[2];
+    }
+    if (func === undefined) {
+        // Default to Master Record's Function
+        func = curl[3];
+    }
+    url += '?c=' + controller + '&f=' + func;
+
+    if ((curl.length > 6) && ($.isNumeric(curl[6]))) {
+        // Component Record ID
+        url += '&r=' + curl[6];
+    } else if ((curl.length > 4) && ($.isNumeric(curl[4]))) {
+        // Master Record ID
+        url += '&r=' + curl[4];
     }
 
     if ($map.length == 0 || popup == 'True') {
         url += '&popup=1';
         S3.openPopup(url, true);
-    }
-    else {
+    } else {
         var toggleButton = function() {
             // Hide/Show the 'Close Map' button
             var closeMap = $('#close-iframe-map');
@@ -920,8 +927,7 @@ var s3_viewMap = function(feature_id, iframe_height, popup) {
                 closeMap.css({
                     'display': ''
                 });
-            }
-            else {
+            } else {
                 closeMap.css({
                     'display': 'none'
                 });
@@ -937,7 +943,7 @@ var s3_viewMap = function(feature_id, iframe_height, popup) {
 
         if ($iframe_map.length==0) {
             // 1st iframe to be loaded in 'map'
-            var iframe = $("<iframe id='iframe-map' data-feature='" + feature_id + "' style='border-style:none' width='100%' height='" + iframe_height + "' src='" + url + "' />"),
+            var iframe = $("<iframe id='iframe-map' data-feature='" + location_id + "' style='border-style:none' width='100%' height='" + iframe_height + "' src='" + url + "' />"),
                 closelink = $("<a class='button tiny' id='close-iframe-map'>" + i18n.close_map + "</a>");
 
             closelink.bind('click', closeMap);
@@ -945,17 +951,15 @@ var s3_viewMap = function(feature_id, iframe_height, popup) {
             $map.slideDown('medium');
             $map.append(iframe);
             $map.append($('<div style="margin-bottom:10px" />').append(closelink));
-        }
-        else {
+        } else {
             var fid = $iframe_map.attr('data-feature');
-            if (fid==feature_id) {
+            if (fid == location_id) {
                 // Same feature request. Display Map
                 $iframe_map.slideToggle('medium', toggleButton);
-            }
-            else {
+            } else {
                 $iframe_map.attr({
                     'src': url,
-                    'data-feature': feature_id
+                    'data-feature': location_id
                 });
                 $iframe_map.slideDown('medium', toggleButton);
             }

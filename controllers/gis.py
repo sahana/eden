@@ -20,9 +20,10 @@ def index():
     response.title = module_name
 
     # Read user request
-    height = get_vars.get("height", None)
-    width = get_vars.get("width", None)
-    toolbar = get_vars.get("toolbar", None)
+    get_vars_get = get_vars.get
+    height = get_vars_get("height", None)
+    width = get_vars_get("width", None)
+    toolbar = get_vars_get("toolbar", None)
     if toolbar is None:
         toolbar = settings.get_gis_toolbar()
     elif toolbar == "0":
@@ -30,11 +31,11 @@ def index():
     else:
         toolbar = True
 
-    collapsed = get_vars.get("collapsed", False)
+    collapsed = get_vars_get("collapsed", False)
     if collapsed:
         collapsed = True
 
-    iframe = get_vars.get("iframe", False)
+    iframe = get_vars_get("iframe", False)
     if iframe:
         response.view = "gis/iframe.html"
     else:
@@ -54,8 +55,9 @@ def index():
     save = settings.get_gis_save()
     if not save:
         help = T("To Print or Share the Map you will have to take a screenshot. If you need help taking a screen shot, have a look at these instructions for %(windows)s or %(mac)s") \
-            % dict(windows="<a href='http://www.wikihow.com/Take-a-Screenshot-in-Microsoft-Windows' target='_blank'>Windows</a>",
-                   mac="<a href='http://www.wikihow.com/Take-a-Screenshot-in-Mac-OS-X' target='_blank'>Mac</a>")
+            % {"windows": "<a href='http://www.wikihow.com/Take-a-Screenshot-in-Microsoft-Windows' target='_blank'>Windows</a>",
+               "mac": "<a href='http://www.wikihow.com/Take-a-Screenshot-in-Mac-OS-X' target='_blank'>Mac</a>",
+               }
         script = '''i18n.gis_print_help="%s"''' % help
         s3.js_global.append(script)
         script = "/%s/static/scripts/S3/s3.gis.print_help.js" % appname
@@ -72,8 +74,9 @@ def index():
                      save = save,
                      )
 
-    return dict(map=map,
-                title = T("Map"))
+    return {"map": map,
+            "title": T("Map"),
+            }
 
 # =============================================================================
 def map_viewing_client():
@@ -110,7 +113,7 @@ def map_viewing_client():
                      )
 
     response.title = T("Map Viewing Client")
-    return dict(map=map)
+    return {"map": map}
 
 # -----------------------------------------------------------------------------
 def define_map(height = None,
@@ -185,20 +188,20 @@ def define_map(height = None,
             # Lookup Layer IDs
             ftable = s3db.gis_layer_feature
             rows = db(ftable.name.belongs(layers)).select(ftable.layer_id, ftable.name)
-            layers_lookup = dict()
+            layers_lookup = {}
             for row in rows:
                 layers_lookup[row.name] = row.layer_id
 
             # Prepare JSON data structure
             pois = []
             for res in poi_resources:
-                poi = dict(c = res["c"],
-                           f = res["f"],
-                           l = s3_unicode(res["label"]),
-                           #t = s3_unicode(res["tooltip"]),
-                           i = layers_lookup.get(res["layer"], None),
-                           t = res.get("type", "point"),
-                           )
+                poi = {"c": res["c"],
+                       "f": res["f"],
+                       "l": s3_unicode(res["label"]),
+                       #"t": s3_unicode(res["tooltip"]),
+                       "i": layers_lookup.get(res["layer"], None),
+                       "t": res.get("type", "point"),
+                       }
                 pois.append(poi)
 
             # Inject client-side JS
@@ -230,12 +233,12 @@ def define_map(height = None,
                                                      limitby=(0, 1)
                                                      ).first()
             if layer:
-                feature_resources = [dict(name = T("PoI"),
-                                          id = "PoI",
-                                          layer_id = layer.layer_id,
-                                          filter = filter_url,
-                                          active = True,
-                                          ),
+                feature_resources = [{"name": T("PoI"),
+                                      "id": "PoI",
+                                      "layer_id": layer.layer_id,
+                                      "filter": filter_url,
+                                      "active": True,
+                                      },
                                      ]
         else:
             lat = None
@@ -638,8 +641,9 @@ def location():
                                     gis.get_country(code, key_type="code") or UNKNOWN_OPT)
 
     output = s3_rest_controller(# CSV column headers, so no T()
-                                csv_extra_fields = [dict(label="Country",
-                                                         field=country())
+                                csv_extra_fields = [{"label": "Country",
+                                                     "field": country(),
+                                                     }
                                                     ],
                                 rheader = s3db.gis_rheader,
                                 )
@@ -871,7 +875,7 @@ def s3_gis_location_parents(r, **attr):
     if r.representation == "html":
 
         # @ToDo
-        output = dict()
+        output = {}
         #return output
         raise HTTP(501, ERROR.BAD_FORMAT)
 
@@ -974,7 +978,7 @@ NO_TYPE_LAYERS_FMT = "No %s Layers currently defined"
 # -----------------------------------------------------------------------------
 def catalog():
     """ Custom View to link to different Layers """
-    return dict()
+    return {}
 
 # -----------------------------------------------------------------------------
 def config_default(r, **attr):
@@ -1256,33 +1260,35 @@ def config():
                                         ltable.enabled)
                 # Show the enable button if the layer is not currently enabled
                 restrict = [str(row.layer_id) for row in rows if not row.enabled]
-                s3.actions.append(dict(label=str(T("Enable")),
-                                       _class="action-btn",
-                                       url=URL(args=[r.id, "layer_entity", "[id]", "enable"]),
-                                       restrict = restrict
-                                       ))
+                s3.actions.append({"label": str(T("Enable")),
+                                   "_class": "action-btn",
+                                   "url": URL(args=[r.id, "layer_entity", "[id]", "enable"]),
+                                   "restrict":  restrict
+                                   })
                 # Show the disable button if the layer is not currently disabled
                 restrict = [str(row.layer_id) for row in rows if row.enabled]
-                s3.actions.append(dict(label=str(T("Disable")),
-                                       _class="action-btn",
-                                       url=URL(args=[r.id, "layer_entity", "[id]", "disable"]),
-                                       restrict = restrict
-                                       ))
+                s3.actions.append({"label": str(T("Disable")),
+                                   "_class": "action-btn",
+                                   "url": URL(args=[r.id, "layer_entity", "[id]", "disable"]),
+                                   "restrict":  restrict
+                                   })
 
             elif not r.component and r.method not in ("datalist", "import"):
-                show = dict(url=URL(c="gis", f="index",
-                                    vars={"config":"[id]"}),
-                            label=str(T("Show")),
-                            _class="action-btn")
+                show = {"url": URL(c="gis", f="index",
+                                   vars={"config":"[id]"}),
+                        "label": str(T("Show")),
+                        "_class": "action-btn",
+                        }
                 if auth.s3_has_role(MAP_ADMIN):
                     s3_action_buttons(r, copyable=True)
                     s3.actions.append(show)
                 else:
                     s3.actions = [show]
                     if auth.is_logged_in():
-                        default = dict(url=URL(args=["[id]", "default"]),
-                                       label=str(T("Set as my Default")),
-                                       _class="action-btn")
+                        default = {"url": URL(args=["[id]", "default"]),
+                                   "label": str(T("Set as my Default")),
+                                   "_class": "action-btn",
+                                   }
                         s3.actions.append(default)
 
         elif r.representation == "url":
@@ -1532,7 +1538,7 @@ def layer_config():
         # Cannot import without a specific layer type
         csv_stylesheet = None
 
-    output = s3_rest_controller(csv_stylesheet=csv_stylesheet)
+    output = s3_rest_controller(csv_stylesheet = csv_stylesheet)
     return output
 
 # -----------------------------------------------------------------------------
@@ -1544,8 +1550,8 @@ def layer_entity():
 
     # Custom Method
     s3db.set_method(module, resourcename,
-                    method="disable",
-                    action=disable_layer)
+                    method = "disable",
+                    action = disable_layer)
 
     def prep(r):
         if r.interactive:
@@ -1596,7 +1602,7 @@ def layer_entity():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -1605,8 +1611,8 @@ def layer_feature():
 
     # Custom Method
     s3db.set_method(module, resourcename,
-                    method="disable",
-                    action=disable_layer)
+                    method = "disable",
+                    action = disable_layer)
 
     # Pre-processor
     def prep(r):
@@ -1640,7 +1646,7 @@ def layer_feature():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -1698,7 +1704,7 @@ def layer_openstreetmap():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -1719,8 +1725,9 @@ def layer_bing():
         msg_record_modified=LAYER_UPDATED)
 
     s3db.configure(tablename,
-                    deletable=False,
-                    listadd=False)
+                   deletable = False,
+                   listadd = False,
+                   )
 
     # Pre-processor
     def prep(r):
@@ -1754,7 +1761,7 @@ def layer_bing():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -1775,8 +1782,9 @@ def layer_empty():
         msg_record_modified=LAYER_UPDATED)
 
     s3db.configure(tablename,
-                    deletable=False,
-                    listadd=False)
+                   deletable = False,
+                   listadd = False,
+                   )
 
     # Pre-processor
     def prep(r):
@@ -1801,7 +1809,7 @@ def layer_empty():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -1822,8 +1830,9 @@ def layer_google():
         msg_record_modified=LAYER_UPDATED)
 
     s3db.configure(tablename,
-                    deletable=False,
-                    listadd=False)
+                   deletable = False,
+                   listadd = False,
+                   )
 
     # Pre-processor
     def prep(r):
@@ -1856,7 +1865,7 @@ def layer_google():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -1884,7 +1893,10 @@ def layer_mgrs():
         msg_record_deleted=LAYER_DELETED,
         msg_list_empty=NO_LAYERS)
 
-    s3db.configure(tablename, deletable=False, listadd=False)
+    s3db.configure(tablename,
+                   deletable = False,
+                   listadd = False,
+                   )
 
     # Pre-processor
     def prep(r):
@@ -1908,7 +1920,7 @@ def layer_mgrs():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -1940,8 +1952,8 @@ def layer_arcrest():
 
     # Custom Method
     s3db.set_method(module, resourcename,
-                    method="enable",
-                    action=enable_layer)
+                    method = "enable",
+                    action = enable_layer)
 
     # Pre-processor
     def prep(r):
@@ -1975,7 +1987,7 @@ def layer_arcrest():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -2041,7 +2053,7 @@ def layer_geojson():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -2073,8 +2085,8 @@ def layer_georss():
 
     # Custom Method
     s3db.set_method(module, resourcename,
-                    method="enable",
-                    action=enable_layer)
+                    method = "enable",
+                    action = enable_layer)
 
     # Pre-processor
     def prep(r):
@@ -2112,7 +2124,7 @@ def layer_georss():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -2176,7 +2188,7 @@ def layer_gpx():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -2208,8 +2220,8 @@ def layer_kml():
 
     # Custom Method
     #s3db.set_method(module, resourcename,
-    #                method="enable",
-    #                action=enable_layer)
+    #                method = "enable",
+    #                action = enable_layer)
 
     # Pre-processor
     def prep(r):
@@ -2243,7 +2255,7 @@ def layer_kml():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -2275,8 +2287,8 @@ def layer_openweathermap():
 
     # Custom Method
     s3db.set_method(module, resourcename,
-                    method="enable",
-                    action=enable_layer)
+                    method = "enable",
+                    action = enable_layer)
 
     # Pre-processor
     def prep(r):
@@ -2314,7 +2326,7 @@ def layer_openweathermap():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -2345,8 +2357,8 @@ def layer_shapefile():
 
     # Custom Method
     s3db.set_method(module, resourcename,
-                    method="enable",
-                    action=enable_layer)
+                    method = "enable",
+                    action = enable_layer)
 
     args = request.args
     if len(args) > 1:
@@ -2422,7 +2434,7 @@ def layer_shapefile():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -2495,7 +2507,7 @@ def layer_theme():
                                     csv_stylesheet="layer_theme.xsl",
                                     )
     else:
-        output = s3_rest_controller(rheader=s3db.gis_rheader)
+        output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -2505,11 +2517,11 @@ def theme_data():
 
     field = s3db.gis_layer_theme_id()
     field.requires = IS_EMPTY_OR(field.requires)
-    output = s3_rest_controller(csv_extra_fields = [
-                                    # CSV column headers, so no T()
-                                    dict(label="Layer",
-                                         field=field)
-                                ])
+    output = s3_rest_controller(csv_extra_fields = [# CSV column headers, so no T()
+                                                    {"label": "Layer",
+                                                     "field": field,
+                                                     }],
+                                )
 
     return output
 
@@ -2541,8 +2553,8 @@ def layer_tms():
 
     # Custom Method
     s3db.set_method(module, resourcename,
-                    method="enable",
-                    action=enable_layer)
+                    method = "enable",
+                    action = enable_layer)
 
     # Pre-processor
     def prep(r):
@@ -2576,7 +2588,7 @@ def layer_tms():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -2638,7 +2650,7 @@ def layer_wfs():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -2670,8 +2682,8 @@ def layer_wms():
 
     # Custom Method
     s3db.set_method(module, resourcename,
-                    method="enable",
-                    action=enable_layer)
+                    method = "enable",
+                    action = enable_layer)
 
     # Pre-processor
     def prep(r):
@@ -2704,7 +2716,7 @@ def layer_wms():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -2736,8 +2748,8 @@ def layer_xyz():
 
     # Custom Method
     s3db.set_method(module, resourcename,
-                    method="enable",
-                    action=enable_layer)
+                    method = "enable",
+                    action = enable_layer)
 
     # Pre-processor
     def prep(r):
@@ -2771,7 +2783,7 @@ def layer_xyz():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -2834,7 +2846,7 @@ def layer_js():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader)
 
     return output
 
@@ -2870,8 +2882,6 @@ def cache_feed():
         global cache object
     """
 
-    resourcename = "cache"
-
     # Load Models
     #s3db.table("gis_cache")
 
@@ -2879,7 +2889,7 @@ def cache_feed():
         # Unzip & Follow Network Links
         #download_kml.delay(url)
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller("gis", "cache")
     return output
 
 # =============================================================================
@@ -3012,18 +3022,19 @@ def poi():
             # Normal Action Buttons
             s3_action_buttons(r, deletable=False)
             # Custom Action Buttons
-            s3.actions += [dict(label=str(T("Show on Map")),
-                                _class="action-btn",
-                                url=URL(f = "index",
-                                        vars = {"poi": "[id]"},
-                                        )),
+            s3.actions += [{"label": str(T("Show on Map")),
+                            "_class": "action-btn",
+                            "url": URL(f = "index",
+                                       vars = {"poi": "[id]"},
+                                       ),
+                            },
                            ]
         return output
     s3.postp = postp
 
     dt_bulk_actions = [(T("Delete"), "delete")]
 
-    return s3_rest_controller(dtargs=dict(dt_bulk_actions=dt_bulk_actions))
+    return s3_rest_controller(dtargs={"dt_bulk_actions": dt_bulk_actions})
 
 # =============================================================================
 def display_feature():
@@ -3033,8 +3044,8 @@ def display_feature():
         Called by the s3_viewMap() JavaScript
     """
 
-    # The Feature
-    feature_id = request.args[0]
+    # The Location
+    location_id = request.args[0]
 
     table = s3db.gis_location
     ftable = s3db.gis_layer_feature
@@ -3042,30 +3053,31 @@ def display_feature():
     gtable = s3db.gis_config
 
     # Check user is authorised to access record
-    if not s3_has_permission("read", table, feature_id):
+    if not s3_has_permission("read", table, location_id):
         session.error = T("No access to this record!")
         raise HTTP(401, body=current.xml.json_message(False, 401, session.error))
 
-    feature = db(table.id == feature_id).select(table.id,
-                                                table.parent,
-                                                table.lat,
-                                                table.lon,
-                                                table.wkt,
-                                                limitby=(0, 1)).first()
+    location = db(table.id == location_id).select(table.id,
+                                                  table.parent,
+                                                  table.lat,
+                                                  table.lon,
+                                                  table.wkt,
+                                                  limitby=(0, 1)
+                                                  ).first()
 
-    if not feature:
+    if not location:
         session.error = T("Record not found!")
         raise HTTP(404, body=current.xml.json_message(False, 404, session.error))
 
-    # Centre on Feature
-    lat = feature.lat
-    lon = feature.lon
+    # Centre on Location
+    lat = location.lat
+    lon = location.lon
     if (lat is None) or (lon is None):
-        if feature.parent:
+        if location.parent:
             # Skip the current record if we can
-            latlon = gis.get_latlon(feature.parent)
-        elif feature.id:
-            latlon = gis.get_latlon(feature.id)
+            latlon = gis.get_latlon(location.parent)
+        elif location.id:
+            latlon = gis.get_latlon(location.id)
         if latlon:
             lat = latlon["lat"]
             lon = latlon["lon"]
@@ -3076,7 +3088,7 @@ def display_feature():
     # Default zoom +2 (same as a single zoom on a cluster)
     # config = gis.get_config()
     # zoom = config.zoom + 2
-    bounds = gis.get_bounds(features=[feature])
+    bounds = gis.get_bounds(features = [location])
 
     options = {"lat": lat,
                "lon": lon,
@@ -3087,10 +3099,8 @@ def display_feature():
                "collapsed": True,
                }
     # Layers
-    controller = get_vars.controller
-    function = get_vars.function
-    # Record id
-    rid = get_vars.rid
+    controller = get_vars.c
+    function = get_vars.f
     query = ((ftable.controller == controller) & \
              (ftable.function == function) & \
              (ftable.layer_id == stable.layer_id) & \
@@ -3100,17 +3110,23 @@ def display_feature():
              ((stable.config_id == None) | ((stable.config_id == gtable.id) & \
                                             (gtable.name == "Default")))
              )
-    rows = db(query).select(ftable.layer_id).first()
-    if rows:
+    row = db(query).select(ftable.layer_id,
+                           limitby = (0, 1)
+                           ).first()
+    if row:
+        # Display feature using Layer Styling
         feature_opts = {"name": T("Represent"),
                         "id": "resource_represent",
                         "active": True,
-                        "layer_id": rows.layer_id}
-        if rid:
-            feature_opts["filter"] = "~.id=%s" % rid
+                        "layer_id": row.layer_id,
+                        }
+        record_id = get_vars.r
+        if record_id:
+            feature_opts["filter"] = "~.id=%s" % record_id
         options["feature_resources"] = [feature_opts]
     else:
-        options["features"] = [feature.wkt]
+        # Just display feature geometry
+        options["features"] = [location.wkt]
 
     # Add Width & Height if opened in Window
     if get_vars.popup == "1":
@@ -3121,7 +3137,7 @@ def display_feature():
 
     response.view = "gis/iframe.html"
     map = gis.show_map(**options)
-    return dict(map=map)
+    return {"map": map}
 
 # -----------------------------------------------------------------------------
 def display_features():
@@ -3184,7 +3200,7 @@ def display_features():
         collapsed = True
     )
 
-    return dict(map=map)
+    return {"map": map}
 
 # =============================================================================
 def geocode():
@@ -3426,7 +3442,7 @@ def geoexplorer():
 # -----------------------------------------------------------------------------
 def about():
     """  Custom View for GeoExplorer """
-    return dict()
+    return {}
 
 # -----------------------------------------------------------------------------
 def maps():
@@ -3456,8 +3472,8 @@ def maps():
         #projection = db(db.gis_projection.id == record.projection).select(limitby=(0, 1)).first()
 
         # Put details into the correct structure
-        output = dict()
-        output["map"] = dict()
+        output = {}
+        output["map"] = {}
         map = output["map"]
         map["center"] = [record.lat, record.lon]
         map["zoom"] = record.zoom
@@ -3473,28 +3489,30 @@ def maps():
             layer = db(ltable.id == _layer).select(limitby=(0, 1)).first()
             if layer.type_ == "OpenLayers.Layer":
                 # Add args
-                map["layers"].append(dict(source=layer.source,
-                                          title=layer.title,
-                                          name=layer.name,
-                                          group=layer.group_,
-                                          type=layer.type_,
-                                          format=layer.img_format,
-                                          visibility=layer.visibility,
-                                          transparent=layer.transparent,
-                                          opacity=layer.opacity,
-                                          fixed=layer.fixed,
-                                          args=[ "None", {"visibility":False} ]))
+                map["layers"].append({"source": layer.source,
+                                      "title": layer.title,
+                                      "name": layer.name,
+                                      "group": layer.group_,
+                                      "type": layer.type_,
+                                      "format": layer.img_format,
+                                      "visibility": layer.visibility,
+                                      "transparent": layer.transparent,
+                                      "opacity": layer.opacity,
+                                      "fixed": layer.fixed,
+                                      "args": [ "None", {"visibility":False} ],
+                                      })
             else:
-                map["layers"].append(dict(source=layer.source,
-                                          title=layer.title,
-                                          name=layer.name,
-                                          group=layer.group_,
-                                          type=layer.type_,
-                                          format=layer.img_format,
-                                          visibility=layer.visibility,
-                                          transparent=layer.transparent,
-                                          opacity=layer.opacity,
-                                          fixed=layer.fixed))
+                map["layers"].append({"source": layer.source,
+                                      "title": layer.title,
+                                      "name": layer.name,
+                                      "group": layer.group_,
+                                      "type": layer.type_,
+                                      "format": layer.img_format,
+                                      "visibility": layer.visibility,
+                                      "transparent": layer.transparent,
+                                      "opacity": layer.opacity,
+                                      "fixed": layer.fixed,
+                                      })
 
         # @ToDo: Read Metadata (no way of editing this yet)
 
@@ -3581,7 +3599,7 @@ def maps():
         id = table.insert(lat=lat, lon=lon, zoom=zoom, layer_id=layers)
 
         # Return the ID of the saved record for the Bookmark
-        output = json.dumps(dict(id=id), separators=SEPARATORS)
+        output = json.dumps({"id": id}, separators=SEPARATORS)
         return output
 
     elif request.env.request_method == "PUT":
@@ -3665,7 +3683,7 @@ def maps():
         db(table.id == id).update(lat=lat, lon=lon, zoom=zoom, layer_id=layers)
 
         # Return the ID of the saved record for the Bookmark
-        output = json.dumps(dict(id=id), separators=SEPARATORS)
+        output = json.dumps({"id": id}, separators=SEPARATORS)
         return output
 
     # Abort - we shouldn't get here
@@ -3711,11 +3729,14 @@ def potlatch2():
 
         site_name = settings.get_system_name_short()
 
-        return dict(lat=lat, lon=lon, zoom=zoom,
-                    gpx_url=gpx_url,
-                    site_name=site_name,
-                    key=osm_oauth_consumer_key,
-                    secret=osm_oauth_consumer_secret)
+        return {"lat": lat,
+                "lon": lon,
+                "zoom": zoom,
+                "gpx_url": gpx_url,
+                "site_name": site_name,
+                "key": osm_oauth_consumer_key,
+                "secret": osm_oauth_consumer_secret,
+                }
 
     else:
         session.warning = T("To edit OpenStreetMap, you need to edit the OpenStreetMap settings in your Map Config")
