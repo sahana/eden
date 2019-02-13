@@ -4,19 +4,23 @@
  {{=item}}
 </div>
 <div class='row'>
- {{if not auth.s3_logged_in():}}
- {{#=login_buttons}}
- <div id='login_box' class='panel'> <!--style='display:none'-->
-  <div id='login_form' {{if not registered:}}style='display:none'{{pass}}>
-   {{=login_div}}
-   {{include "auth/_login.html"}}
-  </div>
-  {{if self_registration:}}
-  <div id='register_form' {{if registered:}}style='display:none'{{pass}}>
-   {{=register_div}}
-   {{include "auth/_register.html"}}
+ <div class='columns medium-6'>
+  {{if not auth.s3_logged_in():}}
+  {{#=login_buttons}}
+  <div id='login_box' class='panel'> <!--style='display:none'-->
+   <div id='login_form' {{if not registered:}}style='display:none'{{pass}}>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+   {{if self_registration:}}
+   <div id='register_form' {{if registered:}}style='display:none'{{pass}}>
+    {{=register_div}}
+    {{include "auth/_register.html"}}
+   </div>
+   {{pass}}
   </div>
   {{pass}}
  </div>
- {{pass}}
+ <div class='columns medium-6'>
+ </div>
 </div>
