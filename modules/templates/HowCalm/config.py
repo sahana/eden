@@ -80,6 +80,12 @@ def config(settings):
     # Open records in read mode rather then edit by default
     settings.ui.open_read_first = True
     settings.ui.update_label = "Edit"
+    settings.ui.export_formats = ("pdf", "xls")
+
+    settings.hrm.compose_button = False
+    settings.hrm.staff_label = "Contacts"
+
+    settings.org.organisation_types_hierarchical = True
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -179,10 +185,6 @@ def config(settings):
         #)),
     ])
 
-    settings.hrm.staff_label = "Contacts"
-    settings.org.organisation_types_hierarchical = True
-    settings.ui.export_formats = ("pdf", "xls")
-
     # -------------------------------------------------------------------------
     def howcalm_rheader(r):
 
@@ -208,10 +210,10 @@ def config(settings):
             #from s3 import s3_rheader_tabs
             #rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            from gluon import DIV, TABLE, TR, TH
+            from gluon import A, DIV, TABLE, TR, TH, URL
 
             from s3 import s3_fullname
-            record_data = TABLE(TR(TH(s3_fullname(record))))
+            record_data = TABLE(TR(TH(s3_fullname(record), _colspan=2)))
             record_data_append = record_data.append
 
             record_id = record.id
@@ -219,7 +221,20 @@ def config(settings):
             db = current.db
             s3db = current.s3db
 
-            ptagtable = current.s3db.pr_person_tag
+            hrtable = s3db.hrm_human_resource
+            query = (hrtable.person_id == record_id)
+            hr = db(query).select(hrtable.organisation_id,
+                                  limitby = (0, 1)
+                                  ).first()
+            if hr:
+                organisation_id = hr.organisation_id
+                record_data_append(TR(TH("%s: " % T("Organization")),
+                                      A(hrtable.organisation_id.represent(organisation_id),
+                                        _href = URL(c="org", f="organisation", args=[organisation_id]),
+                                        )
+                                      ))
+
+            ptagtable = s3db.pr_person_tag
             query = (ptagtable.person_id == record_id) & \
                     (ptagtable.tag == "religious_title")
             religious_title = db(query).select(ptagtable.value,
@@ -244,7 +259,7 @@ def config(settings):
 
         elif tablename == "org_organisation":
             tabs = [(T("Basic Details"), None),
-                    (T("Contacts"), "human_resource"),
+                    (T("Contacts"), "person"),
                     (T("Facilities"), "facility"),
                     ]
 
@@ -258,7 +273,7 @@ def config(settings):
 
             table = s3db.org_organisation
 
-            record_data = TABLE(TR(TH(record.name)))
+            record_data = TABLE(TR(TH(record.name, _colspan=2)))
             record_data_append = record_data.append
 
             record_id = record.id
@@ -373,6 +388,11 @@ def config(settings):
         # Ensure we have the filtered components
         customise_pr_person_resource(r, "pr_person")
 
+        current.s3db.configure("hrm_human_resource",
+                               # We use Custom CRUD button to open Person perspective
+                               listadd = False,
+                               )
+
         hrm_list_fields()
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
@@ -415,8 +435,12 @@ def config(settings):
                                               ),
                               S3LocationFilter("location_id",
                                                label = T("Location"),
-                                               hidden = True,
+                                               #hidden = True,
                                                ),
+                              S3OptionsFilter("person_id$competency.skill_id",
+                                              label = T("Languages Spoken"),
+                                              #hidden = True,
+                                              ),
                               ]
 
             current.s3db.configure("hrm_human_resource",
@@ -428,7 +452,7 @@ def config(settings):
 
         standard_postp = s3.postp
         def custom_postp(r, output):
-            # Call standardstandard_postpprep
+            # Call standard_postp
             if callable(standard_postp):
                 output = standard_postp(r, output)
 
@@ -575,8 +599,10 @@ def config(settings):
 
         s3db = current.s3db
 
-        s3db.org_facility.location_id.widget = S3LocationSelector(levels = gis_levels,
+        s3db.org_facility.location_id.widget = S3LocationSelector(levels = False,
                                                                   show_address = True,
+                                                                  show_postcode = False,
+                                                                  show_map = False,
                                                                   )
 
         # Filtered components
@@ -991,6 +1017,27 @@ def config(settings):
             return result
         s3.prep = custom_prep
 
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standard_postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.interactive and r.component_name == "person":
+
+                # Custom Create Button
+                from gluon import A, URL
+                add_btn = A(T("Create Contact"),
+                            _class = "action-btn",
+                            _href = URL(c="pr", f="person", args="create",
+                                        vars = {"organisation_id": r.id},
+                                        ),
+                            )
+                output["buttons"] = {"add_btn": add_btn}
+
+            return output
+        s3.postp = custom_postp
+
         attr["rheader"] = howcalm_rheader
 
         return attr
@@ -1023,11 +1070,7 @@ def config(settings):
 
         # Filtered components
         s3db.add_components("pr_person",
-                            pr_person_tag = ({"name": "languages_spoken",
-                                              "joinby": "person_id",
-                                              "filterby": {"tag": "languages_spoken"},
-                                              },
-                                             {"name": "other_languages",
+                            pr_person_tag = ({"name": "other_languages",
                                               "joinby": "person_id",
                                               "filterby": {"tag": "other_languages"},
                                               "multiple": False,
@@ -1052,17 +1095,6 @@ def config(settings):
 
         # Individual settings for specific tag components
         components_get = s3db.resource(tablename).components.get
-
-        languages_spoken = components_get("languages_spoken")
-        f = languages_spoken.table.value
-        language_opts = {1: T("English"),
-                         2: T("Spanish"),
-                         3: T("Chinese"),
-                         4: T("Indic Languages (Hindi, Urdu or Gujarati)"),
-                         5: T("Russian"),
-                         }
-        f.requires = IS_EMPTY_OR(IS_IN_SET(language_opts, multiple = True))
-        f.represent = S3Represent(options = language_opts, multiple = True)
 
         em_comms = components_get("em_comms")
         f = em_comms.table.value
@@ -1105,14 +1137,11 @@ def config(settings):
                                       ],
                             ),
                        S3SQLInlineComponent(
-                            "languages_spoken",
-                            name = "languages_spoken",
+                            "competency",
+                            #name = "languages_spoken",
                             label = T("Languages Spoken"),
-                            multiple = False,
-                            fields = [("", "value")],
-                            #filterby = {"field": "tag",
-                            #            "options": "languages_spoken",
-                            #            },
+                            multiple = True,
+                            fields = [("", "skill_id")],
                             ),
                        (T("Other Languages"), "other_languages.value"),
                        (T("Religious Title"), "religious_title.value"),
@@ -1203,28 +1232,32 @@ def config(settings):
 
         crud_form = S3SQLCustomForm(*crud_fields)
 
-        from s3 import S3TextFilter#, S3OptionsFilter, S3HierarchyFilter, S3LocationFilter,
-        filter_widgets = [
-            S3TextFilter(["first_name", "middle_name", "last_name"],
-                         label = T("Search"),
-                         comment = T("Search by person name. You can use * as wildcard."),
-                         _class = "filter-search",
-                         ),
-            #S3HierarchyFilter("organisation_organisation_type.organisation_type_id",
-            #                  label = T("Religion"),
-            #                  ),
-            #S3LocationFilter("org_facility.location_id",
-            #                 label = T("Location"),
-            #                 levels = gis_levels,
-            #                 #hidden = True,
-            #                 ),
-            ]
+        #from s3 import S3HierarchyFilter, S3OptionsFilter, S3LocationFilter, S3TextFilter
+        #filter_widgets = [
+        #    S3TextFilter(["first_name", "middle_name", "last_name"],
+        #                 label = T("Search"),
+        #                 comment = T("Search by person name. You can use * as wildcard."),
+        #                 _class = "filter-search",
+        #                 ),
+        #    S3HierarchyFilter("human_resource.organisation_id$organisation_organisation_type.organisation_type_id",
+        #                      label = T("Religion"),
+        #                      ),
+        #    S3LocationFilter("location_id",
+        #                     label = T("Location"),
+        #                     levels = gis_levels,
+        #                     #hidden = True,
+        #                     ),
+        #    S3OptionsFilter("competency.skill_id",
+        #                    label = T("Languages Spoken"),
+        #                    #hidden = True,
+        #                    ),
+        #    ]
 
         list_fields = ["first_name",
                        "middle_name",
                        "last_name",
                        (T("Type"), "human_resource.job_title_id"),
-                       (T("Languages Spoken"), "languages_spoken.value"),
+                       (T("Languages Spoken"), "competency.skill_id"),
                        (T("Religious Title"), "religious_title.value"),
                        (T("Position Title"), "position_title.value"),
                        (T("ECDM"), "em_comms.value"),
@@ -1232,7 +1265,7 @@ def config(settings):
 
         s3db.configure("pr_person",
                        crud_form = crud_form,
-                       filter_widgets = filter_widgets,
+                       #filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        )
 
@@ -1251,17 +1284,22 @@ def config(settings):
             else:
                 result = True
 
-            mine = r.get_vars.get("mine")
-            if mine:
-                from s3 import FS
-                _filter = (FS("human_resource.organisation_id") == current.auth.user.organisation_id)
-                r.resource.add_filter(_filter)
-                s3.crud_strings["pr_person"].title_list = T("My Contacts")
+            if r.method == "create":
+                organisation_id = r.get_vars.get("organisation_id")
+                if organisation_id:
+                    current.s3db.hrm_human_resource.organisation_id.default = organisation_id
+            else:
+                get_vars_get = r.get_vars.get
+                if get_vars_get("mine"):
+                    from s3 import FS
+                    _filter = (FS("human_resource.organisation_id") == current.auth.user.organisation_id)
+                    r.resource.add_filter(_filter)
+                    s3.crud_strings["pr_person"].title_list = T("My Contacts")
 
-            elif r.get_vars.get("personal"):
-                from gluon import URL
-                from gluon.tools import redirect
-                redirect(URL(args=[current.auth.s3_logged_in_person()]))
+                elif get_vars_get("personal"):
+                    from gluon import URL
+                    from gluon.tools import redirect
+                    redirect(URL(args=[current.auth.s3_logged_in_person()]))
 
             return result
         s3.prep = custom_prep
