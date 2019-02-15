@@ -315,7 +315,40 @@ def config(settings):
                 record_data_append(TR(TH("%s: " % T("Facebook")),
                                       A(url, _href=url)))
 
-            rheader = DIV(record_data,
+            oftable = s3db.org_facility
+            gtable = s3db.gis_location
+            query = (oftable.organisation_id == record_id) & \
+                    (oftable.location_id == gtable.id)
+            features = db(query).select(gtable.lat,
+                                        gtable.lon
+                                        )
+            _map = ""
+            if len(features) > 0:
+                ftable = s3db.gis_layer_feature
+                query = (ftable.controller == "org") & \
+                        (ftable.function == "facility")
+                layer = db(query).select(ftable.layer_id,
+                                         limitby=(0, 1)).first()
+                if layer:
+                    gis = current.gis
+                    bbox = gis.get_bounds([f for f in features])
+                    _map = gis.show_map(height = 250,
+                                        collapsed = True,
+                                        bbox = bbox,
+                                        feature_resources = [{"name": T("Facilities"),
+                                                              "id": "rheader_map",
+                                                              "active": True,
+                                                              "layer_id": layer.layer_id,
+                                                              "filter": "~.organisation_id=%s" % record_id,
+                                                              }],
+                                        )
+
+            rheader = DIV(DIV(record_data,
+                              _class = "columns medium-6",
+                              ),
+                          DIV(_map,
+                              _class = "columns medium-6",
+                              ),
                           rheader_tabs,
                           )
 
@@ -337,7 +370,7 @@ def config(settings):
             db = current.db
             s3db = current.s3db
 
-            stagtable = current.s3db.org_site_tag
+            stagtable = s3db.org_site_tag
             query = (stagtable.site_id == site_id) & \
                     (stagtable.tag == "oem_ready")
             oem_ready = db(query).select(stagtable.value,
@@ -347,7 +380,38 @@ def config(settings):
                 record_data_append(TR(TH("%s: " % T("OEM Ready Receiving Center")),
                                       oem_ready.value))
 
-            rheader = DIV(record_data,
+            gtable = s3db.gis_location
+            location = db(gtable.id == record.location_id).select(gtable.lat,
+                                                                  gtable.lon,
+                                                                  limitby = (0, 1)
+                                                                  ).first()
+            _map = ""
+            if location:
+                ftable = s3db.gis_layer_feature
+                query = (ftable.controller == "org") & \
+                        (ftable.function == "facility")
+                layer = db(query).select(ftable.layer_id,
+                                         limitby=(0, 1)).first()
+                if layer:
+                    _map = current.gis.show_map(height = 250,
+                                                lat = location.lat,
+                                                lon = location.lon,
+                                                zoom = 15,
+                                                collapsed = True,
+                                                feature_resources = [{"name": T("Facility"),
+                                                                      "id": "rheader_map",
+                                                                      "active": True,
+                                                                      "layer_id": layer.layer_id,
+                                                                      "filter": "~.id=%s" % record.id,
+                                                                      }],
+                                                )
+
+            rheader = DIV(DIV(record_data,
+                              _class = "columns medium-6"
+                              ),
+                          DIV(_map,
+                              _class = "columns medium-6"
+                              ),
                           #rheader_tabs,
                           )
 
@@ -418,9 +482,14 @@ def config(settings):
                 r.resource.add_filter(_filter)
                 s3.crud_strings["hrm_human_resource"].title_list = T("My Contacts")
 
+            s3db = current.s3db
+
             hrm_list_fields()
 
-            from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
+            #from s3 import S3HierarchyFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
+            from s3 import S3HierarchyFilter, S3OptionsFilter, S3TextFilter
+
+            s3db.org_organisation_organisation_type.organisation_type_id.label = T("Religion")
 
             filter_widgets = [S3TextFilter(["person_id$first_name",
                                             "person_id$middle_name",
@@ -429,24 +498,44 @@ def config(settings):
                                             ],
                                            label = T("Search"),
                                            ),
-                              S3OptionsFilter("organisation_id",
-                                              search = True,
-                                              header = "",
+                              S3HierarchyFilter("organisation_id$organisation_organisation_type.organisation_type_id",
+                                                label = False,
+                                                #label = T("Religion"),
+                                                widget = "cascade",
+                                                leafonly = False,
+                                                cascade = True,
+                                                ),
+                              #S3OptionsFilter("organisation_id",
+                              #                search = True,
+                              #                header = "",
+                              #                #hidden = True,
+                              #                ),
+                              #S3LocationFilter("location_id",
+                              #                 label = T("Location"),
+                              #                 #hidden = True,
+                              #                 ),
+                              S3OptionsFilter("job_title_id",
+                                              label = T("Type"),
                                               #hidden = True,
                                               ),
-                              S3LocationFilter("location_id",
-                                               label = T("Location"),
-                                               #hidden = True,
-                                               ),
+                              S3OptionsFilter("person_id$em_comms.value",
+                                              label = T("ECDM"),
+                                              #hidden = True,
+                                              options = {"Y": T("Yes"),
+                                                         "N": T("No"),
+                                                         },
+                                              #widget = "groupedopts",
+                                              cols = 2,
+                                              ),
                               S3OptionsFilter("person_id$competency.skill_id",
                                               label = T("Languages Spoken"),
                                               #hidden = True,
                                               ),
                               ]
 
-            current.s3db.configure("hrm_human_resource",
-                                   filter_widgets = filter_widgets,
-                                   )
+            s3db.configure("hrm_human_resource",
+                           filter_widgets = filter_widgets,
+                           )
 
             return result
         s3.prep = custom_prep
@@ -1241,6 +1330,7 @@ def config(settings):
 
         crud_form = S3SQLCustomForm(*crud_fields)
 
+        # List view uses hrm/staff
         #from s3 import S3HierarchyFilter, S3OptionsFilter, S3LocationFilter, S3TextFilter
         #filter_widgets = [
         #    S3TextFilter(["first_name", "middle_name", "last_name"],

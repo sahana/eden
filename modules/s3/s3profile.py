@@ -905,10 +905,10 @@ class S3Profile(S3CRUD):
             # @ToDo: Check permission to access layer (both controller/function & also within Map Config)
             tablename = widget["tablename"]
             list_id = "profile-list-%s-%s" % (tablename, widget["index"])
-            layer = dict(name = T(widget["label"]),
-                         id = list_id,
-                         active = True,
-                         )
+            layer = {"name": T(widget["label"]),
+                     "id": list_id,
+                     "active": True,
+                     }
             filter = widget_get("filter", None)
             marker = widget_get("marker", None)
             if marker:
