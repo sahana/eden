@@ -1112,15 +1112,18 @@ def config(settings):
 
         s3db.hrm_human_resource.job_title_id.comment = S3PopupLink(c = "hrm",
                                                                    f = "job_title",
-                                                                   # Add this for usecases where this is no special controller for an options lookup
-                                                                   #vars = {"prefix": "hrm",
-                                                                   #        "parent": "human_resource",
-                                                                   #        },
                                                                    label = T("Create Type"),
                                                                    title = T("Type"),
                                                                    tooltip = T("The contact's type"),
                                                                    )
 
+        s3db.hrm_competency.skill_id.comment = S3PopupLink(c = "hrm",
+                                                           f = "skill",
+                                                           # no pr/competency controller for options.s3json lookup
+                                                           vars = {"prefix": "hrm",
+                                                                   },
+                                                           label = T("Create Language"),
+                                                           )
         #s3db.gis_location.addr_street.label = T("Mailing Address")
         s3db.gis_location.addr_street.label = ""
         s3db.pr_address.location_id.widget = S3LocationSelector(levels = False,

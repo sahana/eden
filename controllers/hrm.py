@@ -618,7 +618,9 @@ def experience():
 # -----------------------------------------------------------------------------
 def competency():
     """
-        RESTful CRUD controller used to allow searching for people by Skill
+        RESTful CRUD controller
+        - used to allow searching for people by Skill
+        - used for options.s3json lookups
     """
 
     s3.filter = FS("person_id$human_resource.type") == 1
