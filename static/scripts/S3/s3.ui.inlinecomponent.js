@@ -611,7 +611,7 @@
                             // Reference values need to be ints for S3Represent to find a match in theset
                             // - ensure we don't do this to dates though!
                             intvalue = parseInt(value, 10);
-                            if (!isNaN(intvalue)) {
+                            if (!isNaN(intvalue) && value == '' + intvalue) {
                                 value = intvalue;
                             }
                         }
