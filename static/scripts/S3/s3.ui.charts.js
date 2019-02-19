@@ -324,13 +324,14 @@
         _pieChart: function(container) {
 
             var el = $(this.element),
-                opts = this.options;
+                opts = this.options,
+                legendOff = el.data('legend') == 'off';
 
             var chart = nv.models.pieChart()
                                  .duration(opts.transition)
                                  .x(function(d) { return d.label; })
                                  .y(function(d) { return d.value; })
-                                 .showLabels(true)
+                                 .showLabels(legendOff)
                                  //.labelsOutside(true)
                                  .showTooltipPercent(true);
 
@@ -339,7 +340,7 @@
             chart.valueFormat(valueFormat);
 
             // Hide legend?
-            if (el.data('legend') == 'off') {
+            if (legendOff) {
                 chart.showLegend(false);
             }
 
