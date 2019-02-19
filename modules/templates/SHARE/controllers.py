@@ -834,7 +834,7 @@ class HomepageStatistics(object):
         # Build data structure for chart renderer
         rows = dict((row[status], row[number]) for row in rows)
         data = []
-        for code, label, color in cls.REQ_STATUS:
+        for code, label, color in cls.REQ_STATUS[::-1]: # clockwise
             value = rows.get(code)
             data.append({"label": s3_str(label),
                          "value": value if value else 0,
@@ -944,7 +944,7 @@ class HomepageStatistics(object):
         table = s3db.req_need_line
         etable = s3db.event_event
         ltable = s3db.event_event_need
-        
+
         query = (etable.closed == False) & \
                 (etable.id == ltable.event_id) & \
                 (ltable.need_id == table.need_id) & \

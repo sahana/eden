@@ -324,25 +324,34 @@
         _pieChart: function(container) {
 
             var el = $(this.element),
-                opts = this.options,
-                legendOff = el.data('legend') == 'off';
+                opts = this.options;
+
+            var showLegend = el.data('legend') != 'off',
+                showLabels = el.data('labels'),
+                labelThreshold = 0.05;
+
+            if (showLabels == 'off') {
+                showLabels = false;
+            } else {
+                if (showLabels != 'on' && showLegend) {
+                    labelThreshold = 0.25;
+                }
+                showLabels = true;
+            }
 
             var chart = nv.models.pieChart()
                                  .duration(opts.transition)
                                  .x(function(d) { return d.label; })
                                  .y(function(d) { return d.value; })
-                                 .showLabels(legendOff)
+                                 .showLabels(showLabels)
+                                 .labelThreshold(labelThreshold)
+                                 .showLegend(showLegend)
                                  //.labelsOutside(true)
                                  .showTooltipPercent(true);
 
             // Set number format
             var valueFormat = d3.format(opts.valueFormat);
             chart.valueFormat(valueFormat);
-
-            // Hide legend?
-            if (legendOff) {
-                chart.showLegend(false);
-            }
 
             // Set chart default colors
             if (opts.colors) {
