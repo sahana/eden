@@ -326,17 +326,45 @@
             var el = $(this.element),
                 opts = this.options;
 
-            var showLegend = el.data('legend') != 'off',
-                showLabels = el.data('labels'),
-                labelThreshold = 0.05;
+            var showLegend = el.data('legend') != 'off', // on, off
+                showLabels = el.data('labels'),          // inside, outside, off
+                labelType = el.data('labeltype'),        // key, value, percent
+                labelThreshold = 0.05,
+                labelsOutside = true;
 
-            if (showLabels == 'off') {
-                showLabels = false;
-            } else {
-                if (showLabels != 'on' && showLegend) {
-                    labelThreshold = 0.25;
+            if (!labelType) {
+                if (showLegend) {
+                    labelType = 'percent';
+                } else {
+                    labelType = 'key';
                 }
-                showLabels = true;
+            }
+
+            switch(showLabels) {
+                case 'off':
+                    showLabels = false;
+                    break;
+                case 'outside':
+                    showLabels = true;
+                    if (showLegend) {
+                        if (labelType == 'percent' || labelType == 'value') {
+                            labelThreshold = 0.03;
+                        } else {
+                            labelThreshold = 0.20;
+                        }
+                    }
+                    break;
+                default:
+                    showLabels = true;
+                    labelsOutside = false;
+                    if (showLegend) {
+                        if (labelType != 'percent' && labelType != 'value') {
+                            labelThreshold = 0.25;
+                        }
+                    } else {
+                        labelThreshold = 0.10;
+                    }
+                    break;
             }
 
             var chart = nv.models.pieChart()
@@ -344,9 +372,10 @@
                                  .x(function(d) { return d.label; })
                                  .y(function(d) { return d.value; })
                                  .showLabels(showLabels)
-                                 .labelThreshold(labelThreshold)
+                                 .labelType(labelType)
                                  .showLegend(showLegend)
-                                 //.labelsOutside(true)
+                                 .labelsOutside(labelsOutside)
+                                 .labelThreshold(labelThreshold)
                                  .showTooltipPercent(true);
 
             // Set number format
