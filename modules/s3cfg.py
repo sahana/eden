@@ -2856,11 +2856,23 @@ class S3Config(Storage):
         """
         return self.br.get("manage_assistance", True)
 
+    def get_br_assistance_manager(self):
+        """
+            Assign assistance measures to individual staff members
+        """
+        return self.br.get("assistance_manager", True)
+
     def get_br_assistance_types(self):
         """
             Use assistance type categories
         """
         return self.br.get("assistance_types", True)
+
+    def get_br_assistance_track_effort(self):
+        """
+            Track effort (=hours spent) for assistance measures
+        """
+        return self.br.get("assistance_track_effort", True)
 
     # -------------------------------------------------------------------------
     # CAP: Common Alerting Protocol

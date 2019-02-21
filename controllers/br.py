@@ -322,6 +322,13 @@ def person():
                                               ))
             # TODO when using inline measures, filter themes to root org
 
+        elif r.component_name == "assistance_measure":
+
+            mtable = r.component.table
+            if human_resource_id:
+                if settings.get_br_assistance_manager():
+                    mtable.human_resource_id.default = human_resource_id
+
         return True
     s3.prep = prep
 

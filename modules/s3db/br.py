@@ -448,6 +448,7 @@ class BRCaseActivityModel(S3Model):
     """
 
     names = ("br_case_activity",
+             "br_case_activity_id",
              "br_case_activity_status",
              "br_case_activity_update_type",
              )
@@ -766,18 +767,33 @@ class BRCaseActivityModel(S3Model):
             )
 
         # Reusable field
-        # TODO switch default representation between subject and need
-        #      based on deployment setting
-        represent = br_CaseActivityRepresent(show_link=True,
-                                             show_as = "subject",
+        if case_activity_subject:
+            label = T("Subject")
+            show_as = "subject"
+            show_date = False
+        else:
+            label = T("Need")
+            show_as = "need"
+            show_date = True
+        represent = br_CaseActivityRepresent(show_as = show_as,
+                                             show_date = show_date,
+                                             show_link = True,
                                              )
+        if show_date:
+            # Don't alphasort, show latest first
+            sort, orderby = False, "%s.date desc" % tablename
+        else:
+            sort, orderby = True, None
         case_activity_id = S3ReusableField("case_activity_id",
                                            "reference %s" % tablename,
+                                           label = label,
                                            ondelete = "CASCADE",
                                            represent = represent,
                                            requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "%s.id" % tablename,
                                                                   represent,
+                                                                  orderby = orderby,
+                                                                  sort = sort,
                                                                   )),
                                                         )
 
@@ -855,19 +871,20 @@ class BRCaseActivityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"br_case_activity_id": case_activity_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        #dummy = S3ReusableField("dummy_id", "integer",
-        #                        readable = False,
-        #                        writable = False,
-        #                        )
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
 
-        return {#"example_example_id": lambda **attr: dummy("example_id"),
+        return {"br_case_activity_id": lambda **attr: dummy("case_activity_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -1020,7 +1037,7 @@ class BRAppointmentModel(S3Model):
                                               ondelete = "RESTRICT",
                                               represent = represent,
                                               requires = IS_EMPTY_OR(
-                                                              IS_ONE_OF(db, "dvr_case_appointment_type.id",
+                                                              IS_ONE_OF(db, "%s.id" % tablename,
                                                                         represent,
                                                                         )),
                                               )
@@ -1378,6 +1395,9 @@ class BRAssistanceModel(S3Model):
         # Measures of Assistance
         #
         use_type = settings.get_br_assistance_types()
+        assistance_manager = settings.get_br_assistance_manager()
+        track_effort = settings.get_br_assistance_track_effort()
+        use_activities = settings.get_br_case_activities()
 
         tablename = "br_assistance_measure"
         define_table(tablename,
@@ -1387,17 +1407,24 @@ class BRAssistanceModel(S3Model):
                          widget = S3PersonAutocompleteWidget(controller="br"),
                          empty = False,
                          ),
+                     self.br_case_activity_id(
+                         readable = use_activities,
+                         writable = use_activities,
+                         ),
                      # TODO option to use start/end date-time (for calendar)
                      s3_date(label = T("Date"),
                              default = "now",
                              ),
                      assistance_type_id(
-                         readable=use_type,
-                         writable=use_type,
-                         ),
+                        readable = use_type,
+                        writable = use_type,
+                        ),
                      assistance_status_id(),
-                     self.hrm_human_resource_id(widget=None,
-                                                ),
+                     self.hrm_human_resource_id(
+                        widget = None,
+                        readable = assistance_manager,
+                        writable = assistance_manager,
+                        ),
                      Field("hours", "double",
                            label = T("Effort (Hours)"),
                            requires = IS_EMPTY_OR(
@@ -1405,6 +1432,8 @@ class BRAssistanceModel(S3Model):
                            represent = lambda hours: "%.2f" % hours if hours else NONE,
                            widget = S3HoursWidget(precision = 2,
                                                   ),
+                           readable = track_effort,
+                           writable = track_effort,
                            ),
                      s3_comments(label = T("Details"),
                                  comment = None,
@@ -1413,7 +1442,22 @@ class BRAssistanceModel(S3Model):
                      *s3_meta_fields())
 
         # List_fields
-        # TODO
+        list_fields = ["date",
+                       #"case_activity_id",
+                       #"assistance_type_id",
+                       "comments",
+                       #"human_resource_id",
+                       #"hours",
+                       "status_id",
+                       ]
+        if use_type:
+            list_fields.insert(1, "assistance_type_id")
+        if use_activities:
+            list_fields.insert(1, "case_activity_id")
+        if assistance_manager:
+            list_fields.insert(-1, "human_resource_id")
+        if track_effort:
+            list_fields.insert(-1, "hours")
 
         # Filter widgets
         # TODO
@@ -1422,7 +1466,9 @@ class BRAssistanceModel(S3Model):
         # TODO
 
         # Table Configuration
-        # TODO
+        configure(tablename,
+                  list_fields = list_fields,
+                  )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -1597,14 +1643,23 @@ class BRVulnerabilityModel(S3Model):
 class br_CaseActivityRepresent(S3Represent):
     """ Representation of case activity IDs """
 
-    def __init__(self, show_as=None, fmt=None, show_link=False, linkto=None):
+    def __init__(self,
+                 show_as=None,
+                 fmt=None,
+                 show_date=False,
+                 show_link=False,
+                 linkto=None,
+                 ):
         """
             Constructor
 
             @param show_as: alternative representations:
                             "beneficiary"|"need"|"subject"
-            @param show_link: show representation as clickable link
             @param fmt: string format template for person record
+            @param show_date: include the activity date in the representation
+            @param show_link: show representation as clickable link
+            @param linkto: URL for the link, using "[id]" as placeholder
+                           for the record ID
         """
 
         super(br_CaseActivityRepresent, self).__init__(
@@ -1622,6 +1677,8 @@ class br_CaseActivityRepresent(S3Represent):
             self.fmt = fmt
         else:
             self.fmt = "%(first_name)s %(last_name)s"
+
+        self.show_date = show_date
 
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=None):
@@ -1646,7 +1703,9 @@ class br_CaseActivityRepresent(S3Represent):
 
         show_as = self.show_as
         if show_as == "beneficiary":
+            # Beneficiary name
             rows = current.db(query).select(table.id,
+                                            table.date,
                                             ptable.id,
                                             ptable.pe_label,
                                             ptable.first_name,
@@ -1656,19 +1715,21 @@ class br_CaseActivityRepresent(S3Represent):
                                             limitby = (0, count),
                                             )
 
-        # TODO
-        #elif show_as == "need":
-        #    ntable = current.s3db.br_need
-        #    left.append(ntable.on(ntable.id == table.need_id))
-        #    rows = current.db(query).select(table.id,
-        #                                    ptable.id,
-        #                                    ntable.name,
-        #                                    left = left,
-        #                                    limitby = (0, count),
-        #                                    )
+        elif show_as == "need":
+            # Need type
+            ntable = current.s3db.br_need
+            left.append(ntable.on(ntable.id == table.need_id))
+            rows = current.db(query).select(table.id,
+                                            table.date,
+                                            ptable.id,
+                                            ntable.name,
+                                            left = left,
+                                            limitby = (0, count),
+                                            )
         else:
             # Subject line (default)
             rows = current.db(query).select(table.id,
+                                            table.date,
                                             table.subject,
                                             ptable.id,
                                             left = left,
@@ -1690,32 +1751,32 @@ class br_CaseActivityRepresent(S3Represent):
         show_as = self.show_as
         if show_as == "beneficiary":
             beneficiary = dict(row.pr_person)
-
             # Do not show "None" for no label
             if beneficiary.get("pe_label") is None:
                 beneficiary["pe_label"] = ""
+            reprstr = self.fmt % beneficiary
 
-            return self.fmt % beneficiary
-
-        # TODO
-        #elif show_as == "need":
-        #
-        #    need = row.br_need.name
-        #    if self.translate:
-        #        need = current.T(need) if need else self.none
-        #
-        #    return need
+        elif show_as == "need":
+            need = row.br_need.name
+            if self.translate:
+                need = current.T(need) if need else self.none
+            reprstr = need
 
         else:
+            reprstr = row.br_case_activity.subject
 
-            return row.dvr_case_activity.subject
+        if self.show_date:
+            dt = S3DateTime.date_represent(row.br_case_activity.date)
+            reprstr = "[%s] %s" % (dt, reprstr)
+
+        return reprstr
 
     # -------------------------------------------------------------------------
     def link(self, k, v, row=None):
         """
             Represent a (key, value) as hypertext link
 
-            @param k: the key (dvr_case_activity.id)
+            @param k: the key (br_case_activity.id)
             @param v: the representation of the key
             @param row: the row with this key
         """
