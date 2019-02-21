@@ -2349,6 +2349,8 @@ def br_rheader(r, tabs=None):
                     append((T("Family Members"), "group_membership/"))
                 if settings.get_br_case_activities():
                     append((T("Activities"), "case_activity"))
+                if settings.get_br_manage_assistance():
+                    append((T("Measures"), "assistance_measure"))
                 if settings.get_br_case_photos_tab():
                     append((T("Photos"), "image"))
                 if settings.get_br_case_documents_tab():

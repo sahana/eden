@@ -1144,6 +1144,7 @@ class PRPersonModel(S3Model):
                                       },
                            br_case_language = "person_id",
                            br_case_activity = "person_id",
+                           br_assistance_measure = "person_id",
                            )
         else:
             # Use DVR for case management
