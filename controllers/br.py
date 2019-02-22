@@ -291,28 +291,38 @@ def person():
 
         elif r.component_name == "case_activity":
 
-            # Configure case_activity.human_resource_id
             atable = r.component.table
 
+            assistance_inline = settings.get_br_manage_assistance() and \
+                                settings.get_br_assistance_inline()
+            mtable =  s3db.br_assistance_measure
+
+            # Default human_resource_id
             if human_resource_id:
+
+                # Activities
                 if settings.get_br_case_activity_manager():
                     atable.human_resource_id.default = human_resource_id
 
+                # Inline updates
                 if settings.get_br_case_activity_updates():
                     utable = s3db.br_case_activity_update
                     utable.human_resource_id.default = human_resource_id
 
+                # Inline assistance measures
+                if assistance_inline:
+                    mtable.human_resource_id.default = human_resource_id
+
             root_org = None
             org_specific_needs = settings.get_br_case_activity_need() and \
                                  settings.get_br_needs_org_specific()
-
             if org_specific_needs:
                 root_org = s3db.br_case_root_org(r.id)
                 if not root_org:
                     root_org = auth.root_org()
 
+            # Limit selectable need types to the case root org
             if org_specific_needs and root_org:
-                # Limit selectable need types to the case root org
                 field = atable.need_id
                 field.requires = IS_EMPTY_OR(
                                     IS_ONE_OF(db, "br_need.id",
@@ -320,14 +330,23 @@ def person():
                                               filterby = "organisation_id",
                                               filter_opts = (root_org,),
                                               ))
-            # TODO when using inline measures, filter themes to root org
+
+            # TODO when assistance inline and using themes,
+            #      limit selectable themes to case root org
+
+            # Default person_id in inline-measures
+            if assistance_inline:
+                record = r.record
+                if record:
+                    mtable.person_id.default = record.id
+
 
         elif r.component_name == "assistance_measure":
 
+            # Default human_resource_id in assistance measures
             mtable = r.component.table
-            if human_resource_id:
-                if settings.get_br_assistance_manager():
-                    mtable.human_resource_id.default = human_resource_id
+            if human_resource_id and settings.get_br_assistance_manager():
+                mtable.human_resource_id.default = human_resource_id
 
         return True
     s3.prep = prep

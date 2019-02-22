@@ -639,9 +639,21 @@ class BRCaseActivityModel(S3Model):
         # Components
         self.add_components(tablename,
                             br_case_activity_update = "case_activity_id",
+                            br_assistance_measure = "case_activity_id",
                             )
 
         # Optional inline components
+        manage_assistance = settings.get_br_manage_assistance()
+        if manage_assistance and settings.get_br_assistance_inline():
+            # Show inline assistance measures
+            assistance = BRAssistanceModel.assistance_inline_component()
+        elif not manage_assistance:
+            # Show a free-text field to record "support provided"
+            assistance = "activity_details"
+        else:
+            # Track assistance measures on separate tab
+            assistance = None
+
         if settings.get_br_case_activity_updates():
             updates = S3SQLInlineComponent("case_activity_update",
                                            label = T("Progress"),
@@ -677,7 +689,7 @@ class BRCaseActivityModel(S3Model):
                        "need_id",
                        "subject",
                        "need_details",
-                       "activity_details",  # TODO alternative: responses
+                       assistance,
                        "status_id",         # TODO make optional
                        updates,
                        #"end_date",         # TODO make optional
@@ -1530,6 +1542,40 @@ class BRAssistanceModel(S3Model):
         if form_vars.get("is_default_termination"):
             db(table.id == record_id).update(is_termination = True)
             db(table.id != record_id).update(is_default_termination = False)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def assistance_inline_component():
+        """
+            Configure inline-form for assistance measures
+
+            @returns: S3SQLInlineComponent
+        """
+
+        T = current.T
+
+        fields = ["date",
+                  #"assistance_type_id",
+                  "comments",
+                  #"human_resource_id",
+                  #"hours",
+                  "status_id",
+                  ]
+
+        settings = current.deployment_settings
+        if settings.get_br_assistance_types():
+            fields.insert(1, "assistance_type_id")
+        if settings.get_br_assistance_manager():
+            fields.insert(-1, "human_resource_id")
+        if settings.get_br_assistance_track_effort():
+            fields.insert(-1, "hours")
+
+        return S3SQLInlineComponent("assistance_measure",
+                                    label = T("Measures"),
+                                    fields = fields,
+                                    layout = S3SQLVerticalSubFormLayout,
+                                    explicit_add = T("Add Measure"),
+                                    )
 
 # =============================================================================
 class BRDistributionModel(S3Model):
@@ -2410,7 +2456,8 @@ def br_rheader(r, tabs=None):
                     append((T("Family Members"), "group_membership/"))
                 if settings.get_br_case_activities():
                     append((T("Activities"), "case_activity"))
-                if settings.get_br_manage_assistance():
+                if settings.get_br_manage_assistance() and \
+                   settings.get_br_assistance_tab():
                     append((T("Measures"), "assistance_measure"))
                 if settings.get_br_case_photos_tab():
                     append((T("Photos"), "image"))

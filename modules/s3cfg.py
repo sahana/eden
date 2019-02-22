@@ -2856,6 +2856,23 @@ class S3Config(Storage):
         """
         return self.br.get("manage_assistance", True)
 
+    def get_br_assistance_inline(self):
+        """
+            Document assistance measures inline in activities
+        """
+        return self.br.get("assistance_inline", True)
+
+    def get_br_assistance_tab(self):
+        """
+            Document assistance measures on separate case file tab
+        """
+        setting = self.br.get("assistance_tab")
+        if setting is None:
+            # Show the tab if managing assistance without activities
+            setting = self.get_br_manage_assistance() and \
+                      not self.get_br_case_activities()
+        return setting
+
     def get_br_assistance_manager(self):
         """
             Assign assistance measures to individual staff members
