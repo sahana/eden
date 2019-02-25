@@ -285,6 +285,7 @@ def config(settings):
                            "dvr_case_language",
                            "dvr_note",
                            "dvr_residence_status",
+                           "dvr_response_action",
                            "pr_group_membership",
                            "pr_person_details",
                            "pr_person_tag",
@@ -320,7 +321,6 @@ def config(settings):
 
         elif tablename in ("dvr_case_activity_need",
                            "dvr_case_activity_update",
-                           "dvr_response_action",
                            ):
 
             # Inherit from case activity
