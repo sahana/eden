@@ -2,7 +2,7 @@
  * jQuery UI Widget for DRK Food Event Registration
  * (=> custom variant of dvr.eventRegistration, s3.dvr.js)
  *
- * @copyright 2017 (c) Sahana Software Foundation
+ * @copyright 2017-2019 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+

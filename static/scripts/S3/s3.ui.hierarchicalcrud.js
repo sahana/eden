@@ -1,7 +1,7 @@
 /**
  * jQuery UI HierarchicalCRUD Widget for S3HierarchyCRUD
  *
- * @copyright 2015-2018 (c) Sahana Software Foundation
+ * @copyright 2015-2019 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+

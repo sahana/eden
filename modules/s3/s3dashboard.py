@@ -2,7 +2,7 @@
 
 """ Dashboards
 
-    @copyright: 2016 (c) Sahana Software Foundation
+    @copyright: 2016-2019 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{gluon}} <http://web2py.com>}

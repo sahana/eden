@@ -1,7 +1,7 @@
 /**
  * jQuery UI Widget for S3AddPersonWidget
  *
- * @copyright 2017 (c) Sahana Software Foundation
+ * @copyright 2017-2019 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+

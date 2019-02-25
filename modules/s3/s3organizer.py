@@ -2,7 +2,7 @@
 
 """ S3 Organizer (Calendar-based CRUD)
 
-    @copyright: 2018 (c) Sahana Software Foundation
+    @copyright: 2018-2019 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person

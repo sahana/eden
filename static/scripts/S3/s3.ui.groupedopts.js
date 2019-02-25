@@ -1,7 +1,7 @@
 /**
  * jQuery UI GroupedOpts Widget for S3GroupedOptionsWidget
  *
- * @copyright 2013-2018 (c) Sahana Software Foundation
+ * @copyright 2013-2019 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+

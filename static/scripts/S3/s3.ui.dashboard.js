@@ -1,7 +1,7 @@
 /**
  * jQuery UI Widget Classes for S3Dashboard
  *
- * @copyright 2016 (c) Sahana Software Foundation
+ * @copyright 2016-2019 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+
