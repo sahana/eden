@@ -1143,17 +1143,18 @@ def config(settings):
             if callable(standard_postp):
                 output = standard_postp(r, output)
 
-            if r.interactive and r.component_name == "person":
-
-                # Custom Create Button
-                from gluon import A, URL
-                add_btn = A(T("Create Contact"),
-                            _class = "action-btn",
-                            _href = URL(c="pr", f="person", args="create",
-                                        vars = {"organisation_id": r.id},
-                                        ),
-                            )
-                output["buttons"] = {"add_btn": add_btn}
+            if r.interactive:
+                s3.stylesheets.append("../themes/HowCalm/style.css")
+                if r.component_name == "person":
+                    # Custom Create Button
+                    from gluon import A, URL
+                    add_btn = A(T("Create Contact"),
+                                _class = "action-btn",
+                                _href = URL(c="pr", f="person", args="create",
+                                            vars = {"organisation_id": r.id},
+                                            ),
+                                )
+                    output["buttons"] = {"add_btn": add_btn}
 
             return output
         s3.postp = custom_postp
