@@ -2454,11 +2454,23 @@ def br_rheader(r, tabs=None):
                     append((T("ID"), "identity"))
                 if settings.get_br_case_family_tab():
                     append((T("Family Members"), "group_membership/"))
-                if settings.get_br_case_activities():
-                    append((T("Activities"), "case_activity"))
-                if settings.get_br_manage_assistance() and \
-                   settings.get_br_assistance_tab():
-                    append((T("Measures"), "assistance_measure"))
+
+                activities_tab = settings.get_br_case_activities()
+                measures_tab = settings.get_br_manage_assistance() and \
+                               settings.get_br_assistance_tab()
+
+                if activities_tab and measures_tab:
+                    activities_label = T("Needs")
+                    measures_label = T("Measures")
+                else:
+                    activities_label = T("Activities")
+                    measures_label = T("Assistance")
+
+                if activities_tab:
+                    append((activities_label, "case_activity"))
+                if measures_tab:
+                    append((measures_label, "assistance_measure"))
+
                 if settings.get_br_case_photos_tab():
                     append((T("Photos"), "image"))
                 if settings.get_br_case_documents_tab():
