@@ -1,3 +1,7 @@
 div.tabs {
     border-bottom: 0 !important;
 }
+.olControlAttribution {
+    right: 1px !important;
+    bottom: 1.5em !important;
+}
