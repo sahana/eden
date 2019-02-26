@@ -55,10 +55,7 @@ class S3MainMenu(default.S3MainMenu):
                        ),
                     ]
         elif auth.s3_logged_in():
-            return [MM("Dashboard", c="default", f="index",
-                       args=["dashboard"],
-                       ),
-                    ]
+            return []
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -126,6 +123,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("My Facilities", c="org", f="facility", m="summary", vars={"mine": 1}),
                         ),
                        )
+
+    # -------------------------------------------------------------------------
+    def admin(self):
+        """ Admin """
+
+        if current.auth.s3_has_role("ADMIN"):
+            return super(S3OptionsMenu, self).admin()
+        else:
+            return self.howcalm()
 
     # -------------------------------------------------------------------------
     def default(self):

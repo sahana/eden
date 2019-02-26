@@ -335,6 +335,9 @@ def config(settings):
                     _map = gis.show_map(height = 250,
                                         collapsed = True,
                                         bbox = bbox,
+                                        mouse_position = False,
+                                        overview = False,
+                                        permalink = False,
                                         feature_resources = [{"name": T("Facilities"),
                                                               "id": "rheader_map",
                                                               "active": True,
@@ -398,6 +401,9 @@ def config(settings):
                                                 lon = location.lon,
                                                 zoom = 15,
                                                 collapsed = True,
+                                                mouse_position = False,
+                                                overview = False,
+                                                permalink = False,
                                                 feature_resources = [{"name": T("Facility"),
                                                                       "id": "rheader_map",
                                                                       "active": True,
@@ -424,6 +430,7 @@ def config(settings):
         """
 
         list_fields = [(T("Person Name"), "person_id"),
+                       (T("Organization"), "organisation_id"),
                        (T("Type"), "job_title_id"),
                        (T("Languages Spoken"), "person_id$languages_spoken.value"),
                        (T("Religious Title"), "person_id$religious_title.value"),
@@ -488,6 +495,14 @@ def config(settings):
 
             #from s3 import S3HierarchyFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
             from s3 import S3HierarchyFilter, S3OptionsFilter, S3TextFilter
+
+            s3db.configure("org_organisation_type",
+                           hierarchy_levels = ["Religion",
+                                               "Faith Tradition",
+                                               "Denomination",
+                                               "Judicatory Body",
+                                               ],
+                           )
 
             s3db.org_organisation_organisation_type.organisation_type_id.label = T("Religion")
 
@@ -992,11 +1007,21 @@ def config(settings):
                                                                                              hierarchy = "%s, %s"
                                                                                              )
 
+        method = r.method
+        if method == "read":
+            # Can't use the Hierarchy widget labels
+            religion_label = T("Religion")
+            # Can't use the address field label
+            facility_label = T("Main Facility Address")
+        else:
+            religion_label = ""
+            facility_label = ""
+
         crud_fields = ["name",
                        (T("Organization ID"), "org_id.value"),
                        S3SQLInlineLink("organisation_type",
                                        field = "organisation_type_id",
-                                       label = "", #T("Religion"),
+                                       label = religion_label,
                                        multiple = False,
                                        widget = "cascade",
                                        leafonly = False,
@@ -1013,7 +1038,7 @@ def config(settings):
                             #            "options": "FACEBOOK",
                             #            },
                             ),
-                       ("", "main_facility.location_id"),
+                       (facility_label, "main_facility.location_id"),
                        "website",
                        # Not a multiple=False component
                        #(T("Facebook"), "facebook.value"),
@@ -1061,7 +1086,7 @@ def config(settings):
                              ),
             ]
 
-        if r.method == "review":
+        if method == "review":
             from s3 import S3DateTime
             s3db.org_organisation.created_on.represent = \
                 lambda dt: S3DateTime.date_represent(dt, utc=True)
