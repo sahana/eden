@@ -1285,6 +1285,7 @@ def config(settings):
                        (T("Other Languages"), "other_languages.value"),
                        (T("Religious Title"), "religious_title.value"),
                        (T("Position Title"), "position_title.value"),
+                       (T("Gender"), "gender"),
                        S3SQLInlineComponent(
                             "address",
                             name = "address",
