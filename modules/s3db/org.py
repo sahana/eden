@@ -708,6 +708,14 @@ class S3OrganisationModel(S3Model):
                        supply_catalog = "organisation_id",
                        # Resources
                        org_resource = "organisation_id",
+                       # Religion
+                       pr_religion = {"link": "pr_religion_organisation",
+                                      "joinby": "organisation_id",
+                                      "key": "religion_id",
+                                      "multiple": False,
+                                      "actuate": "hide",
+                                      },
+                       pr_religion_organisation = "organisation_id",
                        # Sectors
                        org_sector = {"link": "org_sector_organisation",
                                      "joinby": "organisation_id",

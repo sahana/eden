@@ -18,11 +18,14 @@
         Acronym.................org_organisation.acronym
         Name L10n:XX............org_organisation_name.name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
         Acronym L10n:XX.........org_organisation_name.acronym_10n (Language = XX in column name, acronym_10n = cell in row. Multiple allowed)
-        Type....................org_organisation$organisation_type_id or org_organisation_type.parent
-        SubType.................org_organisation$organisation_type_id or org_organisation_type.parent
-        SubSubType..............org_organisation$organisation_type_id
-        Sectors.................org_sector_organisation$sector_id
-        Services................org_service_organisation$service_id
+        Type....................organisation_organisation_type.organisation_type_id or org_organisation_type.parent
+        SubType.................organisation_organisation_type.organisation_type_id or org_organisation_type.parent
+        SubSubType..............organisation_organisation_type.organisation_type_id
+        Religion................religion_organisation.religion_id or pr_religion.parent
+        SubReligion.............religion_organisation.religion_id or pr_religion.parent
+        SubSubReligion..........religion_organisation.religion_id
+        Sectors.................org_sector_organisation.sector_id
+        Services................org_service_organisation.service_id
          OR
         Service.................org_organisation$service_id or org_service.parent
         SubService..............org_organisation$service_id or org_service.parent
@@ -48,10 +51,14 @@
     <xsl:include href="../../xml/commons.xsl"/>
 
     <xsl:variable name="OrgTypePrefix" select="'OrgType:'"/>
+    <xsl:variable name="ReligionPrefix" select="'Religion:'"/>
     <xsl:variable name="ServicePrefix" select="'Service:'"/>
 
     <!-- Indexes for faster processing -->
     <xsl:key name="region" match="row" use="col[@field='Region']"/>
+    <xsl:key name="religion" match="row" use="concat(col[@field='Religion'], '/',
+                                                     col[@field='SubReligion'], '/',
+                                                     col[@field='SubSubReligion'])"/>
     <xsl:key name="service" match="row" use="concat(col[@field='Service'], '/',
                                                     col[@field='SubService'], '/',
                                                     col[@field='SubSubService'])"/>
@@ -77,6 +84,24 @@
                     </xsl:with-param>
                     <xsl:with-param name="SubSubType">
                          <xsl:value-of select="col[@field='SubSubType']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Religions -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('religion',
+                                                                   concat(col[@field='Religion'], '/',
+                                                                          col[@field='SubReligion'], '/',
+                                                                          col[@field='SubSubReligion']))[1])]">
+                <xsl:call-template name="Religion">
+                    <xsl:with-param name="Religion">
+                         <xsl:value-of select="col[@field='Religion']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="SubReligion">
+                         <xsl:value-of select="col[@field='SubReligion']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="SubSubReligion">
+                         <xsl:value-of select="col[@field='SubSubReligion']"/>
                     </xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
@@ -224,6 +249,15 @@
             <xsl:if test="$Row">
                 <!-- Use the data in this row -->
 
+                <xsl:variable name="Religion">
+                    <xsl:value-of select="col[@field='Religion']/text()"/>
+                </xsl:variable>
+                <xsl:variable name="SubReligion">
+                    <xsl:value-of select="col[@field='SubReligion']/text()"/>
+                </xsl:variable>
+                <xsl:variable name="SubSubReligion">
+                    <xsl:value-of select="col[@field='SubSubReligion']/text()"/>
+                </xsl:variable>
                 <xsl:variable name="Services" select="col[@field='Services']/text()"/>
                 <xsl:variable name="Service">
                     <xsl:value-of select="col[@field='Service']/text()"/>
@@ -271,6 +305,30 @@
                                     <xsl:otherwise>
                                         <!-- Simple Type -->
                                         <xsl:value-of select="concat($OrgTypePrefix, $Type)"/>
+                                    </xsl:otherwise>
+                                </xsl:choose>
+                            </xsl:attribute>
+                        </reference>
+                    </resource>
+                </xsl:if>
+
+                <!-- Link to Religion -->
+                <xsl:if test="$Religion!=''">
+                    <resource name="pr_religion_organisation">
+                        <reference field="religion_id" resource="pr_religion">
+                            <xsl:attribute name="tuid">
+                                <xsl:choose>
+                                    <xsl:when test="$SubSubReligion!=''">
+                                        <!-- Hierarchical Type with 3 levels -->
+                                        <xsl:value-of select="concat($ReligionPrefix, $Religion, '/', $SubReligion, '/', $SubSubReligion)"/>
+                                    </xsl:when>
+                                    <xsl:when test="$SubReligion!=''">
+                                        <!-- Hierarchical Type with 2 levels -->
+                                        <xsl:value-of select="concat($ReligionPrefix, $Religion, '/', $SubReligion)"/>
+                                    </xsl:when>
+                                    <xsl:otherwise>
+                                        <!-- Simple Religion -->
+                                        <xsl:value-of select="concat($ReligionPrefix, $Religion)"/>
                                     </xsl:otherwise>
                                 </xsl:choose>
                             </xsl:attribute>
@@ -502,6 +560,50 @@
                 </data>
             </resource>
         </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Religion">
+        <xsl:param name="Religion"/>
+        <xsl:param name="SubReligion"/>
+        <xsl:param name="SubSubReligion"/>
+
+        <!-- @todo: migrate to Taxonomy-pattern, see vulnerability/data.xsl -->
+        <xsl:if test="$Religion!=''">
+            <resource name="pr_religion">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat($ReligionPrefix, $Religion)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Religion"/></data>
+            </resource>
+            <xsl:if test="$SubReligion!=''">
+                <resource name="pr_religion">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($ReligionPrefix, $Religion, '/', $SubReligion)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$SubReligion"/></data>
+                    <reference field="parent" resource="pr_religion">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($ReligionPrefix, $Religion)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+            <xsl:if test="$SubSubReligion!=''">
+                <resource name="pr_religion">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($ReligionPrefix, $Religion, '/', $SubReligion, '/', $SubSubReligion)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$SubSubReligion"/></data>
+                    <reference field="parent" resource="pr_religion">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($ReligionPrefix, $Religion, '/', $SubReligion)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+        </xsl:if>
+
     </xsl:template>
 
     <!-- ****************************************************************** -->

@@ -86,8 +86,6 @@ def config(settings):
     settings.hrm.compose_button = False
     settings.hrm.staff_label = "Contacts"
 
-    settings.org.organisation_types_hierarchical = True
-
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
@@ -289,14 +287,23 @@ def config(settings):
                 record_data_append(TR(TH("%s: " % T("Organization ID")),
                                       org_id.value))
 
-            ltable = s3db.org_organisation_organisation_type
+            ltable = s3db.pr_religion_organisation
             query = (ltable.organisation_id == record_id)
-            religion = db(query).select(ltable.organisation_type_id,
+            religion = db(query).select(ltable.religion_id,
                                         limitby = (0, 1)
                                         ).first()
             if religion:
                 record_data_append(TR(TH("%s: " % T("Religion")),
-                                      ltable.organisation_type_id.represent(religion.organisation_type_id)))
+                                      ltable.religion_id.represent(religion.religion_id)))
+
+            ltable = s3db.org_organisation_organisation_type
+            query = (ltable.organisation_id == record_id)
+            org_type = db(query).select(ltable.organisation_type_id,
+                                        limitby = (0, 1)
+                                        ).first()
+            if org_type:
+                record_data_append(TR(TH("%s: " % ltable.organisation_type_id.label),
+                                      ltable.organisation_type_id.represent(org_type.organisation_type_id)))
 
             website = record.website
             if website:
@@ -496,7 +503,7 @@ def config(settings):
             #from s3 import S3HierarchyFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
             from s3 import S3HierarchyFilter, S3OptionsFilter, S3TextFilter
 
-            s3db.configure("org_organisation_type",
+            s3db.configure("pr_religion",
                            hierarchy_levels = ["Religion",
                                                "Faith Tradition",
                                                "Denomination",
@@ -513,7 +520,7 @@ def config(settings):
                                             ],
                                            label = T("Search"),
                                            ),
-                              S3HierarchyFilter("organisation_id$organisation_organisation_type.organisation_type_id",
+                              S3HierarchyFilter("organisation_id$religion_organisation.religion_id",
                                                 label = False,
                                                 #label = T("Religion"),
                                                 widget = "cascade",
@@ -865,31 +872,31 @@ def config(settings):
                                                      "filterby": {"tag": "org_id"},
                                                      "multiple": False,
                                                      },
-                                                    {"name": "congregants",
-                                                     "joinby": "organisation_id",
-                                                     "filterby": {"tag": "congregants"},
-                                                     "multiple": False,
-                                                     },
-                                                    {"name": "clergy_staff",
-                                                     "joinby": "organisation_id",
-                                                     "filterby": {"tag": "clergy_staff"},
-                                                     "multiple": False,
-                                                     },
-                                                    {"name": "lay_staff",
-                                                     "joinby": "organisation_id",
-                                                     "filterby": {"tag": "lay_staff"},
-                                                     "multiple": False,
-                                                     },
-                                                    {"name": "religious_staff",
-                                                     "joinby": "organisation_id",
-                                                     "filterby": {"tag": "religious_staff"},
-                                                     "multiple": False,
-                                                     },
-                                                    {"name": "volunteers",
-                                                     "joinby": "organisation_id",
-                                                     "filterby": {"tag": "volunteers"},
-                                                     "multiple": False,
-                                                     },
+                                                    #{"name": "congregants",
+                                                    # "joinby": "organisation_id",
+                                                    # "filterby": {"tag": "congregants"},
+                                                    # "multiple": False,
+                                                    # },
+                                                    #{"name": "clergy_staff",
+                                                    # "joinby": "organisation_id",
+                                                    # "filterby": {"tag": "clergy_staff"},
+                                                    # "multiple": False,
+                                                    # },
+                                                    #{"name": "lay_staff",
+                                                    # "joinby": "organisation_id",
+                                                    # "filterby": {"tag": "lay_staff"},
+                                                    # "multiple": False,
+                                                    # },
+                                                    #{"name": "religious_staff",
+                                                    # "joinby": "organisation_id",
+                                                    # "filterby": {"tag": "religious_staff"},
+                                                    # "multiple": False,
+                                                    # },
+                                                    #{"name": "volunteers",
+                                                    # "joinby": "organisation_id",
+                                                    # "filterby": {"tag": "volunteers"},
+                                                    # "multiple": False,
+                                                    # },
                                                     {"name": "board",
                                                      "joinby": "organisation_id",
                                                      "filterby": {"tag": "board"},
@@ -957,30 +964,30 @@ def config(settings):
 
         integer_represent = IS_INT_AMOUNT.represent
 
-        congregants = components_get("congregants")
-        f = congregants.table.value
-        f.represent = integer_represent
-        f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
+        #congregants = components_get("congregants")
+        #f = congregants.table.value
+        #f.represent = integer_represent
+        #f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
 
-        clergy_staff = components_get("clergy_staff")
-        f = clergy_staff.table.value
-        f.represent = integer_represent
-        f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
+        #clergy_staff = components_get("clergy_staff")
+        #f = clergy_staff.table.value
+        #f.represent = integer_represent
+        #f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
 
-        lay_staff = components_get("lay_staff")
-        f = lay_staff.table.value
-        f.represent = integer_represent
-        f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
+        #lay_staff = components_get("lay_staff")
+        #f = lay_staff.table.value
+        #f.represent = integer_represent
+        #f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
 
-        religious_staff = components_get("religious_staff")
-        f = religious_staff.table.value
-        f.represent = integer_represent
-        f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
+        #religious_staff = components_get("religious_staff")
+        #f = religious_staff.table.value
+        #f.represent = integer_represent
+        #f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
 
-        volunteers = components_get("volunteers")
-        f = volunteers.table.value
-        f.represent = integer_represent
-        f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
+        #volunteers = components_get("volunteers")
+        #f = volunteers.table.value
+        #f.represent = integer_represent
+        #f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
 
         board = components_get("board")
         f = board.table.value
@@ -995,17 +1002,17 @@ def config(settings):
         f.widget = S3TagCheckboxWidget(on="Y", off="N")
         f.default = "N"
 
-        orgtype = components_get("organisation_type")
-        orgtype.configure(hierarchy_levels = ["Religion",
-                                              "Faith Tradition",
-                                              "Denomination",
-                                              "Judicatory Body",
-                                              ],
-                          )
+        religion = components_get("religion")
+        religion.configure(hierarchy_levels = ["Religion",
+                                               "Faith Tradition",
+                                               "Denomination",
+                                               "Judicatory Body",
+                                               ],
+                           )
 
-        s3db.org_organisation_organisation_type.organisation_type_id.represent = S3Represent(lookup = "org_organisation_type",
-                                                                                             hierarchy = "%s, %s"
-                                                                                             )
+        s3db.pr_religion_organisation.religion_id.represent = S3Represent(lookup = "pr_religion",
+                                                                          hierarchy = "%s, %s"
+                                                                          )
 
         method = r.method
         if method == "read":
@@ -1019,14 +1026,19 @@ def config(settings):
 
         crud_fields = ["name",
                        (T("Organization ID"), "org_id.value"),
-                       S3SQLInlineLink("organisation_type",
-                                       field = "organisation_type_id",
+                       S3SQLInlineLink("religion",
+                                       field = "religion_id",
                                        label = religion_label,
                                        multiple = False,
                                        widget = "cascade",
                                        leafonly = False,
                                        #cascade = True,
-                                       represent = S3Represent(lookup = "org_organisation_type"),
+                                       represent = S3Represent(lookup = "pr_religion"),
+                                       ),
+                       S3SQLInlineLink("organisation_type",
+                                       field = "organisation_type_id",
+                                       label = T("Organization Type"),
+                                       multiple = False,
                                        ),
                        S3SQLInlineComponent(
                             "facebook",
@@ -1052,11 +1064,11 @@ def config(settings):
                             #            "options": "FACEBOOK",
                             #            },
                             ),
-                       (T("# Congregants"), "congregants.value"),
-                       (T("# Clergy Staff"), "clergy_staff.value"),
-                       (T("# Lay Staff"), "lay_staff.value"),
-                       (T("# Religious Staff"), "religious_staff.value"),
-                       (T("# Volunteers"), "volunteers.value"),
+                       #(T("# Congregants"), "congregants.value"),
+                       #(T("# Clergy Staff"), "clergy_staff.value"),
+                       #(T("# Lay Staff"), "lay_staff.value"),
+                       #(T("# Religious Staff"), "religious_staff.value"),
+                       #(T("# Volunteers"), "volunteers.value"),
                        (T("# C. Board"), "board.value"),
                        (T("Internet Access"), "internet.value"),
                        "comments",
@@ -1066,19 +1078,22 @@ def config(settings):
                                     postprocess = postprocess
                                     )
 
-        from s3 import S3HierarchyFilter, S3LocationFilter, S3TextFilter#, S3OptionsFilter
+        from s3 import S3HierarchyFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
         filter_widgets = [
             S3TextFilter(["name", "org_id.value"],
                          label = T("Search"),
                          comment = T("Search by organization name or ID. You can use * as wildcard."),
                          _class = "filter-search",
                          ),
-            S3HierarchyFilter("organisation_organisation_type.organisation_type_id",
+            S3HierarchyFilter("religion_organisation.religion_id",
                               label = False, #T("Religion"),
                               widget = "cascade",
                               leafonly = False,
                               cascade = True,
                               ),
+            S3OptionsFilter("organisation_organisation_type.organisation_type_id",
+                            label = T("Type"),
+                            ),
             S3LocationFilter("org_facility.location_id",
                              label = T("Location"),
                              levels = gis_levels,
@@ -1092,14 +1107,14 @@ def config(settings):
                 lambda dt: S3DateTime.date_represent(dt, utc=True)
             list_fields = [(T("ID"), "org_id.value"),
                            "name",
-                           (T("Religion"), "organisation_organisation_type.organisation_type_id"),
+                           (T("Religion"), "religion_organisation.religion_id"),
                            (T("Facility Address"), "main_facility.location_id"),
                            (T("Date Registered"), "created_on"),
                            ]
         else:
             list_fields = [(T("ID"), "org_id.value"),
                            "name",
-                           (T("Religion"), "organisation_organisation_type.organisation_type_id"),
+                           (T("Religion"), "religion_organisation.religion_id"),
                            (T("Facility Address"), "main_facility.location_id"),
                            ]
 
@@ -1364,7 +1379,7 @@ def config(settings):
         #                 comment = T("Search by person name. You can use * as wildcard."),
         #                 _class = "filter-search",
         #                 ),
-        #    S3HierarchyFilter("human_resource.organisation_id$organisation_organisation_type.organisation_type_id",
+        #    S3HierarchyFilter("human_resource.organisation_id$religion_organisation.religion_id",
         #                      label = T("Religion"),
         #                      ),
         #    S3LocationFilter("location_id",

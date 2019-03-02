@@ -48,6 +48,8 @@ __all__ = (# PR Base Entities
            "PRPersonDetailsModel",
            "PRPersonTagModel",
 
+           "PRReligionModel",
+
            # S3 Models
            "S3ImageLibraryModel",
            "S3RoleDelegationModel",
@@ -5465,18 +5467,6 @@ class PROccupationModel(S3Model):
         #
         return {}
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def defaults():
-        """ Safe defaults for names in case the module is disabled """
-
-        #dummy = S3ReusableField("dummy_id", "integer",
-        #                        readable = False,
-        #                        writable = False,
-        #                        )
-
-        return {}
-
 # =============================================================================
 class PRPersonDetailsModel(S3Model):
     """ Extra optional details for People """
@@ -5729,6 +5719,117 @@ class PRPersonTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class PRReligionModel(S3Model):
+    """
+        Model for religions
+        - alternative for the simple religion field for when a full hiearchy is
+          needed
+    """
+
+    names = ("pr_religion",
+             "pr_religion_organisation",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+
+        define_table = self.define_table
+        crud_strings = s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Religions
+        #
+        tablename = "pr_religion"
+        define_table(tablename,
+                     Field("name", length=128, notnull=True,
+                           label = T("Name"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
+                           ),
+                     Field("parent", "reference pr_religion", # This form of hierarchy may not work on all Databases
+                           label = T("SubType of"),
+                           ondelete = "RESTRICT",
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table Configuration
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(),
+                       hierarchy = "parent",
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Religion"),
+            title_display = T("Religion Details"),
+            title_list = T("Religions"),
+            title_update = T("Edit Religion"),
+            label_list_button = T("List Religions"),
+            label_delete_button = T("Delete Religion"),
+            msg_record_created = T("Religion created"),
+            msg_record_modified = T("Religion updated"),
+            msg_record_deleted = T("Religion deleted"),
+            msg_list_empty = T("No Religions currently defined"),
+        )
+
+        # Reusable field
+        represent = S3Represent(lookup = tablename,
+                                #translate = True,
+                                )
+        religion_id = S3ReusableField("religion_id",
+                                      "reference %s" % tablename,
+                                      label = T("Religion"),
+                                      represent = represent,
+                                      requires = IS_ONE_OF(db,
+                                                  "pr_religion.id",
+                                                  represent,
+                                                  ),
+                                      sortby = "name",
+                                      comment = S3PopupLink(c="pr",
+                                                            f="religion",
+                                                            tooltip=T("Create a new religion"),
+                                                            ),
+                                      widget = S3HierarchyWidget(lookup = "pr_religion",
+                                                                 represent = represent,
+                                                                 multiple = False,
+                                                                 #leafonly = True,
+                                                                 )
+                                      )
+
+        # Can't be defined in-line as otherwise get a circular reference
+        table = db[tablename]
+        table.parent.represent = represent
+        table.parent.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(db, "pr_religion.id",
+                                              represent,
+                                              # If limiting to just 1 level of parent
+                                              #filterby="parent",
+                                              #filter_opts=(None,),
+                                              orderby="pr_religion.name"))
+
+        # ---------------------------------------------------------------------
+        # Religion <=> Organisation Link
+        #
+        tablename = "pr_religion_organisation"
+        define_table(tablename,
+                     religion_id(ondelete="RESTRICT",
+                                 ),
+                     self.org_organisation_id(ondelete="CASCADE",
+                                              ),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
         return {}
 
 # =============================================================================

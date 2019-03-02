@@ -536,6 +536,12 @@ def occupation_type():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def religion():
+    """ Religions: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 #def contact():
 #    """ RESTful CRUD controller """
 #
