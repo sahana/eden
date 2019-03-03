@@ -1797,6 +1797,8 @@ class S3ResourceQuery(object):
                         wkt_loads(r)
                     except Exception: #GEOSReadingError:
                         # Invalid WKT => log and let default
+                        # NB This will fail CIRCULARSTRING so maybe convert 1st:
+                        # https://gis.stackexchange.com/questions/256123/how-to-convert-curved-features-into-geojson
                         current.log.error("INTERSECTS: %s" % sys.exc_info()[1])
                     else:
                         expr = l.st_intersects(r)

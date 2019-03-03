@@ -553,6 +553,10 @@ def config(settings):
                                               label = T("Languages Spoken"),
                                               #hidden = True,
                                               ),
+                              S3OptionsFilter("organisation_id$facility.location_id$addr_postcode",
+                                              label = T("Zipcode"),
+                                              #hidden = True,
+                                              ),
                               ]
 
             s3db.configure("hrm_human_resource",
@@ -665,40 +669,81 @@ def config(settings):
         gtable = current.s3db.gis_location
         location = db(gtable.id == location_id).select(gtable.id,
                                                        gtable.addr_street,
-                                                       gtable.addr_postcode,
-                                                       gtable.parent,
+                                                       #gtable.addr_postcode,
+                                                       #gtable.parent,
                                                        limitby = (0, 1)
                                                        ).first()
 
-        parent = location.parent
-        if parent:
-            Lx_ids = gis.get_parents(parent, ids_only=True)
-            if Lx_ids:
-                Lx_ids.append(parent)
-            else:
-                Lx_ids = [parent]
-        else:
-            query = (gtable.name == "New York City") & \
-                    (gtable.level == "L2")
-            NYC = db(query).select(gtable.id,
-                                   limitby = (0, 1)
-                                   ).first()
-            parent = NYC.id
-            Lx_ids = [parent]
+        # We want to populate the Postcode field, so cannot use GeoPy but need
+        # to call the Google API directly
+        #parent = location.parent
+        #if parent:
+        #    Lx_ids = gis.get_parents(parent, ids_only=True)
+        #    if Lx_ids:
+        #        Lx_ids.append(parent)
+        #    else:
+        #        Lx_ids = [parent]
+        #else:
+        #    query = (gtable.name == "New York City") & \
+        #            (gtable.level == "L2")
+        #    NYC = db(query).select(gtable.id,
+        #                           limitby = (0, 1)
+        #                           ).first()
+        #    parent = NYC.id
+        #    Lx_ids = [parent]
 
-        results = gis.geocode(location.addr_street,
-                              location.addr_postcode,
-                              Lx_ids)
-        if isinstance(results, basestring):
-            # Error, Warn
-            current.log.warning("Geocoder: %s" % results)
-        else:
-            location.update_record(lat = results["lat"],
-                                   lon = results["lon"],
-                                   inherited = False,
-                                   parent = parent,
-                                   )
-            gis.update_location_tree({"id": location.id})
+        #results = gis.geocode(location.addr_street,
+        #                      location.addr_postcode,
+        #                      Lx_ids)
+        #if isinstance(results, basestring):
+        #    # Error, Warn
+        #    current.log.warning("Geocoder: %s" % results)
+        #else:
+        #    location.update_record(lat = results["lat"],
+        #                           lon = results["lon"],
+        #                           inherited = False,
+        #                           parent = parent,
+        #                           )
+
+        import requests
+        params = {"address": location.addr_street,
+                  "key":settings.get_gis_api_google(),
+                  }
+        r = requests.get("https://maps.googleapis.com/maps/api/geocode/json", params=params)
+        if r.status_code == requests.codes.ok:
+            results = r.json()
+            if results["status"] == "OK":
+                results = results["results"][0]
+                loc = results["geometry"]["location"]
+                postcode = None
+                parent = None
+                for c in results["address_components"]:
+                    types = c["types"]
+                    if  "postal_code" in types:
+                        postcode = c["short_name"]
+                    elif "sublocality_level_1" in types:
+                        L3 = c["short_name"]
+                        query = (gtable.name == L3) & \
+                                (gtable.level == "L3")
+                        L3 = db(query).select(gtable.id,
+                                              limitby = (0, 1)
+                                              ).first()
+                        if L3:
+                            parent = L3.id
+                if not parent:
+                    query = (gtable.name == "New York City") & \
+                            (gtable.level == "L2")
+                    NYC = db(query).select(gtable.id,
+                                           limitby = (0, 1)
+                                           ).first()
+                    parent = NYC.id
+                location.update_record(lat = loc["lat"],
+                                       lon = loc["lng"],
+                                       addr_postcode = postcode,
+                                       inherited = False,
+                                       parent = parent,
+                                       )
+                gis.update_location_tree({"id": location.id})
 
     # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
@@ -1099,6 +1144,10 @@ def config(settings):
                              levels = gis_levels,
                              #hidden = True,
                              ),
+            S3OptionsFilter("org_facility.location_id$addr_postcode",
+                            label = T("Zipcode"),
+                            #hidden = True,
+                            ),
             ]
 
         if method == "review":

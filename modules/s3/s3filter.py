@@ -2037,8 +2037,8 @@ class S3MapFilter(S3FilterWidget):
         _id = attr_get("_id")
 
         # Hidden INPUT to store the WKT
-        hidden_input = INPUT(_type="hidden",
-                             _class=_class,
+        hidden_input = INPUT(_type = "hidden",
+                             _class = _class,
                              _id = _id,
                              )
 

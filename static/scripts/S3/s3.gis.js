@@ -5212,6 +5212,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     draftLayer.features[0].destroy();
                 }
                 // Enable this if adding Circle tool support to S3LocationSelectorWidget
+                // NB For S3LocationSelector we use a POINT with a radius instead
                 /*var wkt_field = $('#gis_location_wkt');
                 if (wkt_field.length) {
                     // Update form fields in S3LocationSelectorWidget
