@@ -2793,7 +2793,6 @@ class S3NotEmptyFilter(S3FilterWidget):
             @param values: the search values from the URL query
         """
 
-
         attr = self.attr
         _class = self._class
         if "_class" in attr and attr["_class"]:

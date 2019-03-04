@@ -660,6 +660,7 @@ S3.search = {};
             }
         });
 
+        // Value filter widgets
         $('.value-filter:visible', form).each(function() {
 
             $this = $(this);
