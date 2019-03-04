@@ -660,6 +660,19 @@ S3.search = {};
             }
         });
 
+        $('.value-filter:visible', form).each(function() {
+
+            $this = $(this);
+            id = $this.attr('id');
+            urlVar = $('#' + id + '-data').val();
+
+            if ($this.prop('checked')) {
+                queries.push([urlVar, 'None']);
+            } else {
+                queries.push([urlVar, null]);
+            }
+        });
+
         // Other widgets go here...
 
         // return queries to caller
@@ -2138,7 +2151,7 @@ S3.search = {};
         $('.text-filter, .range-filter-input').on('input.autosubmit', function () {
             $(this).closest('form').trigger('optionChanged');
         });
-        $('.options-filter, .location-filter, .date-filter-input, .age-filter-input, .map-filter').on('change.autosubmit', function () {
+        $('.options-filter, .location-filter, .date-filter-input, .age-filter-input, .map-filter, .value-filter').on('change.autosubmit', function () {
             $(this).closest('form').trigger('optionChanged');
         });
         $('.s3-options-filter-anyall input[type="radio"]').on('change.autosubmit', function() {

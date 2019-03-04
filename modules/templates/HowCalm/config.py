@@ -501,7 +501,7 @@ def config(settings):
             hrm_list_fields()
 
             #from s3 import S3HierarchyFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
-            from s3 import S3HierarchyFilter, S3OptionsFilter, S3TextFilter
+            from s3 import S3HierarchyFilter, S3OptionsFilter, S3TextFilter #, S3NotEmptyFilter
 
             s3db.configure("pr_religion",
                            hierarchy_levels = ["Religion",
@@ -553,6 +553,11 @@ def config(settings):
                                               label = T("Languages Spoken"),
                                               #hidden = True,
                                               ),
+                              # TODO
+                              #S3NotEmptyFilter("person_id$email.value",
+                              #                 label = T("Has Email"),
+                              #                 #default = [None], # <== use this to set "on" by default
+                              #                 ),
                               S3OptionsFilter("organisation_id$facility.location_id$addr_postcode",
                                               label = T("Zipcode"),
                                               #hidden = True,
@@ -1235,7 +1240,6 @@ def config(settings):
         from gluon import IS_EMPTY_OR, IS_IN_SET
 
         from s3 import S3LocationSelector, \
-                       S3Represent, \
                        S3SQLCustomForm, S3SQLInlineComponent
         from s3layouts import S3PopupLink
 

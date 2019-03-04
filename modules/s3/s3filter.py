@@ -39,6 +39,7 @@ __all__ = ("S3FilterWidget",
            "S3RangeFilter",
            "S3SliderFilter",
            "S3TextFilter",
+           "S3NotEmptyFilter",
            "S3FilterForm",
            "S3Filter",
            "S3FilterString",
@@ -2774,6 +2775,38 @@ class S3HierarchyFilter(S3FilterWidget):
         return variable
 
 # =============================================================================
+class S3NotEmptyFilter(S3FilterWidget):
+    """
+        Filter to check for presence of any (non-None) value in a field
+    """
+
+    _class = "value-filter"
+
+    operator = "ne"
+
+    # -------------------------------------------------------------------------
+    def widget(self, resource, values):
+        """
+            Render this widget as HTML helper object(s)
+
+            @param resource: the resource
+            @param values: the search values from the URL query
+        """
+
+
+        attr = self.attr
+        _class = self._class
+        if "_class" in attr and attr["_class"]:
+            _class = "%s %s" % (attr["_class"], _class)
+        else:
+            _class = _class
+        attr["_class"] = _class
+        attr["_type"] = "checkbox"
+        attr["value"] = True if "None" in values else False
+
+        return INPUT(**attr)
+
+# =============================================================================
 class S3FilterForm(object):
     """ Helper class to construct and render a filter form for a resource """
 
@@ -3298,7 +3331,7 @@ class S3FilterForm(object):
                         default = applicable_defaults[operator]
                     else:
                         continue
-                elif operator in (None, "belongs", "eq"):
+                elif operator in (None, "belongs", "eq", "ne"):
                     default = applicable_defaults
                 else:
                     continue
