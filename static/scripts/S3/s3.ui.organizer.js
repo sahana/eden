@@ -536,7 +536,7 @@
                 resource = opts.resources[item.source.id];
 
             // Item Title
-            $('<h6>').text(item.title).appendTo(contents);
+            $('<h6>').html(item.popupTitle).appendTo(contents);
 
             // Item Description
             var columns = resource.columns,
@@ -850,9 +850,11 @@
                     }
                 }
 
-                var item = {
+                var title = record.t,
+                    item = {
                     'id': record.id,
-                    title: record.t,
+                    title: $('<div>').html(title).text(),
+                    popupTitle: title,
                     start: record.s,
                     end: end,
                     description: description,

@@ -826,12 +826,15 @@ def assistance_measure():
         crud_strings = response.s3.crud_strings["br_assistance_measure"]
         mine = get_vars.get("mine")
         if mine == "1":
+            mine = True
             if human_resource_id:
                 query = FS("human_resource_id") == human_resource_id
             else:
                 query = FS("human_resource_id").belongs(set())
             resource.add_filter(query)
             crud_strings.title_list = T("My Measures")
+        else:
+            mine = False
 
         # Allow organizer to set an end_date
         method = r.method
@@ -845,7 +848,7 @@ def assistance_measure():
             # Show person_id as link to case file, not writable in this perspective
             field = table.person_id
             field.writable = False
-            if method != "organize":
+            if r.representation != "popup":
                 field.represent = s3db.pr_PersonRepresent(show_link=True)
 
             # Filter case_activity_id selector to current case
@@ -867,12 +870,18 @@ def assistance_measure():
                            #"hours",
                            "status_id",
                            ]
-            if settings.get_br_assistance_manager():
+
+            # Include human_resource_id if not using mine-filter
+            if not mine and settings.get_br_assistance_manager():
                 list_fields.insert(2, "human_resource_id")
+
+            # Include type when using types, otherwise show details
             if settings.get_br_assistance_types():
                 list_fields.insert(2, "assistance_type_id")
             else:
                 list_fields.insert(2, "comments")
+
+            # Show effort when tracking effort
             if settings.get_br_assistance_track_effort():
                 list_fields.insert(-1, "hours")
 
