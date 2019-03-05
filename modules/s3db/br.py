@@ -47,6 +47,7 @@ __all__ = ("BRCaseModel",
            "br_case_default_status",
            "br_case_status_filter_opts",
            "br_group_membership_onaccept",
+           "br_assistance_status_colors",
            "br_household_size",
            "br_rheader",
            "br_terminology",
@@ -1411,28 +1412,39 @@ class BRAssistanceModel(S3Model):
         track_effort = settings.get_br_assistance_track_effort()
         use_activities = settings.get_br_case_activities()
 
+        use_time = settings.get_br_assistance_measures_use_time()
+
         tablename = "br_assistance_measure"
         define_table(tablename,
                      # Beneficiary
                      self.pr_person_id(
+                         comment = None,
+                         empty = False,
                          label = labels.CASE,
                          widget = S3PersonAutocompleteWidget(controller="br"),
-                         empty = False,
                          ),
                      self.br_case_activity_id(
                          readable = use_activities,
                          writable = use_activities,
                          ),
-                     # TODO option to use start/end date-time (for calendar)
-                     s3_date(label = T("Date"),
-                             default = "now",
-                             ),
+                     s3_datetime("start_date",
+                                 label = T("Date"),
+                                 default = "now",
+                                 widget = None if use_time else "date",
+                                 ),
+                     s3_datetime("end_date",
+                                 label = T("End"),
+                                 widget = None if use_time else "date",
+                                 readable = False,
+                                 writable = False,
+                                 ),
                      assistance_type_id(
                         readable = use_type,
                         writable = use_type,
                         ),
                      assistance_status_id(),
                      self.hrm_human_resource_id(
+                        represent = self.hrm_HumanResourceRepresent(show_link=False),
                         widget = None,
                         readable = assistance_manager,
                         writable = assistance_manager,
@@ -1454,7 +1466,7 @@ class BRAssistanceModel(S3Model):
                      *s3_meta_fields())
 
         # List_fields
-        list_fields = ["date",
+        list_fields = ["start_date",
                        #"case_activity_id",
                        #"assistance_type_id",
                        "comments",
@@ -1472,14 +1484,57 @@ class BRAssistanceModel(S3Model):
             list_fields.insert(-1, "hours")
 
         # Filter widgets
-        # TODO
+        filter_widgets = [S3TextFilter(["person_id$pe_label",
+                                        "person_id$first_name",
+                                        "person_id$middle_name",
+                                        "person_id$last_name",
+                                        "comments",
+                                        ],
+                                       label = T("Search"),
+                                       ),
+                          S3OptionsFilter("status_id",
+                                          options = lambda: \
+                                                    s3_get_filter_opts("br_assistance_status"),
+                                          cols = 3,
+                                          translate = True,
+                                          ),
+                          S3DateFilter("start_date",
+                                       hidden = True,
+                                       hide_time = not use_time,
+                                       ),
+                          ]
+        if use_type:
+            filter_widgets.append(S3OptionsFilter(
+                                        "assistance_type_id",
+                                        hidden = True,
+                                        options = lambda: \
+                                        s3_get_filter_opts("br_assistance_type"),
+                                        ))
 
-        # CRUD Form
-        # TODO
+        # Organizer
+        description = ["status_id"]
+        if assistance_manager:
+            description.insert(0, "human_resource_id")
+        if use_type:
+            description.insert(0, "assistance_type_id")
+        else:
+            description.insert(0, "comments")
+        organize = {"start": "start_date",
+                    "title": "person_id",
+                    "description": description,
+                    "color": "status_id",
+                    "colors": br_assistance_status_colors,
+                    }
+        if use_time:
+            organize["end"] = "end_date"
+        else:
+            organize["use_time"] = False
 
         # Table Configuration
         configure(tablename,
+                  filter_widgets = filter_widgets,
                   list_fields = list_fields,
+                  organize = organize,
                   )
 
         # CRUD Strings
@@ -1495,12 +1550,6 @@ class BRAssistanceModel(S3Model):
             msg_record_deleted = T("Measure deleted"),
             msg_list_empty = T("No Measures currently registered"),
         )
-
-        # Components
-        # TODO
-
-        # Reusable field
-        # TODO
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -1554,7 +1603,7 @@ class BRAssistanceModel(S3Model):
 
         T = current.T
 
-        fields = ["date",
+        fields = ["start_date",
                   #"assistance_type_id",
                   "comments",
                   #"human_resource_id",
@@ -2236,6 +2285,24 @@ def br_case_status_filter_opts(closed=None):
 
     T = current.T
     return OrderedDict((row.id, T(row.name)) for row in rows)
+
+# -----------------------------------------------------------------------------
+def br_assistance_status_colors(resource, selector):
+    """
+        Get colors for assistance statuses (organizer)
+
+        @param resource: the S3Resource the caller is looking at
+        @param selector: the Field selector (usually "status_id")
+
+        @returns: a dict with colors {field_value: "#RRGGBB", ...}
+    """
+
+    table = current.s3db.br_assistance_status
+    query = (table.color != None)
+    rows = current.db(query).select(table.id,
+                                    table.color,
+                                    )
+    return {row.id: ("#%s" % row.color) for row in rows if row.color}
 
 # -----------------------------------------------------------------------------
 def br_household_size(group_id):

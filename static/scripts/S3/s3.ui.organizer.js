@@ -217,6 +217,12 @@
          * @prop {string} slotDuration: the slot size in agenda views
          * @prop {string} defaultTimedEventDuration: the default event duration for
          *                                           timed events without explicit end
+         * @prop {object|Array} businessHours: business hours, an object or array of
+         *                                     objects of the format:
+         *                                     {dow:[0,1,2,3,4,5,6], start: "HH:MM", end: "HH:MM"},
+         *                                     - false to disable
+         * @prop {string} timeFormat: time format for events, to override the locale default
+         * @prop {integer} firstDay: first day of the week (0=Sunday, 1=Monday etc.)
          * @prop {string} labelEdit: label for Edit-button
          * @prop {string} labelDelete: label for the Delete-button
          * @prop {string} deleteConfirmation: the question for the delete-confirmation
@@ -233,10 +239,13 @@
             slotDuration: '00:30:00',
             snapDuration: '00:15:00',
             defaultTimedEventDuration: '00:30:00',
+            businessHours: false,
+            timeFormat: null,
 
             labelEdit: 'Edit',
             labelDelete: 'Delete',
-            deleteConfirmation: 'Do you want to delete this entry?'
+            deleteConfirmation: 'Do you want to delete this entry?',
+            firstDay: 1
         },
 
         /**
@@ -314,8 +323,13 @@
                 nowIndicator: opts.nowIndicator,
                 slotDuration: opts.slotDuration,
                 snapDuration: opts.snapDuration,
+                displayEventEnd: false,
                 defaultTimedEventDuration: opts.defaultTimedEventDuration,
                 allDaySlot: allDaySlot,
+                firstDay: opts.firstDay,
+                timeFormat: opts.timeFormat,
+                slotLabelFormat: opts.timeFormat,
+                businessHours: opts.businessHours,
 
                 // Permitted actions
                 selectable: insertable,
@@ -373,7 +387,7 @@
 
             // Move datepicker into header, use icon for calendar button
             var calendarButton = $('.fc-calendar-button').html('<i class="fa fa-calendar">');
-            datePicker.datepicker('option', {showOn: 'focus', showButtonPanel: true})
+            datePicker.datepicker('option', {showOn: 'focus', showButtonPanel: true, firstDay: opts.firstDay})
                       .insertBefore(calendarButton)
                       .on('change', function() {
                           var date = datePicker.datepicker('getDate');
@@ -496,10 +510,12 @@
         _itemTitle: function(item) {
 
             var dateFormat = item.allDay && 'L' || 'L LT',
+                timeFormat = 'LT',
                 dates = [item.start.format(dateFormat)];
 
             if (item.end) {
-                dates.push(item.end.format(dateFormat));
+                var end = moment(item.end).endOf('minute');
+                dates.push(end.format(timeFormat));
             }
 
             return dates.join(' - ');

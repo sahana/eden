@@ -465,6 +465,10 @@ def config(settings):
     #settings.ui.label_permalink = "Permalink"
     # Uncomment to modify the main menu logo
     #settings.ui.menu_logo = URL(c="static", f="img", args=["S3menulogo.png"])
+    # Configure business hours to indicate in organizer (can be a list)
+    #settings.ui.organizer_business_hours = {"dow": [1,2,3,4,5], "start": "08:00", "end": "18:00"}
+    # Configure a time format for organizer events to override locale default
+    #settings.ui.organizer_time_format = "H:mm"
 
     # -------------------------------------------------------------------------
     # Sync

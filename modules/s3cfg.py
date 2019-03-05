@@ -2431,6 +2431,22 @@ class S3Config(Storage):
                                )
                            )
 
+    def get_ui_organizer_business_hours(self):
+        """
+            Business hours to indicate in organizer,
+            - a dict {dow:[0,1,2,3,4,5,6], start: "HH:MM", end: "HH:MM"},
+            - or a list of such dicts
+            - dow 0 being Sunday
+            - False to disable
+        """
+        return self.__lazy("ui", "organizer_business_hours", False)
+
+    def get_ui_organizer_time_format(self):
+        """
+            The time format for organizer (overrides locale default)
+        """
+        return self.__lazy("ui", "organizer_time_format", None)
+
     # =========================================================================
     # Messaging
     #
@@ -2884,6 +2900,12 @@ class S3Config(Storage):
             Use assistance type categories
         """
         return self.br.get("assistance_types", True)
+
+    def get_br_assistance_measures_use_time(self):
+        """
+            Assistance measures use date+time (instead of just date)
+        """
+        return self.br.get("assistance_measures_use_time", False)
 
     def get_br_assistance_track_effort(self):
         """

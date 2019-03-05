@@ -208,7 +208,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                  M("My Measures", f="assistance_measure",
                    vars={"mine": "1"}, check=manage_assistance)(
-                    #M("Calendar"),
+                    M("Calendar", m="organize", vars={"mine": "1"}),
                     ),
                  #M("Appointments"),
                  statistics,

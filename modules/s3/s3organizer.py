@@ -611,7 +611,7 @@ class S3Organizer(S3Method):
                 end_rfield = None
 
         # Should we use a timed calendar to organize?
-        use_time = True
+        use_time = config.get("use_time", True)
         if start_rfield.ftype == "date":
             use_time = False
         elif end_rfield:
@@ -690,10 +690,14 @@ class S3Organizer(S3Method):
                 start = s3_decode_iso_datetime(dates[0])
             except ValueError:
                 pass
+            else:
+                start = start.replace(hour=0, minute=0, second=0)
             try:
                 end = s3_decode_iso_datetime(dates[1])
             except ValueError:
                 pass
+            else:
+                end = end.replace(hour=0, minute=0, second=0)
 
         return start, end
 
@@ -786,6 +790,7 @@ class S3OrganizerWidget(object):
         """
 
         T = current.T
+        settings = current.deployment_settings
 
         if not widget_id:
             widget_id = "organizer"
@@ -808,7 +813,16 @@ class S3OrganizerWidget(object):
                        "labelEdit": s3_str(T("Edit")),
                        "labelDelete": s3_str(T("Delete")),
                        "deleteConfirmation": s3_str(T("Do you want to delete this entry?")),
+                       "firstDay": settings.get_L10n_firstDOW(),
                        }
+        # Options from settings
+        bhours = settings.get_ui_organizer_business_hours()
+        if bhours:
+            script_opts["businessHours"] = bhours
+        tformat = settings.get_ui_organizer_time_format()
+        if tformat:
+            script_opts["timeFormat"] = tformat
+
         self.inject_script(widget_id, script_opts)
 
         # Add a datepicker to navigate to arbitrary dates
@@ -829,7 +843,8 @@ class S3OrganizerWidget(object):
                    )
 
     # -------------------------------------------------------------------------
-    def inject_script(self, widget_id, options):
+    @staticmethod
+    def inject_script(widget_id, options):
         """
             Inject the necessary JavaScript
 
