@@ -1424,6 +1424,7 @@ def config(settings):
                 output = standard_postp(r, output)
 
             if r.interactive:
+                s3.stylesheets.append("../themes/HowCalm/style.css")
                 # Action Buttons should launch Profile page
                 from gluon import URL
 
@@ -1436,7 +1437,6 @@ def config(settings):
                                       read_url = profile_url,
                                       )
 
-                s3.stylesheets.append("../themes/HowCalm/style.css")
                 if r.component_name == "person":
                     # Custom Create Button in unused Tab
                     from gluon import A#, URL

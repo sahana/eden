@@ -5,3 +5,7 @@ div.tabs {
     right: 1px !important;
     bottom: 1.5em !important;
 }
+.profile-add-btn {
+    float: right;
+    margin-top: 45px !important;
+}
