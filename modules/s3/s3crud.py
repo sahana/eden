@@ -2590,13 +2590,13 @@ class S3CRUD(S3Method):
     @classmethod
     def action_buttons(cls,
                        r,
-                       deletable=True,
-                       editable=None,
-                       copyable=False,
-                       read_url=None,
-                       delete_url=None,
-                       update_url=None,
-                       copy_url=None):
+                       deletable = True,
+                       editable = None,
+                       copyable = False,
+                       read_url = None,
+                       delete_url = None,
+                       update_url = None,
+                       copy_url = None):
         """
             Provide the usual action buttons in list views.
             Allow customizing the urls, since this overwrites anything
@@ -2675,10 +2675,11 @@ class S3CRUD(S3Method):
         else:
             # User is not permitted to edit at least some of the records,
             # or caller doesn't allow edit
-            method = ["read"] if not editable or not authorised else []
-            read_url = iframe_safe(URL(args = args + method, #.popup to use modals
-                                       vars = get_vars,
-                                       ))
+            if not read_url:
+                method = ["read"] if not editable or not authorised else []
+                read_url = iframe_safe(URL(args = args + method, #.popup to use modals
+                                           vars = get_vars,
+                                           ))
             s3crud.action_button(labels.READ, read_url,
                                  # To use modals
                                  #_class="action-btn s3_modal"

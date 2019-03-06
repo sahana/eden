@@ -689,16 +689,16 @@ def sms_outbound_gateway():
 
     # CRUD Strings
     s3.crud_strings["msg_sms_outbound_gateway"] = Storage(
-        label_create=T("Create SMS Outbound Gateway"),
-        title_display=T("SMS Outbound Gateway Details"),
-        title_list=T("SMS Outbound Gateways"),
-        title_update=T("Edit SMS Outbound Gateway"),
-        label_list_button=T("List SMS Outbound Gateways"),
-        label_delete_button=T("Delete SMS Outbound Gateway"),
-        msg_record_created=T("SMS Outbound Gateway added"),
-        msg_record_modified=T("SMS Outbound Gateway updated"),
-        msg_record_deleted=T("SMS Outbound Gateway deleted"),
-        msg_list_empty=T("No SMS Outbound Gateways currently registered"))
+        label_create = T("Create SMS Outbound Gateway"),
+        title_display = T("SMS Outbound Gateway Details"),
+        title_list = T("SMS Outbound Gateways"),
+        title_update = T("Edit SMS Outbound Gateway"),
+        label_list_button = T("List SMS Outbound Gateways"),
+        label_delete_button = T("Delete SMS Outbound Gateway"),
+        msg_record_created = T("SMS Outbound Gateway added"),
+        msg_record_modified = T("SMS Outbound Gateway updated"),
+        msg_record_deleted = T("SMS Outbound Gateway deleted"),
+        msg_list_empty = T("No SMS Outbound Gateways currently registered"))
 
     return s3_rest_controller()
 

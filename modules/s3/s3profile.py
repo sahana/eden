@@ -161,7 +161,9 @@ class S3Profile(S3CRUD):
             elif callable(header):
                 header = header(r)
 
-            output = dict(title=title, header=header)
+            output = {"title": title,
+                      "header": header,
+                      }
 
             # Update Form, if configured
             update = get_config(tablename, "profile_update")

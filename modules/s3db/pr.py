@@ -243,6 +243,13 @@ class PRPersonEntityModel(S3Model):
                                           "contact_method": "SMS",
                                           },
                                       },
+                                     # Home phone numbers:
+                                     #{"name": "home_phone",
+                                     # "joinby": pe_id,
+                                     #"filterby": {
+                                     #    "contact_method": "HOME_PHONE",
+                                     #    },
+                                     # },
                                      # Work phone numbers:
                                      #{"name": "work_phone",
                                      # "joinby": pe_id,

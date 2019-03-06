@@ -2144,6 +2144,11 @@ class S3HRSkillModel(S3Model):
                   deduplicate = S3Duplicate(),
                   )
 
+        # Components
+        add_components(tablename,
+                       hrm_competency_rating = "skill_type_id",
+                       )
+
         # ---------------------------------------------------------------------
         # Skills
         # - these can be simple generic skills or can come from certifications
@@ -7356,106 +7361,106 @@ def hrm_human_resource_controller(extra_filter = None):
                             comments)
 
             # Configure widgets
-            contacts_widget = dict(label = "Contacts",
-                                   label_create = "Add Contact",
-                                   tablename = "pr_contact",
-                                   type = "datalist",
-                                   filter = FS("pe_id") == pe_id,
-                                   icon = "phone",
-                                   # Default renderer:
-                                   #list_layout = s3db.pr_render_contact,
-                                   orderby = "priority asc",
-                                   # Can't do this as this is the HR perspective, not Person perspective
-                                   #create_controller = c,
-                                   #create_function = "person",
-                                   #create_component = "contact",
-                                   )
-            address_widget = dict(label = "Address",
-                                  label_create = "Add Address",
-                                  type = "datalist",
-                                  tablename = "pr_address",
-                                  filter = FS("pe_id") == pe_id,
-                                  icon = "home",
-                                  # Default renderer:
-                                  #list_layout = s3db.pr_render_address,
-                                  # Can't do this as this is the HR perspective, not Person perspective
-                                  #create_controller = c,
-                                  #create_function = "person",
-                                  #create_component = "address",
-                                  )
-            credentials_widget = dict(# @ToDo: deployment_setting for Labels
-                                      label = "Sectors",
-                                      label_create = "Add Sector",
-                                      type = "datalist",
-                                      tablename = "hrm_credential",
-                                      filter = FS("person_id") == person_id,
-                                      icon = "tags",
-                                      # Default renderer:
-                                      #list_layout = hrm_credential_list_layout,
-                                      create_controller = c,
-                                      # Can't do this as this is the HR perspective, not Person perspective
-                                      #create_function = "person",
-                                      #create_component = "credential",
-                                      )
-            skills_widget = dict(label = "Skills",
-                                 label_create = "Add Skill",
-                                 type = "datalist",
-                                 tablename = "hrm_competency",
-                                 filter = FS("person_id") == person_id,
-                                 icon = "comment-alt",
-                                 # Default renderer:
-                                 #list_layout = hrm_competency_list_layout,
-                                 create_controller = c,
-                                 # Can't do this as this is the HR perspective, not Person perspective
-                                 #create_function = "person",
-                                 #create_component = "competency",
-                                 )
-            trainings_widget = dict(label = "Trainings",
-                                    label_create = "Add Training",
-                                    type = "datalist",
-                                    tablename = "hrm_training",
-                                    filter = FS("person_id") == person_id,
-                                    icon = "wrench",
-                                    # Default renderer:
-                                    #list_layout = hrm_training_list_layout,
-                                    create_controller = c,
-                                    # Can't do this as this is the HR perspective, not Person perspective
-                                    #create_function = "person",
-                                    #create_component = "training",
-                                    )
-            experience_widget = dict(label = "Experience",
-                                     label_create = "Add Experience",
-                                     type = "datalist",
-                                     tablename = "hrm_experience",
-                                     filter = FS("person_id") == person_id,
-                                     icon = "truck",
-                                     # Default renderer:
-                                     #list_layout = hrm_experience_list_layout,
-                                     create_controller = c,
-                                     # Can't do this as this is the HR perspective, not Person perspective
-                                     #create_function = "person",
-                                     #create_component = "experience",
-                                     )
-            docs_widget = dict(label = "Documents",
-                               label_create = "Add Document",
-                               type = "datalist",
-                               tablename = "doc_document",
-                               filter = FS("doc_id") == record.doc_id,
-                               icon = "attachment",
+            contacts_widget = {"label": "Contacts",
+                               "label_create": "Add Contact",
+                               "tablename": "pr_contact",
+                               "type": "datalist",
+                               "filter": FS("pe_id") == pe_id,
+                               "icon": "phone",
                                # Default renderer:
-                               #list_layout = s3db.doc_document_list_layout,
-                               )
-            education_widget = dict(label = "Education",
-                                    label_create = "Add Education",
-                                    type = "datalist",
-                                    tablename = "pr_education",
-                                    filter = FS("person_id") == person_id,
-                                    icon = "book",
-                                    # Can't do this as this is the HR perspective, not Person perspective
-                                    #create_controller = c,
-                                    #create_function = "person",
-                                    #create_component = "education",
-                                    )
+                               #"list_layout": s3db.pr_render_contact,
+                               "orderby": "priority asc",
+                               # Can't do this as this is the HR perspective, not Person perspective
+                               #"create_controller": c,
+                               #"create_function": "person",
+                               #"create_component": "contact",
+                               }
+            address_widget = {"label": "Address",
+                              "label_create": "Add Address",
+                              "type": "datalist",
+                              "tablename": "pr_address",
+                              "filter": FS("pe_id") == pe_id,
+                              "icon": "home",
+                              # Default renderer:
+                              #"list_layout": s3db.pr_render_address,
+                              # Can't do this as this is the HR perspective, not Person perspective
+                              #"create_controller": c,
+                              #"create_function": "person",
+                              #"create_component": "address",
+                              }
+            credentials_widget = {# @ToDo: deployment_setting for Labels
+                                  "label": "Sectors",
+                                  "label_create": "Add Sector",
+                                  "type": "datalist",
+                                  "tablename": "hrm_credential",
+                                  "filter": FS("person_id") == person_id,
+                                  "icon": "tags",
+                                  # Default renderer:
+                                  #"list_layout": hrm_credential_list_layout,
+                                  "create_controller": c,
+                                  # Can't do this as this is the HR perspective, not Person perspective
+                                  #"create_function": "person",
+                                  #"create_component": "credential",
+                                  }
+            skills_widget = {"label": "Skills",
+                             "label_create": "Add Skill",
+                             "type": "datalist",
+                             "tablename": "hrm_competency",
+                             "filter": FS("person_id") == person_id,
+                             "icon": "comment-alt",
+                             # Default renderer:
+                             #"list_layout": hrm_competency_list_layout,
+                             "create_controller": c,
+                             # Can't do this as this is the HR perspective, not Person perspective
+                             #"create_function": "person",
+                             #"create_component": "competency",
+                             }
+            trainings_widget = {"label": "Trainings",
+                                "label_create": "Add Training",
+                                "type": "datalist",
+                                "tablename": "hrm_training",
+                                "filter": FS("person_id") == person_id,
+                                "icon": "wrench",
+                                # Default renderer:
+                                #"list_layout": hrm_training_list_layout,
+                                "create_controller": c,
+                                # Can't do this as this is the HR perspective, not Person perspective
+                                #"create_function": "person",
+                                #"create_component": "training",
+                                }
+            experience_widget = {"label": "Experience",
+                                 "label_create": "Add Experience",
+                                 "type": "datalist",
+                                 "tablename": "hrm_experience",
+                                 "filter": FS("person_id") == person_id,
+                                 "icon": "truck",
+                                 # Default renderer:
+                                 #"list_layout": hrm_experience_list_layout,
+                                 "create_controller": c,
+                                 # Can't do this as this is the HR perspective, not Person perspective
+                                 #"create_function": "person",
+                                 #"create_component": "experience",
+                                 }
+            docs_widget = {"label": "Documents",
+                           "label_create": "Add Document",
+                           "type": "datalist",
+                           "tablename": "doc_document",
+                           "filter": FS("doc_id") == record.doc_id,
+                           "icon": "attachment",
+                           # Default renderer:
+                           #"list_layout": s3db.doc_document_list_layout,
+                           }
+            education_widget = {"label": "Education",
+                                "label_create": "Add Education",
+                                "type": "datalist",
+                                "tablename": "pr_education",
+                                "filter": FS("person_id") == person_id,
+                                "icon": "book",
+                                # Can't do this as this is the HR perspective, not Person perspective
+                                #"create_controller": c,
+                                #"create_function": "person",
+                                #"create_component": "education",
+                                }
             profile_widgets = [contacts_widget,
                                address_widget,
                                skills_widget,
@@ -8510,33 +8515,33 @@ class hrm_CV(S3Method):
             if vol and settings.get_hrm_use_awards():
                 tablename = "vol_volunteer_award"
                 r.customise_resource(tablename)
-                widget = dict(# Use CRUD Strings (easier to customise)
-                              #label = "Awards",
-                              #label_create = "Add Award",
-                              type = "datatable",
-                              actions = dt_row_actions("award", tablename),
-                              tablename = tablename,
-                              context = "person",
-                              create_controller = "vol",
-                              create_function = "person",
-                              create_component = "award",
-                              pagesize = None, # all records
-                              )
+                widget = {# Use CRUD Strings (easier to customise)
+                          #"label": "Awards",
+                          #"label_create": "Add Award",
+                          "type": "datatable",
+                          "actions": dt_row_actions("award", tablename),
+                          "tablename": tablename,
+                          "context": "person",
+                          "create_controller": "vol",
+                          "create_function": "person",
+                          "create_component": "award",
+                          "pagesize": None, # all records
+                          }
                 profile_widgets.append(widget)
 
             if settings.get_hrm_use_education():
                 tablename = "pr_education"
-                widget = dict(label = "Education",
-                              label_create = "Add Education",
-                              type = "datatable",
-                              actions = dt_row_actions("education", tablename),
-                              tablename = tablename,
-                              context = "person",
-                              create_controller = controller,
-                              create_function = "person",
-                              create_component = "education",
-                              pagesize = None, # all records
-                              )
+                widget = {"label": "Education",
+                          "label_create": "Add Education",
+                          "type": "datatable",
+                          "actions": dt_row_actions("education", tablename),
+                          "tablename": tablename,
+                          "context": "person",
+                          "create_controller": controller,
+                          "create_function": "person",
+                          "create_component": "education",
+                          "pagesize": None, # all records
+                          }
                 profile_widgets.append(widget)
 
             if vol:
