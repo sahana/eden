@@ -229,7 +229,8 @@ def config(settings):
                 organisation_id = hr.organisation_id
                 record_data_append(TR(TH("%s: " % T("Organization")),
                                       A(hrtable.organisation_id.represent(organisation_id),
-                                        _href = URL(c="org", f="organisation", args=[organisation_id]),
+                                        _href = URL(c="org", f="organisation",
+                                                    args=[organisation_id, "profile"]),
                                         )
                                       ))
 
@@ -768,7 +769,8 @@ def config(settings):
 
         s3db = current.s3db
 
-        f = s3db.org_facility.location_id
+        table = s3db.org_facility
+        f = table.location_id
         f.represent = s3db.gis_LocationRepresent(show_link = True,
                                                  controller = "org",
                                                  func = "facility",
@@ -778,6 +780,14 @@ def config(settings):
                                       show_postcode = False,
                                       show_map = False,
                                       )
+
+        if r.method == "read":
+            from gluon import URL
+            profile_url = URL(c="org", f="organisation",
+                              args = ["[id]", "profile"],
+                              )
+            table.organisation_id.represent = s3db.org_OrganisationRepresent(show_link = True,
+                                                                             linkto = profile_url)
 
         # Filtered components
         s3db.add_components("org_facility",

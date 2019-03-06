@@ -5281,12 +5281,12 @@ class org_OrganisationRepresent(S3Represent):
     """ Representation of Organisations """
 
     def __init__(self,
-                 show_link=False,
-                 linkto=None,
-                 parent=True,
-                 acronym=True,
-                 multiple=False,
-                 skip_dt_orderby=False,
+                 show_link = False,
+                 linkto = None,
+                 parent = True,
+                 acronym = True,
+                 multiple = False,
+                 skip_dt_orderby = False,
                  ):
 
         self.acronym = acronym
