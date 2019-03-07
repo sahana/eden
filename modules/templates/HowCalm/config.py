@@ -765,7 +765,7 @@ def config(settings):
 
         from s3 import IS_INT_AMOUNT, \
                        S3LocationSelector, \
-                       S3SQLCustomForm#, S3SQLInlineComponent
+                       S3SQLCustomForm, S3SQLInlineLink#, S3SQLInlineComponent
 
         s3db = current.s3db
 
@@ -855,6 +855,13 @@ def config(settings):
 
         crud_fields = ["organisation_id",
                        "name",
+                       S3SQLInlineLink("facility_type",
+                                       label = T("Facility Type"),
+                                       field = "facility_type_id",
+                                       multiple = False,
+                                       widget = "groupedopts",
+                                       cols = 3,
+                                       ),
                        "location_id",
                        (T("# of Congregations"), "congregations.value"),
                        (T("Cross Streets"), "cross_streets.value"),
@@ -1106,6 +1113,8 @@ def config(settings):
                                        field = "organisation_type_id",
                                        label = T("Organization Type"),
                                        multiple = False,
+                                       widget = "groupedopts",
+                                       cols = 3,
                                        ),
                        (facility_label, "main_facility.location_id"),
                        "website",
