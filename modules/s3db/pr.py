@@ -5770,7 +5770,9 @@ class PRReligionModel(S3Model):
 
         # Table Configuration
         self.configure(tablename,
-                       deduplicate = S3Duplicate(),
+                       deduplicate = S3Duplicate(primary = ["name"],
+												 secondary = ["parent"],
+												 ),
                        hierarchy = "parent",
                        )
 
