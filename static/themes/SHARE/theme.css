@@ -518,7 +518,7 @@ input.datetimepicker {
 
 /* line 218, ../../default/scss/theme/_forms.scss */
 select {
-  padding-right: 1rem !important;
+  padding: 0 1rem 0 0.25rem !important;
 }
 
 /* Form and Item containers */
