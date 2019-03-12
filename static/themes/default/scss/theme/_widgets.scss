@@ -31,18 +31,16 @@ $anonymize_button_bgcolor_hover: $alert-button-bg-hover !default;
         text-decoration: none !important;
         font-size: 0.7em;
     }
-    /* Hides the X in top-right of popups
-    .ui-icon-check,
-    .ui-icon-closethick {
-        background: none;
-        height: 0px;
-        width: 0px;
-    }*/
 }
 .ui-state-active,
 .ui-widget-content .ui-state-active,
 .ui-widget-header .ui-state-active {
     border-color: #ADA6A0;
+}
+.ui-multiselect-header {
+    span.ui-icon {
+        margin-top: 4px;
+    }
 }
 .ui-multiselect-checkboxes li label input {
     margin-left: 0.2rem;
@@ -424,6 +422,23 @@ form.anonymize-form,
 
 // Overrides for right-to-left orientation
 body.rtl {
+    .ui-multiselect-header {
+        .ui-multiselect-filter {
+            direction: rtl;
+            float: right;
+            margin-right: 3px;
+            margin-left: 10px;
+        }
+        ul li {
+            float: right;
+            padding: 0 3px 0 10px;
+        }
+        li.ui-multiselect-close {
+            float: left;
+            text-align: left;
+            padding-left: 0;
+        }
+    }
     .range-filter-widget {
         input.date-filter-input {
             margin-right: 0;
