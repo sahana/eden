@@ -840,13 +840,14 @@ def config(settings):
 
         table = s3db.org_facility
         f = table.location_id
+        f.label = T("Physical Address")
         f.represent = s3db.gis_LocationRepresent(show_link = True,
                                                  controller = "org",
                                                  func = "facility",
                                                  )
-        f.widget = S3LocationSelector(levels = False,
+        f.widget = S3LocationSelector(levels = ["L3"],
                                       show_address = True,
-                                      show_postcode = False,
+                                      show_postcode = True,
                                       show_map = False,
                                       )
 
