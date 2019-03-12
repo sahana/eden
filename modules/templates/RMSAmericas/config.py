@@ -1911,13 +1911,20 @@ Thank you"""
     # -------------------------------------------------------------------------
     def customise_hrm_programme_controller(**attr):
 
+        table = current.s3db.hrm_programme
+
         # Organisation needs to be an NS/Branch
         ns_only("hrm_programme",
                 required = False,
                 branches = False,
                 )
 
-        f = current.s3db.hrm_programme.name_long
+        # non-Admins should only see programmes for their NS
+        auth = current.auth
+        if not auth.s3_has_role("ADMIN"):
+            current.response.s3.filter = (table.organisation_id == auth.root_org())
+
+        f = table.name_long
         f.readable = f.writable = False
 
         return attr

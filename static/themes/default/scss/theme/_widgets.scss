@@ -31,12 +31,13 @@ $anonymize_button_bgcolor_hover: $alert-button-bg-hover !default;
         text-decoration: none !important;
         font-size: 0.7em;
     }
+    /* Hides the X in top-right of popups
     .ui-icon-check,
     .ui-icon-closethick {
         background: none;
         height: 0px;
         width: 0px;
-    }
+    }*/
 }
 .ui-state-active,
 .ui-widget-content .ui-state-active,

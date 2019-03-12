@@ -373,16 +373,71 @@ def config(settings):
 
             from gluon import DIV, TABLE, TR, TH
 
-            record_data = TABLE(TR(TH(record.name)))
+            db = current.db
+            s3db = current.s3db
+
+            table = s3db.org_facility
+
+            record_data = TABLE(TR(TH(record.name, _colspan=2)),
+                                TR(TH("%s: " % table.organisation_id.label),
+                                      table.organisation_id.represent(record.organisation_id)),
+                                )
             record_data_append = record_data.append
 
             #record_id = record.id
             site_id = record.site_id
 
-            db = current.db
-            s3db = current.s3db
+            ltable = s3db.org_site_facility_type
+            query = (ltable.site_id == site_id)
+            fac_type = db(query).select(ltable.facility_type_id,
+                                        limitby = (0, 1)
+                                        ).first()
+            if fac_type:
+                record_data_append(TR(TH("%s: " % ltable.facility_type_id.label),
+                                      ltable.facility_type_id.represent(fac_type.facility_type_id)))
+
+            location_id = record.location_id
+            if location_id:
+                record_data_append(TR(TH("%s: " % table.location_id.label),
+                                      table.location_id.represent(location_id)))
 
             stagtable = s3db.org_site_tag
+            query = (stagtable.site_id == site_id) & \
+                    (stagtable.tag == "congregations")
+            congregations = db(query).select(stagtable.value,
+                                             limitby = (0, 1)
+                                             ).first()
+            if congregations:
+                record_data_append(TR(TH("%s: " % T("# of Congregations")),
+                                      congregations.value))
+
+            query = (stagtable.site_id == site_id) & \
+                    (stagtable.tag == "cross_streets")
+            cross_streets = db(query).select(stagtable.value,
+                                             limitby = (0, 1)
+                                             ).first()
+            if cross_streets:
+                record_data_append(TR(TH("%s: " % T("Cross Streets")),
+                                      cross_streets.value))
+
+            stable = s3db.org_site_status
+            query = (stable.site_id == site_id)
+            status = db(query).select(stable.facility_status,
+                                      limitby = (0, 1)
+                                      ).first()
+            if status:
+                record_data_append(TR(TH("%s: " % stable.facility_status.label),
+                                      stable.facility_status.represent(status.facility_status)))
+
+            query = (stagtable.site_id == site_id) & \
+                    (stagtable.tag == "em_call")
+            em_call = db(query).select(stagtable.value,
+                                       limitby = (0, 1)
+                                       ).first()
+            if em_call:
+                record_data_append(TR(TH("%s: " % T("Call in Emergency")),
+                                      em_call.value))
+
             query = (stagtable.site_id == site_id) & \
                     (stagtable.tag == "oem_ready")
             oem_ready = db(query).select(stagtable.value,
@@ -392,19 +447,33 @@ def config(settings):
                 record_data_append(TR(TH("%s: " % T("OEM Ready Receiving Center")),
                                       oem_ready.value))
 
-            gtable = s3db.gis_location
-            location = db(gtable.id == record.location_id).select(gtable.lat,
-                                                                  gtable.lon,
-                                                                  limitby = (0, 1)
-                                                                  ).first()
+            query = (stagtable.site_id == site_id) & \
+                    (stagtable.tag == "oem_want")
+            oem_want = db(query).select(stagtable.value,
+                                        limitby = (0, 1)
+                                        ).first()
+            if oem_want:
+                record_data_append(TR(TH("%s: " % T("Want to be an OEM Ready Receiving Center")),
+                                      oem_want.value))
+
+            comments = record.comments
+            if comments:
+                record_data_append(TR(TH("%s: " % table.comments.label),
+                                      table.comments.represent(comments)))
+
             _map = ""
-            if location:
+            if location_id:
                 ftable = s3db.gis_layer_feature
                 query = (ftable.controller == "org") & \
                         (ftable.function == "facility")
                 layer = db(query).select(ftable.layer_id,
                                          limitby=(0, 1)).first()
                 if layer:
+                    gtable = s3db.gis_location
+                    location = db(gtable.id == location_id).select(gtable.lat,
+                                                                   gtable.lon,
+                                                                   limitby = (0, 1)
+                                                                   ).first()
                     _map = current.gis.show_map(height = 250,
                                                 lat = location.lat,
                                                 lon = location.lon,
@@ -1224,30 +1293,30 @@ def config(settings):
                     get_config = s3db.get_config
                     def dt_row_actions(component, tablename):
                         def row_actions(r, list_id):
-                            editable = get_config(tablename, "editable")
-                            if editable is None:
-                                editable = True
+                            #editable = get_config(tablename, "editable")
+                            #if editable is None:
+                            #    editable = True
                             deletable = get_config(tablename, "deletable")
                             if deletable is None:
                                 deletable = True
-                            if editable:
-                                actions = [{"label": T("Open"),
-                                            "url": r.url(component=component,
-                                                         component_id="[id]",
-                                                         method="update.popup",
-                                                         vars={"refresh": list_id}),
-                                            "_class": "action-btn edit s3_modal",
-                                            },
-                                           ]
-                            else:
-                                actions = [{"label": T("Open"),
-                                            "url": r.url(component=component,
-                                                         component_id="[id]",
-                                                         method="read.popup",
-                                                         vars={"refresh": list_id}),
-                                            "_class": "action-btn edit s3_modal",
-                                            },
-                                           ]
+                            #if editable:
+                            #    actions = [{"label": T("Open"),
+                            #                "url": r.url(component=component,
+                            #                             component_id="[id]",
+                            #                             method="update.popup",
+                            #                             vars={"refresh": list_id}),
+                            #                "_class": "action-btn edit s3_modal",
+                            #                },
+                            #               ]
+                            #else:
+                            actions = [{"label": T("Open"),
+                                        "url": r.url(component=component,
+                                                     component_id="[id]",
+                                                     method="read.popup",
+                                                     vars={"refresh": list_id}),
+                                        "_class": "action-btn edit s3_modal",
+                                        },
+                                       ]
                             if deletable:
                                 actions.append({"label": T("Delete"),
                                                 "_ajaxurl": r.url(component=component,
