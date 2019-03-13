@@ -7121,7 +7121,9 @@ class MAP(DIV):
         """
 
         if not self.setup:
-            self._setup()
+            result = self._setup()
+            if result is None:
+                return ""
 
         # Add ExtJS
         # @ToDo: Do this conditionally on whether Ext UI is used
