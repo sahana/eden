@@ -1095,7 +1095,7 @@ def config(settings):
 
             return
 
-        from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE
+        from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, URL
 
         from s3 import IS_INT_AMOUNT, \
                        S3Represent, \
@@ -1258,10 +1258,15 @@ def config(settings):
                            (T("Facility Address"), "main_facility.location_id"),
                            ]
 
+        profile_url = URL(c="org", f="organisation",
+                          args = ["[id]", "profile"])
+
         s3db.configure("org_organisation",
                        crud_form = crud_form,
+                       create_next = profile_url,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
+                       update_next = profile_url,
                        )
 
     settings.customise_org_organisation_resource = customise_org_organisation_resource
@@ -1310,14 +1315,27 @@ def config(settings):
                             #                },
                             #               ]
                             #else:
-                            actions = [{"label": T("Open"),
-                                        "url": r.url(component=component,
-                                                     component_id="[id]",
-                                                     method="read.popup",
-                                                     vars={"refresh": list_id}),
-                                        "_class": "action-btn edit s3_modal",
-                                        },
-                                       ]
+                            if tablename == "pr_person":
+                                actions = [{"label": T("Open"),
+                                            "url": URL(c="pr", f="person",
+                                                       args = ["[id]",
+                                                               "read.popup",
+                                                               ],
+                                                       vars = {"refresh": list_id,
+                                                               },
+                                                       ),
+                                            "_class": "action-btn edit s3_modal",
+                                            },
+                                           ]
+                            else:
+                                actions = [{"label": T("Open"),
+                                            "url": r.url(component=component,
+                                                         component_id="[id]",
+                                                         method="read.popup",
+                                                         vars={"refresh": list_id}),
+                                            "_class": "action-btn edit s3_modal",
+                                            },
+                                           ]
                             if deletable:
                                 actions.append({"label": T("Delete"),
                                                 "_ajaxurl": r.url(component=component,
@@ -1355,7 +1373,7 @@ def config(settings):
                                        facilities_widget,
                                        ]
 
-                    from gluon import A, DIV, H2, TABLE, TR, TH
+                    from gluon import A, DIV, H2, TABLE, TR, TH, URL
 
                     table = s3db.org_organisation
                     record = r.record
@@ -1423,11 +1441,11 @@ def config(settings):
                     query = (otagtable.organisation_id == record_id) & \
                             (otagtable.tag == "board")
                     board = db(query).select(otagtable.value,
-                                                limitby = (0, 1)
-                                                ).first()
+                                             limitby = (0, 1)
+                                             ).first()
                     if board:
                         record_data_append(TR(TH("%s: " % T("# C. Board")),
-                                              board))
+                                              board.value))
 
                     query = (otagtable.organisation_id == record_id) & \
                             (otagtable.tag == "internet")

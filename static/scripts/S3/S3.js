@@ -532,7 +532,7 @@ var S3EnableNavigateAwayConfirm = function() {
             // If there are errors, ensure the unsaved form is still protected
             S3SetNavigateAwayConfirm();
         }
-        var form = $('form:not(.filter-form)');
+        var form = $('form:not(.filter-form,.pt-form)');
 
         $('input, textarea', form).keypress(S3SetNavigateAwayConfirm)
                                   .change(S3SetNavigateAwayConfirm);
