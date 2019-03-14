@@ -40,6 +40,7 @@ def config(settings):
     settings.gis.legend = "float"
     settings.gis.poi_create_resources = []
     settings.gis.location_represent_address_only = True
+    settings.gis.max_features = 4500
 
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
