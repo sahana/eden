@@ -827,6 +827,7 @@ def config(settings):
                                        addr_postcode = postcode,
                                        inherited = False,
                                        parent = parent,
+                                       wkt = None,
                                        )
                 gis.update_location_tree({"id": location.id})
 
