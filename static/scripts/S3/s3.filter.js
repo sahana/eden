@@ -1330,7 +1330,7 @@ S3.search = {};
             } else if (t.hasClass('dl')) {
                 t.datalist('ajaxReload', target_data.queries);
             } else if (t.hasClass('map_wrapper')) {
-                S3.gis.refreshLayer('search_results');
+                S3.gis.refreshLayer('search_results', target_data.queries);
             } else if (t.hasClass('gi-container')) {
                 t.groupedItems('reload', null, target_data.queries);
             } else if (t.hasClass('pt-container')) {
