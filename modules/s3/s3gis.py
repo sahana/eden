@@ -4789,10 +4789,12 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             # Nothing we can do
             raise ValueError
 
+        feature_get = feature.get
+
         # L0
-        level = feature.get("level", False)
-        name = feature.get("name", False)
-        path = feature.get("path", False)
+        level = feature_get("level", False)
+        name = feature_get("name", False)
+        path = feature_get("path", False)
         # If we're processing all locations, and this is a hierarchy location,
         # and has already been processed (as evidenced by having a path) do not
         # process it again. Locations with a gap in their ancestor levels will
@@ -4802,10 +4804,10 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
         if all_locations and path and level:
             # This hierarchy location is already finalized.
             return path
-        lat = feature.get("lat", False)
-        lon = feature.get("lon", False)
-        wkt = feature.get("wkt", False)
-        L0 = feature.get("L0", False)
+        lat = feature_get("lat", False)
+        lon = feature_get("lon", False)
+        wkt = feature_get("wkt", False)
+        L0 = feature_get("L0", False)
         if level == "L0":
             if name is False or path is False or lat is False or lon is False or \
                wkt is False or L0 is False:
@@ -4857,9 +4859,9 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
         fixup_required = False
 
         # L1
-        inherited = feature.get("inherited", None)
-        parent = feature.get("parent", False)
-        L1 = feature.get("L1", False)
+        inherited = feature_get("inherited", None)
+        parent = feature_get("parent", False)
+        L1 = feature_get("L1", False)
         if level == "L1":
             if inherited is None or name is False or parent is False or path is False or \
                lat is False or lon is False or wkt is False or \
@@ -4938,7 +4940,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
 
 
         # L2
-        L2 = feature.get("L2", False)
+        L2 = feature_get("L2", False)
         if level == "L2":
             if inherited is None or name is False or parent is False or path is False or \
                lat is False or lon is False or wkt is False or \
@@ -5042,7 +5044,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
 
 
         # L3
-        L3 = feature.get("L3", False)
+        L3 = feature_get("L3", False)
         if level == "L3":
             if inherited is None or name is False or parent is False or path is False or \
                lat is False or lon is False or wkt is False or \
@@ -5182,7 +5184,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
 
 
         # L4
-        L4 = feature.get("L4", False)
+        L4 = feature_get("L4", False)
         if level == "L4":
             if inherited is None or name is False or parent is False or path is False or \
                lat is False or lon is False or wkt is False or \
@@ -5353,7 +5355,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
 
 
         # L5
-        L5 = feature.get("L5", False)
+        L5 = feature_get("L5", False)
         if level == "L5":
             if inherited is None or name is False or parent is False or path is False or \
                lat is False or lon is False or wkt is False or \
