@@ -5122,6 +5122,7 @@ class hrm_AssignMethod(S3Method):
 
         get_vars = r.get_vars
         response = current.response
+        output = None
 
         if r.http == "POST":
             added = 0
@@ -5174,7 +5175,7 @@ class hrm_AssignMethod(S3Method):
                 # Don't redirect, so we retain popup extension & so close popup
                 response.confirmation = T("%(number)s assigned") % \
                                             dict(number=added)
-                return {}
+                output = {}
             else:
                 current.session.confirmation = T("%(number)s assigned") % \
                                                     dict(number=added)
@@ -5326,10 +5327,10 @@ class hrm_AssignMethod(S3Method):
 
                 response.view = "list_filter.html"
 
-                return {"items": items,
-                        "title": T("Assign %(staff)s") % dict(staff=STAFF),
-                        "list_filter_form": ff,
-                        }
+                output = {"items": items,
+                          "title": T("Assign %(staff)s") % dict(staff=STAFF),
+                          "list_filter_form": ff,
+                          }
 
             elif r.representation == "aadata":
                 # Ajax refresh
@@ -5354,12 +5355,14 @@ class hrm_AssignMethod(S3Method):
                                 echo,
                                 dt_bulk_actions=dt_bulk_actions)
                 response.headers["Content-Type"] = "application/json"
-                return items
+                output = items
 
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
+
+        return output
 
 # =============================================================================
 class hrm_HumanResourceRepresent(S3Represent):
@@ -6109,7 +6112,7 @@ def hrm_map_popup(r):
         if len(skills) > 1:
             represent = ", ".join(vals)
         else:
-            represent = len(vals) and vals[0] or ""
+            represent = vals[0] if vals else ""
         append(TR(TD(B("%s:" % T("Skills"))),
                   TD(represent)))
 
@@ -6125,7 +6128,7 @@ def hrm_map_popup(r):
         if len(certificates) > 1:
             represent = ", ".join(vals)
         else:
-            represent = len(vals) and vals[0] or ""
+            represent = vals[0] if vals else ""
         append(TR(TD(B("%s:" % T("Certificates"))),
                   TD(represent)))
 
@@ -6143,7 +6146,7 @@ def hrm_map_popup(r):
         if len(trainings) > 1:
             represent = ", ".join(vals)
         else:
-            represent = len(vals) and vals[0] or ""
+            represent = vals[0] if vals else ""
         append(TR(TD(B("%s:" % T("Trainings"))),
                   TD(represent)))
 
@@ -7657,7 +7660,7 @@ def hrm_human_resource_controller(extra_filter = None):
                 else:
                     fn = "person"
                 redirect(URL(f = fn,
-                             args = [r.method],
+                             args = [method] if method else [],
                              vars = {"human_resource.id" : r.id,
                                      "group" : group
                                      },
@@ -7779,7 +7782,7 @@ def hrm_person_controller(**attr):
         hr = db(table.id == hr_id).select(table.type,
                                           limitby=(0, 1)).first()
         if hr:
-            group = hr.type == 2 and "volunteer" or "staff"
+            group = "volunteer" if hr.type == 2 else "staff"
             # Also inform the back-end of this finding
             get_vars["group"] = group
 
