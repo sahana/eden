@@ -584,17 +584,15 @@ class S3PopupLink(S3NavigationItem):
 S3AddResourceLink = S3PopupLink
 
 # =============================================================================
-def homepage(*match, **attr):
+def homepage(module=None, *match, **attr):
     """
         Shortcut for module homepage menu items using the MM layout,
         retrieves the module's nice name.
 
+        @param module: the module's prefix (controller)
         @param match: additional prefixes
         @param attr: attributes for the navigation item
-        @keyword module: the module's prefix (controller)
     """
-
-    module = attr.pop("module", None)
 
     settings = current.deployment_settings
     all_modules = settings.modules
