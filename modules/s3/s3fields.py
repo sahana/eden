@@ -39,11 +39,11 @@ from gluon.storage import Storage
 from gluon.languages import lazyT
 
 from s3dal import SQLCustomType
-from s3datetime import S3DateTime
-from s3navigation import S3ScriptItem
-from s3utils import s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode, s3_str, S3MarkupStripper
-from s3validators import IS_ISO639_2_LANGUAGE_CODE, IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
-from s3widgets import S3CalendarWidget, S3DateWidget
+from .s3datetime import S3DateTime
+from .s3navigation import S3ScriptItem
+from .s3utils import s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode, s3_str, S3MarkupStripper
+from .s3validators import IS_ISO639_2_LANGUAGE_CODE, IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
+from .s3widgets import S3CalendarWidget, S3DateWidget
 
 # =============================================================================
 class FieldS3(Field):

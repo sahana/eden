@@ -549,7 +549,7 @@ class S3Calendar(object):
             # Gregorian calendar - use strptime
             try:
                 timetuple = time.strptime(dtstr, dtfmt)
-            except ValueError, e:
+            except ValueError as e:
                 # Seconds missing?
                 try:
                     timetuple = time.strptime(dtstr + ":00", dtfmt)

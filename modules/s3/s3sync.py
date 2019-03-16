@@ -39,11 +39,11 @@ except ImportError:
 from gluon import current, URL, DIV
 from gluon.storage import Storage
 
-from s3datetime import s3_parse_datetime, s3_utc
-from s3rest import S3Method
-from s3import import S3ImportItem
-from s3query import S3URLQuery
-from s3utils import s3_str
+from .s3datetime import s3_parse_datetime, s3_utc
+from .s3rest import S3Method
+from .s3import import S3ImportItem
+from .s3query import S3URLQuery
+from .s3utils import s3_str
 
 # =============================================================================
 class S3Sync(S3Method):

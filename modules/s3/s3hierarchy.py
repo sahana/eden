@@ -36,9 +36,9 @@ import json
 from gluon import *
 from gluon.storage import Storage
 from gluon.tools import callback
-from s3utils import s3_str
-from s3rest import S3Method
-from s3widgets import SEPARATORS
+from .s3utils import s3_str
+from .s3rest import S3Method
+from .s3widgets import SEPARATORS
 
 DEFAULT = lambda: None
 

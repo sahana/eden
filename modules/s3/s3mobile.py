@@ -38,11 +38,11 @@ __all__ = ("S3MobileFormList",
 import json
 
 from gluon import *
-from s3datetime import s3_parse_datetime
-from s3forms import S3SQLForm, S3SQLCustomForm, S3SQLDummyField, S3SQLField
-from s3rest import S3Method
-from s3utils import s3_get_foreign_key, s3_str
-from s3validators import SEPARATORS
+from .s3datetime import s3_parse_datetime
+from .s3forms import S3SQLForm, S3SQLCustomForm, S3SQLDummyField, S3SQLField
+from .s3rest import S3Method
+from .s3utils import s3_get_foreign_key, s3_str
+from .s3validators import SEPARATORS
 
 DEFAULT = lambda: None
 

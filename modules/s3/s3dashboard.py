@@ -41,9 +41,9 @@ import uuid
 
 from gluon import *
 
-from s3utils import s3_get_extension, s3_str
-from s3widgets import ICON
-from s3validators import JSONERRORS
+from .s3utils import s3_get_extension, s3_str
+from .s3widgets import ICON
+from .s3validators import JSONERRORS
 
 DEFAULT = lambda: None
 DEFAULT_FORMAT = "html"

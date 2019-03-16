@@ -93,7 +93,7 @@ def climate_overlay_data():
                 arguments[kwarg_name] = converter(value)
             except TypeError:
                 errors.append("%s is wrong type" % kwarg_name)
-            except AssertionError, assertion_error:
+            except AssertionError as assertion_error:
                 errors.append("%s: %s" % (kwarg_name, assertion_error))
     if kwargs:
         errors.append("Unexpected arguments: %s" % kwargs.keys())
@@ -104,7 +104,7 @@ def climate_overlay_data():
         try:
             data_path = _map_plugin().get_overlay_data(**arguments)
         # only DSL exception types should be raised here
-        except DSL.DSLSyntaxError, syntax_error:
+        except DSL.DSLSyntaxError as syntax_error:
             raise HTTP(400, json.dumps({
                 "error": "SyntaxError",
                 "lineno": syntax_error.lineno,
@@ -144,7 +144,7 @@ def climate_csv_location_data():
                 arguments[kwarg_name] = converter(value)
             except TypeError:
                 errors.append("%s is wrong type" % kwarg_name)
-            except AssertionError, assertion_error:
+            except AssertionError as assertion_error:
                 errors.append("%s: %s" % (kwarg_name, assertion_error))
     if kwargs:
         errors.append("Unexpected arguments: %s" % kwargs.keys())
@@ -196,7 +196,7 @@ def _climate_chart(content_type):
                     arguments[name] = converter(value)
                 except TypeError:
                     errors.append("%s is wrong type" % name)
-                except AssertionError, assertion_error:
+                except AssertionError as assertion_error:
                     errors.append("%s: %s" % (name, assertion_error))
         if spec:
             errors.append("Unexpected arguments: %s" % spec.keys())

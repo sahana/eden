@@ -50,12 +50,12 @@ from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3datetime import S3DateTime, s3_decode_iso_datetime
-from s3export import S3Exporter
-from s3forms import S3SQLDefaultForm
-from s3rest import S3Method
-from s3utils import s3_str, s3_unicode, s3_validate, s3_represent_value, s3_set_extension
-from s3widgets import S3EmbeddedComponentWidget, S3Selector, ICON
+from .s3datetime import S3DateTime, s3_decode_iso_datetime
+from .s3export import S3Exporter
+from .s3forms import S3SQLDefaultForm
+from .s3rest import S3Method
+from .s3utils import s3_str, s3_unicode, s3_validate, s3_represent_value, s3_set_extension
+from .s3widgets import S3EmbeddedComponentWidget, S3Selector, ICON
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")

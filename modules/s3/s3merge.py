@@ -35,10 +35,10 @@ from gluon import current, IS_NOT_IN_DB, \
 from gluon.storage import Storage
 
 from s3dal import Field
-from s3data import S3DataTable
-from s3query import FS
-from s3rest import S3Method
-from s3utils import s3_get_foreign_key, s3_represent_value, s3_str
+from .s3data import S3DataTable
+from .s3query import FS
+from .s3rest import S3Method
+from .s3utils import s3_get_foreign_key, s3_represent_value, s3_str
 
 # =============================================================================
 class S3Merge(S3Method):

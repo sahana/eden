@@ -33,10 +33,10 @@ import uuid
 from gluon import current, A, BUTTON, DIV, FORM, INPUT, LABEL, P
 
 from s3dal import original_tablename
-from s3rest import S3Method
-from s3query import FS, S3Joins
-from s3validators import JSONERRORS
-from s3utils import s3_str
+from .s3rest import S3Method
+from .s3query import FS, S3Joins
+from .s3validators import JSONERRORS
+from .s3utils import s3_str
 
 __all__ = ("S3Anonymize",
            "S3AnonymizeWidget",

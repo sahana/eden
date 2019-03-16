@@ -240,7 +240,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 f = urllib2.urlopen(req, data=request_data)
             else:
                 f = urllib2.urlopen(req)
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             message = "HTTP %s: %s" % (e.code, e.reason)
             # More details may be in the response body
             error_response = xml.parse(e)

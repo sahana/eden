@@ -46,11 +46,11 @@ import uuid
 from gluon import current, DIV, INPUT
 from gluon.storage import Storage
 
-from s3datetime import s3_decode_iso_datetime
-from s3rest import S3Method
-from s3utils import s3_str
-from s3validators import JSONERRORS
-from s3widgets import S3DateWidget
+from .s3datetime import s3_decode_iso_datetime
+from .s3rest import S3Method
+from .s3utils import s3_str
+from .s3validators import JSONERRORS
+from .s3widgets import S3DateWidget
 
 # =============================================================================
 class S3Organizer(S3Method):

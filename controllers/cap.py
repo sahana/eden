@@ -23,7 +23,7 @@ def alerting_authority():
     """
 
     return s3_rest_controller()
-    
+
 # -----------------------------------------------------------------------------
 def alert_history():
     """
@@ -67,7 +67,7 @@ def info_prep(r):
                 template_id = db(table.id == r.id).select(table.template_info_id,
                                                           limitby=(0, 1)
                                                           ).first().template_info_id
-            except AttributeError, KeyError:
+            except (AttributeError, KeyError):
                 pass
         elif r.component_name == "info":
             # cap/x/info component tab
@@ -251,7 +251,7 @@ def alert():
                 # Don't allow to delete
                 s3db.configure(tablename,
                                deletable = False,
-                               editable = False,                               
+                               editable = False,
                                insertable = False,
                                )
             if record.reference is not None:
@@ -354,7 +354,7 @@ def alert():
                                    deletable = False,
                                    editable = False,
                                    filter_widgets = filter_widgets,
-                                   insertable = False,                                  
+                                   insertable = False,
                                    )
 
                 if r.method == "review":
@@ -538,7 +538,7 @@ def alert():
 
                     widget = s3db.cap_AlertProfileWidget
                     component = widget.component
-    
+
                     @widget(None)
                     def alert_widget(r, **attr):
                         return (
@@ -622,10 +622,10 @@ def alert():
                                       params,
                                       ),
                         )
-    
+
                     @widget("Alert Qualifiers")
                     def qualifiers_widget(r, **attr):
-    
+
                         return (
                             component("Sender ID",
                                       record.sender,
@@ -659,7 +659,7 @@ def alert():
                                       represent = table.incidents.represent,
                                       ),
                         )
-    
+
                     resource_desc = info["cap_resource.resource_desc"]
                     dtable = s3db.doc_document
                     documents_ = []
@@ -772,7 +772,7 @@ def alert():
                                              URL(c="cap", f=fn, args=alert_id)
                         itable.event_type_id.default = row.event_type_id
                     else:
-                        s3db.configure("cap_info",                              
+                        s3db.configure("cap_info",
                                        insertable = False,
                                        )
                 if record.approved_by is not None:
@@ -1198,7 +1198,7 @@ def template():
                                          URL(c="cap", f=fn, args=alert_id)
                     itable.event_type_id.default = row.event_type_id
                 else:
-                    s3db.configure("cap_info",                              
+                    s3db.configure("cap_info",
                                    insertable = False,
                                    )
         elif r.component_name == "resource":
@@ -1416,7 +1416,7 @@ def notify_approver():
                         url = s3_str(Shortener('Tinyurl', timeout=3).short(url))
                     except:
                         pass
-                        
+
                 message = """
 Hello Approver,
 %(full_name)s has created the alert message.

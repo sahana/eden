@@ -35,7 +35,7 @@ from xml.sax.saxutils import escape, unescape
 
 from gluon import current
 
-from s3utils import s3_str
+from .s3utils import s3_str
 
 # =============================================================================
 class S3Codec(object):

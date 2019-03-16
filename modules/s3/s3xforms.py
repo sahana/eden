@@ -32,8 +32,8 @@ __all__ = ("S3XForms",
            )
 
 from gluon import *
-from s3rest import S3Method
-from s3utils import s3_unicode
+from .s3rest import S3Method
+from .s3utils import s3_unicode
 
 # =============================================================================
 class S3XForms(S3Method):

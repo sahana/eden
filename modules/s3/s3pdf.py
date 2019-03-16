@@ -72,10 +72,10 @@ except ImportError:
     sys.stderr.write("ERROR: lxml module needed for XML handling\n")
     raise
 
-from s3datetime import S3DateTime
-from s3rest import S3Method
-from s3utils import s3_represent_value, s3_validate
-import s3codec
+from .s3datetime import S3DateTime
+from .s3rest import S3Method
+from .s3utils import s3_represent_value, s3_validate
+import .s3codec
 
 try:
     from PIL import Image

@@ -60,15 +60,15 @@ from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3dal import Field
-from s3datetime import s3_decode_iso_datetime, S3DateTime
-from s3query import FS, S3ResourceField, S3ResourceQuery, S3URLQuery
-from s3rest import S3Method
-from s3timeplot import S3TimeSeries
-from s3utils import s3_get_foreign_key, s3_str, s3_unicode, S3TypeConverter
-from s3validators import IS_UTC_DATE
-from s3widgets import ICON, S3CalendarWidget, S3CascadeSelectWidget, \
-                      S3GroupedOptionsWidget, S3HierarchyWidget, \
-                      S3MultiSelectWidget
+from .s3datetime import s3_decode_iso_datetime, S3DateTime
+from .s3query import FS, S3ResourceField, S3ResourceQuery, S3URLQuery
+from .s3rest import S3Method
+from .s3timeplot import S3TimeSeries
+from .s3utils import s3_get_foreign_key, s3_str, s3_unicode, S3TypeConverter
+from .s3validators import IS_UTC_DATE
+from .s3widgets import ICON, S3CalendarWidget, S3CascadeSelectWidget, \
+                       S3GroupedOptionsWidget, S3HierarchyWidget, \
+                       S3MultiSelectWidget
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")

@@ -69,11 +69,11 @@ from gluon.settings import global_settings
 from gluon.storage import Storage
 
 from s3dal import Rows
-from s3datetime import s3_format_datetime, s3_parse_datetime
-from s3fields import s3_all_meta_field_names
-from s3rest import S3Method
-from s3track import S3Trackable
-from s3utils import s3_include_ext, s3_include_underscore, s3_str
+from .s3datetime import s3_format_datetime, s3_parse_datetime
+from .s3fields import s3_all_meta_field_names
+from .s3rest import S3Method
+from .s3track import S3Trackable
+from .s3utils import s3_include_ext, s3_include_underscore, s3_str
 
 # Map WKT types to db types
 GEOM_TYPES = {"point": 1,
@@ -1675,7 +1675,7 @@ class GIS(object):
         if level:
             try:
                 return all_levels[level]
-            except Exception, e:
+            except Exception as e:
                 return level
         else:
             return all_levels
@@ -2910,7 +2910,7 @@ class GIS(object):
         if not os.path.exists(cachepath):
             try:
                 os.mkdir(cachepath)
-            except OSError, os_error:
+            except OSError as os_error:
                 error = "GIS: JPEG files cannot be saved: %s %s" % \
                                   (cachepath, os_error)
                 current.log.error(error)
@@ -2968,14 +2968,14 @@ class GIS(object):
             test = '''return S3.gis.maps['%s'].s3.loaded''' % map_id
             try:
                 result = driver.execute_script(test)
-            except WebDriverException, e:
+            except WebDriverException as e:
                 result = False
             return result
 
         try:
             # Wait for up to 100s (large screenshots take a long time for layers to load)
             WebDriverWait(driver, 100).until(map_loaded)
-        except TimeoutException, e:
+        except TimeoutException as e:
             driver.quit()
             current.log.error("Timeout: %s" % e)
             return None
@@ -3013,7 +3013,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                      }
         try:
             result = driver.execute_phantomjs(script)
-        except WebDriverException, e:
+        except WebDriverException as e:
             driver.quit()
             current.log.error("WebDriver crashed: %s" % e)
             return None
@@ -3758,7 +3758,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             current.log.debug("Downloading %s" % url)
             try:
                 file = fetch(url)
-            except urllib2.URLError, exception:
+            except urllib2.URLError as exception:
                 current.log.error(exception)
                 return
             fp = StringIO(file)
@@ -3835,7 +3835,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         #ttable.insert(location_id = location_id,
                         #              tag = "area",
                         #              value = area)
-                    except db._adapter.driver.OperationalError, e:
+                    except db._adapter.driver.OperationalError as e:
                         current.log.error(sys.exc_info[1])
 
             else:
@@ -3962,7 +3962,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             current.log.debug("Downloading %s" % url)
             try:
                 file = fetch(url)
-            except urllib2.URLError, exception:
+            except urllib2.URLError as exception:
                 current.log.error(exception)
                 # Revert back to the working directory as before.
                 os.chdir(cwd)
@@ -4296,7 +4296,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             current.log.debug("Downloading %s" % url)
             try:
                 file = fetch(url)
-            except urllib2.URLError, exception:
+            except urllib2.URLError as exception:
                 current.log.error(exception)
                 return
             fp = StringIO(file)
@@ -4364,7 +4364,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                          wkt=wkt)
                                          #code2=code2,
                                          #area=area
-                    except db._adapter.driver.OperationalError, exception:
+                    except db._adapter.driver.OperationalError as exception:
                         current.log.error(exception)
 
             else:
@@ -6582,7 +6582,7 @@ class MAP(DIV):
                         # Create it
                         try:
                             f = open(projpath, "w")
-                        except IOError, e:
+                        except IOError as e:
                             response.error =  \
                         T("Map not available: Cannot write projection file - %s") % e
                         else:
@@ -7070,7 +7070,7 @@ class MAP(DIV):
                 layer.as_dict(options)
                 for script in layer.scripts:
                     scripts_append(script)
-            except Exception, exception:
+            except Exception as exception:
                 error = "%s not shown: %s" % (LayerType.__name__, exception)
                 current.log.error(error)
                 if s3.debug:
@@ -7185,7 +7185,7 @@ class MAP(DIV):
         projection = options["projection"]
         try:
             options = dumps(options, separators=SEPARATORS)
-        except Exception, exception:
+        except Exception as exception:
             current.log.error("Map %s failed to initialise" % map_id, exception)
         plugin_callbacks = '''\n'''.join(self.plugin_callbacks)
         if callback:
@@ -8195,7 +8195,7 @@ class LayerGeoRSS(Layer):
                         query = (cachetable.source == url) & \
                                 (cachetable.modified_on < cutoff)
                         db(query).delete()
-                except Exception, exception:
+                except Exception as exception:
                     current.log.error("GeoRSS %s download error" % url, exception)
                     # Feed down
                     if existing_cached_copy:
@@ -8422,7 +8422,7 @@ class LayerKML(Layer):
         else:
             try:
                 os.mkdir(cachepath)
-            except OSError, os_error:
+            except OSError as os_error:
                 current.log.error("GIS: KML layers cannot be cached: %s %s" % \
                                   (cachepath, os_error))
                 cacheable = False
@@ -9658,7 +9658,7 @@ class S3ImportPOI(S3Method):
                     try:
                         #result = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
                         subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
-                    except subprocess.CalledProcessError, e:
+                    except subprocess.CalledProcessError as e:
                         current.session.error = T("OSM file generation failed: %s") % e.output
                         redirect(URL(args=r.id))
                     except AttributeError:

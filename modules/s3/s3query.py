@@ -44,8 +44,8 @@ from gluon import current, IS_EMPTY_OR, IS_IN_SET
 from gluon.storage import Storage
 
 from s3dal import Field, Row
-from s3fields import S3RepresentLazy
-from s3utils import s3_get_foreign_key, s3_str, s3_unicode, S3TypeConverter
+from .s3fields import S3RepresentLazy
+from .s3utils import s3_get_foreign_key, s3_str, s3_unicode, S3TypeConverter
 
 ogetattr = object.__getattribute__
 

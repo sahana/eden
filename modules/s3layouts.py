@@ -44,8 +44,10 @@ __all__ = ("S3MainMenuDefaultLayout",
            "homepage",
            )
 
-from gluon import *
-from s3 import *
+from gluon import current, URL, \
+                  A, DIV, H3, IMG, INPUT, LABEL, LI, SPAN, TAG, UL
+
+from s3 import S3NavigationItem, S3CRUD, ICON
 from s3theme import NAV, SECTION
 
 # =============================================================================
@@ -537,7 +539,6 @@ class S3PopupLink(S3NavigationItem):
             return None
 
         if current.deployment_settings.get_ui_use_button_icons():
-            from s3.s3widgets import ICON
             label = (ICON("add"), item.label)
         else:
             label = item.label
@@ -583,15 +584,17 @@ class S3PopupLink(S3NavigationItem):
 S3AddResourceLink = S3PopupLink
 
 # =============================================================================
-def homepage(module=None, *match, **attr):
+def homepage(*match, **attr):
     """
         Shortcut for module homepage menu items using the MM layout,
         retrieves the module's nice name.
 
-        @param module: the module's prefix (controller)
         @param match: additional prefixes
         @param attr: attributes for the navigation item
+        @keyword module: the module's prefix (controller)
     """
+
+    module = attr.pop("module", None)
 
     settings = current.deployment_settings
     all_modules = settings.modules

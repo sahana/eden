@@ -39,10 +39,10 @@ from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3dal import Table, Field, original_tablename
-from s3navigation import S3ScriptItem
-from s3resource import S3Resource
-from s3validators import IS_ONE_OF
-from s3widgets import s3_comments_widget, s3_richtext_widget
+from .s3navigation import S3ScriptItem
+from .s3resource import S3Resource
+from .s3validators import IS_ONE_OF
+from .s3widgets import s3_comments_widget, s3_richtext_widget
 
 DYNAMIC_PREFIX = "s3dt"
 DEFAULT = lambda: None

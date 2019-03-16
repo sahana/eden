@@ -39,7 +39,7 @@ from gluon.html import *
 from gluon.storage import Storage
 
 from s3dal import Expression, S3DAL
-from s3utils import s3_orderby_fields, s3_str, s3_unicode, s3_set_extension
+from .s3utils import s3_orderby_fields, s3_str, s3_unicode, s3_set_extension
 
 # =============================================================================
 class S3DataTable(object):

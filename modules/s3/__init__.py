@@ -43,78 +43,78 @@
 #
 # These names are also imported into the global namespace in
 # 00_db.py in order to access them without the s3base prefix:
-from s3validators import *
-from s3utils import *
-from s3widgets import *
-from s3data import *
-from s3datetime import *
+from .s3validators import *
+from .s3utils import *
+from .s3widgets import *
+from .s3data import *
+from .s3datetime import *
 
 # Basic Toolkits ==============================================================
 #
 # Codecs for data export/import
-from s3codec import *
-from s3xml import *
+from .s3codec import *
+from .s3xml import *
 
 # Common field definitions
-from s3fields import *
+from .s3fields import *
 
 # Exception classes
-from s3error import *
+from .s3error import *
 
 # Asynchronous Tasks
-from s3task import *
+from .s3task import *
 
 # Hierarchy Handling
-from s3hierarchy import *
+from .s3hierarchy import *
 
 # Core Framework ==============================================================
 
 # Model Extensions
-from s3model import DYNAMIC_PREFIX, S3Model
+from .s3model import DYNAMIC_PREFIX, S3Model
 
 # Resource Framework
-from s3query import *
-from s3resource import *
+from .s3query import *
+from .s3resource import *
 
 # Authentication, Authorization, Accounting
-from s3aaa import *
-from s3roles import *
+from .s3aaa import *
+from .s3roles import *
 
 # RESTful API =================================================================
 
 # Core
-from s3rest import *
+from .s3rest import *
 
 # CRUD
-from s3crud import *
-from s3forms import *
-from s3organizer import *
+from .s3crud import *
+from .s3forms import *
+from .s3organizer import *
 
 # Filtering
-from s3filter import *
+from .s3filter import *
 
 # Reporting
-from s3grouped import *
-from s3report import *
-from s3timeplot import *
+from .s3grouped import *
+from .s3report import *
+from .s3timeplot import *
 
 # Profiles
-from s3profile import *
+from .s3profile import *
 
 # Summary
-from s3summary import *
+from .s3summary import *
 
 # Dashboards
-from s3dashboard import *
+from .s3dashboard import *
 
 # Synchronization
-from s3sync import *
+from .s3sync import *
 
 # Import
-from s3import import *
+from .s3import import *
 
 # De-duplication
-from s3merge import S3Merge
+from .s3merge import S3Merge
 
 # Don't load S3PDF unless needed (very slow import with reportlab)
 #from s3pdf import S3PDF
@@ -122,25 +122,25 @@ from s3merge import S3Merge
 # Advanced Framework ==========================================================
 #
 # Tracking System
-from s3track import *
+from .s3track import *
 
 # GIS Mapping
-from s3gis import *
+from .s3gis import *
 
 # Messaging
-from s3msg import *
+from .s3msg import *
 
 # Notifications
-from s3notify import *
+from .s3notify import *
 
 # GUI Navigation Framework
-from s3navigation import *
+from .s3navigation import *
 
 # Mobile APIs
-from s3xforms import *
-from s3mobile import *
+from .s3xforms import *
+from .s3mobile import *
 
 # Anonymize
-from s3anonymize import *
+from .s3anonymize import *
 
 # END =========================================================================

@@ -1067,7 +1067,7 @@ class S3Migration(object):
             sql = "ALTER TABLE %s RENAME TO %s;" % (tablename_old,
                                                     tablename_new)
             self.db.executesql(sql)
-        except Exception, e:
+        except Exception as e:
             import sys
             sys.stderr.write("%s\n" % e)
 

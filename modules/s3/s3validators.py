@@ -71,8 +71,8 @@ from gluon import current, IS_FLOAT_IN_RANGE, IS_INT_IN_RANGE, IS_IN_SET, \
 from gluon.storage import Storage
 from gluon.validators import Validator
 
-from s3datetime import S3DateTime
-from s3utils import s3_orderby_fields, s3_str, s3_unicode
+from .s3datetime import S3DateTime
+from .s3utils import s3_orderby_fields, s3_str, s3_unicode
 
 DEFAULT = lambda: None
 JSONERRORS = (NameError, TypeError, ValueError, AttributeError, KeyError)
@@ -157,7 +157,7 @@ class IS_JSONS3(Validator):
                 value_ = json.dumps(ast.literal_eval(value),
                                     separators = SEPARATORS,
                                     )
-            except JSONERRORS + (SyntaxError,), e:
+            except JSONERRORS + (SyntaxError,) as e:
                 return error(value, e)
             if self.native_json:
                 return (value_, None)
@@ -171,7 +171,7 @@ class IS_JSONS3(Validator):
                     return (value, None) #  the serialized value is not passed
                 else:
                     return (json.loads(value), None)
-            except JSONERRORS, e:
+            except JSONERRORS as e:
                 return error(value, e)
 
     # -------------------------------------------------------------------------

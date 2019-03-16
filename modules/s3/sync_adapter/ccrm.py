@@ -196,7 +196,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                                                onconflict=onconflict_callback,
                                                site=hostname)
                     count = resource.import_count
-                except IOError, e:
+                except IOError as e:
                     result = log.FATAL
                     message = "%s" % e
                     output = xml.json_message(False, 400, message)
@@ -334,7 +334,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 f = urllib2.urlopen(req, data="")
             else:
                 f = urllib2.urlopen(req)
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             message = "HTTP %s: %s" % (e.code, e.reason)
         else:
             # Parse the response

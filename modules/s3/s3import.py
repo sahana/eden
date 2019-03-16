@@ -62,12 +62,12 @@ from gluon.storage import Storage, Messages
 from gluon.tools import callback, fetch
 
 from s3dal import Field
-from s3datetime import s3_utc
-from s3rest import S3Method, S3Request
-from s3resource import S3Resource
-from s3utils import s3_auth_user_represent_name, s3_get_foreign_key, \
-                    s3_has_foreign_key, s3_mark_required, s3_unicode
-from s3validators import IS_JSONS3
+from .s3datetime import s3_utc
+from .s3rest import S3Method, S3Request
+from .s3resource import S3Resource
+from .s3utils import s3_auth_user_represent_name, s3_get_foreign_key, \
+                     s3_has_foreign_key, s3_mark_required, s3_unicode
+from .s3validators import IS_JSONS3
 
 # =============================================================================
 class S3Importer(S3Method):
@@ -4059,7 +4059,7 @@ class S3BulkImporter(object):
                 req = urllib2.Request(url=filename)
                 try:
                     f = urllib2.urlopen(req)
-                except urllib2.HTTPError, e:
+                except urllib2.HTTPError as e:
                     self.errorList.append("Could not access %s: %s" % (filename, e.read()))
                     return
                 except:
@@ -4108,7 +4108,7 @@ class S3BulkImporter(object):
                                     stylesheet=task[4],
                                     extra_data=extra_data,
                                     )
-            except SyntaxError, e:
+            except SyntaxError as e:
                 self.errorList.append("WARNING: import error - %s (file: %s, stylesheet: %s)" %
                                      (e, filename, task[4]))
                 auth.rollback = False
@@ -4512,7 +4512,7 @@ class S3BulkImporter(object):
         os.chdir(fontPath)
         try:
             _file = fetch(url)
-        except urllib2.URLError, exception:
+        except urllib2.URLError as exception:
             current.log.error(exception)
             # Revert back to the working directory as before.
             os.chdir(cwd)
@@ -4577,7 +4577,7 @@ class S3BulkImporter(object):
             os.chdir(tempPath)
             try:
                 _file = fetch(url)
-            except urllib2.URLError, exception:
+            except urllib2.URLError as exception:
                 current.log.error(exception)
                 # Revert back to the working directory as before.
                 os.chdir(cwd)
@@ -4588,7 +4588,7 @@ class S3BulkImporter(object):
                 import zipfile
                 try:
                     myfile = zipfile.ZipFile(StringIO(_file))
-                except zipfile.BadZipfile, exception:
+                except zipfile.BadZipfile as exception:
                     # e.g. trying to download through a captive portal
                     current.log.error(exception)
                     # Revert back to the working directory as before.
@@ -4759,7 +4759,7 @@ class S3BulkImporter(object):
                                 stylesheet = stylesheet,
                                 source_type = source_type,
                                 )
-        except SyntaxError, e:
+        except SyntaxError as e:
             self.errorList.append("WARNING: import error - %s (file: %s, stylesheet: %s/import.xsl)" %
                                  (e, filepath, dataformat))
             auth.rollback = False

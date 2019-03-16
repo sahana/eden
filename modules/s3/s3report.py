@@ -50,11 +50,11 @@ from gluon.sqlhtml import OptionsWidget
 from gluon.storage import Storage
 from gluon.validators import IS_IN_SET, IS_EMPTY_OR
 
-from s3query import FS
-from s3rest import S3Method
-from s3utils import s3_flatlist, s3_has_foreign_key, s3_str, S3MarkupStripper, s3_represent_value
-from s3xml import S3XMLFormat
-from s3validators import IS_NUMBER, JSONERRORS
+from .s3query import FS
+from .s3rest import S3Method
+from .s3utils import s3_flatlist, s3_has_foreign_key, s3_str, S3MarkupStripper, s3_represent_value
+from .s3xml import S3XMLFormat
+from .s3validators import IS_NUMBER, JSONERRORS
 
 # Compact JSON encoding
 DEFAULT = lambda: None

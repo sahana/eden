@@ -63,12 +63,12 @@ from gluon import current, redirect
 from gluon.html import *
 
 #from s3codec import S3Codec
-from s3crud import S3CRUD
-from s3datetime import s3_decode_iso_datetime
-from s3forms import S3SQLDefaultForm
-from s3utils import s3_unicode
-from s3validators import IS_IN_SET, IS_ONE_OF
-from s3widgets import S3PentityAutocompleteWidget
+from .s3crud import S3CRUD
+from .s3datetime import s3_decode_iso_datetime
+from .s3forms import S3SQLDefaultForm
+from .s3utils import s3_unicode
+from .s3validators import IS_IN_SET, IS_ONE_OF
+from .s3widgets import S3PentityAutocompleteWidget
 
 IDENTITYTRANS = ALLCHARS = string.maketrans("", "")
 NOTPHONECHARS = ALLCHARS.translate(IDENTITYTRANS, string.digits)
@@ -1187,7 +1187,7 @@ class S3Msg(object):
             request.add_header("Authorization", "Basic %s" % base64string)
         try:
             result = urllib2.urlopen(request, query)
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             current.log.error("SMS message send failed: %s" % e)
             return False
         else:
@@ -1780,14 +1780,14 @@ class S3Msg(object):
                     p = poplib.POP3_SSL(host, port)
                 else:
                     p = poplib.POP3(host, port)
-            except socket.error, e:
+            except socket.error as e:
                 error = "Cannot connect: %s" % e
                 current.log.error(error)
                 # Store status in the DB
                 sinsert(channel_id=channel_id,
                         status=error)
                 return error
-            except poplib.error_proto, e:
+            except poplib.error_proto as e:
                 # Something else went wrong - probably transient (have seen '-ERR EOF' here)
                 current.log.error("Email poll failed: %s" % e)
                 return
@@ -1800,7 +1800,7 @@ class S3Msg(object):
                 try:
                     p.user(username)
                     p.pass_(password)
-                except poplib.error_proto, e:
+                except poplib.error_proto as e:
                     error = "Login failed: %s" % e
                     current.log.error(error)
                     # Store status in the DB
@@ -1830,7 +1830,7 @@ class S3Msg(object):
                     M = imaplib.IMAP4_SSL(host, port)
                 else:
                     M = imaplib.IMAP4(host, port)
-            except socket.error, e:
+            except socket.error as e:
                 error = "Cannot connect: %s" % e
                 current.log.error(error)
                 # Store status in the DB
@@ -1840,7 +1840,7 @@ class S3Msg(object):
 
             try:
                 M.login(username, password)
-            except M.error, e:
+            except M.error as e:
                 error = "Login failed: %s" % e
                 current.log.error(error)
                 # Store status in the DB
@@ -1918,7 +1918,7 @@ class S3Msg(object):
 
         try:
             _response = urllib2.urlopen(url)
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             return "Error: %s" % e.code
         else:
             sms_xml = _response.read()
@@ -1988,7 +1988,7 @@ class S3Msg(object):
 
         try:
             smspage = urllib2.urlopen(url)
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             error = "Error: %s" % e.code
             current.log.error(error)
             # Store status in the DB

@@ -49,7 +49,7 @@ from gluon.languages import lazyT
 from gluon.tools import addrow
 
 from s3dal import Expression, Field, Row, S3DAL
-from s3datetime import ISOFORMAT, s3_decode_iso_datetime, s3_relative_datetime
+from .s3datetime import ISOFORMAT, s3_decode_iso_datetime, s3_relative_datetime
 
 URLSCHEMA = re.compile(r"((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
                        r"(//([^/?#\s]*)))([^?#\s]*)(\?([^#\s]*))?(#([^\s]*))?)")
@@ -1916,7 +1916,7 @@ def URL2(a=None, c=None, r=None):
     if c:
         controller = c
     if not (application and controller):
-        raise SyntaxError, "not enough information to build the url"
+        raise SyntaxError("not enough information to build the url")
     #other = ""
     url = "/%s/%s" % (application, controller)
     return url

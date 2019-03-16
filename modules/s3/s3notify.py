@@ -44,8 +44,8 @@ except:
 
 from gluon import current, TABLE, THEAD, TBODY, TR, TD, TH, XML
 
-from s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
-from s3utils import s3_str, s3_truncate, s3_unicode
+from .s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
+from .s3utils import s3_str, s3_truncate, s3_unicode
 
 # =============================================================================
 class S3Notifications(object):
@@ -206,7 +206,7 @@ class S3Notifications(object):
             message = response["message"]
             if response["status"] == "success":
                 success = True
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             message = ("HTTP %s: %s" % (e.code, e.read()))
         except:
             exc_info = sys.exc_info()[:2]

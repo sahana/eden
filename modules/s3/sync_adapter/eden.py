@@ -88,7 +88,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         remote = False
         try:
             f = opener.open(url, data)
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             # Remote error
             result = log.FATAL
             remote = True
@@ -101,7 +101,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             else:
                 message = message_json.get("message", message)
 
-        except urllib2.URLError, e:
+        except urllib2.URLError as e:
             # URL Error (network error)
             result = log.ERROR
             remote = True
@@ -247,7 +247,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             try:
                 f = opener.open(url)
 
-            except urllib2.HTTPError, e:
+            except urllib2.HTTPError as e:
                 result = log.ERROR
                 remote = True # Peer error
                 code = e.code
@@ -274,7 +274,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                     pass
                 output = xml.json_message(False, code, message, tree=None)
 
-            except urllib2.URLError, e:
+            except urllib2.URLError as e:
                 # URL Error (network error)
                 result = log.ERROR
                 remote = True
@@ -323,7 +323,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                                               )
                 count = resource.import_count
 
-            except IOError, e:
+            except IOError as e:
                 result = log.FATAL
                 message = "%s" % e
                 output = xml.json_message(False, 400, message)
@@ -473,7 +473,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                                        )
             try:
                 opener.open(url, data)
-            except urllib2.HTTPError, e:
+            except urllib2.HTTPError as e:
                 result = log.FATAL
                 remote = True # Peer error
                 code = e.code
@@ -487,7 +487,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 else:
                     message = message_json.get("message", message)
                 output = xml.json_message(False, code, message)
-            except urllib2.URLError, e:
+            except urllib2.URLError as e:
                 # URL Error (network error)
                 result = log.ERROR
                 remote = True
@@ -758,7 +758,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             local_error = False
             try:
                 f = opener.open(url)
-            except urllib2.HTTPError, e:
+            except urllib2.HTTPError as e:
                 # HTTP status (remote error)
                 message = e.read()
                 try:
@@ -785,7 +785,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 # Prepend HTTP status code
                 error = "[%s] %s" % (e.code, message)
 
-            except urllib2.URLError, e:
+            except urllib2.URLError as e:
                 # URL Error (network error)
                 error = "Peer repository unavailable (%s)" % e.reason
 

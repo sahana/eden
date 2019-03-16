@@ -108,9 +108,9 @@ from gluon.languages import lazyT
 from gluon.sqlhtml import *
 from gluon.storage import Storage
 
-from s3datetime import S3Calendar, S3DateTime
-from s3utils import *
-from s3validators import *
+from .s3datetime import S3Calendar, S3DateTime
+from .s3utils import *
+from .s3validators import *
 
 DEFAULT = lambda:None
 ogetattr = object.__getattribute__

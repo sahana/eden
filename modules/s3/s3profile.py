@@ -31,11 +31,11 @@ from gluon import current, redirect
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3crud import S3CRUD
-from s3report import S3Report
-from s3query import FS
-from s3utils import s3_str
-from s3widgets import ICON
+from .s3crud import S3CRUD
+from .s3report import S3Report
+from .s3query import FS
+from .s3utils import s3_str
+from .s3widgets import ICON
 
 # =============================================================================
 class S3Profile(S3CRUD):

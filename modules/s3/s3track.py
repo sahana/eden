@@ -34,7 +34,7 @@ from gluon import current, HTTP, FORM, INPUT, LABEL, TABLE
 from gluon.storage import Storage
 
 from s3dal import Table, Rows, Row
-from s3rest import S3Method
+from .s3rest import S3Method
 
 __all__ = ("S3Trackable",
            "S3Tracker",

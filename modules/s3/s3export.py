@@ -35,7 +35,7 @@ __all__ = ("S3Exporter",)
 
 from gluon import current
 
-from s3codec import S3Codec
+from .s3codec import S3Codec
 
 # =============================================================================
 class S3Exporter(object):

@@ -35,7 +35,7 @@ from gluon import current
 from gluon.languages import read_dict, write_dict
 from gluon.storage import Storage
 
-from s3fields import S3ReusableField
+from .s3fields import S3ReusableField
 
 """
     List of classes with description :

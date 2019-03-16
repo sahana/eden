@@ -50,11 +50,11 @@ from gluon.html import *
 from gluon.validators import IS_IN_SET
 from gluon.sqlhtml import OptionsWidget
 
-from s3datetime import s3_decode_iso_datetime, s3_utc
-from s3rest import S3Method
-from s3query import FS
-from s3report import S3Report, S3ReportForm
-from s3utils import s3_flatlist, s3_represent_value, s3_unicode, S3MarkupStripper
+from .s3datetime import s3_decode_iso_datetime, s3_utc
+from .s3rest import S3Method
+from .s3query import FS
+from .s3report import S3Report, S3ReportForm
+from .s3utils import s3_flatlist, s3_represent_value, s3_unicode, S3MarkupStripper
 
 tp_datetime = lambda *t: datetime.datetime(tzinfo=dateutil.tz.tzutc(), *t)
 

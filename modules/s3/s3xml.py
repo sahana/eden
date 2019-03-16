@@ -48,10 +48,10 @@ except ImportError:
 from gluon import current, HTTP, URL, IS_EMPTY_OR
 from gluon.storage import Storage
 
-from s3codec import S3Codec
-from s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
-from s3fields import S3RepresentLazy
-from s3utils import s3_get_foreign_key, s3_represent_value, s3_str, s3_strip_markup, s3_unicode, s3_validate
+from .s3codec import S3Codec
+from .s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
+from .s3fields import S3RepresentLazy
+from .s3utils import s3_get_foreign_key, s3_represent_value, s3_str, s3_strip_markup, s3_unicode, s3_validate
 
 ogetattr = object.__getattribute__
 

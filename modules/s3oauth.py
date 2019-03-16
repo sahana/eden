@@ -285,7 +285,7 @@ class GooglePlusAccount(OAuthAccount):
             opener = self.__build_url_opener(self.token_url)
             try:
                 open_url = opener.open(self.token_url, urllib.urlencode(data))
-            except urllib2.HTTPError, e:
+            except urllib2.HTTPError as e:
                 raise Exception(e.read())
             finally:
                 del session.code # throw it away
@@ -510,7 +510,7 @@ class HumanitarianIDAccount(OAuthAccount):
             opener = self.__build_url_opener(self.token_url)
             try:
                 open_url = opener.open(self.token_url, urllib.urlencode(data))
-            except urllib2.HTTPError, e:
+            except urllib2.HTTPError as e:
                 raise Exception(e.read())
             finally:
                 del session.code # throw it away
@@ -720,7 +720,7 @@ class OpenIDConnectAccount(OAuthAccount):
             opener = self.__build_url_opener(self.token_url)
             try:
                 open_url = opener.open(self.token_url, urllib.urlencode(data))
-            except urllib2.HTTPError, e:
+            except urllib2.HTTPError as e:
                 raise Exception(e.read())
             finally:
                 del session.code # throw it away
@@ -842,13 +842,13 @@ class OpenIDConnectAccount(OAuthAccount):
 
         try:
             f = urllib2.urlopen(req)
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             message = "HTTP %s: %s" % (e.code, e.reason)
             current.log.error(message)
         else:
             try:
                 userinfo = json.load(f)
-            except ValueError, e:
+            except ValueError as e:
                 import sys
                 message = sys.exc_info()[1]
                 current.log.error(message)

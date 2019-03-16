@@ -38,8 +38,8 @@ import math
 
 from gluon import current, DIV, H2, INPUT, SPAN, TABLE, TBODY, TD, TFOOT, TH, THEAD, TR
 
-from s3rest import S3Method
-from s3utils import s3_strip_markup, s3_unicode
+from .s3rest import S3Method
+from .s3utils import s3_strip_markup, s3_unicode
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")

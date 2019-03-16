@@ -3860,8 +3860,8 @@ def proxy():
             # Bad Request
             raise(HTTP(400))
 
-    except Exception, E:
-        raise(HTTP(500, "Some unexpected error occurred. Error text was: %s" % str(E)))
+    except Exception as e:
+        raise(HTTP(500, "Some unexpected error occurred. Error text was: %s" % str(e)))
 
 # =============================================================================
 def screenshot():

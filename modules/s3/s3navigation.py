@@ -43,7 +43,7 @@ __all__ = ("S3NavigationItem",
 
 from gluon import *
 from gluon.storage import Storage
-from s3utils import s3_str
+from .s3utils import s3_str
 
 # =============================================================================
 class S3NavigationItem(object):

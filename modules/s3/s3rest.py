@@ -45,9 +45,9 @@ except ImportError:
 from gluon import current, redirect, HTTP, URL
 from gluon.storage import Storage
 
-from s3datetime import s3_parse_datetime
-from s3resource import S3Resource
-from s3utils import s3_get_extension, s3_remove_last_record_id, s3_store_last_record_id
+from .s3datetime import s3_parse_datetime
+from .s3resource import S3Resource
+from .s3utils import s3_get_extension, s3_remove_last_record_id, s3_store_last_record_id
 
 REGEX_FILTER = re.compile(r".+\..+|.*\(.+\).*")
 HTTP_METHODS = ("GET", "PUT", "POST", "DELETE")

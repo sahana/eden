@@ -56,13 +56,13 @@ from gluon.tools import Auth, callback, DEFAULT, replace_id
 from gluon.utils import web2py_uuid
 
 from s3dal import Row, Rows, Query, Table, Field, original_tablename
-from s3datetime import S3DateTime
-from s3error import S3PermissionError
-from s3fields import S3MetaFields, S3Represent, s3_comments
-from s3rest import S3Method, S3Request
-from s3track import S3Tracker
-from s3utils import s3_addrow, s3_get_extension, s3_mark_required, s3_str
-from s3validators import IS_ISO639_2_LANGUAGE_CODE
+from .s3datetime import S3DateTime
+from .s3error import S3PermissionError
+from .s3fields import S3MetaFields, S3Represent, s3_comments
+from .s3rest import S3Method, S3Request
+from .s3track import S3Tracker
+from .s3utils import s3_addrow, s3_get_extension, s3_mark_required, s3_str
+from .s3validators import IS_ISO639_2_LANGUAGE_CODE
 
 # =============================================================================
 class AuthS3(Auth):

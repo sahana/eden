@@ -49,7 +49,7 @@ if update_check_needed:
     #    at once - it will die on the first fatal error encountered.
     try:
         import s3 as s3base
-    except Exception, e:
+    except Exception as e:
         errors.append(e.message)
 
     import sys
