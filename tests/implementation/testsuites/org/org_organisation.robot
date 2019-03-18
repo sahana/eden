@@ -1,7 +1,7 @@
 *** Settings ***
 Documentation     Test cases for org module
 ...               Run using "python web2py.py --no-banner -M -S eden  -R applications/eden/tests/edentest_runner.py -A org"
-Resource          ../../resources/main.txt
+Resource          ../../resources/main.robot
 
 *** Variables ***
 ${ORGANIZATION URL}     ${BASEURL}/org/organisation

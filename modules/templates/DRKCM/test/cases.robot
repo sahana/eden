@@ -1,7 +1,7 @@
 *** Settings ***
 Documentation     Test cases for Case Management
 ...               Run using "python web2py.py --no-banner -M -S eden -R applications/eden/tests/edentest_runner.py -A DRKCM"
-Resource          ../../../../tests/implementation/resources/main.txt
+Resource          ../../../../tests/implementation/resources/main.robot
 
 *** Variables ***
 ${CASE URL}             ${BASEURL}/dvr/person

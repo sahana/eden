@@ -38,7 +38,11 @@ def pip_install(package):
         Install the package using pip
     """
     try:
-        pip.main(["install", "--upgrade", package])
+        if hasattr(pip, 'main'):
+            pip.main(['install', "--upgrade", package])
+        else:
+            from pip._internal import main as pip_main
+            pip_main(['install', "--upgrade", package])
         return True
     except:
         info("Unable to install %s using pip." % package)
@@ -56,8 +60,8 @@ if __name__ == "__main__":
             info("Could not install Robot Framework.")
             exit(1)
 
-        if not pip_install("robotframework-selenium2library"):
-            info("Could not install Selenium2Library.")
+        if not pip_install("robotframework-seleniumlibrary"):
+            info("Could not install SeleniumLibrary.")
             exit(1)
 
         if not pip_install("requests"):
@@ -91,8 +95,8 @@ if __name__ == "__main__":
         easy_install("selenium")
         easy_install("decorator")
         easy_install("docutils")
-        if not easy_install("robotframework-selenium2library"):
-            info("Could not install Selenium2Library.")
+        if not easy_install("robotframework-seleniumlibrary"):
+            info("Could not install SeleniumLibrary.")
             exit(1)
 
         info("Installation successful")

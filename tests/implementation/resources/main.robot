@@ -1,13 +1,13 @@
 *** Settings ***
 Documentation     Main resource file for EdenTests
-Resource  auth.txt
-Resource  base.txt
-Resource  crud.txt
-Resource  filter.txt
-Resource  datatable.txt
-Resource  widgets.txt
-Resource  form.txt
-Library  Selenium2Library  run_on_failure=Catch Error If Available Else Take Screenshot
+Resource  auth.robot
+Resource  base.robot
+Resource  crud.robot
+Resource  filter.robot
+Resource  datatable.robot
+Resource  widgets.robot
+Resource  form.robot
+Library  SeleniumLibrary  run_on_failure=Catch Error If Available Else Take Screenshot
 Library  Collections
 Library  String
 Variables  ../../execution/settings/config.py

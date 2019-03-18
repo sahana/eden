@@ -18,7 +18,7 @@ Documentation     Run using "python web2py.py --no-banner -M -S eden -R applicat
 ...               6 Rename a section
 ...               7 Delete a section
 
-Resource  ../../resources/main.txt
+Resource  ../../resources/main.robot
 
 Suite Setup  Survey Start
 

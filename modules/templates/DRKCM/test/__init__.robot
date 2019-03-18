@@ -1,4 +1,4 @@
 *** Settings ***
-Resource  ../resources/main.txt
+Resource  ../../../../tests/implementation/resources/main.robot
 Suite Setup  Start Testing
 Suite Teardown  End Testing

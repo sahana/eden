@@ -1,9 +1,0 @@
-*** Settings ***
-Resource  ../../resources/main.txt
-Suite Setup  Start Testing If Template Is SSF
-
-*** Keywords ***
-Start Testing If Template Is SSF
-    [Documentation]  Run the test suite for SSF template
-    ${Template List}=  Create List  SSF
-    Run On Templates  ${Template List} 

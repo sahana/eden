@@ -7,7 +7,7 @@
 # Usage with given name of output file: python web2py.py --no-banner -M -S eden  -R applications/eden/tests/edentest_runner.py -A  smoke_tests  -o NONE -l NONE -v filename:smoke_tests.txt
 
 *** Settings ***
-Resource  ../../resources/main.txt
+Resource  ../../resources/main.robot
 Library  edentest_smoke.py  ${BASE URL}  ${DO NOT FOLLOW}  ${EXT LINKS}
 Library  DateTime
 Library  OperatingSystem
@@ -80,7 +80,7 @@ Visit URLs And Return ToVisit
     # Just a check
     Remove Duplicates  ${URL List}
 
-    :FOR  ${Url}  In  @{URL List}
+    :FOR  ${Url}  IN  @{URL List}
     \  Go To  ${Url}
     \  Append To file  ${Log File}  ${URL}\n
     \  ${status}=  Check For Errors  ${Url}
@@ -97,7 +97,7 @@ Add Current Urls to ToVisit Urls
     [Documentation]  This appends the URLs parsed from the current
     ...  page into the ToVisit URLs
     [Arguments]  ${Current Urls}  ${To Visit}  ${URL List}
-    :FOR  ${Url}  In  @{Current Urls}
+    :FOR  ${Url}  IN  @{Current Urls}
     \  ${output}=  Check If Url Should be Skipped  ${Url}
     \  Continue For Loop If  ${output} == 1
     \  ${Url}=  Strip Url of Unwanted Parts  ${Url}
@@ -118,7 +118,7 @@ Create Log File
     Remove File  ${Log File}
     Create File  ${Log File}
 
-*** Testcases ***
+*** Test Cases ***
 Every page is showing correctly
     Set Selenium Timeouts
     Register Keyword To Run On Failure  Nothing
@@ -133,7 +133,7 @@ Every page is showing correctly
     ${URLs Failed}=  Set Variable  ${0}
     ${URLs Count}=  Set Variable  ${0}
 
-    :For  ${Depth}  In Range  ${MAXDEPTH}
+    :For  ${Depth}  IN RANGE  ${MAXDEPTH}
     \  ${Start Time}=  Get Current Date  result_format=timestamp
     # Just a check
     \  Remove Duplicates  ${To Visit}
