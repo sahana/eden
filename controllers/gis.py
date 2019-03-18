@@ -680,6 +680,7 @@ def ldata():
     except:
         raise HTTP(400)
 
+    s3base.s3_keep_messages()
     response.headers["Content-Type"] = "application/json"
 
     if len(req_args) > 1:

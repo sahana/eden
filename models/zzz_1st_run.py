@@ -28,7 +28,7 @@ if len(pop_list) > 0:
 
     def duration(msg, start):
         delta = datetime.datetime.now() - start
-        info("%s (%s secs)" %
+        info("%s (%s sec)" %
             (msg, "{:.2f}".format(delta.total_seconds())))
 
     info("\n*** FIRST RUN - SETTING UP DATABASE ***\n")

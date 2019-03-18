@@ -15,7 +15,8 @@
 
     // Global cache for location data (shared with other location selectors)
     var hierarchyLocations = {},
-        hierarchyLabels = {};
+        hierarchyLabels = {},
+        hierarchyReads =  {};
 
     /**
      * LocationSelector widget
@@ -815,6 +816,14 @@
          */
         _readHierarchy: function(read, parent, level, missing) {
 
+            // Check if this lookup has already been started by another instance
+            // (and if yes, then wait for it instead of firing again)
+            var key = '' + parent + ';' + level + ';' + missing,
+                promise = hierarchyReads[key];
+            if (promise !== undefined) {
+                return promise;
+            }
+
             var dfd = $.Deferred();
 
             if (read) {
@@ -890,7 +899,12 @@
                 // No need to read, can Resolve right away
                 dfd.resolve();
             }
-            return dfd.promise();
+
+            // Let other location selectors in the page know we're already
+            // looking it up:
+            promise = hierarchyReads[key] = dfd.promise();
+
+            return promise;
         },
 
         /**

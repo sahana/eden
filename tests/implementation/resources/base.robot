@@ -2,32 +2,30 @@
 Documentation       Global keywords for Eden tests
 
 *** Variables ***
-${CONFIRMATION}     jquery=div.alert-success
-${ERROR}            jquery=div.alert-error
+${CONFIRMATION}     jquery:div.alert-success
+${ERROR}            jquery:div.alert-error
 ${ABORTED EARLY}    Test Aborted, awaiting for code to be completed
 
 *** Keywords ***
 #Testsuite: SSF; Test: Create a project
 Should Show Confirmation
     [Documentation]  Checks for the confirmation element and the message inside it (if given
-    ...                as an argument) n the page and fails if it is not present.
+    ...              as an argument) on the page and fails if it is not present.
     [Arguments]  @{message}
-    Sleep  1s  Wait for message to render
-    Page Should Contain Element  ${CONFIRMATION}  Confirmation message not shown
+    Wait Until Page Contains Element  ${CONFIRMATION}  2s  Confirmation message not shown
     ${msg len} =  Get Length  ${message}
     Run Keyword if  ${msg len} >= 1  Element Should Contain  ${CONFIRMATION}  @{message}[0]
 
 Should Show Error
     [Documentation]  Fails if no error message is visible in the page
     [Arguments]  @{message}
-    Sleep  1s  Wait for message to render
-    Page Should Contain Element  ${ERROR}  Error message not shown
+    Wait Until Page Contains Element  ${ERROR}  2s  Error message not shown
     ${msg len} =  Get Length  ${message}
-    Run Keyword if  ${msg len} >= 1  Element Should Contain  ${CONFIRMATION}  @{message}[0]
+    Run Keyword if  ${msg len} >= 1  Element Should Contain  ${ERROR}  @{message}[0]
 
 Code Incomplete Abort Test
     [Documentation]  This will run a keyword which is expected to fail
-    ...               but fail with a helpful message
+    ...              but fail with a helpful message
     [Arguments]  ${condition}  ${error}  ${keyword}  @{args}
     ${error}=  Run Keyword And Expect Error  ${error}*  ${keyword}  @{args}
     Run Keyword If  ${condition}  Fail  ${ABORTED EARLY}  ELSE  Fail  ${error}
@@ -35,14 +33,14 @@ Code Incomplete Abort Test
 #Testsuite: SSF; Used in init
 Run On Templates
     [Documentation]  Run if the current template is in the argument
-    ...            USAGE: To apply it at a suite level, add it to start testing.
-    ...             To apply it at at a test level, add it at begining of the test
+    ...              USAGE: To apply it at a suite level, add it to start testing.
+    ...              To apply it at at a test level, add it at begining of the test
     [Arguments]  @{Template List}
     Should Contain  ${Template List}  ${TEMPLATE}  The test does not run on the current template
 
 Do Not Run on Templates
     [Documentation]  Do not run if the current template is in the argument
-    ...             USAGE : Similar to Run on Templates
+    ...              USAGE : Similar to Run on Templates
     [Arguments]  @{Template List}
     Should Not Contain  ${Template List}  ${TEMPLATE}  The test does not run on the current template
 

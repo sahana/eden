@@ -4133,13 +4133,8 @@ class S3BulkImporter(object):
             end = datetime.datetime.now()
             duration = end - start
             csvName = task[3][task[3].rfind("/") + 1:]
-            try:
-                # Python 2.7
-                duration = '{:.2f}'.format(duration.total_seconds() / 60)
-                msg = "%s import job completed in %s mins" % (csvName, duration)
-            except AttributeError:
-                # older Python
-                msg = "%s import job completed in %s" % (csvName, duration)
+            duration = '{:.2f}'.format(duration.total_seconds())
+            msg = "%s imported (%s sec)" % (csvName, duration)
             self.resultList.append(msg)
             current.log.debug(msg)
 
@@ -4169,13 +4164,8 @@ class S3BulkImporter(object):
                 self.errorList.append(error)
             end = datetime.datetime.now()
             duration = end - start
-            try:
-                # Python 2.7
-                duration = '{:.2f}'.format(duration.total_seconds()/60)
-                msg = "%s import job completed in %s mins" % (fun, duration)
-            except AttributeError:
-                # older Python
-                msg = "%s import job completed in %s" % (fun, duration)
+            duration = '{:.2f}'.format(duration.total_seconds())
+            msg = "%s completed (%s sec)" % (fun, duration)
             self.resultList.append(msg)
             current.log.debug(msg)
 

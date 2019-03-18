@@ -29,6 +29,7 @@ Create Client
     Input Text  ${FirstNameField}  Jane
     Input Text  ${LastNameField}  Doe
     Input Text  ${DoBField}  1984-07-30
+    Click Element  ${IDField}
     Select From List By Label  ${GenderField}  female
     # TODO: choose nationality
     # TODO: fill in resident status
@@ -62,6 +63,7 @@ Add Case Language Without Language
     Click Edit In Row  1
     Location Should Contain  update
     Select From List By Label  sub_defaultcase_language_defaultcase_language_i_language_edit_none  ${EMPTY}
+    Input Text  sub_defaultcase_language_defaultcase_language_i_comments_edit_none  SomeComment
     Click Element  css:div#add-defaultcase_language-none
     Submit CRUD Form
     Should Show Confirmation

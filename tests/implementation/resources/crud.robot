@@ -2,13 +2,14 @@
 Documentation       Keywords for CRUD
 
 *** Variables ***
-${SubmitButton}     jquery=#submit_record__row input.btn[type='submit']
+${SubmitButton}     jquery:#submit_record__row input.btn[type='submit']
 
 *** Keywords ***
 #TestSuite: org; Test case:Create Organization
 Submit CRUD Form
     [Documentation]  Clicks the submit button in a CRUD form
     Click Button  ${SubmitButton}
+    Wait Until Page Does Not Contain Element  ${SubmitButton}  3s  Failed to submit form
 
 #Testsuite: org; Testcase: Create organisation without name
 Field Should Have Error

@@ -47,7 +47,7 @@ from gluon.storage import Storage
 
 from .s3datetime import s3_parse_datetime
 from .s3resource import S3Resource
-from .s3utils import s3_get_extension, s3_remove_last_record_id, s3_store_last_record_id
+from .s3utils import s3_get_extension, s3_keep_messages, s3_remove_last_record_id, s3_store_last_record_id
 
 REGEX_FILTER = re.compile(r".+\..+|.*\(.+\).*")
 HTTP_METHODS = ("GET", "PUT", "POST", "DELETE")
@@ -711,11 +711,7 @@ class S3Request(object):
                     if form and form.errors:
                         return output
 
-            session = current.session
-            session.flash = response.flash
-            session.confirmation = response.confirmation
-            session.error = response.error
-            session.warning = response.warning
+            s3_keep_messages()
             redirect(self.next)
 
         return output

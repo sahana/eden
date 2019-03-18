@@ -935,6 +935,22 @@ def s3_yes_no_represent(value):
         return current.messages["NONE"]
 
 # =============================================================================
+def s3_keep_messages():
+    """
+        Retain user messages from previous request - prevents the messages
+        from being swallowed by overhanging Ajax requests or intermediate
+        pages with mandatory redirection (see s3_redirect_default)
+    """
+
+    response = current.response
+    session = current.session
+
+    session.flash = response.flash
+    session.confirmation = response.confirmation
+    session.error = response.error
+    session.warning = response.warning
+
+# =============================================================================
 def s3_redirect_default(location="", how=303, client_side=False, headers=None):
     """
         Redirect preserving response messages, useful when redirecting from
@@ -948,13 +964,7 @@ def s3_redirect_default(location="", how=303, client_side=False, headers=None):
         @param headers: response headers
     """
 
-    response = current.response
-    session = current.session
-
-    session.error = response.error
-    session.warning = response.warning
-    session.confirmation = response.confirmation
-    session.flash = response.flash
+    s3_keep_messages()
 
     redirect(location,
              how=how,
