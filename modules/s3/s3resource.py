@@ -314,7 +314,7 @@ class S3Resource(object):
         # Standard methods ----------------------------------------------------
 
         # CRUD
-        from s3crud import S3CRUD
+        from .s3crud import S3CRUD
         self.crud = S3CRUD()
         self.crud.resource = self
 
@@ -551,7 +551,7 @@ class S3Resource(object):
         # Check permission
         authorised = current.auth.s3_has_permission("create", tablename)
         if not authorised:
-            from s3error import S3PermissionError
+            from .s3error import S3PermissionError
             raise S3PermissionError("Operation not permitted: INSERT INTO %s" %
                                     tablename)
 
@@ -611,7 +611,7 @@ class S3Resource(object):
                directly if skipping of undeletable rows is desired
         """
 
-        from s3delete import S3Delete
+        from .s3delete import S3Delete
 
         delete = S3Delete(self, representation=format)
         result = delete(cascade = cascade,
@@ -874,7 +874,7 @@ class S3Resource(object):
               main=True):
         """ Merge two records, see also S3RecordMerger.merge """
 
-        from s3merge import S3RecordMerger
+        from .s3merge import S3RecordMerger
         return S3RecordMerger(self).merge(original_id,
                                           duplicate_id,
                                           replace=replace,
@@ -1675,7 +1675,7 @@ class S3Resource(object):
         # Mobile data settings
         llrepr = None
         if mdata:
-            from s3mobile import S3MobileSchema
+            from .s3mobile import S3MobileSchema
             ms = S3MobileSchema(self)
             if ms.lookup_only:
                 # Override fields/references (only meta fields)
@@ -2568,7 +2568,7 @@ class S3Resource(object):
             @todo: update for link table support
         """
 
-        from s3import import S3ImportJob
+        from .s3import import S3ImportJob
 
         db = current.db
         xml = current.xml
@@ -2809,7 +2809,7 @@ class S3Resource(object):
                 requires = requires[0]
                 if isinstance(requires, IS_EMPTY_OR):
                     requires = requires.other
-                from s3validators import IS_LOCATION
+                from .s3validators import IS_LOCATION
                 if not isinstance(requires, (IS_ONE_OF, IS_LOCATION)):
                     # Can't raise an exception here as this goes
                     # directly to the client
@@ -2824,7 +2824,7 @@ class S3Resource(object):
                 fields = [lookupfield]
                 h = None
                 if hierarchy:
-                    from s3hierarchy import S3Hierarchy
+                    from .s3hierarchy import S3Hierarchy
                     h = S3Hierarchy(lookuptable)
                     if not h.config:
                         h = None

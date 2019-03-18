@@ -8129,17 +8129,19 @@ def pr_update_affiliations(table, record):
         if not record:
             return
 
-        # Find the person_ids to update
-        person_id = None
-        if record.deleted_fk:
-            try:
-                person_id = json.loads(record.deleted_fk)["person_id"]
-            except:
-                pass
+        # Find the person_id to update
+        person_id = record.person_id
         if person_id:
             pr_human_resource_update_affiliations(person_id)
-        if person_id != record.person_id:
-            person_id = record.person_id
+        elif hasattr(record, "deleted_fk"):
+            deleted_fk = record.deleted_fk
+            if deleted_fk:
+                try:
+                    deleted_fk = json.loads(deleted_fk)
+                except JSONERRORS:
+                    pass
+                else:
+                    person_id = deleted_fk.get("person_id")
             if person_id:
                 pr_human_resource_update_affiliations(person_id)
 

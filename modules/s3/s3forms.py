@@ -701,7 +701,7 @@ class S3SQLDefaultForm(S3SQLForm):
                 if record_id is None or undelete:
                     # Create hierarchy link
                     if hierarchy:
-                        from s3hierarchy import S3Hierarchy
+                        from .s3hierarchy import S3Hierarchy
                         h = S3Hierarchy(tablename)
                         if h.config:
                             h.postprocess_create_node(hierarchy, form_vars)
@@ -870,7 +870,7 @@ class S3SQLCustomForm(S3SQLForm):
         if subtables:
             if not request:
                 # Create dummy S3Request
-                from s3rest import S3Request
+                from .s3rest import S3Request
                 r = S3Request(resource.prefix,
                               resource.name,
                               # Current request args/vars could be in a different
@@ -1472,7 +1472,7 @@ class S3SQLCustomForm(S3SQLForm):
             if record_id is None or undelete:
                 # Create hierarchy link
                 if hierarchy:
-                    from s3hierarchy import S3Hierarchy
+                    from .s3hierarchy import S3Hierarchy
                     h = S3Hierarchy(tablename)
                     if h.config:
                         h.postprocess_create_node(hierarchy, form_vars)
@@ -1683,7 +1683,7 @@ class S3SQLField(S3SQLFormElement):
         """
 
         # Import S3ResourceField only here, to avoid circular dependency
-        from s3query import S3ResourceField
+        from .s3query import S3ResourceField
 
         rfield = S3ResourceField(resource, self.selector)
 
@@ -3665,7 +3665,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         component, link = self.get_link()
 
         # Customise resources
-        from s3rest import S3Request
+        from .s3rest import S3Request
         r = S3Request(resource.prefix,
                       resource.name,
                       # Current request args/vars could be in a different
@@ -3759,7 +3759,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
 
         # Instantiate the widget
         if widget == "groupedopts" or not widget and "cols" in options:
-            from s3widgets import S3GroupedOptionsWidget
+            from .s3widgets import S3GroupedOptionsWidget
             w_opts = widget_opts(("cols",
                                   "help_field",
                                   "multiple",
@@ -3770,7 +3770,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                                   ))
             w = S3GroupedOptionsWidget(**w_opts)
         elif widget == "hierarchy":
-            from s3widgets import S3HierarchyWidget
+            from .s3widgets import S3HierarchyWidget
             w_opts = widget_opts(("multiple",
                                   "filter",
                                   "leafonly",
@@ -3780,7 +3780,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             w_opts["lookup"] = component.tablename
             w = S3HierarchyWidget(**w_opts)
         elif widget == "cascade":
-            from s3widgets import S3CascadeSelectWidget
+            from .s3widgets import S3CascadeSelectWidget
             w_opts = widget_opts(("levels",
                                   "multiple",
                                   "filter",
@@ -3792,7 +3792,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             w = S3CascadeSelectWidget(**w_opts)
         else:
             # Default to multiselect
-            from s3widgets import S3MultiSelectWidget
+            from .s3widgets import S3MultiSelectWidget
             w_opts = widget_opts(("multiple",
                                   "search",
                                   "header",
@@ -3944,7 +3944,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                 if fname in component.fields:
                     lookup_field = fname
                     break
-            from s3fields import S3Represent
+            from .s3fields import S3Represent
             represent = S3Represent(lookup = component.tablename,
                                     fields = [lookup_field],
                                     )

@@ -551,7 +551,7 @@ class S3DataTable(object):
             @ToDo: DRY with S3CRUD.action_buttons()
         """
 
-        from s3crud import S3CRUD
+        from .s3crud import S3CRUD
 
         s3 = current.response.s3
         auth = current.auth

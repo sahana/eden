@@ -114,7 +114,7 @@ class S3GroupedItemsReport(S3Method):
             filter_widgets = get_config("filter_widgets", None)
             if filter_widgets and not self.hide_filter:
                 show_filter_form = True
-                from s3filter import S3FilterForm
+                from .s3filter import S3FilterForm
                 S3FilterForm.apply_filter_defaults(r, resource)
 
         # Get the report configuration
@@ -642,7 +642,7 @@ class S3GroupedItemsTable(object):
 
         pdf_footer = self.pdf_footer
 
-        from s3.s3export import S3Exporter
+        from .s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(self.resource,
                         request = r,
@@ -706,7 +706,7 @@ class S3GroupedItemsTable(object):
                    }
 
         # Export as XLS
-        from s3.s3export import S3Exporter
+        from .s3export import S3Exporter
         exporter = S3Exporter().xls
         return exporter(xlsdata,
                         title = self.title,

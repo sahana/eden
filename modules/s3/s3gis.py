@@ -9187,7 +9187,7 @@ class S3Map(S3Method):
                         break
 
                 request = self.request
-                from s3filter import S3FilterForm
+                from .s3filter import S3FilterForm
                 # Apply filter defaults (before rendering the data!)
                 S3FilterForm.apply_filter_defaults(r, resource)
                 filter_formstyle = get_config("filter_formstyle", None)
@@ -9514,7 +9514,7 @@ class S3ExportPOI(S3Method):
             @param resource: the resource
         """
 
-        from s3query import FS
+        from .s3query import FS
         query = (FS("location_id$path").contains("/%s/" % lx)) | \
                 (FS("location_id$path").like("%s/%%" % lx))
         resource.add_filter(query)
@@ -9548,7 +9548,7 @@ class S3ImportPOI(S3Method):
 
             resources_list = settings.get_gis_poi_export_resources()
             uploadpath = os.path.join(request.folder,"uploads/")
-            from s3utils import s3_yes_no_represent
+            from .s3utils import s3_yes_no_represent
 
             fields = [Field("text1", # Dummy Field to add text inside the Form
                             label = "",
@@ -9585,15 +9585,15 @@ class S3ImportPOI(S3Method):
                       ]
 
             if not r.id:
-                from s3validators import IS_LOCATION
-                from s3widgets import S3LocationAutocompleteWidget
+                from .s3validators import IS_LOCATION
+                from .s3widgets import S3LocationAutocompleteWidget
                 # dummy field
                 field = s3db.org_office.location_id
                 field.requires = IS_EMPTY_OR(IS_LOCATION())
                 field.widget = S3LocationAutocompleteWidget()
                 fields.insert(3, field)
 
-            from s3utils import s3_mark_required
+            from .s3utils import s3_mark_required
             labels, required = s3_mark_required(fields, ["file", "location_id"])
             s3.has_required = True
 

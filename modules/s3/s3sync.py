@@ -117,7 +117,7 @@ class S3Sync(S3Method):
         """
 
         # Parse the request parameters
-        from s3validators import JSONERRORS
+        from .s3validators import JSONERRORS
         source = r.read_body()
         if not source:
             r.error(400, "Missing parameters")

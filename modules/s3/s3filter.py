@@ -1577,7 +1577,7 @@ class S3LocationFilter(S3FilterWidget):
             rfield = resource.resolve_selector(selector)
 
             # Get the joins for the selector
-            from s3query import S3Joins
+            from .s3query import S3Joins
             joins = S3Joins(resource.tablename)
             joins.extend(rfield._joins)
             join = joins.as_list()

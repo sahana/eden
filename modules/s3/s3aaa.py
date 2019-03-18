@@ -1717,7 +1717,7 @@ Thank you"""
                     i.e. org_admin coming from admin.py/user()
         """
 
-        from s3validators import IS_ONE_OF
+        from .s3validators import IS_ONE_OF
 
         T = current.T
         db = current.db
@@ -1729,7 +1729,7 @@ Thank you"""
         deployment_settings = current.deployment_settings
 
         if deployment_settings.get_ui_multiselect_widget():
-            from s3widgets import S3MultiSelectWidget
+            from .s3widgets import S3MultiSelectWidget
             multiselect_widget = True
         else:
             multiselect_widget = False
@@ -1791,7 +1791,7 @@ Thank you"""
                                                    messages.help_utc_offset)
                                  )
         try:
-            from s3validators import IS_UTC_OFFSET
+            from .s3validators import IS_UTC_OFFSET
             utc_offset.requires = IS_EMPTY_OR(IS_UTC_OFFSET())
         except:
             pass
@@ -1848,7 +1848,7 @@ Thank you"""
                                                       label = org_crud_strings.label_create,
                                                       title = org_crud_strings.title_list,
                                                       )
-                #from s3widgets import S3OrganisationAutocompleteWidget
+                #from .s3widgets import S3OrganisationAutocompleteWidget
                 #organisation_id.widget = S3OrganisationAutocompleteWidget()
                 #organisation_id.comment = DIV(_class="tooltip",
                 #                              _title="%s|%s" % (T("Organization"),
@@ -1900,7 +1900,7 @@ Thank you"""
                 #field.default = deployment_settings.get_auth_registration_site_id_default()
                 site_required = deployment_settings.get_auth_registration_site_required()
                 if show_org:
-                    from s3validators import IS_ONE_OF_EMPTY
+                    from .s3validators import IS_ONE_OF_EMPTY
                     requires = IS_ONE_OF_EMPTY(db, "org_site.site_id",
                                                site_represent,
                                                orderby="org_site.name",
@@ -1923,7 +1923,7 @@ $.filterOptionsS3({
                                          site_represent,
                                          orderby="org_site.name",
                                          sort=True)
-                #from s3widgets import S3SiteAutocompleteWidget
+                #from .s3widgets import S3SiteAutocompleteWidget
                 #field.widget = S3SiteAutocompleteWidget()
                 field.comment = DIV(_class="tooltip",
                                     _title="%s|%s" % (T("Facility"),

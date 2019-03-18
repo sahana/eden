@@ -2107,7 +2107,7 @@ class S3TypeConverter(object):
                 else:
                     dt = datetime.datetime(y, m, d, hh, mm, ss)
                 # Validate and convert to UTC (assuming local timezone)
-                from s3validators import IS_UTC_DATETIME
+                from .s3validators import IS_UTC_DATETIME
                 validator = IS_UTC_DATETIME()
                 dt, error = validator(dt)
                 if error:
@@ -2135,7 +2135,7 @@ class S3TypeConverter(object):
                 if dt:
                     value = dt.date()
             if value is None:
-                from s3validators import IS_UTC_DATE
+                from .s3validators import IS_UTC_DATE
                 # Try ISO format first (e.g. S3DateFilter)
                 value, error = IS_UTC_DATE(format="%Y-%m-%d")(b)
                 if error:

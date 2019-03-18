@@ -812,7 +812,7 @@ class TranslateReadFiles(object):
             which are to be considered for translation.
         """
 
-        from s3import import S3BulkImporter
+        from .s3import import S3BulkImporter
 
         # List of database strings
         database_strings = []

@@ -692,7 +692,7 @@ class S3Represent(object):
 
         if table and self.hierarchy:
             # Does the lookup table have a hierarchy?
-            from s3hierarchy import S3Hierarchy
+            from .s3hierarchy import S3Hierarchy
             h = S3Hierarchy(table._tablename)
             if h.config:
                 def lookup_parent(node_id):
@@ -1334,7 +1334,7 @@ def s3_comments(name="comments", **attr):
         attr["represent"] = lambda comments: \
             XML(comments) if comments else current.messages["NONE"]
     if "widget" not in attr:
-        from s3widgets import s3_comments_widget
+        from .s3widgets import s3_comments_widget
         _placeholder = attr.pop("_placeholder", None)
         if _placeholder:
             attr["widget"] = lambda f, v: \

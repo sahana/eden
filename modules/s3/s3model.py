@@ -381,7 +381,7 @@ class S3Model(object):
                     cls.load(name)
 
         # Define importer tables
-        from s3import import S3Importer, S3ImportJob
+        from .s3import import S3Importer, S3ImportJob
         S3Importer.define_upload_table()
         S3ImportJob.define_job_table()
         S3ImportJob.define_item_table()
@@ -1794,7 +1794,7 @@ class S3DynamicModel(object):
                 fields.append(field)
 
         # Automatically add standard meta-fields
-        from s3fields import s3_meta_fields
+        from .s3fields import s3_meta_fields
         fields.extend(s3_meta_fields())
 
         # Define the table
@@ -1859,7 +1859,7 @@ class S3DynamicModel(object):
                 # CRUD Form
                 crud_fields = settings.get("form")
                 if crud_fields:
-                    from s3forms import S3SQLCustomForm
+                    from .s3forms import S3SQLCustomForm
                     try:
                         crud_form = S3SQLCustomForm(**crud_fields)
                     except:
@@ -1962,7 +1962,7 @@ class S3DynamicModel(object):
         fieldtype = row.field_type
 
         if row.require_unique:
-            from s3validators import IS_NOT_ONE_OF
+            from .s3validators import IS_NOT_ONE_OF
             requires = IS_NOT_ONE_OF(current.db, "%s.%s" % (tablename,
                                                             fieldname,
                                                             ),
@@ -2013,7 +2013,7 @@ class S3DynamicModel(object):
         translate = settings.get("translate_options", True)
         T = current.T
 
-        from s3utils import s3_str
+        from .s3utils import s3_str
 
         sort = False
         zero = ""
@@ -2061,7 +2061,7 @@ class S3DynamicModel(object):
         else:
             widget = None
 
-        from s3fields import S3Represent
+        from .s3fields import S3Represent
         field = Field(fieldname, fieldtype,
                       default = default,
                       represent = S3Represent(options = options_dict,
@@ -2102,7 +2102,7 @@ class S3DynamicModel(object):
             if default == "now":
                 attr["default"] = default
             else:
-                from s3datetime import s3_decode_iso_datetime
+                from .s3datetime import s3_decode_iso_datetime
                 try:
                     dt = s3_decode_iso_datetime(default)
                 except ValueError:
@@ -2111,7 +2111,7 @@ class S3DynamicModel(object):
                 else:
                     attr["default"] = dt.date()
 
-        from s3fields import s3_date
+        from .s3fields import s3_date
         field = s3_date(fieldname, **attr)
 
         return field
@@ -2143,7 +2143,7 @@ class S3DynamicModel(object):
             if default == "now":
                 attr["default"] = default
             else:
-                from s3datetime import s3_decode_iso_datetime
+                from .s3datetime import s3_decode_iso_datetime
                 try:
                     dt = s3_decode_iso_datetime(default)
                 except ValueError:
@@ -2152,7 +2152,7 @@ class S3DynamicModel(object):
                 else:
                     attr["default"] = dt
 
-        from s3fields import s3_datetime
+        from .s3fields import s3_datetime
         field = s3_datetime(fieldname, **attr)
 
         return field
@@ -2175,7 +2175,7 @@ class S3DynamicModel(object):
         ktablename = fieldtype.split(" ", 1)[1].split(".", 1)[0]
         ktable = current.s3db.table(ktablename)
         if ktable:
-            from s3fields import S3Represent
+            from .s3fields import S3Represent
             if "name" in ktable.fields:
                 represent = S3Represent(lookup = ktablename,
                                         translate = True,
@@ -2302,7 +2302,7 @@ class S3DynamicModel(object):
             # Default single checkbox widget
             widget = None
 
-        from s3utils import s3_yes_no_represent
+        from .s3utils import s3_yes_no_represent
         field = Field(fieldname, fieldtype,
                       default = default,
                       represent = s3_yes_no_represent,

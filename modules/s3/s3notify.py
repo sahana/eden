@@ -153,7 +153,7 @@ class S3Notifications(object):
 
         # Filters
         if f.query:
-            from s3filter import S3FilterString
+            from .s3filter import S3FilterString
             resource = s3db.resource(r.resource)
             fstring = S3FilterString(resource, f.query)
             for k, v in fstring.get_vars.iteritems():

@@ -1623,7 +1623,7 @@ class S3ResourceQuery(object):
             @param r: the right operand
         """
 
-        from s3hierarchy import S3Hierarchy
+        from .s3hierarchy import S3Hierarchy
 
         tablename = l.tablename
 

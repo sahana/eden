@@ -1358,24 +1358,10 @@ class S3HRModel(S3Model):
         db = current.db
         htable = db.hrm_human_resource
 
-        if row and "id" in row:
-            record = db(htable.id == row.id).select(htable.deleted,
-                                                    htable.deleted_fk,
-                                                    htable.person_id,
-                                                    limitby = (0, 1),
-                                                    ).first()
-        else:
-            return
-
-        if record.deleted:
-            try:
-                fk = json.loads(record.deleted_fk)
-                person_id = fk.get("person_id", None)
-            except:
-                return
-
-            if person_id:
-                current.s3db.pr_update_affiliations(htable, record)
+        # Update PE hierarchy
+        person_id = row.person_id
+        if person_id:
+            current.s3db.pr_update_affiliations(htable, row)
 
 # =============================================================================
 class S3HRSiteModel(S3Model):
@@ -3692,14 +3678,17 @@ class S3HRSkillModel(S3Model):
                                                   table.number,
                                                   limitby = (0, 1),
                                                   ).first()
-        try:
-            if record.deleted:
+        if record.deleted:
+            try:
                 deleted_fk = json.loads(record.deleted_fk)
-                person_id = deleted_fk["person_id"]
+            except JSONERRORS:
+                person_id = None
             else:
-                person_id = record.person_id
-        except:
-            return
+                person_id = deleted_fk.get("person_id")
+            if not person_id:
+                return
+        else:
+            person_id = record.person_id
 
         if not person_id:
             # This record is being created as a direct component of the Training,
@@ -3855,6 +3844,8 @@ class S3HRSkillModel(S3Model):
                                    limitby=(0, 1)).first()
             if org:
                 return org.realm_entity
+
+        return None
 
 # =============================================================================
 def hrm_training_onvalidation(form):
@@ -7299,7 +7290,7 @@ def hrm_human_resource_controller(extra_filter = None):
         elif method == "profile":
 
             # Adapt list_fields for pr_address
-            s3db.pr_address # must load model before get_config
+            s3db.table("pr_address") # must load model before get_config
             list_fields = s3db.get_config("pr_address", "list_fields")
             list_fields.append("comments")
 
@@ -7323,7 +7314,7 @@ def hrm_human_resource_controller(extra_filter = None):
                            )
 
             # Adapt list_fields for hrm_experience
-            s3db.hrm_experience # Load normal model
+            s3db.table("hrm_experience") # Load normal model
             s3db.configure("hrm_experience",
                            list_fields = [#"code",
                                           "employment_type",

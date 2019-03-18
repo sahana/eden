@@ -262,247 +262,249 @@ def config(settings):
         elif tablename == "org_organisation":
             # Not used: now done in profile_header
             return None
-            tabs = [(T("Basic Details"), None),
-                    (T("Contacts"), "person"),
-                    (T("Facilities"), "facility"),
-                    ]
 
-            from s3 import s3_rheader_tabs
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-
-            from gluon import A, DIV, TABLE, TR, TH
-
-            db = current.db
-            s3db = current.s3db
-
-            table = s3db.org_organisation
-
-            record_data = TABLE(TR(TH(record.name, _colspan=2)))
-            record_data_append = record_data.append
-
-            record_id = record.id
-
-            otagtable = s3db.org_organisation_tag
-            query = (otagtable.organisation_id == record_id) & \
-                    (otagtable.tag == "org_id")
-            org_id = db(query).select(otagtable.value,
-                                      limitby = (0, 1)
-                                      ).first()
-            if org_id:
-                record_data_append(TR(TH("%s: " % T("Organization ID")),
-                                      org_id.value))
-
-            ltable = s3db.pr_religion_organisation
-            query = (ltable.organisation_id == record_id)
-            religion = db(query).select(ltable.religion_id,
-                                        limitby = (0, 1)
-                                        ).first()
-            if religion:
-                record_data_append(TR(TH("%s: " % T("Religion")),
-                                      ltable.religion_id.represent(religion.religion_id)))
-
-            ltable = s3db.org_organisation_organisation_type
-            query = (ltable.organisation_id == record_id)
-            org_type = db(query).select(ltable.organisation_type_id,
-                                        limitby = (0, 1)
-                                        ).first()
-            if org_type:
-                record_data_append(TR(TH("%s: " % ltable.organisation_type_id.label),
-                                      ltable.organisation_type_id.represent(org_type.organisation_type_id)))
-
-            website = record.website
-            if website:
-                record_data_append(TR(TH("%s: " % table.website.label),
-                                      A(website, _href=website)))
-
-            ctable = s3db.pr_contact
-            query = (table.id == record_id) & \
-                    (table.pe_id == ctable.pe_id) & \
-                    (ctable.contact_method == "FACEBOOK")
-            facebook = db(query).select(ctable.value,
-                                        limitby = (0, 1)
-                                        ).first()
-            if facebook:
-                url = facebook.value
-                record_data_append(TR(TH("%s: " % T("Facebook")),
-                                      A(url, _href=url)))
-
-            oftable = s3db.org_facility
-            gtable = s3db.gis_location
-            query = (oftable.organisation_id == record_id) & \
-                    (oftable.location_id == gtable.id)
-            features = db(query).select(gtable.lat,
-                                        gtable.lon
-                                        )
-            _map = ""
-            if len(features) > 0:
-                ftable = s3db.gis_layer_feature
-                query = (ftable.controller == "org") & \
-                        (ftable.function == "facility")
-                layer = db(query).select(ftable.layer_id,
-                                         limitby=(0, 1)).first()
-                if layer:
-                    gis = current.gis
-                    bbox = gis.get_bounds([f for f in features])
-                    _map = gis.show_map(height = 250,
-                                        collapsed = True,
-                                        bbox = bbox,
-                                        mouse_position = False,
-                                        overview = False,
-                                        permalink = False,
-                                        feature_resources = [{"name": T("Facilities"),
-                                                              "id": "rheader_map",
-                                                              "active": True,
-                                                              "layer_id": layer.layer_id,
-                                                              "filter": "~.organisation_id=%s" % record_id,
-                                                              }],
-                                        )
-
-            rheader = DIV(DIV(record_data,
-                              _class = "columns medium-6",
-                              ),
-                          DIV(_map,
-                              _class = "columns medium-6",
-                              ),
-                          rheader_tabs,
-                          )
-
-        elif tablename == "org_facility":
-            # Not used: now done in profile_header
-            return None
             #tabs = [(T("Basic Details"), None),
+            #        (T("Contacts"), "person"),
+            #        (T("Facilities"), "facility"),
             #        ]
 
             #from s3 import s3_rheader_tabs
             #rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            from gluon import DIV, TABLE, TR, TH
+            #from gluon import A, DIV, TABLE, TR, TH
 
-            db = current.db
-            s3db = current.s3db
+            #db = current.db
+            #s3db = current.s3db
 
-            table = s3db.org_facility
+            #table = s3db.org_organisation
 
-            record_data = TABLE(TR(TH(record.name, _colspan=2)),
-                                TR(TH("%s: " % table.organisation_id.label),
-                                      table.organisation_id.represent(record.organisation_id)),
-                                )
-            record_data_append = record_data.append
+            #record_data = TABLE(TR(TH(record.name, _colspan=2)))
+            #record_data_append = record_data.append
 
             #record_id = record.id
-            site_id = record.site_id
 
-            ltable = s3db.org_site_facility_type
-            query = (ltable.site_id == site_id)
-            fac_type = db(query).select(ltable.facility_type_id,
-                                        limitby = (0, 1)
-                                        ).first()
-            if fac_type:
-                record_data_append(TR(TH("%s: " % ltable.facility_type_id.label),
-                                      ltable.facility_type_id.represent(fac_type.facility_type_id)))
+            #otagtable = s3db.org_organisation_tag
+            #query = (otagtable.organisation_id == record_id) & \
+            #        (otagtable.tag == "org_id")
+            #org_id = db(query).select(otagtable.value,
+            #                          limitby = (0, 1)
+            #                          ).first()
+            #if org_id:
+            #    record_data_append(TR(TH("%s: " % T("Organization ID")),
+            #                          org_id.value))
 
-            location_id = record.location_id
-            if location_id:
-                record_data_append(TR(TH("%s: " % table.location_id.label),
-                                      table.location_id.represent(location_id)))
+            #ltable = s3db.pr_religion_organisation
+            #query = (ltable.organisation_id == record_id)
+            #religion = db(query).select(ltable.religion_id,
+            #                            limitby = (0, 1)
+            #                            ).first()
+            #if religion:
+            #    record_data_append(TR(TH("%s: " % T("Religion")),
+            #                          ltable.religion_id.represent(religion.religion_id)))
 
-            stagtable = s3db.org_site_tag
-            query = (stagtable.site_id == site_id) & \
-                    (stagtable.tag == "congregations")
-            congregations = db(query).select(stagtable.value,
-                                             limitby = (0, 1)
-                                             ).first()
-            if congregations:
-                record_data_append(TR(TH("%s: " % T("# of Congregations")),
-                                      congregations.value))
+            #ltable = s3db.org_organisation_organisation_type
+            #query = (ltable.organisation_id == record_id)
+            #org_type = db(query).select(ltable.organisation_type_id,
+            #                            limitby = (0, 1)
+            #                            ).first()
+            #if org_type:
+            #    record_data_append(TR(TH("%s: " % ltable.organisation_type_id.label),
+            #                          ltable.organisation_type_id.represent(org_type.organisation_type_id)))
 
-            query = (stagtable.site_id == site_id) & \
-                    (stagtable.tag == "cross_streets")
-            cross_streets = db(query).select(stagtable.value,
-                                             limitby = (0, 1)
-                                             ).first()
-            if cross_streets:
-                record_data_append(TR(TH("%s: " % T("Cross Streets")),
-                                      cross_streets.value))
+            #website = record.website
+            #if website:
+            #    record_data_append(TR(TH("%s: " % table.website.label),
+            #                          A(website, _href=website)))
 
-            stable = s3db.org_site_status
-            query = (stable.site_id == site_id)
-            status = db(query).select(stable.facility_status,
-                                      limitby = (0, 1)
-                                      ).first()
-            if status:
-                record_data_append(TR(TH("%s: " % stable.facility_status.label),
-                                      stable.facility_status.represent(status.facility_status)))
+            #ctable = s3db.pr_contact
+            #query = (table.id == record_id) & \
+            #        (table.pe_id == ctable.pe_id) & \
+            #        (ctable.contact_method == "FACEBOOK")
+            #facebook = db(query).select(ctable.value,
+            #                            limitby = (0, 1)
+            #                            ).first()
+            #if facebook:
+            #    url = facebook.value
+            #    record_data_append(TR(TH("%s: " % T("Facebook")),
+            #                          A(url, _href=url)))
 
-            query = (stagtable.site_id == site_id) & \
-                    (stagtable.tag == "em_call")
-            em_call = db(query).select(stagtable.value,
-                                       limitby = (0, 1)
-                                       ).first()
-            if em_call:
-                record_data_append(TR(TH("%s: " % T("Call in Emergency")),
-                                      em_call.value))
+            #oftable = s3db.org_facility
+            #gtable = s3db.gis_location
+            #query = (oftable.organisation_id == record_id) & \
+            #        (oftable.location_id == gtable.id)
+            #features = db(query).select(gtable.lat,
+            #                            gtable.lon
+            #                            )
+            #map_ = ""
+            #if len(features) > 0:
+            #    ftable = s3db.gis_layer_feature
+            #    query = (ftable.controller == "org") & \
+            #            (ftable.function == "facility")
+            #    layer = db(query).select(ftable.layer_id,
+            #                             limitby=(0, 1)).first()
+            #    if layer:
+            #        gis = current.gis
+            #        bbox = gis.get_bounds([f for f in features])
+            #        map_ = gis.show_map(height = 250,
+            #                            collapsed = True,
+            #                            bbox = bbox,
+            #                            mouse_position = False,
+            #                            overview = False,
+            #                            permalink = False,
+            #                            feature_resources = [{"name": T("Facilities"),
+            #                                                  "id": "rheader_map",
+            #                                                  "active": True,
+            #                                                  "layer_id": layer.layer_id,
+            #                                                  "filter": "~.organisation_id=%s" % record_id,
+            #                                                  }],
+            #                            )
 
-            query = (stagtable.site_id == site_id) & \
-                    (stagtable.tag == "oem_ready")
-            oem_ready = db(query).select(stagtable.value,
-                                         limitby = (0, 1)
-                                         ).first()
-            if oem_ready:
-                record_data_append(TR(TH("%s: " % T("OEM Ready Receiving Center")),
-                                      oem_ready.value))
+            #rheader = DIV(DIV(record_data,
+            #                  _class = "columns medium-6",
+            #                  ),
+            #              DIV(map_,
+            #                  _class = "columns medium-6",
+            #                  ),
+            #              rheader_tabs,
+            #              )
 
-            query = (stagtable.site_id == site_id) & \
-                    (stagtable.tag == "oem_want")
-            oem_want = db(query).select(stagtable.value,
-                                        limitby = (0, 1)
-                                        ).first()
-            if oem_want:
-                record_data_append(TR(TH("%s: " % T("Want to be an OEM Ready Receiving Center")),
-                                      oem_want.value))
+        elif tablename == "org_facility":
+            # Not used: now done in profile_header
+            return None
 
-            comments = record.comments
-            if comments:
-                record_data_append(TR(TH("%s: " % table.comments.label),
-                                      table.comments.represent(comments)))
+            ##tabs = [(T("Basic Details"), None),
+            ##        ]
 
-            _map = ""
-            if location_id:
-                ftable = s3db.gis_layer_feature
-                query = (ftable.controller == "org") & \
-                        (ftable.function == "facility")
-                layer = db(query).select(ftable.layer_id,
-                                         limitby=(0, 1)).first()
-                if layer:
-                    gtable = s3db.gis_location
-                    location = db(gtable.id == location_id).select(gtable.lat,
-                                                                   gtable.lon,
-                                                                   limitby = (0, 1)
-                                                                   ).first()
-                    _map = current.gis.show_map(height = 250,
-                                                lat = location.lat,
-                                                lon = location.lon,
-                                                zoom = 15,
-                                                collapsed = True,
-                                                mouse_position = False,
-                                                overview = False,
-                                                permalink = False,
-                                                feature_resources = [{"name": T("Facility"),
-                                                                      "id": "rheader_map",
-                                                                      "active": True,
-                                                                      "layer_id": layer.layer_id,
-                                                                      "filter": "~.id=%s" % record.id,
-                                                                      }],
-                                                )
+            ##from s3 import s3_rheader_tabs
+            ##rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            rheader = DIV(DIV(record_data,
-                              _class = "columns medium-6"
-                              ),
-                          DIV(_map,
-                              _class = "columns medium-6"
-                              ),
-                          #rheader_tabs,
-                          )
+            #from gluon import DIV, TABLE, TR, TH
+
+            #db = current.db
+            #s3db = current.s3db
+
+            #table = s3db.org_facility
+
+            #record_data = TABLE(TR(TH(record.name, _colspan=2)),
+            #                    TR(TH("%s: " % table.organisation_id.label),
+            #                          table.organisation_id.represent(record.organisation_id)),
+            #                    )
+            #record_data_append = record_data.append
+
+            ##record_id = record.id
+            #site_id = record.site_id
+
+            #ltable = s3db.org_site_facility_type
+            #query = (ltable.site_id == site_id)
+            #fac_type = db(query).select(ltable.facility_type_id,
+            #                            limitby = (0, 1)
+            #                            ).first()
+            #if fac_type:
+            #    record_data_append(TR(TH("%s: " % ltable.facility_type_id.label),
+            #                          ltable.facility_type_id.represent(fac_type.facility_type_id)))
+
+            #location_id = record.location_id
+            #if location_id:
+            #    record_data_append(TR(TH("%s: " % table.location_id.label),
+            #                          table.location_id.represent(location_id)))
+
+            #stagtable = s3db.org_site_tag
+            #query = (stagtable.site_id == site_id) & \
+            #        (stagtable.tag == "congregations")
+            #congregations = db(query).select(stagtable.value,
+            #                                 limitby = (0, 1)
+            #                                 ).first()
+            #if congregations:
+            #    record_data_append(TR(TH("%s: " % T("# of Congregations")),
+            #                          congregations.value))
+
+            #query = (stagtable.site_id == site_id) & \
+            #        (stagtable.tag == "cross_streets")
+            #cross_streets = db(query).select(stagtable.value,
+            #                                 limitby = (0, 1)
+            #                                 ).first()
+            #if cross_streets:
+            #    record_data_append(TR(TH("%s: " % T("Cross Streets")),
+            #                          cross_streets.value))
+
+            #stable = s3db.org_site_status
+            #query = (stable.site_id == site_id)
+            #status = db(query).select(stable.facility_status,
+            #                          limitby = (0, 1)
+            #                          ).first()
+            #if status:
+            #    record_data_append(TR(TH("%s: " % stable.facility_status.label),
+            #                          stable.facility_status.represent(status.facility_status)))
+
+            #query = (stagtable.site_id == site_id) & \
+            #        (stagtable.tag == "em_call")
+            #em_call = db(query).select(stagtable.value,
+            #                           limitby = (0, 1)
+            #                           ).first()
+            #if em_call:
+            #    record_data_append(TR(TH("%s: " % T("Call in Emergency")),
+            #                          em_call.value))
+
+            #query = (stagtable.site_id == site_id) & \
+            #        (stagtable.tag == "oem_ready")
+            #oem_ready = db(query).select(stagtable.value,
+            #                             limitby = (0, 1)
+            #                             ).first()
+            #if oem_ready:
+            #    record_data_append(TR(TH("%s: " % T("OEM Ready Receiving Center")),
+            #                          oem_ready.value))
+
+            #query = (stagtable.site_id == site_id) & \
+            #        (stagtable.tag == "oem_want")
+            #oem_want = db(query).select(stagtable.value,
+            #                            limitby = (0, 1)
+            #                            ).first()
+            #if oem_want:
+            #    record_data_append(TR(TH("%s: " % T("Want to be an OEM Ready Receiving Center")),
+            #                          oem_want.value))
+
+            #comments = record.comments
+            #if comments:
+            #    record_data_append(TR(TH("%s: " % table.comments.label),
+            #                          table.comments.represent(comments)))
+
+            #map_ = ""
+            #if location_id:
+            #    ftable = s3db.gis_layer_feature
+            #    query = (ftable.controller == "org") & \
+            #            (ftable.function == "facility")
+            #    layer = db(query).select(ftable.layer_id,
+            #                             limitby=(0, 1)).first()
+            #    if layer:
+            #        gtable = s3db.gis_location
+            #        location = db(gtable.id == location_id).select(gtable.lat,
+            #                                                       gtable.lon,
+            #                                                       limitby = (0, 1)
+            #                                                       ).first()
+            #        map_ = current.gis.show_map(height = 250,
+            #                                    lat = location.lat,
+            #                                    lon = location.lon,
+            #                                    zoom = 15,
+            #                                    collapsed = True,
+            #                                    mouse_position = False,
+            #                                    overview = False,
+            #                                    permalink = False,
+            #                                    feature_resources = [{"name": T("Facility"),
+            #                                                          "id": "rheader_map",
+            #                                                          "active": True,
+            #                                                          "layer_id": layer.layer_id,
+            #                                                          "filter": "~.id=%s" % record.id,
+            #                                                          }],
+            #                                    )
+
+            #rheader = DIV(DIV(record_data,
+            #                  _class = "columns medium-6"
+            #                  ),
+            #              DIV(map_,
+            #                  _class = "columns medium-6"
+            #                  ),
+            #              #rheader_tabs,
+            #              )
 
         return rheader
 
@@ -568,15 +570,18 @@ def config(settings):
             mine = r.get_vars.get("mine")
             if mine:
                 from s3 import FS
-                _filter = (FS("organisation_id") == current.auth.user.organisation_id)
-                r.resource.add_filter(_filter)
+                filter_ = (FS("organisation_id") == current.auth.user.organisation_id)
+                r.resource.add_filter(filter_)
                 s3.crud_strings["hrm_human_resource"].title_list = T("My Contacts")
 
             s3db = current.s3db
 
             hrm_list_fields()
 
-            from s3 import S3HierarchyFilter, S3NotEmptyFilter, S3OptionsFilter, S3TextFilter, S3LocationFilter
+            from s3 import S3HierarchyFilter, \
+                           S3NotEmptyFilter, \
+                           S3OptionsFilter, \
+                           S3TextFilter
 
             s3db.configure("pr_religion",
                            hierarchy_levels = ["Religion",
@@ -993,8 +998,8 @@ def config(settings):
             mine = r.get_vars.get("mine")
             if mine:
                 from s3 import FS
-                _filter = (FS("organisation_id") == current.auth.user.organisation_id)
-                r.resource.add_filter(_filter)
+                filter_ = (FS("organisation_id") == current.auth.user.organisation_id)
+                r.resource.add_filter(filter_)
                 s3.crud_strings["org_facility"].title_list = T("My Facilities")
 
             elif r.method == "profile":
@@ -1090,7 +1095,7 @@ def config(settings):
                     record_data_append(TR(TH("%s: " % table.comments.label),
                                           table.comments.represent(comments)))
 
-                _map = ""
+                map_ = ""
                 if location_id:
                     ftable = s3db.gis_layer_feature
                     query = (ftable.controller == "org") & \
@@ -1103,7 +1108,7 @@ def config(settings):
                                                                        gtable.lon,
                                                                        limitby = (0, 1)
                                                                        ).first()
-                        _map = current.gis.show_map(height = 250,
+                        map_ = current.gis.show_map(height = 250,
                                                     lat = location.lat,
                                                     lon = location.lon,
                                                     zoom = 15,
@@ -1128,7 +1133,7 @@ def config(settings):
                                      DIV(DIV(record_data,
                                              _class = "columns medium-6",
                                              ),
-                                         DIV(_map,
+                                         DIV(map_,
                                              _class = "columns medium-6",
                                              ),
                                          _class = "row",
@@ -1468,8 +1473,8 @@ def config(settings):
                 mine = r.get_vars.get("mine")
                 if mine:
                     from s3 import FS
-                    _filter = (FS("id") == current.auth.user.organisation_id)
-                    r.resource.add_filter(_filter)
+                    filter_ = (FS("id") == current.auth.user.organisation_id)
+                    r.resource.add_filter(filter_)
                     s3.crud_strings["org_organisation"].title_list = T("My Organizations")
 
                 elif r.method == "profile":
@@ -1649,7 +1654,7 @@ def config(settings):
                     features = db(query).select(gtable.lat,
                                                 gtable.lon
                                                 )
-                    _map = ""
+                    map_ = ""
                     if len(features) > 0:
                         ftable = s3db.gis_layer_feature
                         query = (ftable.controller == "org") & \
@@ -1659,7 +1664,7 @@ def config(settings):
                         if layer:
                             gis = current.gis
                             bbox = gis.get_bounds([f for f in features])
-                            _map = gis.show_map(height = 250,
+                            map_ = gis.show_map(height = 250,
                                                 collapsed = True,
                                                 bbox = bbox,
                                                 mouse_position = False,
@@ -1681,7 +1686,7 @@ def config(settings):
                                          DIV(DIV(record_data,
                                                  _class = "columns medium-6",
                                                  ),
-                                             DIV(_map,
+                                             DIV(map_,
                                                  _class = "columns medium-6",
                                                  ),
                                              _class = "row",
@@ -2024,8 +2029,8 @@ def config(settings):
                     s3db.hrm_human_resource.organisation_id.default = organisation_id
             elif get_vars_get("mine"):
                 from s3 import FS
-                _filter = (FS("human_resource.organisation_id") == current.auth.user.organisation_id)
-                r.resource.add_filter(_filter)
+                filter_ = (FS("human_resource.organisation_id") == current.auth.user.organisation_id)
+                r.resource.add_filter(filter_)
                 s3.crud_strings["pr_person"].title_list = T("My Contacts")
 
             return result

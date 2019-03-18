@@ -805,7 +805,7 @@ class S3CheckInMethod(S3Method):
                 _id = "location_id"
                 label = LABEL("%s:" % T("Location"))
 
-                from s3.s3widgets import S3LocationSelector
+                from .s3widgets import S3LocationSelector
                 field = table.location_id
                 #value = tracker.get_location(_fields=["id"],
                 #                             as_rows=True).first().id

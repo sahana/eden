@@ -374,7 +374,7 @@ class S3HierarchyCRUD(S3Method):
         all_nodes = h.findall(roots, inclusive=True)
 
         # ...and extract their data from a clone of the resource
-        from s3query import FS
+        from .s3query import FS
         query = FS(h.pkey.name).belongs(all_nodes)
         clone = current.s3db.resource(resource, filter=query)
         data = clone.select(selectors, represent=True, raw_data=True)
@@ -414,7 +414,7 @@ class S3HierarchyCRUD(S3Method):
             output.extend(rows)
 
         # Encode in XLS format
-        from s3codec import S3Codec
+        from .s3codec import S3Codec
         codec = S3Codec.get_codec("xls")
         result = codec.encode(output,
                               title = resource.name,
@@ -1010,7 +1010,7 @@ class S3Hierarchy(object):
                     total += result
 
             # Delete node
-            from s3query import FS
+            from .s3query import FS
             query = (FS(self.pkey.name) == node_id)
             resource = current.s3db.resource(tablename, filter=query)
             success = resource.delete(cascade=True)
@@ -1418,7 +1418,7 @@ class S3Hierarchy(object):
             tablename = self.tablename
             table = current.s3db.table(tablename) if tablename else None
             if table and "name" in table.fields:
-                from s3fields import S3Represent
+                from .s3fields import S3Represent
                 self.represent = renderer = S3Represent(lookup = tablename,
                                                         key = self.pkey.name)
             else:

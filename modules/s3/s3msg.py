@@ -62,11 +62,11 @@ except ImportError:
 from gluon import current, redirect
 from gluon.html import *
 
-#from s3codec import S3Codec
+#from .s3codec import S3Codec
 from .s3crud import S3CRUD
 from .s3datetime import s3_decode_iso_datetime
 from .s3forms import S3SQLDefaultForm
-from .s3utils import s3_unicode
+from .s3utils import s3_str, s3_unicode
 from .s3validators import IS_IN_SET, IS_ONE_OF
 from .s3widgets import S3PentityAutocompleteWidget
 
@@ -252,7 +252,7 @@ class S3Msg(object):
            @param function_name: Parser
         """
 
-        from s3parser import S3Parsing
+        from .s3parser import S3Parsing
 
         parser = S3Parsing.parser
         stable = current.s3db.msg_parsing_status
@@ -1368,7 +1368,6 @@ class S3Msg(object):
             All chunks, except for first, start with prefix.
         """
 
-        from s3 import s3_str
         res = []
         current_prefix = "" # first chunk has no prefix
         while text:

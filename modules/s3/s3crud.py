@@ -297,7 +297,7 @@ class S3CRUD(S3Method):
                 except ValueError:
                     r.error(400, "Invalid parent record ID: %s" % link_to_parent)
                 else:
-                    from s3hierarchy import S3Hierarchy
+                    from .s3hierarchy import S3Hierarchy
                     h = S3Hierarchy(tablename)
                     if h.config:
                         try:
@@ -480,7 +480,7 @@ class S3CRUD(S3Method):
                 session.confirmation = current.T("Data uploaded")
 
         elif representation == "pdf":
-            from s3pdf import S3PDF
+            from .s3pdf import S3PDF
             exporter = S3PDF()
             return exporter(r, **attr)
 
@@ -712,7 +712,7 @@ class S3CRUD(S3Method):
                     pass
 
             # De-duplication
-            from s3merge import S3Merge
+            from .s3merge import S3Merge
             output["deduplicate"] = S3Merge.bookmark(r, tablename, record_id)
 
         elif representation == "plain":
@@ -991,7 +991,7 @@ class S3CRUD(S3Method):
                     pass
 
             # De-duplication
-            from s3merge import S3Merge
+            from .s3merge import S3Merge
             output["deduplicate"] = S3Merge.bookmark(r, tablename, record_id)
 
             # Redirection
@@ -1097,7 +1097,7 @@ class S3CRUD(S3Method):
             if recursive and recursive.lower() in ("1", "true"):
                 # Try recursive deletion of the whole hierarchy branch
                 # => falls back to normal delete if no hierarchy configured
-                from s3hierarchy import S3Hierarchy
+                from .s3hierarchy import S3Hierarchy
                 h = S3Hierarchy(resource.tablename)
                 if h.config:
                     node_ids = None
@@ -1166,7 +1166,7 @@ class S3CRUD(S3Method):
                representation not in ("aadata", "dl"):
                 show_filter_form = True
                 # Apply filter defaults (before rendering the data!)
-                from s3filter import S3FilterForm
+                from .s3filter import S3FilterForm
                 default_filters = S3FilterForm.apply_filter_defaults(r, resource)
             else:
                 default_filters = None
@@ -1398,7 +1398,7 @@ class S3CRUD(S3Method):
 
         elif representation == "msg":
             if r.http == "POST":
-                from s3notify import S3Notifications
+                from .s3notify import S3Notifications
                 return S3Notifications.send(r, resource)
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
@@ -1682,7 +1682,7 @@ class S3CRUD(S3Method):
         record_id = get_vars.get("record", None)
         if record_id is not None:
             # Ajax-reload of a single record
-            from s3query import FS
+            from .s3query import FS
             resource.add_filter(FS("id") == record_id)
             start = 0
             limit = 1
@@ -3253,7 +3253,7 @@ class S3CRUD(S3Method):
             if len(dates) != 2:
                 return
 
-            from s3organizer import S3Organizer
+            from .s3organizer import S3Organizer
 
             try:
                 config = S3Organizer.parse_config(resource)

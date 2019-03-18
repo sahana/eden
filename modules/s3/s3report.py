@@ -112,7 +112,7 @@ class S3Report(S3Method):
             filter_widgets = get_config("filter_widgets", None)
             if filter_widgets and not self.hide_filter:
                 # Apply filter defaults (before rendering the data!)
-                from s3filter import S3FilterForm
+                from .s3filter import S3FilterForm
                 show_filter_form = True
                 S3FilterForm.apply_filter_defaults(r, resource)
 
@@ -2373,7 +2373,7 @@ class S3PivotTable(object):
             @returns: the XLS file as stream
         """
 
-        from s3codec import S3Codec
+        from .s3codec import S3Codec
         exporter = S3Codec.get_codec("xls")
 
         return exporter.encode_pt(self, title)

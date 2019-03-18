@@ -1745,7 +1745,7 @@ class S3XML(S3Codec):
                         for row in rows:
                             uids[str(row[key])] = row[UID]
                     if hierarchy:
-                        from s3hierarchy import S3Hierarchy
+                        from .s3hierarchy import S3Hierarchy
                         h = S3Hierarchy(ktablename)
                         if h.config:
                             for _id in ids:

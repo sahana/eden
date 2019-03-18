@@ -212,7 +212,7 @@ class S3TimePlot(S3Method):
         if r.representation in ("html", "iframe"):
             filter_widgets = get_config("filter_widgets", None)
             if filter_widgets and not self.hide_filter:
-                from s3filter import S3FilterForm
+                from .s3filter import S3FilterForm
                 show_filter_form = True
                 S3FilterForm.apply_filter_defaults(r, resource)
 

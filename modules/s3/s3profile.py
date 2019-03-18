@@ -69,7 +69,7 @@ class S3Profile(S3CRUD):
                 self.settings = current.response.s3.crud
                 self.sqlform = sqlform = self._config("crud_form")
                 if not sqlform:
-                    from s3forms import S3SQLDefaultForm
+                    from .s3forms import S3SQLDefaultForm
                     self.sqlform = S3SQLDefaultForm()
 
                 # Render page
@@ -817,7 +817,7 @@ class S3Profile(S3CRUD):
         if not sqlform:
             sqlform = resource.get_config("crud_form")
         if not sqlform:
-            from s3forms import S3SQLDefaultForm
+            from .s3forms import S3SQLDefaultForm
             sqlform = S3SQLDefaultForm()
 
         get_config = current.s3db.get_config

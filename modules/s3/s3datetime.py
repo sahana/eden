@@ -429,7 +429,7 @@ class S3Calendar(object):
                 dtfmt = "%Y-%m-%d" # ISO Date Format
 
         # Deal with T's
-        from s3utils import s3_str
+        from .s3utils import s3_str
         dtfmt = s3_str(dtfmt)
 
         return self.calendar._format(dt, dtfmt)
@@ -454,7 +454,7 @@ class S3Calendar(object):
                 dtfmt = ISOFORMAT # ISO Date/Time Format
 
         # Deal with T's
-        from s3utils import s3_str
+        from .s3utils import s3_str
         dtfmt = s3_str(dtfmt)
 
         # Remove microseconds
@@ -1163,7 +1163,7 @@ class S3DateTimeParser(object):
         import pyparsing as pp
         self.ParseException = pp.ParseException
 
-        from s3utils import s3_unicode
+        from .s3utils import s3_unicode
 
         # Get the rules
         rules = self.rules
@@ -1430,7 +1430,7 @@ class S3DateTimeFormatter(object):
         T = current.T
         calendar = self.calendar
 
-        from s3utils import s3_unicode
+        from .s3utils import s3_unicode
 
         rules = {"d": "%02d" % d,
                  "b": T(calendar.MONTH_ABBR[m - 1]),

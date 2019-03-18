@@ -1241,7 +1241,7 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
                NOTE: limit - recordsFiltered = total cached
         """
 
-        from s3data import S3DataTable
+        from .s3data import S3DataTable
         request = self.request
         resource = self.resource
         s3 = current.response.s3

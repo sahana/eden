@@ -335,7 +335,7 @@ class S3MobileSchema(object):
             settings = self._settings = {}
             resource = self.resource
 
-            from s3model import SERIALIZABLE_OPTS
+            from .s3model import SERIALIZABLE_OPTS
             for key in SERIALIZABLE_OPTS:
                 if key not in PREPROCESS_OPTS:
                     setting = resource.get_config(key, DEFAULT)
@@ -656,7 +656,7 @@ class S3MobileSchema(object):
             @return: True|False
         """
 
-        from s3model import DYNAMIC_PREFIX
+        from .s3model import DYNAMIC_PREFIX
         if tablename.startswith(DYNAMIC_PREFIX):
 
             ttable = current.s3db.s3_table
@@ -725,7 +725,7 @@ class S3MobileSchema(object):
 
             mform = resource.get_config("mobile_form")
             if mform is False:
-                from s3fields import S3Represent
+                from .s3fields import S3Represent
                 self._llrepr = S3Represent(lookup=resource.tablename)
                 lookup_only = True
             elif callable(mform) and not isinstance(mform, S3SQLForm):

@@ -1121,7 +1121,7 @@ class S3AddPersonWidget(FormWidget):
                      submitted data like: {fieldname: value, ...}
         """
 
-        from s3validators import JSONERRORS
+        from .s3validators import JSONERRORS
         try:
             data = json.loads(value)
         except JSONERRORS:
@@ -2945,7 +2945,7 @@ class S3EmbeddedComponentWidget(FormWidget):
             if "deleted" in linktable:
                 fq &= (linktable.deleted != True)
             linked = current.db(fq).select(table._id)
-            from s3query import FS
+            from .s3query import FS
             pkey = FS("id")
             exclude = (~(pkey.belongs([r[table._id.name] for r in linked])))
             return exclude
@@ -4161,7 +4161,7 @@ class S3LocationDropdownWidget(FormWidget):
             # Skip in-widget validation on POST if inline
             widget_id = attr.get("_id")
             if widget_id and widget_id[:4] == "sub_":
-                from s3forms import SKIP_POST_VALIDATION
+                from .s3forms import SKIP_POST_VALIDATION
                 requires = SKIP_POST_VALIDATION(requires)
 
             widget = TAG[""](SELECT(*opts, **attr), requires = requires)
@@ -4396,7 +4396,7 @@ class S3Selector(FormWidget):
 
         fieldname = str(field).replace(".", "_")
         if fieldname.startswith("sub_"):
-            from s3forms import SKIP_POST_VALIDATION
+            from .s3forms import SKIP_POST_VALIDATION
             requires = SKIP_POST_VALIDATION(requires)
 
         defaults = dict(requires = requires,
@@ -6750,7 +6750,7 @@ class S3CascadeSelectWidget(FormWidget):
 
         # Get the hierarchy
         leafonly = self.leafonly
-        from s3hierarchy import S3Hierarchy
+        from .s3hierarchy import S3Hierarchy
         h = S3Hierarchy(tablename = lookup,
                         represent = represent,
                         filter = self.filter,
@@ -7025,7 +7025,7 @@ class S3HierarchyWidget(FormWidget):
 
         # Instantiate the hierarchy
         leafonly = self.leafonly
-        from s3hierarchy import S3Hierarchy
+        from .s3hierarchy import S3Hierarchy
         h = S3Hierarchy(tablename = lookup,
                         represent = represent,
                         leafonly = leafonly,
@@ -8279,7 +8279,7 @@ def search_ac(r, **attr):
 
     limit = int(_vars.limit or 0)
 
-    from s3query import FS
+    from .s3query import FS
     field = FS(fieldname)
 
     # Default fields to return

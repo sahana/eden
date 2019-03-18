@@ -134,7 +134,7 @@ class S3Organizer(S3Method):
             if filter_widgets:
                 show_filter_form = True
                 # Apply filter defaults (before rendering the data!)
-                from s3filter import S3FilterForm
+                from .s3filter import S3FilterForm
                 default_filters = S3FilterForm.apply_filter_defaults(r, resource)
 
         # Filter Form
@@ -310,7 +310,7 @@ class S3Organizer(S3Method):
         # Add date filter
         start, end = self.parse_interval(r.get_vars.get("$interval"))
         if start and end:
-            from s3query import FS
+            from .s3query import FS
             start_fs = FS(start_rfield.selector)
             if not end_rfield:
                 query = (start_fs >= start) & (start_fs < end)

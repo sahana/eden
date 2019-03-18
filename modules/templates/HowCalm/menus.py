@@ -54,7 +54,9 @@ class S3MainMenu(default.S3MainMenu):
                        #icon="icon-map",
                        ),
                     ]
-        elif auth.s3_logged_in():
+        #elif auth.s3_logged_in():
+        #    return []
+        else:
             return []
 
     # -------------------------------------------------------------------------
