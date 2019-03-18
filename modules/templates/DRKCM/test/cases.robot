@@ -65,6 +65,7 @@ Add Case Language Without Language
     Select From List By Label  sub_defaultcase_language_defaultcase_language_i_language_edit_none  ${EMPTY}
     Input Text  sub_defaultcase_language_defaultcase_language_i_comments_edit_none  SomeComment
     Click Element  css:div#add-defaultcase_language-none
+    Wait Until Page Contains Element  read-row-defaultcase_language-0
     Submit CRUD Form
     Should Show Confirmation
     Click Element  css:a#edit-btn
