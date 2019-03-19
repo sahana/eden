@@ -40,6 +40,7 @@ __all__ = ("ISOFORMAT",
            "s3_encode_iso_datetime",
            "s3_utc",
            "s3_get_utc_offset",
+           "s3_timezone_offset",
            "s3_relative_datetime",
            )
 
@@ -1623,6 +1624,39 @@ def s3_get_utc_offset():
 
     session.s3.utc_offset = offset
     return offset
+
+#--------------------------------------------------------------------------
+def s3_timezone_offset(tzname):
+    """
+        Simple utility to convert a time zone name into an offset
+        string, can be used to configure the default offset of the
+        site in 000_config.py (effective for anonymous users), like:
+
+            from s3 import s3_timezone_offset
+            settings.L10n.utc_offset = s3_timezone_offset("Canada/Mountain")
+
+        Differs from a fixed offset string in that it adapts to DST.
+
+        @param tzname: the time zone name
+
+        NB a list of available time zone names can be obtained from the
+           dateutil-zoneinfo.tar.gz file like:
+
+        import os, tarfile, dateutil.zoneinfo
+        path = os.path.abspath(os.path.dirname(dateutil.zoneinfo.__file__))
+        zonesfile = tarfile.TarFile.open(os.path.join(path, 'dateutil-zoneinfo.tar.gz'))
+        zonenames = zonesfile.getnames()
+    """
+
+    tz = dateutil.tz.gettz(tzname)
+    if tz:
+        delta = (tz.utcoffset(datetime.datetime.utcnow())).total_seconds()
+        hours, minutes = abs(delta) // 3600, (abs(delta) % 3600) // 60
+        sign = "+" if abs(delta) / delta == 1 else "-"
+        deltastr = "%s%02d%02d" % (sign, hours, minutes)
+    else:
+        deltastr = None
+    return deltastr
 
 # =============================================================================
 # Utilities
