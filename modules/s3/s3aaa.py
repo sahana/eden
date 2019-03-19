@@ -2321,12 +2321,7 @@ $.filterOptionsS3({
             this function may become redundant
         """
 
-        db = current.db
-        s3db = current.s3db
-        session = current.session
-
-        utable = self.settings.table_user
-        temptable = s3db.auth_user_temp
+        temptable = current.s3db.auth_user_temp
 
         form_vars = form.vars
         user_id = form_vars.id
@@ -2334,12 +2329,7 @@ $.filterOptionsS3({
         if not user_id:
             return None
 
-        # If the user hasn't set a personal UTC offset,
-        # then read the UTC offset from the form:
-        if not form_vars.utc_offset:
-            db(utable.id == user_id).update(utc_offset = session.s3.utc_offset)
-
-        record  = dict(user_id = user_id)
+        record  = {"user_id": user_id}
 
         # Add the home_phone to pr_contact
         home = form_vars.home
