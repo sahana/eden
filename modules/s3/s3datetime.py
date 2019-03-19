@@ -1618,9 +1618,14 @@ def s3_get_utc_offset():
                 session.auth.user.utc_offset = offset
 
     if not offset:
-        # 3rd choice is the server default (what most clients should see
+        # 3rd choice is to stick with whatever is already stored in
+        # the current session
+        offset = session.s3.utc_offset
+
+    if not offset:
+        # 4th choice is the server default (what most clients should see
         # the timezone as)
-        offset = current.deployment_settings.L10n.utc_offset
+        offset = current.deployment_settings.get_L10n_utc_offset()
 
     session.s3.utc_offset = offset
     return offset

@@ -1723,7 +1723,15 @@ class S3Config(Storage):
                            )
 
     def get_L10n_utc_offset(self):
-        return self.L10n.get("utc_offset", "+0000")
+        """
+            The default UTC offset for datetime representation in the UI,
+            can be a fixed offset in the format [+|-]HHMM, or a callable
+            for org-specific offsets and/or to prevent repeated lookups of
+            timezone definitions, e.g.:
+
+            settings.L10n.utc_offset = lambda default: s3_timezone_offset("Europe/Berlin")
+        """
+        return self.__lazy("L10n", "utc_offset", "+0000")
 
     def get_L10n_firstDOW(self):
         """
