@@ -55,7 +55,7 @@ def config(settings):
     ])
 
     # Default timezone for users
-    settings.L10n.utc_offset = "+0500"
+    settings.L10n.timezone = "US/Eastern"
     # Number formats (defaults to ISO 31-0)
     # Decimal separator for numbers (defaults to ,)
     settings.L10n.decimal_separator = "."

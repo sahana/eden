@@ -24,7 +24,7 @@ def config(settings):
     # Default Language (put this in custom template if-required)
     #settings.L10n.default_language = "crs"
     # Default timezone for users
-    settings.L10n.utc_offset = "+0400"
+    settings.L10n.timezone = "Etc/GMT+4"
     # Default Country Code for telephone numbers
     settings.L10n.default_country_code = 248
 

@@ -779,10 +779,7 @@ class S3PivotTableXLS(object):
             # Current date/time (in local timezone)
             import datetime
             from ..s3datetime import S3DateTime
-            dt = current.request.utcnow
-            offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
-            if offset:
-                dt += datetime.timedelta(seconds=offset)
+            dt = S3DateTime.to_local(current.request.utcnow)
             write(sheet, 1, 0, dt, style = "subheader", numfmt = "datetime")
 
         else:

@@ -1898,8 +1898,6 @@ class S3CalendarWidget(FormWidget):
         extremes = {}
         now = current.request.utcnow
 
-        offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
-
         # RAD : default to something quite generous
         pyears, fyears = 80, 80
 
@@ -1921,9 +1919,7 @@ class S3CalendarWidget(FormWidget):
         if earliest is not None:
             if not fallback:
                 pyears = abs(earliest.year - now.year)
-            earliest = earliest.replace(microsecond=0)
-            if offset:
-                earliest += datetime.timedelta(seconds=offset)
+            earliest = S3DateTime.to_local(earliest.replace(microsecond=0))
             extremes["minDateTime"] = earliest.isoformat()
 
         # Maximum
@@ -1944,9 +1940,7 @@ class S3CalendarWidget(FormWidget):
         if latest is not None:
             if not fallback:
                 fyears = abs(latest.year - now.year)
-            latest = latest.replace(microsecond=0)
-            if offset:
-                latest += datetime.timedelta(seconds=offset)
+            latest = S3DateTime.to_local(latest.replace(microsecond=0))
             extremes["maxDateTime"] = latest.isoformat()
 
         # Default date/time
@@ -1972,8 +1966,9 @@ class S3CalendarWidget(FormWidget):
             elif rounded > latest:
                 rounded = latest
             # Translate into local time
-            if offset:
-                rounded += datetime.timedelta(seconds=offset)
+            print rounded
+            print current.response.tzinfo
+            rounded = S3DateTime.to_local(rounded)
             # Convert into user format
             default = rounded.strftime(dtformat)
             extremes["defaultValue"] = default
@@ -2432,7 +2427,6 @@ class S3DateTimeWidget(FormWidget):
         # Limits
         now = request.utcnow
         timedelta = datetime.timedelta
-        offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
 
         if "min" in opts:
             earliest = opts["min"]
@@ -2463,16 +2457,14 @@ class S3DateTimeWidget(FormWidget):
                 rounded = earliest
             elif rounded > latest:
                 rounded = latest
-            if offset:
-                rounded += timedelta(seconds=offset)
+            rounded = S3DateTime.to_local(rounded)
             default = rounded.strftime(dtformat)
         else:
             default = ""
 
-        # Add timezone offset to limits
-        if offset:
-            earliest += timedelta(seconds=offset)
-            latest += timedelta(seconds=offset)
+        # Convert extremes to local time
+        earliest = S3DateTime.to_local(earliest)
+        latest = S3DateTime.to_local(latest)
 
         # Update limits of another widget?
         set_min = opts.get("set_min", None)

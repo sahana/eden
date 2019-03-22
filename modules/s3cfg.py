@@ -898,10 +898,6 @@ class S3Config(Storage):
         return self.auth.get("ignore_levels_for_presence", ("L0",))
     def get_auth_create_unknown_locations(self):
         return self.auth.get("create_unknown_locations", False)
-
-    def get_auth_show_utc_offset(self):
-        return self.auth.get("show_utc_offset", True)
-
     def get_security_archive_not_delete(self):
         return self.security.get("archive_not_delete", True)
     def get_security_audit_read(self):
@@ -1722,16 +1718,20 @@ class S3Config(Storage):
                            self.get_L10n_time_format()
                            )
 
-    def get_L10n_utc_offset(self):
+    def get_L10n_timezone(self):
         """
-            The default UTC offset for datetime representation in the UI,
-            can be a fixed offset in the format [+|-]HHMM, or a callable
-            for org-specific offsets and/or to prevent repeated lookups of
-            timezone definitions, e.g.:
+            The default timezone for datetime representation in the UI,
+            fallback if the client timezone or UTC offset can not be
+            determined (e.g. user not logged in, or not browser-based)
 
-            settings.L10n.utc_offset = lambda default: s3_timezone_offset("Europe/Berlin")
+            * A list of available timezones can be retrieved with:
+
+              import os, tarfile, dateutil.zoneinfo
+              path = os.path.abspath(os.path.dirname(dateutil.zoneinfo.__file__))
+              zonesfile = tarfile.TarFile.open(os.path.join(path, 'dateutil-zoneinfo.tar.gz'))
+              zonenames = zonesfile.getnames()
         """
-        return self.__lazy("L10n", "utc_offset", "+0000")
+        return self.__lazy("L10n", "timezone")
 
     def get_L10n_firstDOW(self):
         """

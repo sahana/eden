@@ -2258,9 +2258,22 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
         // De-duplication Event Handlers
         deduplication();
 
-        // UTC Offset
-        var now = new Date();
-        $('form').append("<input type='hidden' value=" + now.getTimezoneOffset() + " name='_utc_offset'/>");
+        // Timezone or UTC Offset
+        var anyform = $('form');
+        if (anyform.length) {
+            var tz;
+            try {
+                tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            } catch(e) {
+                // not supported
+            }
+            if (tz) {
+                anyform.append("<input type='hidden' value='" + tz + "' name='_timezone' />");
+            } else {
+                var now = new Date();
+                anyform.append("<input type='hidden' value='" + now.getTimezoneOffset() + "' name='_utc_offset'/>");
+            }
+        }
 
         // Social Media 'share' buttons
         if ($('#socialmedia_share').length > 0) {

@@ -45,7 +45,7 @@ if not auth.permission.has_permission("read"):
 # =============================================================================
 # Initialize Date/Time Settings
 #
-s3base.s3_get_utc_offset()
+s3base.s3_get_tzinfo()
 
 # =============================================================================
 # Menus

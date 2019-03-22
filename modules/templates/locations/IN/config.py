@@ -23,7 +23,7 @@ def config(settings):
     # Default Language (put this in custom template if-required)
     #settings.L10n.default_language = "hi"
     # Default timezone for users
-    settings.L10n.utc_offset = "+0530"
+    settings.L10n.timezone = "Indian"
     # Default Country Code for telephone numbers
     settings.L10n.default_country_code = 91
 

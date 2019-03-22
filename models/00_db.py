@@ -168,7 +168,7 @@ def s3_clear_session():
 
     if "s3" in session:
         s3 = session.s3
-        opts = ["hrm", "report_options", "utc_offset", "deduplicate"]
+        opts = ["hrm", "report_options", "deduplicate"]
         for o in opts:
             if o in s3:
                 del s3[o]

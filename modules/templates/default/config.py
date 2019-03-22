@@ -83,8 +83,6 @@ def config(settings):
     #settings.auth.registration_requests_site = True
     # Uncomment this to allow Admin to see Organisations in User Admin even if the Registration doesn't request this
     #settings.auth.admin_sees_organisation = True
-    # Uncomment to hide the UTC Offset in Registration/Profile
-    #settings.auth.show_utc_offset = False
     # Uncomment to set the default role UUIDs assigned to newly-registered users
     # This is a dictionary of lists, where the key is the realm that the list of roles applies to
     # The key 0 implies not realm restricted
@@ -178,7 +176,7 @@ def config(settings):
     # Uncomment to Hide the language toolbar
     #settings.L10n.display_toolbar = False
     # Default timezone for users
-    #settings.L10n.utc_offset = "+0000"
+    #settings.L10n.timezone = "US/Eastern"
     # Uncomment these to use US-style dates in English
     #settings.L10n.date_format = "%m-%d-%Y"
     #settings.L10n.time_format = "%H:%M:%S"

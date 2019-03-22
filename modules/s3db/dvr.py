@@ -9557,14 +9557,12 @@ def dvr_update_last_seen(person_id):
                                        ).first()
         if appointment:
             date = appointment.date
+            # Default to 08:00 local time (...unless that would be in the future)
             try:
-                date = datetime.datetime.combine(date, datetime.time(0, 0, 0))
+                date = datetime.datetime.combine(date, datetime.time(8, 0, 0))
             except TypeError:
                 pass
-            # Local time offset to UTC (NB: can be 0)
-            delta = S3DateTime.get_offset_value(current.session.s3.utc_offset)
-            # Default to 08:00 local time (...unless that would be future)
-            date = min(now, date + datetime.timedelta(seconds = 28800 - delta))
+            date = min(now, S3DateTime.to_utc(date))
             last_seen_on = date
 
     # Allowance payments to update last_seen_on?

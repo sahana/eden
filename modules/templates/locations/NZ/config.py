@@ -22,7 +22,7 @@ def config(settings):
     # Default Language
     settings.L10n.default_language = "en-gb"
     # Default timezone for users
-    settings.L10n.utc_offset = "+1200"
+    settings.L10n.timezone = "NZ"
     # Default Country Code for telephone numbers
     settings.L10n.default_country_code = 64
 

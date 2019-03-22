@@ -7,6 +7,7 @@
 #
 import datetime
 import dateutil
+import dateutil.tz
 import unittest
 
 from lxml import etree
@@ -23,6 +24,30 @@ from unit_tests import run_suite
 class S3DateTimeTests(unittest.TestCase):
     """ Tests for date/time parsing and formatting """
 
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        settings = current.deployment_settings
+
+        # Store current timezone info
+        self.tzinfo = current.response.s3.tzinfo
+        self.tzsetting = settings.L10n.timezone
+        self.tzname = current.session.s3.tzname
+        self.utc_offset = current.session.s3.utc_offset
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        settings = current.deployment_settings
+
+        # Restore timezone info
+        current.response.s3.tzinfo = self.tzinfo
+        if self.tzsetting:
+            settings.L10n.timezone = tzsetting
+        current.session.s3.tzname = self.tzname
+        current.session.s3.utc_offset = self.utc_offset
+
+    # -------------------------------------------------------------------------
     def testOffsetParsing(self):
 
         data = [
@@ -69,6 +94,76 @@ class S3DateTimeTests(unittest.TestCase):
                               (value, type(value), result)
                         )
 
+    # -------------------------------------------------------------------------
+    def testToLocal(self):
+
+        response = current.response
+        session = current.session
+
+        assertEqual = self.assertEqual
+
+        assertEqual(S3DateTime.to_local(""), None)
+        assertEqual(S3DateTime.to_local(None), None)
+
+        # Test with timezone reading from browser
+        response.s3.tzinfo = None
+        session.s3.tzname = "Europe/Stockholm"
+        session.s3.utc_offset = "+0000"
+
+        dt = datetime.datetime(2019, 1, 21, 1, 06, 0, 0)
+        local = S3DateTime.to_local(dt)
+        assertEqual(local.hour, 2)   # UTC+1 in winter
+        dt = datetime.datetime(2019, 5, 8, 19, 34, 0, 0)
+        local = S3DateTime.to_local(dt)
+        assertEqual(local.hour, 21)  # UTC+2 in summer
+
+        # Test with tz-aware datetime
+        class WEST6(datetime.tzinfo):
+            def utcoffset(self, dt):
+                return datetime.timedelta(hours=-6)
+        dt = datetime.datetime(2019, 5, 8, 19, 34, 0, 0, tzinfo=WEST6())
+        local = S3DateTime.to_local(dt)
+        assertEqual(local.hour, 3)   # 6 hours WEST to UTC, then UTC+2 in summer
+
+        # Disable deployment setting for timezone
+        settings = current.deployment_settings
+        tzsetting = settings.L10n.timezone
+        if tzsetting:
+            del settings.L10n.timezone
+
+        # Test fallback to default timezone
+        response.s3.tzinfo = None
+        session.s3.tzname = None
+        session.s3.utc_offset = None
+        settings.L10n.timezone = "America/Detroit"
+
+        dt = datetime.datetime(2019, 1, 21, 1, 06, 0, 0)
+        local = S3DateTime.to_local(dt)
+        assertEqual(local.day, 20)   # Previous day
+        assertEqual(local.hour, 20)  # UTC-5 in winter
+
+        dt = datetime.datetime(2019, 5, 8, 19, 34, 0, 0)
+        local = S3DateTime.to_local(dt)
+        assertEqual(local.day, 8)    # Same day
+        assertEqual(local.hour, 15)  # UTC-4 in summer
+
+        # Test UTC offset setting overrides default timezone
+        response.s3.tzinfo = None
+        session.s3.tzname = None
+        session.s3.utc_offset = "-0600"
+        settings.L10n.timezone = "America/Detroit"
+
+        dt = datetime.datetime(2019, 1, 21, 1, 06, 0, 0)
+        local = S3DateTime.to_local(dt)
+        assertEqual(local.day, 20)   # Previous day
+        assertEqual(local.hour, 19)  # UTC-6 fixed offset
+        dt = datetime.datetime(2019, 5, 8, 19, 34, 0, 0)
+        local = S3DateTime.to_local(dt)
+        assertEqual(local.day, 8)    # Same day
+        assertEqual(local.hour, 13)  # UTC-6 fixed offset
+
+        del settings.L10n.timezone
+
 # =============================================================================
 class DateRepresentationTests(unittest.TestCase):
     """ Test S3DateTime.date_represent """
@@ -86,6 +181,9 @@ class DateRepresentationTests(unittest.TestCase):
         self.default_format = current.deployment_settings.get_L10n_date_format()
         current.deployment_settings.L10n.date_format = "%Y-%m-%d"
 
+        # Store current timezone info
+        self.tzinfo = current.response.s3.tzinfo
+
     # -------------------------------------------------------------------------
     def tearDown(self):
 
@@ -94,6 +192,9 @@ class DateRepresentationTests(unittest.TestCase):
 
         # Restore default date format
         current.deployment_settings.L10n.date_format = self.default_format
+
+        # Restore timezone info
+        current.response.s3.tzinfo = self.tzinfo
 
     # -------------------------------------------------------------------------
     def testDateRepresent(self):
@@ -213,36 +314,29 @@ class DateRepresentationTests(unittest.TestCase):
     def testTZAwareDateTimeRepresent(self):
         """ Test date representation of datetime.datetime (timezone-aware) """
 
-        session = current.session
-
+        response = current.response
         utc = dateutil.tz.tzutc()
 
         assertEqual = self.assertEqual
         represent = S3DateTime.date_represent
 
-        utc_offset = session.s3.utc_offset
-        try:
-            # Within same date
-            date = datetime.datetime(1973, 4, 21, 15, 30, 0, tzinfo=utc)
-            session.s3.utc_offset = +2
-            rstr = represent(date, utc=True)
-            assertEqual(rstr, "1973-04-21")
+        # Within same date
+        date = datetime.datetime(1973, 4, 21, 15, 30, 0, tzinfo=utc)
+        response.s3.tzinfo = S3DefaultTZ(+2)
+        rstr = represent(date, utc=True)
+        assertEqual(rstr, "1973-04-21")
 
-            # Across date (eastern timezone)
-            date = datetime.datetime(1993, 6, 17, 22, 0, 0, tzinfo=utc)
-            session.s3.utc_offset = +6
-            rstr = represent(date, utc=True)
-            assertEqual(rstr, "1993-06-18")
+        # Across date (eastern timezone)
+        date = datetime.datetime(1993, 6, 17, 22, 0, 0, tzinfo=utc)
+        response.s3.tzinfo = S3DefaultTZ(+6)
+        rstr = represent(date, utc=True)
+        assertEqual(rstr, "1993-06-18")
 
-            # Across date (western timezone)
-            date = datetime.datetime(1995, 4, 1, 03, 0, 0, tzinfo=utc)
-            session.s3.utc_offset = -8
-            rstr = represent(date, utc=True)
-            assertEqual(rstr, "1995-03-31")
-
-        finally:
-            # Restore offset
-            session.s3.utc_offset = utc_offset
+        # Across date (western timezone)
+        date = datetime.datetime(1995, 4, 1, 03, 0, 0, tzinfo=utc)
+        response.s3.tzinfo = S3DefaultTZ(-8)
+        rstr = represent(date, utc=True)
+        assertEqual(rstr, "1995-03-31")
 
 # =============================================================================
 class DateTimeRepresentationTests(unittest.TestCase):
@@ -262,6 +356,9 @@ class DateTimeRepresentationTests(unittest.TestCase):
         self.calendar = current.calendar
         current.calendar = S3Calendar("Gregorian")
 
+        # Store current timezone info
+        self.tzinfo = current.response.s3.tzinfo
+
     # -------------------------------------------------------------------------
     def tearDown(self):
 
@@ -272,6 +369,9 @@ class DateTimeRepresentationTests(unittest.TestCase):
 
         # Restore current calendar
         current.calendar = self.calendar
+
+        # Restore timezone info
+        current.response.s3.tzinfo = self.tzinfo
 
     # -------------------------------------------------------------------------
     def testDateTimeRepresent(self):
@@ -331,42 +431,36 @@ class DateTimeRepresentationTests(unittest.TestCase):
     def testTZAwareDateTimeRepresent(self):
         """ Test datetime representation (timezone-aware) """
 
-        session = current.session
+        response = current.response
 
         utc = dateutil.tz.tzutc()
 
         assertEqual = self.assertEqual
         represent = S3DateTime.datetime_represent
 
-        utc_offset = session.s3.utc_offset
-        try:
-            # Within same date
-            dt = datetime.datetime(1973, 4, 21, 15, 30, 0, tzinfo=utc)
-            session.s3.utc_offset = +2
-            dtstr = represent(dt, utc=True)
-            assertEqual(dtstr, "1973-04-21 17:30:00")
+        # Within same date
+        dt = datetime.datetime(1973, 4, 21, 15, 30, 0, tzinfo=utc)
+        response.s3.tzinfo = S3DefaultTZ(+2)
+        dtstr = represent(dt, utc=True)
+        assertEqual(dtstr, "1973-04-21 17:30:00")
 
-            # Across date (eastern timezone)
-            dt = datetime.datetime(1993, 6, 17, 22, 0, 0, tzinfo=utc)
-            session.s3.utc_offset = +6
-            dtstr = represent(dt, utc=True)
-            assertEqual(dtstr, "1993-06-18 04:00:00")
+        # Across date (eastern timezone)
+        dt = datetime.datetime(1993, 6, 17, 22, 0, 0, tzinfo=utc)
+        response.s3.tzinfo = S3DefaultTZ(+6)
+        dtstr = represent(dt, utc=True)
+        assertEqual(dtstr, "1993-06-18 04:00:00")
 
-            # Across date (western timezone)
-            dt = datetime.datetime(1995, 4, 1, 03, 0, 0, tzinfo=utc)
-            session.s3.utc_offset = -8
-            dtstr = represent(dt, utc=True)
-            assertEqual(dtstr, "1995-03-31 19:00:00")
+        # Across date (western timezone)
+        dt = datetime.datetime(1995, 4, 1, 03, 0, 0, tzinfo=utc)
+        response.s3.tzinfo = S3DefaultTZ(-8)
+        dtstr = represent(dt, utc=True)
+        assertEqual(dtstr, "1995-03-31 19:00:00")
 
-            # ...with utc=False (to verify the effectiveness of the parameter)
-            dt = datetime.datetime(1995, 4, 1, 03, 0, 0, tzinfo=utc)
-            session.s3.utc_offset = -8
-            dtstr = represent(dt, utc=False)
-            assertEqual(dtstr, "1995-04-01 03:00:00")
-
-        finally:
-            # Restore offset
-            session.s3.utc_offset = utc_offset
+        # ...with utc=False (to verify the effectiveness of the parameter)
+        dt = datetime.datetime(1995, 4, 1, 03, 0, 0, tzinfo=utc)
+        response.s3.tzinfo = S3DefaultTZ(-8)
+        dtstr = represent(dt, utc=False)
+        assertEqual(dtstr, "1995-04-01 03:00:00")
 
     # -------------------------------------------------------------------------
     def testDatetimeRepresentDefaultFormat(self):
@@ -438,10 +532,16 @@ class TimeRepresentationTests(unittest.TestCase):
         self.default_format = current.deployment_settings.get_L10n_time_format()
         current.deployment_settings.L10n.date_format = "%H:%M"
 
+        # Store current timezone info
+        self.tzinfo = current.response.s3.tzinfo
+
     # -------------------------------------------------------------------------
     def tearDown(self):
 
         current.deployment_settings.L10n.date_format = self.default_format
+
+        # Restore timezone info
+        current.response.s3.tzinfo = self.tzinfo
 
     # -------------------------------------------------------------------------
     def testTimeRepresent(self):
@@ -469,57 +569,49 @@ class TimeRepresentationTests(unittest.TestCase):
     def testTZAwareTimeRepresent(self):
         """ Test timezone-aware time representation """
 
+        response = current.response
+
         assertEqual = self.assertEqual
         represent = S3DateTime.time_represent
 
-        session = current.session
-        utc_offset = session.s3.utc_offset
-        try:
-            value = datetime.time(10,45)
-            session.s3.utc_offset = +2
-            rstr = represent(value, utc=True)
-            assertEqual(rstr, "12:45")
+        value = datetime.time(10,45)
+        response.s3.tzinfo = S3DefaultTZ(+2)
+        rstr = represent(value, utc=True)
+        assertEqual(rstr, "12:45")
 
-            value = datetime.time(19,33)
-            session.s3.utc_offset = +5
-            rstr = represent(value, utc=True)
-            assertEqual(rstr, "00:33")
+        value = datetime.time(19,33)
+        response.s3.tzinfo = S3DefaultTZ(+5)
+        rstr = represent(value, utc=True)
+        assertEqual(rstr, "00:33")
 
-            value = datetime.time(7,6)
-            session.s3.utc_offset = -8
-            rstr = represent(value, utc=True)
-            assertEqual(rstr, "23:06")
-        finally:
-            # Restore offset
-            session.s3.utc_offset = utc_offset
+        value = datetime.time(7,6)
+        response.s3.tzinfo = S3DefaultTZ(-8)
+        rstr = represent(value, utc=True)
+        assertEqual(rstr, "23:06")
 
     # -------------------------------------------------------------------------
     def testTZAwareDateTimeRepresent(self):
         """ Test timezone-aware datetime representation """
 
+        response = current.response
+
         assertEqual = self.assertEqual
         represent = S3DateTime.time_represent
 
-        session = current.session
-        utc_offset = session.s3.utc_offset
-        try:
-            value = datetime.datetime(1988,6,21,10,45)
-            session.s3.utc_offset = +2
-            rstr = represent(value, utc=True)
-            assertEqual(rstr, "12:45")
+        value = datetime.datetime(1988,6,21,10,45)
+        response.s3.tzinfo = S3DefaultTZ(+2)
+        rstr = represent(value, utc=True)
+        assertEqual(rstr, "12:45")
 
-            value = datetime.datetime(1988,6,21,19,33)
-            session.s3.utc_offset = +5
-            rstr = represent(value, utc=True)
-            assertEqual(rstr, "00:33")
+        value = datetime.datetime(1988,6,21,19,33)
+        response.s3.tzinfo = S3DefaultTZ(+5)
+        rstr = represent(value, utc=True)
+        assertEqual(rstr, "00:33")
 
-            value = datetime.datetime(1988,6,21,7,6)
-            session.s3.utc_offset = -8
-            rstr = represent(value, utc=True)
-            assertEqual(rstr, "23:06")
-        finally:
-            # Restore offset
-            session.s3.utc_offset = utc_offset
+        value = datetime.datetime(1988,6,21,7,6)
+        response.s3.tzinfo = S3DefaultTZ(-8)
+        rstr = represent(value, utc=True)
+        assertEqual(rstr, "23:06")
 
     # -------------------------------------------------------------------------
     def testTimeRepresentDefaultFormat(self):

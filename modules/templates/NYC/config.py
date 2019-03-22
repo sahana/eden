@@ -32,7 +32,7 @@ def config(settings):
     # Uncomment to Hide the language toolbar
     settings.L10n.display_toolbar = False
     # Default timezone for users
-    settings.L10n.utc_offset = "-0500"
+    settings.L10n.timezone = "US/Eastern"
     # Uncomment to Disable the Postcode selector in the LocationSelector
     # - using L4 instead
     settings.gis.postcode_selector = False
@@ -88,9 +88,6 @@ def config(settings):
     settings.auth.record_approval_required_for = ("org_organisation",)
 
     settings.security.policy = 8 # Hierarchical Realms + Delegations
-
-    # Hide UTC offset
-    settings.auth.show_utc_offset = False
 
     # Enable this to have Open links in IFrames open a full page in a new tab
     settings.ui.iframe_opens_full = True

@@ -23,7 +23,7 @@ def config(settings):
     # Default Language (put this in custom template if-required)
     #settings.L10n.default_language = "ne"
     # Default timezone for users
-    settings.L10n.utc_offset = "+0545"
+    settings.L10n.timezone = "Asia/Kathmandu"
     # Default Country Code for telephone numbers
     settings.L10n.default_country_code = 977
 

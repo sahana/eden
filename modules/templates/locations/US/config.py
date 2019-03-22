@@ -21,7 +21,7 @@ def config(settings):
     # L10n (Localization) settings
     #settings.L10n.languages["es"] = "Spanish"
     # Default timezone for users
-    settings.L10n.utc_offset = "-0500"
+    settings.L10n.timezone = "US/Eastern"
     # Uncomment these to use US-style dates in English
     settings.L10n.date_format = "%m-%d-%Y"
     # Start week on Sunday

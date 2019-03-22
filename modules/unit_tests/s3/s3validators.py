@@ -8,7 +8,7 @@
 import unittest
 from gluon import current
 
-from s3.s3datetime import S3Calendar
+from s3.s3datetime import S3Calendar, S3DefaultTZ
 from s3.s3fields import *
 from s3.s3validators import *
 
@@ -278,9 +278,9 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
         settings.L10n.time_format = "%H:%M:%S"
 
         # Set timezone to UTC
-        session = current.session
-        self.utc_offset = session.s3.utc_offset
-        session.s3.utc_offset = 0
+        self.tzinfo = current.response.s3.tzinfo
+        self.tzname = current.session.s3.tzname
+        self.utc_offset = current.session.s3.utc_offset
 
         # Set current calendar to Gregorian
         self.calendar = current.calendar
@@ -296,6 +296,8 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
         settings.L10n.time_format = self.time_format
 
         # Reset time zone
+        current.response.s3.tzinfo = self.tzinfo
+        current.session.s3.tzname = self.tzname
         current.session.s3.utc_offset = self.utc_offset
 
         # Restore current calendar
@@ -305,15 +307,27 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
     def testValidation(self):
         """ Test validation with valid datetime string """
 
+        response = current.response
+        session = current.session
+
+        response.s3.tzinfo = None
+        session.s3.tzname = "America/Detroit"
+
         validate = IS_UTC_DATETIME()
 
         assertEqual = self.assertEqual
 
-        # Test timezone-naive string
+        # Test timezone-naive string (winter)
         dtstr = "2011-11-19 14:00:00"
         value, error = validate(dtstr)
         assertEqual(error, None)
-        assertEqual(value, datetime.datetime(2011, 11, 19, 14, 0, 0))
+        assertEqual(value, datetime.datetime(2011, 11, 19, 19, 0, 0))
+
+        # Test timezone-naive string (summer)
+        dtstr = "2011-06-11 14:00:00"
+        value, error = validate(dtstr)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 6, 11, 18, 0, 0))
 
         # Test timezone-aware string
         dtstr = "2011-11-19 14:00:00+0500"
@@ -321,8 +335,10 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
         assertEqual(error, None)
         assertEqual(value, datetime.datetime(2011, 11, 19, 9, 0, 0))
 
-        # Change time zone
-        current.session.s3.utc_offset = -8
+        # Fall back to offset
+        response.s3.tzinfo = None
+        session.s3.tzname = None
+        session.s3.utc_offset = -8
 
         # Test timezone-naive string
         dtstr = "2011-11-19 14:00:00"
@@ -340,6 +356,13 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
     def testValidationWithDateTime(self):
         """ Test validation with datetime """
 
+        response = current.response
+        session = current.session
+
+        response.s3.tzinfo = None
+        session.s3.tzname = "Australia/Tasmania"
+        session.s3.utc_offset = "+0200"
+
         validate = IS_UTC_DATETIME()
 
         class EAST5(datetime.tzinfo):
@@ -348,20 +371,28 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
 
         assertEqual = self.assertEqual
 
-        # Test timezone-naive datetime
+        # Test timezone-naive datetime (winter, UTC+11 to UTC)
         dt = datetime.datetime(2011, 11, 19, 14, 0, 0)
         value, error = validate(dt)
         assertEqual(error, None)
-        assertEqual(value, datetime.datetime(2011, 11, 19, 14, 0, 0))
+        assertEqual(value, datetime.datetime(2011, 11, 19, 3, 0, 0))
 
-        # Test timezone-aware datetime
+        # Test timezone-naive datetime (summer, UTC+10)
+        dt = datetime.datetime(2011, 6, 8, 5, 0, 0)
+        value, error = validate(dt)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 6, 7, 19, 0, 0))
+
+        # Test timezone-aware datetime (UTC+5 to UTC)
         dt = datetime.datetime(2011, 11, 19, 14, 0, 0, tzinfo=EAST5())
         value, error = validate(dt)
         assertEqual(error, None)
         assertEqual(value, datetime.datetime(2011, 11, 19, 9, 0, 0))
 
-        # Change time zone
-        current.session.s3.utc_offset = -8
+        # Fall back to fixed offset
+        response.s3.tzinfo = None
+        session.s3.tzname = None
+        session.s3.utc_offset = -8
 
         # Test timezone-naive datetime
         dt = datetime.datetime(2011, 11, 19, 14, 0, 0)
@@ -379,6 +410,13 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
     def testValidationWithDate(self):
         """ Test validation with date """
 
+        response = current.response
+        session = current.session
+
+        response.s3.tzinfo = None
+        session.s3.tzname = "UTC"
+        session.s3.utc_offset = "+0200"
+
         validate = IS_UTC_DATETIME()
 
         class EAST5(datetime.tzinfo):
@@ -393,23 +431,33 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
         assertEqual(error, None)
         assertEqual(value, datetime.datetime(2011, 11, 19, 8, 0, 0))
 
-        # Change time zone
-        current.session.s3.utc_offset = -8
+        # Change time zone (far West, fixed offset)
+        response.s3.tzinfo = None
+        session.s3.tzname = None
+        session.s3.utc_offset = -8
 
-        # Check that date defaults to 08:00 hours (Western time zone)
+        # Check that date defaults to 08:00 hours
         dt = datetime.date(2011, 11, 19)
         value, error = validate(dt)
         assertEqual(error, None)
         assertEqual(value, datetime.datetime(2011, 11, 19, 16, 0, 0))
 
-        # Change time zone
-        current.session.s3.utc_offset = +11
+        # Change time zone (extreme East, with DST-awareness)
+        response.s3.tzinfo = None
+        session.s3.tzname = "Australia/Tasmania"
+        session.s3.utc_offset = -2
 
-        # Check that date defaults to 08:00 hours (Extreme Eastern time zone)
+        # Check that date defaults to 08:00 hours
         dt = datetime.date(2011, 11, 19)
         value, error = validate(dt)
         assertEqual(error, None)
         assertEqual(value, datetime.datetime(2011, 11, 18, 21, 0, 0))
+
+        # Check that date defaults to 08:00 hours
+        dt = datetime.date(2011, 05, 11)
+        value, error = validate(dt)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 05, 10, 22, 0, 0))
 
     # -------------------------------------------------------------------------
     def testValidationDestructive(self):
@@ -527,6 +575,9 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
     def testFormatter(self):
         """ Test formatter """
 
+        response = current.response
+        session = current.session
+
         validate = IS_UTC_DATETIME()
 
         assertEqual = self.assertEqual
@@ -542,24 +593,31 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
         assertEqual(dtstr, "2011-11-19 14:00:00")
 
         # Change time zone
-        current.session.s3.utc_offset = -8
+        response.s3.tzinfo = None
+        session.s3.tzname = "Canada/Eastern"
+        session.s3.utc_offset = +5
 
-        # Test with default UTC offset
+        # Test with default timezone (alternate DST)
         dt = datetime.datetime(2011, 11, 19, 14, 0, 0)
         dtstr = validate.formatter(dt)
-        assertEqual(dtstr, "2011-11-19 06:00:00")
+        assertEqual(dtstr, "2011-11-19 09:00:00")
+        dt = datetime.datetime(2011, 6, 8, 14, 0, 0)
+        dtstr = validate.formatter(dt)
+        assertEqual(dtstr, "2011-06-08 10:00:00")
 
-        # Test with UTC offset and format override
-        validate = IS_UTC_DATETIME(utc_offset="+0200",
-                                   format="%d.%m.%Y %I:%M %p",
+        # Test format override
+        validate = IS_UTC_DATETIME(format="%d.%m.%Y %I:%M %p",
                                    )
         dt = datetime.datetime(2011, 11, 19, 14, 0, 0)
         dtstr = validate.formatter(dt)
-        assertEqual(dtstr, "19.11.2011 04:00 PM")
+        assertEqual(dtstr, "19.11.2011 09:00 AM")
 
     # -------------------------------------------------------------------------
     def testLocalizedErrorMessages(self):
         """ Test localized date/time in default error messages """
+
+        response = current.response
+        session = current.session
 
         assertEqual = self.assertEqual
         assertTrue = self.assertTrue
@@ -569,7 +627,9 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
         current.deployment_settings.L10n.time_format = "%I:%M %p"
 
         # Change time zone
-        current.session.s3.utc_offset = +3
+        response.s3.tzinfo = None
+        session.s3.tzname = "US/Pacific"
+        session.s3.utc_offset = +3
 
         # Minimum/maximum
         mindt = datetime.datetime(2011, 11, 19, 14, 0, 0)
@@ -579,13 +639,13 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
         validate = IS_UTC_DATETIME(minimum=mindt)
         msg = validate.error_message
         assertEqual(validate.minimum, mindt)
-        assertTrue(msg.find("19/11/2011 05:00 PM") != -1)
+        assertTrue(msg.find("19/11/2011 06:00 AM") != -1)
 
         # Test maximum error
         validate = IS_UTC_DATETIME(maximum=maxdt)
         msg = validate.error_message
         assertEqual(validate.maximum, maxdt)
-        assertTrue(msg.find("21/11/2011 01:00 AM") != -1)
+        assertTrue(msg.find("20/11/2011 02:00 PM") != -1)
 
         # Test minimum error with custom format
         validate = IS_UTC_DATETIME(minimum=mindt,
@@ -593,7 +653,7 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
                                    )
         msg = validate.error_message
         assertEqual(validate.minimum, mindt)
-        assertTrue(msg.find("2011-11-19 17:00") != -1)
+        assertTrue(msg.find("2011-11-19 06:00") != -1)
 
         # Test maximum error with custom format
         validate = IS_UTC_DATETIME(maximum=maxdt,
@@ -601,7 +661,7 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
                                    )
         msg = validate.error_message
         assertEqual(validate.maximum, maxdt)
-        assertTrue(msg.find("2011-11-21 01:00") != -1)
+        assertTrue(msg.find("2011-11-20 14:00") != -1)
 
 # =============================================================================
 class IS_UTC_DATE_Tests(unittest.TestCase):
@@ -621,9 +681,9 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         settings.L10n.date_format = "%Y-%m-%d"
 
         # Set timezone to UTC
-        session = current.session
-        self.utc_offset = session.s3.utc_offset
-        session.s3.utc_offset = 0
+        self.tzinfo = current.response.tzinfo
+        self.tzname = current.session.tzname
+        self.utc_offset = current.session.s3.utc_offset
 
     # -------------------------------------------------------------------------
     def tearDown(self):
@@ -634,6 +694,8 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         settings.L10n.date_format = self.date_format
 
         # Reset time zone
+        current.response.s3.tzinfo = self.tzinfo
+        current.session.s3.tzname = self.tzname
         current.session.s3.utc_offset = self.utc_offset
 
         # Reset calendar
@@ -642,6 +704,8 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testValidation(self):
         """ Test validation with valid datetime string """
+
+        response = current.response
 
         validate = IS_UTC_DATE()
 
@@ -654,7 +718,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(value, datetime.date(2011, 11, 19))
 
         # Change time zone
-        current.session.s3.utc_offset = -6
+        response.s3.tzinfo = S3DefaultTZ(-6)
 
         # Test western time zone (6 hours West, same day)
         dtstr = "2011-11-19"
@@ -663,7 +727,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(value, datetime.date(2011, 11, 19))
 
         # Change time zone
-        current.session.s3.utc_offset = +5
+        response.s3.tzinfo = S3DefaultTZ(+5)
 
         # Test eastern time zone (5 hours East, same day)
         dtstr = "2011-11-19"
@@ -672,7 +736,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(value, datetime.date(2011, 11, 19))
 
         # Change time zone
-        current.session.s3.utc_offset = +11
+        response.s3.tzinfo = S3DefaultTZ(+11)
 
         # Test eastern time zone (11 hours East, next day)
         dtstr = "2011-11-19"
@@ -683,6 +747,8 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testValidationWithDateTime(self):
         """ Test validation with datetime """
+
+        response = current.response
 
         validate = IS_UTC_DATE()
 
@@ -709,7 +775,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(value, datetime.date(2011, 11, 20))
 
         # Change time zone
-        current.session.s3.utc_offset = -8
+        response.s3.tzinfo = S3DefaultTZ(-8)
 
         # Test timezone-naive datetime (8 hours West, previous day)
         dt = datetime.datetime(2011, 11, 19, 18, 0, 0)
@@ -729,12 +795,14 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
 
         # Representation of a parsed string must give the same string
 
+        response = current.response
+
         assertEqual = self.assertEqual
 
         validate = IS_UTC_DATE()
         represent = S3DateTime.date_represent
 
-        current.session.s3.utc_offset = -10
+        response.s3.tzinfo = S3DefaultTZ(-10)
 
         dtstr = "1998-03-21"
         value, error = validate(dtstr)
@@ -744,7 +812,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         representation = represent(value, utc=True)
         assertEqual(representation, dtstr)
 
-        current.session.s3.utc_offset = 0
+        response.s3.tzinfo = S3DefaultTZ(0)
 
         dtstr = "1998-03-21"
         value, error = validate(dtstr)
@@ -754,7 +822,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         representation = represent(value, utc=True)
         assertEqual(representation, dtstr)
 
-        current.session.s3.utc_offset = 6
+        response.s3.tzinfo = S3DefaultTZ(+6)
 
         dtstr = "1998-03-21"
         value, error = validate(dtstr)
@@ -764,7 +832,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         representation = represent(value, utc=True)
         assertEqual(representation, dtstr)
 
-        current.session.s3.utc_offset = 11
+        response.s3.tzinfo = S3DefaultTZ(+11)
 
         dtstr = "1998-03-21"
         value, error = validate(dtstr)
@@ -777,6 +845,8 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testValidationWithDate(self):
         """ Test validation with date """
+
+        response = current.response
 
         validate = IS_UTC_DATE()
 
@@ -793,7 +863,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(value, datetime.date(2011, 11, 19))
 
         # Change time zone
-        current.session.s3.utc_offset = -5
+        response.s3.tzinfo = S3DefaultTZ(-5)
 
         # Test western time zone (5 hours West, same day)
         dt = datetime.date(2011, 11, 19)
@@ -802,7 +872,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(value, datetime.date(2011, 11, 19))
 
         # Change time zone
-        current.session.s3.utc_offset = +5
+        response.s3.tzinfo = S3DefaultTZ(+5)
 
         # Test eastern time zone (5 hours East, same day)
         dt = datetime.date(2011, 11, 19)
@@ -811,7 +881,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(value, datetime.date(2011, 11, 19))
 
         # Change time zone
-        current.session.s3.utc_offset = +9
+        response.s3.tzinfo = S3DefaultTZ(+9)
 
         # Test eastern time zone (9 hours East, next day)
         dt = datetime.date(2011, 11, 19)
@@ -927,6 +997,9 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
     def testFormatter(self):
         """ Test formatter """
 
+        response = current.response
+        session = current.session
+
         validate = IS_UTC_DATE()
 
         assertEqual = self.assertEqual
@@ -942,7 +1015,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(dtstr, "2011-11-19")
 
         # Change time zone
-        current.session.s3.utc_offset = -6
+        response.s3.tzinfo = S3DefaultTZ(-6)
 
         # Test with default UTC offset (6 hours West, same day)
         dt = datetime.date(2011, 11, 19)
@@ -950,7 +1023,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(dtstr, "2011-11-19")
 
         # Change time zone
-        current.session.s3.utc_offset = +6
+        response.s3.tzinfo = S3DefaultTZ(+6)
 
         # Test with default UTC offset (6 hours East, same day)
         dt = datetime.date(2011, 11, 19)
@@ -958,16 +1031,19 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(dtstr, "2011-11-19")
 
         # Change time zone
-        current.session.s3.utc_offset = +9
+        response.s3.tzinfo = S3DefaultTZ(+9)
 
         # Test with default UTC offset (9 hours East, next day)
         dt = datetime.date(2011, 11, 19)
         dtstr = validate.formatter(dt)
         assertEqual(dtstr, "2011-11-20")
 
-        # Test with UTC offset and format override (12 hours East, next day)
-        validate = IS_UTC_DATE(utc_offset="+1200",
-                               format="%d.%m.%Y",
+        response.s3.tzinfo = None
+        session.s3.tzname = "Australia/South"
+        session.s3.utc_offset = +1
+
+        # Test format override
+        validate = IS_UTC_DATE(format="%d.%m.%Y",
                                )
         dt = datetime.datetime(2011, 11, 19, 8, 0, 0)
         dtstr = validate.formatter(dt)
@@ -981,9 +1057,15 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         dtstr = validate.formatter(dt)
         assertEqual(dtstr, "20.11.2011")
 
+        dt = datetime.date(2011, 5, 19)
+        dtstr = validate.formatter(dt)
+        assertEqual(dtstr, "20.05.2011")
+
     # -------------------------------------------------------------------------
     def testLocalizedErrorMessages(self):
         """ Test localized date/time in default error messages """
+
+        response = current.response
 
         assertEqual = self.assertEqual
         assertTrue = self.assertTrue
@@ -992,7 +1074,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         current.deployment_settings.L10n.date_format = "%d/%m/%Y"
 
         # Change time zone
-        current.session.s3.utc_offset = +3
+        response.s3.tzinfo = S3DefaultTZ(+3)
 
         # Minimum/maximum
         mindt = datetime.date(2011, 11, 16)

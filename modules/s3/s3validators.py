@@ -64,6 +64,7 @@ __all__ = ("single_phone_number_pattern",
            )
 
 import datetime
+import dateutil.tz
 import json
 import re
 
@@ -1358,7 +1359,6 @@ class IS_UTC_DATETIME(Validator):
                  format=None,
                  error_message=None,
                  offset_error=None,
-                 utc_offset=None,
                  calendar=None,
                  minimum=None,
                  maximum=None):
@@ -1369,8 +1369,6 @@ class IS_UTC_DATETIME(Validator):
                            directives refer to your strptime implementation
             @param error_message: error message for invalid date/times
             @param offset_error: error message for invalid UTC offset
-            @param utc_offset: offset to UTC in hours, defaults to the
-                               current session's UTC offset
             @param calendar: calendar to use for string evaluation, defaults
                              to current.calendar
             @param minimum: the minimum acceptable date/time
@@ -1389,8 +1387,6 @@ class IS_UTC_DATETIME(Validator):
         elif calendar == None:
             calendar = current.calendar
         self.calendar = calendar
-
-        self.utc_offset = utc_offset
 
         self.minimum = minimum
         self.maximum = maximum
@@ -1416,26 +1412,6 @@ class IS_UTC_DATETIME(Validator):
         # Store error messages
         self.error_message = error_message % {"min": mindt, "max": maxdt}
         self.offset_error = offset_error
-
-    # -------------------------------------------------------------------------
-    def delta(self, utc_offset=None):
-        """
-            Compute the delta in seconds for the current UTC offset
-
-            @param utc_offset: the offset (override defaults)
-            @return: the offset in seconds
-        """
-
-        if utc_offset is None:
-            # Fall back to validator default
-            utc_offset = self.utc_offset
-
-        if utc_offset is None:
-            # Fall back to session default
-            utc_offset = current.session.s3.utc_offset
-
-        # Convert into offset seconds
-        return S3DateTime.get_offset_value(utc_offset)
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
@@ -1480,16 +1456,14 @@ class IS_UTC_DATETIME(Validator):
             return value, self.error_message
 
         # Convert to UTC and make tz-naive
-        if dt.tzinfo:
-            offset = dt.tzinfo.utcoffset(dt)
-            dt = dt.replace(tzinfo=None)
-        else:
-            offset = self.delta(utc_offset=utc_offset)
-            # Offset must be in range -2359 to +2359
+        if not dt.tzinfo and utc_offset:
+            offset = S3DateTime.get_offset_value(utc_offset)
             if not -86340 < offset < 86340:
                 return (val, self.offset_error)
             offset = datetime.timedelta(seconds=offset)
-        dt_utc = dt - offset
+            dt_utc = (dt - offset).replace(tzinfo=None)
+        else:
+            dt_utc = S3DateTime.to_utc(dt)
 
         # Validate
         if self.minimum and dt_utc < self.minimum or \
@@ -1509,10 +1483,7 @@ class IS_UTC_DATETIME(Validator):
         if not value:
             return current.messages["NONE"]
 
-        offset = self.delta()
-        if offset:
-            value += datetime.timedelta(seconds=offset)
-        result = self.calendar.format_datetime(value,
+        result = self.calendar.format_datetime(S3DateTime.to_local(value),
                                                dtfmt=self.format,
                                                local=True,
                                                )
@@ -1538,7 +1509,6 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
                  error_message=None,
                  offset_error=None,
                  calendar=None,
-                 utc_offset=None,
                  minimum=None,
                  maximum=None):
         """
@@ -1550,8 +1520,6 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
             @param offset_error: error message for invalid UTC offset
             @param calendar: calendar to use for string evaluation, defaults
                              to current.calendar
-            @param utc_offset: offset to UTC in seconds, defaults to the
-                               current session's UTC offset
             @param minimum: the minimum acceptable date (datetime.date)
             @param maximum: the maximum acceptable date (datetime.date)
         """
@@ -1568,8 +1536,6 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
         elif calendar == None:
             calendar = current.calendar
         self.calendar = calendar
-
-        self.utc_offset = utc_offset
 
         self.minimum = minimum
         self.maximum = maximum
@@ -1618,31 +1584,22 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
                 return(value, self.error_message)
         elif isinstance(value, datetime.datetime):
             dt = value
-            #utc_offset = None
             is_datetime = True
         elif isinstance(value, datetime.date):
             # Default to 0:00 hours in the current timezone
             dt = value
-            #utc_offset = None
         else:
             # Invalid type
             return (value, self.error_message)
 
         # Convert to UTC
-        if is_datetime and dt.tzinfo:
-            offset = dt.tzinfo.utcoffset(dt)
-            dt = dt.replace(tzinfo=None)
+        if is_datetime:
+            dt_utc = S3DateTime.to_utc(dt)
         else:
-            offset = self.delta()
-            # Offset must be in range -2359 to +2359
-            if not -86340 < offset < 86340:
-                return (value, self.offset_error)
-            offset = datetime.timedelta(seconds=offset)
-
-        if not is_datetime:
             # Convert to standard time 08:00 hours
             dt = datetime.datetime.combine(dt, datetime.time(8, 0, 0))
-        dt_utc = (dt - offset).date()
+            dt_utc = S3DateTime.to_utc(dt)
+        dt_utc = dt_utc.date()
 
         # Validate
         if self.minimum and dt_utc < self.minimum or \
@@ -1662,15 +1619,18 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
         if not value:
             return current.messages["NONE"]
 
-        offset = self.delta()
-        if offset:
-            delta = datetime.timedelta(seconds=offset)
-            if not isinstance(value, datetime.datetime):
-                combine = datetime.datetime.combine
-                # Compute the break point
-                bp = (combine(value, datetime.time(8, 0, 0)) - delta).time()
-                value = combine(value, bp)
-            value += delta
+        #value = datetime.datetime.combine(value, datetime.time(8, 0, 0))
+        value = S3DateTime.to_local(value)
+
+        #offset = self.delta()
+        #if offset:
+            #delta = datetime.timedelta(seconds=offset)
+            #if not isinstance(value, datetime.datetime):
+                #combine = datetime.datetime.combine
+                ## Compute the break point
+                #bp = (combine(value, datetime.time(8, 0, 0)) - delta).time()
+                #value = combine(value, bp)
+            #value += delta
 
         result = self.calendar.format_date(value,
                                            dtfmt=self.format,

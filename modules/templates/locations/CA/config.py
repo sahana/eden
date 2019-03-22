@@ -27,7 +27,7 @@ def config(settings):
     # Default Language (put this in custom template if-required)
     #settings.L10n.default_language = "fr"
     # Default timezone for users
-    settings.L10n.utc_offset = "-0500"
+    settings.L10n.timezone = "Canada/Eastern"
     # Default Country Code for telephone numbers
     settings.L10n.default_country_code = 1
 

@@ -170,7 +170,6 @@ Please go to %(url)s to approve this user."""
         messages.email_verification_failed = "Unable to send verification email - either your email is invalid or our email server is down"
         messages.email_verified = "Email verified - you can now login"
         messages.duplicate_email = "This email address is already in use"
-        messages.help_utc_offset = "The time difference between UTC and your timezone, specify as +HHMM for eastern or -HHMM for western timezones."
         messages.help_mobile_phone = "Entering a phone number is optional, but doing so allows you to subscribe to receive SMS messages."
         messages.help_organisation = "Entering an Organization is optional, but doing so directs you to the appropriate approver & means you automatically get the appropriate permissions."
         messages.help_image = "You can either use %(gravatar)s or else upload a picture here. The picture will be resized to 50x50."
@@ -178,7 +177,6 @@ Please go to %(url)s to approve this user."""
         messages.label_organisation_id = "Organization"
         messages.label_org_group_id = "Coalition"
         messages.label_remember_me = "Remember Me"
-        messages.label_utc_offset = "UTC Offset"
         #messages.logged_in = "Signed In"
         #messages.logged_out = "Signed Out"
         #messages.submit_button = "Signed In"
@@ -281,8 +279,6 @@ Thank you"""
                       readable=False, writable=False),
                 Field("language", length=16,
                       default = deployment_settings.get_L10n_default_language()),
-                Field("utc_offset", length=16,
-                      readable=False, writable=False),
                 Field("organisation_id", "integer",
                       readable=False, writable=False),
                 Field("org_group_id", "integer",
@@ -1064,11 +1060,6 @@ Thank you"""
         settings = self.settings
         req_vars = request.vars
 
-        # If the user hasn't set a personal UTC offset,
-        # then read the UTC offset from the form:
-        if not user.utc_offset:
-            user.utc_offset = session.s3.utc_offset
-
         session.auth = Storage(
             user=user,
             last_visit=request.now,
@@ -1566,10 +1557,6 @@ Thank you"""
         session = current.session
         deployment_settings = current.deployment_settings
 
-        if deployment_settings.get_auth_show_utc_offset():
-            utable.utc_offset.readable = True
-            utable.utc_offset.writable = True
-
         # Users should not be able to change their Org affiliation
         # - also hide popup-link to create a new Org (makes
         #   no sense here if the field is read-only anyway)
@@ -1783,18 +1770,6 @@ Thank you"""
         else:
             language.default = languages.keys()[0]
             language.readable = language.writable = False
-
-        utc_offset = utable.utc_offset
-        utc_offset.label = messages.label_utc_offset
-        utc_offset.comment = DIV(_class="tooltip",
-                                 _title="%s|%s" % (messages.label_utc_offset,
-                                                   messages.help_utc_offset)
-                                 )
-        try:
-            from .s3validators import IS_UTC_OFFSET
-            utc_offset.requires = IS_EMPTY_OR(IS_UTC_OFFSET())
-        except:
-            pass
 
         utable.registration_key.label = messages.label_registration_key
         #utable.reset_password_key.label = messages.label_registration_key

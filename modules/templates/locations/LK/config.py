@@ -24,7 +24,7 @@ def config(settings):
     # Default Language (put this in custom template if-required)
     #settings.L10n.default_language = "si"
     # Default timezone for users
-    settings.L10n.utc_offset = "+0530"
+    settings.L10n.timezone = "Asia/Colombo"
     # Default Country Code for telephone numbers
     settings.L10n.default_country_code = 94
 
