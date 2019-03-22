@@ -1724,15 +1724,12 @@ def s3_get_tzinfo():
         # 1st choice: use the _timezone parameter from the current form
         tzname = current.request.post_vars.get("_timezone")
         if tzname:
-            print "setting"
             session.s3.tzname = tzname
         else:
             # Fall back to the previous _timezone of the same session
             tzname = session.s3.tzname
-        print "tzname", tzname
         if tzname:
             tzinfo = dateutil.tz.gettz(tzname)
-        print "tzinfo", tzinfo
 
         # 2nd choice: use the _utc_offset parameter from the current form
         # (e.g. client not supporting Intl)

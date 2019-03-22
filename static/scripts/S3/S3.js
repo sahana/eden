@@ -2258,20 +2258,19 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
         // De-duplication Event Handlers
         deduplication();
 
-        // Timezone or UTC Offset
+        // Timezone and UTC Offset
         var anyform = $('form');
         if (anyform.length) {
-            var tz;
+            var now = new Date(),
+                tz;
+            anyform.append("<input type='hidden' value='" + now.getTimezoneOffset() + "' name='_utc_offset'/>");
             try {
                 tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
             } catch(e) {
                 // not supported
             }
             if (tz) {
-                anyform.append("<input type='hidden' value='" + tz + "' name='_timezone' />");
-            } else {
-                var now = new Date();
-                anyform.append("<input type='hidden' value='" + now.getTimezoneOffset() + "' name='_utc_offset'/>");
+                anyform.append("<input type='hidden' value='" + tz + "' name='_timezone'/>");
             }
         }
 

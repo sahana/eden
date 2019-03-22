@@ -1966,8 +1966,6 @@ class S3CalendarWidget(FormWidget):
             elif rounded > latest:
                 rounded = latest
             # Translate into local time
-            print rounded
-            print current.response.tzinfo
             rounded = S3DateTime.to_local(rounded)
             # Convert into user format
             default = rounded.strftime(dtformat)
