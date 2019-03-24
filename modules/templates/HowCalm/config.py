@@ -817,6 +817,9 @@ def config(settings):
                         postcode = c["short_name"]
                     elif "sublocality_level_1" in types:
                         L3 = c["short_name"]
+                        if L3 == "Bronx":
+                            # Google sometimes returns just 'Bronx'
+                            L3 = "The Bronx"
                         query = (gtable.name == L3) & \
                                 (gtable.level == "L3")
                         L3 = db(query).select(gtable.id,
