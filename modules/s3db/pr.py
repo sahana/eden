@@ -770,12 +770,12 @@ class PRPersonModel(S3Model):
         pr_gender = S3ReusableField("gender", "integer",
                                     default = 1,
                                     label = T("Sex"),
-                                    represent = S3Represent(options=pr_gender_opts,
-                                                            default=current.messages["NONE"],
+                                    represent = S3Represent(options = pr_gender_opts,
+                                                            default = current.messages["NONE"],
                                                             ),
                                     requires = IS_PERSON_GENDER(pr_gender_opts,
-                                                                sort=True,
-                                                                zero=None,
+                                                                sort = True,
+                                                                zero = None,
                                                                 ),
                                     )
 

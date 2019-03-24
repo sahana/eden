@@ -85,6 +85,8 @@ def config(settings):
     settings.ui.update_label = "Edit"
     settings.ui.export_formats = ("pdf", "xls")
 
+    settings.pr.hide_third_gender = False
+
     settings.hrm.compose_button = False
     settings.hrm.staff_label = "Contacts"
 
@@ -222,20 +224,6 @@ def config(settings):
             db = current.db
             s3db = current.s3db
 
-            hrtable = s3db.hrm_human_resource
-            query = (hrtable.person_id == record_id)
-            hr = db(query).select(hrtable.organisation_id,
-                                  limitby = (0, 1)
-                                  ).first()
-            if hr:
-                organisation_id = hr.organisation_id
-                record_data_append(TR(TH("%s: " % T("Organization")),
-                                      A(hrtable.organisation_id.represent(organisation_id),
-                                        _href = URL(c="org", f="organisation",
-                                                    args=[organisation_id, "profile"]),
-                                        )
-                                      ))
-
             ptagtable = s3db.pr_person_tag
             query = (ptagtable.person_id == record_id) & \
                     (ptagtable.tag == "religious_title")
@@ -254,6 +242,20 @@ def config(settings):
             if position_title:
                 record_data_append(TR(TH("%s: " % T("Position Title")),
                                       position_title.value))
+
+            hrtable = s3db.hrm_human_resource
+            query = (hrtable.person_id == record_id)
+            hr = db(query).select(hrtable.organisation_id,
+                                  limitby = (0, 1)
+                                  ).first()
+            if hr:
+                organisation_id = hr.organisation_id
+                record_data_append(TR(TH("%s: " % T("Organization")),
+                                      A(hrtable.organisation_id.represent(organisation_id),
+                                        _href = URL(c="org", f="organisation",
+                                                    args=[organisation_id, "profile"]),
+                                        )
+                                      ))
 
             rheader = DIV(record_data,
                           #rheader_tabs,
@@ -520,7 +522,7 @@ def config(settings):
                        (T("Languages Spoken"), "person_id$languages_spoken.value"),
                        (T("Religious Title"), "person_id$religious_title.value"),
                        (T("Position Title"), "person_id$position_title.value"),
-                       (T("ECDM"), "person_id$em_comms.value"),
+                       #(T("ECDM"), "person_id$em_comms.value"),
                        ]
 
         current.s3db.configure("hrm_human_resource",
@@ -620,15 +622,15 @@ def config(settings):
                                               label = T("Type"),
                                               #hidden = True,
                                               ),
-                              S3OptionsFilter("person_id$em_comms.value",
-                                              label = T("ECDM"),
-                                              #hidden = True,
-                                              options = {"Y": T("Yes"),
-                                                         "N": T("No"),
-                                                         },
-                                              #widget = "groupedopts",
-                                              cols = 2,
-                                              ),
+                              #S3OptionsFilter("person_id$em_comms.value",
+                              #                label = T("ECDM"),
+                              #                #hidden = True,
+                              #                options = {"Y": T("Yes"),
+                              #                           "N": T("No"),
+                              #                           },
+                              #                #widget = "groupedopts",
+                              #                cols = 2,
+                              #                ),
                               S3OptionsFilter("person_id$competency.skill_id",
                                               label = T("Languages Spoken"),
                                               #hidden = True,
@@ -886,16 +888,16 @@ def config(settings):
                                              "filterby": {"tag": "em_call"},
                                              "multiple": False,
                                              },
-                                            {"name": "oem_ready",
-                                             "joinby": "site_id",
-                                             "filterby": {"tag": "oem_ready"},
-                                             "multiple": False,
-                                             },
-                                            {"name": "oem_want",
-                                             "joinby": "site_id",
-                                             "filterby": {"tag": "oem_want"},
-                                             "multiple": False,
-                                             },
+                                            #{"name": "oem_ready",
+                                            # "joinby": "site_id",
+                                            # "filterby": {"tag": "oem_ready"},
+                                            # "multiple": False,
+                                            # },
+                                            #{"name": "oem_want",
+                                            # "joinby": "site_id",
+                                            # "filterby": {"tag": "oem_want"},
+                                            # "multiple": False,
+                                            # },
                                             ),
                             )
 
@@ -917,21 +919,21 @@ def config(settings):
         f.widget = S3TagCheckboxWidget(on="Y", off="N")
         f.default = "N"
 
-        oem_ready = components_get("oem_ready")
-        f = oem_ready.table.value
-        f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
-        f.represent = lambda v: T("yes") if v == "Y" else T("no")
-        #from s3 import S3TagCheckboxWidget
-        f.widget = S3TagCheckboxWidget(on="Y", off="N")
-        f.default = "N"
+        #oem_ready = components_get("oem_ready")
+        #f = oem_ready.table.value
+        #f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
+        #f.represent = lambda v: T("yes") if v == "Y" else T("no")
+        ##from s3 import S3TagCheckboxWidget
+        #f.widget = S3TagCheckboxWidget(on="Y", off="N")
+        #f.default = "N"
 
-        oem_want = components_get("oem_want")
-        f = oem_want.table.value
-        f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
-        f.represent = lambda v: T("yes") if v == "Y" else T("no")
-        #from s3 import S3TagCheckboxWidget
-        f.widget = S3TagCheckboxWidget(on="Y", off="N")
-        f.default = "N"
+        #oem_want = components_get("oem_want")
+        #f = oem_want.table.value
+        #f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
+        #f.represent = lambda v: T("yes") if v == "Y" else T("no")
+        ##from s3 import S3TagCheckboxWidget
+        #f.widget = S3TagCheckboxWidget(on="Y", off="N")
+        #f.default = "N"
 
         crud_fields = ["organisation_id",
                        "name",
@@ -943,12 +945,12 @@ def config(settings):
                                        cols = 3,
                                        ),
                        "location_id",
-                       (T("# of Congregations"), "congregations.value"),
+                       (T("# of Congregations at this Facility"), "congregations.value"),
                        (T("Cross Streets"), "cross_streets.value"),
                        (T("Building Status"), "status.facility_status"),
                        (T("Call in Emergency"), "em_call.value"),
-                       (T("OEM Ready Receiving Center"), "oem_ready.value"),
-                       (T("Want to be an OEM Ready Receiving Center"), "oem_want.value"),
+                       #(T("OEM Ready Receiving Center"), "oem_ready.value"),
+                       #(T("Want to be an OEM Ready Receiving Center"), "oem_want.value"),
                        "comments",
                        ]
 
@@ -957,10 +959,10 @@ def config(settings):
         list_fields = [#"organisation_id",
                        #"name",
                        (T("Physical Address"), "location_id$addr_street"),
-                       (T("# of Congregations"), "congregations.value"),
+                       (T("# of Congregations at this Facility"), "congregations.value"),
                        (T("Building Status"), "status.facility_status"),
                        (T("Call?"), "em_call.value"),
-                       (T("OEM RRC"), "oem_ready.value"),
+                       #(T("OEM RRC"), "oem_ready.value"),
                        ]
         if r.function == "facility":
             list_fields.insert(0, "organisation_id")
@@ -1072,23 +1074,23 @@ def config(settings):
                     record_data_append(TR(TH("%s: " % T("Call in Emergency")),
                                           em_call.value))
 
-                query = (stagtable.site_id == site_id) & \
-                        (stagtable.tag == "oem_ready")
-                oem_ready = db(query).select(stagtable.value,
-                                             limitby = (0, 1)
-                                             ).first()
-                if oem_ready:
-                    record_data_append(TR(TH("%s: " % T("OEM Ready Receiving Center")),
-                                          oem_ready.value))
+                #query = (stagtable.site_id == site_id) & \
+                #        (stagtable.tag == "oem_ready")
+                #oem_ready = db(query).select(stagtable.value,
+                #                             limitby = (0, 1)
+                #                             ).first()
+                #if oem_ready:
+                #    record_data_append(TR(TH("%s: " % T("OEM Ready Receiving Center")),
+                #                          oem_ready.value))
 
-                query = (stagtable.site_id == site_id) & \
-                        (stagtable.tag == "oem_want")
-                oem_want = db(query).select(stagtable.value,
-                                            limitby = (0, 1)
-                                            ).first()
-                if oem_want:
-                    record_data_append(TR(TH("%s: " % T("Want to be an OEM Ready Receiving Center")),
-                                          oem_want.value))
+                #query = (stagtable.site_id == site_id) & \
+                #        (stagtable.tag == "oem_want")
+                #oem_want = db(query).select(stagtable.value,
+                #                            limitby = (0, 1)
+                #                            ).first()
+                #if oem_want:
+                #    record_data_append(TR(TH("%s: " % T("Want to be an OEM Ready Receiving Center")),
+                #                          oem_want.value))
 
                 comments = record.comments
                 if comments:
@@ -1367,7 +1369,7 @@ def config(settings):
                        S3SQLInlineLink("organisation_type",
                                        field = "organisation_type_id",
                                        label = T("Organization Type"),
-                                       multiple = False,
+                                       multiple = True,
                                        widget = "groupedopts",
                                        cols = 3,
                                        ),
@@ -1399,7 +1401,7 @@ def config(settings):
                                     postprocess = postprocess
                                     )
 
-        from s3 import S3HierarchyFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
+        from s3 import S3HierarchyFilter, S3OptionsFilter, S3TextFilter #, S3LocationFilter
         filter_widgets = [
             S3TextFilter(["name", "org_id.value"],
                          label = T("Search"),
@@ -1415,11 +1417,14 @@ def config(settings):
             S3OptionsFilter("organisation_organisation_type.organisation_type_id",
                             label = T("Type"),
                             ),
-            S3LocationFilter("org_facility.location_id",
-                             label = T("Location"),
-                             levels = gis_levels,
-                             #hidden = True,
-                             ),
+            S3OptionsFilter("org_facility.location_id$L3",
+                            label = T("Location"),
+                            ),
+            #S3LocationFilter("org_facility.location_id",
+            #                 label = T("Location"),
+            #                 levels = gis_levels,
+            #                 #hidden = True,
+            #                 ),
             S3OptionsFilter("org_facility.location_id$addr_postcode",
                             label = T("Zipcode"),
                             #hidden = True,
@@ -1589,12 +1594,10 @@ def config(settings):
 
                     ltable = s3db.org_organisation_organisation_type
                     query = (ltable.organisation_id == record_id)
-                    org_type = db(query).select(ltable.organisation_type_id,
-                                                limitby = (0, 1)
-                                                ).first()
-                    if org_type:
+                    org_types = db(query).select(ltable.organisation_type_id)
+                    if org_types:
                         record_data_append(TR(TH("%s: " % ltable.organisation_type_id.label),
-                                              ltable.organisation_type_id.represent(org_type.organisation_type_id)))
+                                              ltable.organisation_type_id.represent.multiple([l.organisation_type_id for l in org_types])))
 
                     website = record.website
                     if website:
@@ -1754,7 +1757,7 @@ def config(settings):
 
         from gluon import IS_EMPTY_OR, IS_IN_SET
 
-        from s3 import S3LocationSelector
+        from s3 import S3LocationSelector, S3Represent, IS_PERSON_GENDER
         from s3layouts import S3PopupLink
 
         s3db = current.s3db
@@ -1770,6 +1773,21 @@ def config(settings):
             msg_record_modified = T("Contact details updated"),
             msg_record_deleted = T("Contact deleted"),
             msg_list_empty = T("No Contacts currently registered"))
+
+        pr_gender_opts = {1: "",
+                          2: T("He, Him, His"),
+                          3: T("She, Her, Hers"),
+                          4: T("They, Their, Theirs"),
+                          }
+        f = s3db.pr_person.gender
+        f.label = T("Pronouns")
+        f.represent = S3Represent(options = pr_gender_opts,
+                                  default = current.messages["NONE"],
+                                  )
+        f.requires = IS_PERSON_GENDER(pr_gender_opts,
+                                      sort = True,
+                                      zero = None,
+                                      )
 
         # Filtered components
         s3db.add_components("pr_person",
@@ -1788,11 +1806,11 @@ def config(settings):
                                               "filterby": {"tag": "position_title"},
                                               "multiple": False,
                                               },
-                                             {"name": "em_comms",
-                                              "joinby": "person_id",
-                                              "filterby": {"tag": "em_comms"},
-                                              "multiple": False,
-                                              },
+                                             #{"name": "em_comms",
+                                             # "joinby": "person_id",
+                                             # "filterby": {"tag": "em_comms"},
+                                             # "multiple": False,
+                                             # },
                                              ),
                             )
 
@@ -1815,15 +1833,15 @@ def config(settings):
                             )
 
         # Individual settings for specific tag components
-        components_get = s3db.resource(tablename).components.get
+        #components_get = s3db.resource(tablename).components.get
 
-        em_comms = components_get("em_comms")
-        f = em_comms.table.value
-        f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
-        f.represent = lambda v: T("yes") if v == "Y" else T("no")
-        from s3 import S3TagCheckboxWidget
-        f.widget = S3TagCheckboxWidget(on="Y", off="N")
-        f.default = "N"
+        #em_comms = components_get("em_comms")
+        #f = em_comms.table.value
+        #f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
+        #f.represent = lambda v: T("yes") if v == "Y" else T("no")
+        #from s3 import S3TagCheckboxWidget
+        #f.widget = S3TagCheckboxWidget(on="Y", off="N")
+        #f.default = "N"
 
         s3db.hrm_human_resource.job_title_id.comment = S3PopupLink(c = "hrm",
                                                                    f = "job_title",
@@ -1876,7 +1894,7 @@ def config(settings):
                        (T("Languages Spoken"), "competency.skill_id"),
                        (T("Religious Title"), "religious_title.value"),
                        (T("Position Title"), "position_title.value"),
-                       (T("ECDM"), "em_comms.value"),
+                       #(T("ECDM"), "em_comms.value"),
                        ]
 
         s3db.configure("pr_person",
@@ -1933,7 +1951,7 @@ def config(settings):
                            (T("Other Languages"), "other_languages.value"),
                            (T("Religious Title"), "religious_title.value"),
                            (T("Position Title"), "position_title.value"),
-                           (T("Gender"), "gender"),
+                           "gender",
                            S3SQLInlineComponent(
                                 "address",
                                 name = "address",
@@ -2015,7 +2033,7 @@ def config(settings):
                                              },
                                             ),
                                 ),
-                           (T("Emergency Communications Decision-maker"), "em_comms.value"),
+                           #(T("Emergency Communications Decision-maker"), "em_comms.value"),
                            )
 
             crud_form = S3SQLCustomForm(*crud_fields)
