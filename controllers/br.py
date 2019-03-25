@@ -796,6 +796,12 @@ def assistance_status():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def assistance_theme():
+    """ Assistance Themes: RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def assistance_type():
     """ Types of Assistance: RESTful CRUD controller """
 

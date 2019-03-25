@@ -589,20 +589,21 @@ class S3OptionsMenu(object):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         s3db = current.s3db
-        LABELS = s3db.br_terminology()
+        labels = s3db.br_terminology()
         crud_strings = s3db.br_crud_strings("pr_person")
 
         settings = current.deployment_settings
+        manage_assistance = settings.get_br_manage_assistance()
 
         return M(c="br")(
-                    M(LABELS.CURRENT, f="person", vars={"closed": "0"})(
+                    M(labels.CURRENT, f="person", vars={"closed": "0"})(
                         M(crud_strings.label_create, m="create"),
                         ),
                     M("Overviews", link=False)(
                         M("All Activities", f="case_activity"),
                         ),
                     M("Archive", link=False)(
-                        M(LABELS.CLOSED, f="person",
+                        M(labels.CLOSED, f="person",
                           vars = {"closed": "1"},
                           ),
                         M("Invalid Cases", f="person",
@@ -619,10 +620,16 @@ class S3OptionsMenu(object):
                           check = lambda i: not settings.get_br_needs_org_specific(),
                           ),
                         M("Assistance Statuses", f="assistance_status",
-                          check = lambda i: settings.get_br_manage_assistance(),
+                          check = manage_assistance,
                           ),
                         M("Assistance Types", f="assistance_type",
-                          check = lambda i: settings.get_br_assistance_types(),
+                          check = lambda i: manage_assistance and \
+                                            settings.get_br_assistance_types(),
+                          ),
+                        M(labels.THEMES, f="assistance_theme",
+                          check = lambda i: manage_assistance and \
+                                            settings.get_br_assistance_themes() and \
+                                            not settings.get_br_assistance_themes_org_specific(),
                           ),
                         ),
                     )

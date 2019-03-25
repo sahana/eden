@@ -1,8 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from gluon import *
-from gluon.storage import Storage
-from s3 import *
+__all__ = ("S3MainMenuLayout",
+           "S3AboutMenuLayout",
+           "MA",
+           "S3LanguageMenuLayout",
+           "ML",
+           "S3OrgMenuLayout",
+           "OM",
+           "S3PersonalMenuLayout",
+           "MP",
+           )
+from gluon import current, URL, \
+                  A, FORM, IMG, INPUT, LI, OPTION, SELECT, SPAN, TAG, UL
+from s3 import S3NavigationItem
 from s3theme import NAV, SECTION
 
 # =============================================================================
@@ -53,6 +63,8 @@ class S3MainMenuLayout(S3NavigationItem):
                                         ),
                                     _class=_class,
                                     )
+                    else:
+                        return None
                 else:
                     # Menu item without Drop-Down
                     if toplevel:
@@ -250,10 +262,7 @@ class S3LanguageMenuLayout(S3NavigationItem):
     def check_enabled(self):
         """ Check whether the language menu is enabled """
 
-        if current.deployment_settings.get_L10n_display_toolbar():
-            return True
-        else:
-            return False
+        return bool(current.deployment_settings.get_L10n_display_toolbar())
 
 # -----------------------------------------------------------------------------
 # Shortcut

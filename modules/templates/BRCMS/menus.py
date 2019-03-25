@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current
-from s3 import *
-from s3layouts import *
+from gluon import current, URL
+from s3 import IS_ISO639_2_LANGUAGE_CODE
+from s3layouts import MM, M
 try:
     from .layouts import *
 except ImportError:
@@ -43,9 +43,9 @@ class S3MainMenu(default.S3MainMenu):
            auth.s3_has_role("CASE_MANAGEMENT"):
             case_vars["mine"] = "1"
 
-        LABELS = current.s3db.br_terminology()
+        labels = current.s3db.br_terminology()
 
-        return [MM(LABELS.CASES, c=("br", "pr"), f="person", vars=case_vars),
+        return [MM(labels.CASES, c=("br", "pr"), f="person", vars=case_vars),
                 #MM("Case Consulting", c="br", f="index",
                 #   check = lambda this: not this.preceding()[-1].check_permission(),
                 #   ),
@@ -174,7 +174,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         s3db = current.s3db
-        LABELS = s3db.br_terminology()
+        labels = s3db.br_terminology()
         crud_strings = s3db.br_crud_strings("pr_person")
 
         settings = current.deployment_settings
@@ -197,7 +197,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         if human_resource_id and has_role("CASE_MANAGEMENT"):
 
             # Side menu for case managers (including "my"-sections)
-            menu(M(LABELS.CURRENT_MINE, f="person", vars={"closed": "0", "mine": "1"})(
+            menu(M(labels.CURRENT_MINE, f="person", vars={"closed": "0", "mine": "1"})(
                     M(crud_strings.label_create, m="create"),
                     M("My Activities", f="case_activity",
                       vars={"mine": "1"}, check=use_activities,
@@ -222,7 +222,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         else:
 
             # Default side menu (without "my"-sections)
-            menu(M(LABELS.CURRENT, f="person", vars={"closed": "0"})(
+            menu(M(labels.CURRENT, f="person", vars={"closed": "0"})(
                     M(crud_strings.label_create, m="create"),
                     M("Activities", f="case_activity", check=use_activities,
                       ),
@@ -242,7 +242,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         # Archive- and Administration sub-menus (common for all roles)
         menu(M("Archive", link=False)(
-                M(LABELS.CLOSED, f="person", vars={"closed": "1"}),
+                M(labels.CLOSED, f="person", vars={"closed": "1"}),
                 M("Invalid Cases", f="person", vars={"invalid": "1"}, restrict=[ADMIN]),
                 ),
              M("Administration", link=False, restrict=[ADMIN])(
@@ -254,10 +254,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                   check = lambda i: not settings.get_br_needs_org_specific(),
                   ),
                 M("Assistance Statuses", f="assistance_status",
-                  check = lambda i: settings.get_br_manage_assistance(),
+                  check = manage_assistance,
                   ),
                 M("Assistance Types", f="assistance_type",
-                  check = lambda i: settings.get_br_assistance_types(),
+                  check = lambda i: manage_assistance and \
+                                    settings.get_br_assistance_types(),
+                  ),
+                M(labels.THEMES, f="assistance_theme",
+                  check = lambda i: manage_assistance and \
+                                    settings.get_br_assistance_themes() and \
+                                    not settings.get_br_assistance_themes_org_specific(),
                   ),
                 ),
              )

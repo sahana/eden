@@ -1270,6 +1270,7 @@ class BRAssistanceModel(S3Model):
 
     names = ("br_assistance_measure",
              "br_assistance_status",
+             "br_assistance_theme",
              "br_assistance_type",
              )
 
@@ -1287,6 +1288,42 @@ class BRAssistanceModel(S3Model):
 
         labels = br_terminology()
         NONE = current.messages["NONE"]
+
+        # ---------------------------------------------------------------------
+        # Assistance Theme
+        #
+        org_specific_themes = settings.get_br_assistance_themes_org_specific()
+
+        tablename = "br_assistance_theme"
+        define_table(tablename,
+                     self.org_organisation_id(
+                         comment = None,
+                         readable = org_specific_themes,
+                         writable = org_specific_themes,
+                         ),
+                     Field("name",
+                           label = T("Theme"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     # TODO self.br_need_id
+                     # TODO self.org_sector_id
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table configuration
+        # TODO
+        #configure(tablename,
+        #          deduplicate = S3Duplicate(primary = ("name",),
+        #                                    secondary = ("organisation_id",),
+        #                                    ),
+        #          ondelete_cascade = self.response_theme_ondelete_cascade,
+        #          )
+
+        # CRUD strings
+        crud_strings[tablename] = br_crud_strings(tablename)
+
+        # Reusable field
+        # TODO
 
         # ---------------------------------------------------------------------
         # Types of Assistance
@@ -2630,8 +2667,11 @@ def br_terminology():
     labels = current.response.s3.br_labels
     if labels is None:
 
-        terminology = current.deployment_settings.get_br_terminology()
         labels = Messages(current.T)
+        settings = current.deployment_settings
+
+        # Case Terminology
+        terminology = settings.get_br_case_terminology()
 
         if terminology == "Beneficiary":
             labels.CASE = "Beneficiary"
@@ -2657,6 +2697,15 @@ def br_terminology():
             labels.CURRENT_MINE = "My Current Cases"
             labels.CLOSED = "Closed Cases"
 
+        # Assistance Terminology
+        terminology = settings.get_br_assistance_terminology()
+
+        if terminology == "Counseling":
+            labels.THEMES = "Counseling Themes"
+
+        else:
+            labels.THEMES = "Assistance Themes"
+
         current.response.s3.br_labels = labels
 
     return labels
@@ -2672,9 +2721,9 @@ def br_crud_strings(tablename):
     """
 
     T = current.T
-    terminology = current.deployment_settings.get_br_terminology()
-
     if tablename == "pr_person":
+        terminology = current.deployment_settings.get_br_case_terminology()
+
         if terminology == "Beneficiary":
             crud_strings = Storage(
                 label_create = T("Create Beneficiary"),
@@ -2714,6 +2763,38 @@ def br_crud_strings(tablename):
                 msg_record_deleted = T("Case deleted"),
                 msg_list_empty = T("No Cases currently registered")
                 )
+
+    elif tablename == "br_assistance_theme":
+
+        terminology = current.deployment_settings.get_br_assistance_terminology()
+
+        if terminology == "Counseling":
+            crud_strings = Storage(
+                label_create = T("Create Counseling Theme"),
+                title_display = T("Counseling Theme"),
+                title_list = T("Counseling Themes"),
+                title_update = T("Edit Counseling Theme"),
+                label_list_button = T("List Counseling Themes"),
+                label_delete_button = T("Delete Counseling Theme"),
+                msg_record_created = T("Counseling Theme added"),
+                msg_record_modified = T("Counseling Theme updated"),
+                msg_record_deleted = T("Counseling Theme deleted"),
+                msg_list_empty = T("No Counseling Themes currently defined")
+                )
+        else:
+            crud_strings = Storage(
+                label_create = T("Create Assistance Theme"),
+                title_display = T("Assistance Theme"),
+                title_list = T("Assistance Themes"),
+                title_update = T("Edit Assistance Theme"),
+                label_list_button = T("List Assistance Themes"),
+                label_delete_button = T("Delete Assistance Theme"),
+                msg_record_created = T("Assistance Theme added"),
+                msg_record_modified = T("Assistance Theme updated"),
+                msg_record_deleted = T("Assistance Theme deleted"),
+                msg_list_empty = T("No Assistance Themes currently defined")
+                )
+
     else:
         crud_strings = current.response.s3.crud_strings.get(tablename)
 

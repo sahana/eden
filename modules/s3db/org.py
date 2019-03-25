@@ -812,7 +812,7 @@ class S3OrganisationModel(S3Model):
             # Use BR for org-specific categories in case management
             add_components(tablename,
                            br_need = "organisation_id",
-                           #br_response_theme = "organisation_id",
+                           br_assistance_theme = "organisation_id",
                            )
         else:
             # Use DVR for org-specific categories in case management
@@ -6436,9 +6436,12 @@ def org_rheader(r, tabs=None):
 
                 # Org-specific categories for beneficiary/case management
                 if settings.has_module("br"):
+                    labels = s3db.br_terminology()
                     if settings.get_br_needs_org_specific():
                         append_tab((T("Need Types"), "need"))
-                    # TODO org-specific response types/themes
+                    if settings.get_br_assistance_themes() and \
+                       settings.get_br_assistance_themes_org_specific():
+                        append_tab((labels.THEMES, "assistance_theme"))
 
                 # Org Role Manager always last
                 append_tab((T("User Roles"), "roles"))

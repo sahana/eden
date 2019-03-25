@@ -481,7 +481,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Beneficiary Registry
     # Terminology to use when referring to cases (Beneficiary|Client|Case)
-    #settings.br.terminology = "Beneficiary"
+    #settings.br.case_terminology = "Beneficiary"
+    # Terminology to use when referring to measures of assistance (Counseling|Assistance)
+    #settings.br.assistance_terminology = "Counseling"
     # Show the case organisation even if only one option
     #settings.br.case_hide_default_org = False
     # Disable assignment of cases to staff

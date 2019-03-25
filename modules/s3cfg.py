@@ -2727,11 +2727,17 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # BR: Beneficiary Registry
     #
-    def get_br_terminology(self):
+    def get_br_case_terminology(self):
         """
             Terminology to use when referring to cases: Beneficiary|Client|Case
         """
-        return self.br.get("terminology", "Case")
+        return self.br.get("case_terminology", "Case")
+
+    def get_br_assistance_terminology(self):
+        """
+            Terminology to use when referring to measures of assistance: Counseling|Assistance
+        """
+        return self.br.get("assistance_terminology", "Assistance")
 
     def get_br_case_hide_default_org(self):
         """
@@ -2908,6 +2914,18 @@ class S3Config(Storage):
             Use assistance type categories
         """
         return self.br.get("assistance_types", True)
+
+    def get_br_assistance_themes(self):
+        """
+            Use assistance theme categories
+        """
+        return self.br.get("assistance_themes", False)
+
+    def get_br_assistance_themes_org_specific(self):
+        """
+            Assistance themes are specific per root organisation
+        """
+        return self.br.get("assistance_themes_org_specific", True)
 
     def get_br_assistance_measures_use_time(self):
         """
