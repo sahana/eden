@@ -189,7 +189,7 @@ class S3MobileFormList(object):
                          "d": row.mobile_data,
                          }
                 formlist.append(mform)
-                formdict[name] = mform
+                formdict[tablename] = mform
 
         self.formlist = formlist
         self.forms = formdict
