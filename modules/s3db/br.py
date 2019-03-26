@@ -1317,13 +1317,11 @@ class BRAssistanceModel(S3Model):
                      *s3_meta_fields())
 
         # Table configuration
-        # TODO
-        #configure(tablename,
-        #          deduplicate = S3Duplicate(primary = ("name",),
-        #                                    secondary = ("organisation_id",),
-        #                                    ),
-        #          ondelete_cascade = self.response_theme_ondelete_cascade,
-        #          )
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("organisation_id",),
+                                            ),
+                  )
 
         # CRUD strings
         crud_strings[tablename] = br_crud_strings(tablename)
