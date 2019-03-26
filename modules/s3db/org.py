@@ -6872,6 +6872,33 @@ def org_organisation_controller():
                                    create_next = None,
                                    )
 
+                elif cname == "assistance_theme":
+                    # Filter sector_id to the sectors of the current org
+                    ttable = component.table
+                    stable = s3db.org_sector
+                    ltable = s3db.org_sector_organisation
+
+                    left = ltable.on(ltable.sector_id == stable.id)
+                    dbset = db((ltable.organisation_id == r.id) & \
+                               (ltable.deleted == False))
+
+                    field = ttable.sector_id
+                    field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "org_sector.id",
+                                                           field.represent,
+                                                           left = left,
+                                                           ))
+
+                    # If need types are org-specific, filter need_id to org's needs
+                    if settings.get_br_needs_org_specific():
+                        ntable = s3db.br_need
+
+                        dbset = db(ntable.organisation_id == r.id)
+
+                        field = ttable.need_id
+                        field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "br_need.id",
+                                                               field.represent,
+                                                               ))
+
                 elif cname == "card_config":
                     s3db.doc_update_card_type_requires(r.component_id, r.id)
 

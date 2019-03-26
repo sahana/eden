@@ -2927,6 +2927,18 @@ class S3Config(Storage):
         """
         return self.br.get("assistance_themes_org_specific", True)
 
+    def get_br_assistance_themes_sectors(self):
+        """
+            Assistance themes are organized by org sector
+        """
+        return self.br.get("assistance_themes_sectors", False)
+
+    def get_br_assistance_themes_needs(self):
+        """
+            Assistance themes are linked to needs
+        """
+        return self.br.get("assistance_themes_needs", False)
+
     def get_br_assistance_measures_use_time(self):
         """
             Assistance measures use date+time (instead of just date)

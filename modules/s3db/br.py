@@ -1233,11 +1233,11 @@ class BRNeedsModel(S3Model):
                                                 IS_ONE_OF(db, "%s.id" % tablename,
                                                           represent,
                                                           )),
-                                  comment = S3PopupLink(c = "br",
-                                                        f = "need",
-                                                        title = ADD_NEED,
-                                                        tooltip = T("Choose the need type from the drop-down, or click the link to create a new type"),
-                                                        ),
+                                  #comment = S3PopupLink(c = "br",
+                                  #                      f = "need",
+                                  #                      title = ADD_NEED,
+                                  #                      tooltip = T("Choose the need type from the drop-down, or click the link to create a new type"),
+                                  #                      ),
                                   widget = widget,
                                   )
 
@@ -1293,6 +1293,8 @@ class BRAssistanceModel(S3Model):
         # Assistance Theme
         #
         org_specific_themes = settings.get_br_assistance_themes_org_specific()
+        themes_sectors = settings.get_br_assistance_themes_sectors()
+        themes_needs = settings.get_br_assistance_themes_needs()
 
         tablename = "br_assistance_theme"
         define_table(tablename,
@@ -1305,8 +1307,12 @@ class BRAssistanceModel(S3Model):
                            label = T("Theme"),
                            requires = IS_NOT_EMPTY(),
                            ),
-                     # TODO self.br_need_id
-                     # TODO self.org_sector_id
+                     self.org_sector_id(readable = themes_sectors,
+                                        writable = themes_sectors,
+                                        ),
+                     self.br_need_id(readable = themes_needs,
+                                     writable = themes_needs,
+                                     ),
                      s3_comments(),
                      *s3_meta_fields())
 
