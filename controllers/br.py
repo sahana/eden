@@ -332,8 +332,14 @@ def person():
                                               filter_opts = (root_org,),
                                               ))
 
-            # TODO when assistance inline and using themes,
-            #      limit selectable themes to case root org
+            if assistance_inline and settings.get_br_assistance_themes() and root_org:
+                # Limit selectable themes to the case root org
+                field = mtable.theme_ids
+                dbset = s3db.br_org_assistance_themes(root_org)
+                field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "br_assistance_theme.id",
+                                                       field.represent,
+                                                       multiple = True,
+                                                       ))
 
             # Default person_id in inline-measures
             if assistance_inline:
@@ -356,6 +362,18 @@ def person():
                     requires = requires.other
                 requires.set_filter(filterby = "person_id",
                                     filter_opts = (record.id,))
+
+            # Filter theme_ids selector to case root org
+            root_org = s3db.br_case_root_org(r.id)
+            if not root_org:
+                root_org = auth.root_org()
+            if root_org:
+                field = mtable.theme_ids
+                dbset = s3db.br_org_assistance_themes(root_org)
+                field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "br_assistance_theme.id",
+                                                       field.represent,
+                                                       multiple = True,
+                                                       ))
 
             # Allow organizer to set an end_date
             if r.method == "organize" and \
@@ -851,6 +869,8 @@ def assistance_measure():
 
         if not r.component:
 
+            record = r.record
+
             # Show person_id as link to case file, not writable in this perspective
             field = table.person_id
             field.writable = False
@@ -858,7 +878,6 @@ def assistance_measure():
                 field.represent = s3db.pr_PersonRepresent(show_link=True)
 
             # Filter case_activity_id selector to current case
-            record = r.record
             field = table.case_activity_id
             if record and field.writable:
                 requires = field.requires
@@ -867,10 +886,24 @@ def assistance_measure():
                 requires.set_filter(filterby = "person_id",
                                     filter_opts = (record.person_id,))
 
+            # Filter theme_ids selector to case root org
+            field = table.theme_ids
+            if record and field.writable:
+                root_org = s3db.br_case_root_org(record.person_id)
+                if not root_org:
+                    root_org = auth.root_org()
+                if root_org:
+                    dbset = s3db.br_org_assistance_themes(root_org)
+                    field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "br_assistance_theme.id",
+                                                           field.represent,
+                                                           multiple = True,
+                                                           ))
+
             # Adapt list fields to perspective
             list_fields = [(T("ID"), "person_id$pe_label"),
                            "person_id",
                            #"assistance_type_id"|"comments",
+                           #"theme_ids",
                            #"human_resource_id",
                            "start_date",
                            #"hours",
@@ -881,10 +914,15 @@ def assistance_measure():
             if not mine and settings.get_br_assistance_manager():
                 list_fields.insert(2, "human_resource_id")
 
+            # Include themes if using themes
+            use_themes = settings.get_br_assistance_themes()
+            if use_themes:
+                list_fields.insert(2, "theme_ids")
+
             # Include type when using types, otherwise show details
             if settings.get_br_assistance_types():
                 list_fields.insert(2, "assistance_type_id")
-            else:
+            elif not use_themes:
                 list_fields.insert(2, "comments")
 
             # Show effort when tracking effort
