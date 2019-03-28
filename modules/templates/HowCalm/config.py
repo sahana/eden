@@ -1670,8 +1670,10 @@ def config(settings):
                     query = (ltable.organisation_id == record_id)
                     org_types = db(query).select(ltable.organisation_type_id)
                     if org_types:
+                        # Ensure Unique & Hashable
+                        org_types = list(set([l.organisation_type_id for l in org_types]))
                         record_data_append(TR(TH("%s: " % ltable.organisation_type_id.label),
-                                              ltable.organisation_type_id.represent.multiple(set([l.organisation_type_id for l in org_types]))))
+                                              ltable.organisation_type_id.represent.multiple(org_types)))
 
                     website = record.website
                     if website:
