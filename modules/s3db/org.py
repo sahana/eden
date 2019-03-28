@@ -880,9 +880,14 @@ class S3OrganisationModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
-                  xml_post_parse = self.org_organisation_organisation_type_xml_post_parse,
+                  # Whilst S3SQLInlineLink can resolve duplicates automatically, imports cannot
+                  deduplicate = S3Duplicate(primary = ("organisation_id",
+                                                       "organisation_type_id",
+                                                       ),
+                                            ),
                   onaccept = self.org_organisation_organisation_type_onaccept,
                   ondelete = self.org_organisation_organisation_type_ondelete,
+                  xml_post_parse = self.org_organisation_organisation_type_xml_post_parse,
                   )
 
         # ---------------------------------------------------------------------
