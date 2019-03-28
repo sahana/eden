@@ -995,6 +995,41 @@ def config(settings):
 
         crud_form = S3SQLCustomForm(*crud_fields)
 
+        
+
+        from s3 import S3OptionsFilter, S3TextFilter #, S3HierarchyFilter, S3LocationFilter
+        filter_widgets = [
+            S3TextFilter(["name"],
+                         label = T("Search"),
+                         comment = T("Search by facility name. You can use * as wildcard."),
+                         _class = "filter-search",
+                         ),
+            #S3HierarchyFilter("religion_organisation.religion_id",
+            #                  label = False, #T("Religion"),
+            #                  widget = "cascade",
+            #                  leafonly = False,
+            #                  cascade = True,
+            #                  ),
+            S3OptionsFilter("site_facility_type.facility_type_id",
+                            label = T("Type"),
+                            ),
+            S3OptionsFilter("organisation_id",
+                            label = T("Organization"),
+                            ),
+            S3OptionsFilter("location_id$L3",
+                            label = T("Location"),
+                            ),
+            #S3LocationFilter("location_id",
+            #                 label = T("Location"),
+            #                 levels = gis_levels,
+            #                 #hidden = True,
+            #                 ),
+            #S3OptionsFilter("location_id$addr_postcode",
+            #                label = T("Zipcode"),
+            #                #hidden = True,
+            #                ),
+            ]
+            
         list_fields = [#"organisation_id",
                        #"name",
                        (T("Physical Address"), "location_id$addr_street"),
@@ -1012,8 +1047,7 @@ def config(settings):
         s3db.configure("org_facility",
                        create_next = profile_url,
                        crud_form = crud_form,
-                       # Defaults seem OK for now
-                       #filter_widgets = filter_widgets,
+                       filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        update_next = profile_url,
                        )
@@ -1637,7 +1671,7 @@ def config(settings):
                     org_types = db(query).select(ltable.organisation_type_id)
                     if org_types:
                         record_data_append(TR(TH("%s: " % ltable.organisation_type_id.label),
-                                              ltable.organisation_type_id.represent.multiple([l.organisation_type_id for l in org_types])))
+                                              ltable.organisation_type_id.represent.multiple(set([l.organisation_type_id for l in org_types]))))
 
                     website = record.website
                     if website:
