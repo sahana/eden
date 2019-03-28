@@ -40,6 +40,7 @@ __all__ = ("BRCaseModel",
            "BRServiceContactModel",
            "BRReferralModel",
            "BRVulnerabilityModel",
+           "br_AssistanceMeasureThemeRepresent",
            "br_DocEntityRepresent",
            "br_case_read_orgs",
            "br_case_default_org",
@@ -1527,18 +1528,55 @@ class BRAssistanceModel(S3Model):
                                  ),
                      *s3_meta_fields())
 
-        # List_fields
+        # Components
+        self.add_components(tablename,
+                            br_assistance_measure_theme = "measure_id",
+                            )
+
+        # CRUD form
+        crud_fields = ["person_id",
+                       "start_date",
+                       "case_activity_id",
+                       "assistance_type_id",
+                       #"theme_ids" | inline theme links,
+                       #"comments",
+                       "human_resource_id",
+                       "hours",
+                       "status_id",
+                       ]
+        details_per_theme = settings.get_br_assistance_details_per_theme()
+        if use_themes and details_per_theme:
+            crud_fields.insert(4, S3SQLInlineComponent("assistance_measure_theme",
+                                                       fields = ["theme_id",
+                                                                 "comments",
+                                                                 ],
+                                                       label = T("Details"),
+                                                       ))
+        else:
+            crud_fields[4:4] = ["theme_ids",
+                                "comments",
+                                ]
+        crud_form = S3SQLCustomForm(*crud_fields)
+
+        # List_fields (for component tab, master perspective see controller)
         list_fields = ["start_date",
                        #"case_activity_id",
                        #"assistance_type_id",
-                       #"theme_ids",
-                       "comments",
+                       #"theme_ids" | measure-theme links,
+                       #"comments",
                        #"human_resource_id",
                        #"hours",
                        "status_id",
                        ]
+
+        if not details_per_theme:
+            list_fields.insert(1, "comments")
         if use_themes:
-            list_fields.insert(1, "theme_ids")
+            if details_per_theme:
+                list_fields.insert(1, (T("Themes"), "assistance_measure_theme.id"))
+            else:
+                # TODO consider using link table entries throughout
+                list_fields.insert(1, "theme_ids")
         if use_type:
             list_fields.insert(1, "assistance_type_id")
         if use_activities:
@@ -1581,11 +1619,12 @@ class BRAssistanceModel(S3Model):
         if assistance_manager:
             description.insert(0, "human_resource_id")
         if use_themes:
+            # TODO consider using link table entries throughout
             description.insert(0, "theme_ids")
         if use_type:
             description.insert(0, "assistance_type_id")
-        elif not use_themes:
-            description.insert(0, "comments")
+        #if not use_themes or not details_per_theme:
+        #    description.insert(0, "comments")
         organize = {"start": "start_date",
                     "title": "person_id",
                     "description": description,
@@ -1599,6 +1638,7 @@ class BRAssistanceModel(S3Model):
 
         # Table Configuration
         configure(tablename,
+                  crud_form = crud_form,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   organize = organize,
@@ -1649,17 +1689,16 @@ class BRAssistanceModel(S3Model):
                      #                 readable = False,
                      #                 writable = False,
                      #                 ),
-                     #s3_comments(label = T("Details"),
-                     #            comment = None,
-                     #            represent = lambda v: s3_text_represent(v, lines=8),
-                     #            ),
+                     s3_comments(label = T("Details"),
+                                 comment = None,
+                                 represent = lambda v: s3_text_represent(v, lines=8),
+                                 ),
                      *s3_meta_fields())
 
-        # TODO
-        #configure(tablename,
-        #          onaccept = self.assistance_measure_theme_onaccept,
-        #          ondelete = self.assistance_measure_theme_ondelete,
-        #          )
+        configure(tablename,
+                  onaccept = self.assistance_measure_theme_onaccept,
+                  ondelete = self.assistance_measure_theme_ondelete,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -1688,7 +1727,7 @@ class BRAssistanceModel(S3Model):
 
         db = current.db
 
-        # Table with list:reference dvr_assistance_theme
+        # Table with list:reference br_assistance_theme
         mtable = current.s3db.br_assistance_measure
         reference = mtable.theme_ids
 
@@ -1768,32 +1807,140 @@ class BRAssistanceModel(S3Model):
         if not record:
             return
 
-        theme_ids = record.theme_ids
-        if not theme_ids:
-            theme_ids = []
+        if "theme_ids" in form_vars:
+            theme_ids = record.theme_ids
+            if not theme_ids:
+                theme_ids = []
 
-        # Get all selected themes
-        selected = set(theme_ids)
+            # Get all selected themes
+            selected = set(theme_ids)
 
-        # Get all linked themes
-        ltable = s3db.br_assistance_measure_theme
-        query = (ltable.measure_id == record_id) & \
-                (ltable.deleted == False)
-        links = db(query).select(ltable.theme_id)
-        linked = set(link.theme_id for link in links)
+            # Get all linked themes
+            ltable = s3db.br_assistance_measure_theme
+            query = (ltable.measure_id == record_id) & \
+                    (ltable.deleted == False)
+            links = db(query).select(ltable.theme_id)
+            linked = set(link.theme_id for link in links)
 
-        # Remove obsolete theme links
-        obsolete = linked - selected
-        if obsolete:
-            query &= ltable.theme_id.belongs(obsolete)
-            db(query).delete()
+            # Remove obsolete theme links
+            obsolete = linked - selected
+            if obsolete:
+                query &= ltable.theme_id.belongs(obsolete)
+                db(query).delete()
 
-        # Add links for newly selected themes
-        added = selected - linked
-        for theme_id in added:
-            ltable.insert(measure_id = record_id,
-                          theme_id = theme_id,
-                          )
+            # Add links for newly selected themes
+            added = selected - linked
+            for theme_id in added:
+                ltable.insert(measure_id = record_id,
+                              theme_id = theme_id,
+                              )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def assistance_measure_theme_onaccept(cls, form):
+        """
+            Onaccept routine for measure-theme links
+                - update theme_ids in measure record
+                - link to case activity if required
+        """
+
+        form_vars = form.vars
+        try:
+            record_id = form_vars.id
+        except AttributeError:
+            record_id = None
+        if not record_id:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        # Look up the record
+        table = s3db.br_assistance_measure_theme
+        query = (table.id == record_id)
+        record = db(query).select(table.id,
+                                  table.measure_id,
+                                  table.theme_id,
+                                  table.comments,
+                                  limitby = (0, 1),
+                                  ).first()
+        if not record:
+            return
+
+        # Look up the measure
+        measure_id = record.measure_id
+        if measure_id:
+            mtable = s3db.br_assistance_measure
+            query = (mtable.id == measure_id)
+            measure = db(query).select(mtable.id,
+                                       mtable.person_id,
+                                       mtable.human_resource_id,
+                                       limitby = (0, 1),
+                                       ).first()
+        else:
+            measure = None
+
+        if measure:
+            theme_id = record.theme_id
+            if theme_id:
+
+                # Merge duplicate measure-theme links
+                query = (table.id != record.id) & \
+                        (table.measure_id == measure_id) & \
+                        (table.theme_id == record.theme_id) & \
+                        current.auth.s3_accessible_query("delete", table) & \
+                        (table.deleted == False)
+                rows = db(query).select(table.id,
+                                        table.comments,
+                                        orderby = table.created_on,
+                                        )
+                duplicates = []
+                details = []
+                for row in rows:
+                    if row.comments:
+                        details.append(row.comments.strip())
+                    duplicates.append(row.id)
+                if record.comments:
+                    details.append(record.comments.strip())
+
+                record.update_record(comments="\n\n".join(c for c in details if c))
+                s3db.resource("br_assistance_measure_theme", id=duplicates).delete()
+
+            # Update theme_ids in the measure
+            query = (table.measure_id == measure_id) & \
+                    (table.deleted == False)
+            rows = db(query).select(table.theme_id)
+            theme_ids = [row.theme_id for row in rows if row.theme_id]
+            measure.update_record(theme_ids=theme_ids)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def assistance_measure_theme_ondelete(row):
+        """
+            On-delete actions for measure-theme links
+                - update theme_ids in measure record
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Look up the measure
+        measure_id = row.measure_id
+        if measure_id:
+            mtable = s3db.br_assistance_measure
+            query = (mtable.id == measure_id)
+            measure = db(query).select(mtable.id, limitby = (0, 1)).first()
+        else:
+            measure = None
+
+        if measure:
+            # Update theme_ids in the measure
+            table = s3db.br_assistance_measure_theme
+            query = (table.measure_id == measure_id) & \
+                    (table.deleted == False)
+            rows = db(query).select(table.theme_id)
+            theme_ids = [row.theme_id for row in rows if row.theme_id]
+            measure.update_record(theme_ids=theme_ids)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1809,14 +1956,17 @@ class BRAssistanceModel(S3Model):
         fields = ["start_date",
                   #"assistance_type_id",
                   #"theme_ids",
-                  "comments",
+                  #"comments",
                   #"human_resource_id",
                   #"hours",
                   "status_id",
                   ]
 
         settings = current.deployment_settings
-        if settings.get_br_assistance_themes():
+        use_themes = settings.get_br_assistance_themes()
+        if not use_themes or not settings.get_br_assistance_details_per_theme():
+            fields.insert(1, "comments")
+        if use_themes:
             fields.insert(1, "theme_ids")
         if settings.get_br_assistance_types():
             fields.insert(1, "assistance_type_id")
@@ -2028,7 +2178,7 @@ class br_AssistanceThemeRepresent(S3Represent):
 
 # -----------------------------------------------------------------------------
 class br_AssistanceMeasureRepresent(S3Represent):
-    """ Representation of response actions """
+    """ Representation of assistance measures """
 
     def __init__(self, show_hr=True, show_link=True):
         """
@@ -2121,6 +2271,101 @@ class br_AssistanceMeasureRepresent(S3Represent):
                   )
 
         return A(v, _href = url)
+
+# -----------------------------------------------------------------------------
+class br_AssistanceMeasureThemeRepresent(S3Represent):
+    """ Representation of measure-theme links """
+
+    def __init__(self, paragraph=False, details=False):
+        """
+            Constructor
+
+            @param paragraph: render as HTML paragraph
+            @param details: include details in paragraph
+        """
+
+        super(br_AssistanceMeasureThemeRepresent, self).__init__(
+                                    lookup = "br_assistance_measure_theme",
+                                    )
+
+        self.paragraph = paragraph
+        self.details = details
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: list of fields to look up (unused)
+        """
+
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+
+        table = self.table
+
+        fields = [table.id, table.measure_id, table.theme_id]
+        if self.details:
+            fields.append(table.comments)
+
+        rows = current.db(query).select(limitby=(0, count), *fields)
+        self.queries += 1
+
+        # Bulk-represent themes
+        theme_ids = [row.theme_id for row in rows]
+        table.theme_id.represent.bulk(theme_ids)
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        table = self.table
+
+        theme = table.theme_id.represent(row.theme_id)
+
+        if self.paragraph:
+            # CSS class to allow styling
+            css = "br-assistance-measure-theme"
+            if self.details:
+                comments = table.comments.represent(row.comments)
+                reprstr = DIV(H6(theme), comments, _class=css)
+            else:
+                reprstr = P(theme, _class=css)
+        else:
+            reprstr = theme
+
+        return reprstr
+
+    # -------------------------------------------------------------------------
+    def render_list(self, value, labels, show_link=True):
+        """
+            Render list-type representations from bulk()-results.
+
+            @param value: the list
+            @param labels: the labels as returned from bulk()
+            @param show_link: render references as links, should
+                              be the same as used with bulk()
+        """
+
+        if self.paragraph:
+            reprstr = TAG[""]([labels[v] if v in labels else self.default
+                               for v in value
+                               ])
+        else:
+            reprstr = super(br_AssistanceMeasureThemeRepresent, self) \
+                        .render_list(value, labels, show_link=show_link)
+        return reprstr
 
 # -----------------------------------------------------------------------------
 class br_CaseActivityRepresent(S3Represent):

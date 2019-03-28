@@ -2945,6 +2945,14 @@ class S3Config(Storage):
         """
         return self.br.get("assistance_measures_use_time", False)
 
+    def get_br_assistance_details_per_theme(self):
+        """
+            Document assistance measure details per theme
+            - requires assistance tab
+        """
+        return self.get_br_assistance_tab() and \
+               self.br.get("assistance_details_per_theme", False)
+
     def get_br_assistance_track_effort(self):
         """
             Track effort (=hours spent) for assistance measures
