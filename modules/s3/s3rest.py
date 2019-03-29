@@ -47,7 +47,7 @@ from gluon.storage import Storage
 
 from .s3datetime import s3_parse_datetime
 from .s3resource import S3Resource
-from .s3utils import s3_get_extension, s3_keep_messages, s3_remove_last_record_id, s3_store_last_record_id
+from .s3utils import s3_get_extension, s3_keep_messages, s3_remove_last_record_id, s3_store_last_record_id, s3_str
 
 REGEX_FILTER = re.compile(r".+\..+|.*\(.+\).*")
 HTTP_METHODS = ("GET", "PUT", "POST", "DELETE")
@@ -566,13 +566,13 @@ class S3Request(object):
                     continue
                 # Catch any non-str values
                 if type(value) is list:
-                    value = [str(item)
+                    value = [s3_str(item)
                              if not isinstance(item, basestring) else item
                              for item in value
                              ]
-                elif not isinstance(value, basestring):
-                    value = str(value)
-                get_vars[k] = value
+                elif type(value) is not str:
+                    value = s3_str(value)
+                get_vars[s3_str(k)] = value
                 # Remove filter expression from POST vars
                 if k in post_vars:
                     del post_vars[k]

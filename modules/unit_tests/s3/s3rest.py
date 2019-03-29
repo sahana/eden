@@ -122,7 +122,7 @@ class POSTFilterTests(unittest.TestCase):
         request = current.request
 
         # Test with valid filter expression JSON
-        jsonstr = '''{"service_organisation.service_id__belongs":"1","~.example__lt":1,"~.other__like":[1,2]}'''
+        jsonstr = '''{"service_organisation.service_id__belongs":"1","~.example__lt":1,"~.other__like":[1,2],"~.name__like":"*Liquiçá*"}'''
         request._body = StringIO(jsonstr)
         r = S3Request(prefix = "org",
                       name = "organisation",
@@ -137,10 +137,17 @@ class POSTFilterTests(unittest.TestCase):
         # $search removed from GET vars:
         assertNotIn("$search", get_vars)
 
+        # Verify that parsed $filter vars can safely be re-encoded as GET URL
+        try:
+            r.url()
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            self.fail("r.url raises Unicode exception with non-ASCII characters in $filter")
+
         # Filter queries from JSON body added to GET vars (always str, or list of str):
         assertEqual(get_vars.get("service_organisation.service_id__belongs"), "1")
         assertEqual(get_vars.get("~.example__lt"), "1")
         assertEqual(get_vars.get("~.other__like"), ["1","2"])
+        assertEqual(get_vars.get("~.name__like"), "*Liquiçá*")
 
         # Must retain other GET vars:
         assertEqual(get_vars.get("test"), "retained")
