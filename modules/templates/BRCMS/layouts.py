@@ -290,8 +290,11 @@ class S3OrgMenuLayout(S3NavigationItem):
                 if row:
                     name = row.name
 
-        logo = IMG(_src = "/%s/static/img/sahanalarge_14.png" %
-                          current.request.application,
+        menu_logo = current.deployment_settings.get_ui_menu_logo()
+        if not menu_logo:
+            menu_logo = "/%s/static/img/sahanalarge_14.png" % current.request.application
+
+        logo = IMG(_src = menu_logo,
                    _alt = name,
                    _width=40,
                    )
