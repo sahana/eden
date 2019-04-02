@@ -643,6 +643,7 @@ class BRCaseActivityModel(S3Model):
         self.add_components(tablename,
                             br_case_activity_update = "case_activity_id",
                             br_assistance_measure = "case_activity_id",
+                            br_assistance_measure_theme = "case_activity_id",
                             )
 
         # Optional inline components
@@ -704,6 +705,9 @@ class BRCaseActivityModel(S3Model):
         # List fields (for case file tab)
         list_fields = ["priority",
                        "date",
+                       #"need_id",
+                       #"subject",
+                       #"human_resource_id",
                        "status_id",         # TODO make optional
                        #"end_date",         # TODO make optional
                        ]
@@ -1271,6 +1275,7 @@ class BRAssistanceModel(S3Model):
     """
 
     names = ("br_assistance_measure",
+             "br_assistance_measure_theme",
              "br_assistance_status",
              "br_assistance_theme",
              "br_assistance_type",
@@ -1290,6 +1295,8 @@ class BRAssistanceModel(S3Model):
 
         labels = br_terminology()
         NONE = current.messages["NONE"]
+
+        case_activity_id = self.br_case_activity_id
 
         # ---------------------------------------------------------------------
         # Assistance Theme
@@ -1484,7 +1491,7 @@ class BRAssistanceModel(S3Model):
                          label = labels.CASE,
                          widget = S3PersonAutocompleteWidget(controller="br"),
                          ),
-                     self.br_case_activity_id(
+                     case_activity_id(
                          readable = use_activities,
                          writable = use_activities,
                          ),
@@ -1536,7 +1543,7 @@ class BRAssistanceModel(S3Model):
         # CRUD form
         crud_fields = ["person_id",
                        "start_date",
-                       "case_activity_id",
+                       #"case_activity_id",
                        "assistance_type_id",
                        #"theme_ids" | inline theme links,
                        #"comments",
@@ -1545,14 +1552,21 @@ class BRAssistanceModel(S3Model):
                        "status_id",
                        ]
         details_per_theme = settings.get_br_assistance_details_per_theme()
+        autolink = settings.get_br_assistance_activity_autolink()
         if use_themes and details_per_theme:
-            crud_fields.insert(4, S3SQLInlineComponent("assistance_measure_theme",
-                                                       fields = ["theme_id",
-                                                                 "comments",
-                                                                 ],
-                                                       label = T("Details"),
-                                                       ))
+            if autolink:
+                pos = 3
+            else:
+                crud_fields.insert(2, "case_activity_id")
+                pos = 4
+            crud_fields.insert(pos, S3SQLInlineComponent("assistance_measure_theme",
+                                                         fields = ["theme_id",
+                                                                   "comments",
+                                                                   ],
+                                                         label = T("Details"),
+                                                         ))
         else:
+            crud_fields.insert(2, "case_activity_id")
             crud_fields[4:4] = ["theme_ids",
                                 "comments",
                                 ]
@@ -1579,7 +1593,7 @@ class BRAssistanceModel(S3Model):
                 list_fields.insert(1, "theme_ids")
         if use_type:
             list_fields.insert(1, "assistance_type_id")
-        if use_activities:
+        if use_activities and not autolink:
             list_fields.insert(1, "case_activity_id")
         if assistance_manager:
             list_fields.insert(-1, "human_resource_id")
@@ -1684,11 +1698,10 @@ class BRAssistanceModel(S3Model):
                                                 theme_represent,
                                                 ),
                            ),
-                     # TODO
-                     #case_activity_id(ondelete = "SET NULL",
-                     #                 readable = False,
-                     #                 writable = False,
-                     #                 ),
+                     case_activity_id(ondelete = "SET NULL",
+                                      readable = False,
+                                      writable = False,
+                                      ),
                      s3_comments(label = T("Details"),
                                  comment = None,
                                  represent = lambda v: s3_text_represent(v, lines=8),
@@ -1836,6 +1849,53 @@ class BRAssistanceModel(S3Model):
                               )
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def get_case_activity_by_need(person_id, need_id, hr_id=None):
+        """
+            DRY helper to find or create a case activity matching a need_id
+
+            @param person_id: the beneficiary person ID
+            @param need_id: the need ID (or a list of need IDs)
+            @param human_resource_id: the HR responsible
+
+            @returns: a br_case_activity record ID
+        """
+
+        if not person_id:
+            return None
+
+        s3db = current.s3db
+        table = s3db.br_case_activity
+
+        # Look up a matching case activity for this beneficiary
+        query = (table.person_id == person_id)
+        if isinstance(need_id, (list, tuple)):
+            need = need_id[0] if len(need_id) == 1 else None
+            query &= (table.need_id.belongs(need_id))
+        else:
+            need = need_id
+            query &= (table.need_id == need_id)
+        query &= (table.deleted == False)
+        activity = current.db(query).select(table.id,
+                                            orderby = ~table.date,
+                                            limitby = (0, 1),
+                                            ).first()
+        if activity:
+            activity_id = activity.id
+        elif need is not None:
+            # Create an activity for the case
+            activity_id = table.insert(person_id = person_id,
+                                       need_id = need,
+                                       start_date = current.request.utcnow,
+                                       human_resource_id = hr_id,
+                                       )
+            s3db.update_super(table, {"id": activity_id})
+        else:
+            activity_id = None
+
+        return activity_id
+
+    # -------------------------------------------------------------------------
     @classmethod
     def assistance_measure_theme_onaccept(cls, form):
         """
@@ -1913,6 +1973,24 @@ class BRAssistanceModel(S3Model):
             theme_ids = [row.theme_id for row in rows if row.theme_id]
             measure.update_record(theme_ids=theme_ids)
 
+            # Auto-link to case activity
+            settings = current.deployment_settings
+            if settings.get_br_case_activity_need() and \
+               settings.get_br_assistance_themes_needs() and \
+               settings.get_br_assistance_activity_autolink():
+
+                # Look up the theme's need_id
+                ttable = s3db.br_assistance_theme
+                query = (ttable.id == record.theme_id)
+                theme = db(query).select(ttable.need_id, limitby=(0, 1)).first()
+                if theme:
+                    activity_id = cls.get_case_activity_by_need(
+                                            measure.person_id,
+                                            theme.need_id,
+                                            hr_id = measure.human_resource_id,
+                                            )
+                    record.update_record(case_activity_id=activity_id)
+
     # -------------------------------------------------------------------------
     @staticmethod
     def assistance_measure_theme_ondelete(row):
@@ -1953,34 +2031,51 @@ class BRAssistanceModel(S3Model):
 
         T = current.T
 
-        fields = ["start_date",
-                  #"assistance_type_id",
-                  #"theme_ids",
-                  #"comments",
-                  #"human_resource_id",
-                  #"hours",
-                  "status_id",
-                  ]
-
         settings = current.deployment_settings
-        use_themes = settings.get_br_assistance_themes()
-        if not use_themes or not settings.get_br_assistance_details_per_theme():
-            fields.insert(1, "comments")
-        if use_themes:
-            fields.insert(1, "theme_ids")
-        if settings.get_br_assistance_types():
-            fields.insert(1, "assistance_type_id")
-        if settings.get_br_assistance_manager():
-            fields.insert(-1, "human_resource_id")
-        if settings.get_br_assistance_track_effort():
-            fields.insert(-1, "hours")
 
-        return S3SQLInlineComponent("assistance_measure",
-                                    label = T("Measures"),
-                                    fields = fields,
-                                    layout = S3SQLVerticalSubFormLayout,
-                                    explicit_add = T("Add Measure"),
-                                    )
+        use_themes = settings.get_br_assistance_themes()
+        details_per_theme = settings.get_br_assistance_details_per_theme()
+
+        if use_themes and details_per_theme and \
+           settings.get_br_case_activity_need() and \
+           settings.get_br_assistance_activity_autolink():
+
+            # Embed details per theme rather than measures
+            return S3SQLInlineComponent("assistance_measure_theme",
+                                        fields = ["measure_id",
+                                                  "theme_id",
+                                                  "comments",
+                                                  ],
+                                        label = T("Themes"),
+                                        orderby = "measure_id",
+                                        )
+        else:
+            fields = ["start_date",
+                      #"assistance_type_id",
+                      #"theme_ids",
+                      #"comments",
+                      #"human_resource_id",
+                      #"hours",
+                      "status_id",
+                      ]
+
+            if not use_themes or not details_per_theme:
+                fields.insert(1, "comments")
+            if use_themes:
+                fields.insert(1, "theme_ids")
+            if settings.get_br_assistance_types():
+                fields.insert(1, "assistance_type_id")
+            if settings.get_br_assistance_manager():
+                fields.insert(-1, "human_resource_id")
+            if settings.get_br_assistance_track_effort():
+                fields.insert(-1, "hours")
+
+            return S3SQLInlineComponent("assistance_measure",
+                                        label = T("Measures"),
+                                        fields = fields,
+                                        layout = S3SQLVerticalSubFormLayout,
+                                        explicit_add = T("Add Measure"),
+                                        )
 
 # =============================================================================
 class BRDistributionModel(S3Model):

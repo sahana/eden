@@ -2953,6 +2953,15 @@ class S3Config(Storage):
         return self.get_br_assistance_tab() and \
                self.br.get("assistance_details_per_theme", False)
 
+    def get_br_assistance_activity_autolink(self):
+        """
+            Auto-link assistance details to case activities
+            - requires case_activity_need
+            - requires assistance_themes and assistance_themes_needs
+            - requires assistance_tab and assistance_details_per_theme
+        """
+        return self.br.get("assistance_activity_autolink", False)
+
     def get_br_assistance_track_effort(self):
         """
             Track effort (=hours spent) for assistance measures
