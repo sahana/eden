@@ -2490,7 +2490,7 @@ $.filterOptionsS3({
 
         user_id = user.id
         if not user_id:
-            return None
+            return
 
         db = current.db
         s3db = current.s3db
@@ -3049,7 +3049,8 @@ $.filterOptionsS3({
         return organisation_id
 
     # -------------------------------------------------------------------------
-    def s3_link_to_org_group(self, user, person_id):
+    @staticmethod
+    def s3_link_to_org_group(user, person_id):
         """
             Link a user account to an organisation group
 
@@ -3121,13 +3122,9 @@ $.filterOptionsS3({
             """ Customise hrm_human_resource """
             customise = settings.customise_resource(htablename)
             if customise:
-                if hr_id:
-                    args = [str(hr_id)]
-                else:
-                    args = None
                 request = S3Request("hrm", "human_resource",
                                     current.request,
-                                    args = args,
+                                    args = [str(hr_id)] if hr_id else [],
                                     )
                 customise(request, htablename)
 
@@ -3287,7 +3284,8 @@ $.filterOptionsS3({
         return member_id
 
     # -------------------------------------------------------------------------
-    def s3_approver(self, user):
+    @staticmethod
+    def s3_approver(user):
         """
             Returns the Approver for a new Registration &
             the organisation_id field
