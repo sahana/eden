@@ -1610,8 +1610,7 @@ class BRAssistanceModel(S3Model):
                                        label = T("Search"),
                                        ),
                           S3OptionsFilter("status_id",
-                                          options = lambda: \
-                                                    s3_get_filter_opts("br_assistance_status"),
+                                          options = lambda: s3_get_filter_opts("br_assistance_status"),
                                           cols = 3,
                                           translate = True,
                                           ),
@@ -1621,12 +1620,16 @@ class BRAssistanceModel(S3Model):
                                        ),
                           ]
         if use_type:
-            filter_widgets.append(S3OptionsFilter(
-                                        "assistance_type_id",
-                                        hidden = True,
-                                        options = lambda: \
-                                        s3_get_filter_opts("br_assistance_type"),
-                                        ))
+            filter_widgets.append(S3OptionsFilter("assistance_type_id",
+                                                  hidden = True,
+                                                  options = lambda: s3_get_filter_opts("br_assistance_type"),
+                                                  ))
+        if use_themes:
+            # TODO consider using link table entries throughout
+            filter_widgets.append(S3OptionsFilter("theme_ids",
+                                                  hidden = True,
+                                                  options = lambda: s3_get_filter_opts("br_assistance_theme"),
+                                                  ))
 
         # Organizer
         description = ["status_id"]
