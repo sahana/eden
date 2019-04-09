@@ -476,7 +476,8 @@ class S3RoleManager(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    def get_permissions(self, role):
+    @staticmethod
+    def get_permissions(role):
         """
             Extract the permission rules for a role
 
@@ -577,7 +578,8 @@ class S3RoleManager(S3Method):
         return role_id, message
 
     # -------------------------------------------------------------------------
-    def update_permissions(self, role_id, rules):
+    @staticmethod
+    def update_permissions(role_id, rules):
         """
             Update the permission rules for a role
 
@@ -633,10 +635,9 @@ class S3RoleManager(S3Method):
                         # Add the rule
                         table.insert(**data)
 
-        return ""
-
     # -------------------------------------------------------------------------
-    def copy_role(self, r, **attr):
+    @staticmethod
+    def copy_role(r, **attr):
         """
             Duplicate an existing role
 
@@ -647,80 +648,78 @@ class S3RoleManager(S3Method):
         key = current.session["_formkey[admin/rolelist]"]
         if not key or r.post_vars.get("_formkey") != key:
             r.error(403, current.ERROR.NOT_PERMITTED)
-
-        if r.http == "POST":
-
-            db = current.db
-
-            role = r.record
-            if not role:
-                r.error(400, current.ERROR.BAD_RECORD)
-
-            # Find a suitable uuid and name
-            table = r.table
-            query = ((table.uuid.like("%s%%" % role.uuid)) | \
-                     (table.role.like("%s%%" % role.role)))
-            rows = db(query).select(table.uuid,
-                                    table.role,
-                                    )
-            uids = set(row.uuid for row in rows)
-            names = set(row.role for row in rows)
-            uid = name = None
-            for i in range(2, 1000):
-                if not uid:
-                    uid = "%s%s" % (role.uuid, i)
-                    if uid in uids:
-                        uid = None
-                if not name:
-                    name = "%s-%s" % (role.role, i)
-                    if name in names:
-                        name = None
-                if uid and name:
-                    break
-            if not uid:
-                uid = str(uuid.uuid4())
-            if not name:
-                name = str(uuid.uuid4())
-
-            # Create the new role
-            role_id = table.insert(uuid = uid,
-                                   role = name,
-                                   )
-
-            # Copy permissions
-            ptable = current.auth.permission.table
-            if ptable:
-                query = (ptable.group_id == role.id) & \
-                        (ptable.deleted == False)
-                rules = db(query).select(ptable.controller,
-                                         ptable.function,
-                                         ptable.tablename,
-                                         ptable.record,
-                                         ptable.oacl,
-                                         ptable.uacl,
-                                         ptable.entity,
-                                         ptable.unrestricted,
-                                         )
-                for rule in rules:
-                    ptable.insert(group_id = role_id,
-                                  controller = rule.controller,
-                                  function = rule.function,
-                                  tablename = rule.tablename,
-                                  record = rule.record,
-                                  oacl = rule.oacl,
-                                  uacl = rule.uacl,
-                                  entity = rule.entity,
-                                  unrestricted = rule.unrestricted,
-                                  )
-
-            message = current.T("New Role %(role)s created") % {"role": name}
-            return current.xml.json_message(message=message)
-
-        else:
+        elif r.http != "POST":
             r.error(405, current.ERROR.BAD_METHOD)
 
+        db = current.db
+
+        role = r.record
+        if not role:
+            r.error(400, current.ERROR.BAD_RECORD)
+
+        # Find a suitable uuid and name
+        table = r.table
+        query = ((table.uuid.like("%s%%" % role.uuid)) | \
+                 (table.role.like("%s%%" % role.role)))
+        rows = db(query).select(table.uuid,
+                                table.role,
+                                )
+        uids = set(row.uuid for row in rows)
+        names = set(row.role for row in rows)
+        uid = name = None
+        for i in range(2, 1000):
+            if not uid:
+                uid = "%s%s" % (role.uuid, i)
+                if uid in uids:
+                    uid = None
+            if not name:
+                name = "%s-%s" % (role.role, i)
+                if name in names:
+                    name = None
+            if uid and name:
+                break
+        if not uid:
+            uid = str(uuid.uuid4())
+        if not name:
+            name = str(uuid.uuid4())
+
+        # Create the new role
+        role_id = table.insert(uuid = uid,
+                               role = name,
+                               )
+
+        # Copy permissions
+        ptable = current.auth.permission.table
+        if ptable:
+            query = (ptable.group_id == role.id) & \
+                    (ptable.deleted == False)
+            rules = db(query).select(ptable.controller,
+                                     ptable.function,
+                                     ptable.tablename,
+                                     ptable.record,
+                                     ptable.oacl,
+                                     ptable.uacl,
+                                     ptable.entity,
+                                     ptable.unrestricted,
+                                     )
+            for rule in rules:
+                ptable.insert(group_id = role_id,
+                              controller = rule.controller,
+                              function = rule.function,
+                              tablename = rule.tablename,
+                              record = rule.record,
+                              oacl = rule.oacl,
+                              uacl = rule.uacl,
+                              entity = rule.entity,
+                              unrestricted = rule.unrestricted,
+                              )
+
+        message = current.T("New Role %(role)s created") % {"role": name}
+        return current.xml.json_message(message=message)
+
     # -------------------------------------------------------------------------
-    def delete_role(self, r, **attr):
+    @staticmethod
+    def delete_role(r, **attr):
         """
             Delete a role
 
@@ -731,26 +730,23 @@ class S3RoleManager(S3Method):
         key = current.session["_formkey[admin/rolelist]"]
         if not key or r.post_vars.get("_formkey") != key:
             r.error(403, current.ERROR.NOT_PERMITTED)
-
-        if r.http in ("POST", "DELETE"):
-
-            role = r.record
-            if not role:
-                r.error(400, current.ERROR.BAD_RECORD)
-
-            if role.protected or role.system:
-                r.error(403, current.ERROR.NOT_PERMITTED)
-
-            auth = current.auth
-            auth.s3_delete_role(role.id)
-            auth.s3_set_roles()
-
-            message = current.T("Role %(role)s deleted") % {"role": role.role}
-
-            return current.xml.json_message(message=message)
-
-        else:
+        elif r.http not in ("POST", "DELETE"):
             r.error(405, current.ERROR.BAD_METHOD)
+
+        role = r.record
+        if not role:
+            r.error(400, current.ERROR.BAD_RECORD)
+
+        if role.protected or role.system:
+            r.error(403, current.ERROR.NOT_PERMITTED)
+
+        auth = current.auth
+        auth.s3_delete_role(role.id)
+        auth.s3_set_roles()
+
+        message = current.T("Role %(role)s deleted") % {"role": role.role}
+
+        return current.xml.json_message(message=message)
 
     # -------------------------------------------------------------------------
     def assign_roles(self, r, **attr):
@@ -1265,7 +1261,8 @@ class S3RoleManager(S3Method):
         #   import the submitted file using Bulk-importer
 
     # -------------------------------------------------------------------------
-    def export_roles(self, r, **attr):
+    @staticmethod
+    def export_roles(r, **attr):
         """
             Export of roles (auth_roles.csv format)
 
@@ -1417,7 +1414,8 @@ class S3PermissionWidget(object):
         return widget
 
     # -------------------------------------------------------------------------
-    def get_active_modules(self):
+    @staticmethod
+    def get_active_modules():
         """
             Get a JSON-serializable dict of active modules
 
@@ -1485,7 +1483,8 @@ class S3PermissionWidget(object):
         return models
 
     # -------------------------------------------------------------------------
-    def get_db_tables(self):
+    @staticmethod
+    def get_db_tables():
         """
             Return all table names in the database; in separate function
             to allow caching because it requires to load all models once
@@ -1508,7 +1507,8 @@ class S3PermissionWidget(object):
         return db.tables
 
     # -------------------------------------------------------------------------
-    def get_permissions(self):
+    @staticmethod
+    def get_permissions():
         """
             Get a JSON-serializable list of permissions
 
@@ -1630,7 +1630,8 @@ class S3PermissionWidget(object):
             jquery_ready.append(script)
 
     # -------------------------------------------------------------------------
-    def inject_i18n(self, labels):
+    @staticmethod
+    def inject_i18n(labels):
         """
             Inject translations for screen messages rendered by the
             client-side script
@@ -1835,7 +1836,8 @@ class S3RolesWidget(object):
             jquery_ready.append(script)
 
     # -------------------------------------------------------------------------
-    def inject_i18n(self, labels):
+    @staticmethod
+    def inject_i18n(labels):
         """
             Inject translations for screen messages rendered by the
             client-side script
@@ -2033,7 +2035,8 @@ class S3RolesExport(object):
         return f
 
     # -------------------------------------------------------------------------
-    def encode_permissions(self, permissions, explicit_none=False):
+    @staticmethod
+    def encode_permissions(permissions, explicit_none=False):
         """
             Encodes a permission bitmap as string, using the permission
             labels from S3Permission.PERMISSION_OPTS

@@ -231,25 +231,6 @@ def config(settings):
                                                  case.organisation_id,
                                                  )
 
-        elif tablename in ("br_case_activity",
-                           "br_assistance_measure",
-                           "br_case_language",
-                           "pr_group_membership",
-                           "pr_person_details",
-                           "pr_person_tag",
-                           ):
-
-            # Inherit from person via person_id
-            table = s3db.table(tablename)
-            ptable = s3db.pr_person
-            query = (table._id == row.id) & \
-                    (ptable.id == table.person_id)
-            person = db(query).select(ptable.realm_entity,
-                                      limitby = (0, 1),
-                                      ).first()
-            if person:
-                realm_entity = person.realm_entity
-
         elif tablename in ("pr_address",
                            "pr_contact",
                            "pr_contact_emergency",
@@ -267,22 +248,51 @@ def config(settings):
             if person:
                 realm_entity = person.realm_entity
 
-        # TODO
-        #elif tablename in ("br_case_activity_need",
-        #                   "br_case_activity_update",
-        #                   "br_assistance_measure",
-        #                   ):
-        #
-        #    # Inherit from case activity
-        #    table = s3db.table(tablename)
-        #    atable = s3db.dvr_case_activity
-        #    query = (table._id == row.id) & \
-        #            (atable.id == table.case_activity_id)
-        #    activity = db(query).select(atable.realm_entity,
-        #                                limitby = (0, 1),
-        #                                ).first()
-        #    if activity:
-        #        realm_entity = activity.realm_entity
+        elif tablename in ("br_appointment",
+                           "br_case_activity",
+                           "br_case_language",
+                           "br_assistance_measure",
+                           "pr_group_membership",
+                           "pr_person_details",
+                           "pr_person_tag",
+                           ):
+
+            # Inherit from person via person_id
+            table = s3db.table(tablename)
+            ptable = s3db.pr_person
+            query = (table._id == row.id) & \
+                    (ptable.id == table.person_id)
+            person = db(query).select(ptable.realm_entity,
+                                      limitby = (0, 1),
+                                      ).first()
+            if person:
+                realm_entity = person.realm_entity
+
+        elif tablename == "br_case_activity_update":
+
+            # Inherit from case activity
+            table = s3db.table(tablename)
+            atable = s3db.br_case_activity
+            query = (table._id == row.id) & \
+                    (atable.id == table.case_activity_id)
+            activity = db(query).select(atable.realm_entity,
+                                        limitby = (0, 1),
+                                        ).first()
+            if activity:
+                realm_entity = activity.realm_entity
+
+        elif tablename == "br_assistance_measure_theme":
+
+            # Inherit from measure
+            table = s3db.table(tablename)
+            mtable = s3db.br_assistance_measure
+            query = (table._id == row.id) & \
+                    (mtable.id == table.measure_id)
+            activity = db(query).select(mtable.realm_entity,
+                                        limitby = (0, 1),
+                                        ).first()
+            if activity:
+                realm_entity = activity.realm_entity
 
         elif tablename == "pr_group":
 
@@ -411,13 +421,13 @@ def config(settings):
            restricted = True,
            module_type = 10,
         )),
-        ("msg", Storage(
-          name_nice = T("Messaging"),
-          #description = "Sends & Receives Alerts via Email & SMS",
-          restricted = True,
-          # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
-          module_type = None,
-        )),
+        #("msg", Storage(
+        #  name_nice = T("Messaging"),
+        #  #description = "Sends & Receives Alerts via Email & SMS",
+        #  restricted = True,
+        #  # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
+        #  module_type = None,
+        #)),
         #("supply", Storage(
         #   name_nice = T("Supply Chain Management"),
         #   #description = "Used within Inventory Management, Request Management and Asset Management",

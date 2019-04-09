@@ -877,6 +877,7 @@ class BRCaseActivityModel(S3Model):
                              ),
                      update_type_id(),
                      self.hrm_human_resource_id(
+                            comment = None,
                             represent = hr_represent,
                             widget = None,
                             ),
@@ -1515,6 +1516,7 @@ class BRAssistanceModel(S3Model):
                                ),
                      assistance_status_id(),
                      self.hrm_human_resource_id(
+                        comment = None,
                         represent = self.hrm_HumanResourceRepresent(show_link=False),
                         widget = None,
                         readable = assistance_manager,

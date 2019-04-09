@@ -46,9 +46,9 @@ class S3MainMenu(default.S3MainMenu):
         labels = current.s3db.br_terminology()
 
         return [MM(labels.CASES, c=("br", "pr"), f="person", vars=case_vars),
-                #MM("Case Consulting", c="br", f="index",
-                #   check = lambda this: not this.preceding()[-1].check_permission(),
-                #   ),
+                MM("Case Management", c="br", f="index",
+                   check = lambda this: not this.preceding()[-1].check_permission(),
+                   ),
                 MM("ToDo", c="project", f="task"),
                 MM("Shelters", c="cr", f="shelter"),
                 MM("More", link=False)(
@@ -171,7 +171,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
         auth = current.auth
         has_role = auth.s3_has_role
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        sysroles = auth.get_system_roles()
+        ADMIN = sysroles.ADMIN
+        ORG_GROUP_ADMIN = sysroles.ORG_GROUP_ADMIN
 
         s3db = current.s3db
         labels = s3db.br_terminology()
@@ -245,7 +247,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 M(labels.CLOSED, f="person", vars={"closed": "1"}),
                 M("Invalid Cases", f="person", vars={"invalid": "1"}, restrict=[ADMIN]),
                 ),
-             M("Administration", link=False, restrict=[ADMIN])(
+             M("Administration", link=False, restrict=[ADMIN, ORG_GROUP_ADMIN])(
                 M("Case Statuses", f="case_status"),
                 M("Case Activity Statuses", f="case_activity_status",
                   check = use_activities,

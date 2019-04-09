@@ -220,7 +220,7 @@ class S3ContentModel(S3Model):
         #
 
         if settings.get_cms_richtext():
-            body_represent = lambda body: XML(body)
+            body_represent = XML
             body_widget = s3_richtext_widget
         else:
             body_represent = lambda body: XML(s3_URLise(body))
@@ -1327,6 +1327,7 @@ def cms_index(module, resource=None, page_name=None, alt_function=None):
                 run_view_in(response._view_environment)
                 page = response.body.getvalue()
             # Set default headers if not set
+            from gluon.contenttype import contenttype
             default_headers = [
                 ("Content-Type", contenttype("." + request.extension)),
                 ("Cache-Control",
@@ -2119,7 +2120,7 @@ class cms_Calendar(S3Method):
         max_rows = []
         mappend = max_rows.append
         # Initialise arrays
-        for day in days:
+        for _ in days:
             cappend([])
             mappend(0)
 

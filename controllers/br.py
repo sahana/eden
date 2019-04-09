@@ -20,8 +20,12 @@ def index():
 def index_alt():
     """ Default Module Homepage """
 
-    # Just redirect to list of current cases
-    s3_redirect_default(URL(f="person", vars={"closed": "0"}))
+    from gluon import current
+    if current.auth.s3_has_permission("read", "pr_person", c="br", f="person"):
+        # Just redirect to list of current cases
+        s3_redirect_default(URL(f="person", vars={"closed": "0"}))
+
+    return {"module_name": settings.modules["br"].name_nice}
 
 # =============================================================================
 # Case File and Component Tabs

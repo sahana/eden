@@ -2,7 +2,7 @@
 
 #from collections import OrderedDict
 
-from gluon import current, URL
+from gluon import current
 #from gluon.storage import Storage
 
 def config(settings):
@@ -12,7 +12,7 @@ def config(settings):
 
     T = current.T
 
-    settings.base.system_name = "Case Management"
+    settings.base.system_name = T("Case Management")
     settings.base.system_name_short = "BRCMS"
 
     # Pre-populate data
