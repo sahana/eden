@@ -480,10 +480,20 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Beneficiary Registry
+
+    # --- Terminology ---
     # Terminology to use when referring to cases (Beneficiary|Client|Case)
     #settings.br.case_terminology = "Beneficiary"
     # Terminology to use when referring to measures of assistance (Counseling|Assistance)
     #settings.br.assistance_terminology = "Counseling"
+
+    # --- Need Categories ---
+    # Use hierarchical need categories
+    #settings.br.needs_hierarchical = True
+    # Let all orgs use a common set of need categories
+    #settings.br.needs_org_specific = False
+
+    # --- Basic Case Options ---
     # Show the case organisation even if only one option
     #settings.br.case_hide_default_org = False
     # Disable assignment of cases to staff
@@ -494,6 +504,8 @@ def config(settings):
     #settings.br.case_language_details = False
     # Control household size tracking in case files: False, True or "auto" (=default)
     #settings.br.household_size = "auto"
+
+    # --- Case File Tabs ---
     # Hide the contact info tab in case files
     #settings.br.case_contacts_tab = False
     # Show the ID-tab in case files
@@ -504,10 +516,14 @@ def config(settings):
     #settings.br.case_photos_tab = True
     # Hide the documents-tab in case files
     #settings.br.case_documents_tab = False
+
+    # --- Attachments ---
     # Hide activity attachments from case documents-tab
     #settings.br.case_include_activity_docs = False
     # Hide case group attachments from case documents-tab
     #settings.br.case_include_group_docs = False
+
+    # --- Case Activities ---
     # Disable tracking of case activities
     #settings.br.case_activities = False
     # Disable assignment of case activities to staff
@@ -520,24 +536,28 @@ def config(settings):
     #settings.br.case_activity_subject = True
     # Use a free-text field to document need details in case activities
     #settings.br.case_activity_need_details = True
-    # Disable inline-updates of case activities
-    #settings.br.case_activity_updates = False
+    # Enable inline-updates of case activities
+    #settings.br.case_activity_updates = True
     # Allow documents to be attached to case activities
     #settings.br.case_activity_documents = True
-    # Use hierarchical need categories
-    #settings.br.needs_hierarchical = True
-    # Let all orgs use a common set of need categories
-    #settings.br.needs_org_specific = False
+
+    # --- Assistance Measures ---
     # Disable tracking of individual assistance measures
     #settings.br.manage_assistance = False
-    # Hide inline assistance measures on activity-tab
-    #settings.br.assistance_inline = False
-    # Enable/disable assistance tab
+    # Use separate tab to track assistance measures
     #settings.br.assistance_tab = True
+    # Hide inline assistance measures on case activity tab
+    #settings.br.assistance_inline = False
+    # Document date+time (rather than only date) for assistance measures
+    #settings.br.assistance_measures_use_time = True
+    # Set default status of assistance measures to closed
+    #settings.br.assistance_measure_default_closed = True
     # Disable assignment of assistance measures to staff
     #settings.br.assistance_manager = False
     # Disable types of assistance (e.g. if there is only one type)
     #settings.br.assistance_types = False
+
+    # --- Assistance Themes ---
     # Enable assistance themes
     #settings.br.assistance_themes = True
     # Use a common set of assistance themes rather than org-specific
@@ -546,6 +566,10 @@ def config(settings):
     #settings.br.assistance_themes_sectors = True
     # Organize assistance themes by need type
     #settings.br.assistance_themes_needs = True
+    # Document assistance details per theme
+    #settings.br.assistance_details_per_theme = True
+    # Enable auto-linking of assistance measure details to case activities
+    #settings.br.assistance_activity_autolink = True
     # Disable tracking of effort (=hours spent) for assistance measures
     #settings.br.assistance_track_effort = False
 

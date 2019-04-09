@@ -30,7 +30,7 @@ def person():
     """ Case File: RESTful CRUD Controller """
 
     # Set the default case status
-    default_status = s3db.br_case_default_status()
+    s3db.br_case_default_status()
 
     # Set contacts-method for tab
     s3db.set_method("pr", "person",
@@ -332,27 +332,29 @@ def person():
                                               filter_opts = (root_org,),
                                               ))
 
-            if assistance_inline and settings.get_br_assistance_themes() and root_org:
-                # Limit selectable themes to the case root org
-                field = mtable.theme_ids
-                dbset = s3db.br_org_assistance_themes(root_org)
-                field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "br_assistance_theme.id",
-                                                       field.represent,
-                                                       multiple = True,
-                                                       ))
-
-            # Default person_id in inline-measures
+            # Configure inline assistance measures
             if assistance_inline:
                 if record:
                     mtable.person_id.default = record.id
-
+                if settings.get_br_assistance_themes() and root_org:
+                    # Limit selectable themes to the case root org
+                    field = mtable.theme_ids
+                    dbset = s3db.br_org_assistance_themes(root_org)
+                    field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "br_assistance_theme.id",
+                                                           field.represent,
+                                                           multiple = True,
+                                                           ))
+                s3db.br_assistance_default_status()
 
         elif r.component_name == "assistance_measure":
 
             mtable = r.component.table
             ltable = s3db.br_assistance_measure_theme
 
-            # Default human_resource_id in assistance measures
+            # Default status
+            s3db.br_assistance_default_status()
+
+            # Default human_resource_id
             if human_resource_id and settings.get_br_assistance_manager():
                 mtable.human_resource_id.default = human_resource_id
 
@@ -848,6 +850,9 @@ def assistance_measure():
         resource = r.resource
         table = resource.table
 
+        # Set default status
+        s3db.br_assistance_default_status()
+
         # Populate human_resource_id with current user, don't link
         human_resource_id = auth.s3_logged_in_human_resource()
         if human_resource_id:
@@ -950,7 +955,6 @@ def assistance_measure():
 
                     list_fields.insert(2, (T("Themes"), "assistance_measure_theme.id"))
                 else:
-                    # TODO consider using link table entries throughout
                     list_fields.insert(2, "theme_ids")
 
             # Include type when using types, otherwise show details

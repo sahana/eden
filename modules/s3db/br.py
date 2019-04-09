@@ -49,6 +49,7 @@ __all__ = ("BRCaseModel",
            "br_case_status_filter_opts",
            "br_org_assistance_themes",
            "br_group_membership_onaccept",
+           "br_assistance_default_status",
            "br_assistance_status_colors",
            "br_household_size",
            "br_rheader",
@@ -1589,7 +1590,6 @@ class BRAssistanceModel(S3Model):
             if details_per_theme:
                 list_fields.insert(1, (T("Themes"), "assistance_measure_theme.id"))
             else:
-                # TODO consider using link table entries throughout
                 list_fields.insert(1, "theme_ids")
         if use_type:
             list_fields.insert(1, "assistance_type_id")
@@ -1625,7 +1625,6 @@ class BRAssistanceModel(S3Model):
                                                   options = lambda: s3_get_filter_opts("br_assistance_type"),
                                                   ))
         if use_themes:
-            # TODO consider using link table entries throughout
             filter_widgets.append(S3OptionsFilter("theme_ids",
                                                   hidden = True,
                                                   options = lambda: s3_get_filter_opts("br_assistance_theme"),
@@ -1636,7 +1635,6 @@ class BRAssistanceModel(S3Model):
         if assistance_manager:
             description.insert(0, "human_resource_id")
         if use_themes:
-            # TODO consider using link table entries throughout
             description.insert(0, "theme_ids")
         if use_type:
             description.insert(0, "assistance_type_id")
@@ -3074,6 +3072,37 @@ def br_org_assistance_themes(organisation_id):
         dbset = db
 
     return dbset
+
+# -----------------------------------------------------------------------------
+def br_assistance_default_status():
+    """
+        Set the default status for assistance measures
+
+        @returns: the default status ID
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    table = s3db.br_assistance_measure
+    field = table.status_id
+
+    default = field.default
+    if not default:
+        stable = s3db.br_assistance_status
+        if current.deployment_settings.get_br_assistance_measure_default_closed():
+            query = (stable.is_default_termination == True)
+        else:
+            query = (stable.is_default == True)
+        query &= (stable.deleted == False)
+        row = db(query).select(stable.id,
+                               limitby = (0, 1),
+                               orderby = stable.workflow_position,
+                               ).first()
+        if row:
+            default = field.default = row.id
+
+    return default
 
 # -----------------------------------------------------------------------------
 def br_assistance_status_colors(resource, selector):

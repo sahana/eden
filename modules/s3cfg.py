@@ -2739,6 +2739,18 @@ class S3Config(Storage):
         """
         return self.br.get("assistance_terminology", "Assistance")
 
+    def get_br_needs_hierarchical(self):
+        """
+            Need categories are hierarchical
+        """
+        return self.br.get("needs_hierarchical", False)
+
+    def get_br_needs_org_specific(self):
+        """
+            Need categories are specific per root organisation
+        """
+        return self.br.get("needs_org_specific", True)
+
     def get_br_case_hide_default_org(self):
         """
             Hide the organisation field in cases if only one allowed
@@ -2860,25 +2872,13 @@ class S3Config(Storage):
         """
             Use case activity update journal (inline-component)
         """
-        return self.br.get("case_activity_updates", True)
+        return self.br.get("case_activity_updates", False)
 
     def get_br_case_activity_documents(self):
         """
             Case activities have attachments
         """
         return self.br.get("case_activity_documents", False)
-
-    def get_br_needs_hierarchical(self):
-        """
-            Need categories are hierarchical
-        """
-        return self.br.get("needs_hierarchical", False)
-
-    def get_br_needs_org_specific(self):
-        """
-            Need categories are specific per root organisation
-        """
-        return self.br.get("needs_org_specific", True)
 
     def get_br_manage_assistance(self):
         """
@@ -2944,6 +2944,13 @@ class S3Config(Storage):
             Assistance measures use date+time (instead of just date)
         """
         return self.br.get("assistance_measures_use_time", False)
+
+    def get_br_assistance_measure_default_closed(self):
+        """
+            Set default status of assistance measures to closed
+            (useful if the primary use-case is post-action documentation)
+        """
+        return self.br.get("assistance_measure_default_closed", False)
 
     def get_br_assistance_details_per_theme(self):
         """
