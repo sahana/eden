@@ -381,8 +381,9 @@ class S3RoleManager(S3Method):
                             label = PERMISSIONS,
                             widget = S3PermissionWidget(r.id),
                             )
-        if not current.auth.permission.use_cacls:
-            # Security policy with fixed access rules
+        if readonly or not current.auth.permission.use_cacls:
+            # Cannot edit permissions in read-view, nor with a
+            # security policy with fixed access rules
             permissions.readable = permissions.writable = False
         elif record:
             if record.uuid == "ADMIN":
