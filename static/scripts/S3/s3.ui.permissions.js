@@ -212,7 +212,7 @@
                 }
             });
             if (ruleSet._other.length) {
-                this._ruleTable('p', null, ruleSet._other).appendTo(tab);
+                this._ruleTable('p', '_other', ruleSet._other).appendTo(tab);
             }
 
             // Render table rules
@@ -231,7 +231,7 @@
                 this._ruleTable('t', '_system', ruleSet._system).appendTo(tab);
 
                 if (ruleSet._other.length) {
-                    this._ruleTable('t', null, ruleSet._other).appendTo(tab);
+                    this._ruleTable('t', '_other', ruleSet._other).appendTo(tab);
                 }
             }
 
