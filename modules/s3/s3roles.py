@@ -277,7 +277,7 @@ class S3RoleManager(S3Method):
         # Standard actions
         s3.actions = None
         s3.crud_labels.UPDATE = T("Edit")
-        S3CRUD.action_buttons(r, deletable=False)
+        S3CRUD.action_buttons(r, editable=True, deletable=False)
 
         action_button = S3CRUD.action_button
 
