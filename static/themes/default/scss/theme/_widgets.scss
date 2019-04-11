@@ -374,6 +374,13 @@ form.anonymize-form,
         background-color: #FFA0A0;
     }
 }
+.rm-fixed,
+.rm-hint {
+    display: block;
+    font-style: italic;
+    font-size: 0.8rem;
+    color: #AAAAAA;
+}
 
 /* Organizer */
 .s3-organizer-popup {

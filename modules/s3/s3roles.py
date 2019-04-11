@@ -34,7 +34,7 @@ import uuid
 import json
 #import sys
 
-from gluon import current, URL, DIV, SQLFORM, INPUT, A, LI, UL
+from gluon import current, URL, DIV, SPAN, SQLFORM, INPUT, A, LI, UL
 
 from s3dal import Field
 from .s3crud import S3CRUD
@@ -381,17 +381,20 @@ class S3RoleManager(S3Method):
                             label = PERMISSIONS,
                             widget = S3PermissionWidget(r.id),
                             )
-        if readonly or not current.auth.permission.use_cacls:
-            # Cannot edit permissions in read-view, nor with a
-            # security policy with fixed access rules
+        if record and record.uuid == "ADMIN":
+            # Administrator permissions cannot be edited
+            permissions.readable = permissions.writable = False
+        elif not current.auth.permission.use_cacls:
+            # Security policy does not use configurable permissions
+            record.permissions = None
+            permissions.represent = self.policy_hint
+            permissions.writable = False
+        elif readonly:
+            # Read-only view (dummy) - just hide permissions
             permissions.readable = permissions.writable = False
         elif record:
-            if record.uuid == "ADMIN":
-                # Administrator permissions cannot be edited
-                permissions.readable = permissions.writable = False
-            else:
-                # Populate the field with current permissions
-                record.permissions = self.get_permissions(record)
+            # Populate the field with current permissions
+            record.permissions = self.get_permissions(record)
 
         # Mark required
         if not readonly:
@@ -475,6 +478,25 @@ class S3RoleManager(S3Method):
         response.view = "admin/role_form.html"
 
         return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def policy_hint(value):
+        """
+            Show a hint if permissions cannot be edited due to security policy
+
+            @param value: ignored (dummy, function is used as Field.represent)
+        """
+
+        T = current.T
+
+        warn = T("The current system configuration uses hard-coded access rules (security policy %(policy)s).") % \
+               {"policy": current.deployment_settings.get_security_policy()}
+        hint = T("Change to security policy 3 or higher if you want to define permissions for roles.")
+
+        return DIV(SPAN(warn, _class="rm-fixed"),
+                   SPAN(hint, _class="rm-hint"),
+                   )
 
     # -------------------------------------------------------------------------
     @staticmethod

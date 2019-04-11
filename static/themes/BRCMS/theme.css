@@ -1730,31 +1730,40 @@ form.anonymize-form,
   background-color: #FFA0A0;
 }
 
+/* line 377, ../../default/scss/theme/_widgets.scss */
+.rm-fixed,
+.rm-hint {
+  display: block;
+  font-style: italic;
+  font-size: 0.8rem;
+  color: #AAAAAA;
+}
+
 /* Organizer */
-/* line 380, ../../default/scss/theme/_widgets.scss */
+/* line 387, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-popup label {
   font-size: 0.7rem;
   font-weight: bold;
 }
-/* line 384, ../../default/scss/theme/_widgets.scss */
+/* line 391, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-popup p {
   font-size: 0.8rem;
   font-weight: normal;
   margin-bottom: 0.3rem;
 }
-/* line 389, ../../default/scss/theme/_widgets.scss */
+/* line 396, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-popup .action-btn {
   margin-left: 0;
   margin-right: 0.3rem;
 }
 
-/* line 395, ../../default/scss/theme/_widgets.scss */
+/* line 402, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-create .action-btn {
   display: block;
 }
 
 /* Priority Representation */
-/* line 401, ../../default/scss/theme/_widgets.scss */
+/* line 408, ../../default/scss/theme/_widgets.scss */
 .prio {
   padding: 0 4px;
   border: 1px solid black;
@@ -1763,68 +1772,68 @@ form.anonymize-form,
   font-weight: normal;
 }
 
-/* line 408, ../../default/scss/theme/_widgets.scss */
+/* line 415, ../../default/scss/theme/_widgets.scss */
 .prio-red {
   color: white;
   background-color: #d10000;
 }
 
-/* line 412, ../../default/scss/theme/_widgets.scss */
+/* line 419, ../../default/scss/theme/_widgets.scss */
 .prio-blue {
   color: white;
   background-color: #10427b;
 }
 
-/* line 416, ../../default/scss/theme/_widgets.scss */
+/* line 423, ../../default/scss/theme/_widgets.scss */
 .prio-lightblue {
   background-color: #b7ddff;
 }
 
-/* line 419, ../../default/scss/theme/_widgets.scss */
+/* line 426, ../../default/scss/theme/_widgets.scss */
 .prio-grey {
   background-color: silver;
 }
 
-/* line 426, ../../default/scss/theme/_widgets.scss */
+/* line 433, ../../default/scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header .ui-multiselect-filter {
   direction: rtl;
   float: right;
   margin-right: 3px;
   margin-left: 10px;
 }
-/* line 432, ../../default/scss/theme/_widgets.scss */
+/* line 439, ../../default/scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header ul li {
   float: right;
   padding: 0 3px 0 10px;
 }
-/* line 436, ../../default/scss/theme/_widgets.scss */
+/* line 443, ../../default/scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header li.ui-multiselect-close {
   float: left;
   text-align: left;
   padding-left: 0;
 }
-/* line 443, ../../default/scss/theme/_widgets.scss */
+/* line 450, ../../default/scss/theme/_widgets.scss */
 body.rtl .range-filter-widget input.date-filter-input {
   margin-right: 0;
   margin-left: 2px;
 }
-/* line 448, ../../default/scss/theme/_widgets.scss */
+/* line 455, ../../default/scss/theme/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
   margin-right: 0;
   margin-left: 0.35rem;
 }
-/* line 454, ../../default/scss/theme/_widgets.scss */
+/* line 461, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0;
   margin-left: 0.3rem;
 }
-/* line 460, ../../default/scss/theme/_widgets.scss */
+/* line 467, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 0;
   border-right: 1px solid red;
 }
-/* line 464, ../../default/scss/theme/_widgets.scss */
+/* line 471, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;
