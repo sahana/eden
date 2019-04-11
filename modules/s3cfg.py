@@ -2804,6 +2804,12 @@ class S3Config(Storage):
         """
         return self.br.get("case_family_tab", True)
 
+    def get_br_case_notes_tab(self):
+        """
+            Use a simple notes journal in case files
+        """
+        return self.br.get("case_notes_tab", False)
+
     def get_br_case_photos_tab(self):
         """
             Case file use tab to upload photos

@@ -252,6 +252,7 @@ def config(settings):
                            "br_case_activity",
                            "br_case_language",
                            "br_assistance_measure",
+                           "br_note",
                            "pr_group_membership",
                            "pr_person_details",
                            "pr_person_tag",

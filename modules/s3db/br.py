@@ -414,7 +414,7 @@ class BRCaseModel(S3Model):
                                                # TODO
                                                # appointments
                                                # case events
-                                               # notes
+                                               "br_note",
                                                ),
                            )
             set_realm_entity("pr_person", person_id, force_update=True)
@@ -424,7 +424,10 @@ class BRCaseModel(S3Model):
             query = (atable.person_id == person_id)
             set_realm_entity(atable, query, force_update=True)
 
-            # Force-update the realm entity for all related responses (TODO)
+            # Force-update the realm entity for all related assistance measures
+            mtable = s3db.br_assistance_measure
+            query = (mtable.person_id == person_id)
+            set_realm_entity(mtable, query, force_update=True)
 
             # Auto-create standard appointments (if create) TODO
 
@@ -2176,7 +2179,126 @@ class BRServiceContactModel(S3Model):
 
 # =============================================================================
 class BRNotesModel(S3Model):
-    pass
+    """ Simple Journal for Case Files """
+
+    names = ("br_note",
+             "br_note_type",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Note Types
+        #
+        tablename = "br_note_type"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     # Code field for deduplication, and to allow hard-coded
+                     # filters and differential authorization
+                     Field("code", length=64, notnull=True, unique=True,
+                           label = T("Type Code"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(64),
+                                       IS_NOT_ONE_OF(db,
+                                                     "%s.code" % tablename,
+                                                     ),
+                                       ],
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Type Code"),
+                                                             T("A unique code to identify this type"),
+                                                             ),
+                                         ),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Note Type"),
+            title_display = T("Note Type Details"),
+            title_list = T("Note Types"),
+            title_update = T("Edit Note Type"),
+            label_list_button = T("List Note Types"),
+            label_delete_button = T("Delete Note Type"),
+            msg_record_created = T("Note Type added"),
+            msg_record_modified = T("Note Type updated"),
+            msg_record_deleted = T("Note Type deleted"),
+            msg_list_empty = T("No Note Types found"),
+            )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        note_type_id = S3ReusableField("note_type_id", "reference %s" % tablename,
+                                       label = T("Note Type"),
+                                       ondelete = "RESTRICT",
+                                       represent = represent,
+                                       requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                        "%s.id" % tablename,
+                                                        represent,
+                                                        )),
+                                       )
+
+        # ---------------------------------------------------------------------
+        # Notes
+        #
+        tablename = "br_note"
+        define_table(tablename,
+                     self.pr_person_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     note_type_id(empty = False,
+                                  ),
+                     s3_datetime(default = "now",
+                                 ),
+                     s3_comments("note",
+                                 label = T("Note"),
+                                 represent = lambda v: s3_text_represent(v, lines=8),
+                                 comment = None,
+                                 ),
+                     *s3_meta_fields())
+
+        # List fields
+        list_fields = ["id",
+                       "person_id",
+                       "date",
+                       "note_type_id",
+                       "note",
+                       (T("Author"), "modified_by"),
+                       ]
+
+        # Table configuration
+        self.configure(tablename,
+                       list_fields = list_fields,
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Note"),
+            title_display = T("Note Details"),
+            title_list = T("Notes"),
+            title_update = T("Edit Note"),
+            label_list_button = T("List Notes"),
+            label_delete_button = T("Delete Note"),
+            msg_record_created = T("Note added"),
+            msg_record_modified = T("Note updated"),
+            msg_record_deleted = T("Note deleted"),
+            msg_list_empty = T("No Notes found"),
+            )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class BRReferralModel(S3Model):
@@ -3358,6 +3480,8 @@ def br_rheader(r, tabs=None):
                 if measures_tab:
                     append((measures_label, "assistance_measure"))
 
+                if settings.get_br_case_notes_tab():
+                    append((T("Notes"), "br_note"))
                 if settings.get_br_case_photos_tab():
                     append((T("Photos"), "image"))
                 if settings.get_br_case_documents_tab():

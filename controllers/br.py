@@ -401,6 +401,12 @@ def person():
                 field = mtable.end_date
                 field.writable = True
 
+        elif r.component_name == "br_note":
+
+            # Represent the note author by their name (rather than email)
+            ntable = r.component.table
+            ntable.modified_by.represent = s3base.s3_auth_user_represent_name
+
         return True
     s3.prep = prep
 
@@ -1013,6 +1019,12 @@ def case_activity_update_type():
 # -----------------------------------------------------------------------------
 def need():
     """ Needs: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def note_type():
+    """ Note Types: RESTful CRUD Controller """
 
     return s3_rest_controller()
 
