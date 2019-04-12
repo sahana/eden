@@ -192,7 +192,8 @@ class S3PDFCard(S3Codec):
         return output_stream
 
     # -------------------------------------------------------------------------
-    def extract(self, resource, fields, orderby=None):
+    @staticmethod
+    def extract(resource, fields, orderby=None):
         """
             Extract the data items from the given resource
 
@@ -216,7 +217,8 @@ class S3PDFCard(S3Codec):
                                )
 
     # -------------------------------------------------------------------------
-    def get_flowables(self, layout, resource, items, labels=None, cards_per_page=1):
+    @staticmethod
+    def get_flowables(layout, resource, items, labels=None, cards_per_page=1):
         """
             Get the Flowable-instances for the data items
 
@@ -354,7 +356,8 @@ class S3PDFCardTemplate(BaseDocTemplate):
                                  )
 
     # -------------------------------------------------------------------------
-    def number_of_cards(self, pagesize, cardsize, margins, spacing):
+    @staticmethod
+    def number_of_cards(pagesize, cardsize, margins, spacing):
         """
             Compute the number of cards for one page dimension
 
@@ -674,7 +677,12 @@ class S3PDFCardLayout(Flowable):
 
         qr_code = qr.QrCodeWidget(value)
 
-        bounds = qr_code.getBounds()
+        try:
+            bounds = qr_code.getBounds()
+        except ValueError:
+            # Value contains invalid characters
+            return
+
         w = bounds[2] - bounds[0]
         h = bounds[3] - bounds[1]
 

@@ -42,6 +42,15 @@ def person():
                     action = s3db.pr_Contacts,
                     )
 
+    # ID Card Export
+    id_card_layout = settings.get_br_id_card_layout()
+    id_card_export_roles = settings.get_br_id_card_export_roles()
+    if id_card_layout and id_card_export_roles and \
+       auth.s3_has_roles(id_card_export_roles):
+        id_card_export = True
+    else:
+        id_card_export = False
+
     def prep(r):
 
         # Filter to persons who have a case registered
@@ -125,6 +134,21 @@ def person():
                            deletable = False,
                            insertable = insertable,
                            )
+
+        # Configure ID Cards
+        if id_card_export:
+            if r.representation == "card":
+                # Configure ID card layout
+                resource.configure(pdf_card_layout = id_card_layout,
+                                   #pdf_card_pagesize="A4",
+                                   )
+
+            if not r.id and not r.component:
+                # Add export-icon for ID cards
+                export_formats = list(settings.get_ui_export_formats())
+                export_formats.append(("card", "fa fa-id-card", T("Export ID Cards")))
+                settings.ui.export_formats = export_formats
+                s3.formats["card"] = r.url(method="")
 
         if not r.component:
 
@@ -431,10 +455,22 @@ def person():
             from s3 import S3AnonymizeWidget
             anonymize = S3AnonymizeWidget.widget(r, _class="action-btn anonymize-btn")
 
-            # TODO ID-Card button
+            # ID-Card button
+            if id_card_export:
+                card_button = A(T("ID Card"),
+                                data = {"url": URL(c="br", f="person",
+                                                   args = ["%s.card" % r.id]
+                                                   ),
+                                        },
+                                _class = "action-btn s3-download-button",
+                                _script = "alert('here')",
+                                )
+            else:
+                card_button = ""
 
             # Render in place of the delete-button
-            buttons["delete_btn"] = TAG[""](anonymize,
+            buttons["delete_btn"] = TAG[""](card_button,
+                                            anonymize,
                                             )
         return output
     s3.postp = postp

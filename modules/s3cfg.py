@@ -2751,6 +2751,18 @@ class S3Config(Storage):
         """
         return self.br.get("needs_org_specific", True)
 
+    def get_br_id_card_layout(self):
+        """
+            Layout class for beneficiary ID cards
+        """
+        return self.br.get("id_card_layout")
+
+    def get_br_id_card_export_roles(self):
+        """
+            User roles permitted to export beneficiary ID cards
+        """
+        return self.br.get("id_card_export_roles")
+
     def get_br_case_hide_default_org(self):
         """
             Hide the organisation field in cases if only one allowed

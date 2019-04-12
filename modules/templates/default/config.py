@@ -504,6 +504,10 @@ def config(settings):
     #settings.br.case_language_details = False
     # Control household size tracking in case files: False, True or "auto" (=default)
     #settings.br.household_size = "auto"
+    # Layout class for beneficiary ID cards
+    #settings.br.id_card_layout = IDCardLayout
+    # User roles with permission to export beneficiary ID cards
+    #settings.br.id_card_export_roles = ["ORG_ADMIN", "CASE_MANAGEMENT"]
 
     # --- Case File Tabs ---
     # Hide the contact info tab in case files
@@ -512,6 +516,8 @@ def config(settings):
     #settings.br.case_id_tab = True
     # Hide the family members tab in case files
     #settings.br.case_family_tab = False
+    # Show tab with notes journal
+    #settings.br.case_notes_tab = True
     # Show the photos-tab in case files
     #settings.br.case_photos_tab = True
     # Hide the documents-tab in case files

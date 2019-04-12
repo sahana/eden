@@ -10,6 +10,8 @@ from gluon.storage import Storage
 #from s3 import FS, IS_ONE_OF
 from s3dal import original_tablename
 
+from templates.BRCMS.idcards import IDCardLayout
+
 # =============================================================================
 def config(settings):
     """
@@ -151,6 +153,12 @@ def config(settings):
 
     # Terminology to use when referring to measures of assistance (Counseling|Assistance)
     #settings.br.assistance_terminology = "Counseling"
+
+    # ID Card Layout
+    settings.br.id_card_layout = IDCardLayout
+
+    # Roles with permission to generate beneficiary ID cards
+    settings.br.id_card_export_roles = ["CASE_MANAGEMENT"]
 
     # -------------------------------------------------------------------------
     # CMS Module Settings
