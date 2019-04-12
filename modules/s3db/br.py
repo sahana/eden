@@ -55,6 +55,7 @@ __all__ = ("BRCaseModel",
            "br_rheader",
            "br_terminology",
            "br_crud_strings",
+           "br_person_anonymize",
            )
 
 from collections import OrderedDict
@@ -3706,5 +3707,224 @@ def br_crud_strings(tablename):
         crud_strings = current.response.s3.crud_strings.get(tablename)
 
     return crud_strings
+
+# =============================================================================
+def br_anonymous_address(record_id, field, value):
+    """
+        Helper to anonymize a pr_address location; removes street and
+        postcode details, but retains Lx ancestry for statistics
+
+        @param record_id: the pr_address record ID
+        @param field: the location_id Field
+        @param value: the location_id
+
+        @return: the location_id
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    # Get the location
+    if value:
+        ltable = s3db.gis_location
+        row = db(ltable.id == value).select(ltable.id,
+                                            ltable.level,
+                                            limitby = (0, 1),
+                                            ).first()
+        if not row.level:
+            # Specific location => remove address details
+            data = {"addr_street": None,
+                    "addr_postcode": None,
+                    "gis_feature_type": 0,
+                    "lat": None,
+                    "lon": None,
+                    "wkt": None,
+                    }
+            # Doesn't work - PyDAL doesn't detect the None value:
+            #if "the_geom" in ltable.fields:
+            #    data["the_geom"] = None
+            row.update_record(**data)
+            if "the_geom" in ltable.fields:
+                db.executesql("UPDATE gis_location SET the_geom=NULL WHERE id=%s" % row.id)
+
+    return value
+
+# -----------------------------------------------------------------------------
+def br_obscure_dob(record_id, field, value):
+    """
+        Helper to obscure a date of birth; maps to the first day of
+        the quarter, thus retaining the approximate age for statistics
+
+        @param record_id: the pr_address record ID
+        @param field: the location_id Field
+        @param value: the location_id
+
+        @return: the new date
+    """
+
+    if value:
+        month = int((value.month - 1) / 3) * 3 + 1
+        value = value.replace(month=month, day=1)
+
+    return value
+
+# -----------------------------------------------------------------------------
+def br_person_anonymize():
+    """ Rules to anonymize a case file """
+
+    ANONYMOUS = "-"
+
+    # Helper to produce an anonymous ID (pe_label)
+    anonymous_id = lambda record_id, f, v: "NN%06d" % long(record_id)
+
+    # General rule for attachments
+    documents = ("doc_document", {"key": "doc_id",
+                                  "match": "doc_id",
+                                  "fields": {"name": ("set", ANONYMOUS),
+                                             "file": "remove",
+                                             "url": "remove",
+                                             "comments": "remove",
+                                             },
+                                  "delete": True,
+                                  })
+
+    # Cascade rule for case activities
+    activity_details = [("br_case_activity_update", {
+                                "key": "case_activity_id",
+                                "match": "id",
+                                "fields": {"comments": ("set", ANONYMOUS),
+                                           },
+                                }),
+                        ]
+
+    # Cascade rule for assistance measures
+    assistance_details = [("br_assistance_measure_theme", {
+                                "key": "measure_id",
+                                "match": "id",
+                                "fields": {"comments": ("set", ANONYMOUS),
+                                           },
+                                }),
+                          ]
+
+    rules = [# Rules to remove PID from basic beneficiary details
+             {"name": "default",
+              "title": "Names, IDs, Reference Numbers, Contact Information, Addresses",
+              "fields": {"first_name": ("set", ANONYMOUS),
+                         "last_name": ("set", ANONYMOUS),
+                         "pe_label": anonymous_id,
+                         "date_of_birth": br_obscure_dob,
+                         "comments": "remove",
+                         },
+              "cascade": [("br_case", {
+                                "key": "person_id",
+                                "match": "id",
+                                "fields": {"comments": "remove",
+                                           },
+                                }),
+                          ("br_case_language", {
+                                "key": "person_id",
+                                "match": "id",
+                                "fields": {"comments": "remove",
+                                           },
+                                }),
+                          ("pr_contact", {
+                                "key": "pe_id",
+                                "match": "pe_id",
+                                "fields": {"contact_description": "remove",
+                                           "value": ("set", ""),
+                                           "comments": "remove",
+                                           },
+                                "delete": True,
+                                }),
+                          ("pr_contact_emergency", {
+                                "key": "pe_id",
+                                "match": "pe_id",
+                                "fields": {"name": ("set", ANONYMOUS),
+                                           "relationship": "remove",
+                                           "phone": "remove",
+                                           "comments": "remove",
+                                           },
+                                "delete": True,
+                                }),
+                          ("pr_address", {
+                                "key": "pe_id",
+                                "match": "pe_id",
+                                "fields": {"location_id": br_anonymous_address,
+                                           "comments": "remove",
+                                           },
+                                }),
+                          ("pr_person_details", {
+                                "key": "person_id",
+                                "match": "id",
+                                "fields": {"education": "remove",
+                                           "occupation": "remove",
+                                           },
+                                }),
+                          ("pr_person_tag", {
+                                "key": "person_id",
+                                "match": "id",
+                                "fields": {"value": ("set", ANONYMOUS),
+                                           },
+                                "delete": True,
+                                }),
+                          ],
+              },
+
+             # Rules to remove PID from activities, assistance details and notes
+             {"name": "activities",
+              "title": "Activities, Assistance Details and Notes",
+              "cascade": [("br_case_activity", {
+                                "key": "person_id",
+                                "match": "id",
+                                "fields": {"subject": ("set", ANONYMOUS),
+                                           "need_details": "remove",
+                                           "outcome": "remove",
+                                           "comments": "remove",
+                                           },
+                                "cascade": activity_details,
+                                }),
+                          ("br_assistance_measure", {
+                                "key": "person_id",
+                                "match": "id",
+                                "fields": {"comments": "remove",
+                                           },
+                                "cascade": assistance_details,
+                                }),
+                          ("br_note", {
+                                "key": "person_id",
+                                "match": "id",
+                                "fields": {"note": "remove",
+                                           },
+                                "delete": True,
+                                }),
+                          ],
+              },
+
+             # Rules to remove photos and attachments
+             {"name": "documents",
+              "title": "Photos and Documents",
+              "cascade": [("br_case", {"key": "person_id",
+                                       "match": "id",
+                                       "cascade": [documents,
+                                                   ],
+                                       }),
+                          ("br_case_activity", {"key": "person_id",
+                                                "match": "id",
+                                                "cascade": [documents,
+                                                            ],
+                                                }),
+                          ("pr_image", {"key": "pe_id",
+                                        "match": "pe_id",
+                                        "fields": {"image": "remove",
+                                                   "url": "remove",
+                                                   "description": "remove",
+                                                   },
+                                        "delete": True,
+                                        }),
+                          ],
+              },
+             ]
+
+    return rules
 
 # END =========================================================================

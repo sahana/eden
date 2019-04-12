@@ -111,7 +111,6 @@ class S3Organizer(S3Method):
         filter_widgets = get_config("filter_widgets", None)
 
         show_filter_form = False
-        default_filters = None
 
         if filter_widgets and not hide_filter:
 
@@ -135,7 +134,7 @@ class S3Organizer(S3Method):
                 show_filter_form = True
                 # Apply filter defaults (before rendering the data!)
                 from .s3filter import S3FilterForm
-                default_filters = S3FilterForm.apply_filter_defaults(r, resource)
+                S3FilterForm.apply_filter_defaults(r, resource)
 
         # Filter Form
         if show_filter_form:

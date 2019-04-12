@@ -61,7 +61,6 @@ def person():
             settings.base.bigtable = True
 
             get_vars = r.get_vars
-
             queries = []
 
             # Filter for "my cases"
@@ -114,8 +113,16 @@ def person():
         crud_strings.title_list = CASES
         s3.crud_strings["pr_person"] = crud_strings
 
-        # Should not be able to delete records in this view
-        resource.configure(deletable = False,
+        # Configure Anonymizer
+        from s3 import S3Anonymize
+        s3db.set_method("pr", "person",
+                        method = "anonymize",
+                        action = S3Anonymize,
+                        )
+
+        # Update resource configuration for perspective
+        resource.configure(anonymize = s3db.br_person_anonymize(),
+                           deletable = False,
                            insertable = insertable,
                            )
 
@@ -410,7 +417,30 @@ def person():
         return True
     s3.prep = prep
 
-    return s3_rest_controller("pr", "person", rheader=s3db.br_rheader)
+    def postp(r, output):
+
+        if not r.component and r.record and isinstance(output, dict):
+
+            # Custom CRUD buttons
+            if "buttons" not in output:
+                buttons = output["buttons"] = {}
+            else:
+                buttons = output["buttons"]
+
+            # Anonymize-button
+            from s3 import S3AnonymizeWidget
+            anonymize = S3AnonymizeWidget.widget(r, _class="action-btn anonymize-btn")
+
+            # TODO ID-Card button
+
+            # Render in place of the delete-button
+            buttons["delete_btn"] = TAG[""](anonymize,
+                                            )
+        return output
+    s3.postp = postp
+
+    output = s3_rest_controller("pr", "person", rheader=s3db.br_rheader)
+    return output
 
 # -----------------------------------------------------------------------------
 def person_search():

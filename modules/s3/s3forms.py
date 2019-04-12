@@ -47,7 +47,7 @@ from gluon.sqlhtml import StringWidget
 from gluon.tools import callback
 from gluon.validators import Validator
 
-from s3dal import original_tablename
+from s3dal import Field, original_tablename
 from .s3query import FS
 from .s3utils import s3_mark_required, s3_store_last_record_id, s3_str, s3_validate
 from .s3widgets import S3Selector, S3UploadWidget
