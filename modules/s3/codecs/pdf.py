@@ -983,6 +983,7 @@ class S3PDFTable(object):
 
         stylesheet = getSampleStyleSheet()
         para_style = stylesheet["Normal"]
+        para_style.fontName = self.font_name
 
         adj_data = data = self.pdf_data
         while not fit:
@@ -1013,9 +1014,9 @@ class S3PDFTable(object):
                         if col_index in para_cols:
                             col_widths[col_index] = min_width
                             para = main_doc.addParagraph(item,
-                                                              style=para_style,
-                                                              append=False,
-                                                              )
+                                                         style=para_style,
+                                                         append=False,
+                                                         )
                             temp_row.append(para)
                         else:
                             temp_row.append(item)
