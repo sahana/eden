@@ -2553,6 +2553,12 @@ class S3OrganisationServiceModel(S3Model):
         # Service
         #
         tablename = "org_service"
+        service_represent = S3Represent(lookup = tablename,
+                                        # Questionable UX:
+                                        #hierarchy = hierarchical_service_types,
+                                        translate = True,
+                                        )
+
         define_table(tablename,
                      Field("root_service", "reference org_service",
                            ondelete = "CASCADE",
@@ -2573,31 +2579,37 @@ class S3OrganisationServiceModel(S3Model):
                            writable = hierarchical_service_types,
                            ),
                      s3_comments(),
-                     *s3_meta_fields())
-
-        represent = S3Represent(lookup = tablename,
-                                # Questionable UX:
-                                #hierarchy = hierarchical_service_types,
-                                translate = True,
-                                )
+                     *s3_meta_fields(),
+                     on_define = lambda table: \
+                        [table.parent.set_attributes(
+                            represent = service_represent,
+                            requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                     "org_service.id",
+                                                      service_represent,
+                                                      # If limiting to just 1 level of parent
+                                                      #filterby="parent",
+                                                      #filter_opts=(None,),
+                                                      orderby="org_service.name",
+                                                      )),
+                            ),
+                         table.root_service.set_attributes(
+                            represent = service_represent,
+                            ),
+                         ]
+                     )
 
         if hierarchical_service_types:
             hierarchy = "parent"
-            # Can't be defined in-line as otherwise get a circular reference
-            table = db[tablename]
-            table.root_service.represent = represent
             onaccept = self.org_service_onaccept
-            table.parent.represent = represent
-            table.parent.requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(db, "org_service.id",
-                                                  represent,
-                                                  # If limiting to just 1 level of parent
-                                                  #filterby="parent",
-                                                  #filter_opts=(None,),
-                                                  orderby="org_service.name"))
+            widget = S3HierarchyWidget(lookup = "org_service",
+                                       represent = service_represent,
+                                       multiple = False,
+                                       leafonly = True,
+                                       )
         else:
             hierarchy = None
             onaccept = None
+            widget = None
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -2617,12 +2629,14 @@ class S3OrganisationServiceModel(S3Model):
         service_id = S3ReusableField("service_id", "reference %s" % tablename,
                                      label = T("Services"),
                                      ondelete = "CASCADE",
-                                     represent = represent,
+                                     represent = service_represent,
                                      requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db, "org_service.id",
-                                                          represent,
-                                                          sort=True)),
+                                                    IS_ONE_OF(db, "org_service.id",
+                                                              service_represent,
+                                                              sort = True,
+                                                              )),
                                      sortby = "name",
+                                     widget = widget,
                                      )
 
         configure(tablename,

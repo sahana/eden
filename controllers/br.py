@@ -1094,4 +1094,10 @@ def note_type():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def service_contact_type():
+    """ Service Contact Types: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
 # END =========================================================================
