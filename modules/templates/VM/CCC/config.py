@@ -1,0 +1,76 @@
+# -*- coding: utf-8 -*-
+
+from collections import OrderedDict
+
+from gluon import current
+from gluon.storage import Storage
+
+def config(settings):
+    """
+        Cumbria County Council extensions to the Volunteer Management template
+        - branding
+        - support Donations
+    """
+
+    T = current.T
+
+    settings.base.system_name = T("Help for Cumbria")
+    settings.base.system_name_short = T("Help Cumbria")
+
+    # PrePopulate data
+    settings.base.prepopulate += ("VM/CCC",)
+    #settings.base.prepopulate_demo += ("VM/CCC/Demo",)
+
+    # Authentication settings
+    # Do new users need to verify their email address?
+    settings.auth.registration_requires_verification = True
+    # Do new users need to be approved by an administrator prior to being able to login?
+    #settings.auth.registration_requires_approval = True
+    settings.auth.registration_requests_organisation = True
+
+    # Uncomment to Hide the language toolbar
+    settings.L10n.display_toolbar = False
+
+    # Security Policy
+    # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
+    # 1: Simple (default): Global as Reader, Authenticated as Editor
+    # 2: Editor role required for Update/Delete, unless record owned by session
+    # 3: Apply Controller ACLs
+    # 4: Apply both Controller & Function ACLs
+    # 5: Apply Controller, Function & Table ACLs
+    # 6: Apply Controller, Function, Table ACLs and Entity Realm
+    # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
+    # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
+
+    settings.security.policy = 7 # Organisation-ACLs
+
+    # Record Approval
+    settings.auth.record_approval = True
+    settings.auth.record_approval_required_for = ("org_organisation",
+                                                  )
+
+    # -------------------------------------------------------------------------
+    # Comment/uncomment modules here to disable/enable them
+    # Modules menu is defined in modules/eden/menu.py
+    settings.modules.update([
+        ("supply", Storage(
+            name_nice = T("Supply Chain Management"),
+            #description = "Used within Inventory Management, Request Management and Asset Management",
+            restricted = True,
+            module_type = None, # Not displayed
+        )),
+        ("inv", Storage(
+            name_nice = T("Warehouses"),
+            #description = "Receiving and Sending Items",
+            restricted = True,
+            module_type = 4
+        )),
+        ("req", Storage(
+            name_nice = T("Requests"),
+            #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+            restricted = True,
+            module_type = 10,
+        )),
+    ])
+
+# END =========================================================================

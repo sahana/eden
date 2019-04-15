@@ -1,0 +1,4 @@
+Name,Module,Resource,Body
+Homepage,default,index,"<div class='medium-6 columns'><p>Help Cumbria provides essential information to help coordinate response and manage long-term recovery in a disaster.</p></div><div class='medium-6 columns'><img src='/eden/static/themes/CCC/img/logo.png'></div>"
+Donate,req,index,"<div class='medium-6 columns'><p>Donate to Help Cumbria</p></div><div class='medium-6 columns'><img src='/eden/static/themes/CCC/img/logo.png'></div>"
+Volunteer,vol,index,"<div class='medium-6 columns'><p>Volunteer to Help Cumbria</p></div><div class='medium-6 columns'><img src='/eden/static/themes/CCC/img/logo.png'></div>"

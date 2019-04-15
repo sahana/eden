@@ -1346,7 +1346,9 @@ def cms_index(module, resource=None, page_name=None, alt_function=None):
     report = ""
 
     response.view = "index.html"
-    return dict(item=item, report=report)
+    return {"item": item,
+            "report": report,
+            }
 
 # =============================================================================
 def cms_documentation(r, default_page, default_url):

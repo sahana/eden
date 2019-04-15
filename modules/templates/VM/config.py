@@ -8,7 +8,7 @@ from gluon.storage import Storage
 def config(settings):
     """
         Volunteer Managament application
-        desogned to be used along with a location template &, if-required, a custom template
+        designed to be used along with a location template &, if-required, a custom template
     """
 
     T = current.T
@@ -24,25 +24,25 @@ def config(settings):
     # Should users be allowed to register themselves?
     #settings.security.self_registration = False
     # Do new users need to verify their email address?
-    #settings.auth.registration_requires_verification = True
+    settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
     #settings.auth.registration_requires_approval = True
     #settings.auth.registration_requests_organisation = True
+    settings.auth.registration_requests_mobile_phone = True
+    # Uncomment this to direct newly-registered users to their volunteer page to be able to add extra details
+    # NB This requires Verification/Approval to be Off
+    # @ToDo: Extend to all optional Profile settings: Homepage, Twitter, Facebook, Mobile Phone, Image
+    #settings.auth.registration_volunteer = True
+    # Terms of Service to be able to Register on the system
+    # https://termsfeed.com/terms-conditions/generator/
+    # uses <template>/views/tos.html
+    #settings.auth.terms_of_service = True
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
 
-    # Restrict the Location Selector to just certain countries
-    # NB This can also be over-ridden for specific contexts later
-    # e.g. Activities filtered to those of parent Project
-    #settings.gis.countries = ("US",)
     # Uncomment to display the Map Legend as a floating DIV
     settings.gis.legend = "float"
-    # Uncomment to Disable the Postcode selector in the LocationSelector
-    #settings.gis.postcode_selector = False # @ToDo: Vary by country (include in the gis_config!)
-    # Uncomment to show the Print control:
-    # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
-    #settings.gis.print_button = True
 
     # Number formats (defaults to ISO 31-0)
     # Decimal separator for numbers (defaults to ,)
@@ -208,18 +208,18 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10
         #)),
-        ("dvr", Storage(
-           name_nice = T("Disaster Victim Registry"),
-           #description = "Allow affected individuals & households to register to receive compensation and distributions",
-           restricted = True,
-           module_type = 10,
-        )),
-        ("po", Storage(
-           name_nice = T("Project Outreach"),
-           #description = "Allow affected individuals & households to register to receive compensation and distributions",
-           restricted = True,
-           module_type = 10,
-        )),
+        #("dvr", Storage(
+        #   name_nice = T("Disaster Victim Registry"),
+        #   #description = "Allow affected individuals & households to register to receive compensation and distributions",
+        #   restricted = True,
+        #   module_type = 10,
+        #)),
+        #("po", Storage(
+        #   name_nice = T("Project Outreach"),
+        #   #description = "Allow affected individuals & households to register to receive compensation and distributions",
+        #   restricted = True,
+        #   module_type = 10,
+        #)),
         #("event", Storage(
         #    name_nice = T("Events"),
         #    #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
