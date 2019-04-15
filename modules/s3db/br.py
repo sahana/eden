@@ -2176,7 +2176,142 @@ class BRLegalStatusModel(S3Model):
 
 # =============================================================================
 class BRServiceContactModel(S3Model):
-    pass
+    """ Model to track external service contacts of beneficiaries """
+
+    names = ("br_service_contact",
+             "br_service_contact_type",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+
+        crud_strings = s3.crud_strings
+
+        define_table = self.define_table
+        configure = self.configure
+
+        # ---------------------------------------------------------------------
+        # Service Contact Types
+        #
+        tablename = "br_service_contact_type"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # CRUD Strings
+        ADD_TYPE = T("Create Service Contact Type")
+        crud_strings[tablename] = Storage(
+            label_create = ADD_TYPE,
+            title_display = T("Service Contact Type"),
+            title_list = T("Service Contact Types"),
+            title_update = T("Edit Service Contact Types"),
+            label_list_button = T("List Service Contact Types"),
+            label_delete_button = T("Delete Service Contact Type"),
+            msg_record_created = T("Service Contact Type added"),
+            msg_record_modified = T("Service Contact Type updated"),
+            msg_record_deleted = T("Service Contact Type deleted"),
+            msg_list_empty = T("No Service Contact Types currently defined"),
+            )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        contact_type_id = S3ReusableField("contact_type_id", "reference %s" % tablename,
+                                          label = T("Contact Type"),
+                                          ondelete = "RESTRICT",
+                                          represent = represent,
+                                          requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "%s.id" % tablename,
+                                                                  represent,
+                                                                  )),
+                                          sortby = "name",
+                                          )
+
+        # ---------------------------------------------------------------------
+        # Service Contacts of Beneficiaries
+        #
+        AGENCY = T("Providing Agency")
+
+        tablename = "br_service_contact"
+        define_table(tablename,
+                     # Beneficiary (component link):
+                     self.pr_person_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+
+                     # Service and contact type
+                     self.org_service_id(readable = False,
+                                         writable = False,
+                                         ),
+                     contact_type_id(),
+
+                     Field("organisation",
+                           label = AGENCY,
+                           ),
+                     # Alternative organisation_id (if tracking providers in-DB)
+                     # - enable in template as required
+                     self.org_organisation_id(label = AGENCY,
+                                              readable = False,
+                                              writable = False,
+                                              ),
+
+                     Field("reference",
+                           label = T("Ref.No."),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Ref.No."),
+                                                             T("Customer number, file reference or other reference number"),
+                                                             ),
+                                         ),
+                           ),
+                     Field("contact",
+                           label = T("Contact Person"),
+                           ),
+                     Field("phone",
+                           label = T("Phone"),
+                           ),
+                     Field("email",
+                           label = T("Email"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Service Contact"),
+            title_display = T("Service Contact Details"),
+            title_list = T("Service Contacts"),
+            title_update = T("Edit Service Contacts"),
+            label_list_button = T("List Service Contacts"),
+            label_delete_button = T("Delete Service Contact"),
+            msg_record_created = T("Service Contact added"),
+            msg_record_modified = T("Service Contact updated"),
+            msg_record_deleted = T("Service Contact deleted"),
+            msg_list_empty = T("No Service Contacts currently registered"),
+            )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        return {}
 
 # =============================================================================
 class BRNotesModel(S3Model):
@@ -3481,6 +3616,8 @@ def br_rheader(r, tabs=None):
                 if measures_tab:
                     append((measures_label, "assistance_measure"))
 
+                if settings.get_br_service_contacts():
+                    append((T("Service Contacts"), "service_contact"))
                 if settings.get_br_case_notes_tab():
                     append((T("Notes"), "br_note"))
                 if settings.get_br_case_photos_tab():

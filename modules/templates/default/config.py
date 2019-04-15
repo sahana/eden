@@ -516,6 +516,8 @@ def config(settings):
     #settings.br.case_id_tab = True
     # Hide the family members tab in case files
     #settings.br.case_family_tab = False
+    # Enable case file tab to track service contacts
+    #settings.br.service_contacts = True
     # Show tab with notes journal
     #settings.br.case_notes_tab = True
     # Show the photos-tab in case files

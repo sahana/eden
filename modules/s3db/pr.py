@@ -1157,6 +1157,7 @@ class PRPersonModel(S3Model):
                            br_note = {"name": "br_note",
                                       "joinby": "person_id",
                                       },
+                           br_service_contact = "person_id",
                            )
         else:
             # Use DVR for case management
