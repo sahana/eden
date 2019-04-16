@@ -10,6 +10,7 @@ def config(settings):
         Cumbria County Council extensions to the Volunteer Management template
         - branding
         - support Donations
+        - support Assessments
     """
 
     T = current.T
@@ -53,6 +54,18 @@ def config(settings):
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
     settings.modules.update([
+        #("cr", Storage(
+        #    name_nice = T("Shelters"),
+        #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
+        #    restricted = True,
+        #    module_type = 10
+        #)),
+        ("dc", Storage(
+            name_nice = T("Assessments"),
+            #description = "Data collection tool",
+            restricted = True,
+            module_type = 5
+        )),
         ("supply", Storage(
             name_nice = T("Supply Chain Management"),
             #description = "Used within Inventory Management, Request Management and Asset Management",
