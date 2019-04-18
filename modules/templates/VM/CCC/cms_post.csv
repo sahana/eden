@@ -1,4 +1,4 @@
 Name,Module,Resource,Body
-Homepage,default,index,"<div class='medium-6 columns'><p>Help Cumbria provides essential information to help coordinate response and manage long-term recovery in a disaster.</p></div><div class='medium-6 columns'><img src='/eden/static/themes/CCC/img/logo.png'></div>"
-Donate,req,index,"<div class='medium-6 columns'><p>Donate to Help Cumbria</p></div><div class='medium-6 columns'><img src='/eden/static/themes/CCC/img/logo.png'></div>"
-Volunteer,vol,index,"<div class='medium-6 columns'><p>Volunteer to Help Cumbria</p></div><div class='medium-6 columns'><img src='/eden/static/themes/CCC/img/logo.png'></div>"
+Homepage,default,index,"<div class='medium-6 columns'><h2>Help for Cumbria</h2><p>Information about donating money and general support advice</p></div><div class='medium-6 columns'><img src='/eden/static/themes/CCC/img/logo.png'></div>"
+Donate,req,index,"<div class='medium-6 columns'><h2>Donate Items</h2><p>Information on where items can be donated locally or nationally.</p><p><i>Perhaps a quote from a child?</i></p></div><div class='medium-6 columns'><img src='/eden/static/themes/CCC/img/logo.png'></div>"
+Volunteer,vol,index,"<div class='medium-6 columns'><h2>Volunteer Your Time</h2><p>Information on BRC and CVS.</p><p>What it means to volunteer.</p><p><i>Perhaps a quote?</i></p></div><div class='medium-6 columns'><img src='/eden/static/themes/CCC/img/logo.png'></div>"

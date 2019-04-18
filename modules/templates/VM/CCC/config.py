@@ -90,14 +90,19 @@ def config(settings):
     def customise_req_home():
 
         current.menu.options = None
-        return current.s3db.cms_index("req", page_name="Donate")
+        return current.s3db.cms_index("req",
+                                      page_name = "Donate",
+                                      view = "VM/CCC/views/donate.html")
 
     settings.customise_req_home = customise_req_home
+
     # -------------------------------------------------------------------------
     def customise_vol_home():
 
         current.menu.options = None
-        return current.s3db.cms_index("vol", page_name="Volunteer")
+        return current.s3db.cms_index("vol",
+                                      page_name = "Volunteer",
+                                      view = "VM/CCC/views/volunteer.html")
 
     settings.customise_vol_home = customise_vol_home
 
