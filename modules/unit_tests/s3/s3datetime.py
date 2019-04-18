@@ -251,7 +251,7 @@ class S3DateTimeTests(unittest.TestCase):
         assertEqual = self.assertEqual
 
         response.s3.tzinfo = None
-        session.s3.tzname = "NZ"
+        session.s3.tzname = "Australia/Melbourne"
         session.s3.utc_offset = None
 
         dt = datetime.date(2019, 1, 21)

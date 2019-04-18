@@ -1039,7 +1039,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(dtstr, "2011-11-20")
 
         response.s3.tzinfo = None
-        session.s3.tzname = "NZ"
+        session.s3.tzname = "Australia/Melbourne"
         session.s3.utc_offset = +1
 
         # Test format override
