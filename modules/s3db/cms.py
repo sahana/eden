@@ -46,6 +46,7 @@ __all__ = ("S3ContentModel",
 
 import datetime
 import json
+import os
 
 from gluon import *
 from gluon.storage import Storage
@@ -1245,7 +1246,11 @@ def cms_rheader(r, tabs=None):
     return rheader
 
 # =============================================================================
-def cms_index(module, resource=None, page_name=None, alt_function=None):
+def cms_index(module,
+              resource = None,
+              page_name = None,
+              alt_function = None,
+              view = None):
     """
         Return a module index page retrieved from CMS
         - or run an alternate function if not found
@@ -1342,12 +1347,19 @@ def cms_index(module, resource=None, page_name=None, alt_function=None):
         else:
             item = H2(page_name)
 
-    # tbc
-    report = ""
+    if view is not None:
+        view = os.path.join(*(view.split("/")))
+        view = os.path.join(current.request.folder, "modules", "templates", view)
+        try:
+            # Pass view as file not str to work in compiled mode
+            response.view = open(view, "rb")
+        except IOError as e:
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
+    else:
+        response.view = "index.html"
 
-    response.view = "index.html"
     return {"item": item,
-            "report": report,
+            "report": "",
             }
 
 # =============================================================================
