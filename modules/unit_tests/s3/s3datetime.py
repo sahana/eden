@@ -96,14 +96,16 @@ class S3DateTimeTests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     def testToLocal(self):
+        """ Test DateTime conversion to local timezone """
 
         response = current.response
         session = current.session
 
         assertEqual = self.assertEqual
+        to_local = S3DateTime.to_local
 
-        assertEqual(S3DateTime.to_local(""), None)
-        assertEqual(S3DateTime.to_local(None), None)
+        assertEqual(to_local(""), None)
+        assertEqual(to_local(None), None)
 
         # Test with timezone reading from browser
         response.s3.tzinfo = None
@@ -111,10 +113,10 @@ class S3DateTimeTests(unittest.TestCase):
         session.s3.utc_offset = "+0000"
 
         dt = datetime.datetime(2019, 1, 21, 1, 06, 0, 0)
-        local = S3DateTime.to_local(dt)
+        local = to_local(dt)
         assertEqual(local.hour, 2)   # UTC+1 in winter
         dt = datetime.datetime(2019, 5, 8, 19, 34, 0, 0)
-        local = S3DateTime.to_local(dt)
+        local = to_local(dt)
         assertEqual(local.hour, 21)  # UTC+2 in summer
 
         # Test with tz-aware datetime
@@ -122,7 +124,7 @@ class S3DateTimeTests(unittest.TestCase):
             def utcoffset(self, dt):
                 return datetime.timedelta(hours=-6)
         dt = datetime.datetime(2019, 5, 8, 19, 34, 0, 0, tzinfo=WEST6())
-        local = S3DateTime.to_local(dt)
+        local = to_local(dt)
         assertEqual(local.hour, 3)   # 6 hours WEST to UTC, then UTC+2 in summer
 
         # Disable deployment setting for timezone
@@ -131,38 +133,208 @@ class S3DateTimeTests(unittest.TestCase):
         if tzsetting:
             del settings.L10n.timezone
 
-        # Test fallback to default timezone
+        # Verify fallback to default timezone
         response.s3.tzinfo = None
         session.s3.tzname = None
         session.s3.utc_offset = None
         settings.L10n.timezone = "America/Detroit"
 
         dt = datetime.datetime(2019, 1, 21, 1, 06, 0, 0)
-        local = S3DateTime.to_local(dt)
+        local = to_local(dt)
         assertEqual(local.day, 20)   # Previous day
         assertEqual(local.hour, 20)  # UTC-5 in winter
 
         dt = datetime.datetime(2019, 5, 8, 19, 34, 0, 0)
-        local = S3DateTime.to_local(dt)
+        local = to_local(dt)
         assertEqual(local.day, 8)    # Same day
         assertEqual(local.hour, 15)  # UTC-4 in summer
 
-        # Test UTC offset setting overrides default timezone
+        # Verify that UTC offset setting overrides default timezone
         response.s3.tzinfo = None
         session.s3.tzname = None
         session.s3.utc_offset = "-0600"
         settings.L10n.timezone = "America/Detroit"
 
         dt = datetime.datetime(2019, 1, 21, 1, 06, 0, 0)
-        local = S3DateTime.to_local(dt)
+        local = to_local(dt)
         assertEqual(local.day, 20)   # Previous day
         assertEqual(local.hour, 19)  # UTC-6 fixed offset
+
         dt = datetime.datetime(2019, 5, 8, 19, 34, 0, 0)
-        local = S3DateTime.to_local(dt)
+        local = to_local(dt)
         assertEqual(local.day, 8)    # Same day
         assertEqual(local.hour, 13)  # UTC-6 fixed offset
 
         del settings.L10n.timezone
+
+    # -------------------------------------------------------------------------
+    def testToUTC(self):
+        """ Test DateTime conversion to UTC """
+
+        response = current.response
+        session = current.session
+
+        assertEqual = self.assertEqual
+        to_utc = S3DateTime.to_utc
+
+        assertEqual(to_utc(""), None)
+        assertEqual(to_utc(None), None)
+
+        # Test with timezone reading from browser
+        response.s3.tzinfo = None
+        session.s3.tzname = "Europe/Stockholm"
+        session.s3.utc_offset = "+0000"
+
+        dt = datetime.datetime(2019, 1, 21, 1, 06, 0, 0)
+        local = to_utc(dt)
+        assertEqual(local.hour, 0)   # UTC+1 in winter
+        dt = datetime.datetime(2019, 5, 8, 19, 34, 0, 0)
+        local = to_utc(dt)
+        assertEqual(local.hour, 17)  # UTC+2 in summer
+
+        # Test with tz-aware datetime
+        class WEST6(datetime.tzinfo):
+            def utcoffset(self, dt):
+                return datetime.timedelta(hours=-6)
+        dt = datetime.datetime(2019, 5, 8, 5, 23, 0, 0, tzinfo=WEST6())
+        local = to_utc(dt)
+        assertEqual(local.hour, 11)   # 6 hours WEST to UTC, then UTC+2 in summer
+
+        # Disable deployment setting for timezone
+        settings = current.deployment_settings
+        tzsetting = settings.L10n.timezone
+        if tzsetting:
+            del settings.L10n.timezone
+
+        # Verify fallback to default timezone
+        response.s3.tzinfo = None
+        session.s3.tzname = None
+        session.s3.utc_offset = None
+        settings.L10n.timezone = "America/Detroit"
+
+        dt = datetime.datetime(2019, 1, 20, 20, 06, 0, 0)
+        local = to_utc(dt)
+        assertEqual(local.day, 21)   # Next day
+        assertEqual(local.hour, 1)  # UTC-5 in winter
+
+        dt = datetime.datetime(2019, 5, 8, 19, 34, 0, 0)
+        local = to_utc(dt)
+        assertEqual(local.day, 8)    # Same day
+        assertEqual(local.hour, 23)  # UTC-4 in summer
+
+        # Verify that UTC offset setting overrides default timezone
+        response.s3.tzinfo = None
+        session.s3.tzname = None
+        session.s3.utc_offset = "-0600"
+        settings.L10n.timezone = "America/Detroit"
+
+        dt = datetime.datetime(2019, 1, 21, 20, 06, 0, 0)
+        local = to_utc(dt)
+        assertEqual(local.day, 22)   # Next day
+        assertEqual(local.hour, 2)   # UTC-6 fixed offset
+
+        dt = datetime.datetime(2019, 5, 8, 7, 34, 0, 0)
+        local = to_utc(dt)
+        assertEqual(local.day, 8)    # Same day
+        assertEqual(local.hour, 13)  # UTC-6 fixed offset
+
+        del settings.L10n.timezone
+
+    # -------------------------------------------------------------------------
+    def testDateToLocal(self):
+        """ Test Date-only conversion to local timezone """
+
+        response = current.response
+        session = current.session
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        response.s3.tzinfo = None
+        session.s3.tzname = "NZ"
+        session.s3.utc_offset = None
+
+        dt = datetime.date(2019, 1, 21)
+        local = S3DateTime.to_local(dt)
+        assertTrue(isinstance(local, datetime.datetime)) # always a datetime
+        assertEqual(local.day, 22) # Already on next day
+
+        dt = datetime.date(2019, 7, 21)
+        local = S3DateTime.to_local(dt)
+        assertEqual(local.day, 22) # Already on next day
+
+        # Converting forth and back must give the same date
+        # (if time component is retained between conversions)
+        assertEqual(dt, S3DateTime.to_utc(S3DateTime.to_local(dt).date()).date())
+
+        response.s3.tzinfo = None
+        session.s3.tzname = None
+        session.s3.utc_offset = "+1200"
+
+        dt = datetime.date(2019, 7, 21)
+        local = S3DateTime.to_local(dt)
+        assertEqual(local.day, 22) # Already on next day
+
+        # Converting forth and back must give the same date
+        # (if time component is retained between conversions)
+        assertEqual(dt, S3DateTime.to_utc(S3DateTime.to_local(dt).date()).date())
+
+        response.s3.tzinfo = None
+        session.s3.tzname = "Europe/Berlin"
+        session.s3.utc_offset = None
+
+        dt = datetime.date(2019, 1, 20)
+        local = S3DateTime.to_local(dt)
+        assertEqual(local.day, 20) # Same day
+
+        response.s3.tzinfo = None
+        session.s3.tzname = "Pacific/Niue"
+        session.s3.utc_offset = None
+
+        dt = datetime.date(2019, 8, 13)
+        local = S3DateTime.to_local(dt)
+        assertEqual(local.day, 13) # Same day
+
+    # -------------------------------------------------------------------------
+    def testDateToUTC(self):
+        """ Test Date-only conversion to UTC """
+
+        response = current.response
+        session = current.session
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        response.s3.tzinfo = None
+        session.s3.tzname = "NZ"
+        session.s3.utc_offset = None
+
+        dt = datetime.date(2019, 1, 21)
+        local = S3DateTime.to_utc(dt)
+        assertTrue(isinstance(local, datetime.datetime)) # always a datetime
+        assertEqual(local.day, 20) # Still on previous day
+
+        # Converting forth and back must give the same date
+        assertEqual(dt, S3DateTime.to_local(S3DateTime.to_utc(dt).date()).date())
+
+        response.s3.tzinfo = None
+        session.s3.tzname = None
+        session.s3.utc_offset = "+1200"
+
+        dt = datetime.date(2019, 7, 21)
+        local = S3DateTime.to_utc(dt)
+        assertEqual(local.day, 20) # Still on previous day
+
+        # Converting forth and back must give the same date
+        assertEqual(dt, S3DateTime.to_local(S3DateTime.to_utc(dt).date()).date())
+
+        response.s3.tzinfo = None
+        session.s3.tzname = "Pacific/Niue"
+        session.s3.utc_offset = None
+
+        dt = datetime.date(2019, 8, 21)
+        local = S3DateTime.to_utc(dt)
+        assertEqual(local.day, 21) # Same day
 
 # =============================================================================
 class DateRepresentationTests(unittest.TestCase):

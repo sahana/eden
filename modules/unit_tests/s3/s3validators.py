@@ -832,7 +832,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         representation = represent(value, utc=True)
         assertEqual(representation, dtstr)
 
-        response.s3.tzinfo = S3DefaultTZ(+11)
+        response.s3.tzinfo = S3DefaultTZ(+12)
 
         dtstr = "1998-03-21"
         value, error = validate(dtstr)
@@ -1031,15 +1031,15 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(dtstr, "2011-11-19")
 
         # Change time zone
-        response.s3.tzinfo = S3DefaultTZ(+9)
+        response.s3.tzinfo = S3DefaultTZ(+12)
 
-        # Test with default UTC offset (9 hours East, next day)
+        # Test with default UTC offset (12 hours East, next day)
         dt = datetime.date(2011, 11, 19)
         dtstr = validate.formatter(dt)
         assertEqual(dtstr, "2011-11-20")
 
         response.s3.tzinfo = None
-        session.s3.tzname = "Australia/South"
+        session.s3.tzname = "NZ"
         session.s3.utc_offset = +1
 
         # Test format override
