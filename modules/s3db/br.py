@@ -467,12 +467,14 @@ class BRCaseActivityModel(S3Model):
         T = current.T
 
         db = current.db
-        s3 = current.response.s3
         settings = current.deployment_settings
+        s3 = current.response.s3
+        crud_strings = s3.crud_strings
 
         define_table = self.define_table
         configure = self.configure
-        crud_strings = s3.crud_strings
+
+        labels = br_terminology()
 
         hr_represent = self.hrm_HumanResourceRepresent(show_link=False)
 
@@ -566,6 +568,7 @@ class BRCaseActivityModel(S3Model):
                      # Beneficiary
                      self.pr_person_id(comment = None,
                                        empty = False,
+                                       label = labels.CASE,
                                        ondelete = "CASCADE",
                                        writable = False,
                                        ),
@@ -767,7 +770,37 @@ class BRCaseActivityModel(S3Model):
                                                               ),
                                                   ))
 
-        # Report options TODO
+        # Report options
+        facts = ((T("Number of Activities"), "count(id)"),
+                 (labels.NUMBER_OF_CASES, "count(person_id)"),
+                 )
+        axes = ["person_id$case.organisation_id",
+                "person_id$gender",
+                "person_id$person_details.nationality",
+                "person_id$person_details.marital_status",
+                "priority",
+                ]
+        default_rows = "person_id$case.organisation_id"
+        default_cols = "person_id$person_details.nationality"
+
+        if manage_assistance and settings.get_br_assistance_themes():
+            axes.insert(1, "assistance_measure_theme.theme_id")
+        if case_activity_need:
+            axes.insert(1, "need_id")
+            default_cols = "need_id"
+        if case_activity_status:
+            axes.insert(4, "status_id")
+
+        report_options = {
+            "rows": axes,
+            "cols": axes,
+            "fact": facts,
+            "defaults": {"rows": default_rows,
+                         "cols": default_cols,
+                         "fact": "count(id)",
+                         "totals": True,
+                         },
+            }
 
         # Table configuration
         configure(tablename,
@@ -776,7 +809,7 @@ class BRCaseActivityModel(S3Model):
                   list_fields = list_fields,
                   onaccept = self.case_activity_onaccept,
                   orderby = "br_case_activity.priority",
-                  #report_options = report_options,
+                  report_options = report_options,
                   realm_components = ("case_activity_update",
                                       ),
                   super_entity = "doc_entity",
@@ -787,6 +820,7 @@ class BRCaseActivityModel(S3Model):
             label_create = T("Create Activity"),
             title_display = T("Activity Details"),
             title_list = T("Activities"),
+            title_report = T("Activity Statistic"),
             title_update = T("Edit Activity"),
             label_list_button = T("List Activities"),
             label_delete_button = T("Delete Activity"),
@@ -1828,6 +1862,7 @@ class BRAssistanceModel(S3Model):
         query = (mtable.id == record_id)
         record = db(query).select(mtable.id,
                                   mtable.theme_ids,
+                                  mtable.case_activity_id,
                                   limitby = (0, 1),
                                   ).first()
         if not record:
@@ -1854,11 +1889,15 @@ class BRAssistanceModel(S3Model):
                 query &= ltable.theme_id.belongs(obsolete)
                 db(query).delete()
 
+            # Inline-created theme links inherit case_activity_id
+            case_activity_id = record.case_activity_id
+
             # Add links for newly selected themes
             added = selected - linked
             for theme_id in added:
                 ltable.insert(measure_id = record_id,
                               theme_id = theme_id,
+                              case_activity_id = case_activity_id,
                               )
 
     # -------------------------------------------------------------------------
@@ -3759,6 +3798,7 @@ def br_terminology():
             labels.CURRENT = "Current Beneficiaries"
             labels.CURRENT_MINE = "My Current Beneficiaries"
             labels.CLOSED = "Former Beneficiaries"
+            labels.NUMBER_OF_CASES = "Number of Beneficiaries"
 
         elif terminology == "Client":
             labels.CASE = "Client"
@@ -3767,6 +3807,7 @@ def br_terminology():
             labels.CURRENT = "Current Clients"
             labels.CURRENT_MINE = "My Current Clients"
             labels.CLOSED = "Former Clients"
+            labels.NUMBER_OF_CASES = "Number of Clients"
 
         else:
             labels.CASE = "Case"
@@ -3775,6 +3816,7 @@ def br_terminology():
             labels.CURRENT = "Current Cases"
             labels.CURRENT_MINE = "My Current Cases"
             labels.CLOSED = "Closed Cases"
+            labels.NUMBER_OF_CASES = "Number of Cases"
 
         # Assistance Terminology
         terminology = settings.get_br_assistance_terminology()
