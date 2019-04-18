@@ -1960,7 +1960,9 @@ class S3CustomController(object):
             # Pass view as file not str to work in compiled mode
             current.response.view = open(view, "rb")
         except IOError:
-            raise HTTP(404, "Unable to open Custom View: %s" % view)
+            msg = "Unable to open Custom View: %s" % view
+            current.log.error("%s (%s)" % (msg, sys.exc_info()[1]))
+            raise HTTP(404, msg)
 
 # =============================================================================
 class S3TypeConverter(object):
