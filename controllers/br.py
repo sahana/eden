@@ -333,6 +333,10 @@ def person():
                                 settings.get_br_assistance_inline()
             mtable =  s3db.br_assistance_measure
 
+            # Default status
+            if settings.get_br_case_activity_status():
+                s3db.br_case_activity_default_status()
+
             # Default human_resource_id
             if human_resource_id:
 
@@ -868,6 +872,10 @@ def case_activity():
             # Adapt list title when filtering for priority 0 (Emergency)
             if get_vars.get("~.priority") == "0":
                 crud_strings.title_list = T("Emergencies")
+
+            # Default status
+            if settings.get_br_case_activity_status():
+                s3db.br_case_activity_default_status()
 
         # Set default for human_resource_ids
         if human_resource_id:

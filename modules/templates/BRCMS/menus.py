@@ -250,7 +250,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
              M("Administration", link=False, restrict=[ADMIN, ORG_GROUP_ADMIN])(
                 M("Case Statuses", f="case_status"),
                 M("Case Activity Statuses", f="case_activity_status",
-                  check = use_activities,
+                  check = lambda i: use_activities and settings.get_br_case_activity_status(),
                   ),
                 M("Need Types", f="need",
                   check = lambda i: not settings.get_br_needs_org_specific(),

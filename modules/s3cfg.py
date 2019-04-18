@@ -2892,6 +2892,12 @@ class S3Config(Storage):
         """
         return self.br.get("case_activity_need_details", False)
 
+    def get_br_case_activity_status(self):
+        """
+            Case activities have a status (and possibly an end date)
+        """
+        return self.br.get("case_activity_status", True)
+
     def get_br_case_activity_updates(self):
         """
             Use case activity update journal (inline-component)

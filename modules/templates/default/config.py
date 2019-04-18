@@ -538,6 +538,8 @@ def config(settings):
     #settings.br.case_activity_manager = False
     # Expose "urgent" priority for case activities (=emergencies)
     #settings.br.case_activity_urgent_option = True
+    # Disable status and end-date for case activities
+    #settings.br.case_activity_status = False
     # Disable need categories in case activities
     #settings.br.case_activity_need = False
     # Use a free-text subject line in case activities

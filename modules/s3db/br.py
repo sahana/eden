@@ -47,6 +47,7 @@ __all__ = ("BRCaseModel",
            "br_case_root_org",
            "br_case_default_status",
            "br_case_status_filter_opts",
+           "br_case_activity_default_status",
            "br_org_assistance_themes",
            "br_group_membership_onaccept",
            "br_assistance_default_status",
@@ -544,6 +545,7 @@ class BRCaseActivityModel(S3Model):
         #           (subject-based/need-based)
         #
         case_activity_manager = settings.get_br_case_activity_manager()
+        case_activity_status = settings.get_br_case_activity_status()
         case_activity_need = settings.get_br_case_activity_need()
         case_activity_subject = settings.get_br_case_activity_subject()
         case_activity_need_details = settings.get_br_case_activity_need_details()
@@ -620,8 +622,9 @@ class BRCaseActivityModel(S3Model):
                            ),
 
                      # Status
-                     status_id(),
-
+                     status_id(readable = case_activity_status,
+                               writable = case_activity_status,
+                               ),
                      # Dates
                      s3_date(label = T("Date"),
                              default = "now",
@@ -699,7 +702,7 @@ class BRCaseActivityModel(S3Model):
                        "subject",
                        "need_details",
                        assistance,
-                       "status_id",         # TODO make optional
+                       "status_id",
                        updates,
                        #"end_date",         # TODO make optional
                        "outcome",           # TODO make optional
@@ -713,15 +716,18 @@ class BRCaseActivityModel(S3Model):
                        #"need_id",
                        #"subject",
                        #"human_resource_id",
-                       "status_id",         # TODO make optional
+                       #"status_id",
                        #"end_date",         # TODO make optional
                        ]
-        if case_activity_manager:
-            list_fields.insert(2, "human_resource_id")
-        if case_activity_subject:
-            list_fields.insert(2, "subject")
+        append = list_fields.append
         if case_activity_need:
-            list_fields.insert(2, "need_id")
+            append("need_id")
+        if case_activity_subject:
+            append("subject")
+        if case_activity_manager:
+            append("human_resource_id")
+        if case_activity_status:
+            append("status_id")
 
         # Filter widgets
         text_filter_fields = ["person_id$pe_label",
@@ -3274,6 +3280,34 @@ def br_case_status_filter_opts(closed=None):
 
     T = current.T
     return OrderedDict((row.id, T(row.name)) for row in rows)
+
+# -----------------------------------------------------------------------------
+def br_case_activity_default_status():
+    """
+        Helper to get/set the default status for case activities
+
+        @return: the default status_id
+    """
+
+    s3db = current.s3db
+
+    atable = s3db.br_case_activity
+    field = atable.status_id
+
+    default = field.default
+    if not default:
+
+        # Look up the default status
+        stable = s3db.br_case_activity_status
+        query = (stable.is_default == True) & \
+                (stable.deleted != True)
+        row = current.db(query).select(stable.id, limitby=(0, 1)).first()
+
+        if row:
+            # Set as field default in case table
+            default = field.default = row.id
+
+    return default
 
 # -----------------------------------------------------------------------------
 def br_org_assistance_themes(organisation_id):
