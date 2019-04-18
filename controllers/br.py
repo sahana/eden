@@ -862,20 +862,134 @@ def case_activity():
             # Filter for "my activities"
             mine = get_vars.get("mine")
             if mine == "1":
+                mine = True
                 if human_resource_id:
                     query = FS("human_resource_id") == human_resource_id
                 else:
                     query = FS("human_resource_id").belongs(set())
                 resource.add_filter(query)
                 crud_strings.title_list = T("My Activities")
+            else:
+                mine = False
 
             # Adapt list title when filtering for priority 0 (Emergency)
             if get_vars.get("~.priority") == "0":
                 crud_strings.title_list = T("Emergencies")
 
+            case_activity_status = settings.get_br_case_activity_status()
+            case_activity_need = settings.get_br_case_activity_need()
+
             # Default status
-            if settings.get_br_case_activity_status():
+            if case_activity_status:
                 s3db.br_case_activity_default_status()
+
+            # Filter widgets
+            from s3 import S3DateFilter, \
+                           S3OptionsFilter, \
+                           S3TextFilter, \
+                           s3_get_filter_opts
+
+            text_filter_fields = ["person_id$pe_label",
+                                  "person_id$first_name",
+                                  "person_id$middle_name",
+                                  "person_id$last_name",
+                                  ]
+            if settings.get_br_case_activity_subject():
+                text_filter_fields.append("subject")
+            if settings.get_br_case_activity_need_details():
+                text_filter_fields.append("need_details")
+
+            filter_widgets = [S3TextFilter(text_filter_fields,
+                                           label = T("Search"),
+                                           ),
+                             ]
+
+            multiple_orgs = s3db.br_case_read_orgs()[0]
+            if multiple_orgs:
+                filter_widgets.append(S3OptionsFilter("person_id$case.organisation_id"))
+
+            if case_activity_status:
+                stable = s3db.br_case_activity_status
+                query = (stable.deleted == False)
+                rows = db(query).select(stable.id,
+                                        stable.name,
+                                        stable.is_closed,
+                                        cache = s3db.cache,
+                                        orderby = stable.workflow_position,
+                                        )
+                status_filter_options = OrderedDict((row.id, T(row.name)) for row in rows)
+                status_filter_defaults = [row.id for row in rows if not row.is_closed]
+                filter_widgets.append(S3OptionsFilter("status_id",
+                                                      options = status_filter_options,
+                                                      default = status_filter_defaults,
+                                                      cols = 3,
+                                                      hidden = True,
+                                                      sort = False,
+                                                      ))
+
+            if not mine and settings.get_br_case_activity_manager():
+                filter_widgets.append(S3OptionsFilter("human_resource_id",
+                                                      hidden = True,
+                                                      ))
+
+            filter_widgets.extend([S3DateFilter("date",
+                                                hidden = True,
+                                                ),
+                                   S3OptionsFilter("person_id$person_details.nationality",
+                                                   label = T("Client Nationality"),
+                                                   hidden = True,
+                                                   ),
+                                   ])
+
+            if case_activity_need:
+                org_specific_needs = settings.get_br_needs_org_specific()
+                filter_widgets.append(S3OptionsFilter("need_id",
+                                                      hidden = True,
+                                                      header = True,
+                                                      options = lambda: \
+                                                                s3_get_filter_opts(
+                                                                  "br_need",
+                                                                  org_filter = org_specific_needs,
+                                                                  translate = True,
+                                                                  ),
+                                                      ))
+
+            resource.configure(filter_widgets=filter_widgets)
+
+            # Report options
+            if r.method == "report":
+                facts = ((T("Number of Activities"), "count(id)"),
+                         (labels.NUMBER_OF_CASES, "count(person_id)"),
+                         )
+                axes = ["person_id$case.organisation_id",
+                        "person_id$gender",
+                        "person_id$person_details.nationality",
+                        "person_id$person_details.marital_status",
+                        "priority",
+                        ]
+                default_rows = "person_id$case.organisation_id"
+                default_cols = "person_id$person_details.nationality"
+
+                if settings.get_br_manage_assistance() and \
+                   settings.get_br_assistance_themes():
+                    axes.insert(1, "assistance_measure_theme.theme_id")
+                if case_activity_need:
+                    axes.insert(1, "need_id")
+                    default_cols = "need_id"
+                if case_activity_status:
+                    axes.insert(4, "status_id")
+
+                report_options = {
+                    "rows": axes,
+                    "cols": axes,
+                    "fact": facts,
+                    "defaults": {"rows": default_rows,
+                                 "cols": default_cols,
+                                 "fact": "count(id)",
+                                 "totals": True,
+                                 },
+                    }
+                resource.configure(report_options=report_options)
 
         # Set default for human_resource_ids
         if human_resource_id:

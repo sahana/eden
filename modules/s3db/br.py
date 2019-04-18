@@ -732,84 +732,12 @@ class BRCaseActivityModel(S3Model):
         if case_activity_status:
             append("status_id")
 
-        # Filter widgets
-        text_filter_fields = ["person_id$pe_label",
-                              "person_id$first_name",
-                              "person_id$middle_name",
-                              "person_id$last_name",
-                              ]
-        if case_activity_subject:
-            text_filter_fields.append("subject")
-
-        filter_widgets = [S3TextFilter(text_filter_fields,
-                                       label = T("Search"),
-                                       ),
-                          S3DateFilter("date",
-                                       hidden = True,
-                                       ),
-                          S3OptionsFilter("status_id",
-                                          cols = 4,
-                                          hidden = True,
-                                          sort = False,
-                                          options = lambda: \
-                                                    s3_get_filter_opts(
-                                                      "br_case_activity_status",
-                                                      orderby = "br_case_activity_status.workflow_position",
-                                                      ),
-                                          ),
-                         ]
-        if case_activity_need:
-            org_specific_needs = settings.get_br_needs_org_specific()
-            filter_widgets.append(S3OptionsFilter("need_id",
-                                                  hidden = True,
-                                                  header = True,
-                                                  options = lambda: \
-                                                            s3_get_filter_opts(
-                                                              "br_need",
-                                                              org_filter = org_specific_needs
-                                                              ),
-                                                  ))
-
-        # Report options
-        facts = ((T("Number of Activities"), "count(id)"),
-                 (labels.NUMBER_OF_CASES, "count(person_id)"),
-                 )
-        axes = ["person_id$case.organisation_id",
-                "person_id$gender",
-                "person_id$person_details.nationality",
-                "person_id$person_details.marital_status",
-                "priority",
-                ]
-        default_rows = "person_id$case.organisation_id"
-        default_cols = "person_id$person_details.nationality"
-
-        if manage_assistance and settings.get_br_assistance_themes():
-            axes.insert(1, "assistance_measure_theme.theme_id")
-        if case_activity_need:
-            axes.insert(1, "need_id")
-            default_cols = "need_id"
-        if case_activity_status:
-            axes.insert(4, "status_id")
-
-        report_options = {
-            "rows": axes,
-            "cols": axes,
-            "fact": facts,
-            "defaults": {"rows": default_rows,
-                         "cols": default_cols,
-                         "fact": "count(id)",
-                         "totals": True,
-                         },
-            }
-
         # Table configuration
         configure(tablename,
                   crud_form = S3SQLCustomForm(*crud_fields),
-                  filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.case_activity_onaccept,
                   orderby = "br_case_activity.priority",
-                  report_options = report_options,
                   realm_components = ("case_activity_update",
                                       ),
                   super_entity = "doc_entity",
