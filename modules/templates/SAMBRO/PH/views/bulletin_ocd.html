@@ -1,0 +1,89 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="{{=T.accepted_language or "en"}}">
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+ <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+ <title>Office of Civil Defense Bulletin</title>
+ <meta name="application-name" content="{{=appname}}" />
+ <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+ <link rel="shortcut icon" href="/{{=appname}}/static/favicon.ico" type="image/x-icon" />
+</head>
+<body>
+<div id='ocd-wrapper' style='font-family: sans-serif'>
+ <div id='ocd-header'>
+  <div id='ocd-header-top' style='clear:both'>
+   <div id='ocd-header-logo'>
+    <img src='/{{=appname}}/static/img/ndrrmc_logo.jpg' style='height: 6em; float: left' />
+   </div>
+   <div id='ocd-header-heading' style='display: block;
+                                       text-transform: uppercase;
+                                       text-align: center;
+                                       margin-left: 7em;
+                                       word-spacing: 0;
+                                       letter-spacing: 0;
+                                       margin-top: 1em;'>
+    <div id='ocd-header-heading-1' style='line-height:0'>
+     <b>Republic of the Philippines</b>
+    </div>
+    <div id='ocd-header-heading-2' style='line-height:0'>
+     <h4><b>National Disaster Risk Reduction and Management Council</b></h4>
+    </div>
+    <hr style='border: 1px solid blue' />
+    <div id='ocd-header-heading-3' style='text-transform:none; line-height: 0'>
+     <h6>National Disaster Risk Reduction and Management Center, Camp Aguinaldo, Quezon City, Philippines</h6>
+    </div>
+   </div>
+  </div>
+  <div id='ocd-header-bottom'>
+   <div id='ocd-header-subject' style='text-transform: uppercase;
+                                       text-decoration: underline;
+                                       text-align: center;
+                                       margin-bottom: 1em;'>
+    <h2><b>NDRRMC {{=XML(status)}}</b></h2>
+   </div>
+   <div id='ocd-header-subject-description' style='text-align: center'>
+    {{=XML(headline)}}
+   </div>
+   <div id='ocd-header-signature' style='margin-left: 60%;
+                                         margin-top: 2em;
+                                         text-align: center;'>
+    Releasing Officer: <br /><br /><br />
+    <b>{{=XML(releasing_officer)}}</b> <br />{{=XML(releasing_officer_designation)}}
+   </div>
+  </div>
+ </div>
+ <div id='ocd-body'>
+  <div id='ocd-body-top'>
+   <div id='ocd-body-top-date' style='line-height: 0'>
+    DATE: {{=XML(time)}}
+   </div>
+   <hr />
+   <div id='ocd-body-top-source' style='line-height: 0; margin-bottom: 2em'>
+    Source: {{=XML(source)}}
+   </div>
+  </div>
+  <div id='ocd-body-main'>
+   <div id='ocd-situational-overview'>
+    <b style='text-transform: uppercase'>I. Situational Overview</b> <br /><br />
+    <div id='ocd-parameter-body'>
+     {{=XML(parameter_table)}}
+     <div id='ocd-body-description' style='margin-top: 1em'>
+      <b>Description: </b>{{=XML(description)}}
+     </div>
+    </div>
+   </div>
+   <div id='ocd-instruction' style='margin-top: 1em;'>
+    <b style='text-transform: uppercase'>II. Action/s Taken</b>
+    <div id='ocd-body-description'>
+     {{=XML(instruction)}}
+    </div>
+   </div>
+  </div>
+ </div>
+ <div id='ocd-footer' style='margin-top: 10em; text-align: center;'>
+  <hr style='border: 2px solid blue'>{{=XML(contact)}} 
+ </div>
+</div>
+<script>window.print();</script>
+</body>
+</html>

@@ -45,4 +45,8 @@ def config(settings):
                                 args = ["SAMBRO", "PH", "img", "pagasa.png"],
                                 )
 
+    # Name of Method used to create bulletin
+    # This may vary according to organization implementing it
+    settings.cap.bulletin_method = "bulletin_ocd"
+
 # END =========================================================================

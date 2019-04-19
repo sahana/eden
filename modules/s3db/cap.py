@@ -3393,6 +3393,7 @@ def cap_rheader(r):
             db = current.db
             s3db = current.s3db
             tablename = r.tablename
+            settings = current.deployment_settings
             if tablename == "cap_alert":
                 alert_id = record.id
                 itable = s3db.cap_info
@@ -3446,6 +3447,7 @@ def cap_rheader(r):
                 else:
                     action_btn = None
                     msg_type_buttons = None
+                    bulletin_btns = []
                     if not row:
                         error = DIV(T("You need to create at least one alert information item in order to be able to broadcast this alert!"),
                                     _class="error")
@@ -3459,26 +3461,50 @@ def cap_rheader(r):
 
                         has_permission = current.auth.s3_has_permission
                         # Display 'Submit for Approval', 'Publish Alert' or
-                        # 'Review Alert' based on permission and deployment settings
+                        # 'Review Alert' and Bulletin Form print button based 
+                        # on permission and deployment settings
                         if not current.request.get_vars.get("_next") and \
-                           current.deployment_settings.get_cap_authorisation() and \
+                           settings.get_cap_authorisation() and \
                            record.approved_by is None:
                             # Show these buttons only if there is atleast one area segment
                             area_table = s3db.cap_area
                             area_row = db(area_table.alert_id == alert_id).\
                                                 select(area_table.id,
                                                        limitby=(0, 1)).first()
-                            if area_row and has_permission("update", "cap_alert",
+                            if area_row:
+                                # Show these buttons only if there is at least one area segment
+                                cap_bulletin_method = settings.get_cap_bulletin_method()
+                                if cap_bulletin_method:
+                                    irows = db(itable.alert_id == alert_id).select(\
+                                                                        itable.language)
+                                    for irow in irows:
+                                        language = irow.language
+                                        btn = A(T("%s Form" % (itable.language.represent(language))),
+                                                _href = URL(c = "default",
+                                                            f = "index",
+                                                            args = [cap_bulletin_method],
+                                                            vars = {"lan": language,
+                                                                    "alert_id": alert_id,
+                                                                    }
+                                                            ),
+                                                _class = "action-btn button tiny",
+                                                _target = "_blank",
+                                                )
+                                        bulletin_btns.append(btn)
+
+                                # Display 'Submit for Approval', 'Publish Alert' or
+                                # 'Review Alert' based on permission and deployment settings
+                                if has_permission("update", "cap_alert",
                                                            record_id=alert_id):
-                                action_btn = A(T("Submit for Approval"),
-                                               _href = URL(f = "notify_approver",
-                                                           vars = {"cap_alert.id": alert_id,
-                                                                   },
-                                                           ),
-                                               _class = "action-btn confirm-btn button tiny"
-                                               )
-                                current.response.s3.jquery_ready.append(
-'''S3.confirmClick('.confirm-btn','%s')''' % T("Do you want to submit the alert for approval?"))
+                                    action_btn = A(T("Submit for Approval"),
+                                                   _href = URL(f = "notify_approver",
+                                                               vars = {"cap_alert.id": alert_id,
+                                                                       },
+                                                               ),
+                                                   _class = "action-btn confirm-btn button tiny"
+                                                   )
+                                    current.response.s3.jquery_ready.append(
+    '''S3.confirmClick('.confirm-btn','%s')''' % T("Do you want to submit the alert for approval?"))
 
                                 # For Alert Approver
                                 if has_permission("approve", "cap_alert"):
@@ -3589,6 +3615,10 @@ def cap_rheader(r):
 
                     if msg_type_buttons is not None:
                         rheader.insert(1, msg_type_buttons)
+
+                    if len(bulletin_btns):
+                        for bulletin_btn in bulletin_btns:
+                            rheader.insert(1, bulletin_btn)
 
             elif tablename == "cap_area":
                 # Used only for Area Templates

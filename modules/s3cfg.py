@@ -3168,6 +3168,27 @@ class S3Config(Storage):
 
         return self.cap.get("area_default", ["geocode", "polygon"])
 
+    def get_cap_bulletin_method(self):
+        """
+            Name of the method that is used to generate the bulletin for this deployment
+        """
+
+        return self.cap.get("bulletin_method")
+
+    def get_cap_bulletin_officer(self):
+        """
+            Name of the officer who is responsible to issue the bulletin
+        """
+
+        return self.cap.get("bulletin_officer", "Name of Officer")
+
+    def get_cap_bulltin_officer_designation(self):
+        """
+            Designation of the officer who is responsible to issue the bulletin
+        """
+
+        return self.cap.get("bulletin_officer_designation", "Designation")
+
     # -------------------------------------------------------------------------
     # CMS: Content Management System
     #
