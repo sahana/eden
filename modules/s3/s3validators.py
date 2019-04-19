@@ -64,7 +64,6 @@ __all__ = ("single_phone_number_pattern",
            )
 
 import datetime
-import dateutil.tz
 import json
 import re
 
@@ -80,6 +79,9 @@ DEFAULT = lambda: None
 JSONERRORS = (NameError, TypeError, ValueError, AttributeError, KeyError)
 SEPARATORS = (",", ":")
 
+LAT_SCHEMA = re.compile(r"^([0-9]{,3})[d:°]{,1}\s*([0-9]{,3})[m:']{,1}\s*([0-9]{,3}(\.[0-9]+){,1})[s\"]{,1}\s*([N|S]{,1})$")
+LON_SCHEMA = re.compile(r"^([0-9]{,3})[d:°]{,1}\s*([0-9]{,3})[m:']{,1}\s*([0-9]{,3}(\.[0-9]+){,1})[s\"]{,1}\s*([E|W]{,1})$")
+
 def translate(text):
     if text is None:
         return None
@@ -89,7 +91,7 @@ def translate(text):
     return str(text)
 
 def options_sorter(x, y):
-    return (s3_unicode(x[1]).upper() > s3_unicode(y[1]).upper() and 1) or -1
+    return 1 if s3_unicode(x[1]).upper() > s3_unicode(y[1]).upper() else -1
 
 # -----------------------------------------------------------------------------
 # Phone number requires
@@ -203,62 +205,46 @@ class IS_LAT(Validator):
                  error_message = "Latitude/Northing should be between -90 & 90!"
                  ):
 
-        self.minimum = -90
-        self.maximum = 90
         self.error_message = error_message
+
         # Tell s3_mark_required that this validator doesn't accept NULL values
         self.mark_required = True
 
+        self.schema = LAT_SCHEMA
+        self.minimum = -90
+        self.maximum = 90
+
     # -------------------------------------------------------------------------
     def __call__(self, value):
+
+        if value is None:
+            return value, self.error_message
         try:
             value = float(value)
         except ValueError:
             # DMS format
-            pass
-        else:
-            if self.minimum <= value <= self.maximum:
-                return (value, None)
+            match = self.schema.match(value)
+            if not match:
+                return value, self.error_message
             else:
-                return (value, self.error_message)
-
-        pattern = re.compile(r"^[0-9]{,3}[\D\W][0-9]{,3}[\D\W][0-9]+$")
-        if not pattern.match(value):
-            return (value, self.error_message)
-        else:
-            val = []
-            val.append(value)
-            sep = []
-            count = 0
-            for i in val[0]:
                 try:
-                    int(i)
-                except ValueError:
-                    sep.append(count)
-                count += 1
-            sec = ""
-            posn = sep[1]
-            while posn != (count-1):
-                # join the numbers for seconds
-                sec = sec + val[0][posn+1]
-                posn += 1
-            posn2 = sep[0]
-            mins = ""
-            while posn2 != (sep[1]-1):
-                # join the numbers for minutes
-                mins = mins + val[0][posn2+1]
-                posn2 += 1
-            deg = ""
-            posn3 = 0
-            while posn3 != (sep[0]):
-                # join the numbers for degree
-                deg = deg + val[0][posn3]
-                posn3 += 1
-            e = int(sec) / 60 # formula to get back decimal degree
-            f = int(mins) + e # formula
-            g = int(f) / 60 # formula
-            value = int(deg) + g
-            return (value, None)
+                    d = float(match.group(1))
+                    m = float(match.group(2))
+                    s = float(match.group(3))
+                except (ValueError, TypeError):
+                    return value, self.error_message
+
+                h = match.group(5)
+                sign = -1 if h in ("S", "W") else 1
+
+                deg = sign * (d + m / 60 + s / 3600)
+        else:
+            deg = value
+
+        if self.minimum <= deg <= self.maximum:
+            return (deg, None)
+        else:
+            return (value, self.error_message)
 
 # =============================================================================
 class IS_LON(IS_LAT):
@@ -277,6 +263,7 @@ class IS_LON(IS_LAT):
 
         super(IS_LON, self).__init__(error_message=error_message)
 
+        self.schema = LON_SCHEMA
         self.minimum = -180
         self.maximum = 180
 
@@ -978,7 +965,7 @@ class IS_ONE_OF_EMPTY(Validator):
         try:
             dbset = self.dbset
             table = dbset._db[self.ktable]
-            deleted_q = ("deleted" in table) and (table["deleted"] == False) or False
+            deleted_q = (table["deleted"] == False) if ("deleted" in table) else False
             filter_opts_q = False
             filterby = self.filterby
             if filterby and filterby in table:
@@ -1014,13 +1001,13 @@ class IS_ONE_OF_EMPTY(Validator):
                     query = None
                     for v in values:
                         q = (field == v)
-                        query = query is not None and query | q or q
+                        query = (query | q) if query is not None else q
                     if filter_opts_q != False:
-                        query = query is not None and \
-                                (filter_opts_q & (query)) or filter_opts_q
+                        query = (filter_opts_q & (query)) \
+                                if query is not None else filter_opts_q
                     if deleted_q != False:
-                        query = query is not None and \
-                                (deleted_q & (query)) or deleted_q
+                        query = (deleted_q & (query)) \
+                                if query is not None else deleted_q
                     if dbset(query).count() < 1:
                         return (value, error_message)
                     return (values, None)
@@ -1035,13 +1022,13 @@ class IS_ONE_OF_EMPTY(Validator):
                 query = None
                 for v in values:
                     q = (table[self.kfield] == v)
-                    query = query is not None and query | q or q
+                    query = (query | q) if query is not None else q
                 if filter_opts_q != False:
-                    query = query is not None and \
-                            (filter_opts_q & (query)) or filter_opts_q
+                    query = (filter_opts_q & (query)) \
+                            if query is not None else filter_opts_q
                 if deleted_q != False:
-                    query = query is not None and \
-                            (deleted_q & (query)) or deleted_q
+                    query = (deleted_q & (query)) \
+                            if query is not None else deleted_q
                 if dbset(query).count():
                     if self._and:
                         return self._and(value)
