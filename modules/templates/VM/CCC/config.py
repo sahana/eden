@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from collections import OrderedDict
+#from collections import OrderedDict
 
 from gluon import current
 from gluon.storage import Storage
@@ -17,6 +17,11 @@ def config(settings):
 
     settings.base.system_name = T("Help for Cumbria")
     settings.base.system_name_short = T("Help Cumbria")
+
+    # Theme
+    settings.base.theme = "CCC"
+    settings.base.theme_layouts = "VM.CCC"
+    settings.base.theme_config = "VM.CCC"
 
     # PrePopulate data
     settings.base.prepopulate += ("VM/CCC",)

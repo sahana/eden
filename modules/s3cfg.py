@@ -368,13 +368,19 @@ class S3Config(Storage):
         else:
             s3.theme_layouts = theme_path
 
-        # Path under modules/templates/ for css.cfg
-        # NB this is also the path under static/themes/ for eden.min.css
+        # Path under static/themes/ for eden.min.css
         styles = self.base.get("theme_styles")
         if styles:
             s3.theme_styles = path_to(styles.split("."))
         else:
             s3.theme_styles = theme_path
+
+        # Path under modules/templates/ for css.cfg
+        config = self.base.get("theme_config")
+        if config:
+            s3.theme_config = path_to(config.split("."))
+        else:
+            s3.theme_config = s3.theme_styles
 
         # Path under static/themes/ for base styles (e.g. foundation/*.css)
         base = self.base.get("theme_base")
@@ -396,11 +402,9 @@ class S3Config(Storage):
             individually adjusted with theme_layouts, theme_styles and
             theme_base settings if required.
         """
-
         theme = current.response.s3.theme
         if not theme:
             theme = self.set_theme()
-
         return theme
 
     def get_theme_layouts(self):
@@ -411,7 +415,6 @@ class S3Config(Storage):
 
             => defaults to theme
         """
-
         layouts = current.response.s3.theme_layouts
         if not layouts:
             self.set_theme()
@@ -421,17 +424,28 @@ class S3Config(Storage):
     def get_theme_styles(self):
         """
             The location of the theme styles:
-            - modules/templates/[theme_styles]/css.cfg
             - static/themes/[theme_styles]/eden.min.css
 
             => defaults to theme
         """
-
         styles = current.response.s3.theme_styles
         if not styles:
             self.set_theme()
             styles = current.response.s3.theme_styles
         return styles
+
+    def get_theme_config(self):
+        """
+            The location of the theme CSS config:
+            - modules/templates/[theme_config]/css.cfg
+
+            => defaults to theme_styles
+        """
+        config = current.response.s3.theme_config
+        if not config:
+            self.set_theme()
+            config = current.response.s3.theme_config
+        return config
 
     def get_theme_base(self):
         """
@@ -440,7 +454,6 @@ class S3Config(Storage):
 
             => defaults to theme_styles
         """
-
         base = current.response.s3.theme_base
         if not base:
             self.set_theme()

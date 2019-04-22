@@ -981,7 +981,7 @@ def s3_include_debug_css():
 
     request = current.request
 
-    location = current.response.s3.theme_styles
+    location = current.response.s3.theme_config
     filename = "%s/modules/templates/%s/css.cfg" % (request.folder, location)
     if not os.path.isfile(filename):
         raise HTTP(500, "Theme configuration file missing: modules/templates/%s/css.cfg" % location)

@@ -1,0 +1,20 @@
+@import "settings";
+
+// Override default text direction
+$text-direction: rtl;
+
+@import "foundation.scss";
+
+// Patches for right-to-left support:
+
+// Drop-downs in top-bar should not overflow the left end of the screen
+.top-bar-section {
+    .right li .dropdown {
+        left: auto;
+        right: 0;
+    }
+    .left li .dropdown {
+        left: 0;
+        right: auto;
+    }
+}

@@ -150,7 +150,8 @@ def docss():
     theme_styles = settings.get_theme_styles()
     info("Building theme %s" % theme_styles)
 
-    css_cfg = os.path.join("..", "..", "..", "modules", "templates", theme_styles, "css.cfg")
+    theme_config = settings.get_theme_config()
+    css_cfg = os.path.join("..", "..", "..", "modules", "templates", theme_config, "css.cfg")
 
     with open(css_cfg, "r") as f:
         css_paths = f.readlines()
