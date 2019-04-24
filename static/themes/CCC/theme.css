@@ -1870,3 +1870,11 @@ body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   margin-left: 1.25rem;
   font-size: 1.2rem;
 }
+
+/* line 16, ../scss/theme/_misc.scss */
+#strapline {
+  text-align: right;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #0082aa;
+}
