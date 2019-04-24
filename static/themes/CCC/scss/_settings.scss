@@ -114,11 +114,25 @@ $tuatara        : #444444;
 $oil            : #333333;
 // $jet         : #222222;
 // $black       : #000000;
-$lightblue      : #2ba6cb;
 $blood          : #c60f13;
-$cccblue        : #0082aa;
-$cccgreen       : #54a002;
-$cccyellow      : #fed700;
+
+// Primary color
+$cccblue        : #0082aa;  // pantone 7468
+$cccdarkblue    : #00588d;  // pantone 301
+$ccclightblue   : #00b4e4;  // pantone 306
+
+// Secondary colors
+$cccred         : #c31f41;  // pantone 193
+$cccpink        : #f27eb1;  // pantone 211
+
+$cccpurple      : #802064;  // pantone 2425
+$ccclightpurple : #c61a82;  // pantone 233
+
+$cccgreen       : #008044;  // pantone 348
+$ccclightgreen  : #b7d233;  // pantone 382
+
+$cccamber       : #e47225;  // pantone 152
+$cccyellow      : #f4b11c;  // pantone 7408
 
 // We use these as default colors throughout
 $primary-color: $cccblue;
@@ -996,6 +1010,7 @@ $icon-bar-icon-color: $oil;
 
 // We use these to control the background and border styles
 // $panel-bg: scale-color($white, $lightness: -5%);
+$panel-bg: $white;
 // $panel-border-style: solid;
 // $panel-border-size: 1px;
 // $callout-panel-bg: scale-color($primary-color, $lightness: 94%);
@@ -1429,10 +1444,10 @@ $topbar-link-color-active-hover: $white;
 $topbar-link-font-size: rem-calc(15);
 // $topbar-link-hover-lightness: -10%; // Darken by 10%
 // $topbar-link-bg: $topbar-bg;
-$topbar-link-bg-hover: scale-color($primary-color, $lightness: -10%);
+$topbar-link-bg-hover: scale-color($topbar-bg-color, $lightness: -14%);
 // $topbar-link-bg-color-hover: $charcoal;
-$topbar-link-bg-active: $secondary-color;
-$topbar-link-bg-active-hover: scale-color($secondary-color, $lightness: -10%);
+$topbar-link-bg-active: $ccclightblue;
+$topbar-link-bg-active-hover: scale-color($topbar-link-bg-active, $lightness: -14%);
 // $topbar-link-font-family: $body-font-family;
 // $topbar-link-text-transform: none;
 // $topbar-link-padding: ($topbar-height / 3);

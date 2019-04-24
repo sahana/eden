@@ -1,4 +1,17 @@
 {{extend "layout.html"}}
 {{=item}}
-<a href="/{{=request.application}}/vol" class="button">Volunteer your Time</a>
-<a href="/{{=request.application}}/req" class="button">Donate Items</a>
+<div class="row">
+ <div class="large-3 medium-6 small-12 columns">
+  <div class="panel">
+   <a href="/{{=request.application}}/vol">
+    <img src="/{{=request.application}}/static/themes/CCC/img/volunteer.png"/>
+    <span class="service-link">Volunteer your Time</span>
+   </a>
+  </div>
+ </div>
+ <div class="large-3 medium-6 small-12 columns end">
+  <div class="panel">
+   <a href="/{{=request.application}}/req" class="button">Donate Items</a>
+  </div>
+ </div>
+</div>

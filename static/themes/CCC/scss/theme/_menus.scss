@@ -8,6 +8,7 @@ $side-nav-list-type: none !default;
 $side-nav-list-position: inside !default;
 $side-nav-link-color-hover: scale-color($side-nav-link-color, $lightness: 30%) !default;
 $side-nav-link-bg-hover: hsla(0, 0, 0, .025) !default;
+$topbar-dropdown-toggle-alpha: 0.4 !default;
 
 // Side menu border and background colors
 // (Foundation side-nav has no background, this is added here)
@@ -47,10 +48,17 @@ $side_bar_divider_color: $side_bar_border_color !default;
         padding: 0.5rem;
     }
 }
-.top-bar-section li.menu-home a {
-    font-weight: bold !important;
-    font-size: 1.4em !important;
-    text-transform: capitalize !important;
+.top-bar-section {
+    li {
+        &.menu-home a {
+            font-weight: bold !important;
+            font-size: 1.4em !important;
+            text-transform: capitalize !important;
+        }
+        &.active.has-dropdown > a::after {
+            border-color: rgba($topbar-link-color-active, $topbar-dropdown-toggle-alpha) transparent transparent transparent;
+        }
+    }
 }
 
 #menu-options-toggle {

@@ -193,33 +193,34 @@ main.main {
 }
 
 /* line 139, ../scss/theme/_page.scss */
-#content a.help:link {
+#content a.help:link, .main-content a.help:link {
   color: #fff;
   text-decoration: none;
   margin-right: 10px;
 }
 /* line 144, ../scss/theme/_page.scss */
-#content a.help:hover {
+#content a.help:hover, .main-content a.help:hover {
   background-color: #336699;
   text-decoration: underline;
 }
 /* line 148, ../scss/theme/_page.scss */
-#content a.help:visited {
+#content a.help:visited, .main-content a.help:visited {
   font-weight: normal;
   color: #666;
 }
 /* line 153, ../scss/theme/_page.scss */
 #content h1,
-#content h2 {
+#content h2, .main-content h1,
+.main-content h2 {
   font-size: 1.3em;
   font-weight: bolder;
 }
 /* line 162, ../scss/theme/_page.scss */
-#content h2 {
+#content h2, .main-content h2 {
   margin-top: 10px;
 }
 /* line 168, ../scss/theme/_page.scss */
-#content h3 {
+#content h3, .main-content h3 {
   font-size: 1.1em;
   padding-bottom: 5px;
 }
@@ -902,16 +903,16 @@ body.rtl .action-lnk:first-child {
 }
 
 /* Top bar */
-/* line 23, ../scss/theme/_menus.scss */
+/* line 24, ../scss/theme/_menus.scss */
 .top-bar {
   z-index: 1000;
   /* Menu logo */
 }
-/* line 24, ../scss/theme/_menus.scss */
+/* line 25, ../scss/theme/_menus.scss */
 .top-bar.expanded {
   width: 100%;
 }
-/* line 29, ../scss/theme/_menus.scss */
+/* line 30, ../scss/theme/_menus.scss */
 .top-bar .logo {
   color: white;
   display: inline-block;
@@ -921,36 +922,40 @@ body.rtl .action-lnk:first-child {
   padding: 0.625rem 0.5rem 0 0.7rem;
   text-transform: uppercase;
 }
-/* line 38, ../scss/theme/_menus.scss */
+/* line 39, ../scss/theme/_menus.scss */
 .top-bar .menu-toggle input {
   margin-right: 5px;
 }
-/* line 41, ../scss/theme/_menus.scss */
+/* line 42, ../scss/theme/_menus.scss */
 .top-bar li.name {
   padding-top: 0.2rem;
 }
-/* line 44, ../scss/theme/_menus.scss */
+/* line 45, ../scss/theme/_menus.scss */
 .top-bar .home-link {
   font-size: 1.375rem;
   color: white;
   padding: 0.5rem;
 }
 
-/* line 50, ../scss/theme/_menus.scss */
+/* line 53, ../scss/theme/_menus.scss */
 .top-bar-section li.menu-home a {
   font-weight: bold !important;
   font-size: 1.4em !important;
   text-transform: capitalize !important;
 }
+/* line 58, ../scss/theme/_menus.scss */
+.top-bar-section li.active.has-dropdown > a::after {
+  border-color: rgba(255, 255, 255, 0.4) transparent transparent transparent;
+}
 
-/* line 56, ../scss/theme/_menus.scss */
+/* line 64, ../scss/theme/_menus.scss */
 #menu-options-toggle {
   margin: 0.3rem 0;
   padding: 0.3rem;
 }
 
 /* Side Menu */
-/* line 62, ../scss/theme/_menus.scss */
+/* line 70, ../scss/theme/_menus.scss */
 .sidebar {
   background: none repeat scroll 0 0 #EEEEEE;
   margin-top: 10px;
@@ -958,67 +963,67 @@ body.rtl .action-lnk:first-child {
   padding-bottom: 0.25rem;
 }
 
-/* line 69, ../scss/theme/_menus.scss */
+/* line 77, ../scss/theme/_menus.scss */
 .side-nav li {
   list-style-type: none;
   list-style-position: inside;
   line-height: 1.2;
   padding: 0;
 }
-/* line 75, ../scss/theme/_menus.scss */
+/* line 83, ../scss/theme/_menus.scss */
 .side-nav li.heading {
   margin-top: 0.125rem;
 }
-/* line 78, ../scss/theme/_menus.scss */
+/* line 86, ../scss/theme/_menus.scss */
 .side-nav li.heading:not(:first-child) {
   border-top: 1px solid #d0d1d2;
 }
-/* line 83, ../scss/theme/_menus.scss */
+/* line 91, ../scss/theme/_menus.scss */
 .side-nav li.active > a:first-child:not(.button) {
   font-weight: bold;
   background-color: #e0e1e2;
 }
-/* line 86, ../scss/theme/_menus.scss */
+/* line 94, ../scss/theme/_menus.scss */
 .side-nav li.active > a:first-child:not(.button):hover {
   color: #FFFFFF;
   background-color: #0082aa;
 }
 
 /* Page Header */
-/* line 97, ../scss/theme/_menus.scss */
+/* line 105, ../scss/theme/_menus.scss */
 .main-title .org-logo {
   vertical-align: top;
   display: inline-block;
   padding: 0.4rem 0.8rem 0.3rem 0;
 }
-/* line 102, ../scss/theme/_menus.scss */
+/* line 110, ../scss/theme/_menus.scss */
 .main-title .system-title {
   display: inline-block;
   margin-left: 4rem;
   padding-top: 1rem;
 }
-/* line 106, ../scss/theme/_menus.scss */
+/* line 114, ../scss/theme/_menus.scss */
 .main-title .system-title .system-name {
   color: #0082aa;
   font-size: 1.3rem;
   font-weight: bold;
   line-height: 1.0;
 }
-/* line 112, ../scss/theme/_menus.scss */
+/* line 120, ../scss/theme/_menus.scss */
 .main-title .system-title .org-name {
   color: #999999;
   line-height: 1rem;
   font-size: 0.8rem;
 }
-/* line 117, ../scss/theme/_menus.scss */
+/* line 125, ../scss/theme/_menus.scss */
 .main-title .system-title h5:first-child, .main-title .system-title h6:first-child {
   margin: 0.3rem 0 0.125rem;
 }
-/* line 121, ../scss/theme/_menus.scss */
+/* line 129, ../scss/theme/_menus.scss */
 .main-title .personal-menu-area {
   text-align: right;
 }
-/* line 124, ../scss/theme/_menus.scss */
+/* line 132, ../scss/theme/_menus.scss */
 .main-title .personal-menu {
   float: right;
   clear: right;
@@ -1026,11 +1031,11 @@ body.rtl .action-lnk:first-child {
   margin-bottom: 0.125rem;
   margin-right: 0.2rem;
 }
-/* line 130, ../scss/theme/_menus.scss */
+/* line 138, ../scss/theme/_menus.scss */
 .main-title .personal-menu li a {
   padding: 0 0.375rem;
 }
-/* line 134, ../scss/theme/_menus.scss */
+/* line 142, ../scss/theme/_menus.scss */
 .main-title .language-selector {
   float: right;
   display: block;
@@ -1038,12 +1043,12 @@ body.rtl .action-lnk:first-child {
   margin-bottom: 0.125rem;
 }
 
-/* line 143, ../scss/theme/_menus.scss */
+/* line 151, ../scss/theme/_menus.scss */
 body.rtl .main-title .personal-menu {
   float: left;
   clear: left;
 }
-/* line 147, ../scss/theme/_menus.scss */
+/* line 155, ../scss/theme/_menus.scss */
 body.rtl .main-title .language-selector {
   float: left;
 }
@@ -1858,4 +1863,10 @@ body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;
+}
+
+/* line 11, ../scss/theme/_misc.scss */
+.service-link {
+  margin-left: 1.25rem;
+  font-size: 1.2rem;
 }

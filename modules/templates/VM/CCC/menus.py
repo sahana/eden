@@ -26,7 +26,7 @@ class S3MainMenu(default.S3MainMenu):
         # Additional menus
         current.menu.personal = cls.menu_personal()
         current.menu.lang = cls.menu_lang()
-        #current.menu.about = cls.menu_about()
+        current.menu.about = cls.menu_about()
         current.menu.org = cls.menu_org()
 
         return main_menu
@@ -136,7 +136,7 @@ class S3MainMenu(default.S3MainMenu):
 
         menu_about = MA(c="default")(
             MA("Help", f="help"),
-            #MA("Contact", f="contact"),
+            MA("Contact", f="contact"),
             MA("Version", f="about", restrict = ADMIN),
         )
         return menu_about
