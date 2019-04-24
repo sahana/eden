@@ -47,7 +47,7 @@ def config(settings):
     # NB This can also be over-ridden for specific contexts later
     # e.g. Activities filtered to those of parent Project
     #settings.gis.countries = ("US",)
-    gis_levels = ("L2", "L3", "L4")
+    #gis_levels = ("L2", "L3", "L4")
 
     settings.L10n.languages = OrderedDict([
         ("en", "English"),
@@ -646,6 +646,10 @@ def config(settings):
                               #                ),
                               S3OptionsFilter("person_id$competency.skill_id",
                                               label = T("Languages Spoken"),
+                                              #hidden = True,
+                                              ),
+                              S3OptionsFilter("organisation_id$facility.location_id$L3",
+                                              label = T("Location"),
                                               #hidden = True,
                                               ),
                               S3OptionsFilter("organisation_id$facility.location_id$addr_postcode",
@@ -1367,7 +1371,7 @@ def config(settings):
         #f.default = current.messages["NONE"] # Can't be empty, otherwise widget validator assumes it's an Lx location!
         f.label =  T("Facility Address")
 
-        integer_represent = IS_INT_AMOUNT.represent
+        #integer_represent = IS_INT_AMOUNT.represent
 
         #congregants = components_get("congregants")
         #f = congregants.table.value
@@ -1394,10 +1398,10 @@ def config(settings):
         #f.represent = integer_represent
         #f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
 
-        board = components_get("board")
-        f = board.table.value
-        f.represent = integer_represent
-        f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
+        #board = components_get("board")
+        #f = board.table.value
+        #f.represent = integer_represent
+        #f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
 
         internet = components_get("internet")
         f = internet.table.value
@@ -1530,6 +1534,7 @@ def config(settings):
                        create_next = profile_url,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
+                       popup_url = profile_url,
                        update_next = profile_url,
                        )
 
@@ -2207,10 +2212,12 @@ def config(settings):
                 if hr:
                     organisation_id = hr.organisation_id
                     record_data_append(TR(TH("%s: " % T("Organization")),
-                                          A(hrtable.organisation_id.represent(organisation_id),
-                                            _href = URL(c="org", f="organisation",
-                                                        args=[organisation_id, "profile"]),
-                                            )
+                                          s3db.org_OrganisationRepresent(show_link = True,
+                                                                         linkto = URL(c="org",
+                                                                                      f="organisation",
+                                                                                      args=["[id]",
+                                                                                            "profile",
+                                                                                            ]))(organisation_id),
                                           ))
                 gender = record.gender
                 if gender:
