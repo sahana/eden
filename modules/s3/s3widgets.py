@@ -6558,11 +6558,11 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
             @param noneSelectedText: text to show on the widget button when no option is
                                      selected (automatic l10n, no T() required)
             @param columns: set the columns width class for Foundation forms
-            @param create: options to create a new record {c: 'controller',
-                                                           f: 'function',
-                                                           label: 'label',
-                                                           parent: 'parent', (optional: which function to lookup options from)
-                                                           child: 'child', (optional: which field to lookup options for)
+            @param create: options to create a new record {"c": "controller",
+                                                           "f": "function",
+                                                           "label": "label",
+                                                           "parent": "parent", (optional: which function to lookup options from)
+                                                           "child": "child", (optional: which field to lookup options for)
                                                            }
             @ToDo: Complete the 'create' feature:
                 * Ensure the Create option doesn't get filtered out when searching for items

@@ -1342,7 +1342,8 @@ def config(settings):
                     (ftable.name == "Main")
             current.db(query).update(name = form_vars_get("name"))
 
-        if not current.auth.s3_logged_in():
+        auth = current.auth
+        if not auth.s3_logged_in():
             # Simplified Form
             from s3 import S3SQLCustomForm
 
@@ -1435,6 +1436,12 @@ def config(settings):
             religion_label = ""
             facility_label = ""
 
+        if auth.s3_has_role("ADMIN"):
+            # Want to be able to create new Types inline!
+            org_type_widget = "multiselect"
+        else:
+            org_type_widget = "groupedopts"
+
         crud_fields = ["name",
                        (T("Organization ID"), "org_id.value"),
                        S3SQLInlineLink("religion",
@@ -1450,8 +1457,13 @@ def config(settings):
                                        field = "organisation_type_id",
                                        label = T("Organization Type"),
                                        multiple = True,
-                                       widget = "groupedopts",
-                                       cols = 3,
+                                       widget = org_type_widget,
+                                       cols = 3, # Only used with "groupedopts"
+                                       create = {"c": "org", # Only used with "multiselect"
+                                                 "f": "organisation_type",
+                                                 "label": "Create Organization Type",
+                                                 "parent": "organisation_organisation_type",
+                                                 },
                                        ),
                        (facility_label, "main_facility.location_id"),
                        "website",

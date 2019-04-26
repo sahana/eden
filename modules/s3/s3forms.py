@@ -3613,6 +3613,12 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             noneSelectedText..string..........placeholder text on multi-select button
             columns...........integer.........Foundation column-width for the
                                               widget (for custom forms)
+            create............dict............Options to create a new record {"c": "controller",
+                                                                              "f": "function",
+                                                                              "label": "label",
+                                                                              "parent": "parent", (optional: which function to lookup options from)
+                                                                              "child": "child", (optional: which field to lookup options for)
+                                                                              }
 
             ** Options-filtering:
                - multiselect and groupedopts only
@@ -3799,6 +3805,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                                   "selectedList",
                                   "noneSelectedText",
                                   "columns",
+                                  "create",
                                   ))
             w = S3MultiSelectWidget(**w_opts)
 
