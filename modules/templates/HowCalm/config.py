@@ -42,6 +42,8 @@ def config(settings):
     settings.gis.location_represent_address_only = True
     # 4500 Facs would be nice but this hits server timeout limits so we have to currently accept the default 2000
     #settings.gis.max_features = 4500
+    # Reduce the default a little to have a more responsive site
+    settings.gis.max_features = 1500
 
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
