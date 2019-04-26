@@ -657,7 +657,7 @@ class BRCaseActivityModel(S3Model):
                             br_assistance_measure_theme = "case_activity_id",
                             )
 
-        # Optional inline components
+        # Optional fields and inline components
         manage_assistance = settings.get_br_manage_assistance()
         if manage_assistance and settings.get_br_assistance_inline():
             # Show inline assistance measures
@@ -682,6 +682,11 @@ class BRCaseActivityModel(S3Model):
                                            )
         else:
             updates = None
+
+        if settings.get_br_case_activity_outcome():
+            outcome = "outcome"
+        else:
+            outcome = None
 
         if settings.get_br_case_activity_documents():
             attachments = S3SQLInlineComponent("document",
@@ -708,7 +713,7 @@ class BRCaseActivityModel(S3Model):
                        "status_id",
                        updates,
                        #"end_date",         # TODO make optional
-                       "outcome",           # TODO make optional
+                       outcome,
                        attachments,
                        "comments",
                        ]

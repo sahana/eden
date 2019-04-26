@@ -2917,6 +2917,12 @@ class S3Config(Storage):
         """
         return self.br.get("case_activity_updates", False)
 
+    def get_br_case_activity_outcome(self):
+        """
+            Show field to track outcomes of case activities (free-text)
+        """
+        return self.br.get("case_activity_outcome", True)
+
     def get_br_case_activity_documents(self):
         """
             Case activities have attachments
