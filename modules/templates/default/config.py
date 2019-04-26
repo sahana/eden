@@ -548,6 +548,8 @@ def config(settings):
     #settings.br.case_activity_need_details = True
     # Enable inline-updates of case activities
     #settings.br.case_activity_updates = True
+    # Disable fields for outcome documentation
+    #settings.br.case_activity_outcome = False
     # Allow documents to be attached to case activities
     #settings.br.case_activity_documents = True
 
