@@ -4642,6 +4642,7 @@
 'Specific Area (e.g. Building/Room) within the Location that this Person/Group is seen.': 'Bestimmter Bereich (z.B. Gebäude/Raum) innerhalb eines Ortes in der diese Person/Gruppe gefunden werden kann.',
 'Specific locations need to have a parent of level': 'Bestimmte Orte benötigen ein übergeordnetes Element der Stufe',
 'Specify a descriptive title for the image.': 'Geben Sie einen beschreibenden Titel für das Bild an.',
+'Specify a time unit or use HH:MM format': 'Geben Sie eine Zeiteinheit an oder verwenden sie die HH:MM Schreibweise',
 'Specify the bed type of this unit.': 'Geben Sie den Bettentypen an für diese Einheit an.',
 'Specify the number of available sets': 'Geben Sie die Anzahl der verfügbaren Sätze an',
 'Specify the number of available units (adult doses)': 'Geben Sie die Anzahl der verfügbaren Einheiten ein (Dosis für Erwachsene)',

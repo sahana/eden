@@ -75,7 +75,7 @@ except ImportError:
 from .s3datetime import S3DateTime
 from .s3rest import S3Method
 from .s3utils import s3_represent_value, s3_validate
-import .s3codec
+from .s3codec import S3Codec
 
 try:
     from PIL import Image
@@ -119,6 +119,8 @@ MAX_FORM_OPTIONS_LIMIT = 12
 
 # Will be loaded with values during S3PDF apply_method
 ERROR = Storage()
+
+DEBUG = False
 
 # =============================================================================
 def checkDependencies(r):
@@ -3103,7 +3105,7 @@ class S3PDFDataSource:
                 fields = [table.id]
             list_fields = [f.name for f in fields]
         else:
-            indices = s3codec.S3Codec.indices
+            indices = S3Codec.indices
             list_fields = [f for f in list_fields if f not in indices]
 
         # Filter and orderby

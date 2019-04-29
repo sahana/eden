@@ -2054,6 +2054,13 @@ def config(settings):
                 field.represent = hr_represent
                 field.widget = field.comment = None
 
+                # Require explicit unit in hours-widget above 4 hours
+                from s3 import S3HoursWidget
+                field = rtable.hours
+                field.widget = S3HoursWidget(precision = 2,
+                                             explicit_above = 4,
+                                             )
+
                 # Embed response actions
                 response_action_fields = ["response_theme_ids",
                                           "comments",
@@ -2753,6 +2760,13 @@ def config(settings):
             field.default = current.auth.s3_logged_in_human_resource()
             field.represent = s3db.hrm_HumanResourceRepresent(show_link=False)
             field.widget = None
+
+            # Require explicit unit in hours-widget above 4 hours
+            from s3 import S3HoursWidget
+            field = table.hours
+            field.widget = S3HoursWidget(precision = 2,
+                                         explicit_above = 4,
+                                         )
 
             # Use separate due-date field?
             use_due_date = settings.get_dvr_response_due_date()

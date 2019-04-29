@@ -1103,7 +1103,7 @@ class S3AddPersonWidget(FormWidget):
             return (None, T("Date of Birth is Required"))
 
         # Validate the email
-        email, error = self.validate_email(data.get("email"))
+        error = self.validate_email(data.get("email"))[1]
         if error:
             return (None, error)
 
@@ -2566,22 +2566,33 @@ class S3HoursWidget(FormWidget):
     """
         Widget to enter a duration in hours (e.g. of a task), supporting
         flexible input format (e.g. "1h 15min", "1.75", "2:10")
+
+        NB users who frequently enter minutes-fragments sometimes forget
+           that the field expects hours, e.g. input of "15" interpreted
+           as 15 hours while the user actually meant 15 minutes. To avoid
+           this, use the explicit_above parameter to require an explicit
+           time unit or colon notation for implausible numbers (e.g. >10)
+           - so the user must enter "15h", "15m", "15:00" or "0:15" explicitly.
     """
 
     PARTS = re.compile(r"((?:[+-]{0,1}\s*)(?:[0-9,.:]+)\s*(?:[^0-9,.:+-]*))")
     TOKEN = re.compile(r"([+-]{0,1}\s*)([0-9,.:]+)([^0-9,.:+-]*)")
 
-    def __init__(self, interval=None, precision=2):
+    def __init__(self, interval=None, precision=2, explicit_above=None):
         """
             Constructor
 
             @param interval: standard interval to round up to (minutes),
                              None to disable rounding
             @param precision: number of decimal places to keep
+            @param explicit_above: require explicit time unit or colon notation
+                                   for value fragments above this limit
         """
 
         self.interval = interval
         self.precision = precision
+
+        self.explicit_above = explicit_above
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
@@ -2615,6 +2626,9 @@ class S3HoursWidget(FormWidget):
 
         try:
             return self.s3_parse(value), None
+        except SyntaxError as e:
+            # Input format violation
+            return value, str(e)
         except:
             return value, "invalid value"
 
@@ -2634,6 +2648,8 @@ class S3HoursWidget(FormWidget):
         elif not value:
             return hours
 
+        explicit_above = self.explicit_above
+
         parts = self.PARTS.split(value)
         for part in parts:
 
@@ -2649,7 +2665,7 @@ class S3HoursWidget(FormWidget):
             num = m.group(2)
 
             unit = m.group(3).lower()
-            unit = unit[0] if unit else "h"
+            unit, implicit = (unit[0], False) if unit else ("h", ":" not in num)
             if unit == "s":
                 length = 1
                 factor = 3600.0
@@ -2670,6 +2686,9 @@ class S3HoursWidget(FormWidget):
                 total += v / factor
                 factor *= 60
 
+            if explicit_above is not None and total > explicit_above and implicit:
+                msg = current.T("Specify a time unit or use HH:MM format")
+                raise SyntaxError(s3_str(msg))
             if sign == "-":
                 hours -= total
             else:
@@ -2681,7 +2700,8 @@ class S3HoursWidget(FormWidget):
             interval = float(interval)
             hours = math.ceil(hours * 60.0 / interval) * interval / 60.0
 
-        return round(hours, self.precision)
+        precision = self.precision
+        return round(hours, precision) if precision is not None else hours
 
 # =============================================================================
 class S3EmbeddedComponentWidget(FormWidget):

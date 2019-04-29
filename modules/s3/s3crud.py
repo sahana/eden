@@ -2219,6 +2219,8 @@ class S3CRUD(S3Method):
                             parser = int
                         try:
                             value = parser(value)
+                        except SyntaxError as e:
+                            error, skip_validation = (str(e) or "invalid value"), True
                         except ValueError:
                             value = 0
                     else:
@@ -2229,6 +2231,8 @@ class S3CRUD(S3Method):
                             parser = float
                         try:
                             value = parser(value)
+                        except SyntaxError as e:
+                            error, skip_validation = (str(e) or "invalid value"), True
                         except ValueError:
                             value = 0.0
                     else:
