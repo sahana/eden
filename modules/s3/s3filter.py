@@ -1550,7 +1550,8 @@ class S3LocationFilter(S3FilterWidget):
                     i += 1
 
     # -------------------------------------------------------------------------
-    def get_lx_ancestors(self, levels, resource, selector=None, location_ids=None, path=False):
+    @staticmethod
+    def get_lx_ancestors(levels, resource, selector=None, location_ids=None, path=False):
         """
             Look up the immediate Lx ancestors of relevant levels
             for all locations referenced by selector
@@ -2860,12 +2861,20 @@ class S3FilterForm(object):
 
         # Filter widgets
         rows = self._render_widgets(resource,
-                                    get_vars=get_vars or {},
-                                    alias=alias,
-                                    formstyle=formstyle)
+                                    get_vars = get_vars or {},
+                                    alias = alias,
+                                    formstyle = formstyle,
+                                    )
+
+        # Filter Manager (load/apply/save filters)
+        fm = settings.get_search_filter_manager()
+        if fm and opts_get("filter_manager", resource is not None):
+            filter_manager = self._render_filters(resource, form_id)
+        else:
+            filter_manager = None
 
         # Other filter form controls
-        controls = self._render_controls(resource)
+        controls = self._render_controls(resource, filter_manager)
         if controls:
             rows.append(formstyle(None, "", controls, ""))
 
@@ -2922,14 +2931,11 @@ class S3FilterForm(object):
             rows.append(submit_row)
 
         # Filter Manager (load/apply/save filters)
-        fm = settings.get_search_filter_manager()
-        if fm and opts_get("filter_manager", resource is not None):
-            filter_manager = self._render_filters(resource, form_id)
-            if filter_manager:
-                fmrow = formstyle(None, "", filter_manager, "")
-                if hasattr(fmrow, "add_class"):
-                    fmrow.add_class("hide filter-manager-row")
-                rows.append(fmrow)
+        if filter_manager:
+            fmrow = formstyle(None, "", filter_manager, "")
+            if hasattr(fmrow, "add_class"):
+                fmrow.add_class("hide filter-manager-row")
+            rows.append(fmrow)
 
         # Adapt to formstyle: render a TABLE only if formstyle returns TRs
         if rows:
@@ -2994,10 +3000,13 @@ class S3FilterForm(object):
         return fields
 
     # -------------------------------------------------------------------------
-    def _render_controls(self, resource):
+    def _render_controls(self, resource, filter_manager=None):
         """
             Render optional additional filter form controls: advanced
             options toggle, clear filters.
+
+            @param resource: the resource
+            @param filter_manager: the filter manager widget
         """
 
         T = current.T
@@ -3043,16 +3052,13 @@ class S3FilterForm(object):
             clear.add_class("action-lnk")
             controls.append(clear)
 
-        fm = current.deployment_settings.get_search_filter_manager()
-        if fm and opts.get("filter_manager", resource is not None):
+        if filter_manager:
             show_fm = A(T("Saved Filters"),
-                        _class="show-filter-manager action-lnk")
+                        _class = "show-filter-manager action-lnk",
+                        )
             controls.append(show_fm)
 
-        if controls:
-            return DIV(controls, _class="filter-controls")
-        else:
-            return None
+        return DIV(controls, _class="filter-controls") if controls else None
 
     # -------------------------------------------------------------------------
     def _render_widgets(self,
@@ -3169,49 +3175,47 @@ class S3FilterForm(object):
 
         # JSON-serializable translator
         T = current.T
-        _t = lambda s: s3_str(T(s))
+        t_ = lambda s: s3_str(T(s))
 
         # Configure the widget
         settings = current.deployment_settings
-        config = dict(
+        config = {# Filters and Ajax URL
+                  "filters": filters,
+                  "ajaxURL": ajaxurl,
 
-            # Filters and Ajax URL
-            filters = filters,
-            ajaxURL = ajaxurl,
+                  # Workflow Options
+                  "allowDelete": settings.get_search_filter_manager_allow_delete(),
 
-            # Workflow Options
-            allowDelete = settings.get_search_filter_manager_allow_delete(),
+                  # Tooltips for action icons/buttons
+                  "createTooltip": t_("Save current options as new filter"),
+                  "loadTooltip": t_("Load filter"),
+                  "saveTooltip": t_("Update saved filter"),
+                  "deleteTooltip": t_("Delete saved filter"),
 
-            # Tooltips for action icons/buttons
-            createTooltip = _t("Save current options as new filter"),
-            loadTooltip = _t("Load filter"),
-            saveTooltip = _t("Update saved filter"),
-            deleteTooltip = _t("Delete saved filter"),
+                  # Hints
+                  "titleHint": t_("Enter a title..."),
+                  "selectHint": s3_str(SELECT_FILTER),
+                  "emptyHint": t_("No saved filters"),
 
-            # Hints
-            titleHint = _t("Enter a title..."),
-            selectHint = s3_str(SELECT_FILTER),
-            emptyHint = _t("No saved filters"),
-
-            # Confirm update + confirmation text
-            confirmUpdate = _t("Update this filter?"),
-            confirmDelete = _t("Delete this filter?"),
-        )
+                  # Confirm update + confirmation text
+                  "confirmUpdate": t_("Update this filter?"),
+                  "confirmDelete": t_("Delete this filter?"),
+                  }
 
         # Render actions as buttons with text if configured, otherwise
         # they will appear as empty DIVs with classes for CSS icons
         create_text = settings.get_search_filter_manager_save()
         if create_text:
-            config["createText"] = _t(create_text)
+            config["createText"] = t_(create_text)
         update_text = settings.get_search_filter_manager_update()
         if update_text:
-            config["saveText"] = _t(update_text)
+            config["saveText"] = t_(update_text)
         delete_text = settings.get_search_filter_manager_delete()
         if delete_text:
-            config["deleteText"] = _t(delete_text)
+            config["deleteText"] = t_(delete_text)
         load_text = settings.get_search_filter_manager_load()
         if load_text:
-            config["loadText"] = _t(load_text)
+            config["loadText"] = t_(load_text)
 
         script = '''$("#%s").filtermanager(%s)''' % \
                     (widget_id,
@@ -3366,29 +3370,33 @@ class S3Filter(S3Method):
         """
 
         representation = r.representation
+        output = None
+
         if representation == "options":
             # Return the filter options as JSON
-            return self._options(r, **attr)
+            output = self._options(r, **attr)
 
         elif representation == "json":
             if r.http == "GET":
                 # Load list of saved filters
-                return self._load(r, **attr)
+                output = self._load(r, **attr)
             elif r.http == "POST":
                 if "delete" in r.get_vars:
                     # Delete a filter
-                    return self._delete(r, **attr)
+                    output = self._delete(r, **attr)
                 else:
                     # Save a filter
-                    return self._save(r, **attr)
+                    output = self._save(r, **attr)
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
 
         elif representation == "html":
-            return self._form(r, **attr)
+            output = self._form(r, **attr)
 
         else:
             r.error(415, current.ERROR.BAD_FORMAT)
+
+        return output
 
     # -------------------------------------------------------------------------
     def _form(self, r, **attr):
@@ -3486,9 +3494,9 @@ class S3Filter(S3Method):
 
         if not success:
             r.error(400, resource.error)
-        else:
-            current.response.headers["Content-Type"] = "application/json"
-            return current.xml.json_message(deleted=record_id)
+
+        current.response.headers["Content-Type"] = "application/json"
+        return current.xml.json_message(deleted=record_id)
 
     # -------------------------------------------------------------------------
     def _save(self, r, **attr):
