@@ -151,7 +151,7 @@ class AuthConsentModel(S3Model):
         data under GDPR rules.
     """
 
-    names = ("auth_consent_option_type",
+    names = ("auth_processing_type",
              "auth_consent_option",
              "auth_consent",
              )
@@ -160,38 +160,52 @@ class AuthConsentModel(S3Model):
 
         T = current.T
 
-        #db = current.db
+        db = current.db
         s3 = current.response.s3
 
         define_table = self.define_table
         crud_strings = s3.crud_strings
 
         # ---------------------------------------------------------------------
-        # Consent Option Types
-        # - types of data processing consent is requested for
+        # Processing Types
+        # - types of data processing consent is required for
         #
-        tablename = "auth_consent_option_type"
+        tablename = "auth_processing_type"
         define_table(tablename,
-                     # TODO code for hard-coded lookups
+                     Field("code", length=16, notnull=True, unique=True,
+                           label = T("Type Code"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(16),
+                                       IS_NOT_ONE_OF(db, "%s.code" % tablename),
+                                       ],
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Type Code"),
+                                                             T("A unique code to identify the type"),
+                                                             ),
+                                         ),
+                           ),
                      Field("name",
                            requires = IS_NOT_EMPTY(),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
 
-        # TODO CRUD Strings
+        # Representation
+        type_represent = S3Represent(lookup=tablename)
+
+        # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Example"),
-            title_display = T("Example Details"),
-            title_list = T("Examples"),
-            title_update = T("Edit Example"),
-            label_list_button = T("List Examples"),
-            label_delete_button = T("Delete Example"),
-            msg_record_created = T("Example created"),
-            msg_record_modified = T("Example updated"),
-            msg_record_deleted = T("Example deleted"),
-            msg_list_empty = T("No Examples currently registered"),
-        )
+            label_create = T("Create Processing Type"),
+            title_display = T("Processing Type Details"),
+            title_list = T("Processing Types"),
+            title_update = T("Edit Processing Type"),
+            label_list_button = T("List Processing Types"),
+            label_delete_button = T("Delete Processing Type"),
+            msg_record_created = T("Processing Type created"),
+            msg_record_modified = T("Processing Type updated"),
+            msg_record_deleted = T("Processing Type deleted"),
+            msg_list_empty = T("No Processing Types currently defined"),
+            )
 
         # ---------------------------------------------------------------------
         # Consent Option
@@ -203,38 +217,70 @@ class AuthConsentModel(S3Model):
         #
         tablename = "auth_consent_option"
         define_table(tablename,
-                     Field("type_id", "reference auth_consent_option_type",
-                           # TODO requires
-                           # TODO represent
-                           ),
-                     s3_date("valid_from",
-                             default = "now",
-                             ),
-                     s3_date("valid_until"),
-                     Field("obsolete", "boolean",
-                           default = False,
+                     Field("type_id", "reference auth_processing_type",
+                           represent = type_represent,
+                           requires = IS_ONE_OF(db, "auth_processing_type.id",
+                                                type_represent,
+                                                ),
                            ),
                      Field("name",
+                           label = T("Short Description"),
                            requires = IS_NOT_EMPTY(),
                            ),
-                     Field("explanation", "text",
+                     Field("description", "text",
+                           label = T("Explanations"),
                            represent = s3_text_represent,
+                           ),
+                     s3_date("valid_from",
+                             label = T("Valid From"),
+                             default = "now",
+                             ),
+                     s3_date("valid_until",
+                             readable = False,
+                             writable = False,
+                             ),
+                     Field("opt_out", "boolean",
+                           default = False,
+                           label = T("Preselected"),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Preselected"),
+                                                             T("This option is preselected in consent question (explicit opt-out)"),
+                                                             ),
+                                         ),
+                           ),
+                     Field("mandatory", "boolean",
+                           default = False,
+                           label = T("Mandatory"),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Mandatory"),
+                                                             T("This option is required for the consent question to succeed"),
+                                                             ),
+                                         ),
+                           ),
+                     Field("obsolete", "boolean",
+                           default = False,
+                           label = T("Obsolete"),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Obsolete"),
+                                                             T("This description of the data processing is obsolete"),
+                                                             ),
+                                         ),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
 
-        # TODO CRUD Strings
+        # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Example"),
-            title_display = T("Example Details"),
-            title_list = T("Examples"),
-            title_update = T("Edit Example"),
-            label_list_button = T("List Examples"),
-            label_delete_button = T("Delete Example"),
-            msg_record_created = T("Example created"),
-            msg_record_modified = T("Example updated"),
-            msg_record_deleted = T("Example deleted"),
-            msg_list_empty = T("No Examples currently registered"),
+            label_create = T("Create Consent Option"),
+            title_display = T("Consent Option Details"),
+            title_list = T("Consent Options"),
+            title_update = T("Edit Consent Option"),
+            label_list_button = T("List Consent Options"),
+            label_delete_button = T("Delete Consent Option"),
+            msg_record_created = T("Consent Option created"),
+            msg_record_modified = T("Consent Option updated"),
+            msg_record_deleted = T("Consent Option deleted"),
+            msg_list_empty = T("No Consent Options currently defined"),
         )
 
         # ---------------------------------------------------------------------
