@@ -223,9 +223,9 @@ class BRCaseModel(S3Model):
                             writable = not default_organisation,
                             ),
                      self.hrm_human_resource_id(
-                            label = T("Assigned To"),
+                            label = T("Staff Member in Charge"),
                             comment = DIV(_class = "tooltip",
-                                          _title = "%s|%s" % (T("Assigned To"),
+                                          _title = "%s|%s" % (T("Staff Member in Charge"),
                                                               T("The staff member managing this case"),
                                                               ),
                                           ),
@@ -547,10 +547,12 @@ class BRCaseActivityModel(S3Model):
         #           (subject-based/need-based)
         #
         case_activity_manager = settings.get_br_case_activity_manager()
-        case_activity_status = settings.get_br_case_activity_status()
         case_activity_need = settings.get_br_case_activity_need()
         case_activity_subject = settings.get_br_case_activity_subject()
         case_activity_need_details = settings.get_br_case_activity_need_details()
+        case_activity_status = settings.get_br_case_activity_status()
+        case_activity_end_date = case_activity_status and \
+                                 settings.get_br_case_activity_end_date()
 
         # Priority options
         priority_opts = [#(0, T("Urgent")),
@@ -575,9 +577,9 @@ class BRCaseActivityModel(S3Model):
 
                      # Case Manager
                      self.hrm_human_resource_id(
-                            label = T("Assigned To"),
+                            label = T("Staff Member in Charge"),
                             comment = DIV(_class = "tooltip",
-                                          _title = "%s|%s" % (T("Assigned To"),
+                                          _title = "%s|%s" % (T("Staff Member in Charge"),
                                                               T("The staff member managing this activity"),
                                                               ),
                                           ),
@@ -634,10 +636,9 @@ class BRCaseActivityModel(S3Model):
                              set_min = "#br_case_activity_end_date",
                              ),
                      s3_date("end_date",
-                             label = T("Closed on"),
-                             # TODO make optional CRUD field
-                             readable = False,
-                             writable = False,
+                             label = T("Ended on"),
+                             readable = case_activity_end_date,
+                             writable = case_activity_end_date == "writable",
                              set_max = "#br_case_activity_date",
                              ),
 
@@ -712,7 +713,7 @@ class BRCaseActivityModel(S3Model):
                        assistance,
                        "status_id",
                        updates,
-                       #"end_date",         # TODO make optional
+                       "end_date",
                        outcome,
                        attachments,
                        "comments",
@@ -725,7 +726,7 @@ class BRCaseActivityModel(S3Model):
                        #"subject",
                        #"human_resource_id",
                        #"status_id",
-                       #"end_date",         # TODO make optional
+                       #"end_date",
                        ]
         append = list_fields.append
         if case_activity_need:
@@ -736,6 +737,8 @@ class BRCaseActivityModel(S3Model):
             append("human_resource_id")
         if case_activity_status:
             append("status_id")
+        if case_activity_end_date:
+            append("end_date")
 
         # Table configuration
         configure(tablename,

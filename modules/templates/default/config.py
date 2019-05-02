@@ -540,14 +540,16 @@ def config(settings):
     #settings.br.case_activity_manager = False
     # Expose "urgent" priority for case activities (=emergencies)
     #settings.br.case_activity_urgent_option = True
-    # Disable status and end-date for case activities
-    #settings.br.case_activity_status = False
     # Disable need categories in case activities
     #settings.br.case_activity_need = False
     # Use a free-text subject line in case activities
     #settings.br.case_activity_subject = True
     # Use a free-text field to document need details in case activities
     #settings.br.case_activity_need_details = True
+    # Disable status and end-date for case activities
+    #settings.br.case_activity_status = False
+    # Show end-date of case activites (True=show, "writable"=allow manual edit)
+    #settings.br.case_activity_end_date = True
     # Enable inline-updates of case activities
     #settings.br.case_activity_updates = True
     # Disable fields for outcome documentation

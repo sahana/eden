@@ -2915,6 +2915,13 @@ class S3Config(Storage):
         """
         return self.br.get("case_activity_status", True)
 
+    def get_br_case_activity_end_date(self):
+        """
+            Show case activity end date in form
+            - True to show, "writable" to allow manual edit
+        """
+        return self.br.get("case_activity_end_date", False)
+
     def get_br_case_activity_updates(self):
         """
             Use case activity update journal (inline-component)
