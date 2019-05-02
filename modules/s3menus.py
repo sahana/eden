@@ -445,8 +445,9 @@ class S3OptionsMenu(object):
         settings_messaging = self.settings_messaging()
 
         settings = current.deployment_settings
-        translate = settings.has_module("translate")
+        consent_tracking = lambda i: settings.get_auth_consent_tracking()
         is_data_repository = lambda i: settings.get_sync_data_repository()
+        translate = settings.has_module("translate")
 
         # NB: Do not specify a controller for the main menu to allow
         #     re-use of this menu by other controllers
@@ -470,6 +471,10 @@ class S3OptionsMenu(object):
                         #M("Roles", f="group"),
                         #M("Membership", f="membership"),
                     ),
+                    M("Consent Tracking", c="admin", link=False, check=consent_tracking)(
+                        M("Processing Types", f="processing_type"),
+                        M("Consent Options", f="consent_option"),
+                        ),
                     M("CMS", c="cms", f="post")(
                     ),
                     M("Database", c="appadmin", f="index")(

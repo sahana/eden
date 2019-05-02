@@ -823,6 +823,10 @@ class S3Config(Storage):
         """
         return self.auth.get("terms_of_service", False)
 
+    def get_auth_consent_tracking(self):
+        """ Expose options to track user consent """
+        return self.auth.get("consent_tracking", False)
+
     def get_auth_registration_volunteer(self):
         """ Redirect the newly-registered user to their volunteer details page """
         return self.auth.get("registration_volunteer", False)

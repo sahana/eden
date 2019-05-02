@@ -11,16 +11,18 @@ def index():
 
     module_name = settings.modules["admin"].name_nice
     response.title = module_name
-    return dict(module_name=module_name)
+
+    return {"module_name": module_name}
 
 # =============================================================================
 @auth.s3_requires_membership(1)
 def setting():
     """
-        Custom page to link to those Settings which can be edited through the web interface
+        Custom page to link to those Settings which can be edited through
+        the web interface
     """
 
-    return dict()
+    return {}
 
 # =============================================================================
 # AAA
@@ -183,7 +185,8 @@ def user():
         msg_record_created = T("User added"),
         msg_record_modified = T("User updated"),
         msg_record_deleted = T("User deleted"),
-        msg_list_empty = T("No Users currently registered"))
+        msg_list_empty = T("No Users currently registered"),
+        )
 
     def rheader(r):
         if r.representation != "html" or not r.record:
@@ -302,12 +305,11 @@ def user():
                     (table.registration_key != "")
             rows = db(query).select(table.id)
             restrict = [str(row.id) for row in rows]
-            s3.actions.append(
-                    dict(label=str(T("Approve")), _class="action-btn",
-                         url=URL(c="admin", f="user",
-                                 args=["[id]", "approve"]),
-                         restrict = restrict)
-                )
+            s3.actions.append({"label": str(T("Approve")),
+                               "url": URL(c="admin", f="user", args=["[id]", "approve"]),
+                               "restrict": restrict,
+                               "_class": "action-btn",
+                               })
             # Add some highlighting to the rows
             query = (table.registration_key.belongs(["disabled", "pending"]))
             rows = db(query).select(table.id,
@@ -410,7 +412,8 @@ def group():
         msg_record_created = T("Role added"),
         msg_record_modified = T("Role updated"),
         msg_record_deleted = T("Role deleted"),
-        msg_list_empty = T("No Roles defined"))
+        msg_list_empty = T("No Roles defined"),
+        )
 
     s3db.configure(tablename, main="role")
     return s3_rest_controller("auth", "group")
@@ -438,10 +441,9 @@ def organisation():
         msg_record_modified = T("Organization Domain updated"),
         msg_record_deleted = T("Organization Domain deleted"),
         msg_list_empty = T("No Organization Domains currently registered")
-    )
+        )
 
-    output = s3_rest_controller("auth", "organisation")
-    return output
+    return s3_rest_controller("auth", "organisation")
 
 # -----------------------------------------------------------------------------
 def user_create_onvalidation (form):
@@ -450,6 +452,72 @@ def user_create_onvalidation (form):
         form.request_vars.password != form.request_vars.password_two):
         form.errors.password = T("Password fields don't match")
     return True
+
+# =============================================================================
+# Consent Tracking
+#
+@auth.s3_requires_membership(1)
+def processing_type():
+    """ Types of Data Processing: RESTful CRUD Controller """
+
+    return s3_rest_controller("auth", "processing_type")
+
+# -----------------------------------------------------------------------------
+@auth.s3_requires_membership(1)
+def consent_option():
+    """ Consent Options: RESTful CRUD Controller """
+
+    def prep(r):
+
+        resource = r.resource
+        table = resource.table
+
+        # Make hash-fields writable while no consent reference exists
+        editable = False
+        if not r.record:
+            editable = True
+        else:
+            ctable = s3db.auth_consent
+            query = (ctable.option_id == r.id) & (ctable.deleted == False)
+            editable = db(query).count() == 0
+        if editable:
+            for fn in s3db.auth_consent_option_hash_fields:
+                table[fn].writable = True
+        else:
+            # Prevent deletion when referenced in consent record
+            resource.configure(deletable=False)
+
+        return True
+    s3.prep = prep
+
+    def postp(r, output):
+
+        if not r.record:
+            # No delete-button by default
+            s3_action_buttons(r, deletable=False)
+
+            # Add delete-button only for options not yet referenced
+            # by any consent record:
+            table = r.table
+            ctable = s3db.auth_consent
+            left = ctable.on(table.id == ctable.option_id)
+            consent_count = ctable.id.count()
+            rows = db(table.deleted == False).select(table.id,
+                                                     consent_count,
+                                                     groupby = table.id,
+                                                     having = consent_count == 0,
+                                                     left = left,
+                                                     )
+            deletable = [str(row.auth_consent_option.id) for row in rows]
+            s3.actions.append({"label": s3_str(T("Delete")),
+                               "restrict": deletable,
+                               "url": URL(args = ["[id]", "delete"]),
+                               "_class": "action-btn delete-btn",
+                               })
+        return output
+    s3.postp = postp
+
+    return s3_rest_controller("auth", "consent_option")
 
 # =============================================================================
 @auth.s3_requires_membership(1)
@@ -520,34 +588,11 @@ def acl_represent(acl, options):
 
 # =============================================================================
 # Ticket viewing
-# =============================================================================
-@auth.s3_requires_membership(1)
-def ticket():
-    """ Ticket handler """
-
-    import traceback
-    from gluon.restricted import RestrictedError
-
-    if len(request.args) != 2:
-        session.error = T("Invalid ticket")
-        redirect(URL(r=request))
-
-    app = request.args[0]
-    ticket = request.args[1]
-    e = RestrictedError()
-    e.load(request, app, ticket)
-
-    return dict(app=app,
-                ticket=ticket,
-                traceback=s3base.Traceback(e.traceback),
-                code=e.code,
-                layer=e.layer)
-
-# -----------------------------------------------------------------------------
-# Web2Py Ticket Viewer functions Borrowed from admin application of web2py
+# - web2Py ticket viewer functions borrowed from admin application of web2py
+#
 @auth.s3_requires_membership(1)
 def errors():
-    """ Error handler """
+    """ Error ticket list """
 
     from gluon.admin import apath
     from gluon.fileutils import listdir
@@ -561,7 +606,32 @@ def errors():
                      key=func,
                      reverse=True)
 
-    return dict(app=appname, tickets=tickets)
+    return {"app": appname,
+            "tickets": tickets,
+            }
+
+# -----------------------------------------------------------------------------
+@auth.s3_requires_membership(1)
+def ticket():
+    """ Ticket viewer """
+
+    if len(request.args) != 2:
+        session.error = T("Invalid ticket")
+        redirect(URL(r=request))
+
+    app = request.args[0]
+    ticket = request.args[1]
+
+    from gluon.restricted import RestrictedError
+    e = RestrictedError()
+    e.load(request, app, ticket)
+
+    return {"app": app,
+            "ticket": ticket,
+            "traceback": s3base.Traceback(e.traceback),
+            "code": e.code,
+            "layer": e.layer,
+            }
 
 # =============================================================================
 # Create portable app
@@ -652,11 +722,11 @@ def portable():
 
     else:
         download_last_form = None
-    return dict(
-            web2py_form=web2py_form,
-            generator_form=generator_form,
-            download_last_form=download_last_form
-        )
+
+    return {"web2py_form": web2py_form,
+            "generator_form": generator_form,
+            "download_last_form": download_last_form,
+            }
 
 # -----------------------------------------------------------------------------
 def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
@@ -765,7 +835,7 @@ def translate():
     opt = get_vars.get("opt", None)
     if not opt:
         # Show index page
-        return dict()
+        return {}
 
     # For the one which actually uses CRUD (opt 2)
     s3.crud.submit_button = T("Upload")

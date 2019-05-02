@@ -112,6 +112,8 @@ def config(settings):
     # https://termsfeed.com/terms-conditions/generator/
     # uses <template>/views/tos.html
     #settings.auth.terms_of_service = True
+    # Enable options for tracking user consent
+    #settings.auth.consent_tracking = True
     # Uncomment this to allow users to Login using Gmail's SMTP
     #settings.auth.gmail_domains = ["gmail.com"]
     # Uncomment this to allow users to Login using Office365's SMTP

@@ -37,6 +37,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
+from ..s3layouts import S3PopupLink
 
 # =============================================================================
 class AuthDomainApproverModel(S3Model):
@@ -153,6 +154,7 @@ class AuthConsentModel(S3Model):
 
     names = ("auth_processing_type",
              "auth_consent_option",
+             "auth_consent_option_hash_fields",
              "auth_consent",
              )
 
@@ -173,7 +175,7 @@ class AuthConsentModel(S3Model):
         tablename = "auth_processing_type"
         define_table(tablename,
                      Field("code", length=16, notnull=True, unique=True,
-                           label = T("Type Code"),
+                           label = T("Code"),
                            requires = [IS_NOT_EMPTY(),
                                        IS_LENGTH(16),
                                        IS_NOT_ONE_OF(db, "%s.code" % tablename),
@@ -185,6 +187,7 @@ class AuthConsentModel(S3Model):
                                          ),
                            ),
                      Field("name",
+                           label = T("Description"),
                            requires = IS_NOT_EMPTY(),
                            ),
                      s3_comments(),
@@ -194,8 +197,9 @@ class AuthConsentModel(S3Model):
         type_represent = S3Represent(lookup=tablename)
 
         # CRUD Strings
+        ADD_TYPE = T("Create Processing Type")
         crud_strings[tablename] = Storage(
-            label_create = T("Create Processing Type"),
+            label_create = ADD_TYPE,
             title_display = T("Processing Type Details"),
             title_list = T("Processing Types"),
             title_update = T("Edit Processing Type"),
@@ -218,18 +222,30 @@ class AuthConsentModel(S3Model):
         tablename = "auth_consent_option"
         define_table(tablename,
                      Field("type_id", "reference auth_processing_type",
+                           label = T("Processing Type"),
                            represent = type_represent,
                            requires = IS_ONE_OF(db, "auth_processing_type.id",
                                                 type_represent,
                                                 ),
+                           ondelete = "RESTRICT",
+                           comment = S3PopupLink(c = "admin",
+                                                 f = "processing_type",
+                                                 title = ADD_TYPE,
+                                                 tooltip = T("Choose a type from the drop-down, or click the link to create a new type"),
+                                                 vars = {"parent": "consent_option",
+                                                         "child": "type_id",
+                                                         },
+                                                 ),
                            ),
                      Field("name",
                            label = T("Short Description"),
                            requires = IS_NOT_EMPTY(),
+                           writable = False,
                            ),
                      Field("description", "text",
                            label = T("Explanations"),
                            represent = s3_text_represent,
+                           writable = False,
                            ),
                      s3_date("valid_from",
                              label = T("Valid From"),
@@ -269,6 +285,22 @@ class AuthConsentModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # Read-only hash fields (enabled in controller if permissible)
+        hash_fields = ("name", "description")
+
+        # List fields
+        list_fields = ["id",
+                       "type_id",
+                       "name",
+                       "valid_from",
+                       "obsolete",
+                       ]
+
+        # Table Configuration
+        self.configure(tablename,
+                       list_fields = list_fields,
+                       )
+
         # CRUD Strings
         crud_strings[tablename] = Storage(
             label_create = T("Create Consent Option"),
@@ -291,7 +323,7 @@ class AuthConsentModel(S3Model):
                      self.pr_person_id(),
                      Field("vsign"),
                      Field("vhash", "text"),
-                     Field("option_id", "reference auth_consent_option.id",
+                     Field("option_id", "reference auth_consent_option",
                            ondelete = "RESTRICT",
                            ),
                      Field("consenting", "boolean",
@@ -305,7 +337,8 @@ class AuthConsentModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"auth_consent_option_hash_fields": hash_fields,
+                }
 
 # =============================================================================
 def auth_user_options_get_osm(pe_id):

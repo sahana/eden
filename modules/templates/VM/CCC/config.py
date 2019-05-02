@@ -50,6 +50,9 @@ def config(settings):
 
     settings.security.policy = 7 # Organisation-ACLs
 
+    # Consent Tracking
+    settings.auth.consent_tracking = True
+
     # Record Approval
     settings.auth.record_approval = True
     settings.auth.record_approval_required_for = ("org_organisation",
