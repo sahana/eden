@@ -5507,6 +5507,7 @@ class PRPersonDetailsModel(S3Model):
             5: T("divorced"),
             6: T("widowed"),
             7: T("cohabiting"),
+            8: T("married (not legally recognized)"),
             9: T("other"),
         }
 
