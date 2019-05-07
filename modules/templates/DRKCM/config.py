@@ -14,6 +14,7 @@ from s3dal import original_tablename
 # UI options per organisation
 #
 UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
+               "case_collaboration": False,
                "case_bamf_first": False,
                "case_document_templates": False,
                "case_header_protection_themes": False,
@@ -49,6 +50,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                }
 
 UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
+                      "case_collaboration": True,
                       "case_bamf_first": True,
                       "case_document_templates": True,
                       "case_header_protection_themes": True,

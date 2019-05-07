@@ -39,13 +39,18 @@ class S3MainMenu(default.S3MainMenu):
         """ Modules Menu """
 
         auth = current.auth
+        ui_options = get_ui_options()
 
         case_vars = {"closed": "0"}
-        if auth.s3_logged_in_human_resource() and \
+        if not ui_options.get("case_collaboration") and \
+           auth.s3_logged_in_human_resource() and \
            auth.s3_has_role("CASE_MANAGEMENT"):
             case_vars["mine"] = "1"
 
-        return [MM("Cases", c=("dvr", "pr"), f="person", t="dvr_case", vars=case_vars),
+        return [MM("Cases", c=("dvr", "pr"), f=("person", "case_activity", "response_action"),
+                   t = "dvr_case",
+                   vars = case_vars,
+                   ),
                 MM("Case Consulting", c="dvr", f="index",
                    check = lambda this: not this.preceding()[-1].check_permission(),
                    ),
@@ -210,7 +215,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         human_resource_id = auth.s3_logged_in_human_resource()
         if human_resource_id and auth.s3_has_role("CASE_MANAGEMENT"):
-            # Extended menu for case managers
+
+            # Follow-up labels
             if followups:
                 my_due_followups = due_followups(human_resource_id = human_resource_id) or "0"
                 my_due_followups_label = "%s (%s)" % (due_followups_label,
@@ -222,29 +228,51 @@ class S3OptionsMenu(default.S3OptionsMenu):
             else:
                 my_due_followups_label = all_due_followups_label = due_followups_label
 
+            # Cases sub-menu
+            case_collaboration = ui_options.get("case_collaboration")
+            if case_collaboration:
+                # Current Cases as lead item
+                case_menu = M("Current Cases", c=("dvr", "pr"), f="person", t="dvr_case",
+                              vars = {"closed": "0"},
+                              )
+            else:
+                # My Cases as lead item (Current Cases in Overviews)
+                case_menu = M("My Cases", c=("dvr", "pr"), f="person", t="dvr_case",
+                              vars = {"closed": "0", "mine": "1"},
+                              )
+
+            # Actions sub-menu
             if ui_options.get("response_use_organizer"):
                 my_actions = M("My Actions", c="dvr", f="response_action",
                                t="dvr_response_action", vars={"mine": "a"})(
                                 M("Calendar", m="organize", vars={"mine": "a"}),
                                 )
             else:
-                my_actions = M("Actions", c="dvr", f="response_action", t="dvr_response_action", link=False)(
+                my_actions = M("Actions", c="dvr", f="response_action",
+                               t="dvr_response_action", link=False)(
                                 M("Assigned to me", vars = {"mine": "a"}),
                                 M("Managed by me", vars = {"mine": "r"}),
                                 )
 
             menu = M(c="dvr")(
-                    M("My Cases", c=("dvr", "pr"), f="person", t="dvr_case",
-                      vars = {"closed": "0", "mine": "1"})(
+                    case_menu(
                         M("Create Case", m="create", t="pr_person", p="create"),
-                        M("My Activities", c="dvr", f="case_activity",
-                          vars = {"mine": "1"}),
+                        M("My Cases", f="person", t="dvr_case",
+                          vars = {"closed": "0", "mine": "1"},
+                          check = case_collaboration,
+                          ),
+                        M("My Activities", c="dvr", f="case_activity", vars={"mine": "1"}),
                         M(my_due_followups_label, c="dvr", f="due_followups",
-                          vars = {"mine": 1}, check = followups),
+                          vars = {"mine": 1},
+                          check = followups,
+                          ),
                         ),
                     my_actions,
                     M("Overviews", c=("dvr", "pr"), link=False)(
-                        M("Current Cases", f="person", t="dvr_case", vars = {"closed": "0"}),
+                        M("Current Cases", f="person", t="dvr_case",
+                          vars = {"closed": "0"},
+                          check = case_collaboration,
+                          ),
                         M("All Cases", f="person", t="dvr_case"),
                         M("All Activities", f="case_activity", t="dvr_case_activity"),
                         M(all_due_followups_label, f="due_followups", check=followups),

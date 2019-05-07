@@ -87,7 +87,7 @@ $column-gutter: rem-calc(20);
 // - - - - - - - - - - - - - - - - - - - - - - - - -
 
 // We use these to define default font stacks
-// $font-family-sans-serif: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+$font-family-sans-serif: Arial, "Helvetica Neue", Helvetica, Roboto, sans-serif;
 // $font-family-serif: Georgia, Cambria, "Times New Roman", Times, serif;
 // $font-family-monospace: Consolas, "Liberation Mono", Courier, monospace;
 
@@ -96,7 +96,7 @@ $font-weight-normal: normal !default;
 $font-weight-bold: bold !default;
 
 $white       : #FFFFFF;
-$rcred       : #CC0000;
+$rcred       : #CC0707;
 $brightred   : #EE3224;
 $blood       : #E50000;
 $darksteel    : #4D4D4D;
@@ -114,14 +114,14 @@ $iron        : #CCCCCC;
 // $jumbo       : #888888;
 // $monsoon     : #777777;
 $steel       : #666666;
-// $charcoal    : #555555;
+$charcoal    : #555555;
 // $tuatara     : #444444;
 // $oil         : #333333;
 // $jet         : #222222;
 $black       : #000000;
 
 // We use these as default colors throughout
-$primary-color: #006A71;
+$primary-color: #386570;
 // $primary-color: #004b79;
 $secondary-color: #e7e7e7;
 $alert-color: #D92C20;
@@ -1426,11 +1426,11 @@ $sub-nav-item-divider-margin: rem-calc(6);
 // $include-html-top-bar-classes: $include-html-classes;
 
 // Background color for the top bar
-$topbar-bg-color: $darksteel;
+$topbar-bg-color: $charcoal;
 // $topbar-bg: $topbar-bg-color;
 
 // Height and margin
-$topbar-height: rem-calc(40);
+$topbar-height: rem-calc(32);
 // $topbar-margin-bottom: 0;
 
 // Controlling the styles for the title in the top bar

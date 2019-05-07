@@ -658,7 +658,7 @@ div.tabs {
   padding: 0;
   line-height: 1.3rem;
   text-align: left;
-  border-bottom: 1px solid #006A71;
+  border-bottom: 1px solid #386570;
 }
 /* line 82, ../../default/scss/theme/_rheader.scss */
 div.tabs span {
@@ -684,9 +684,9 @@ div.tabs span.tab_here {
   font-size: 1rem;
   font-weight: bold;
   margin: 0.2rem 0.35rem 0 0;
-  padding: 0.1rem 0.4rem 0.1rem;
+  padding: 0.1rem 0.4rem 0.12rem;
   background: #ffffff;
-  border-color: #006A71;
+  border-color: #386570;
   border-style: solid;
   border-width: 0.125rem 2px 0.0625rem 3px;
   border-bottom-style: solid;
@@ -709,15 +709,15 @@ div.tabs span.tab_last, div.tabs span.tab_other {
   font-size: 0.9rem;
   margin: 0.35rem 0.2rem 0 0;
   padding: 0.1rem 0.3rem 0;
-  background-color: #006A71;
-  border-color: #006A71;
+  background-color: #386570;
+  border-color: #386570;
   border-width: 0.0625rem 1px 0.0625rem 2px;
   border-style: solid;
 }
 /* line 147, ../../default/scss/theme/_rheader.scss */
 div.tabs span.tab_last:hover, div.tabs span.tab_other:hover {
-  background-color: #00555a;
-  border-color: #00555a;
+  background-color: #2d515a;
+  border-color: #2d515a;
 }
 /* line 151, ../../default/scss/theme/_rheader.scss */
 div.tabs span.tab_last a, div.tabs span.tab_other a {
@@ -759,13 +759,13 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 /* line 58, ../../default/scss/theme/_buttons.scss */
 .action-btn,
 .selected-action {
-  background-color: #006A71;
+  background-color: #386570;
   color: white !important;
 }
 /* line 62, ../../default/scss/theme/_buttons.scss */
 .action-btn:hover,
 .selected-action:hover {
-  background-color: #00555a;
+  background-color: #2d515a;
   color: white !important;
 }
 
@@ -792,7 +792,7 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 /* line 83, ../../default/scss/theme/_buttons.scss */
 .cancel-form-btn:hover {
   color: white;
-  background-color: #006A71;
+  background-color: #386570;
 }
 
 /* Full screen map button */
@@ -919,7 +919,7 @@ body.rtl .action-lnk:first-child {
 /* Side Menu */
 /* line 57, ../../default/scss/theme/_menus.scss */
 .sidebar {
-  background: none repeat scroll 0 0 #f3f3f3;
+  background: none repeat scroll 0 0 #f7f7f7;
   margin-top: 10px;
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
@@ -947,7 +947,7 @@ body.rtl .action-lnk:first-child {
 }
 /* line 81, ../../default/scss/theme/_menus.scss */
 .side-nav li.active > a:first-child:not(.button):hover {
-  color: #008f99;
+  color: #437a87;
   background-color: rgba(0, 0, 0, 0.025);
 }
 
@@ -1090,7 +1090,7 @@ table.dataTable .group .group-expand {
 /* line 101, ../../default/scss/theme/_tables.scss */
 table.dataTable.dtr-inline.collapsed tbody td:first-child::before, table.dataTable.dtr-inline.collapsed tbody th:first-child::before {
   top: 6px;
-  background-color: #006A71;
+  background-color: #386570;
 }
 /* line 106, ../../default/scss/theme/_tables.scss */
 table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child::before, table.dataTable.dtr-inline.collapsed tbody tr.parent th:first-child::before {
@@ -1301,7 +1301,7 @@ h4.profile-sub-header {
 
 /* line 49, ../../default/scss/theme/_widgets.scss */
 .ui-widget {
-  font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+  font-family: Arial, "Helvetica Neue", Helvetica, Roboto, sans-serif;
 }
 
 /* List-Add Button */
@@ -1608,7 +1608,7 @@ form.anonymize-form,
 .rm-form .rm-assign .action-lnk,
 .rm-form .rm-rules .action-lnk {
   display: inline-block;
-  color: #006A71;
+  color: #386570;
   font-style: normal;
 }
 /* line 295, ../../default/scss/theme/_widgets.scss */
