@@ -460,7 +460,10 @@ def user_create_onvalidation (form):
 def processing_type():
     """ Types of Data Processing: RESTful CRUD Controller """
 
-    return s3_rest_controller("auth", "processing_type")
+    return s3_rest_controller("auth", "processing_type",
+                              csv_template = ("auth", "processing_type"),
+                              csv_stylesheet = ("auth", "processing_type.xsl"),
+                              )
 
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
@@ -517,7 +520,10 @@ def consent_option():
         return output
     s3.postp = postp
 
-    return s3_rest_controller("auth", "consent_option")
+    return s3_rest_controller("auth", "consent_option",
+                              csv_template = ("auth", "consent_option"),
+                              csv_stylesheet = ("auth", "consent_option.xsl"),
+                              )
 
 # =============================================================================
 @auth.s3_requires_membership(1)
