@@ -15,7 +15,6 @@ from s3dal import original_tablename
 #
 UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "case_collaboration": False,
-               "case_bamf_first": False,
                "case_document_templates": False,
                "case_header_protection_themes": False,
                "case_hide_default_org": False,
@@ -51,7 +50,6 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
 
 UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "case_collaboration": True,
-                      "case_bamf_first": True,
                       "case_document_templates": True,
                       "case_header_protection_themes": True,
                       "case_hide_default_org": True,
@@ -1028,24 +1026,6 @@ def config(settings):
                         field = table.last_name
                         field.requires = IS_NOT_EMPTY()
 
-                        # Alternatives: BAMF first or last
-                        bamf = S3SQLInlineComponent(
-                                    "bamf",
-                                    fields = [("", "value")],
-                                    filterby = {"field": "tag",
-                                                "options": "BAMF",
-                                                },
-                                    label = T("BAMF Reference Number"),
-                                    multiple = False,
-                                    name = "bamf",
-                                    )
-                        if ui_options.get("case_bamf_first"):
-                            bamf_first = bamf
-                            bamf_last = None
-                        else:
-                            bamf_first = None
-                            bamf_last = bamf
-
                         # Optional: site dates
                         if ui_options.get("case_lodging_dates"):
                             on_site_from = (T("Moving-in Date"),
@@ -1131,13 +1111,23 @@ def config(settings):
 
                             # Person Details --------------------------
                             (T("ID"), "pe_label"),
-                            bamf_first,
                             "last_name",
                             "first_name",
                             "person_details.nationality",
-                            "gender",
                             "date_of_birth",
                             place_of_birth,
+                            S3SQLInlineComponent(
+                                    "bamf",
+                                    fields = [("", "value")],
+                                    filterby = {"field": "tag",
+                                                "options": "BAMF",
+                                                },
+                                    label = T("BAMF Reference Number"),
+                                    multiple = False,
+                                    name = "bamf",
+                                    ),
+                            "case_details.arrival_date",
+                            "gender",
                             "person_details.marital_status",
 
                             # Process Data ----------------------------
@@ -1145,8 +1135,6 @@ def config(settings):
                             on_site_from,
                             on_site_until,
                             address,
-                            bamf_last,
-                            "case_details.arrival_date",
                             residence_status,
 
                             # Other Details ---------------------------

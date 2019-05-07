@@ -738,7 +738,7 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
   border: 0;
   line-height: 1;
   margin-bottom: inherit;
-  padding: 0.25rem 0.5rem 0.375rem;
+  padding: 0.3rem 0.5rem;
   cursor: pointer;
   text-decoration: none !important;
   display: inline-block;
@@ -826,7 +826,7 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
   border: 0;
   line-height: 1;
   margin-bottom: inherit;
-  padding: 0.25rem 0.5rem 0.375rem;
+  padding: 0.3rem 0.5rem;
   cursor: pointer;
   text-decoration: none !important;
   display: inline-block;
