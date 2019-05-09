@@ -784,28 +784,6 @@ def config(settings):
                                     )
 
     # -------------------------------------------------------------------------
-    def case_read_multiple_orgs():
-        """
-            Check if the user has read access to cases of more than one org
-
-            @returns: tuple (multiple_orgs, org_ids)
-        """
-
-        realms = current.auth.permission.permitted_realms("dvr_case", "read")
-        if realms is None:
-            multiple_orgs = True
-            org_ids = []
-        else:
-            otable = current.s3db.org_organisation
-            query = (otable.pe_id.belongs(realms)) & \
-                    (otable.deleted == False)
-            rows = current.db(query).select(otable.id)
-            multiple_orgs = len(rows) > 1
-            org_ids = [row.id for row in rows]
-
-        return multiple_orgs, org_ids
-
-    # -------------------------------------------------------------------------
     def case_default_org():
         """
             Determine the default organisation for new cases
@@ -3739,6 +3717,28 @@ def config(settings):
     ])
 
 # =============================================================================
+def case_read_multiple_orgs():
+    """
+        Check if the user has read access to cases of more than one org
+
+        @returns: tuple (multiple_orgs, org_ids)
+    """
+
+    realms = current.auth.permission.permitted_realms("dvr_case", "read")
+    if realms is None:
+        multiple_orgs = True
+        org_ids = []
+    else:
+        otable = current.s3db.org_organisation
+        query = (otable.pe_id.belongs(realms)) & \
+                (otable.deleted == False)
+        rows = current.db(query).select(otable.id)
+        multiple_orgs = len(rows) > 1
+        org_ids = [row.id for row in rows]
+
+    return multiple_orgs, org_ids
+
+# =============================================================================
 def drk_cr_rheader(r, tabs=None):
     """ CR custom resource headers """
 
@@ -3851,146 +3851,173 @@ def drk_dvr_rheader(r, tabs=None):
         if tablename == "pr_person":
 
             # "Case Archived" hint
-            hint = lambda record: SPAN(T("Invalid Case"),
-                                       _class="invalid-case",
-                                       )
+            hint = lambda record: SPAN(T("Invalid Case"), _class="invalid-case")
 
-            if current.request.controller == "security":
+            # UI Options and ability to read cases from multiple orgs
+            ui_opts = get_ui_options()
+            ui_opts_get = ui_opts.get
+            multiple_orgs = case_read_multiple_orgs()[0]
 
-                # No rheader except archived-hint
-                case = resource.select(["dvr_case.archived"], as_rows=True)
-                if case and case[0]["dvr_case.archived"]:
-                    rheader_fields = [[(None, hint)]]
-                    tabs = None
+            if not tabs:
+                response_tab = ui_opts_get("case_use_response_tab")
+                if response_tab and ui_opts_get("activity_use_need"):
+                    ACTIVITIES = T("Counseling Reasons")
                 else:
-                    return None
+                    ACTIVITIES = T("Activities")
 
+                # Basic Case Documentation
+                tabs = [(T("Basic Details"), None),
+                        (T("Contact Info"), "contacts"),
+                        (T("Family Members"), "group_membership/"),
+                        (ACTIVITIES, "case_activity"),
+                        ]
+
+                # Optional Case Documentation
+                if response_tab:
+                    tabs.append((T("Actions"), "response_action"))
+                if ui_opts_get("case_use_appointments"):
+                    tabs.append((T("Appointments"), "case_appointment"))
+                if ui_opts_get("case_use_service_contacts"):
+                    tabs.append((T("Service Contacts"), "service_contact"))
+
+                # Uploads, Notes etc.
+                tabs.extend([(T("Photos"), "image"),
+                             (T("Documents"), "document/"),
+                             ])
+                if ui_opts_get("case_use_notes"):
+                    tabs.append((T("Notes"), "case_note"))
+
+            lodging_opt = ui_opts_get("case_lodging")
+            if lodging_opt == "site":
+                lodging_sel = "dvr_case.site_id"
+                lodging_col = "dvr_case.site_id"
+            elif lodging_opt == "text":
+                lodging_sel = "case_details.lodging"
+                lodging_col = "dvr_case_details.lodging"
             else:
+                lodging_sel = None
+                lodging_col = None
 
-                ui_opts = get_ui_options()
-                ui_opts_get = ui_opts.get
+            if ui_opts_get("case_use_flags"):
+                flags_sel = "dvr_case_flag_case.flag_id"
+            else:
+                flags_sel = None
 
-                if not tabs:
-                    response_tab = ui_opts_get("case_use_response_tab")
-                    if response_tab and ui_opts_get("activity_use_need"):
-                        ACTIVITIES = T("Counseling Reasons")
-                    else:
-                        ACTIVITIES = T("Activities")
+            if ui_opts_get("case_use_place_of_birth"):
+                pob_sel = "person_details.place_of_birth"
+            else:
+                pob_sel = None
 
-                    # Basic Case Documentation
-                    tabs = [(T("Basic Details"), None),
-                            (T("Contact Info"), "contacts"),
-                            (T("Family Members"), "group_membership/"),
-                            (ACTIVITIES, "case_activity"),
-                            ]
+            case = resource.select(["first_name",
+                                    "last_name",
+                                    "dvr_case.status_id",
+                                    "dvr_case.archived",
+                                    "dvr_case.household_size",
+                                    "dvr_case.organisation_id",
+                                    "case_details.arrival_date",
+                                    "bamf.value",
+                                    "person_details.nationality",
+                                    pob_sel,
+                                    lodging_sel,
+                                    flags_sel,
+                                    ],
+                                    represent = True,
+                                    raw_data = True,
+                                    ).rows
 
-                    # Optional Case Documentation
-                    if response_tab:
-                        tabs.append((T("Actions"), "response_action"))
-                    if ui_opts_get("case_use_appointments"):
-                        tabs.append((T("Appointments"), "case_appointment"))
-                    if ui_opts_get("case_use_service_contacts"):
-                        tabs.append((T("Service Contacts"), "service_contact"))
+            if case:
+                # Extract case data
+                case = case[0]
 
-                    # Uploads, Notes etc.
-                    tabs.extend([(T("Photos"), "image"),
-                                 (T("Documents"), "document/"),
-                                 ])
-                    if ui_opts_get("case_use_notes"):
-                        tabs.append((T("Notes"), "case_note"))
+                name = s3_fullname
 
-                lodging_opt = ui_opts_get("case_lodging")
-                if lodging_opt == "site":
-                    lodging_sel = "dvr_case.site_id"
-                    lodging_col = "dvr_case.site_id"
-                elif lodging_opt == "text":
-                    lodging_sel = "case_details.lodging"
-                    lodging_col = "dvr_case_details.lodging"
+                case_status = lambda row: case["dvr_case.status_id"]
+                archived = case["_row"]["dvr_case.archived"]
+                organisation = lambda row: case["dvr_case.organisation_id"]
+                arrival_date = lambda row: case["dvr_case_details.arrival_date"]
+                household_size = lambda row: case["dvr_case.household_size"]
+                nationality = lambda row: case["pr_person_details.nationality"]
+
+                bamf = lambda row: case["pr_bamf_person_tag.value"]
+
+                if pob_sel:
+                    place_of_birth = lambda row: case["pr_person_details.place_of_birth"]
                 else:
-                    lodging_sel = None
-                    lodging_col = None
-
-                if ui_opts_get("case_use_flags"):
-                    flags_sel = "dvr_case_flag_case.flag_id"
+                    place_of_birth = None
+                if lodging_col:
+                    lodging = (T("Lodging"), lambda row: case[lodging_col])
                 else:
-                    flags_sel = None
-
-                case = resource.select(["first_name",
-                                        "last_name",
-                                        "dvr_case.status_id",
-                                        "dvr_case.archived",
-                                        "dvr_case.household_size",
-                                        "dvr_case.organisation_id",
-                                        lodging_sel,
-                                        flags_sel,
-                                        ],
-                                        represent = True,
-                                        raw_data = True,
-                                        ).rows
-
-                if case:
-                    # Extract case data
-                    case = case[0]
-                    name = s3_fullname
-                    case_status = lambda row: case["dvr_case.status_id"]
-                    archived = case["_row"]["dvr_case.archived"]
-                    household_size = lambda row: case["dvr_case.household_size"]
-                    organisation = lambda row: case["dvr_case.organisation_id"]
-                    if lodging_col:
-                        lodging = (T("Lodging"), lambda row: case[lodging_col])
-                    else:
-                        lodging = None
-                    if flags_sel:
-                        flags = lambda row: case["dvr_case_flag_case.flag_id"]
-                    else:
-                        flags = None
-                else:
-                    # Target record exists, but doesn't match filters
-                    return None
-
-                rheader_fields = [[(T("ID"), "pe_label"),
-                                   (T("Case Status"), case_status),
-                                   (T("Organisation"), organisation),
-                                   ],
-                                  [(T("Name"), name),
-                                   (T("Size of Family"), household_size),
-                                   lodging,
-                                   ],
-                                  ["date_of_birth",
-                                   ],
-                                  ]
-
+                    lodging = None
                 if flags_sel:
-                    rheader_fields.append([(T("Flags"), flags, 5)])
-                if ui_opts_get("case_header_protection_themes"):
-                    rheader_fields.append([(T("Protection Need"),
-                                            get_protection_themes,
-                                            5,
-                                            )])
-                if archived:
-                    rheader_fields.insert(0, [(None, hint)])
+                    flags = lambda row: case["dvr_case_flag_case.flag_id"]
+                else:
+                    flags = None
+            else:
+                # Target record exists, but doesn't match filters
+                return None
 
-                # Generate rheader XML
-                rheader = S3ResourceHeader(rheader_fields, tabs)(
-                                r,
-                                table = resource.table,
-                                record = record,
+            arrival_date_label = ui_opts_get("case_arrival_date_label")
+            arrival_date_label = T(arrival_date_label) \
+                                 if arrival_date_label else T("Date of Entry")
+
+            rheader_fields = [[(T("ID"), "pe_label"),
+                               (T("Nationality"), nationality),
+                               (T("Case Status"), case_status),
+                               ],
+                              ["date_of_birth",
+                               (T("BAMF-Az"), bamf),
+                               lodging,
+                               ],
+                              ]
+
+            if pob_sel:
+                # Show place_of_birth below date_of_birth, family size in 3rd column
+                rheader_fields.append([(T("Place of Birth"), place_of_birth),
+                                       (arrival_date_label, arrival_date),
+                                       (T("Size of Family"), household_size),
+                                       ])
+            else:
+                # Show family size in 1st column
+                rheader_fields.append([(T("Size of Family"), household_size),
+                                       (arrival_date_label, arrival_date),
+                                       ])
+
+            if multiple_orgs:
+                # Show organisation if user can see cases from multiple orgs
+                rheader_fields.insert(0, [(T("Organisation"), organisation, 7)])
+            if flags_sel:
+                rheader_fields.append([(T("Flags"), flags, 7)])
+            if ui_opts_get("case_header_protection_themes"):
+                rheader_fields.append([(T("Protection Need"),
+                                        get_protection_themes,
+                                        7,
+                                        )])
+            if archived:
+                rheader_fields.insert(0, [(None, hint)])
+
+            # Generate rheader XML
+            rheader = S3ResourceHeader(rheader_fields, tabs, title=name)(
+                            r,
+                            table = resource.table,
+                            record = record,
+                            )
+
+            # Add profile picture
+            from s3 import s3_avatar_represent
+            rheader.insert(0, A(s3_avatar_represent(record_id,
+                                                    "pr_person",
+                                                    _class = "rheader-avatar",
+                                                    _width = 60,
+                                                    _height = 60,
+                                                    ),
+                                _href=URL(f = "person",
+                                          args = [record_id, "image"],
+                                          vars = r.get_vars,
+                                          ),
                                 )
+                           )
 
-                # Add profile picture
-                from s3 import s3_avatar_represent
-                rheader.insert(0, A(s3_avatar_represent(record_id,
-                                                        "pr_person",
-                                                        _class = "rheader-avatar",
-                                                        ),
-                                    _href=URL(f = "person",
-                                              args = [record_id, "image"],
-                                              vars = r.get_vars,
-                                              ),
-                                    )
-                               )
-
-                return rheader
+            return rheader
 
         elif tablename == "dvr_case":
 

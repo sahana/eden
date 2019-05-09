@@ -106,13 +106,14 @@ body.rtl {
 }
 
 /* Page Sections */
+.item-container form,
 .form-container form,
 #datalist-filter-form,
 #datatable-filter-form,
 #summary-filter-form,
 #summary-sections,
 .thumbnail {
-    border: 1px solid #CCC;
+    border: 1px solid #E0E0E0;
 }
 .widget-container #list-btn-add {
     margin-bottom: 0;
@@ -156,6 +157,7 @@ body.rtl {
     h2 {
         margin-top: 10px;
         @if $title_background {
+            font-size: 1.0rem;
             padding-left: 0.7rem;
         }
     }

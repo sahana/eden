@@ -222,16 +222,22 @@ select {
 /* Form and Item containers */
 #last_update,
 #markDuplicate {
-    float: none;
-    clear: none;
+    float: right;
+    clear: right;
     text-align: right;
+}
+#markDuplicate {
+    margin-bottom: 1rem;
 }
 body.rtl {
     #last_update,
     #markDuplicate {
+        float: left;
+        clear: left;
         text-align: left;
     }
 }
+
 .form-container,
 .item-container {
     form {

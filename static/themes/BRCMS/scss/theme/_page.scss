@@ -108,13 +108,14 @@ body.rtl {
 }
 
 /* Page Sections */
+.item-container form,
 .form-container form,
 #datalist-filter-form,
 #datatable-filter-form,
 #summary-filter-form,
 #summary-sections,
 .thumbnail {
-    border: 1px solid #CCC;
+    border: 1px solid #E0E0E0;
 }
 .widget-container #list-btn-add {
     margin-bottom: 0;
