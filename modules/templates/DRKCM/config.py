@@ -545,6 +545,8 @@ def config(settings):
             if r.controller == "dvr" and \
                (r.interactive or r.representation == "aadata"):
 
+                configure_person_tags()
+
                 table = r.table
                 field = table.doc_id
 
@@ -880,12 +882,12 @@ def config(settings):
                 if hasattr(requires, "instance_types"):
                     requires.instance_types = ("cr_shelter",)
 
+                configure_person_tags()
+
                 if not r.component:
 
                     # Can the user see cases from more than one org?
                     multiple_orgs = case_read_multiple_orgs()[0]
-
-                    configure_person_tags()
 
                     # Alternatives: site_id or simple text field
                     lodging_opt = ui_options.get("case_lodging")
@@ -1405,6 +1407,8 @@ def config(settings):
                                 method = "contacts",
                                 action = s3db.pr_Contacts,
                                 )
+
+                configure_person_tags()
 
                 if r.interactive:
                     table = resource.table
