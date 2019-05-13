@@ -2772,6 +2772,10 @@ def config(settings):
                                    "hours",
                                    "status_id",
                                    ]
+                    pdf_fields = ["date",
+                                  #"human_resource_id",
+                                  (T("Themes"), "dvr_response_action_theme.id"),
+                                  ]
                 else:
                     # Show activity_id (read-only), represent by subject
                     field = table.case_activity_id
@@ -2798,11 +2802,18 @@ def config(settings):
                                    "hours",
                                    "status_id",
                                    ]
+                    pdf_fields = ["date",
+                                  #"human_resource_id",
+                                  "case_activity_id",
+                                  "response_theme_ids",
+                                  "comments",
+                                  ]
 
                 s3db.configure("dvr_response_action",
-                               list_fields = list_fields,
                                filter_widgets = None,
+                               list_fields = list_fields,
                                orderby = "dvr_response_action.date desc",
+                               pdf_fields = pdf_fields,
                                )
                 if "viewing" in get_vars:
                     s3db.configure("dvr_response_action",

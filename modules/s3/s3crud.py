@@ -1370,7 +1370,6 @@ class S3CRUD(S3Method):
             exporter = S3Exporter().pdf
             return exporter(resource,
                             request = r,
-                            list_fields = list_fields,
                             report_hide_comments = report_hide_comments,
                             report_filename = report_filename,
                             report_formname = report_formname,

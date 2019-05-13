@@ -398,10 +398,9 @@ class S3RL_PDF(S3Codec):
         if fields:
             list_fields = [f for f in fields if f != "id"]
         else:
-            list_fields = [f.name for f in resource.readable_fields()
-                                  if f.type != "id" and
-                                     f.name != "comments" or
-                                     not self.pdf_hide_comments]
+            list_fields = resource.list_fields("pdf_fields", id_column=False)
+            if self.pdf_hide_comments:
+                list_fields = [f for f in list_fields if f != "comments"]
 
         get_vars = Storage(current.request.get_vars)
         get_vars["iColumns"] = len(list_fields)
@@ -800,8 +799,7 @@ class S3PDFTable(object):
         self.row_heights = []
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def convert(cls, rfield, value):
+    def convert(self, rfield, value):
         """
             Convert represented field value into a suitable
             ReportLab element
@@ -826,13 +824,61 @@ class S3PDFTable(object):
 
         elif isinstance(value, DIV):
 
-            if len(value.components) > 0:
-                pdf_value = cls.convert(rfield, value.components[0])
+            num_components = len(value.components)
+
+            # Paragraph style
+            if isinstance(value, (H1, H2, H3, H4, H5, H6)):
+                font = self.font_name_bold
             else:
-                pdf_value = biDiText(value)
+                font = self.font_name
+            stylesheet = getSampleStyleSheet()
+            para_style = stylesheet["Normal"]
+            para_style.fontName = font
 
+            if num_components == 1:
+                # Simple tag => convert to string
+                pdf_value = self.convert(rfield, value.components[0])
+
+                # Wrap in paragraph if string contains newlines or component is
+                # a block-element, preserving newlines and setting font weight
+                if isinstance(pdf_value, basestring) and \
+                   isinstance(value, (H1, H2, H3, H4, H5, H6, P, DIV)) or "\n" in pdf_value:
+                    pdf_value = Paragraph(pdf_value.replace("\n", "<br/>"), para_style)
+
+            elif num_components > 0:
+                # Complex tag => convert to list of paragraphs
+                # @todo: support bulleted lists and tables in represents
+                pdf_value = []
+
+                def add_paragraph(text):
+                    # Wrap text in Paragraph to preserve newlines and set font weight
+                    para = Paragraph(biDiText(text).replace("\n", "<br/>"), para_style)
+                    pdf_value.append(para)
+
+                text = ""
+                for component in value.components:
+                    if isinstance(component, basestring):
+                        # Concatenate consecutive strings
+                        text = "".join((text, component))
+                    else:
+                        # Convert component
+                        sub = self.convert(rfield, component)
+                        if isinstance(sub, basestring):
+                            text = "".join((text, sub))
+                            continue
+                        elif text:
+                            add_paragraph(text)
+                            text = ""
+                        if isinstance(sub, list):
+                            pdf_value.extend(sub)
+                        else:
+                            pdf_value.append(sub)
+                if text:
+                    add_paragraph(text)
+            else:
+                # Empty tag => empty string
+                pdf_value = ""
         else:
-
             pdf_value = biDiText(value)
 
         return pdf_value
@@ -1011,7 +1057,7 @@ class S3PDFTable(object):
                 else:
                     temp_row = []
                     for col_index, item in enumerate(row):
-                        if col_index in para_cols:
+                        if col_index in para_cols and isinstance(item, basestring):
                             col_widths[col_index] = min_width
                             para = main_doc.addParagraph(item,
                                                          style=para_style,
