@@ -1795,8 +1795,36 @@ form.anonymize-form,
   display: block;
 }
 
-/* Priority Representation */
+/* Consent Widget */
 /* line 408, ../../default/scss/theme/_widgets.scss */
+.consent-widget {
+  border: 1px solid #E0E0E0;
+  padding: 0.5rem 1rem;
+}
+/* line 411, ../../default/scss/theme/_widgets.scss */
+.consent-widget .consent-option {
+  margin-top: 0.3rem;
+}
+/* line 414, ../../default/scss/theme/_widgets.scss */
+.consent-widget .consent-explanation {
+  white-space: pre-wrap;
+  padding: 0.3rem 2rem;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #7F7F7F;
+}
+/* line 421, ../../default/scss/theme/_widgets.scss */
+.consent-widget .consent-title {
+  font-weight: bold;
+}
+/* line 424, ../../default/scss/theme/_widgets.scss */
+.consent-widget .consent-checkbox {
+  vertical-align: bottom;
+  margin-right: 0.5rem;
+}
+
+/* Priority Representation */
+/* line 431, ../../default/scss/theme/_widgets.scss */
 .prio {
   padding: 0 4px;
   border: 1px solid black;
@@ -1805,68 +1833,68 @@ form.anonymize-form,
   font-weight: normal;
 }
 
-/* line 415, ../../default/scss/theme/_widgets.scss */
+/* line 438, ../../default/scss/theme/_widgets.scss */
 .prio-red {
   color: white;
   background-color: #d10000;
 }
 
-/* line 419, ../../default/scss/theme/_widgets.scss */
+/* line 442, ../../default/scss/theme/_widgets.scss */
 .prio-blue {
   color: white;
   background-color: #10427b;
 }
 
-/* line 423, ../../default/scss/theme/_widgets.scss */
+/* line 446, ../../default/scss/theme/_widgets.scss */
 .prio-lightblue {
   background-color: #b7ddff;
 }
 
-/* line 426, ../../default/scss/theme/_widgets.scss */
+/* line 449, ../../default/scss/theme/_widgets.scss */
 .prio-grey {
   background-color: silver;
 }
 
-/* line 433, ../../default/scss/theme/_widgets.scss */
+/* line 456, ../../default/scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header .ui-multiselect-filter {
   direction: rtl;
   float: right;
   margin-right: 3px;
   margin-left: 10px;
 }
-/* line 439, ../../default/scss/theme/_widgets.scss */
+/* line 462, ../../default/scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header ul li {
   float: right;
   padding: 0 3px 0 10px;
 }
-/* line 443, ../../default/scss/theme/_widgets.scss */
+/* line 466, ../../default/scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header li.ui-multiselect-close {
   float: left;
   text-align: left;
   padding-left: 0;
 }
-/* line 450, ../../default/scss/theme/_widgets.scss */
+/* line 473, ../../default/scss/theme/_widgets.scss */
 body.rtl .range-filter-widget input.date-filter-input {
   margin-right: 0;
   margin-left: 2px;
 }
-/* line 455, ../../default/scss/theme/_widgets.scss */
+/* line 478, ../../default/scss/theme/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
   margin-right: 0;
   margin-left: 0.35rem;
 }
-/* line 461, ../../default/scss/theme/_widgets.scss */
+/* line 484, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0;
   margin-left: 0.3rem;
 }
-/* line 467, ../../default/scss/theme/_widgets.scss */
+/* line 490, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 0;
   border-right: 1px solid red;
 }
-/* line 471, ../../default/scss/theme/_widgets.scss */
+/* line 494, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;

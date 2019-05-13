@@ -404,6 +404,29 @@ form.anonymize-form,
     }
 }
 
+/* Consent Widget */
+.consent-widget {
+    border: 1px solid #E0E0E0;
+    padding: 0.5rem 1rem;
+    .consent-option {
+        margin-top: 0.3rem;
+    }
+    .consent-explanation {
+        white-space: pre-wrap;
+        padding: 0.3rem 2rem;
+        font-size: 0.8rem;
+        font-style: italic;
+        color: #7F7F7F;
+    }
+    .consent-title {
+        font-weight: bold;
+    }
+    .consent-checkbox {
+        vertical-align: bottom;
+        margin-right: 0.5rem;
+    }
+}
+
 /* Priority Representation */
 .prio {
     padding: 0 4px;
