@@ -366,6 +366,7 @@ class auth_Consent(object):
             @param attributes: HTML attributes for the widget
         """
 
+        T = current.T
         fieldname = field.name
 
         # Consent options to ask
@@ -386,6 +387,7 @@ class auth_Consent(object):
                      )
 
         # Construct the consent options
+        has_mandatory_opts = False
         for code, spec in opts.items():
 
             # Title
@@ -409,6 +411,10 @@ class auth_Consent(object):
                              _class = "consent-question",
                              )
 
+            if spec.get("mandatory"):
+                has_mandatory_opts = True
+                question.append(SPAN("*", _class="req"))
+
             # The option
             option = DIV(question, _class="consent-option")
 
@@ -424,6 +430,9 @@ class auth_Consent(object):
             # JSON format: {"code": [id, consenting]}
             value[code] = [spec.get("id"), v]
 
+        # Mandatory options advice
+        if has_mandatory_opts:
+            widget.append(P("* %s" % T("Consent required"), _class="req_key"))
 
         # The hidden input
         requires = field.requires
@@ -487,9 +496,14 @@ class auth_Consent(object):
     # -------------------------------------------------------------------------
     @classmethod
     def parse(cls, value):
-        # TODO docstring
+        """
+            Parse the JSON string returned by the widget
 
-        # JSON format: {code:[id,consenting]}
+            @param value: the JSON string
+            @returns: dict with consent question responses,
+                      format {code: [id, consenting], ...}
+        """
+
         parsed = {}
         if value is not None:
             try:
@@ -528,7 +542,7 @@ class auth_Consent(object):
         s3 = current.response.s3
 
         # Static script
-        if s3.debug or True: # TODO minify-config
+        if s3.debug:
             script = "/%s/static/scripts/S3/s3.ui.consent.js" % \
                      request.application
         else:

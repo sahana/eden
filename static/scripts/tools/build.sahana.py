@@ -448,6 +448,7 @@ def dojs(dogis = False, warnings = True):
                      "ui.anonymize",
                      "ui.cascadeselect",
                      "ui.charts",
+                     "ui.consent",
                      "ui.contacts",
                      "ui.dashboard",
                      "ui.embeddedcomponent",
