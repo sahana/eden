@@ -435,12 +435,11 @@ class auth_Consent(object):
             widget.append(P("* %s" % T("Consent required"), _class="req_key"))
 
         # The hidden input
-        requires = field.requires
         hidden_input = INPUT(_type = "hidden",
                              _name = attributes.get("_name", fieldname),
                              _id = "%s-response" % widget_id,
                              _value = json.dumps(value),
-                             requires = requires if requires else self.validate,
+                             requires = self.validate,
                              )
         widget.append(hidden_input)
 
@@ -489,9 +488,7 @@ class auth_Consent(object):
                              "default": True if option.opt_out else False,
                              "mandatory": option.mandatory,
                              }
-
         return options
-
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -521,12 +518,56 @@ class auth_Consent(object):
             @param value: the value returned from the widget
         """
 
-        # TODO verify mandatory options have been consented to
-        #      - JSON format: {code:[id,consenting]}
-        #      - Check that id matches type code
-        #      - Check that consenting=true if mandatory
+        T = current.T
+        invalid = T("Invalid value")
 
-        return value, None
+        error = None
+        parsed = cls.parse(value)
+        if not parsed or not isinstance(parsed, dict):
+            error = invalid
+        else:
+            try:
+                option_ids = set(v[0] for v in parsed.values())
+            except (TypeError, IndexError):
+                error = invalid
+            else:
+                # Retrieve the relevant consent options
+                s3db = current.s3db
+                ttable = s3db.auth_processing_type
+                otable = s3db.auth_consent_option
+                join = ttable.on(ttable.id == otable.type_id)
+                query = otable.id.belongs(option_ids)
+                rows = current.db(query).select(otable.id,
+                                                otable.obsolete,
+                                                otable.mandatory,
+                                                ttable.code,
+                                                join = join,
+                                                )
+                options = {}
+                for row in rows:
+                    processing = row.auth_processing_type
+                    option = row.auth_consent_option
+                    options[option.id] = (processing.code, option.obsolete, option.mandatory)
+
+                # Validate each response
+                for code, spec in parsed.items():
+                    option_id, consenting = spec
+                    option = options.get(option_id)
+
+                    if not option or option[0] != code:
+                        # Option does not exist or does not match the code
+                        error = invalid
+                        break
+                    if option[1]:
+                        # Option is obsolete
+                        error = T("Obsolete option: %(code)s") % {"code": code}
+                        break
+                    if option[2] and not consenting:
+                        # Required consent has not been given
+                        error = T("Required consent not given")
+                        break
+
+        return (None, error) if error else (value, None)
 
     # -------------------------------------------------------------------------
     @staticmethod

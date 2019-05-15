@@ -567,9 +567,8 @@ def consent_question():
     formname = "consent_question/None"
     if form.accepts(request.post_vars,
                     current.session,
-                    #onvalidation = self.validate,
                     formname = formname,
-                    keepvalues = True,
+                    keepvalues = False,
                     hideerror = False,
                     ):
 
