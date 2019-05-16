@@ -34,6 +34,8 @@ __all__ = ("AuthDomainApproverModel",
            "auth_user_options_get_osm"
            )
 
+import datetime
+
 from gluon import *
 from gluon.storage import Storage
 
@@ -253,6 +255,7 @@ class AuthConsentModel(S3Model):
                              default = "now",
                              ),
                      s3_date("valid_until",
+                             # Automatically set onaccept
                              readable = False,
                              writable = False,
                              ),
@@ -271,6 +274,16 @@ class AuthConsentModel(S3Model):
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("Mandatory"),
                                                              T("This option is required for the consent question to succeed"),
+                                                             ),
+                                         ),
+                           ),
+                     Field("validity_period", "integer",
+                           default = None,
+                           label = T("Consent valid for (days)"),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1, None)),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Period of Validity"),
+                                                             T("Consent to this option expires after this many days"),
                                                              ),
                                          ),
                            ),
@@ -300,6 +313,7 @@ class AuthConsentModel(S3Model):
         # Table Configuration
         self.configure(tablename,
                        list_fields = list_fields,
+                       onaccept = self.consent_option_onaccept,
                        )
 
         # CRUD Strings
@@ -335,11 +349,110 @@ class AuthConsentModel(S3Model):
                      s3_date("expires_on"),
                      *s3_meta_fields())
 
+        # Table Configuration
+        self.configure(tablename,
+                       onaccept = self.consent_onaccept,
+                       )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return {"auth_consent_option_hash_fields": hash_fields,
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def consent_option_onaccept(form):
+        """
+            Onaccept-routine for consent options:
+                - set valid_until date when obsolete (or otherwise remove it)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        # Retrieve record (id and obsolete)
+        table = s3db.auth_consent_option
+        query = (table.id == record_id)
+        row = db(query).select(table.id,
+                               table.obsolete,
+                               table.valid_until,
+                               limitby = (0, 1),
+                               ).first()
+        if not row:
+            return
+
+        if row.obsolete:
+            if not row.valid_until:
+                row.update_record(valid_until = current.request.utcnow.date())
+        else:
+            row.update_record(valid_until = None)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def consent_onaccept(form):
+        """
+            Onaccept-routine for consent:
+                - automatically expire all previous consent to the same
+                  processing type
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get record ID
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        # Retrieve record
+        ctable = s3db.auth_consent
+        otable = s3db.auth_consent_option
+        ttable = s3db.auth_processing_type
+
+        join = [otable.on(otable.id == ctable.option_id),
+                ttable.on(ttable.id == otable.type_id),
+                ]
+        query = (ctable.id == record_id)
+        row = db(query).select(ctable.id,
+                               ctable.person_id,
+                               ttable.id,
+                               join = join,
+                               limitby = (0, 1),
+                               ).first()
+        if not row:
+            return
+
+        # Expire all previous consent records for the same
+        # processing type and person
+        today = current.request.utcnow.date()
+
+        consent = row.auth_consent
+        processing_type_id = row.auth_processing_type.id
+
+        query = (ctable.person_id == consent.person_id) & \
+                ((ctable.expires_on == None) | (ctable.expires_on > today)) & \
+                (otable.id == ctable.option_id) & \
+                (otable.type_id == processing_type_id) & \
+                (ctable.id != consent.id) & \
+                (ctable.deleted == False)
+        rows = db(query).select(ctable.id)
+
+        query = ctable.id.belongs(set(row.id for row in rows))
+        db(query).update(expires_on = today)
 
 # =============================================================================
 class auth_Consent(object):
@@ -621,7 +734,7 @@ class auth_Consent(object):
         s3db = current.s3db
         request = current.request
 
-        now = request.utcnow.date()
+        today = request.utcnow.date()
         vsign = request.env.remote_addr
 
         # Consent option hash fields
@@ -633,21 +746,26 @@ class auth_Consent(object):
         # Get all current+valid options matching the codes
         ttable = s3db.auth_processing_type
         otable = s3db.auth_consent_option
-        ctable = s3db.auth_consent
-        fields = [ttable.code, otable.id] + [otable[fn] for fn in hash_fields]
-        left = ttable.on(ttable.id == otable.type_id)
+
+        option_fields = set(["id", "validity_period"]) | set(hash_fields)
+        fields = [ttable.code] + [otable[fn] for fn in option_fields]
+
+        join = ttable.on(ttable.id == otable.type_id)
         query = (ttable.code.belongs(parsed.keys())) & \
                 (otable.obsolete == False) & \
                 (otable.deleted == False)
-        rows = db(query).select(left=left, *fields)
+        rows = db(query).select(join=join, *fields)
+
         valid_options = {}
         for row in rows:
             option = row.auth_consent_option
             context = {fn: option[fn] for fn in hash_fields}
             valid_options[option.id] = {"code": row.auth_processing_type.code,
                                         "hash": cls.get_hash(context),
+                                        "valid_for": option.validity_period,
                                         }
 
+        ctable = s3db.auth_consent
         record_ids = []
         for code, response in parsed.items():
 
@@ -659,7 +777,7 @@ class auth_Consent(object):
                 raise ValueError("Invalid consent option: %s#%s" % (code, option_id))
 
             # Generate consent record
-            consent = {"date": now.isoformat(),
+            consent = {"date": today.isoformat(),
                        "option_id": option_id,
                        "person_id": person_id,
                        "vsign": vsign,
@@ -671,13 +789,17 @@ class auth_Consent(object):
             consent["vhash"] = cls.get_hash(consent)
 
             # Update data
-            # TODO automatic expiry
-            consent["date"] = now
+            consent["date"] = today
+            valid_for = option["valid_for"]
+            if valid_for:
+                consent["expires_on"] = today + datetime.timedelta(days=valid_for)
             del consent["ohash"]
 
-            # Save consent record
+            # Create new consent record
             record_id = ctable.insert(**consent)
             if record_id:
+                consent["id"] = record_id
+                s3db.onaccept(ctable, consent)
                 record_ids.append(record_id)
 
         return record_ids
@@ -751,6 +873,33 @@ class auth_Consent(object):
         return str(crypt(inp)[0])
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def get_consent_options(code):
+        """
+            Get all currently valid consent options for a processing type
+
+            @param code: the processing type code
+
+            @returns: set of record IDs
+        """
+
+        s3db = current.s3db
+
+        today = current.request.utcnow.date()
+
+        ttable = s3db.auth_processing_type
+        otable = s3db.auth_consent_option
+        join = ttable.on((ttable.id == otable.type_id) & \
+                         (ttable.deleted == False))
+        query = (ttable.code == code) & \
+                (otable.valid_from <= today) & \
+                (otable.obsolete == False) & \
+                (otable.deleted == False)
+        rows = current.db(query).select(otable.id, join=join)
+
+        return set(row.id for row in rows)
+
+    # -------------------------------------------------------------------------
     @classmethod
     def has_consented(cls, person_id, code):
         """
@@ -767,44 +916,32 @@ class auth_Consent(object):
                 consent = s3db.auth_Consent()
                 if consent.has_consented(auth.s3_logged_in_person(), "PIDSHARE"):
                     # perform PIDSHARE...
+
+            TODO test this
         """
 
-        db = current.db
-        s3db = current.s3db
-
-        today = current.request.utcnow.date()
-
-        ttable = s3db.auth_processing_type
-        otable = s3db.auth_consent_option
-
         # Get all current consent options for the code
-        join = ttable.on((ttable.id == otable.type_id) & \
-                         (ttable.deleted == False))
-        query = (ttable.code == code) & \
-                (otable.valid_from <= today) & \
-                (otable.obsolete == False) & \
-                (otable.deleted == False)
-        rows = db(query).select(otable.id, join=join)
-        if not rows:
+        option_ids = cls.get_consent_options(code)
+        if not option_ids:
             return False
 
-        ctable = s3db.auth_consent
-
         # Get the newest response to any of these options
-        option_ids = set(row.id for row in rows)
+        # TODO look for any response that is not expired (should only be one)
+        ctable = current.s3db.auth_consent
         query = (ctable.person_id == person_id) & \
                 (ctable.option_id.belongs(option_ids)) & \
                 (ctable.deleted == False)
-        row = db(query).select(ctable.consenting,
-                               ctable.expires_on,
-                               limitby = (0, 1),
-                               orderby = ~ctable.date,
-                               ).first()
+        row = current.db(query).select(ctable.consenting,
+                                       ctable.expires_on,
+                                       limitby = (0, 1),
+                                       orderby = ~ctable.date,
+                                       ).first()
         if not row:
             # No consent record at all
             return False
 
         # Result is positive if consent record was positive and has not expired
+        today = current.request.utcnow.date()
         expires = row.expires_on
         return row.consenting if expires is None or expires > today else False
 
@@ -822,8 +959,8 @@ class auth_Consent(object):
         pass
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def consent_filter(resource, selector, code):
+    @classmethod
+    def consent_filter(cls, selector, code):
         """
             Filter resource for records where the person identified by
             selector has consented to a certain type of data processing.
