@@ -58,8 +58,13 @@ try:
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.pdfgen import canvas
-    from reportlab.platypus import BaseDocTemplate, PageBreak, PageTemplate, \
-                                   Paragraph, Spacer, Table, KeepTogether
+    from reportlab.platypus import BaseDocTemplate, \
+                                   KeepTogether, \
+                                   PageBreak, \
+                                   PageTemplate, \
+                                   Paragraph, \
+                                   Spacer, \
+                                   Table
     from reportlab.platypus.frames import Frame
     reportLabImported = True
 except ImportError:
@@ -215,9 +220,6 @@ class S3RL_PDF(S3Codec):
             @keyword use_colour:      True to add colour to the cells. default False
 
             @keyword pdf_html_styles: styles for S3html2pdf (dict)
-
-            @ToDo: Add Page Numbers in Footer:
-                   http://www.blog.pythonlibrary.org/2013/08/12/reportlab-how-to-add-page-numbers/
         """
 
         if not reportLabImported:
@@ -232,8 +234,8 @@ class S3RL_PDF(S3Codec):
         self.pdf_orderby = attr_get("pdf_orderby")
         self.pdf_hide_comments = attr_get("pdf_hide_comments")
         self.table_autogrow = attr_get("pdf_table_autogrow")
-        self.pdf_header_padding = attr_get("pdf_header_padding", 0)
-        self.pdf_footer_padding = attr_get("pdf_footer_padding", 0)
+        self.pdf_header_padding = attr_get("pdf_header_padding", 6)
+        self.pdf_footer_padding = attr_get("pdf_footer_padding", 3)
 
         # Get the title & filename
         now = current.request.now.isoformat()[:19].replace("T", " ")
@@ -275,7 +277,7 @@ class S3RL_PDF(S3Codec):
                                                      doc.printable_width,
                                                      styles = pdf_html_styles,
                                                      )
-            if self.pdf_header_padding:
+            if header_flowable and self.pdf_header_padding:
                 header_flowable.append(Spacer(1, self.pdf_header_padding))
 
         # Get the footer
@@ -288,7 +290,7 @@ class S3RL_PDF(S3Codec):
                                                      doc.printable_width,
                                                      styles = pdf_html_styles,
                                                      )
-            if self.pdf_footer_padding:
+            if footer_flowable and self.pdf_footer_padding:
                 footer_flowable.append(Spacer(1, self.pdf_footer_padding))
 
         # Build report template
@@ -754,6 +756,8 @@ class S3PDFList(object):
         self.font_name_bold = None
         set_fonts(self)
 
+        self.styles = self.get_styles()
+
     # -------------------------------------------------------------------------
     def build(self):
         """
@@ -772,7 +776,7 @@ class S3PDFList(object):
 
         rfields = self.rfields
         formatted = self.formatted
-        for row in self.rows:
+        for index, row in enumerate(self.rows):
 
             # Insert a horizontal line between records
             ruler = Drawing(printable_width,6)
@@ -784,7 +788,10 @@ class S3PDFList(object):
             item = [ruler]
             for rfield in rfields:
                 item.extend(formatted(rfield, row[rfield.colname]))
-            flowables.append(KeepTogether(item))
+            if index == 0:
+                flowables.extend(item)
+            else:
+                flowables.append(KeepTogether(item))
 
         # Hint for too many records
         totalrows = self.totalrows
@@ -792,12 +799,8 @@ class S3PDFList(object):
         if totalrows and totalrows > numrows:
             hint = current.T("Too many records - %(number)s more records not included") % \
                                 {"number": totalrows - numrows}
-            stylesheet = getSampleStyleSheet()
-            style = stylesheet["Normal"]
-            style.textColor = colors.red
-            style.fontSize = 12
             flowables.append(PageBreak())
-            flowables.append(Paragraph(s3_str(hint), style))
+            flowables.append(Paragraph(s3_str(hint), self.styles["warning"]))
 
         return flowables
 
@@ -809,15 +812,10 @@ class S3PDFList(object):
             @returns: a list of Flowables
         """
 
-        # TODO apply fonts
-        indented = getSampleStyleSheet()["Normal"]
-        indented.leftIndent = indented.rightIndent = 12
-        indented.spaceAfter = 6
-
-        inline = getSampleStyleSheet()["Normal"]
-        inline.spaceAfter = 6
-
         label = biDiText(rfield.label)
+
+        inline = self.styles["inline"]
+        indented = self.styles["indented"]
 
         if isinstance(value, (basestring, lazyT)):
             v = biDiText(value)
@@ -830,7 +828,7 @@ class S3PDFList(object):
                 flowables = [Paragraph("<b>%s:</b> %s" % (label, biDiText(value)), inline),
                              ]
         else:
-            flowables = self.get_flowables(rfield, value)
+            flowables = self.format_value(rfield, value)
             label_paragraph = Paragraph("<b>%s:</b>" % label, inline)
             if isinstance(flowables, list):
                 flowables.insert(0, label_paragraph)
@@ -844,68 +842,58 @@ class S3PDFList(object):
         return flowables
 
     # -------------------------------------------------------------------------
-    def get_flowables(self, rfield, value):
+    def format_value(self, rfield, value):
         """
-            Convert represented field value into a suitable
-            ReportLab element
+            Convert represented field value into suitable ReportLab elements
 
             @param rfield: the S3ResourceField
             @param value: the field value
 
-            TODO cleanup, move styles into separate property
-            TODO apply fonts
+            @returns: a BiDi-converted unicode string, or a list of Flowables
         """
 
-        # rfield contains the label
         if isinstance(value, (basestring, lazyT)):
-
-            pdf_value = biDiText(value)
+            formatted = biDiText(value)
 
         elif isinstance(value, IMG):
-
             field = rfield.field
             if field:
-                pdf_value = S3html2pdf.parse_img(value, field.uploadfolder)
-                if pdf_value:
-                    pdf_value = pdf_value[:1]
+                formatted = S3html2pdf.parse_img(value, field.uploadfolder)
+                if formatted:
+                    formatted = formatted[:1]
             else:
-                pdf_value = []
+                formatted = []
 
         elif isinstance(value, DIV):
+            is_header = isinstance(value, (H1, H2, H3, H4, H5, H6))
+            is_block = is_header or isinstance(value, (P, DIV))
 
-            # Paragraph style
-            if isinstance(value, (H1, H2, H3, H4, H5, H6)):
-                font = self.font_name_bold
-            else:
-                font = self.font_name
-            stylesheet = getSampleStyleSheet()
-            para_style = stylesheet["Normal"]
-            para_style.fontName = font
-            para_style.leftIndent = para_style.rightIndent = 12
+            # Paragraph Style
+            style = self.styles["indented_bold"] \
+                    if is_header else self.styles["indented"]
 
             num_components = len(value.components)
 
             if num_components == 1:
                 # Simple tag => convert to string
-                pdf_value = self.get_flowables(rfield, value.components[0])
+                formatted = self.format_value(rfield, value.components[0])
 
                 # Wrap in paragraph if string contains newlines or component is
                 # a block-element, preserving newlines and setting font weight
-                if isinstance(pdf_value, basestring) and \
-                   (isinstance(value, (H1, H2, H3, H4, H5, H6, P, DIV)) or "\n" in pdf_value):
-                    pdf_value = [Paragraph(pdf_value.replace("\n", "<br/>"), para_style)]
-                elif not isinstance(pdf_value, list):
-                    pdf_value = [pdf_value]
+                if isinstance(formatted, basestring) and (is_block or "\n" in formatted):
+                    formatted = [Paragraph(formatted.replace("\n", "<br/>"), style)]
+                elif not isinstance(formatted, list):
+                    formatted = [formatted]
 
             elif num_components > 0:
                 # Complex tag => convert to list of paragraphs
                 # @todo: support bulleted lists and tables in represents
-                pdf_value = []
+                formatted = []
 
                 def add_paragraph(text):
                     # Wrap text in Paragraph to preserve newlines and set font weight
-                    para = Paragraph(biDiText(text).replace("\n", "<br/>"), para_style)
-                    pdf_value.append(para)
+                    para = Paragraph(biDiText(text).replace("\n", "<br/>"), style)
+                    formatted.append(para)
 
                 text = ""
                 for component in value.components:
@@ -914,7 +902,7 @@ class S3PDFList(object):
                         text = "".join((text, component))
                     else:
                         # Convert component
-                        sub = self.get_flowables(rfield, component)
+                        sub = self.format_value(rfield, component)
                         if isinstance(sub, basestring):
                             text = "".join((text, sub))
                             continue
@@ -922,18 +910,48 @@ class S3PDFList(object):
                             add_paragraph(text)
                             text = ""
                         if isinstance(sub, list):
-                            pdf_value.extend(sub)
+                            formatted.extend(sub)
                         else:
-                            pdf_value.append(sub)
+                            formatted.append(sub)
                 if text:
                     add_paragraph(text)
             else:
                 # Empty tag => empty string
-                pdf_value = ""
+                formatted = ""
         else:
-            pdf_value = biDiText(value)
+            formatted = biDiText(value)
 
-        return pdf_value
+        return formatted
+
+    # -------------------------------------------------------------------------
+    def get_styles(self):
+        """
+            Get the paragraph styles used in this layout
+
+            @returns: dict of paragraph styles
+        """
+
+        styles = {}
+
+        styles["inline"] = style = getSampleStyleSheet()["Normal"]
+        style.spaceAfter = 6
+        style.fontName = self.font_name
+
+        styles["indented"] = style = getSampleStyleSheet()["Normal"]
+        style.leftIndent = style.rightIndent = 12
+        style.spaceAfter = 6
+        style.fontName = self.font_name
+
+        styles["indented_bold"] = style = getSampleStyleSheet()["Normal"]
+        style.leftIndent = style.rightIndent = 12
+        style.spaceAfter = 6
+        style.fontName = self.font_name_bold
+
+        styles["warning"] = style = getSampleStyleSheet()["Normal"]
+        style.textColor = colors.red
+        style.fontSize = 12
+
+        return styles
 
 # =============================================================================
 class S3PDFTable(object):
