@@ -2956,6 +2956,7 @@ def config(settings):
                                    "color": "status_id",
                                    "colors": s3db.dvr_response_status_colors,
                                    },
+                       pdf_format = "list" if response_themes_details else "table",
                        )
 
     settings.customise_dvr_response_action_resource = customise_dvr_response_action_resource
@@ -3996,16 +3997,17 @@ def drk_dvr_rheader(r, tabs=None):
                 rheader_fields.append([(T("Size of Family"), household_size),
                                        (arrival_date_label, arrival_date),
                                        ])
+            colspan = 5
 
             if multiple_orgs:
                 # Show organisation if user can see cases from multiple orgs
-                rheader_fields.insert(0, [(T("Organisation"), organisation, 7)])
+                rheader_fields.insert(0, [(T("Organisation"), organisation, colspan)])
             if flags_sel:
-                rheader_fields.append([(T("Flags"), flags, 7)])
+                rheader_fields.append([(T("Flags"), flags, colspan)])
             if ui_opts_get("case_header_protection_themes"):
                 rheader_fields.append([(T("Protection Need"),
                                         get_protection_themes,
-                                        7,
+                                        colspan,
                                         )])
             if archived:
                 rheader_fields.insert(0, [(None, hint)])

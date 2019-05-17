@@ -49,6 +49,7 @@ from ..s3codec import S3Codec
 from ..s3utils import s3_strip_markup, s3_unicode, s3_str
 
 try:
+    from reportlab.graphics.shapes import Drawing, Line
     from reportlab.lib import colors
     from reportlab.lib.colors import Color, HexColor
     from reportlab.lib.pagesizes import A4, LETTER, landscape, portrait
@@ -58,7 +59,7 @@ try:
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.pdfgen import canvas
     from reportlab.platypus import BaseDocTemplate, PageBreak, PageTemplate, \
-                                   Paragraph, Spacer, Table
+                                   Paragraph, Spacer, Table, KeepTogether
     from reportlab.platypus.frames import Frame
     reportLabImported = True
 except ImportError:
@@ -332,6 +333,7 @@ class S3RL_PDF(S3Codec):
         doc.build(header_flowable,
                   body_flowable,
                   footer_flowable,
+                  canvasmaker = S3NumberedCanvas,
                   )
 
         # Return the generated PDF
@@ -410,21 +412,21 @@ class S3RL_PDF(S3Codec):
         result = resource.select(list_fields,
                                  left=left,
                                  limit=None,
-                                 count=True,
-                                 getids=True,
                                  orderby=orderby,
                                  represent=True,
-                                 show_links=False)
+                                 show_links=False,
+                                 )
 
-        # Now generate the PDF table
-        pdf_table = S3PDFTable(doc,
-                               result.rfields,
-                               result.rows,
-                               groupby = self.pdf_groupby,
-                               autogrow = self.table_autogrow,
-                               ).build()
-
-        return pdf_table
+        if resource.get_config("pdf_format") == "list":
+            output = S3PDFList(doc, result.rfields, result.rows).build()
+        else:
+            output = S3PDFTable(doc,
+                                result.rfields,
+                                result.rows,
+                                groupby = self.pdf_groupby,
+                                autogrow = self.table_autogrow,
+                                ).build()
+        return output
 
 # =============================================================================
 class EdenDocTemplate(BaseDocTemplate):
@@ -706,6 +708,201 @@ class EdenDocTemplate(BaseDocTemplate):
                 col += 1
             row += 1
         return (table, style)
+
+# =============================================================================
+class S3PDFList(object):
+    """ Export resource data as list-style report """
+
+    def __init__(self,
+                 document,
+                 rfields,
+                 rows,
+                 ):
+        """
+            Constructor
+
+            @param document: the DocTemplate
+            @param rfields: the S3ResourceFields (for labels and order)
+            @param rows: the data (S3ResourceData.rows)
+        """
+
+        self.document = document
+
+        self.rfields = rfields
+        self.rows = rows
+
+        # Set fonts
+        self.font_name = None
+        self.font_name_bold = None
+        set_fonts(self)
+
+    # -------------------------------------------------------------------------
+    def build(self):
+        """
+            Build the list
+
+            @returns: list of Flowables
+        """
+
+        flowables = []
+
+        document = self.document
+        try:
+            printable_width = document.printable_width
+        except AttributeError:
+            printable_width = document.width
+
+        rfields = self.rfields
+        formatted = self.formatted
+        for row in self.rows:
+
+            # Insert a horizontal line between records
+            ruler = Drawing(printable_width,6)
+            ruler.add(Line(0, 6, printable_width, 6,
+                           strokeColor = colors.grey,
+                           strokeWidth = 0.5,
+                           ))
+
+            item = [ruler]
+            for rfield in rfields:
+                item.extend(formatted(rfield, row[rfield.colname]))
+            flowables.append(KeepTogether(item))
+
+        return flowables
+
+    # -------------------------------------------------------------------------
+    def formatted(self, rfield, value):
+        """
+            Format a field value with label
+
+            @returns: a list of Flowables
+        """
+
+        # TODO apply fonts
+        indented = getSampleStyleSheet()["Normal"]
+        indented.leftIndent = indented.rightIndent = 12
+        indented.spaceAfter = 6
+
+        inline = getSampleStyleSheet()["Normal"]
+        inline.spaceAfter = 6
+
+        label = biDiText(rfield.label)
+
+        if isinstance(value, (basestring, lazyT)):
+            v = biDiText(value)
+            if "\n" in v:
+                flowables = [Paragraph("<b>%s:</b>" % label, inline),
+                             Paragraph(v.replace("\n", "<br/>"), indented),
+                             ]
+            else:
+                # Convert to paragraph with inline label
+                flowables = [Paragraph("<b>%s:</b> %s" % (label, biDiText(value)), inline),
+                             ]
+        else:
+            flowables = self.get_flowables(rfield, value)
+            label_paragraph = Paragraph("<b>%s:</b>" % label, inline)
+            if isinstance(flowables, list):
+                flowables.insert(0, label_paragraph)
+                flowables.append(Spacer(1, 6))
+            else:
+                flowables = [label_paragraph,
+                             Paragraph(s3_str(flowables).replace("\n", "<br/>"), indented),
+                             ]
+
+        # Return list of flowables
+        return flowables
+
+    # -------------------------------------------------------------------------
+    def get_flowables(self, rfield, value):
+        """
+            Convert represented field value into a suitable
+            ReportLab element
+
+            @param rfield: the S3ResourceField
+            @param value: the field value
+
+            TODO cleanup, move styles into separate property
+            TODO apply fonts
+        """
+
+        # rfield contains the label
+        if isinstance(value, (basestring, lazyT)):
+
+            pdf_value = biDiText(value)
+
+        elif isinstance(value, IMG):
+
+            field = rfield.field
+            if field:
+                pdf_value = S3html2pdf.parse_img(value, field.uploadfolder)
+                if pdf_value:
+                    pdf_value = pdf_value[:1]
+            else:
+                pdf_value = []
+
+        elif isinstance(value, DIV):
+
+            # Paragraph style
+            if isinstance(value, (H1, H2, H3, H4, H5, H6)):
+                font = self.font_name_bold
+            else:
+                font = self.font_name
+            stylesheet = getSampleStyleSheet()
+            para_style = stylesheet["Normal"]
+            para_style.fontName = font
+            para_style.leftIndent = para_style.rightIndent = 12
+
+            num_components = len(value.components)
+
+            if num_components == 1:
+                # Simple tag => convert to string
+                pdf_value = self.get_flowables(rfield, value.components[0])
+
+                # Wrap in paragraph if string contains newlines or component is
+                # a block-element, preserving newlines and setting font weight
+                if isinstance(pdf_value, basestring) and \
+                   (isinstance(value, (H1, H2, H3, H4, H5, H6, P, DIV)) or "\n" in pdf_value):
+                    pdf_value = [Paragraph(pdf_value.replace("\n", "<br/>"), para_style)]
+                elif not isinstance(pdf_value, list):
+                    pdf_value = [pdf_value]
+
+            elif num_components > 0:
+                # Complex tag => convert to list of paragraphs
+                # @todo: support bulleted lists and tables in represents
+                pdf_value = []
+
+                def add_paragraph(text):
+                    # Wrap text in Paragraph to preserve newlines and set font weight
+                    para = Paragraph(biDiText(text).replace("\n", "<br/>"), para_style)
+                    pdf_value.append(para)
+
+                text = ""
+                for component in value.components:
+                    if isinstance(component, basestring):
+                        # Concatenate consecutive strings
+                        text = "".join((text, component))
+                    else:
+                        # Convert component
+                        sub = self.get_flowables(rfield, component)
+                        if isinstance(sub, basestring):
+                            text = "".join((text, sub))
+                            continue
+                        elif text:
+                            add_paragraph(text)
+                            text = ""
+                        if isinstance(sub, list):
+                            pdf_value.extend(sub)
+                        else:
+                            pdf_value.append(sub)
+                if text:
+                    add_paragraph(text)
+            else:
+                # Empty tag => empty string
+                pdf_value = ""
+        else:
+            pdf_value = biDiText(value)
+
+        return pdf_value
 
 # =============================================================================
 class S3PDFTable(object):
@@ -1892,5 +2089,38 @@ class S3html2pdf():
                 except AttributeError:
                     color = None
         return color
+
+# =============================================================================
+class S3NumberedCanvas(canvas.Canvas):
+    """
+        Canvas type with page numbers
+        - based on http://code.activestate.com/recipes/576832
+    """
+    def __init__(self, *args, **kwargs):
+
+        canvas.Canvas.__init__(self, *args, **kwargs)
+        self._saved_page_states = []
+
+    def showPage(self):
+
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+
+        num_pages = len(self._saved_page_states)
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            self.draw_page_number(num_pages)
+            canvas.Canvas.showPage(self)
+        canvas.Canvas.save(self)
+
+    def draw_page_number(self, page_count):
+
+        self.setFont("Helvetica", 7)
+        self.drawRightString(self._pagesize[0] - 12,
+                             self._pagesize[1] - 12,
+                             "%d / %d" % (self._pageNumber, page_count),
+                             )
 
 # END =========================================================================
