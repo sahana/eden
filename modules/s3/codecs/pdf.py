@@ -409,22 +409,35 @@ class S3RL_PDF(S3Codec):
         dtfilter, orderby, left = resource.datatable_filter(list_fields, get_vars)
         resource.add_filter(dtfilter)
 
+        # Should we limit the number of rows in the export?
+        max_rows = current.deployment_settings.get_pdf_max_rows()
+        limit, count = (max_rows, True) if max_rows else (None, False)
+
         result = resource.select(list_fields,
-                                 left=left,
-                                 limit=None,
-                                 orderby=orderby,
-                                 represent=True,
-                                 show_links=False,
+                                 count = count,
+                                 left = left,
+                                 limit = limit,
+                                 orderby = orderby,
+                                 represent = True,
+                                 show_links = False,
                                  )
+        totalrows = result.numrows if count else None
 
         if resource.get_config("pdf_format") == "list":
-            output = S3PDFList(doc, result.rfields, result.rows).build()
+            # Export as data list
+            output = S3PDFList(doc,
+                               result.rfields,
+                               result.rows,
+                               totalrows = totalrows,
+                               ).build()
         else:
+            # Export as data table
             output = S3PDFTable(doc,
                                 result.rfields,
                                 result.rows,
                                 groupby = self.pdf_groupby,
                                 autogrow = self.table_autogrow,
+                                totalrows = totalrows,
                                 ).build()
         return output
 
@@ -717,6 +730,7 @@ class S3PDFList(object):
                  document,
                  rfields,
                  rows,
+                 totalrows = None,
                  ):
         """
             Constructor
@@ -724,12 +738,16 @@ class S3PDFList(object):
             @param document: the DocTemplate
             @param rfields: the S3ResourceFields (for labels and order)
             @param rows: the data (S3ResourceData.rows)
+            @param totalrows: total number of rows matching the filter
         """
 
         self.document = document
 
         self.rfields = rfields
         self.rows = rows
+
+        self.numrows = len(rows)
+        self.totalrows = totalrows
 
         # Set fonts
         self.font_name = None
@@ -767,6 +785,19 @@ class S3PDFList(object):
             for rfield in rfields:
                 item.extend(formatted(rfield, row[rfield.colname]))
             flowables.append(KeepTogether(item))
+
+        # Hint for too many records
+        totalrows = self.totalrows
+        numrows = self.numrows
+        if totalrows and totalrows > numrows:
+            hint = current.T("Too many records - %(number)s more records not included") % \
+                                {"number": totalrows - numrows}
+            stylesheet = getSampleStyleSheet()
+            style = stylesheet["Normal"]
+            style.textColor = colors.red
+            style.fontSize = 12
+            flowables.append(PageBreak())
+            flowables.append(Paragraph(s3_str(hint), style))
 
         return flowables
 
@@ -922,6 +953,7 @@ class S3PDFTable(object):
                  rows,
                  groupby = None,
                  autogrow = False,
+                 totalrows = None,
                  ):
         """
             Constructor
@@ -939,6 +971,7 @@ class S3PDFTable(object):
                              "V" - add extra (empty) rows to fill vertically
                              "B" - do both
                              False - do nothing
+            @param totalrows: total number of rows matching the filter
         """
 
         rtl = current.response.s3.rtl
@@ -968,6 +1001,10 @@ class S3PDFTable(object):
         self.labels = labels
 
         # Convert the input data into suitable ReportLab elements
+
+        self.totalrows = totalrows
+        self.numrows = len(rows)
+
         convert = self.convert
         data = []
         append = data.append
@@ -1395,6 +1432,19 @@ class S3PDFTable(object):
                 tables.append(PageBreak())
             if next_part % num_horz_parts == 0:
                 start_row += num_rows - 1 # Don't include the heading
+
+        # Hint for too many records
+        totalrows = self.totalrows
+        numrows = self.numrows
+        if totalrows and totalrows > numrows:
+            hint = current.T("Too many records - %(number)s more records not included") % \
+                                {"number": totalrows - numrows}
+            stylesheet = getSampleStyleSheet()
+            style = stylesheet["Normal"]
+            style.textColor = colors.red
+            style.fontSize = 12
+            tables.append(PageBreak())
+            tables.append(Paragraph(s3_str(hint), style))
 
         # Return a list of table objects
         return tables
