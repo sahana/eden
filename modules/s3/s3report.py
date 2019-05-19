@@ -2442,12 +2442,13 @@ class S3PivotTable(object):
         if ftype in ("integer", "string"):
             # Sort option keys by their representation
             requires = rfield.requires
-            if isinstance(requires, (tuple, list)):
-                requires = requires[0]
-            if isinstance(requires, IS_EMPTY_OR):
-                requires = requires.other
-            if isinstance(requires, IS_IN_SET):
-                sortby = "text"
+            if requires:
+                if isinstance(requires, (tuple, list)):
+                    requires = requires[0]
+                if isinstance(requires, IS_EMPTY_OR):
+                    requires = requires.other
+                if isinstance(requires, IS_IN_SET):
+                    sortby = "text"
 
         elif ftype[:9] == "reference":
             # Sort foreign keys by their representation
