@@ -40,6 +40,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
+from ..s3dal import original_tablename
 from ..s3layouts import S3PopupLink
 
 # =============================================================================
@@ -916,8 +917,6 @@ class auth_Consent(object):
                 consent = s3db.auth_Consent()
                 if consent.has_consented(auth.s3_logged_in_person(), "PIDSHARE"):
                     # perform PIDSHARE...
-
-            TODO test this
         """
 
         # Get all current consent options for the code
@@ -925,38 +924,59 @@ class auth_Consent(object):
         if not option_ids:
             return False
 
-        # Get the newest response to any of these options
-        # TODO look for any response that is not expired (should only be one)
+        # Check if there is a positive consent record for this person
+        # for any of these consent options that has not expired
+        today = current.request.utcnow.date()
+
         ctable = current.s3db.auth_consent
         query = (ctable.person_id == person_id) & \
                 (ctable.option_id.belongs(option_ids)) & \
+                ((ctable.expires_on == None) | (ctable.expires_on > today)) & \
+                (ctable.consenting == True) & \
                 (ctable.deleted == False)
-        row = current.db(query).select(ctable.consenting,
-                                       ctable.expires_on,
-                                       limitby = (0, 1),
-                                       orderby = ~ctable.date,
-                                       ).first()
-        if not row:
-            # No consent record at all
-            return False
+        row = current.db(query).select(ctable.id, limitby = (0, 1)).first()
 
-        # Result is positive if consent record was positive and has not expired
-        today = current.request.utcnow.date()
-        expires = row.expires_on
-        return row.consenting if expires is None or expires > today else False
+        return row is not None
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def consent_query(table, code, field=None):
+    @classmethod
+    def consent_query(cls, table, code, field=None):
         """
             Get a query for table for records where the person identified
             by field has consented to a certain type of data processing.
 
             - useful to limit background processing that requires consent
+
+            @param table: the table to query
+            @param code: the processing type code to check
+            @param field: the field in the table referencing pr_person.id
+
+            @example:
+                consent = s3db.auth_Consent()
+                query = consent.consent_query(table, "PIDSHARE") & (table.deleted == False)
+                # Perform PIDSHARE with query result...
+                rows = db(query).select(*fields)
         """
 
-        # TODO implement this
-        pass
+        if field is None:
+            if original_tablename(table) == "pr_person":
+                field = table.id
+            else:
+                field = table.person_id
+        elif isinstance(field, str):
+            field = table[field]
+
+        option_ids = cls.get_consent_options(code)
+        today = current.request.utcnow.date()
+
+        ctable = current.s3db.auth_consent
+        query = (ctable.person_id == field) & \
+                (ctable.option_id.belongs(option_ids)) & \
+                ((ctable.expires_on == None) | (ctable.expires_on > today)) & \
+                (ctable.consenting == True) & \
+                (ctable.deleted == False)
+
+        return query
 
     # -------------------------------------------------------------------------
     @classmethod
