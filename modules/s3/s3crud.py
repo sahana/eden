@@ -2275,6 +2275,9 @@ class S3CRUD(S3Method):
                     validated["value"] = field.formatter(value) \
                                          if not error else value
                     widget_represent = None
+                if not error:
+                    # Store parsed+validated value for onvalidation
+                    record[fname] = value
 
                 # Handle errors, update the validated item
                 if error:
@@ -2315,8 +2318,7 @@ class S3CRUD(S3Method):
                     else:
                         msg = "%s: %s" % (fn, msg)
                         if "_error" in fields:
-                            fields["_error"] = "\n".join([msg,
-                                                          fields["_error"]])
+                            fields["_error"] = "\n".join([msg, fields["_error"]])
                         else:
                             fields["_error"] = msg
 

@@ -40,6 +40,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "appointments_use_organizer": False,
                "response_activity_autolink": False,
                "response_due_date": True,
+               "response_effort_required": False,
                "response_planning": True,
                "response_themes_details": False,
                "response_themes_sectors": False,
@@ -75,6 +76,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "appointments_use_organizer": True,
                       "response_activity_autolink": True,
                       "response_due_date": False,
+                      "response_effort_required": True,
                       "response_planning": False,
                       "response_themes_details": True,
                       "response_themes_sectors": True,
@@ -2044,6 +2046,11 @@ def config(settings):
                 if settings.get_dvr_response_due_date():
                     response_action_fields[1:1] = ["date_due"]
 
+                s3db.add_custom_callback("dvr_response_action",
+                                         "onvalidation",
+                                         response_action_onvalidation,
+                                         )
+
                 inline_responses = S3SQLInlineComponent(
                                             "response_action",
                                             label = T("Actions"),
@@ -2646,6 +2653,42 @@ def config(settings):
             field.requires = IS_EMPTY_OR(field.requires)
 
     # -------------------------------------------------------------------------
+    def response_action_onvalidation(form):
+        """
+            Onvalidation for response actions:
+                - enforce hours for closed-statuses (org-specific UI option)
+        """
+
+        ui_options = get_ui_options()
+        if ui_options.get("response_effort_required"):
+
+            db = current.db
+            s3db = current.s3db
+            form_vars = form.vars
+
+            # Get the new status
+            if "status_id" in form_vars:
+                status_id = form_vars.status_id
+            else:
+                status_id = s3db.dvr_response_action.status_id.default
+
+            try:
+                hours = form_vars.hours
+            except AttributeError:
+                # No hours field in form, so no point validating it
+                return
+
+            if hours is None:
+                # If new status is closed, require hours
+                stable = s3db.dvr_response_status
+                query = (stable.id == status_id)
+                status = db(query).select(stable.is_closed,
+                                          limitby = (0, 1),
+                                          ).first()
+                if status and status.is_closed:
+                    form.errors["hours"] = T("Please specify the effort spent")
+
+    # -------------------------------------------------------------------------
     def customise_dvr_response_action_resource(r, tablename):
 
         #db = current.db
@@ -2938,7 +2981,7 @@ def config(settings):
                                    )
 
 
-        # Organizer
+        # Organizer and PDF exports
         if response_themes_details:
             description = [(T("Themes"), "response_action_theme.id"),
                            "human_resource_id",
@@ -2958,6 +3001,12 @@ def config(settings):
                                    },
                        pdf_format = "list" if response_themes_details else "table",
                        )
+
+        # Custom onvalidation
+        s3db.add_custom_callback("dvr_response_action",
+                                 "onvalidation",
+                                 response_action_onvalidation,
+                                 )
 
     settings.customise_dvr_response_action_resource = customise_dvr_response_action_resource
 
