@@ -248,9 +248,6 @@ def config(settings):
                                      "BAMF-Az": "bamf.value",
                                      }
 
-    # Limit the number of records in PDF exports
-    settings.base.pdf_max_rows = 1000
-
     # -------------------------------------------------------------------------
     # Realm Rules
     #

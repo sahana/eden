@@ -1919,8 +1919,9 @@ class S3Config(Storage):
     def get_pdf_max_rows(self):
         """
             Maximum number of records in a single PDF table/list export
+                - None for unlimited
         """
-        return self.base.get("pdf_max_rows")
+        return self.base.get("pdf_max_rows", 1000)
 
     # -------------------------------------------------------------------------
     # XLS Export Settings
