@@ -2689,6 +2689,18 @@ def config(settings):
                     form.errors["hours"] = T("Please specify the effort spent")
 
     # -------------------------------------------------------------------------
+    def response_date_dt_orderby(field, direction, orderby, left_joins):
+        """
+            When sorting response actions by date, use created_on to maintain
+            consistent order of multiple response actions on the same date
+        """
+
+        sorting = {"table": field.tablename,
+                   "direction": direction,
+                   }
+        orderby.append("%(table)s.date%(direction)s,%(table)s.created_on%(direction)s" % sorting)
+
+    # -------------------------------------------------------------------------
     def customise_dvr_response_action_resource(r, tablename):
 
         #db = current.db
@@ -2855,7 +2867,6 @@ def config(settings):
                 s3db.configure("dvr_response_action",
                                filter_widgets = None,
                                list_fields = list_fields,
-                               orderby = "dvr_response_action.date desc",
                                pdf_fields = pdf_fields,
                                )
                 if "viewing" in get_vars:
@@ -3000,7 +3011,13 @@ def config(settings):
                                    "colors": s3db.dvr_response_status_colors,
                                    },
                        pdf_format = "list" if response_themes_details else "table",
+                       orderby = "dvr_response_action.date desc, dvr_response_action.created_on desc",
                        )
+
+        # Maintain consistent order for multiple response actions
+        # on the same day (by enforcing created_on as secondary order criterion)
+        field = table.date
+        field.represent.dt_orderby = response_date_dt_orderby
 
         # Custom onvalidation
         s3db.add_custom_callback("dvr_response_action",
