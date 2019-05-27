@@ -2787,6 +2787,11 @@ def config(settings):
             field.default = current.auth.s3_logged_in_human_resource()
             field.represent = s3db.hrm_HumanResourceRepresent(show_link=False)
             field.widget = None
+            # Use field options as filter options
+            try:
+                hr_filter_opts = field.requires.options()
+            except AttributeError:
+                hr_filter_opts = False
 
             # Require explicit unit in hours-widget above 4 hours
             from s3 import S3HoursWidget
@@ -2950,6 +2955,7 @@ def config(settings):
                         S3DateFilter("date", hidden=not is_report),
                         S3OptionsFilter(
                             "response_theme_ids",
+                            header = True,
                             hidden = True,
                             options = lambda: \
                                       s3_get_filter_opts("dvr_response_theme",
@@ -2968,8 +2974,16 @@ def config(settings):
 
                     if use_due_date:
                         filter_widgets.insert(3, S3DateFilter("date_due",
-                                                              hidden=is_report,
+                                                              hidden = is_report,
                                                               ))
+                    if hr_filter_opts:
+                        hr_filter_opts = dict(hr_filter_opts)
+                        hr_filter_opts.pop('', None)
+                        filter_widgets.insert(-2, S3OptionsFilter("human_resource_id",
+                                                                  hidden = True,
+                                                                  options = dict(hr_filter_opts),
+                                                                  header = True,
+                                                                  ))
 
                     if multiple_orgs:
                         # Add case organisation filter
