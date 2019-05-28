@@ -951,6 +951,8 @@ class auth_Consent(object):
             @param code: the processing type code to check
             @param field: the field in the table referencing pr_person.id
 
+            @returns: Query
+
             @example:
                 consent = s3db.auth_Consent()
                 query = consent.consent_query(table, "PIDSHARE") & (table.deleted == False)
@@ -980,16 +982,51 @@ class auth_Consent(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def consent_filter(cls, selector, code):
+    def consent_filter(cls, code, selector=None):
         """
             Filter resource for records where the person identified by
             selector has consented to a certain type of data processing.
 
             - useful to limit REST methods that require consent
+
+            @param code: the processing type code to check
+            @param selector: a field selector (string) that references
+                             pr_person.id; if not specified pr_person is
+                             assumed to be the master resource
+
+            @returns: S3ResourceQuery
+
+            @example:
+                consent = s3db.auth_Consent
+                resource.add_filter(consent.consent_filter("PIDSHARE", "~.person_id"))
+
+            NB only one consent filter can be used for the same resource;
+               if multiple consent options must be checked and/or multiple
+               person_id references apply independently, then either aliased
+               auth_consent components can be used to construct a filter, or
+               the query must be split (the latter typically performs better).
+               Ideally, however, the consent decision for a single operation
+               should not be complex or second-guessing.
         """
 
-        # TODO implement this
-        pass
+        option_ids = cls.get_consent_options(code)
+        today = current.request.utcnow.date()
+
+        # Construct sub-selectors
+        if selector and selector not in ("id", "~.id"):
+            consent = "%s$person_id:auth_consent" % selector
+        else:
+            # Assume pr_person is master
+            consent = "person_id:auth_consent"
+        option_id = FS("%s.option_id" % consent)
+        expires_on = FS("%s.expires_on" % consent)
+        consenting = FS("%s.consenting" % consent)
+
+        query = (option_id.belongs(option_ids)) & \
+                ((expires_on == None) | (expires_on > today)) & \
+                (consenting == True)
+
+        return query
 
 # =============================================================================
 def auth_user_options_get_osm(pe_id):
