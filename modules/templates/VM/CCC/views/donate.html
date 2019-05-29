@@ -1,7 +1,16 @@
 {{extend "layout.html"}}
-{{=item}}
 <div class="row">
- <div class="small-12 columns">
-  <a href="/{{=request.application}}/req/commit/create" class="button">Register a Donation</a>
+ <div class='medium-12 columns'>
+ {{=item}}
+ </div>
+</div>
+<div class="row">
+ <div class="large-6 medium-6 small-12 columns">
+  <div class="panel radius">
+   <a href="/{{=appname}}/req/commit/create">
+    <img src="/{{=appname}}/static/themes/CCC/img/gift.png"/>
+    <span class="service-link">REGISTER A DONATION</span>
+   </a>
+  </div>
  </div>
 </div>

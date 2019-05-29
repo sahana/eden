@@ -15,8 +15,8 @@ def config(settings):
 
     T = current.T
 
-    settings.base.system_name = T("Help for Cumbria")
-    settings.base.system_name_short = T("Help Cumbria")
+    settings.base.system_name = T("Support Cumbria")
+    settings.base.system_name_short = T("Support Cumbria")
 
     # Theme
     settings.base.theme = "CCC"

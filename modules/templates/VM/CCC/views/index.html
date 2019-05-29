@@ -1,19 +1,23 @@
 {{extend "layout.html"}}
-{{=item}}
 <div class="row">
- <div class="large-3 medium-6 small-12 columns">
+ <div class='medium-12 columns'>
+ {{=item}}
+ </div>
+</div>
+<div class="row">
+ <div class="large-6 medium-6 small-12 columns">
   <div class="panel radius">
-   <a href="/{{=request.application}}/vol">
-    <img src="/{{=request.application}}/static/themes/CCC/img/volunteer.png"/>
-    <span class="service-link">Volunteer your Time</span>
+   <a href="/{{=appname}}/vol">
+    <img src="/{{=appname}}/static/themes/CCC/img/volunteer.png"/>
+    <span class="service-link">I WISH TO VOLUNTEER</span>
    </a>
   </div>
  </div>
- <div class="large-3 medium-6 small-12 columns end">
+ <div class="large-6 medium-6 small-12 columns end">
   <div class="panel radius">
-   <a href="/{{=request.application}}/req">
-    <img src="/{{=request.application}}/static/themes/CCC/img/gift.png"/>
-    <span class="service-link">Donate Items</span>
+   <a href="/{{=appname}}/req">
+    <img src="/{{=appname}}/static/themes/CCC/img/gift.png"/>
+    <span class="service-link">I WOULD LIKE TO DONATE ITEMS</span>
    </a>
   </div>
  </div>
