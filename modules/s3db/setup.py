@@ -2037,12 +2037,13 @@ def setup_run_playbook(playbook, hosts, tags=None, private_key=None):
 
     inventory = InventoryManager(loader=loader, sources=sources)
     variable_manager = VariableManager(loader=loader, inventory=inventory)
+
+    # Broken with recent Ansible:
     # https://github.com/ansible/ansible/issues/21562
-    tmp_path = os.path.join("/", "tmp")
-    variable_manager.extra_vars = {"ansible_local_tmp": tmp_path,
-                                   # Broken with recent Ansible:
-                                   #"ansible_remote_tmp": tmp_path,
-                                   }
+    #tmp_path = os.path.join("/", "tmp")
+    #variable_manager.extra_vars = {"ansible_local_tmp": tmp_path,
+    #                               "ansible_remote_tmp": tmp_path,
+    #                               }
 
     # Run Playbook
     pbex = PlaybookExecutor(playbooks = [playbook],
