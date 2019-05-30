@@ -2038,18 +2038,19 @@ def setup_run_playbook(playbook, hosts, tags=None, private_key=None):
     inventory = InventoryManager(loader=loader, sources=sources)
     variable_manager = VariableManager(loader=loader, inventory=inventory)
 
-    # Broken with recent Ansible:
+    # Broken with Ansible 2.8
     # https://github.com/ansible/ansible/issues/21562
-    #tmp_path = os.path.join("/", "tmp")
-    #variable_manager.extra_vars = {"ansible_local_tmp": tmp_path,
-    #                               "ansible_remote_tmp": tmp_path,
-    #                               }
+    tmp_path = os.path.join("/", "tmp")
+    variable_manager.extra_vars = {"ansible_local_tmp": tmp_path,
+                                   "ansible_remote_tmp": tmp_path,
+                                   }
 
     # Run Playbook
     pbex = PlaybookExecutor(playbooks = [playbook],
                             inventory = inventory,
                             variable_manager = variable_manager,
                             loader = loader,
+                            # Not supported in Ansible 2.8
                             options = options,
                             passwords = {},
                             )
