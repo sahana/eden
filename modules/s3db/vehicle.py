@@ -212,7 +212,8 @@ class S3VehicleModel(S3Model):
             msg_record_deleted = T("Vehicle Details deleted"),
             msg_list_empty = T("No Vehicle Details currently defined"))
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
+
         vehicle_id = S3ReusableField("vehicle_id", "reference %s" % tablename,
                                      label = T("Vehicle"),
                                      ondelete = "RESTRICT",
@@ -232,8 +233,8 @@ class S3VehicleModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(vehicle_vehicle_id = vehicle_id,
-                    )
+        return {"vehicle_vehicle_id": vehicle_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -244,7 +245,7 @@ class S3VehicleModel(S3Model):
                                 readable = False,
                                 writable = False)
 
-        return dict(vehicle_vehicle_id = lambda **attr: dummy("vehicle_id"),
-                    )
+        return {"vehicle_vehicle_id": lambda **attr: dummy("vehicle_id"),
+                }
 
 # END =========================================================================

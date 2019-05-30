@@ -2040,7 +2040,8 @@ def setup_run_playbook(playbook, hosts, tags=None, private_key=None):
     # https://github.com/ansible/ansible/issues/21562
     tmp_path = os.path.join("/", "tmp")
     variable_manager.extra_vars = {"ansible_local_tmp": tmp_path,
-                                   "ansible_remote_tmp": tmp_path,
+                                   # Broken with recent Ansible:
+                                   #"ansible_remote_tmp": tmp_path,
                                    }
 
     # Run Playbook

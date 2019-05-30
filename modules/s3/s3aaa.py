@@ -1155,13 +1155,13 @@ Thank you"""
             @return: a registration form
         """
 
+        T = current.T
         db = current.db
         settings = self.settings
         messages = self.messages
         request = current.request
         session = current.session
         deployment_settings = current.deployment_settings
-        T = current.T
 
         # Customise the resource
         customise = deployment_settings.customise_resource("auth_user")
@@ -1245,6 +1245,7 @@ Thank you"""
                           )
 
         # Add an opt in clause to receive emails depending on the deployment settings
+        # @ToDo: Replace with Consent Tracking
         if deployment_settings.get_auth_opt_in_to_email():
             field_id = "%s_opt_in" % utablename
             comment = DIV(DIV(_class="tooltip",
@@ -1329,6 +1330,7 @@ Thank you"""
                       field_id + SQLFORM.ID_ROW_SUFFIX,
                       )
 
+        # @ToDo: Replace with Consent Tracking
         if deployment_settings.get_auth_terms_of_service():
             field_id = "%s_tos" % utablename
             label = T("I agree to the %(terms_of_service)s") % \

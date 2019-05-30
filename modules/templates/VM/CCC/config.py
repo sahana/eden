@@ -114,4 +114,28 @@ def config(settings):
 
     settings.customise_vol_home = customise_vol_home
 
+    # -------------------------------------------------------------------------
+    def customise_auth_user_controller(**attr):
+
+        if arg == "register":
+            get_vars_get = current.request.get_vars.get
+            if get_vars_get("existing"):
+                # Volunteer for Existing Org
+
+                pass
+
+            elif get_vars_get("group"):
+                # Volunteer Group
+
+                pass
+
+            else:
+                # Individual Volunteer
+
+                pass
+
+        return attr
+
+    settings.customise_auth_user_controller = customise_auth_user_controller
+
 # END =========================================================================
