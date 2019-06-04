@@ -5085,6 +5085,7 @@ $.filterOptionsS3({
                   "pr_contact",
                   "pr_address",
                   "pr_contact_emergency",
+                  "pr_person_details",
                   "pr_physical_description",
                   "pr_group_membership",
                   "pr_image",
