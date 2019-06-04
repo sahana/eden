@@ -49,24 +49,47 @@ class S3MainMenu(default.S3MainMenu):
         T = current.T
         auth = current.auth
         has_role = auth.s3_has_role
+        s3db = current.s3db
 
-        if not has_role(ADMIN) and auth.s3_has_roles(("EVENT_MONITOR", "EVENT_ORGANISER", "EVENT_OFFICE_MANAGER")):
-            # Simplified menu for Bangkok CCST
-            return [homepage("hrm", "org", name=T("Training Events"), f="training_event",
-                             #vars=dict(group="staff"), check=hrm)(
-                             vars=dict(group="staff"))(
-                        #MM("Training Events", c="hrm", f="training_event"),
-                        #MM("Trainings", c="hrm", f="training"),
-                        #MM("Training Courses", c="hrm", f="course"),
-                        ),
-                    ]
+        if not has_role(ADMIN):
+            if auth.s3_has_roles(("EVENT_MONITOR", "EVENT_ORGANISER", "EVENT_OFFICE_MANAGER")):
+                # Simplified menu for Bangkok CCST
+                return [homepage("hrm", "org", name=T("Training Events"), f="training_event",
+                                 #vars=dict(group="staff"), check=hrm)(
+                                 vars=dict(group="staff"))(
+                            #MM("Training Events", c="hrm", f="training_event"),
+                            #MM("Trainings", c="hrm", f="training"),
+                            #MM("Training Courses", c="hrm", f="course"),
+                            ),
+                        ]
+            elif not has_role("RDRT_ADMIN") and auth.s3_has_role("RDRT_MEMBER"):
+                # Simplified menu for AP RDRT
+                db = current.db
+                person_id = auth.s3_logged_in_person()
+                atable = s3db.deploy_application
+                htable = s3db.hrm_human_resource
+                query = (atable.human_resource_id == htable.id) & \
+                        (htable.person_id == person_id)
+                member = db(query).select(htable.id,
+                                          cache = s3db.cache,
+                                          limitby = (0, 1),
+                                          ).first()
+                if member:
+                    profile = MM("My RDRT Profile",
+                                 c="deploy", f="human_resource", args=[member.id, "profile"],
+                                 )
+                else:
+                    profile = None
+                return [homepage("deploy", name="RDRT")(
+                            profile,
+                            ),
+                        ]
 
         settings = current.deployment_settings
 
         root_org = auth.root_org_name()
         ORG_ADMIN = system_roles.ORG_ADMIN
 
-        s3db = current.s3db
         s3db.inv_recv_crud_strings()
         inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
 
@@ -108,8 +131,8 @@ class S3MainMenu(default.S3MainMenu):
             return root_org == NZRC or \
                    root_org is None and has_role(ADMIN)
 
-        def rdrt_admin(item):
-            return has_role("RDRT_ADMIN")
+        #def rdrt_admin(item):
+        #    return has_role("RDRT_ADMIN")
 
         #def vol(item):
         #    return root_org != HNRC or \
@@ -195,7 +218,7 @@ class S3MainMenu(default.S3MainMenu):
             ),
             homepage("deploy", name="RDRT", f="mission", m="summary",
                      vars={"~.status__belongs": "2"})(
-                MM("InBox", c="deploy", f="email_inbox", check=rdrt_admin),
+                MM("InBox", c="deploy", f="email_inbox"),
                 MM("Missions", c="deploy", f="mission", m="summary"),
                 MM("Members", c="deploy", f="human_resource", m="summary"),
             ),
@@ -453,6 +476,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 query = (atable.human_resource_id == htable.id) & \
                         (htable.person_id == person_id)
                 member = db(query).select(htable.id,
+                                          cache = s3db.cache,
                                           limitby = (0, 1),
                                           ).first()
                 if member:
@@ -506,13 +530,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                                    ),
                                       ),
                                )
-                else:
-                    focal_points = None
-                    inbox = None
-                    training = None
-                    members = None
-
-                return M()(M("Alerts",
+                    return M()(M("Alerts",
                              c="deploy", f="alert")(
                                 M("Create", m="create"),
                                 inbox,
@@ -541,6 +559,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                            ),
                            #M("Online Manual", c="deploy", f="index"),
                        )
+                else:
+                    return M()(profile)
 
         # Africa (Default)
         return M()(M("Missions",

@@ -108,6 +108,7 @@ def config(settings):
                                               ("pr_person", EID),
                                               ],
                                 pr_contact_emergency = EID,
+                                pr_person_details = PID,
                                 pr_physical_description = EID,
                                 pr_address = [("org_organisation", EID),
                                               ("pr_person", EID),
@@ -4564,181 +4565,218 @@ def config(settings):
                         s3db.hrm_human_resource.organisation_id.requires = s3db.org_organisation_requires(required=True)
 
                 AP = _is_asia_pacific()
-                if AP:
-                    otable = s3db.org_organisation
-                    org = db(otable.name == AP_ZONE).select(otable.id,
-                                                            limitby=(0, 1),
-                                                            cache = s3db.cache,
-                                                            ).first()
-                    try:
-                        organisation_id = org.id
-                    except:
-                        current.log.error("Cannot find org %s - prepop not done?" % AP_ZONE)
-                        organisation_id = None
-                    else:
-                        # Filter trainings to courses which belong to
-                        # the AP_ZONE organisation:
-                        ctable = s3db.hrm_course
-                        query = (ctable.organisation_id == organisation_id) & \
-                                (ctable.deleted != True)
-                        courses = db(query).select(ctable.id)
-                        course_ids = [c.id for c in courses]
-                        s3db.add_components(tablename,
-                                            hrm_training = {"link": "pr_person",
-                                                            "joinby": "id",
-                                                            "key": "id",
-                                                            "fkey": "person_id",
-                                                            "pkey": "person_id",
-                                                            "filterby": {"course_id": course_ids,
-                                                                         },
-                                                            },
-                                            )
-                        # Reset the component (we're past resource initialization)
-                        r.resource.components.reset(("training",))
 
-                # Exclude None-values for training course pivot axis
-                s3db.configure(tablename,
-                               report_exclude_empty = ("training.course_id",
-                                                       ),
-                               )
-
-                # Custom profile widgets for hrm_competency ("skills"):
-                subsets = (("Computer", "Computer Skills", "Add Computer Skills"),
-                           ("Language", "Language Skills", "Add Language Skills"),
-                           )
-                widgets = []
-                append_widget = widgets.append
-                profile_widgets = get_config("profile_widgets")
-                contacts_filter = None
-                while profile_widgets:
-                    widget = profile_widgets.pop(0)
-                    w_tablename = widget["tablename"]
-                    if w_tablename == "hrm_competency":
-                        for skill_type, label, label_create in subsets:
-                            query = widget["filter"] & \
-                                    (FS("skill_id$skill_type_id$name") == skill_type)
-                            new_widget = dict(widget)
-                            new_widget["label"] = label
-                            new_widget["label_create"] = label_create
-                            new_widget["filter"] = query
-                            append_widget(new_widget)
-                    elif w_tablename == "hrm_experience":
-                        new_widget = dict(widget)
-                        new_widget["create_controller"] = "deploy"
-                        append_widget(new_widget)
-                    elif w_tablename == "hrm_training" and AP and organisation_id:
-                        new_widget = dict(widget)
-                        new_widget["filter"] = widget["filter"] & \
-                            (FS("~.course_id$organisation_id") == organisation_id)
-                        append_widget(new_widget)
-                    else:
-                        append_widget(widget)
-                    if widget["tablename"] == "pr_contact":
-                        contacts_filter = widget["filter"]
-
-                # Emergency contacts
-                if contacts_filter is not None:
-                    emergency_widget = {"label": "Emergency Contacts",
-                                        "label_create": "Add Emergency Contact",
-                                        "tablename": "pr_contact_emergency",
-                                        "type": "datalist",
-                                        "filter": contacts_filter,
-                                        "icon": "phone",
-                                        }
-                    append_widget(emergency_widget)
-
-                if r.record:
-                    widgets.insert(0, {"label": "Personal Details",
-                                       "tablename": "pr_person",
-                                       "type": "datalist",
-                                       "insert": False,
-                                       "list_fields": ["first_name",
-                                                       "middle_name",
-                                                       "last_name",
-                                                       "date_of_birth",
-                                                       "gender",
-                                                       "person_details.nationality",
-                                                       "physical_description.blood_type",
-                                                       ],
-                                       "filter": FS("id") == r.record.person_id,
-                                       "icon": "user",
-                                       })
-
-                # Remove unnecessary filter widgets
-                filters = []
-                append_widget = filters.append
-                filter_widgets = get_config("filter_widgets")
-                while filter_widgets:
-                    widget = filter_widgets.pop(0)
-                    if widget.field not in ("location_id",
-                                            "site_id",
-                                            #"group_membership.group_id",
-                                            ):
-                        append_widget(widget)
-
-                from s3 import S3OptionsFilter
-
-                # Add gender filter
-                gender_opts = dict(s3db.pr_gender_opts)
-                del gender_opts[1]
-                append_widget(S3OptionsFilter("person_id$gender",
-                                              options = gender_opts,
-                                              cols = 3,
-                                              hidden = True,
-                                              ))
-                # Add Roster status filter
-                append_widget(S3OptionsFilter("application.active",
-                                              cols = 2,
-                                              default = True,
-                                              # Don't hide otherwise default
-                                              # doesn't apply:
-                                              #hidden = False,
-                                              label = T("Status"),
-                                              options = {"True": T("active"),
-                                                         "False": T("inactive"),
-                                                         },
-                                              ))
-
-                if r.method != "profile":
-                    # Representation of emergency contacts (breaks the update_url construction in render_toolbox)
-                    field = s3db.pr_contact_emergency.id
-                    field.represent = S3Represent(lookup = "pr_contact_emergency",
-                                                  fields = ("name", "relationship", "phone"),
-                                                  labels = emergency_contact_represent,
-                                                  )
-
-                # Custom list fields for RDRT
-                phone_label = settings.get_ui_label_mobile_phone()
-                s3db.org_organisation.root_organisation.label = T("National Society")
-                list_fields = ["person_id",
-                               (T("Sectors"), "credential.job_title_id"),
-                               # @todo: Languages?
-                               # @todo: Skills?
-                               (T("Trainings"), "training.course_id"),
-                               "organisation_id$root_organisation",
-                               "type",
-                               "job_title_id",
-                               # @todo: Education?
-                               (T("Status"), "application.active"),
-                               (T("Email"), "email.value"),
-                               (phone_label, "phone.value"),
-                               (T("Address"), "person_id$address.location_id"),
-                               "person_id$date_of_birth",
-                               "person_id$gender",
-                               "person_id$person_details.nationality",
-                               #(T("Passport Number"), "person_id$passport.value"),
-                               #(T("Passport Issuer"), "person_id$passport.ia_name"),
-                               #(T("Passport Date"), "person_id$passport.valid_from"),
-                               #(T("Passport Expires"), "person_id$passport.valid_until"),
-                               (T("Emergency Contacts"), "person_id$contact_emergency.id"),
-                               "person_id$physical_description.blood_type",
-                               ]
-
-                resource.configure(filter_widgets = filters,
-                                   list_fields = list_fields,
-                                   profile_widgets = widgets,
-                                   profile_header = rdrt_member_profile_header,
+                if not AP:
+                    # Africa
+                    # Exclude None-values for training course pivot axis
+                    s3db.configure(tablename,
+                                   report_exclude_empty = ("training.course_id",
+                                                           ),
                                    )
+
+                    if r.record:
+                        widgets = [{"label": "Personal Details",
+                                    "tablename": "pr_person",
+                                    "type": "datalist",
+                                    "insert": False,
+                                    "list_fields": ["first_name",
+                                                    # Not in form!?
+                                                    "middle_name",
+                                                    "last_name",
+                                                    "date_of_birth",
+                                                    "gender",
+                                                    # Not in form!?
+                                                    "person_details.nationality",
+                                                    # Not in form!?
+                                                    "physical_description.blood_type",
+                                                    ],
+                                    "filter": FS("id") == r.record.person_id,
+                                    "icon": "user",
+                                    },
+                                   ]
+                    else:
+                        widgets = []
+
+                    append_widget = widgets.append
+
+                    # Custom profile widgets for hrm_competency ("skills"):
+                    subsets = (("Computer", "Computer Skills", "Add Computer Skills"),
+                               ("Language", "Language Skills", "Add Language Skills"),
+                               )
+                    profile_widgets = get_config("profile_widgets")
+                    contacts_filter = None
+                    while profile_widgets:
+                        widget = profile_widgets.pop(0)
+                        w_tablename = widget["tablename"]
+                        if w_tablename == "hrm_competency":
+                            for skill_type, label, label_create in subsets:
+                                query = widget["filter"] & \
+                                        (FS("skill_id$skill_type_id$name") == skill_type)
+                                new_widget = dict(widget)
+                                new_widget["label"] = label
+                                new_widget["label_create"] = label_create
+                                new_widget["filter"] = query
+                                append_widget(new_widget)
+                        elif w_tablename == "hrm_experience":
+                            new_widget = dict(widget)
+                            new_widget["create_controller"] = "deploy"
+                            append_widget(new_widget)
+                        #elif w_tablename == "hrm_training" and AP and organisation_id:
+                        #    new_widget = dict(widget)
+                        #    new_widget["filter"] = widget["filter"] & \
+                        #        (FS("~.course_id$organisation_id") == organisation_id)
+                        #    append_widget(new_widget)
+                        else:
+                            append_widget(widget)
+                        if widget["tablename"] == "pr_contact":
+                            contacts_filter = widget["filter"]
+
+                    # Emergency contacts
+                    if contacts_filter is not None:
+                        emergency_widget = {"label": "Emergency Contacts",
+                                            "label_create": "Add Emergency Contact",
+                                            "tablename": "pr_contact_emergency",
+                                            "type": "datalist",
+                                            "filter": contacts_filter,
+                                            "icon": "phone",
+                                            }
+                        append_widget(emergency_widget)
+
+                    # Remove unnecessary filter widgets
+                    filters = []
+                    append_filter = filters.append
+                    filter_widgets = get_config("filter_widgets")
+                    while filter_widgets:
+                        widget = filter_widgets.pop(0)
+                        if widget.field not in ("location_id",
+                                                "site_id",
+                                                #"group_membership.group_id",
+                                                ):
+                            append_filter(widget)
+
+                    from s3 import S3OptionsFilter
+
+                    # Add gender filter
+                    gender_opts = dict(s3db.pr_gender_opts)
+                    del gender_opts[1]
+                    append_filter(S3OptionsFilter("person_id$gender",
+                                                  options = gender_opts,
+                                                  cols = 3,
+                                                  hidden = True,
+                                                  ))
+                    # Add Roster status filter
+                    append_filter(S3OptionsFilter("application.active",
+                                                  cols = 2,
+                                                  default = True,
+                                                  # Don't hide otherwise default
+                                                  # doesn't apply:
+                                                  #hidden = False,
+                                                  label = T("Status"),
+                                                  options = {"True": T("active"),
+                                                             "False": T("inactive"),
+                                                             },
+                                                  ))
+
+                    if r.method != "profile":
+                        # Representation of emergency contacts (breaks the update_url construction in render_toolbox)
+                        field = s3db.pr_contact_emergency.id
+                        field.represent = S3Represent(lookup = "pr_contact_emergency",
+                                                      fields = ("name", "relationship", "phone"),
+                                                      labels = emergency_contact_represent,
+                                                      )
+
+                    # Custom list fields for Africa RDRT
+                    phone_label = settings.get_ui_label_mobile_phone()
+                    s3db.org_organisation.root_organisation.label = T("National Society")
+                    list_fields = ["person_id",
+                                   (T("Sectors"), "credential.job_title_id"),
+                                   # @todo: Languages?
+                                   # @todo: Skills?
+                                   (T("Trainings"), "training.course_id"),
+                                   "organisation_id$root_organisation",
+                                   "type",
+                                   "job_title_id",
+                                   # @todo: Education?
+                                   (T("Status"), "application.active"),
+                                   (T("Email"), "email.value"),
+                                   (phone_label, "phone.value"),
+                                   (T("Address"), "person_id$address.location_id"),
+                                   "person_id$date_of_birth",
+                                   "person_id$gender",
+                                   "person_id$person_details.nationality",
+                                   #(T("Passport Number"), "person_id$passport.value"),
+                                   #(T("Passport Issuer"), "person_id$passport.ia_name"),
+                                   #(T("Passport Date"), "person_id$passport.valid_from"),
+                                   #(T("Passport Expires"), "person_id$passport.valid_until"),
+                                   (T("Emergency Contacts"), "person_id$contact_emergency.id"),
+                                   "person_id$physical_description.blood_type",
+                                   ]
+
+                    resource.configure(filter_widgets = filters,
+                                       list_fields = list_fields,
+                                       profile_widgets = widgets,
+                                       profile_header = rdrt_member_profile_header,
+                                       )
+                else:
+                    #otable = s3db.org_organisation
+                    #org = db(otable.name == AP_ZONE).select(otable.id,
+                    #                                        limitby=(0, 1),
+                    #                                        cache = s3db.cache,
+                    #                                        ).first()
+                    #try:
+                    #    organisation_id = org.id
+                    #except:
+                    #    current.log.error("Cannot find org %s - prepop not done?" % AP_ZONE)
+                    #    organisation_id = None
+                    #else:
+                    #    # Filter trainings to courses which belong to
+                    #    # the AP_ZONE organisation:
+                    #    ctable = s3db.hrm_course
+                    #    query = (ctable.organisation_id == organisation_id) & \
+                    #            (ctable.deleted != True)
+                    #    courses = db(query).select(ctable.id)
+                    #    course_ids = [c.id for c in courses]
+                    #    s3db.add_components(tablename,
+                    #                        hrm_training = {"link": "pr_person",
+                    #                                        "joinby": "id",
+                    #                                        "key": "id",
+                    #                                        "fkey": "person_id",
+                    #                                        "pkey": "person_id",
+                    #                                        "filterby": {"course_id": course_ids,
+                    #                                                     },
+                    #                                        },
+                    #                        )
+                    #    # Reset the component (we're past resource initialization)
+                    #    r.resource.components.reset(("training",))
+
+                    if r.record:
+                        widgets = [{"label": "Personal Details",
+                                    "tablename": "pr_person",
+                                    "type": "datalist",
+                                    "insert": False,
+                                    "list_fields": ["first_name",
+                                                    "middle_name",
+                                                    "last_name",
+                                                    "date_of_birth",
+                                                    "gender",
+                                                    "person_details.nationality",
+                                                    "person_details.nationality2",
+                                                    "physical_description.blood_type",
+                                                    ],
+                                    "filter": FS("id") == r.record.person_id,
+                                    "icon": "user",
+                                    },
+                                   ]
+                    else:
+                        widgets = []
+
+                    append_widget = widgets.append
+
+                    resource.configure(#filter_widgets = filters,
+                                       #list_fields = list_fields,
+                                       profile_widgets = widgets,
+                                       profile_header = rdrt_member_profile_header,
+                                       )
 
             return True
         s3.prep = custom_prep
@@ -6781,6 +6819,7 @@ def config(settings):
                 if not result:
                     return False
 
+            controller = r.controller
             component_name = r.component_name
             method = r.method
             if component_name == "address":
@@ -6823,7 +6862,6 @@ def config(settings):
 
             elif component_name == "identity":
                 if crmada:
-                    controller = r.controller
                     table = r.component.table
                     # Set default to National ID Card
                     table.type.default = 2
@@ -6886,7 +6924,7 @@ def config(settings):
                         branches = True,
                         )
                 if method == "record":
-                    if r.controller == "vol" and root_org == NRCS:
+                    if controller == "vol" and root_org == NRCS:
                         from s3 import S3SQLCustomForm
                         crud_form = S3SQLCustomForm("organisation_id",
                                                     "details.volunteer_type",
@@ -6903,646 +6941,671 @@ def config(settings):
                         # Use default form (legacy)
                         s3db.clear_config("hrm_human_resource", "crud_form")
 
-            if arcs:
-                # Changes common to both Members & Volunteers
-                from gluon import IS_EMPTY_OR
-                from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineComponent, S3LocationSelector
-                # Ensure that + appears at the beginning of the number
-                # Done in Model's controller prep
-                #f = s3db.get_aliased(s3db.pr_contact, "pr_phone_contact").value
-                #f.represent = s3_phone_represent
-                #f.widget = S3PhoneWidget()
-                s3db.pr_address.location_id.widget = S3LocationSelector(show_address = T("Village"),
-                                                                        show_map = False)
-                etable = s3db.pr_education
-                etable.level_id.comment = None # Don't Add Education Levels inline
-                organisation_id = current.auth.root_org()
-                f = etable.level_id
-                f.requires = IS_ONE_OF(db, "pr_education_level.id",
-                                       f.represent,
-                                       filterby = "organisation_id",
-                                       filter_opts = (organisation_id,),
-                                       )
-                s3db.pr_image.image.widget = None # ImageCropWidget doesn't work inline
-                s3db.add_components("pr_person",
-                                    pr_address = {"name": "perm_address",
-                                                  "joinby": "pe_id",
-                                                  "pkey": "pe_id",
-                                                  "filterby": {"type": 2,
-                                                               },
-                                                  "multiple": False,
-                                                  },
-                                    pr_education = {"name": "previous_education",
-                                                    "joinby": "person_id",
-                                                    "filterby": {"current": False,
-                                                                 },
-                                                    "multiple": False,
-                                                    },
-                                    )
-                crud_strings = s3.crud_strings
-                controller = r.controller
-                if controller == "vol":
-                    crud_strings["pr_person"] = crud_strings["hrm_human_resource"]
-                    #ctable = s3db.hrm_course
-                    #ctable.type.default = 2
-                    #query = (ctable.organisation_id == current.auth.root_org()) & \
-                    #        (ctable.type == 2) & \
-                    #        (ctable.deleted != True)
-                    #courses = db(query).select(ctable.id)
-                    #course_ids = [c.id for c in courses]
-                    f = s3db.hrm_training.course_id
-                    f.requires = IS_ONE_OF(db, "hrm_course.id",
+            
+            if controller == "deploy":
+                
+                AP = _is_asia_pacific()
+                if AP:
+                    from s3 import S3SQLCustomForm, S3SQLInlineComponent
+
+                    f = s3db.pr_person.middle_name
+                    f.readable = f.writable = True
+
+                    f = s3db.pr_person_details.nationality2
+                    f.readable = f.writable = True
+
+                    crud_form = S3SQLCustomForm("first_name",
+                                                "middle_name",
+                                                "last_name",
+                                                "date_of_birth",
+                                                "gender",
+                                                "person_details.nationality",
+                                                "person_details.nationality2",
+                                                "physical_description.blood_type",
+                                                "comments",
+                                                )
+
+                    s3db.configure("pr_person",
+                                   crud_form = crud_form,
+                                   )
+            else:
+                if arcs:
+                    # Changes common to both Members & Volunteers
+                    from gluon import IS_EMPTY_OR
+                    from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineComponent, S3LocationSelector
+                    # Ensure that + appears at the beginning of the number
+                    # Done in Model's controller prep
+                    #f = s3db.get_aliased(s3db.pr_contact, "pr_phone_contact").value
+                    #f.represent = s3_phone_represent
+                    #f.widget = S3PhoneWidget()
+                    s3db.pr_address.location_id.widget = S3LocationSelector(show_address = T("Village"),
+                                                                            show_map = False)
+                    etable = s3db.pr_education
+                    etable.level_id.comment = None # Don't Add Education Levels inline
+                    organisation_id = current.auth.root_org()
+                    f = etable.level_id
+                    f.requires = IS_ONE_OF(db, "pr_education_level.id",
                                            f.represent,
-                                           #filterby = "id",
-                                           #filter_opts = course_ids,
                                            filterby = "organisation_id",
                                            filter_opts = (organisation_id,),
-                                           sort = True,
                                            )
+                    s3db.pr_image.image.widget = None # ImageCropWidget doesn't work inline
                     s3db.add_components("pr_person",
-                                        hrm_human_resource = {"name": "volunteer",
-                                                              "joinby": "person_id",
-                                                              "filterby": {
-                                                                  "type": 2,
-                                                                  },
-                                                              "multiple": False,
-                                                              },
-                                        #hrm_training = {"name": "vol_training",
-                                        #                "joinby": "person_id",
-                                        #                "filterby": {"course_id": course_ids,
-                                        #                             },
-                                        #                },
-                                        pr_education = {"name": "current_education",
-                                                        "joinby": "person_id",
-                                                        "filterby": {
-                                                            "current": True,
-                                                            },
-                                                        "multiple": False,
-                                                        },
-                                        vol_details = {"name": "volunteer_details",
-                                                       "link": "hrm_human_resource",
-                                                       "joinby": "person_id",
-                                                       "key": "id",
-                                                       "fkey": "human_resource_id",
-                                                       "pkey": "id",
-                                                       "multiple": False,
-                                                       },
-                                        )
-                    crud_form = S3SQLCustomForm("volunteer.organisation_id",
-                                                "volunteer.code",
-                                                (T("Name"), "first_name"),
-                                                "last_name",
-                                                (T("Father Name"), "person_details.father_name"),
-                                                (T("Grand Father Name"), "person_details.grandfather_name"),
-                                                "date_of_birth",
-                                                (T("Gender"), "gender"),
-                                                (T("Job"), "person_details.occupation"),
-                                                S3SQLInlineComponent("perm_address",
-                                                                     label = T("Address"),
-                                                                     fields = [("", "location_id")],
-                                                                     filterby = {"field": "type",
-                                                                                 "options": 2,
-                                                                                 },
-                                                                     multiple = False,
-                                                                     ),
-                                                S3SQLInlineComponent("current_education",
-                                                                     label = T("School / University"),
-                                                                     fields = [("", "institute")],
-                                                                     filterby = {"field": "current",
-                                                                                 "options": True,
-                                                                                 },
-                                                                     multiple = False,
-                                                                     ),
-                                                S3SQLInlineComponent("phone",
-                                                                     label = T("Phone Number"),
-                                                                     fields = [("", "value")],
-                                                                     filterby = {"field": "contact_method",
-                                                                                 "options": "SMS",
-                                                                                 },
-                                                                     multiple = False,
-                                                                     ),
-                                                S3SQLInlineComponent("contact_emergency",
-                                                                     label = T("Emergency Contact Number"),
-                                                                     fields = [("", "phone")],
-                                                                     multiple = False,
-                                                                     ),
-                                                S3SQLInlineComponent("previous_education",
-                                                                     label = T("Education Level"),
-                                                                     fields = [("", "level_id")],
-                                                                     filterby = {"field": "current",
-                                                                                 "options": False,
-                                                                                 },
-                                                                     multiple = False,
-                                                                     ),
-                                                (T("Volunteer Start Date"), "volunteer.start_date"),
-                                                S3SQLInlineComponent("training",
-                                                                     #"vol_training",
-                                                                     label = T("Trainings"),
-                                                                     fields = (("", "course_id"),
-                                                                               ("", "date"),
-                                                                                ),
-                                                                     ),
-                                                S3SQLInlineComponent("volunteer_details",
-                                                                     label = T("Active"),
-                                                                     fields = [("", "active")],
-                                                                     link = False,
-                                                                     update_link = False,
-                                                                     multiple = False,
-                                                                     ),
-                                                (T("Remarks"), "comments"),
-                                                S3SQLInlineComponent("image",
-                                                                     label = T("Photo"),
-                                                                     fields = [("", "image")],
-                                                                     filterby = {"field": "profile",
-                                                                                 "options": True,
-                                                                                 },
-                                                                     multiple = False,
-                                                                     ),
-                                                )
-                    s3db.configure("pr_person",
-                                   crud_form = crud_form,
-                                   )
-
-                elif controller == "member":
-                    mtable = s3db.member_membership
-                    crud_strings["pr_person"] = crud_strings["member_membership"]
-                    f = mtable.leaving_reason
-                    f.readable = f.writable = True
-                    f = mtable.restart_date
-                    f.readable = f.writable = True
-                    f = mtable.election
-                    f.readable = f.writable = True
-                    f = mtable.trainings
-                    f.readable = f.writable = True
-                    #ctable = s3db.hrm_course
-                    #ctable.type.default = 4
-                    #query = (ctable.organisation_id == current.auth.root_org()) & \
-                    #        (ctable.type == 4) & \
-                    #        (ctable.deleted != True)
-                    #courses = db(query).select(ctable.id)
-                    #course_ids = [c.id for c in courses]
-                    #f = s3db.hrm_training.course_id
-                    #f.requires = IS_ONE_OF(db, "hrm_course.id",
-                    #                       f.represent,
-                    #                       filterby = "id",
-                    #                       filter_opts = course_ids,
-                    #                       sort = True,
-                    #                       )
-                    f = s3db.pr_person_details.grandfather_name
-                    f.readable = f.writable = True
-
-                    s3db.add_components("pr_person",
-                                        #hrm_training = {"name": "member_training",
-                                        #                "joinby": "person_id",
-                                        #                "filterby": {"course_id": course_ids,
-                                        #                             },
-                                        #                },
-                                        pr_address = {"name": "temp_address",
+                                        pr_address = {"name": "perm_address",
                                                       "joinby": "pe_id",
                                                       "pkey": "pe_id",
-                                                      "filterby": {
-                                                          "type": 1,
-                                                          },
+                                                      "filterby": {"type": 2,
+                                                                   },
                                                       "multiple": False,
                                                       },
-                                        # Make single, so fields can be embedded:
-                                        member_membership = {"joinby": "person_id",
-                                                             "multiple": False,
-                                                             },
+                                        pr_education = {"name": "previous_education",
+                                                        "joinby": "person_id",
+                                                        "filterby": {"current": False,
+                                                                     },
+                                                        "multiple": False,
+                                                        },
                                         )
-                    # Reset the component (we're past resource initialization)
-                    r.resource.components.reset(("membership",))
+                    crud_strings = s3.crud_strings
+                    if controller == "vol":
+                        crud_strings["pr_person"] = crud_strings["hrm_human_resource"]
+                        #ctable = s3db.hrm_course
+                        #ctable.type.default = 2
+                        #query = (ctable.organisation_id == current.auth.root_org()) & \
+                        #        (ctable.type == 2) & \
+                        #        (ctable.deleted != True)
+                        #courses = db(query).select(ctable.id)
+                        #course_ids = [c.id for c in courses]
+                        f = s3db.hrm_training.course_id
+                        f.requires = IS_ONE_OF(db, "hrm_course.id",
+                                               f.represent,
+                                               #filterby = "id",
+                                               #filter_opts = course_ids,
+                                               filterby = "organisation_id",
+                                               filter_opts = (organisation_id,),
+                                               sort = True,
+                                               )
+                        s3db.add_components("pr_person",
+                                            hrm_human_resource = {"name": "volunteer",
+                                                                  "joinby": "person_id",
+                                                                  "filterby": {
+                                                                      "type": 2,
+                                                                      },
+                                                                  "multiple": False,
+                                                                  },
+                                            #hrm_training = {"name": "vol_training",
+                                            #                "joinby": "person_id",
+                                            #                "filterby": {"course_id": course_ids,
+                                            #                             },
+                                            #                },
+                                            pr_education = {"name": "current_education",
+                                                            "joinby": "person_id",
+                                                            "filterby": {
+                                                                "current": True,
+                                                                },
+                                                            "multiple": False,
+                                                            },
+                                            vol_details = {"name": "volunteer_details",
+                                                           "link": "hrm_human_resource",
+                                                           "joinby": "person_id",
+                                                           "key": "id",
+                                                           "fkey": "human_resource_id",
+                                                           "pkey": "id",
+                                                           "multiple": False,
+                                                           },
+                                            )
+                        crud_form = S3SQLCustomForm("volunteer.organisation_id",
+                                                    "volunteer.code",
+                                                    (T("Name"), "first_name"),
+                                                    "last_name",
+                                                    (T("Father Name"), "person_details.father_name"),
+                                                    (T("Grand Father Name"), "person_details.grandfather_name"),
+                                                    "date_of_birth",
+                                                    (T("Gender"), "gender"),
+                                                    (T("Job"), "person_details.occupation"),
+                                                    S3SQLInlineComponent("perm_address",
+                                                                         label = T("Address"),
+                                                                         fields = [("", "location_id")],
+                                                                         filterby = {"field": "type",
+                                                                                     "options": 2,
+                                                                                     },
+                                                                         multiple = False,
+                                                                         ),
+                                                    S3SQLInlineComponent("current_education",
+                                                                         label = T("School / University"),
+                                                                         fields = [("", "institute")],
+                                                                         filterby = {"field": "current",
+                                                                                     "options": True,
+                                                                                     },
+                                                                         multiple = False,
+                                                                         ),
+                                                    S3SQLInlineComponent("phone",
+                                                                         label = T("Phone Number"),
+                                                                         fields = [("", "value")],
+                                                                         filterby = {"field": "contact_method",
+                                                                                     "options": "SMS",
+                                                                                     },
+                                                                         multiple = False,
+                                                                         ),
+                                                    S3SQLInlineComponent("contact_emergency",
+                                                                         label = T("Emergency Contact Number"),
+                                                                         fields = [("", "phone")],
+                                                                         multiple = False,
+                                                                         ),
+                                                    S3SQLInlineComponent("previous_education",
+                                                                         label = T("Education Level"),
+                                                                         fields = [("", "level_id")],
+                                                                         filterby = {"field": "current",
+                                                                                     "options": False,
+                                                                                     },
+                                                                         multiple = False,
+                                                                         ),
+                                                    (T("Volunteer Start Date"), "volunteer.start_date"),
+                                                    S3SQLInlineComponent("training",
+                                                                         #"vol_training",
+                                                                         label = T("Trainings"),
+                                                                         fields = (("", "course_id"),
+                                                                                   ("", "date"),
+                                                                                    ),
+                                                                         ),
+                                                    S3SQLInlineComponent("volunteer_details",
+                                                                         label = T("Active"),
+                                                                         fields = [("", "active")],
+                                                                         link = False,
+                                                                         update_link = False,
+                                                                         multiple = False,
+                                                                         ),
+                                                    (T("Remarks"), "comments"),
+                                                    S3SQLInlineComponent("image",
+                                                                         label = T("Photo"),
+                                                                         fields = [("", "image")],
+                                                                         filterby = {"field": "profile",
+                                                                                     "options": True,
+                                                                                     },
+                                                                         multiple = False,
+                                                                         ),
+                                                    )
+                        s3db.configure("pr_person",
+                                       crud_form = crud_form,
+                                       )
 
-                    crud_form = S3SQLCustomForm("membership.organisation_id",
-                                                "membership.code",
-                                                (T("Name"), "first_name"),
-                                                "last_name",
-                                                (T("Father Name"), "person_details.father_name"),
-                                                (T("Grand Father Name"), "person_details.grandfather_name"),
-                                                "date_of_birth",
-                                                (T("Gender"), "gender"),
-                                                S3SQLInlineComponent("perm_address",
-                                                                     label = T("Permanent Address"),
-                                                                     fields = [("", "location_id")],
-                                                                     filterby = {"field": "type",
-                                                                                 "options": 2,
-                                                                                 },
-                                                                     multiple = False,
-                                                                     ),
-                                                S3SQLInlineComponent("temp_address",
-                                                                     label = T("Temporary Address"),
-                                                                     fields = [("", "location_id")],
-                                                                     filterby = {"field": "type",
-                                                                                 "options": 1,
-                                                                                 },
-                                                                     multiple = False,
-                                                                     ),
-                                                (T("Place of Work"), "person_details.company"),
-                                                S3SQLInlineComponent("previous_education",
-                                                                     label = T("Education Level"),
-                                                                     fields = [("", "level_id")],
-                                                                     filterby = {"field": "current",
-                                                                                 "options": False,
-                                                                                 },
-                                                                     multiple = False,
-                                                                     ),
-                                                S3SQLInlineComponent("identity",
-                                                                     label = T("ID Number"),
-                                                                     fields = [("", "value")],
-                                                                     filterby = {"field": "type",
-                                                                                 "options": 2,
-                                                                                 },
-                                                                     multiple = False,
-                                                                     ),
-                                                S3SQLInlineComponent("physical_description",
-                                                                     label = T("Blood Group"),
-                                                                     fields = [("", "blood_type")],
-                                                                     multiple = False,
-                                                                     ),
-                                                S3SQLInlineComponent("phone",
-                                                                     label = T("Phone Number"),
-                                                                     fields = [("", "value")],
-                                                                     filterby = {"field": "contact_method",
-                                                                                 "options": "SMS",
-                                                                                 },
-                                                                     multiple = False,
-                                                                     ),
-                                                S3SQLInlineComponent("contact_emergency",
-                                                                     label = T("Relatives Contact #"),
-                                                                     fields = [("", "phone")],
-                                                                     multiple = False,
-                                                                     ),
-                                                (T("Date of Recruitment"), "membership.start_date"),
-                                                (T("Date of Dismissal"), "membership.end_date"),
-                                                (T("Reason for Dismissal"), "membership.leaving_reason"),
-                                                (T("Date of Re-recruitment"), "membership.restart_date"),
-                                                (T("Monthly Membership Fee"), "membership.membership_fee"),
-                                                (T("Membership Fee Last Paid"), "membership.membership_paid"),
-                                                "membership.membership_due",
-                                                "membership.election",
-                                                "membership.trainings",
-                                                #S3SQLInlineComponent("member_training",
-                                                #                     label = T("Trainings"),
-                                                #                     fields = (("", "course_id"),
-                                                #                               ("", "date"),
-                                                #                                ),
-                                                #                     ),
-                                                "membership.comments",
-                                                S3SQLInlineComponent("image",
-                                                                     label = T("Photo"),
-                                                                     fields = [("", "image")],
-                                                                     filterby = {"field": "profile",
-                                                                                 "options": True,
-                                                                                 },
-                                                                     multiple = False,
-                                                                     ),
-                                                )
-                    s3db.configure("pr_person",
-                                   crud_form = crud_form,
-                                   )
+                    elif controller == "member":
+                        mtable = s3db.member_membership
+                        crud_strings["pr_person"] = crud_strings["member_membership"]
+                        f = mtable.leaving_reason
+                        f.readable = f.writable = True
+                        f = mtable.restart_date
+                        f.readable = f.writable = True
+                        f = mtable.election
+                        f.readable = f.writable = True
+                        f = mtable.trainings
+                        f.readable = f.writable = True
+                        #ctable = s3db.hrm_course
+                        #ctable.type.default = 4
+                        #query = (ctable.organisation_id == current.auth.root_org()) & \
+                        #        (ctable.type == 4) & \
+                        #        (ctable.deleted != True)
+                        #courses = db(query).select(ctable.id)
+                        #course_ids = [c.id for c in courses]
+                        #f = s3db.hrm_training.course_id
+                        #f.requires = IS_ONE_OF(db, "hrm_course.id",
+                        #                       f.represent,
+                        #                       filterby = "id",
+                        #                       filter_opts = course_ids,
+                        #                       sort = True,
+                        #                       )
+                        f = s3db.pr_person_details.grandfather_name
+                        f.readable = f.writable = True
 
-            elif vnrc:
-                controller = r.controller
-                if not r.component:
-                    crud_fields = ["first_name",
-                                   "middle_name",
-                                   "last_name",
-                                   "date_of_birth",
-                                   "gender",
-                                   "person_details.marital_status",
-                                   "person_details.nationality",
-                                   ]
+                        s3db.add_components("pr_person",
+                                            #hrm_training = {"name": "member_training",
+                                            #                "joinby": "person_id",
+                                            #                "filterby": {"course_id": course_ids,
+                                            #                             },
+                                            #                },
+                                            pr_address = {"name": "temp_address",
+                                                          "joinby": "pe_id",
+                                                          "pkey": "pe_id",
+                                                          "filterby": {
+                                                              "type": 1,
+                                                              },
+                                                          "multiple": False,
+                                                          },
+                                            # Make single, so fields can be embedded:
+                                            member_membership = {"joinby": "person_id",
+                                                                 "multiple": False,
+                                                                 },
+                                            )
+                        # Reset the component (we're past resource initialization)
+                        r.resource.components.reset(("membership",))
 
-                    from gluon import IS_EMPTY_OR, IS_IN_SET
-                    from s3 import IS_ONE_OF
+                        crud_form = S3SQLCustomForm("membership.organisation_id",
+                                                    "membership.code",
+                                                    (T("Name"), "first_name"),
+                                                    "last_name",
+                                                    (T("Father Name"), "person_details.father_name"),
+                                                    (T("Grand Father Name"), "person_details.grandfather_name"),
+                                                    "date_of_birth",
+                                                    (T("Gender"), "gender"),
+                                                    S3SQLInlineComponent("perm_address",
+                                                                         label = T("Permanent Address"),
+                                                                         fields = [("", "location_id")],
+                                                                         filterby = {"field": "type",
+                                                                                     "options": 2,
+                                                                                     },
+                                                                         multiple = False,
+                                                                         ),
+                                                    S3SQLInlineComponent("temp_address",
+                                                                         label = T("Temporary Address"),
+                                                                         fields = [("", "location_id")],
+                                                                         filterby = {"field": "type",
+                                                                                     "options": 1,
+                                                                                     },
+                                                                         multiple = False,
+                                                                         ),
+                                                    (T("Place of Work"), "person_details.company"),
+                                                    S3SQLInlineComponent("previous_education",
+                                                                         label = T("Education Level"),
+                                                                         fields = [("", "level_id")],
+                                                                         filterby = {"field": "current",
+                                                                                     "options": False,
+                                                                                     },
+                                                                         multiple = False,
+                                                                         ),
+                                                    S3SQLInlineComponent("identity",
+                                                                         label = T("ID Number"),
+                                                                         fields = [("", "value")],
+                                                                         filterby = {"field": "type",
+                                                                                     "options": 2,
+                                                                                     },
+                                                                         multiple = False,
+                                                                         ),
+                                                    S3SQLInlineComponent("physical_description",
+                                                                         label = T("Blood Group"),
+                                                                         fields = [("", "blood_type")],
+                                                                         multiple = False,
+                                                                         ),
+                                                    S3SQLInlineComponent("phone",
+                                                                         label = T("Phone Number"),
+                                                                         fields = [("", "value")],
+                                                                         filterby = {"field": "contact_method",
+                                                                                     "options": "SMS",
+                                                                                     },
+                                                                         multiple = False,
+                                                                         ),
+                                                    S3SQLInlineComponent("contact_emergency",
+                                                                         label = T("Relatives Contact #"),
+                                                                         fields = [("", "phone")],
+                                                                         multiple = False,
+                                                                         ),
+                                                    (T("Date of Recruitment"), "membership.start_date"),
+                                                    (T("Date of Dismissal"), "membership.end_date"),
+                                                    (T("Reason for Dismissal"), "membership.leaving_reason"),
+                                                    (T("Date of Re-recruitment"), "membership.restart_date"),
+                                                    (T("Monthly Membership Fee"), "membership.membership_fee"),
+                                                    (T("Membership Fee Last Paid"), "membership.membership_paid"),
+                                                    "membership.membership_due",
+                                                    "membership.election",
+                                                    "membership.trainings",
+                                                    #S3SQLInlineComponent("member_training",
+                                                    #                     label = T("Trainings"),
+                                                    #                     fields = (("", "course_id"),
+                                                    #                               ("", "date"),
+                                                    #                                ),
+                                                    #                     ),
+                                                    "membership.comments",
+                                                    S3SQLInlineComponent("image",
+                                                                         label = T("Photo"),
+                                                                         fields = [("", "image")],
+                                                                         filterby = {"field": "profile",
+                                                                                     "options": True,
+                                                                                     },
+                                                                         multiple = False,
+                                                                         ),
+                                                    )
+                        s3db.configure("pr_person",
+                                       crud_form = crud_form,
+                                       )
 
-                    dtable = s3db.pr_person_details
+                elif vnrc:
+                    if not r.component:
+                        crud_fields = ["first_name",
+                                       "middle_name",
+                                       "last_name",
+                                       "date_of_birth",
+                                       "gender",
+                                       "person_details.marital_status",
+                                       "person_details.nationality",
+                                       ]
 
-                    # Context-dependent form fields
-                    if controller in ("pr", "hrm", "vol"):
-                        # Provinces of Viet Nam
-                        ltable = s3db.gis_location
-                        ptable = ltable.with_alias("gis_parent_location")
-                        dbset = db((ltable.level == "L1") & \
-                                   (ptable.name == "Viet Nam"))
-                        left = ptable.on(ltable.parent == ptable.id)
-                        vn_provinces = IS_EMPTY_OR(IS_ONE_OF(dbset, "gis_location.name",
-                                                            "%(name)s",
-                                                            left=left,
-                                                            ))
-                        # Place Of Birth
-                        field = dtable.place_of_birth
-                        field.readable = field.writable = True
-                        field.requires = vn_provinces
+                        from gluon import IS_EMPTY_OR, IS_IN_SET
+                        from s3 import IS_ONE_OF
 
-                        # Home Town
-                        field = dtable.hometown
-                        field.readable = field.writable = True
-                        field.requires = vn_provinces
+                        dtable = s3db.pr_person_details
 
-                        # Use a free-text version of religion field
-                        # @todo: make religion a drop-down list of options
-                        field = dtable.religion_other
-                        field.label = T("Religion")
-                        field.readable = field.writable = True
+                        # Context-dependent form fields
+                        if controller in ("pr", "hrm", "vol"):
+                            # Provinces of Viet Nam
+                            ltable = s3db.gis_location
+                            ptable = ltable.with_alias("gis_parent_location")
+                            dbset = db((ltable.level == "L1") & \
+                                       (ptable.name == "Viet Nam"))
+                            left = ptable.on(ltable.parent == ptable.id)
+                            vn_provinces = IS_EMPTY_OR(IS_ONE_OF(dbset, "gis_location.name",
+                                                                "%(name)s",
+                                                                left=left,
+                                                                ))
+                            # Place Of Birth
+                            field = dtable.place_of_birth
+                            field.readable = field.writable = True
+                            field.requires = vn_provinces
 
-                        crud_fields.extend(["person_details.place_of_birth",
-                                            "person_details.hometown",
-                                            "person_details.religion_other",
-                                            "person_details.mother_name",
-                                            "person_details.father_name",
-                                            "person_details.affiliations",
-                                            ])
-                    else:
-                        # ID Card Number inline
-                        from s3 import S3SQLInlineComponent
-                        idcard_number = S3SQLInlineComponent("idcard",
-                                                             label = T("ID Card Number"),
-                                                             fields = [("", "value")],
-                                                             default = {"type": 2,
-                                                                        },
-                                                             multiple = False,
-                                                             )
-                        # @todo: make ethnicity a drop-down list of options
-                        crud_fields.extend(["physical_description.ethnicity",
-                                            idcard_number,
-                                            ])
+                            # Home Town
+                            field = dtable.hometown
+                            field.readable = field.writable = True
+                            field.requires = vn_provinces
 
-                    # Standard option for nationality
-                    field = dtable.nationality
-                    VN = "VN"
-                    field.default = VN
-                    vnrc_only = False
-                    try:
-                        options = dict(field.requires.options())
-                    except AttributeError:
-                        pass
-                    else:
-                        opts = [VN]
-                        if r.record:
-                            # Get the nationality from the current record
-                            query = (r.table.id == r.id)
-                            left = dtable.on(dtable.person_id == r.id)
-                            row = db(query).select(dtable.nationality,
-                                                   left = left,
-                                                   limitby = (0, 1)).first()
-                            if row and row.nationality:
-                                opts.append(row.nationality)
-                            # Check wether this person is only VNRC-associated
-                            htable = s3db.hrm_human_resource
-                            otable = s3db.org_organisation
-                            query = (htable.person_id == r.id) & \
-                                    (htable.deleted != True) & \
-                                    (otable.id == htable.organisation_id) & \
-                                    (otable.name != VNRC)
-                            row = db(query).select(htable.id, limitby=(0, 1)).first()
-                            if not row:
-                                vnrc_only = True
-                        opts = dict((k, options[k]) for k in opts if k in options)
-                        if vnrc_only:
-                            # Person is only associated with VNRC => enforce update,
-                            # and limit options to either current value or VN
-                            field.requires = IS_IN_SET(opts, zero=None)
+                            # Use a free-text version of religion field
+                            # @todo: make religion a drop-down list of options
+                            field = dtable.religion_other
+                            field.label = T("Religion")
+                            field.readable = field.writable = True
+
+                            crud_fields.extend(["person_details.place_of_birth",
+                                                "person_details.hometown",
+                                                "person_details.religion_other",
+                                                "person_details.mother_name",
+                                                "person_details.father_name",
+                                                "person_details.affiliations",
+                                                ])
                         else:
-                            # Person is (also) associated with another org
-                            # => can't enforce update, so just limit options
-                            field.requires = IS_EMPTY_OR(IS_IN_SET(opts))
+                            # ID Card Number inline
+                            from s3 import S3SQLInlineComponent
+                            idcard_number = S3SQLInlineComponent("idcard",
+                                                                 label = T("ID Card Number"),
+                                                                 fields = [("", "value")],
+                                                                 default = {"type": 2,
+                                                                            },
+                                                                 multiple = False,
+                                                                 )
+                            # @todo: make ethnicity a drop-down list of options
+                            crud_fields.extend(["physical_description.ethnicity",
+                                                idcard_number,
+                                                ])
 
-                    # Also hide some other fields
-                    crud_fields.append("comments")
-                    from s3 import S3SQLCustomForm
-                    s3db.configure("pr_person",
-                                   crud_form = S3SQLCustomForm(*crud_fields),
-                                   )
+                        # Standard option for nationality
+                        field = dtable.nationality
+                        VN = "VN"
+                        field.default = VN
+                        vnrc_only = False
+                        try:
+                            options = dict(field.requires.options())
+                        except AttributeError:
+                            pass
+                        else:
+                            opts = [VN]
+                            if r.record:
+                                # Get the nationality from the current record
+                                query = (r.table.id == r.id)
+                                left = dtable.on(dtable.person_id == r.id)
+                                row = db(query).select(dtable.nationality,
+                                                       left = left,
+                                                       limitby = (0, 1)).first()
+                                if row and row.nationality:
+                                    opts.append(row.nationality)
+                                # Check wether this person is only VNRC-associated
+                                htable = s3db.hrm_human_resource
+                                otable = s3db.org_organisation
+                                query = (htable.person_id == r.id) & \
+                                        (htable.deleted != True) & \
+                                        (otable.id == htable.organisation_id) & \
+                                        (otable.name != VNRC)
+                                row = db(query).select(htable.id, limitby=(0, 1)).first()
+                                if not row:
+                                    vnrc_only = True
+                            opts = dict((k, options[k]) for k in opts if k in options)
+                            if vnrc_only:
+                                # Person is only associated with VNRC => enforce update,
+                                # and limit options to either current value or VN
+                                field.requires = IS_IN_SET(opts, zero=None)
+                            else:
+                                # Person is (also) associated with another org
+                                # => can't enforce update, so just limit options
+                                field.requires = IS_EMPTY_OR(IS_IN_SET(opts))
 
-                if method == "record" or component_name == "human_resource":
-                    # Hide unwanted fields in human_resource
-                    htable = s3db.hrm_human_resource
-                    for fname in ["job_title_id",
-                                  "code",
-                                  "essential",
-                                  "site_contact",
-                                  "start_date",
-                                  "end_date",
-                                  ]:
-                        field = htable[fname]
-                        field.readable = field.writable = False
+                        # Also hide some other fields
+                        crud_fields.append("comments")
+                        from s3 import S3SQLCustomForm
+                        s3db.configure("pr_person",
+                                       crud_form = S3SQLCustomForm(*crud_fields),
+                                       )
 
-                    if method == "record" and controller == "hrm":
-                        # Custom config for method handler
+                    if method == "record" or component_name == "human_resource":
+                        # Hide unwanted fields in human_resource
+                        htable = s3db.hrm_human_resource
+                        for fname in ["job_title_id",
+                                      "code",
+                                      "essential",
+                                      "site_contact",
+                                      "start_date",
+                                      "end_date",
+                                      ]:
+                            field = htable[fname]
+                            field.readable = field.writable = False
 
-                        # RC employment history
-                        org_type_name = "organisation_id$organisation_organisation_type.organisation_type_id$name"
-                        widget_filter = (FS(org_type_name) == "Red Cross / Red Crescent") & \
-                                        (FS("organisation") == None)
-                        org_experience = {"label": T("Red Cross Employment History"),
-                                          "label_create": T("Add Employment"),
-                                          "list_fields": ["start_date",
+                        if method == "record" and controller == "hrm":
+                            # Custom config for method handler
+
+                            # RC employment history
+                            org_type_name = "organisation_id$organisation_organisation_type.organisation_type_id$name"
+                            widget_filter = (FS(org_type_name) == "Red Cross / Red Crescent") & \
+                                            (FS("organisation") == None)
+                            org_experience = {"label": T("Red Cross Employment History"),
+                                              "label_create": T("Add Employment"),
+                                              "list_fields": ["start_date",
+                                                              "end_date",
+                                                              "organisation",
+                                                              "department_id",
+                                                              "job_title",
+                                                              "employment_type",
+                                                              ],
+                                              "filter": widget_filter,
+                                              }
+
+                            # Non-RC employment history
+                            widget_filter = FS("organisation") != None
+                            other_experience = {"label": T("Other Employments"),
+                                                "label_create": T("Add Employment"),
+                                                "list_fields": ["start_date",
+                                                                "end_date",
+                                                                "organisation",
+                                                                "job_title",
+                                                                ],
+                                                "filter": widget_filter,
+                                                }
+
+                            s3db.set_method("pr", "person",
+                                            method = "record",
+                                            action = s3db.hrm_Record(salary=True,
+                                                                     awards=True,
+                                                                     disciplinary_record=True,
+                                                                     org_experience=org_experience,
+                                                                     other_experience=other_experience,
+                                                                     ))
+
+                            # Custom list_fields for hrm_salary (exclude monthly amount)
+                            stable = s3db.hrm_salary
+                            stable.salary_grade_id.label = T("Grade Code")
+                            s3db.configure("hrm_salary",
+                                           list_fields = ["staff_level_id",
+                                                          "salary_grade_id",
+                                                          "start_date",
                                                           "end_date",
-                                                          "organisation",
-                                                          "department_id",
-                                                          "job_title",
-                                                          "employment_type",
                                                           ],
-                                          "filter": widget_filter,
-                                          }
+                                           )
+                            # Custom list_fields for hrm_award
+                            s3db.configure("hrm_award",
+                                           list_fields = ["date",
+                                                          "awarding_body",
+                                                          "award_type_id",
+                                                          ],
+                                           orderby = "hrm_award.date desc"
+                                           )
+                            # Custom list_fields for hrm_disciplinary_action
+                            s3db.configure("hrm_disciplinary_action",
+                                           list_fields = ["date",
+                                                          "disciplinary_body",
+                                                          "disciplinary_type_id",
+                                                          ],
+                                           orderby = "hrm_disciplinary_action.date desc"
+                                           )
+                            # Custom form for hrm_human_resource
+                            from s3 import S3SQLCustomForm, S3SQLInlineComponent
+                            crud_fields = ["organisation_id",
+                                           "site_id",
+                                           "department_id",
+                                           "status",
+                                           S3SQLInlineComponent("contract",
+                                                                label = T("Contract Details"),
+                                                                fields = ("term",
+                                                                          (T("Hours Model"), "hours"),
+                                                                          ),
+                                                                multiple = False,
+                                                                ),
+                                           S3SQLInlineComponent("social_insurance",
+                                                                label = T("Social Insurance"),
+                                                                name = "social",
+                                                                fields = ("insurance_number",
+                                                                          "insurer",
+                                                                          ),
+                                                                default = {"type": "SOCIAL"},
+                                                                multiple = False,
+                                                                ),
+                                           S3SQLInlineComponent("health_insurance",
+                                                                label = T("Health Insurance"),
+                                                                name = "health",
+                                                                fields = ("insurance_number",
+                                                                          "provider",
+                                                                          ),
+                                                                default = {"type": "HEALTH"},
+                                                                multiple = False,
+                                                                ),
+                                           "comments",
+                                           ]
+                            s3db.configure("hrm_human_resource",
+                                           crud_form = S3SQLCustomForm(*crud_fields),
+                                           )
 
-                        # Non-RC employment history
-                        widget_filter = FS("organisation") != None
-                        other_experience = {"label": T("Other Employments"),
-                                            "label_create": T("Add Employment"),
-                                            "list_fields": ["start_date",
-                                                            "end_date",
-                                                            "organisation",
-                                                            "job_title",
-                                                            ],
-                                            "filter": widget_filter,
-                                            }
+                    elif component_name == "address":
+                        settings.gis.building_name = False
+                        settings.gis.latlon_selector = False
+                        settings.gis.map_selector = False
 
-                        s3db.set_method("pr", "person",
-                                        method = "record",
-                                        action = s3db.hrm_Record(salary=True,
-                                                                 awards=True,
-                                                                 disciplinary_record=True,
-                                                                 org_experience=org_experience,
-                                                                 other_experience=other_experience,
-                                                                 ))
+                    elif method == "contacts":
+                        table = s3db.pr_contact_emergency
+                        table.address.readable = table.address.writable = True
 
-                        # Custom list_fields for hrm_salary (exclude monthly amount)
-                        stable = s3db.hrm_salary
-                        stable.salary_grade_id.label = T("Grade Code")
-                        s3db.configure("hrm_salary",
-                                       list_fields = ["staff_level_id",
-                                                      "salary_grade_id",
+                    elif component_name == "identity":
+                        table = r.component.table
+
+                        # Limit options for identity document type
+                        pr_id_type_opts = {1: T("Passport"),
+                                           2: T("National ID Card"),
+                                           }
+                        from gluon.validators import IS_IN_SET
+                        table.type.requires = IS_IN_SET(pr_id_type_opts, zero=None)
+
+                        if controller == "hrm":
+                            # For staff, set default for ID document type and do not
+                            # allow selection of other options
+                            table.type.default = 2
+                            table.type.writable = False
+                            hide_fields = ("description", "valid_until", "country_code", "ia_name")
+                        else:
+                            hide_fields = ("description",)
+
+                        # Hide unneeded fields
+                        for fname in hide_fields:
+                            field = table[fname]
+                            field.readable = field.writable = False
+                        list_fields = s3db.get_config("pr_identity", "list_fields")
+                        hide_fields = set(hide_fields)
+                        list_fields = (fs for fs in list_fields if fs not in hide_fields)
+                        s3db.configure("pr_identity", list_fields = list_fields)
+
+                    elif method == "cv" or component_name == "experience":
+                        table = s3db.hrm_experience
+                        # Use simple free-text variants
+                        table.organisation_id.default = None # should not default in this case
+                        table.organisation.readable = True
+                        table.organisation.writable = True
+                        table.job_title.readable = True
+                        table.job_title.writable = True
+                        table.comments.label = T("Main Duties")
+                        from s3 import S3SQLCustomForm
+                        crud_form = S3SQLCustomForm("organisation",
+                                                    "job_title",
+                                                    "comments",
+                                                    "start_date",
+                                                    "end_date",
+                                                    )
+                        s3db.configure("hrm_experience",
+                                       crud_form = crud_form,
+                                       list_fields = ["organisation",
+                                                      "job_title",
+                                                      "comments",
                                                       "start_date",
                                                       "end_date",
                                                       ],
                                        )
-                        # Custom list_fields for hrm_award
-                        s3db.configure("hrm_award",
-                                       list_fields = ["date",
-                                                      "awarding_body",
-                                                      "award_type_id",
-                                                      ],
-                                       orderby = "hrm_award.date desc"
-                                       )
-                        # Custom list_fields for hrm_disciplinary_action
-                        s3db.configure("hrm_disciplinary_action",
-                                       list_fields = ["date",
-                                                      "disciplinary_body",
-                                                      "disciplinary_type_id",
-                                                      ],
-                                       orderby = "hrm_disciplinary_action.date desc"
-                                       )
-                        # Custom form for hrm_human_resource
-                        from s3 import S3SQLCustomForm, S3SQLInlineComponent
-                        crud_fields = ["organisation_id",
-                                       "site_id",
-                                       "department_id",
-                                       "status",
-                                       S3SQLInlineComponent("contract",
-                                                            label = T("Contract Details"),
-                                                            fields = ("term",
-                                                                      (T("Hours Model"), "hours"),
-                                                                      ),
-                                                            multiple = False,
-                                                            ),
-                                       S3SQLInlineComponent("social_insurance",
-                                                            label = T("Social Insurance"),
-                                                            name = "social",
-                                                            fields = ("insurance_number",
-                                                                      "insurer",
-                                                                      ),
-                                                            default = {"type": "SOCIAL"},
-                                                            multiple = False,
-                                                            ),
-                                       S3SQLInlineComponent("health_insurance",
-                                                            label = T("Health Insurance"),
-                                                            name = "health",
-                                                            fields = ("insurance_number",
-                                                                      "provider",
-                                                                      ),
-                                                            default = {"type": "HEALTH"},
-                                                            multiple = False,
-                                                            ),
-                                       "comments",
-                                       ]
-                        s3db.configure("hrm_human_resource",
-                                       crud_form = S3SQLCustomForm(*crud_fields),
-                                       )
+                        if method == "cv":
+                            # Customize CV
+                            s3db.set_method("pr", "person",
+                                            method = "cv",
+                                            action = s3db.hrm_CV(form=vnrc_cv_form))
 
-                elif component_name == "address":
-                    settings.gis.building_name = False
-                    settings.gis.latlon_selector = False
-                    settings.gis.map_selector = False
-
-                elif method == "contacts":
-                    table = s3db.pr_contact_emergency
-                    table.address.readable = table.address.writable = True
-
-                elif component_name == "identity":
-                    controller = r.controller
-                    table = r.component.table
-
-                    # Limit options for identity document type
-                    pr_id_type_opts = {1: T("Passport"),
-                                       2: T("National ID Card"),
-                                       }
-                    from gluon.validators import IS_IN_SET
-                    table.type.requires = IS_IN_SET(pr_id_type_opts, zero=None)
-
-                    if controller == "hrm":
-                        # For staff, set default for ID document type and do not
-                        # allow selection of other options
-                        table.type.default = 2
-                        table.type.writable = False
-                        hide_fields = ("description", "valid_until", "country_code", "ia_name")
-                    else:
-                        hide_fields = ("description",)
-
-                    # Hide unneeded fields
-                    for fname in hide_fields:
-                        field = table[fname]
+                    elif component_name == "salary":
+                        stable = s3db.hrm_salary
+                        stable.salary_grade_id.label = T("Grade Code")
+                        field = stable.monthly_amount
                         field.readable = field.writable = False
-                    list_fields = s3db.get_config("pr_identity", "list_fields")
-                    hide_fields = set(hide_fields)
-                    list_fields = (fs for fs in list_fields if fs not in hide_fields)
-                    s3db.configure("pr_identity", list_fields = list_fields)
 
-                elif method == "cv" or component_name == "experience":
-                    table = s3db.hrm_experience
-                    # Use simple free-text variants
-                    table.organisation_id.default = None # should not default in this case
-                    table.organisation.readable = True
-                    table.organisation.writable = True
-                    table.job_title.readable = True
-                    table.job_title.writable = True
-                    table.comments.label = T("Main Duties")
-                    from s3 import S3SQLCustomForm
-                    crud_form = S3SQLCustomForm("organisation",
-                                                "job_title",
-                                                "comments",
-                                                "start_date",
-                                                "end_date",
-                                                )
-                    s3db.configure("hrm_experience",
-                                   crud_form = crud_form,
-                                   list_fields = ["organisation",
-                                                  "job_title",
-                                                  "comments",
-                                                  "start_date",
-                                                  "end_date",
-                                                  ],
-                                   )
-                    if method == "cv":
-                        # Customize CV
-                        s3db.set_method("pr", "person",
-                                        method = "cv",
-                                        action = s3db.hrm_CV(form=vnrc_cv_form))
+                    elif component_name == "competency":
+                        ctable = s3db.hrm_competency
+                        # Hide confirming organisation (defaults to VNRC)
+                        ctable.organisation_id.readable = False
 
-                elif component_name == "salary":
-                    stable = s3db.hrm_salary
-                    stable.salary_grade_id.label = T("Grade Code")
-                    field = stable.monthly_amount
-                    field.readable = field.writable = False
+                    elif component_name == "membership":
+                        field = s3db.member_membership.fee_exemption
+                        field.readable = field.writable = True
+                        PROGRAMMES = T("Programs")
+                        from s3 import S3SQLCustomForm, S3SQLInlineLink
+                        crud_form = S3SQLCustomForm("organisation_id",
+                                                    "code",
+                                                    "membership_type_id",
+                                                    "start_date",
+                                                    "end_date",
+                                                    "membership_fee",
+                                                    "membership_paid",
+                                                    "fee_exemption",
+                                                    S3SQLInlineLink("programme",
+                                                                    field = "programme_id",
+                                                                    label = PROGRAMMES,
+                                                                    ),
+                                                    )
 
-                elif component_name == "competency":
-                    ctable = s3db.hrm_competency
-                    # Hide confirming organisation (defaults to VNRC)
-                    ctable.organisation_id.readable = False
+                        list_fields = ["organisation_id",
+                                       "membership_type_id",
+                                       "start_date",
+                                       (T("Paid"), "paid"),
+                                       (T("Email"), "email.value"),
+                                       (T("Phone"), "phone.value"),
+                                       (PROGRAMMES, "membership_programme.programme_id"),
+                                       ]
 
-                elif component_name == "membership":
-                    field = s3db.member_membership.fee_exemption
-                    field.readable = field.writable = True
-                    PROGRAMMES = T("Programs")
-                    from s3 import S3SQLCustomForm, S3SQLInlineLink
-                    crud_form = S3SQLCustomForm("organisation_id",
-                                                "code",
-                                                "membership_type_id",
-                                                "start_date",
-                                                "end_date",
-                                                "membership_fee",
-                                                "membership_paid",
-                                                "fee_exemption",
-                                                S3SQLInlineLink("programme",
-                                                                field = "programme_id",
-                                                                label = PROGRAMMES,
-                                                                ),
-                                                )
-
-                    list_fields = ["organisation_id",
-                                   "membership_type_id",
-                                   "start_date",
-                                   (T("Paid"), "paid"),
-                                   (T("Email"), "email.value"),
-                                   (T("Phone"), "phone.value"),
-                                   (PROGRAMMES, "membership_programme.programme_id"),
-                                   ]
-
-                    s3db.configure("member_membership",
-                                   crud_form = crud_form,
-                                   list_fields = list_fields,
-                                   )
+                        s3db.configure("member_membership",
+                                       crud_form = crud_form,
+                                       list_fields = list_fields,
+                                       )
             return True
         s3.prep = custom_prep
 
