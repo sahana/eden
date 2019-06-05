@@ -108,7 +108,6 @@ def config(settings):
                                               ("pr_person", EID),
                                               ],
                                 pr_contact_emergency = EID,
-                                pr_person_details = PID,
                                 pr_physical_description = EID,
                                 pr_address = [("org_organisation", EID),
                                               ("pr_person", EID),
