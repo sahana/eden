@@ -407,6 +407,7 @@ class S3DeploymentModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # Table Configuration
         configure(tablename,
                   organize = {"start": "start_date",
                               "end": "end_date",
@@ -416,6 +417,19 @@ class S3DeploymentModel(S3Model):
                                               ],
                               },
                   )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Period of Unavailability"),
+            title_display = T("Unavailability"),
+            title_list = T("Periods of Unavailability"),
+            title_update = T("Edit Unavailability"),
+            label_list_button = T("List Periods of Unavailability"),
+            label_delete_button = T("Delete Unavailability"),
+            msg_record_created = T("Unavailability added"),
+            msg_record_modified = T("Unavailability updated"),
+            msg_record_deleted = T("Unavailability deleted"),
+            msg_list_empty = T("No Unavailability currently registered"))
 
         # ---------------------------------------------------------------------
         # Assignment of human resources
