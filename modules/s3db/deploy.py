@@ -80,6 +80,7 @@ class S3DeploymentModel(S3Model):
              "deploy_assignment",
              "deploy_assignment_appraisal",
              "deploy_assignment_experience",
+             "deploy_unavailability",
              )
 
     def model(self):
@@ -150,51 +151,51 @@ class S3DeploymentModel(S3Model):
 
         # Profile
         list_layout = deploy_MissionProfileLayout()
-        alert_widget = dict(label = "Alerts",
-                            insert = lambda r, list_id, title, url: \
-                                     A(title,
-                                       _href = r.url(component = "alert",
-                                                     method = "create"),
-                                       _class = "action-btn profile-add-btn",
-                                       ),
-                            label_create = "Create Alert",
-                            type = "datalist",
-                            list_fields = ["modified_on",
-                                           "mission_id",
-                                           "message_id",
-                                           "subject",
-                                           "body",
-                                           ],
-                            tablename = "deploy_alert",
-                            context = "mission",
-                            list_layout = list_layout,
-                            pagesize = 10,
-                            )
+        alert_widget = {"label": "Alerts",
+                        "insert": lambda r, list_id, title, url: \
+                                         A(title,
+                                           _href = r.url(component = "alert",
+                                                         method = "create"),
+                                           _class = "action-btn profile-add-btn",
+                                           ),
+                        "label_create": "Create Alert",
+                        "type": "datalist",
+                        "list_fields": ["modified_on",
+                                        "mission_id",
+                                        "message_id",
+                                        "subject",
+                                        "body",
+                                        ],
+                        "tablename": "deploy_alert",
+                        "context": "mission",
+                        "list_layout": list_layout,
+                        "pagesize": 10,
+                        }
 
-        response_widget = dict(label = "Responses",
-                               insert = False,
-                               type = "datalist",
-                               tablename = "deploy_response",
-                               # Can't be 'response' as this clobbers web2py global
-                               function = "response_message",
-                               list_fields = [
-                                   "created_on",
-                                   "mission_id",
-                                   "comments",
-                                   "human_resource_id$id",
-                                   "human_resource_id$person_id",
-                                   "human_resource_id$organisation_id",
-                                   "message_id$body",
-                                   "message_id$from_address",
-                                   "message_id$attachment.document_id$file",
-                                   ],
-                               context = "mission",
-                               list_layout = list_layout,
-                               # The popup datalist isn't currently functional
-                               # (needs card layout applying) and not ideal UX anyway
-                               #pagesize = 10,
-                               pagesize = None,
-                               )
+        response_widget = {"label": "Responses",
+                           "insert": False,
+                           "type": "datalist",
+                           "tablename": "deploy_response",
+                           # Can't be 'response' as this clobbers web2py global
+                           "function": "response_message",
+                           "list_fields": [
+                               "created_on",
+                               "mission_id",
+                               "comments",
+                               "human_resource_id$id",
+                               "human_resource_id$person_id",
+                               "human_resource_id$organisation_id",
+                               "message_id$body",
+                               "message_id$from_address",
+                               "message_id$attachment.document_id$file",
+                               ],
+                           "context": "mission",
+                           "list_layout": list_layout,
+                           # The popup datalist isn't currently functional
+                           # (needs card layout applying) and not ideal UX anyway
+                           #"pagesize": 10,
+                           "pagesize": None,
+                           }
 
         hr_label = settings.get_deploy_hr_label()
         if hr_label == "Member":
@@ -207,44 +208,44 @@ class S3DeploymentModel(S3Model):
             label = "Volunteers Deployed"
             label_create = "Deploy New Volunteer"
 
-        assignment_widget = dict(label = label,
-                                 insert = lambda r, list_id, title, url: \
-                                        A(title,
-                                          _href=r.url(component = "assignment",
-                                                      method = "create",
-                                                      ),
-                                          _class="action-btn profile-add-btn",
-                                          ),
-                                 label_create = label_create,
-                                 tablename = "deploy_assignment",
-                                 type = "datalist",
-                                 #type = "datatable",
-                                 #actions = dt_row_actions,
-                                 list_fields = [
-                                     "human_resource_id$id",
-                                     "human_resource_id$person_id",
-                                     "human_resource_id$organisation_id",
-                                     "start_date",
-                                     "end_date",
-                                     "job_title_id",
-                                     "job_title",
-                                     "appraisal.rating",
-                                     "mission_id",
-                                     ],
-                                 context = "mission",
-                                 list_layout = list_layout,
-                                 pagesize = None, # all records
-                                 )
+        assignment_widget = {"label": label,
+                             "insert": lambda r, list_id, title, url: \
+                                              A(title,
+                                                _href=r.url(component = "assignment",
+                                                            method = "create",
+                                                            ),
+                                                _class="action-btn profile-add-btn",
+                                                ),
+                             "label_create": label_create,
+                             "tablename": "deploy_assignment",
+                             "type": "datalist",
+                             #"type": "datatable",
+                             #"actions": dt_row_actions,
+                             "list_fields": [
+                                 "human_resource_id$id",
+                                 "human_resource_id$person_id",
+                                 "human_resource_id$organisation_id",
+                                 "start_date",
+                                 "end_date",
+                                 "job_title_id",
+                                 "job_title",
+                                 "appraisal.rating",
+                                 "mission_id",
+                                 ],
+                             "context": "mission",
+                             "list_layout": list_layout,
+                             "pagesize": None, # all records
+                             }
 
-        docs_widget = dict(label = "Documents & Links",
-                           label_create = "Add New Document / Link",
-                           type = "datalist",
-                           tablename = "doc_document",
-                           context = ("~.doc_id", "doc_id"),
-                           icon = "attachment",
-                           # Default renderer:
-                           #list_layout = s3db.doc_document_list_layouts,
-                           )
+        docs_widget = {"label": "Documents & Links",
+                       "label_create": "Add New Document / Link",
+                       "type": "datalist",
+                       "tablename": "doc_document",
+                       "context": ("~.doc_id", "doc_id"),
+                       "icon": "attachment",
+                       # Default renderer:
+                       #"list_layout": s3db.doc_document_list_layouts,
+                       }
 
         # Table configuration
         profile_url = URL(c="deploy", f="mission", args=["[id]", "profile"])
@@ -389,6 +390,48 @@ class S3DeploymentModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
+        # Unavailability
+        # - periods where an HR is not available for deployments
+        #
+        tablename = "deploy_unavailability"
+        define_table(tablename,
+                     self.pr_person_id(ondelete="CASCADE"),
+                     s3_date("start_date",
+                             label = T("Start Date"),
+                             set_min = "#deploy_unavailability_end_date",
+                             ),
+                     s3_date("end_date",
+                             label = T("End Date"),
+                             set_max = "#deploy_unavailability_start_date",
+                             ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Table Configuration
+        configure(tablename,
+                  organize = {"start": "start_date",
+                              "end": "end_date",
+                              "title": "comments",
+                              "description": ["start_date",
+                                              "end_date",
+                                              ],
+                              },
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Period of Unavailability"),
+            title_display = T("Unavailability"),
+            title_list = T("Periods of Unavailability"),
+            title_update = T("Edit Unavailability"),
+            label_list_button = T("List Periods of Unavailability"),
+            label_delete_button = T("Delete Unavailability"),
+            msg_record_created = T("Unavailability added"),
+            msg_record_modified = T("Unavailability updated"),
+            msg_record_deleted = T("Unavailability deleted"),
+            msg_list_empty = T("No Unavailability currently registered"))
+
+        # ---------------------------------------------------------------------
         # Assignment of human resources
         # - actual assignment of an HR to a mission
         #
@@ -514,9 +557,9 @@ class S3DeploymentModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(deploy_mission_id = mission_id,
-                    deploy_mission_status_opts = mission_status_opts,
-                    )
+        return {"deploy_mission_id": mission_id,
+                "deploy_mission_status_opts": mission_status_opts,
+                }
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -528,8 +571,8 @@ class S3DeploymentModel(S3Model):
                                 readable = False,
                                 writable = False)
 
-        return dict(deploy_mission_id = lambda **attr: dummy("mission_id"),
-                    )
+        return {"deploy_mission_id": lambda **attr: dummy("mission_id"),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1147,7 +1190,7 @@ class S3DeploymentAlertModel(S3Model):
                                         created_by = record.created_by,
                                         created_on = record.created_on,
                                         )
-            new_alert = dict(id=new_alert_id)
+            new_alert = {"id": new_alert_id}
             s3db.update_super(table, new_alert)
 
             # Add Recipients
@@ -1231,7 +1274,7 @@ class S3DeploymentAlertModel(S3Model):
                     current.log.debug("Sending tweets failed: %s" % e)
 
         # Update the Alert to show it's been Sent
-        data = dict(message_id=message_id)
+        data = {"message_id": message_id}
         if contact_method == 2:
             # Clear the Subject
             data["subject"] = None
@@ -2074,7 +2117,7 @@ def deploy_alert_select_recipients(r, **attr):
             response.warning = T("No Recipients Selected!")
         else:
             response.confirmation = T("%(number)s Recipients added to Alert") % \
-                                     dict(number=added)
+                                        {"number": added}
 
     get_vars = r.get_vars or {}
     representation = r.representation
@@ -2322,7 +2365,7 @@ def deploy_response_select_mission(r, **attr):
         #                _href=URL(c="deploy", f="mission",
         #                          args=[mission_id, "profile"])))
         #current.session.confirmation = T("Response linked to %(mission)s") % \
-        #                                    dict(mission=mission)
+        #                                    {"mission": mission}
         current.session.confirmation = T("Response linked to Mission")
         redirect(URL(c="deploy", f="email_inbox"))
 
