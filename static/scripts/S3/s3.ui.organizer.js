@@ -678,8 +678,13 @@
                     url = resource.baseURL;
 
                 if (url && label) {
-                    url += '/create.popup';
-                    var query = [];
+
+                    var link = createButton.get(0),
+                        query = [];
+
+                    // Set path to create-dialog
+                    link.href = url;
+                    link.pathname += '/create.popup';
 
                     // Add refresh-target
                     if (widgetID) {
@@ -690,9 +695,15 @@
                     var dates = start.toISOString() + '--' + moment(end).subtract(1, 'seconds').toISOString();
                     query.push('organizer=' + encodeURIComponent(dates));
 
-                    url += '?' + query.join('&');
-                    createButton.attr('href', url)
-                                .text(label)
+                    // Update query part of link URL
+                    if (link.search) {
+                        link.search += '&' + query.join('&');
+                    } else {
+                        link.search = '?' + query.join('&');
+                    }
+
+                    // Complete the button and append it to popup
+                    createButton.text(label)
                                 .appendTo(contents)
                                 .on('click' + ns, function() {
                                     api.hide();
