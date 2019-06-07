@@ -35,6 +35,7 @@ __all__ = ("S3DeploymentOrganisationModel",
            "deploy_alert_select_recipients",
            "deploy_Inbox",
            "deploy_response_select_mission",
+           "deploy_availability_filter",
            )
 
 from gluon import *
@@ -1340,6 +1341,57 @@ class S3DeploymentAlertModel(S3Model):
                 if hr:
                     doc_id = hr.doc_id
             db(dtable.id.belongs(attachments)).update(doc_id=doc_id)
+
+# =============================================================================
+def deploy_availability_filter(r):
+    """
+        Filter requested resource (hrm_human_resource or pr_person) for
+        availability for deployment during a selected interval
+            - uses special filter selector "available" from GET vars
+            - called from prep of the respective controller
+            - adds resource filter for r.resource
+
+        @param r: the S3Request
+    """
+
+    get_vars = r.get_vars
+
+    # Parse start/end date
+    calendar = current.calendar
+    start = get_vars.pop("available__ge", None)
+    if start:
+        start = calendar.parse_date(start)
+    end = get_vars.pop("available__le", None)
+    if end:
+        end = calendar.parse_date(end)
+
+    utable = current.s3db.deploy_unavailability
+
+    # Construct query for unavailability
+    query = (utable.deleted == False)
+    if start and end:
+        query &= ((utable.start_date >= start) & (utable.start_date <= end)) | \
+                 ((utable.end_date >= start) & (utable.end_date <= end)) | \
+                 ((utable.start_date < start) & (utable.end_date > end))
+    elif start:
+        query &= (utable.end_date >= start) | (utable.start_date >= start)
+    elif end:
+        query &= (utable.start_date <= end) | (utable.end_date <= end)
+    else:
+        return
+
+    # Get person_ids of unavailability-entries
+    rows = current.db(query).select(utable.person_id,
+                                    groupby = utable.person_id,
+                                    )
+    if rows:
+        person_ids = set(row.person_id for row in rows)
+
+        # Filter r.resource for non-match
+        if r.tablename == "hrm_human_resource":
+            r.resource.add_filter(~(FS("person_id").belongs(person_ids)))
+        elif r.tablename == "pr_person":
+            r.resource.add_filter(~(FS("id").belongs(person_ids)))
 
 # =============================================================================
 def deploy_rheader(r, tabs=None, profile=False):

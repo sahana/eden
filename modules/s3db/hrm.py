@@ -7276,6 +7276,10 @@ def hrm_human_resource_controller(extra_filter = None):
         deploy = c == "deploy"
         vol = c == "vol"
 
+        if deploy:
+            # Apply availability filter
+            s3db.deploy_availability_filter(r)
+
         if s3.rtl:
             # Ensure that + appears at the beginning of the number
             # - using table alias to only apply to filtered component
@@ -9819,6 +9823,16 @@ def hrm_human_resource_filters(resource_type = None,
 
     if module == "deploy":
         # Deployment-specific filters
+
+        # Availability Filter
+        append_filter(S3DateFilter("available",
+                                   label = T("Available for Deployment"),
+                                   # Use custom selector to prevent automatic
+                                   # parsing (which would result in an error)
+                                   selector = "available",
+                                   hide_time = True,
+                                   hidden = True,
+                                   ))
 
         # Job title filter
         append_filter(S3OptionsFilter("credential.job_title_id",
