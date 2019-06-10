@@ -620,7 +620,7 @@ class S3Profile(S3CRUD):
             if s3.dataTable_pageLength:
                 display_length = s3.dataTable_pageLength
             else:
-                display_length = widget.get("pagesize", 10)
+                display_length = widget_get("pagesize", 10)
             dtargs["dt_lengthMenu"] = [[10, 25, 50, -1],
                                        [10, 25, 50, s3_str(current.T("All"))]
                                        ]
@@ -658,6 +658,8 @@ class S3Profile(S3CRUD):
                                              "msg_no_match")
             empty = DIV(empty_str, _class="empty")
 
+            dtargs["dt_searching"] = widget_get("dt_searching", "true")
+
             dtargs["dt_pagination"] = dt_pagination
             dtargs["dt_pageLength"] = display_length
             # @todo: fix base URL (make configurable?) to fix export options
@@ -674,13 +676,13 @@ class S3Profile(S3CRUD):
 
             datatable = dt.html(totalrows,
                                 displayrows,
-                                id=list_id,
+                                id = list_id,
                                 **dtargs)
 
             if dt.data:
-                empty.update(_style="display:none")
+                empty.update(_style = "display:none")
             else:
-                datatable.update(_style="display:none")
+                datatable.update(_style = "display:none")
             contents = DIV(datatable, empty, _class="dt-contents")
 
             # Link for create-popup
@@ -707,11 +709,14 @@ class S3Profile(S3CRUD):
 
             # Render the widget
             output = DIV(create_popup,
-                         H4(icon, label,
-                            _class="profile-sub-header"),
+                         H4(icon,
+                            label,
+                            _class = "profile-sub-header",
+                            ),
                          DIV(contents,
-                             _class="card-holder"),
-                         _class=_class,
+                             _class = "card-holder",
+                             ),
+                         _class = _class,
                          )
 
             return output
@@ -1204,7 +1209,7 @@ class S3Profile(S3CRUD):
         widget_cols = widget.get("colspan", 1)
         span = int(12 / page_cols) * widget_cols
 
-        formstyle = current.deployment_settings.ui.get("formstyle", "default")
+        #formstyle = current.deployment_settings.ui.get("formstyle", "default")
         if current.deployment_settings.ui.get("formstyle") == "bootstrap":
             # Bootstrap
             return "profile-widget span%s" % span
@@ -1282,6 +1287,11 @@ class S3Profile(S3CRUD):
             # Indicate that popup comes from profile (and which)
             url_vars.profile = r.tablename
 
+            # Add a var to allow special cutomise rules
+            create_var = widget_get("create_var")
+            if create_var:
+                url_vars[create_var] = 1
+
             # CRUD string
             label_create = widget_get("label_create", None)
             # Activate if-required
@@ -1306,15 +1316,15 @@ class S3Profile(S3CRUD):
             elif current.deployment_settings.ui.formstyle == "bootstrap":
                 # Bootstrap-style action icon
                 create = A(ICON("plus-sign", _class="small-add"),
-                           _href=add_url,
-                           _class="s3_modal",
-                           _title=label_create,
+                           _href = add_url,
+                           _class = "s3_modal",
+                           _title = label_create,
                            )
             else:
                 # Standard action button
                 create = A(label_create,
-                           _href=add_url,
-                           _class="action-btn profile-add-btn s3_modal",
+                           _href = add_url,
+                           _class = "action-btn profile-add-btn s3_modal",
                            )
 
             if widget_get("type") == "datalist":
@@ -1324,19 +1334,21 @@ class S3Profile(S3CRUD):
                 multiple = widget_get("multiple", True)
                 if not multiple and hasattr(create, "update"):
                     if numrows:
-                        create.update(_style="display:none")
+                        create.update(_style = "display:none")
                     else:
-                        create.update(_style="display:block")
+                        create.update(_style = "display:block")
                     # Script to hide/unhide the create-button on Ajax
                     # list updates
-                    createid = create["_id"]
-                    if not createid:
-                        createid = "%s-add-button" % list_id
-                        create.update(_id=createid)
+                    create_id = create["_id"]
+                    if not create_id:
+                        create_id = "%s-add-button" % list_id
+                        create.update(_id = create_id)
                     script = \
 '''$('#%(list_id)s').on('listUpdate',function(){
-$('#%(createid)s').css({display:$(this).datalist('getTotalItems')?'none':'block'})
-})''' % dict(list_id=list_id, createid=createid)
+$('#%(create_id)s').css({display:$(this).datalist('getTotalItems')?'none':'block'})
+})''' % {"list_id": list_id,
+         "create_id": create_id,
+         }
                     current.response.s3.jquery_ready.append(script)
 
         return create
