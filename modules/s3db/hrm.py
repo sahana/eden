@@ -1162,8 +1162,9 @@ class S3HRModel(S3Model):
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
             output = [
-                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % \
-                    dict(max=MAX_SEARCH_RESULTS)))
+                {"label": str(current.T("There are more than %(max)s results, please input more characters.") % \
+                    {"max": MAX_SEARCH_RESULTS}),
+                 },
                 ]
         else:
             fields = ["id",
@@ -1177,10 +1178,10 @@ class S3HRModel(S3Model):
                 fields.append("organisation_id$name")
 
             name_format = settings.get_pr_name_format()
-            test = name_format % dict(first_name=1,
-                                      middle_name=2,
-                                      last_name=3,
-                                      )
+            test = name_format % {"first_name": 1,
+                                  "middle_name": 2,
+                                  "last_name": 3,
+                                  }
             test = "".join(ch for ch in test if ch in ("1", "2", "3"))
             if test[:1] == "1":
                 orderby = "pr_person.first_name"
@@ -1899,7 +1900,8 @@ class S3HRJobModel(S3Model):
                                       #                _class="s3_add_resource_link",
                                       #                _href=URL(f="position",
                                       #                          args="create",
-                                      #                          vars=dict(format="popup")),
+                                      #                          vars={"format": "popup"}
+                                      #                          ),
                                       #                _target="top",
                                       #                _title=label_create),
                                       #              DIV(_class="tooltip",
@@ -2402,7 +2404,8 @@ class S3HRSkillModel(S3Model):
         #                                           _class="s3_add_resource_link",
         #                                           _href=URL(f="skill_provision",
         #                                                     args="create",
-        #                                                     vars=dict(format="popup")),
+        #                                                     vars={"format": "popup"},
+        #                                                     ),
         #                                           _target="top",
         #                                           _title=label_create),
         #                                         DIV(_class="tooltip",
@@ -5165,11 +5168,11 @@ class hrm_AssignMethod(S3Method):
             if r.representation == "popup":
                 # Don't redirect, so we retain popup extension & so close popup
                 response.confirmation = T("%(number)s assigned") % \
-                                            dict(number=added)
+                                            {"number": added}
                 output = {}
             else:
                 current.session.confirmation = T("%(number)s assigned") % \
-                                                    dict(number=added)
+                                                    {"number": added}
                 if added > 0:
                     redirect(URL(args=[r.id, self.next_tab], vars={}))
                 else:
@@ -5319,7 +5322,7 @@ class hrm_AssignMethod(S3Method):
                 response.view = "list_filter.html"
 
                 output = {"items": items,
-                          "title": T("Assign %(staff)s") % dict(staff=STAFF),
+                          "title": T("Assign %(staff)s") % {"staff": STAFF},
                           "list_filter_form": ff,
                           }
 
@@ -6982,10 +6985,11 @@ def hrm_competency_controller():
             S3CRUD.action_buttons(r)
 
             args = ["[id]", "group_membership"]
-            s3.actions.append(dict(label=str(T("Add to a Team")),
-                                             _class="action-btn",
-                                             url = URL(f = "person",
-                                                       args = args))
+            s3.actions.append({"label": str(T("Add to a Team")),
+                               "_class": "action-btn",
+                               "url": URL(f = "person",
+                                          args = args),
+                               }
                               )
         return output
     s3.postp = postp
@@ -7498,7 +7502,7 @@ def hrm_human_resource_controller(extra_filter = None):
             if deploy:
                 deploy_team = settings.get_deploy_team_label()
                 s3.crud_strings["hrm_human_resource"]["title_list"] = \
-                    T("%(team)s Members") % dict(team=T(deploy_team))
+                    T("%(team)s Members") % {"team": T(deploy_team)}
             else:
                 s3.crud_strings["hrm_human_resource"]["title_list"] = \
                     T("Staff & Volunteers")
@@ -7852,7 +7856,7 @@ def hrm_person_controller(**attr):
                 title_update = T("Staff Member Details")
                 )
     # Upload for configuration (add replace option)
-    s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
+    s3.importerPrep = lambda: {"ReplaceOption": T("Remove existing data before import")}
 
     # Import pre-process
     def import_prep(data, group=group):
@@ -8073,17 +8077,18 @@ def hrm_person_controller(**attr):
     # REST Interface
     #orgname = session.s3.hrm.orgname
 
-    _attr = dict(csv_stylesheet = ("hrm", "person.xsl"),
-                 csv_template = "staff",
-                 csv_extra_fields = [dict(label="Type",
-                                          field=s3db.hrm_human_resource.type),
-                                     ],
-                 # Better in the native person controller (but this isn't always accessible):
-                 #deduplicate = "",
-                 #orgname = orgname,
-                 replace_option = T("Remove existing data before import"),
-                 rheader = hrm_rheader,
-                 )
+    _attr = {"csv_stylesheet": ("hrm", "person.xsl"),
+             "csv_template": "staff",
+             "csv_extra_fields": [{"label": "Type",
+                                   "field": s3db.hrm_human_resource.type,
+                                   },
+                                 ],
+             # Better in the native person controller (but this isn't always accessible):
+             #"deduplicate": "",
+             #"orgname": orgname,
+             "replace_option": T("Remove existing data before import"),
+             "rheader": hrm_rheader,
+             }
     _attr.update(attr)
 
     return current.rest_controller("pr", "person", **_attr)
@@ -8151,9 +8156,10 @@ def hrm_training_controller():
     return current.rest_controller("hrm", "training",
                                    csv_stylesheet = ("hrm", "training.xsl"),
                                    csv_template = ("hrm", "training"),
-                                   csv_extra_fields=[dict(label="Training Event",
-                                                          field=s3db.hrm_training.training_event_id),
-                                                     ],
+                                   csv_extra_fields = [{"label": "Training Event",
+                                                        "field": s3db.hrm_training.training_event_id,
+                                                        },
+                                                       ],
                                    )
 
 # =============================================================================
@@ -8554,139 +8560,139 @@ class hrm_CV(S3Method):
             if experience:
                 tablename = "hrm_experience"
                 r.customise_resource(tablename)
-                widget = dict(# Use CRUD Strings (easier to customise)
-                              #label = "Experience",
-                              #label_create = "Add Experience",
-                              type = "datatable",
-                              actions = dt_row_actions("experience", tablename),
-                              tablename = tablename,
-                              context = "person",
-                              filter = FS("assignment__link.assignment_id") == None,
-                              create_controller = controller,
-                              create_function = "person",
-                              create_component = "experience",
-                              pagesize = None, # all records
-                              # Settings suitable for RMSAmericas
-                              list_fields = ["start_date",
-                                             "end_date",
-                                             "employment_type",
-                                             "organisation",
-                                             "job_title",
-                                             ],
-                              )
+                widget = {# Use CRUD Strings (easier to customise)
+                          #"label": "Experience",
+                          #"label_create": "Add Experience",
+                          "type": "datatable",
+                          "actions": dt_row_actions("experience", tablename),
+                          "tablename": tablename,
+                          "context": "person",
+                          "filter": FS("assignment__link.assignment_id") == None,
+                          "create_controller": controller,
+                          "create_function": "person",
+                          "create_component": "experience",
+                          "pagesize": None, # all records
+                          # Settings suitable for RMSAmericas
+                          "list_fields": ["start_date",
+                                          "end_date",
+                                          "employment_type",
+                                          "organisation",
+                                          "job_title",
+                                          ],
+                          }
                 profile_widgets.append(widget)
 
             if missions:
                 tablename = "hrm_experience"
-                widget = dict(label = "Missions",
-                              type = "datatable",
-                              actions = dt_row_actions("experience", tablename),
-                              tablename = tablename,
-                              context = "person",
-                              filter = FS("assignment__link.assignment_id") != None,
-                              insert = False,
-                              pagesize = None, # all records
-                              # Settings suitable for RMSAmericas
-                              list_fields = ["start_date",
-                                             "end_date",
-                                             "location_id",
-                                             #"organisation_id",
-                                             "job_title_id",
-                                             "job_title",
-                                             ],
-                              )
+                widget = {"label": "Missions",
+                          "type": "datatable",
+                          "actions": dt_row_actions("experience", tablename),
+                          "tablename": tablename,
+                          "context": "person",
+                          "filter": FS("assignment__link.assignment_id") != None,
+                          "insert": False,
+                          "pagesize": None, # all records
+                          # Settings suitable for RMSAmericas
+                          "list_fields": ["start_date",
+                                          "end_date",
+                                          "location_id",
+                                          #"organisation_id",
+                                          "job_title_id",
+                                          "job_title",
+                                          ],
+                          }
                 profile_widgets.append(widget)
 
             if settings.get_hrm_use_trainings():
                 tablename = "hrm_training"
                 if settings.get_hrm_trainings_external():
-                    widget = dict(label = "Internal Training",
-                                  label_create = "Add Internal Training",
-                                  type = "datatable",
-                                  actions = dt_row_actions("training", tablename),
-                                  tablename = tablename,
-                                  context = "person",
-                                  filter = FS("course_id$external") == False,
-                                  create_controller = controller,
-                                  create_function = "person",
-                                  create_component = "training",
-                                  pagesize = None, # all records
-                                  )
+                    widget = {"label": "Internal Training",
+                              "label_create": "Add Internal Training",
+                              "type": "datatable",
+                              "actions": dt_row_actions("training", tablename),
+                              "tablename": tablename,
+                              "context": "person",
+                              "filter": FS("course_id$external") == False,
+                              "create_controller": controller,
+                              "create_function": "person",
+                              "create_component": "training",
+                              "pagesize": None, # all records
+                              }
                     profile_widgets.append(widget)
-                    widget = dict(label = "External Training",
-                                  label_create = "Add External Training",
-                                  type = "datatable",
-                                  actions = dt_row_actions("training", tablename),
-                                  tablename = tablename,
-                                  context = "person",
-                                  filter = FS("course_id$external") == True,
-                                  create_controller = controller,
-                                  create_function = "person",
-                                  create_component = "training",
-                                  pagesize = None, # all records
-                                  )
+                    widget = {"label": "External Training",
+                              "label_create": "Add External Training",
+                              "type": "datatable",
+                              "actions": dt_row_actions("training", tablename),
+                              "tablename": tablename,
+                              "context": "person",
+                              "filter": FS("course_id$external") == True,
+                              "create_controller": controller,
+                              "create_function": "person",
+                              "create_component": "training",
+                              "pagesize": None, # all records
+                              }
                     profile_widgets.append(widget)
                 else:
-                    widget = dict(label = "Training",
-                                  label_create = "Add Training",
-                                  type = "datatable",
-                                  actions = dt_row_actions("training", tablename),
-                                  tablename = tablename,
-                                  context = "person",
-                                  create_controller = controller,
-                                  create_function = "person",
-                                  create_component = "training",
-                                  pagesize = None, # all records
-                                  )
+                    widget = {"label": "Training",
+                              "label_create": "Add Training",
+                              "type": "datatable",
+                              "actions": dt_row_actions("training", tablename),
+                              "tablename": tablename,
+                              "context": "person",
+                              "create_controller": controller,
+                              "create_function": "person",
+                              "create_component": "training",
+                              "pagesize": None, # all records
+                              }
                     profile_widgets.append(widget)
 
             if settings.get_hrm_use_skills():
                 tablename = "hrm_competency"
                 r.customise_resource(tablename)
-                widget = dict(# Use CRUD Strings (easier to customise)
-                              #label = label,
-                              #label_create = "Add Skill",
-                              type = "datatable",
-                              actions = dt_row_actions("competency", tablename),
-                              tablename = tablename,
-                              context = "person",
-                              create_controller = controller,
-                              create_function = "person",
-                              create_component = "competency",
-                              pagesize = None, # all records
-                              )
+                widget = {# Use CRUD Strings (easier to customise)
+                          #"label": label,
+                          #"label_create": "Add Skill",
+                          "type": "datatable",
+                          "actions": dt_row_actions("competency", tablename),
+                          "tablename": tablename,
+                          "context": "person",
+                          "create_controller": controller,
+                          "create_function": "person",
+                          "create_component": "competency",
+                          "pagesize": None, # all records
+                          }
                 profile_widgets.append(widget)
 
             if settings.get_hrm_use_certificates():
                 tablename = "hrm_certification"
-                widget = dict(label = "Certificates",
-                              label_create = "Add Certificate",
-                              type = "datatable",
-                              actions = dt_row_actions("certification", tablename),
-                              tablename = tablename,
-                              context = "person",
-                              create_controller = controller,
-                              create_function = "person",
-                              create_component = "certification",
-                              pagesize = None, # all records
-                              )
+                widget = {"label": "Certificates",
+                          "label_create": "Add Certificate",
+                          "type": "datatable",
+                          "actions": dt_row_actions("certification", tablename),
+                          "tablename": tablename,
+                          "context": "person",
+                          "create_controller": controller,
+                          "create_function": "person",
+                          "create_component": "certification",
+                          "pagesize": None, # all records
+                          }
                 profile_widgets.append(widget)
 
             # Person isn't a doc_id
             #if settings.has_module("doc"):
             #    tablename = "doc_document"
-            #    widget = dict(label = "Documents",
-            #                  label_create = "Add Document",
-            #                  type = "datatable",
-            #                  actions = dt_row_actions("document", tablename),
-            #                  tablename = tablename,
-            #                  filter = FS("doc_id") == record.doc_id,
-            #                  icon = "attachment",
-            #                  create_controller = controller,
-            #                  create_function = "person",
-            #                  create_component = "document",
-            #                  pagesize = None, # all records
-            #                  )
+            #    widget = {"label": "Documents",
+            #              "label_create": "Add Document",
+            #              "type": "datatable",
+            #              "actions": dt_row_actions("document", tablename),
+            #              "tablename": tablename,
+            #              "filter": FS("doc_id") == record.doc_id,
+            #              "icon": "attachment",
+            #              "create_controller": controller,
+            #              "create_function": "person",
+            #              "create_component": "document",
+            #              "pagesize": None, # all records
+            #              }
             #    profile_widgets.append(widget)
 
             if r.representation == "html":
@@ -8816,12 +8822,12 @@ class hrm_Record(S3Method):
                 code.readable = code.writable = True
 
         profile_widgets = [
-            dict(label = label,
-                 type = "form",
-                 tablename = "hrm_human_resource",
-                 context = "person",
-                 filter = widget_filter,
-                 )
+            {"label": label,
+             "type": "form",
+             "tablename": "hrm_human_resource",
+             "context": "person",
+             "filter": widget_filter,
+             },
             ]
 
         if VOL:
@@ -8848,19 +8854,19 @@ class hrm_Record(S3Method):
                     list_fields.append("job_title_id")
                 list_fields.append("hours")
                 crud_strings_ = crud_strings[tablename]
-                hours_widget = dict(label = crud_strings_["title_list"],
-                                    label_create = crud_strings_["label_create"],
-                                    type = "datatable",
-                                    actions = dt_row_actions("hours"),
-                                    tablename = tablename,
-                                    context = "person",
-                                    filter = filter_,
-                                    list_fields = list_fields,
-                                    create_controller = controller,
-                                    create_function = "person",
-                                    create_component = "hours",
-                                    pagesize = None, # all records
-                                    )
+                hours_widget = {"label": crud_strings_["title_list"],
+                                "label_create": crud_strings_["label_create"],
+                                "type": "datatable",
+                                "actions": dt_row_actions("hours"),
+                                "tablename": tablename,
+                                "context": "person",
+                                "filter": filter_,
+                                "list_fields": list_fields,
+                                "create_controller": controller,
+                                "create_function": "person",
+                                "create_component": "hours",
+                                "pagesize": None, # all records
+                                }
                 profile_widgets.append(hours_widget)
             elif vol_experience == "activity":
                 # Exclude records which are just to link to Activity & also Training Hours
@@ -8875,21 +8881,21 @@ class hrm_Record(S3Method):
                 #if s3db.vol_activity_hours.job_title_id.readable:
                 #    list_fields.append("job_title_id")
                 #list_fields.append("hours")
-                hours_widget = dict(label = "Activity Hours",
-                                    # Don't Add Hours here since the Activity List will be very hard to find the right one in
-                                    insert = False,
-                                    #label_create = "Add Activity Hours",
-                                    type = "datatable",
-                                    actions = dt_row_actions("hours"),
-                                    tablename = "vol_activity_hours",
-                                    context = "person",
-                                    #filter = filter_,
-                                    list_fields = list_fields,
-                                    #create_controller = controller,
-                                    #create_function = "person",
-                                    #create_component = "activity_hours",
-                                    pagesize = None, # all records
-                                    )
+                hours_widget = {"label": "Activity Hours",
+                                # Don't Add Hours here since the Activity List will be very hard to find the right one in
+                                "insert": False,
+                                #"label_create": "Add Activity Hours",
+                                "type": "datatable",
+                                "actions": dt_row_actions("hours"),
+                                "tablename": "vol_activity_hours",
+                                "context": "person",
+                                #"filter": filter_,
+                                "list_fields": list_fields,
+                                #"create_controller": controller,
+                                #"create_function": "person",
+                                #"create_component": "activity_hours",
+                                "pagesize": None, # all records
+                                }
                 profile_widgets.append(hours_widget)
 
         teams = settings.get_hrm_teams()
@@ -8899,17 +8905,17 @@ class hrm_Record(S3Method):
                 label_create = "Add Team"
             elif teams == "Groups":
                 label_create = "Add Group"
-            teams_widget = dict(label = teams,
-                                label_create = label_create,
-                                type = "datatable",
-                                actions = dt_row_actions("group_membership"),
-                                tablename = "pr_group_membership",
-                                context = "person",
-                                create_controller = controller,
-                                create_function = "person",
-                                create_component = "group_membership",
-                                pagesize = None, # all records
-                                )
+            teams_widget = {"label": teams,
+                            "label_create": label_create,
+                            "type": "datatable",
+                            "actions": dt_row_actions("group_membership"),
+                            "tablename": "pr_group_membership",
+                            "context": "person",
+                            "create_controller": controller,
+                            "create_function": "person",
+                            "create_component": "group_membership",
+                            "pagesize": None, # all records
+                            }
             profile_widgets.append(teams_widget)
 
         if controller == "hrm":
@@ -8938,13 +8944,13 @@ class hrm_Record(S3Method):
                     ]
 
                 # Configure widget, apply overrides
-                widget = dict(label = T("Experience"),
-                              label_create = T("Add Experience"),
-                              type = "datatable",
-                              actions = experience_row_actions("experience"),
-                              tablename = "hrm_experience",
-                              pagesize = None, # all records
-                              )
+                widget = {"label": T("Experience"),
+                          "label_create": T("Add Experience"),
+                          "type": "datatable",
+                          "actions": experience_row_actions("experience"),
+                          "tablename": "hrm_experience",
+                          "pagesize": None, # all records
+                          }
                 if isinstance(org_experience, dict):
                     widget.update(org_experience)
 
@@ -8964,62 +8970,62 @@ class hrm_Record(S3Method):
                 # (=> defaults to vol-style experience form)
 
                 # Configure widget and apply overrides
-                widget = dict(label = "Experience",
-                              label_create = "Add Experience",
-                              type = "datatable",
-                              actions = dt_row_actions("experience"),
-                              tablename = "hrm_experience",
-                              context = "person",
-                              create_controller = controller,
-                              create_function = "person",
-                              create_component = "experience",
-                              pagesize = None, # all records
-                              )
+                widget = {"label": "Experience",
+                          "label_create": "Add Experience",
+                          "type": "datatable",
+                          "actions": dt_row_actions("experience"),
+                          "tablename": "hrm_experience",
+                          "context": "person",
+                          "create_controller": controller,
+                          "create_function": "person",
+                          "create_component": "experience",
+                          "pagesize": None, # all records
+                          }
                 if isinstance(other_experience, dict):
                     widget.update(other_experience)
 
                 profile_widgets.append(widget)
 
             if self.awards:
-                widget = dict(label = T("Awards"),
-                              label_create = T("Add Award"),
-                              type = "datatable",
-                              actions = dt_row_actions("staff_award"),
-                              tablename = "hrm_award",
-                              context = "person",
-                              create_controller = controller,
-                              create_function = "person",
-                              create_component = "staff_award",
-                              pagesize = None, # all records
-                              )
+                widget = {"label": T("Awards"),
+                          "label_create": T("Add Award"),
+                          "type": "datatable",
+                          "actions": dt_row_actions("staff_award"),
+                          "tablename": "hrm_award",
+                          "context": "person",
+                          "create_controller": controller,
+                          "create_function": "person",
+                          "create_component": "staff_award",
+                          "pagesize": None, # all records
+                          }
                 profile_widgets.append(widget)
 
             if self.disciplinary_record:
-                widget = dict(label = T("Disciplinary Record"),
-                              label_create = T("Add Disciplinary Action"),
-                              type = "datatable",
-                              actions = dt_row_actions("disciplinary_action"),
-                              tablename = "hrm_disciplinary_action",
-                              context = "person",
-                              create_controller = controller,
-                              create_function = "person",
-                              create_component = "disciplinary_action",
-                              pagesize = None, # all records
-                              )
+                widget = {"label": T("Disciplinary Record"),
+                          "label_create": T("Add Disciplinary Action"),
+                          "type": "datatable",
+                          "actions": dt_row_actions("disciplinary_action"),
+                          "tablename": "hrm_disciplinary_action",
+                          "context": "person",
+                          "create_controller": controller,
+                          "create_function": "person",
+                          "create_component": "disciplinary_action",
+                          "pagesize": None, # all records
+                          }
                 profile_widgets.append(widget)
 
             if self.salary:
-                widget = dict(label = T("Salary"),
-                              label_create = T("Add Salary"),
-                              type = "datatable",
-                              actions = dt_row_actions("salary"),
-                              tablename = "hrm_salary",
-                              context = "person",
-                              create_controller = controller,
-                              create_function = "person",
-                              create_component = "salary",
-                              pagesize = None, # all records
-                              )
+                widget = {"label": T("Salary"),
+                          "label_create": T("Add Salary"),
+                          "type": "datatable",
+                          "actions": dt_row_actions("salary"),
+                          "tablename": "hrm_salary",
+                          "context": "person",
+                          "create_controller": controller,
+                          "create_function": "person",
+                          "create_component": "salary",
+                          "pagesize": None, # all records
+                          }
                 profile_widgets.append(widget)
 
         if representation == "html":
@@ -9177,10 +9183,10 @@ def hrm_configure_pr_group_membership():
                        (site_label, "person_id$human_resource.site_id"),
                        ]
         name_format = settings.get_pr_name_format()
-        test = name_format % dict(first_name=1,
-                                  middle_name=2,
-                                  last_name=3,
-                                  )
+        test = name_format % {"first_name": 1,
+                              "middle_name": 2,
+                              "last_name": 3,
+                              }
         test = "".join(ch for ch in test if ch in ("1", "2", "3"))
         if test[:1] == "1":
             orderby = "pr_person.first_name"

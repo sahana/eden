@@ -3620,37 +3620,114 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_hrm_experience_controller(**attr):
 
-        s3 = current.response.s3
+        get_vars_get = current.request.get_vars.get
+        if get_vars_get("rdrt_ap_current"):
+            from s3 import S3SQLCustomForm
+            s3db = current.s3db
+            table = s3db.hrm_experience
+            f = table.organisation
+            f.readable = f.writable = True
+            f = table.comments
+            f.comment = None
+            f = table.job_title
+            f.readable = f.writable = True
+            crud_form = S3SQLCustomForm("organisation",
+                                        (T("From"), "start_date"),
+                                        (T("To"), "end_date"),
+                                        (T("Total experience"), "comments"),
+                                        (T("Designation(s)"), "job_title"),
+                                        )
+            s3db.configure("hrm_experience",
+                           crud_form = crud_form,
+                           )
+        elif get_vars_get("rdrt_ap_deployment"):
+            from gluon import IS_EMPTY_OR
+            from s3 import s3_comments_widget, IS_ONE_OF, S3Represent, S3SQLCustomForm#, S3MultiSelectWidget
+            db = current.db
+            s3db = current.s3db
+            
+            # Limit Orgs to RC roots
+            ttable = s3db.org_organisation_type
+            try:
+                type_id = db(ttable.name == "Red Cross / Red Crescent").select(ttable.id,
+                                                                               limitby=(0, 1),
+                                                                               cache = s3db.cache,
+                                                                               ).first().id
+            except:
+                # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+                return
+            ltable = s3db.org_organisation_organisation_type
+            rows = db(ltable.organisation_type_id == type_id).select(ltable.organisation_id)
+            filter_opts = [row.organisation_id for row in rows]
+            btable = s3db.org_organisation_branch
+            rows = db((btable.deleted != True) &
+                      (btable.branch_id.belongs(filter_opts))).select(btable.branch_id)
+            filter_opts = list(set(filter_opts) - set(row.branch_id for row in rows))
 
-        root_org = current.auth.root_org_name()
-        vnrc = False
-        if root_org == VNRC:
-            vnrc = True
+            table = s3db.hrm_experience
+            table.organisation_id.requires = IS_ONE_OF(db, "org_organisation.id",
+                                                       s3db.org_OrganisationRepresent(acronym = False,
+                                                                                      parent = False),
+                                                       filterby = "id",
+                                                       filter_opts = filter_opts,
+                                                       orderby = "org_organisation.name",
+                                                       sort = True)
+            f = table.comments
+            f.comment = None
+            country_represent = S3Represent(lookup="gis_location", translate=True)
+            f = table.location_id
+            f.default = None
+            f.represent = country_represent
+            f.requires = IS_EMPTY_OR(IS_ONE_OF(db, "gis_location.id",
+                                               country_represent,
+                                               filterby = "level",
+                                               filter_opts = ["L0"],
+                                               sort=True))
+            f.widget = None
+            #f.widget = S3MultiSelectWidget(multiple=False)
+            table.responsibilities.widget = s3_comments_widget
+            crud_form = S3SQLCustomForm("organisation_id",
+                                        (T("From"), "start_date"),
+                                        (T("To"), "end_date"),
+                                        (T("Disaster situation (flood / earthquake, etc.)"), "comments"),
+                                        (T("Country of Deployment"), "location_id"),
+                                        (T("Skills Utilized"), "responsibilities"),
+                                        )
+            s3db.configure("hrm_experience",
+                           crud_form = crud_form,
+                           )
+        else:
+            s3 = current.response.s3
 
-        standard_prep = s3.prep
-        def custom_prep(r):
-            # Call standard prep
-            if callable(standard_prep):
-                if not standard_prep(r):
-                    return False
+            root_org = current.auth.root_org_name()
+            vnrc = False
+            if root_org == VNRC:
+                vnrc = True
 
-            if vnrc:
-                department_id = r.table.department_id
-                department_id.readable = department_id.writable = True
+            standard_prep = s3.prep
+            def custom_prep(r):
+                # Call standard prep
+                if callable(standard_prep):
+                    if not standard_prep(r):
+                        return False
 
-            if r.controller == "deploy":
-                # Popups in RDRT Member Profile
+                if vnrc:
+                    department_id = r.table.department_id
+                    department_id.readable = department_id.writable = True
 
-                table = r.table
+                if r.controller == "deploy":
+                    # Popups in RDRT Africa Member Profile
 
-                job_title_id = table.job_title_id
-                _customise_job_title_field(job_title_id, r)
-                job_title_id.label = T("Sector / Area of Expertise")
+                    table = r.table
 
-                job_title = table.job_title
-                job_title.readable = job_title.writable = True
-            return True
-        s3.prep = custom_prep
+                    job_title_id = table.job_title_id
+                    _customise_job_title_field(job_title_id, r)
+                    job_title_id.label = T("Sector / Area of Expertise")
+
+                    job_title = table.job_title
+                    job_title.readable = job_title.writable = True
+                return True
+            s3.prep = custom_prep
 
         return attr
 
@@ -4748,32 +4825,163 @@ def config(settings):
                     #    # Reset the component (we're past resource initialization)
                     #    r.resource.components.reset(("training",))
 
-                    if r.record:
-                        widgets = [{"label": "Personal Details",
-                                    "tablename": "pr_person",
-                                    "type": "datalist",
-                                    "insert": False,
-                                    "list_fields": ["first_name",
-                                                    "middle_name",
-                                                    "last_name",
-                                                    "date_of_birth",
-                                                    "gender",
-                                                    "person_details.nationality",
-                                                    "person_details.nationality2",
-                                                    "physical_description.blood_type",
-                                                    ],
-                                    "filter": FS("id") == r.record.person_id,
-                                    "icon": "user",
-                                    },
-                                   ]
-                    else:
-                        widgets = []
+                    record = r.record
+                    if record:
+                        person_id = record.person_id
+                        ptable = db.pr_person
+                        person = db(ptable.id == person_id).select(#ptable.first_name,
+                                                                   #ptable.middle_name,
+                                                                   #ptable.last_name,
+                                                                   ptable.pe_id,
+                                                                   limitby=(0, 1)
+                                                                   ).first()
+                        #name = s3_fullname(person)
+                        pe_id = person.pe_id
 
-                    append_widget = widgets.append
+                        details_widget = {"label": "Personal Details",
+                                          "tablename": "pr_person",
+                                          "type": "datalist",
+                                          "insert": False,
+                                          "list_fields": ["first_name",
+                                                          "middle_name",
+                                                          "last_name",
+                                                          "date_of_birth",
+                                                          "gender",
+                                                          "person_details.nationality",
+                                                          "person_details.nationality2",
+                                                          "physical_description.blood_type",
+                                                          ],
+                                          "filter": FS("id") == person_id,
+                                          "icon": "user",
+                                          }
+
+                        contacts_widget = {"label": "Contacts",
+                                           "label_create": "Add Contact",
+                                           "tablename": "pr_contact",
+                                           "type": "datalist",
+                                           "filter": FS("pe_id") == pe_id,
+                                           "icon": "phone",
+                                           # Default renderer:
+                                           #"list_layout": s3db.pr_render_contact,
+                                           "orderby": "priority asc",
+                                           # Can't do this as this is the HR perspective, not Person perspective
+                                           #"create_controller": c,
+                                           #"create_function": "person",
+                                           #"create_component": "contact",
+                                           }
+
+                        emergency_widget = {"label": "Emergency Contacts",
+                                            "label_create": "Add Emergency Contact",
+                                            "tablename": "pr_contact_emergency",
+                                            "type": "datalist",
+                                            "filter": FS("pe_id") == pe_id,
+                                            "icon": "phone",
+                                            }
+
+                        address_widget = {"label": "Address",
+                                          "label_create": "Add Address",
+                                          "type": "datalist",
+                                          "tablename": "pr_address",
+                                          "filter": FS("pe_id") == pe_id,
+                                          "icon": "home",
+                                          # Default renderer:
+                                          #"list_layout": s3db.pr_render_address,
+                                          # Can't do this as this is the HR perspective, not Person perspective
+                                          #"create_controller": c,
+                                          #"create_function": "person",
+                                          #"create_component": "address",
+                                          }
+
+                        education_widget = {"label": "Education",
+                                            "label_create": "Add Education",
+                                            "type": "datalist",
+                                            "tablename": "pr_education",
+                                            "filter": FS("person_id") == person_id,
+                                            "icon": "book",
+                                            "list_fields": [(T("Qualification"), "level"),
+                                                            (T("Field of Expertise"), "major"),
+                                                            ],
+                                            # Can't do this as this is the HR perspective, not Person perspective
+                                            #"create_controller": c,
+                                            #"create_function": "person",
+                                            #"create_component": "education",
+                                            "create_var": "rdrt_ap",
+                                            }
+
+                        job_widget = {"label": "Current Job Role",
+                                      "label_create": "Add Job Role",
+                                      "type": "datatable",
+                                      "dt_searching": False,
+                                      "tablename": "hrm_experience",
+                                      "filter": (FS("person_id") == person_id) & \
+                                                (FS("activity_type") == None),
+                                      "icon": "wrench",
+                                      "list_fields": ["organisation",
+                                                      (T("From"), "start_date"),
+                                                      (T("To"), "end_date"),
+                                                      (T("Total experience"), "comments"),
+                                                      (T("Designation(s)"), "job_title"),
+                                                      ],
+                                      # Default renderer:
+                                      #"list_layout": hrm_experience_list_layout,
+                                      "create_controller": "deploy",
+                                      # Can't do this as this is the HR perspective, not Person perspective
+                                      #"create_function": "person",
+                                      #"create_component": "experience",
+                                      "create_var": "rdrt_ap_current",
+                                      "pagesize": 1,
+                                      }
+
+                        experience_widget = {"label": "NDRT / other Deployments",
+                                             "label_create": "Add Deployment",
+                                             "type": "datatable",
+                                             "dt_searching": False,
+                                             "tablename": "hrm_experience",
+                                             "filter": (FS("person_id") == person_id) & \
+                                                       (FS("activity_type") == "rdrt"),
+                                             "icon": "truck",
+                                             "list_fields": ["organisation_id",
+                                                             (T("From"), "start_date"),
+                                                             (T("To"), "end_date"),
+                                                             (T("Disaster situation (flood / earthquake, etc.)"), "comments"),
+                                                             (T("Country of Deployment"), "location_id"),
+                                                             (T("Skills Utilized"), "responsibilities"),
+                                                             ],
+                                             # Default renderer:
+                                             #"list_layout": hrm_experience_list_layout,
+                                             "create_controller": "deploy",
+                                             # Can't do this as this is the HR perspective, not Person perspective
+                                             #"create_function": "person",
+                                             #"create_component": "experience",
+                                             "create_var": "rdrt_ap_deployment",
+                                             "pagesize": 2,
+                                             }
+
+                        docs_widget = {"label": "Documents",
+                                       "label_create": "Add Document",
+                                       "type": "datalist",
+                                       "tablename": "doc_document",
+                                       "filter": FS("doc_id") == record.doc_id,
+                                       "icon": "attachment",
+                                       # Default renderer:
+                                       #"list_layout": s3db.doc_document_list_layout,
+                                       }
+
+                        profile_widgets = [details_widget,
+                                           contacts_widget,
+                                           emergency_widget,
+                                           address_widget,
+                                           education_widget,
+                                           job_widget,
+                                           experience_widget,
+                                           docs_widget,
+                                           ]
+                    else:
+                        profile_widgets = []
 
                     resource.configure(#filter_widgets = filters,
                                        #list_fields = list_fields,
-                                       profile_widgets = widgets,
+                                       profile_widgets = profile_widgets,
                                        profile_header = rdrt_member_profile_header,
                                        )
 
@@ -6374,7 +6582,7 @@ def config(settings):
                                 r.table.region_id.requires = r.table.region_id.requires.other
                             else:
                                 r.table.region_id.readable = r.table.region_id.writable = False
-                        resource.configure(list_fields=list_fields)
+                        resource.configure(list_fields = list_fields)
 
                         if r.interactive:
                             r.table.country.label = T("Country")
@@ -6437,6 +6645,29 @@ def config(settings):
             address.readable = address.writable = True
 
     settings.customise_pr_contact_emergency_resource = customise_pr_contact_emergency_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_education_resource(r, tablename):
+
+        if r.get_vars.get("rdrt_ap"):
+            # Simplify for RDRT AP
+            from s3 import S3SQLCustomForm
+            s3db = current.s3db
+            # Use legacy field for cleaner options
+            f = s3db.pr_education.level
+            f.readable = f.writable = True
+            #from gluon import IS_IN_SET
+            #f.requires = IS_IN_SET(("High School",
+            #                        "University / College",
+            #                        "Post Graduate",
+            #                        ))
+            s3db.configure("pr_education",
+                           crud_form = S3SQLCustomForm((T("Qualification"), "level"),
+                                                       (T("Field of Expertise"), "major"),
+                                                       ),
+                           )
+
+    settings.customise_pr_education_resource = customise_pr_education_resource
 
     # -------------------------------------------------------------------------
     def customise_pr_person_availability_resource(r, tablename):

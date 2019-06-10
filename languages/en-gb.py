@@ -193,6 +193,7 @@
 'Sent Shipment canceled': 'Sent Shipment cancelled',
 'Sent Shipment canceled and items returned to Warehouse': 'Sent Shipment cancelled and items returned to Warehouse',
 'Shipping Organization': 'Shipping Organisation',
+'Skills Utilized': 'Skills Utilised',
 'Social Mobilization': 'Social Mobilisation',
 'Specialized Hospital': 'Specialised Hospital',
 'Synchronization': 'Synchronisation',
