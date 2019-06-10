@@ -392,7 +392,7 @@ def config(settings):
         s3db = current.s3db
         def onapprove(record):
             # Normal onapprove
-            s3db.cap_alert_approve(record)
+            s3db.cap_alert_onapprove(record)
 
             async_task = current.s3task.async
 
@@ -1195,7 +1195,7 @@ def config(settings):
                          if description else "",
                          BR() if not isinstance(description, list) else "",
                          BR() if response_type else "",
-                         XML(T("%(label)s: %(response_type)s") % 
+                         XML(T("%(label)s: %(response_type)s") %
                          {"label": B(T("Expected Response")),
                           "response_type": s3_str(get_formatted_value(response_type,
                                                                       represent = itable.response_type.represent,
@@ -1505,7 +1505,7 @@ T("""%(status)s %(message_type)s for %(area_description)s with %(priority)s prio
 
     # -------------------------------------------------------------------------
     def _get_or_create_attachment(alert_id):
-        """ 
+        """
             Retrieve the CAP attachment for the alert_id if present
             else creates CAP file as attachment to be sent with the email
             returns the document_id for the CAP file

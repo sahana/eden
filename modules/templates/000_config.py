@@ -213,10 +213,8 @@ settings.frontpage.rss = [
 # See http://alerting.worldweather.org/ for oid
 # Country root oid. The oid for the organisation includes this base
 #settings.cap.identifier_oid = "2.49.0.0.608.0"
-# Change this for the offset period in days that the alert will be effective for
-# Expire Date = Effective Date + expire_offset
-# Default is 2 days
-#settings.cap.expire_offset = 2
+# Set the period (in days) after which alert info segments expire (default=2)
+#settings.cap.info_effective_period = 2
 
 # =============================================================================
 # Import the settings from the Template

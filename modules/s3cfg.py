@@ -3065,11 +3065,11 @@ class S3Config(Storage):
         # Else fallback to the default OID
         return self.cap.get("identifier_oid", "")
 
-    def get_cap_expire_offset(self):
+    def get_cap_info_effective_period(self):
         """
-            Offset period for expiration
+            The period (in days) after which alert info segments expire
         """
-        return self.cap.get("expire_offset", 2)
+        return self.cap.get("info_effective_period", 2)
 
     def get_cap_codes(self):
         """

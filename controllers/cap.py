@@ -216,13 +216,6 @@ def alert():
                      (table.approved_on != None)
             resource.add_filter(filter)
 
-        #elif r.representation == "cap":
-        #    # This is either importing from or exporting to cap format. Set both
-        #    # postprocessing hooks so we don't have to enumerate methods.
-        #    s3db.configure("gis_location",
-        #                   xml_post_parse = s3db.cap_gis_location_xml_post_parse,
-        #                   xml_post_render = s3db.cap_gis_location_xml_post_render,
-        #                   )
         record = r.record
         if r.id:
 
@@ -923,8 +916,8 @@ def alert():
                     row_clone["template_info_id"] = row.id
                     row_clone["is_template"] = False
                     row_clone["effective"] = request.utcnow
-                    row_clone["expires"] = s3db.cap_expiry_date()
-                    row_clone["sender_name"] = s3db.cap_sender_name()
+                    row_clone["expires"] = s3db.cap_expirydate()
+                    row_clone["sender_name"] = s3db.cap_sendername()
                     row_clone["web"] = settings.get_base_public_url() + \
                                         URL(c="cap", f=fn, args=lastid)
                     row_clone["audience"] = audience

@@ -1568,7 +1568,7 @@ class user_info(S3CustomController):
             response = {"r": roles,
                         "uid": user.id,
                         "pid": auth.s3_logged_in_person(),
-                        "o": current.deployment_settings.get_cap_expire_offset(),
+                        "o": current.deployment_settings.get_cap_info_effective_period(),
                         }
             current.response.headers["Content-Type"] = "application/json"
             return json.dumps(response)
