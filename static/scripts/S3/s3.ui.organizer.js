@@ -405,6 +405,9 @@
                           }
                       });
 
+            // Hide the datepicker dialog (sometimes showing after init)
+            datePicker.datepicker('widget').hide();
+
             // Add throbber
             var throbber = $('<div class="inline-throbber">').css({visibility: 'hidden'});
             $('.fc-header-toolbar .fc-left', this.element).append(throbber);

@@ -1093,9 +1093,9 @@ class S3Profile(S3CRUD):
         widget_get = widget.get
 
         # Card holder label and icon
-        label = widget_get("label", "")
-        if label and isinstance(label, basestring):
-            label = current.T(label)
+        profile_label = widget_get("label", "")
+        if profile_label and isinstance(profile_label, basestring):
+            profile_label = current.T(profile_label)
         icon = widget_get("icon", "")
         if icon:
             icon = ICON(icon)
@@ -1104,17 +1104,19 @@ class S3Profile(S3CRUD):
         # Get base URL
         # - we use an explicit URL here (resource native or component) because
         #   the create-popup requires it anyway, so we can pass the organizer
-        #   Ajax data lookup through it as well:
+        #   Ajax lookups through it as well
+        # - when accessing the target table as component, remember to also
+        #   specify "master" and "component" (see further down)
         base_url = widget_get("url")
         if not base_url:
-            return DIV(H4(icon, label, _class="profile-sub-header"),
+            return DIV(H4(icon, profile_label, _class="profile-sub-header"),
                        DIV(DIV("Error: missing widget URL", _class="error"),
                            _class="card-holder",
                            ),
                        _class = _class,
                        )
 
-        # Construct Ajax URL
+        # Construct Ajax URL from base URL
         parsed = base_url.split("?")
         parsed[0] += "/organize.json"
         ajax_url = "?".join(parsed)
@@ -1173,10 +1175,22 @@ class S3Profile(S3CRUD):
         import uuid
         formkey = uuid.uuid4().get_hex()
 
+        # Determine the formname (see also S3Organizer.formname)
+        master = widget_get("master")
+        component = widget_get("component")
+        if master and component:
+            # Override default formname when accessing the target
+            # table as a component of another resource:
+            # - master: "master_tablename/master_record_id"
+            # - component: "component_alias"
+            formname = "%s/%s/organizer" % (master, component)
+        else:
+            # Use default formname
+            formname = "%s/organizer" % tablename
+
         # Store form key in session
-        # TODO fix this, delete-request doesn't match
         session = current.session
-        keyname = "_formkey[%s]" % S3Organizer.formname(r)
+        keyname = "_formkey[%s]" % formname
         session[keyname] = session.get(keyname, [])[-9:] + [formkey]
 
         # Instantiate Organizer Widget
@@ -1186,8 +1200,8 @@ class S3Profile(S3CRUD):
                                   )
 
         # Render the widget
-        output = DIV(H4(icon, label, _class="profile-sub-header"),
-                     DIV(contents, _class="card-holder"),
+        output = DIV(H4(icon, profile_label, _class="profile-sub-header"),
+                     DIV(contents, _class="card-holder profile-organizer"),
                      _class = _class,
                      )
 

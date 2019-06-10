@@ -606,6 +606,11 @@ input.rm-invalid {
   background-color: #FFA0A0;
 }
 
+/* Organizer Profile Widget */
+.card-holder.profile-organizer {
+    padding-top: 8px;
+}
+
 /* For Person Duplicates */
 .card_1_line {
     height: 14px; /* Height needs to be same with or without contents */
