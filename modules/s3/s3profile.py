@@ -232,6 +232,8 @@ class S3Profile(S3CRUD):
                     w = self._map(r, widget, widgets, **attr)
                 elif w_type == "report":
                     w = self._report(r, widget, **attr)
+                elif w_type == "organizer":
+                    w = self._organizer(r, widget, **attr)
                 elif w_type == "custom":
                     w = self._custom(r, widget, **attr)
                 else:
@@ -1068,6 +1070,121 @@ class S3Profile(S3CRUD):
                      DIV(contents,
                          _class="card-holder"),
                      _class=_class)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def _organizer(self, r, widget, **attr):
+        """
+            Generate an Organizer widget
+
+            @param r: the S3Request instance
+            @param widget: the widget configuration (a dict)
+            @param attr: controller attributes for the request
+        """
+
+        from .s3organizer import S3Organizer, S3OrganizerWidget
+
+        widget_get = widget.get
+
+        # Card holder label and icon
+        label = widget_get("label", "")
+        if label and isinstance(label, basestring):
+            label = current.T(label)
+        icon = widget_get("icon", "")
+        if icon:
+            icon = ICON(icon)
+        _class = self._lookup_class(r, widget)
+
+        # Get base URL
+        # - we use an explicit URL here (resource native or component) because
+        #   the create-popup requires it anyway, so we can pass the organizer
+        #   Ajax data lookup through it as well:
+        base_url = widget_get("url")
+        if not base_url:
+            return DIV(H4(icon, label, _class="profile-sub-header"),
+                       DIV(DIV("Error: missing widget URL", _class="error"),
+                           _class="card-holder",
+                           ),
+                       _class = _class,
+                       )
+
+        # Construct Ajax URL
+        parsed = base_url.split("?")
+        parsed[0] += "/organize.json"
+        ajax_url = "?".join(parsed)
+
+        # Get the target resource (customised+filtered)
+        tablename = widget_get("tablename", None)
+        resource = current.s3db.resource(tablename)
+        r.customise_resource(tablename)
+
+        # Parse the resource organizer config
+        config = S3Organizer.parse_config(resource)
+
+        # Generate organizer config for this resource
+        table = resource.table
+        permitted = current.auth.s3_has_permission
+
+        start = config["start"]
+        end = config["end"]
+
+        resource_config = {
+            "ajaxURL": ajax_url,
+            "useTime": config.get("use_time"),
+            "baseURL": base_url,
+            "labelCreate": s3_str(self.crud_string(tablename, "label_create")),
+            "insertable": resource.get_config("insertable", True) and \
+                          permitted("create", table),
+            "editable": resource.get_config("editable", True) and \
+                        permitted("update", table),
+            "startEditable": start.field and start.field.writable,
+            "durationEditable": end and end.field and end.field.writable,
+            "deletable": resource.get_config("deletable", True) and \
+                         permitted("delete", table),
+            "start": start.selector if start else None,
+            "end": end.selector if end else None,
+            }
+
+        # Description Labels
+        labels = []
+        for rfield in config["description"]:
+            label = rfield.label
+            if label is not None:
+                label = s3_str(label)
+            labels.append((rfield.colname, label))
+        resource_config["columns"] = labels
+
+        # Colors
+        color = config.get("color")
+        if color:
+            resource_config["color"] = color.colname
+            resource_config["colors"] = config.get("colors")
+
+        # Use the widget-index to create a unique ID
+        widget_id = "profile-organizer-%s-%s" % (tablename, widget["index"])
+
+        # Generate form key
+        import uuid
+        formkey = uuid.uuid4().get_hex()
+
+        # Store form key in session
+        # TODO fix this, delete-request doesn't match
+        session = current.session
+        keyname = "_formkey[%s]" % S3Organizer.formname(r)
+        session[keyname] = session.get(keyname, [])[-9:] + [formkey]
+
+        # Instantiate Organizer Widget
+        organizer = S3OrganizerWidget([resource_config])
+        contents = organizer.html(widget_id = widget_id,
+                                  formkey = formkey,
+                                  )
+
+        # Render the widget
+        output = DIV(H4(icon, label, _class="profile-sub-header"),
+                     DIV(contents, _class="card-holder"),
+                     _class = _class,
+                     )
 
         return output
 

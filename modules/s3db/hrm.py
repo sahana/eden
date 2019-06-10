@@ -7472,6 +7472,16 @@ def hrm_human_resource_controller(extra_filter = None):
                 if settings.get_hrm_use_education():
                     profile_widgets.insert(-1, education_widget)
 
+                # Not ready yet:
+                #profile_widgets.insert(2, {"label": "Periods of Unavailability",
+                #                           "type": "organizer",
+                #                           "tablename": "deploy_unavailability",
+                #                           "icon": "calendar",
+                #                           "url": URL(c="deploy", f="person",
+                #                                      args = [person_id, "unavailability"],
+                #                                      ),
+                #                           })
+
             # Configure resource
             s3db.configure("hrm_human_resource",
                            profile_cols = 1,
