@@ -86,7 +86,7 @@ table th label {
 table td {
     padding: 10px;
 }
-table td:first-child {
+table td:first-child:not(.fc-highlight) {
     background-color: #fff;
 }
 table.ui-datepicker-calendar td:first-child {

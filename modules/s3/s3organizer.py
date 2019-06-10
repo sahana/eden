@@ -892,6 +892,12 @@ class S3OrganizerWidget(object):
             options["locale"] = language
             inject.insert(-1, "fullcalendar/locale/%s" % l10n_file)
 
+        # Choose icon set (other than default FA4)
+        icon_set = current.deployment_settings.get_ui_icons()
+        if icon_set == "font-awesome3":
+            options["refreshIconClass"] = "icon-refresh"
+            options["calendarIconClass"] = "icon-calendar"
+
         # Inject scripts
         for path in inject:
             script = "/%s/static/scripts/%s" % (appname, path)

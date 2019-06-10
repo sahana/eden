@@ -226,6 +226,8 @@
          * @prop {string} labelEdit: label for Edit-button
          * @prop {string} labelDelete: label for the Delete-button
          * @prop {string} deleteConfirmation: the question for the delete-confirmation
+         * @prop {string} refreshIconClass: the CSS class for the refresh button icon
+         * @prop {string} calendarIconClass: the CSS class for the calendar button icon
          *
          */
         options: {
@@ -245,7 +247,10 @@
             labelEdit: 'Edit',
             labelDelete: 'Delete',
             deleteConfirmation: 'Do you want to delete this entry?',
-            firstDay: 1
+            firstDay: 1,
+
+            refreshIconClass: 'fa fa-refresh',
+            calendarIconClass: 'fa fa-calendar'
         },
 
         /**
@@ -344,13 +349,13 @@
                 // View options
                 customButtons: {
                     reload: {
-                        text: '',
+                        text: 'Reload',
                         click: function() {
                             self.reload();
                         }
                     },
                     calendar: {
-                        text: '',
+                        text: 'Calendar',
                         click: function() {
                             datePicker.datepicker('show');
                         }
@@ -382,11 +387,15 @@
                 timezone: 'local'
             });
 
-            // Remember reloadButton, use icon
-            this.reloadButton = $('.fc-reload-button').html('<i class="fa fa-refresh">');
+            // Button icons
+            var refreshIcon = $('<i>').addClass(opts.refreshIconClass),
+                calendarIcon = $('<i>').addClass(opts.calendarIconClass);
+
+            // Store reloadButton, use icon
+            this.reloadButton = $('.fc-reload-button').empty().append(refreshIcon);
 
             // Move datepicker into header, use icon for calendar button
-            var calendarButton = $('.fc-calendar-button').html('<i class="fa fa-calendar">');
+            var calendarButton = $('.fc-calendar-button').empty().append(calendarIcon);
             datePicker.datepicker('option', {showOn: 'focus', showButtonPanel: true, firstDay: opts.firstDay})
                       .insertBefore(calendarButton)
                       .on('change', function() {
