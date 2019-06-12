@@ -5009,7 +5009,8 @@ class S3LocationSelector(S3Selector):
                        )
 
     # -------------------------------------------------------------------------
-    def _labels(self, levels, country=None):
+    @staticmethod
+    def _labels(levels, country=None):
         """
             Extract the hierarchy labels
 
@@ -5060,24 +5061,27 @@ class S3LocationSelector(S3Selector):
                     for level in levels:
                         if level == "L0":
                             continue
-                        labels[level] = d[int(level[1:])] = s3_unicode(T(row[level]))
+                        label = row[level]
+                        label = s3_str(T(label)) if label else level
+                        labels[level] = d[int(level[1:])] = label
         else:
             row = rows.first()
             d = compact["d"] = {}
             for level in levels:
                 if level == "L0":
                     continue
-                d[int(level[1:])] = s3_unicode(T(row[level]))
+                d[int(level[1:])] = s3_str(T(row[level]))
 
         return labels, compact
 
     # -------------------------------------------------------------------------
-    def _locations(self,
-                   levels,
+    @staticmethod
+    def _locations(levels,
                    values,
                    default_bounds = None,
                    lowest_lx = None,
-                   config = None):
+                   config = None,
+                   ):
         """
             Build initial location dict (to populate Lx dropdowns)
 
@@ -5315,11 +5319,8 @@ class S3LocationSelector(S3Selector):
         return location_dict
 
     # -------------------------------------------------------------------------
-    def _layout(self,
-                components,
-                map_icon=None,
-                formstyle=None,
-                inline=False):
+    @staticmethod
+    def _layout(components, map_icon=None, formstyle=None, inline=False):
         """
             Overall layout for visible components
 
