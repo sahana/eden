@@ -2170,120 +2170,134 @@ class CAPAreaModel(S3Model):
     @staticmethod
     def area_location_onaccept(form):
         """
-            - Link alert_id for non-template area
-            - for external alerts (from import feed or rss), make sure the
-              locations are only imported if we set polygons to be imported
+            Onaccept-routine for area-location links
+            - inherit alert_id from area-segment (non-template areas only)
+            - remove the location link for imported alerts if polygon import
+              is not configured (settings.cap.area_default), e.g. SAMBRO/PH
+              wants alerts only linked to standard locations by geocode, which
+              happens via a tag match (cap_area_tag <=> gis_location_tag)
         """
 
         form_vars = form.vars
 
         area_id = form_vars.get("area_id")
         if not area_id:
-            # comes from assign method
+            # Coming from assign method => no action
             return
 
         db = current.db
+
+        # Look up the alert_id
         alert_id = form_vars.get("alert_id")
         if not alert_id:
             atable = db.cap_area
             row = db(atable.id == area_id).select(atable.alert_id,
                                                   limitby = (0, 1),
                                                   ).first()
-            alert_id = row.alert_id or None
+            if row:
+                alert_id = row.alert_id
+
         if alert_id:
-            # This is not template area
-            # NB Template area are not linked with alert_id
+            # Not a template area (template areas have no alert_id)
+
+            # Remove the record if the alert is imported and polygon import
+            # is not configured (=>a link to a geocode location is created in
+            # area_tag_onaccept instead)
             location_default = current.deployment_settings.get_cap_area_default()
             if "polygon" not in location_default:
-                # Use-case for PH
                 table = current.s3db.cap_alert
                 row = db(table.id == alert_id).select(table.external,
                                                       limitby = (0, 1),
                                                       ).first()
                 if row.external:
-                    # If "polygon" is not in deployment_settings (eg. in PH) and
-                    # if it is a external alert (coming from RSS and import_feed),
-                    # don't use this for displaying map in area
                     db(db.cap_area_location.id == form_vars["id"]).delete()
                     return
-            # For alerts generated from SAMBRO, link area to the alert_id
-            db(db.cap_area_location.id == form_vars["id"]).update(alert_id = alert_id)
+
+            # Inherit the alert_id from area
+            db(db.cap_area_location.id == form_vars["id"]).update(alert_id=alert_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
     def area_tag_onaccept(form):
         """
-            Link location if area_tag has SAME code
-            Link alert_id for non-template area
+            Onaccept-routine for area tags
+            - inherit alert_id from area (non-template areas only)
+            - if the tag is a SAME code, create a cap_area_location link
+              for the area to the corresponding gis_location
         """
 
         form_vars = form.vars
 
         area_id = form_vars.get("area_id")
         if not area_id:
-            # comes from assign method
+            # Coming from assign method => no action
             return
 
         db = current.db
         atable = db.cap_area
-
         arow = db(atable.id == area_id).select(atable.alert_id,
                                                limitby = (0, 1),
                                                ).first()
         alert_id = arow.alert_id
 
         if alert_id:
-            # This is not template area
-            db(db.cap_area_tag.id == form_vars.id).update(alert_id = alert_id)
+            # Not a template area (template areas have no alert_id)
+
+            # Inherit the alert_id
+            db(db.cap_area_tag.id == form_vars.id).update(alert_id=alert_id)
 
             s3db = current.s3db
-            tag = form_vars.get("tag")
-            same_code = current.deployment_settings.get_cap_same_code()
-            import_location = False
-            if tag and same_code:
-                # Check if tag and same_code exist. If neither one or none
-                # exists, do not import location
-                if tag == "SAME":
-                    # If tag is "SAME" then check other conditions, otherwise
-                    # do not import location
-                    if "geocode" in current.deployment_settings.get_cap_area_default():
-                        import_location = True
-                    else:
-                        # Check internal alert
-                        table = s3db.cap_alert
-                        row = db(table.id == alert_id).select(table.external,
-                                                              limitby = (0, 1),
-                                                              ).first()
-                        if not row.external:
-                            import_location = True
+            settings = current.deployment_settings
 
-            if import_location:
-                # SAME tag refers to some location_id in CAP
+            same_code = settings.get_cap_same_code()
+
+            tag = form_vars.get("tag")
+            link_location_by_code = False
+
+            if same_code and tag == "SAME":
+                # Use this tag to link to an existing gis_location with this
+                # code if geocode-import is configured or the alert is generated
+                # locally
+                if "geocode" in settings.get_cap_area_default():
+                    link_location_by_code = True
+                else:
+                    table = s3db.cap_alert
+                    row = db(table.id == alert_id).select(table.external,
+                                                          limitby = (0, 1),
+                                                          ).first()
+                    link_location_by_code = not row.external if row else False
+
+            if link_location_by_code:
+                # Look up the gis_location with a matching SAME code
+                # - find a matching gis_location_tag where the tag name is the
+                #   configured SAME code, and the value matches the value of this
+                #   tag
+                # - it is possible for there to be two polygons for the same SAME
+                #   code since polygon change over time, even if the code remains
+                #   the same. Historic polygons are excluded as (gtable.end_date == None)
                 ttable = s3db.gis_location_tag
                 gtable = s3db.gis_location
-
-                # It is possible for there to be two polygons for the same SAME
-                # code since polygon change over time, even if the code remains
-                # the same. Hence the historic polygon is excluded as (gtable.end_date == None)
                 tquery = (ttable.tag == same_code) & \
                          (ttable.value == form_vars.get("value")) & \
                          (ttable.deleted == False) & \
                          (ttable.location_id == gtable.id) & \
                          (gtable.end_date == None) & \
                          (gtable.deleted == False)
-                trow = db(tquery).select(ttable.location_id, limitby=(0, 1)).first()
+                trow = db(tquery).select(ttable.location_id,
+                                         limitby = (0, 1),
+                                         ).first()
                 if trow and trow.location_id:
-                    # Match
+                    # Match => link area to this location
                     ltable = db.cap_area_location
-                    ldata = {"area_id": area_id,
-                             "alert_id": alert_id or None,
-                             "location_id": trow.location_id,
-                             }
-                    lid = ltable.insert(**ldata)
-                    current.auth.s3_set_record_owner(ltable, lid)
-                    # Uncomment this when required
-                    #ldata["id"] = lid
-                    #s3db.onaccept(ltable, ldata)
+                    link = {"area_id": area_id,
+                            "alert_id": alert_id or None,
+                            "location_id": trow.location_id,
+                            }
+                    link_id = ltable.insert(**link)
+                    current.auth.s3_set_record_owner(ltable, link_id)
+                    # Currently not required:
+                    #link["id"] = link_id
+                    #s3db.onaccept(ltable, link)
 
 # =============================================================================
 class CAPResourceModel(S3Model):
@@ -2326,6 +2340,7 @@ class CAPResourceModel(S3Model):
                            ),
                      self.super_link("doc_id", "doc_entity"),
                      Field("resource_desc",
+                           label = T("Description"),
                            requires = IS_NOT_EMPTY(),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The type and content of the resource file"),
@@ -2480,40 +2495,42 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
     @staticmethod
     def resource_onvalidation(form):
         """
-            For Image Upload
-             NB not using document_onvalidation here because we are extracting
-             other values from the file like size and mime type
+            Resource form validation:
+                - post-process S3ImageCropWidget
+                - Determine MIME type and file size of uploaded image
+
+            @param form: the FORM
         """
 
         form_vars = form.vars
+
         image = form_vars.image
         if image is None:
+
             encoded_file = form_vars.get("imagecrop-data")
             if encoded_file:
-                import base64
-                import uuid
-                import cStringIO
+                # Post-process S3ImageCropWidget (see document_onvalidation)
+                # - differs from document_onvalidation in that it also
+                #   determines file size and MIME type
                 metadata, encoded_file = encoded_file.split(",")
-                #filename, datatype, enctype = metadata.split(";")
                 filename, datatype = metadata.split(";")[:2]
-                f = Storage()
-                f.filename = uuid.uuid4().hex + filename
-                f.file = cStringIO.StringIO(base64.decodestring(encoded_file))
-                form_vars.image = image = f
-                stream = image.file
+
+                import uuid
+                import base64
+                from cStringIO import StringIO
+
+                image = Storage(filename = uuid.uuid4().hex + filename)
+                image.file = stream = StringIO(base64.decodestring(encoded_file))
+
+                form_vars.image = image
+
+                # Determine file size
                 stream.seek(0, os.SEEK_END)
-                file_size = stream.tell()
+                form_vars.size = stream.tell()
                 stream.seek(0)
 
-                # extract mime_type
-                if image is not None:
-                    #data, mime_type = datatype.split(":")
-                    form_vars.size = file_size
-                    form_vars.mime_type = datatype.split(":")[1]
-
-        elif isinstance(image, str):
-            # Image = String => Update not a create, so file not in form
-            return
+                # Determine MIME type
+                form_vars.mime_type = datatype.split(":")[1]
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4339,7 +4356,7 @@ def cap_history_rheader(r, tabs=None):
         T = current.T
         s3db = current.s3db
 
-        if r.tablename == "cap_alert_history":
+        if tablename == "cap_alert_history":
             alert_id = record.id
 
             # Default tabs
