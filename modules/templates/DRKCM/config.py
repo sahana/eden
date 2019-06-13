@@ -4,7 +4,7 @@ import datetime
 
 from collections import OrderedDict
 
-from gluon import current, A, DIV,IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, SPAN, TAG, URL
+from gluon import current, A, DIV,IS_EMPTY_OR, IS_IN_SET, IS_LENGTH, IS_NOT_EMPTY, SPAN, TAG, URL
 from gluon.storage import Storage
 
 from s3 import FS, IS_ONE_OF
@@ -1006,7 +1006,7 @@ def config(settings):
 
                         # Last name is required
                         field = table.last_name
-                        field.requires = IS_NOT_EMPTY()
+                        field.requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)]
 
                         # Optional: site dates
                         if ui_options.get("case_lodging_dates"):
@@ -1942,7 +1942,7 @@ def config(settings):
                 # Expose simple free-text subject
                 field = table.subject
                 field.readable = field.writable = True
-                field.requires = IS_NOT_EMPTY()
+                field.requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)]
 
             # Show need details (optional)
             field = table.need_details
@@ -3284,7 +3284,7 @@ def config(settings):
             # otherwise imports will fail before reaching de-duplicate
             ttable = s3db.cr_shelter_type
             field = ttable.name
-            field.requires = IS_NOT_EMPTY()
+            field.requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)]
 
             # Reset to standard (no need to repeat it)
             s3.import_prep = import_prep

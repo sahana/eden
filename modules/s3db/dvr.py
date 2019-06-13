@@ -117,7 +117,7 @@ class DVRCaseModel(S3Model):
         define_table(tablename,
                      Field("name",
                            label = T("Type"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      # Enable in template if/when org-specific
                      # case types are required:
@@ -165,7 +165,7 @@ class DVRCaseModel(S3Model):
                      Field("code", length=64, notnull=True, unique=True,
                            label = T("Status Code"),
                            requires = [IS_NOT_EMPTY(),
-                                       IS_LENGTH(64),
+                                       IS_LENGTH(64, minsize=1),
                                        IS_NOT_ONE_OF(db,
                                                      "%s.code" % tablename,
                                                      ),
@@ -890,7 +890,7 @@ class DVRCaseFlagModel(S3Model):
         define_table(tablename,
                      Field("name",
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      Field("advise_at_check_in", "boolean",
                            default = False,
@@ -1106,7 +1106,7 @@ class DVRNeedsModel(S3Model):
         define_table(tablename,
                      Field("name",
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      # This form of hierarchy may not work on all Databases:
                      Field("parent", "reference dvr_need",
@@ -1247,7 +1247,7 @@ class DVRNotesModel(S3Model):
                      Field("name", length=128, unique=True,
                            label = T("Name"),
                            requires = [IS_NOT_EMPTY(),
-                                       IS_LENGTH(128),
+                                       IS_LENGTH(128, minsize=1),
                                        IS_NOT_ONE_OF(db,
                                                      "dvr_note_type.name",
                                                      ),
@@ -1351,7 +1351,7 @@ class DVRReferralModel(S3Model):
         self.define_table(tablename,
                           Field("name",
                                 label = T("Name"),
-                                requires = IS_NOT_EMPTY(),
+                                requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                                 ),
                           s3_comments(),
                           *s3_meta_fields())
@@ -1450,7 +1450,7 @@ class DVRResponseModel(S3Model):
                      self.org_organisation_id(),
                      Field("name",
                            label = T("Theme"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      self.dvr_need_id(readable = themes_needs,
                                       writable = themes_needs,
@@ -1515,7 +1515,7 @@ class DVRResponseModel(S3Model):
         tablename = "dvr_response_type"
         define_table(tablename,
                      Field("name",
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      # This form of hierarchy may not work on all databases:
                      Field("parent", "reference dvr_response_type",
@@ -1584,7 +1584,7 @@ class DVRResponseModel(S3Model):
         tablename = "dvr_response_status"
         define_table(tablename,
                      Field("name",
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      Field("workflow_position", "integer",
                            label = T("Workflow Position"),
@@ -2322,7 +2322,7 @@ class DVRCaseActivityModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True,
                            label = T("Type"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2368,7 +2368,7 @@ class DVRCaseActivityModel(S3Model):
                      Field("name", length=128, notnull=True, unique=True,
                            label = T("Type"),
                            requires = [IS_NOT_EMPTY(),
-                                       IS_LENGTH(128),
+                                       IS_LENGTH(128, minsize=1),
                                        IS_NOT_ONE_OF(db,
                                                      "%s.name" % tablename,
                                                      ),
@@ -2418,7 +2418,7 @@ class DVRCaseActivityModel(S3Model):
                      Field("name", length=128, notnull=True, unique=True,
                            label = T("Age Group"),
                            requires = [IS_NOT_EMPTY(),
-                                       IS_LENGTH(128),
+                                       IS_LENGTH(128, minsize=1),
                                        IS_NOT_ONE_OF(db,
                                                      "%s.name" % tablename,
                                                      ),
@@ -2467,7 +2467,7 @@ class DVRCaseActivityModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True,
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2679,7 +2679,7 @@ class DVRCaseActivityModel(S3Model):
                                 ),
                      Field("name", notnull=True,
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2725,7 +2725,7 @@ class DVRCaseActivityModel(S3Model):
         tablename = "dvr_case_activity_status"
         define_table(tablename,
                      Field("name",
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      Field("workflow_position", "integer",
                            label = T("Workflow Position"),
@@ -3173,7 +3173,7 @@ class DVRCaseActivityModel(S3Model):
         define_table(tablename,
                      Field("name",
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -3587,7 +3587,7 @@ class DVRCaseAppointmentModel(S3Model):
         define_table(tablename,
                      Field("name", length=64, notnull=True, unique=True,
                            requires = [IS_NOT_EMPTY(),
-                                       IS_LENGTH(64),
+                                       IS_LENGTH(64, minsize=1),
                                        IS_NOT_ONE_OF(db,
                                                      "%s.name" % tablename,
                                                      ),
@@ -4025,7 +4025,7 @@ class DVRHouseholdModel(S3Model):
         define_table(tablename,
                      Field("name",
                            label = T("Type"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -4244,7 +4244,7 @@ class DVRCaseEconomyInformationModel(S3Model):
         define_table(tablename,
                      Field("name",
                            label = T("Type"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -4275,7 +4275,7 @@ class DVRCaseEconomyInformationModel(S3Model):
         tablename = "dvr_income_source"
         define_table(tablename,
                      Field("name",
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -4464,7 +4464,7 @@ class DVRLegalStatusModel(S3Model):
         tablename = "dvr_residence_status_type"
         define_table(tablename,
                      Field("name",
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -4512,7 +4512,7 @@ class DVRLegalStatusModel(S3Model):
         tablename = "dvr_residence_permit_type"
         define_table(tablename,
                      Field("name",
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -4859,7 +4859,7 @@ class DVRCaseEventModel(S3Model):
                      Field("code", notnull=True, length=64, unique=True,
                            label = T("Code"),
                            requires = [IS_NOT_EMPTY(),
-                                       IS_LENGTH(64),
+                                       IS_LENGTH(64, minsize=1),
                                        IS_NOT_ONE_OF(db,
                                                      "dvr_case_event_type.code",
                                                      ),
@@ -4867,7 +4867,7 @@ class DVRCaseEventModel(S3Model):
                            ),
                      Field("name",
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      Field("is_inactive", "boolean",
                            default = False,
@@ -5499,7 +5499,7 @@ class DVRVulnerabilityModel(S3Model):
         define_table(tablename,
                      Field("name",
                            label = T("Type of Vulnerability"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      # This form of hierarchy may not work on all Databases:
                      Field("parent", "reference dvr_vulnerability_type",
@@ -5681,7 +5681,7 @@ class DVRServiceContactModel(S3Model):
         define_table(tablename,
                      Field("name",
                            label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
+                           requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -7562,7 +7562,9 @@ class DVRRegisterCaseEvent(S3Method):
         # Standard form fields and data
         formfields = [Field("label",
                             label = T("ID"),
-                            requires = IS_NOT_EMPTY(error_message=T("Enter or scan an ID")),
+                            requires = [IS_NOT_EMPTY(error_message=T("Enter or scan an ID")),
+                                        IS_LENGTH(512, minsize=1),
+                                        ],
                             ),
                       Field("person",
                             label = "",
