@@ -136,8 +136,8 @@ class S3MainMenu(default.S3MainMenu):
 
         menu_about = MA(c="default")(
             MA("Help", f="help"),
-            MA("Contact", f="contact"),
-            MA("Version", f="about", restrict = ADMIN),
+            MA("Contact Us", f="contact"),
+            #MA("Version", f="about", restrict = ADMIN),
         )
         return menu_about
 
