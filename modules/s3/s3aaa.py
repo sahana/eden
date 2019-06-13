@@ -341,6 +341,7 @@ Thank you"""
                      Field("image", "upload",
                            length = current.MAX_FILENAME_LENGTH,
                            ),
+                     Field("consent"),
                      S3MetaFields.uuid(),
                      S3MetaFields.created_on(),
                      S3MetaFields.modified_on(),
@@ -2319,6 +2320,11 @@ $.filterOptionsS3({
         if mobile:
             record["mobile"] = mobile
 
+        # Store Consent Question Response
+        consent = form_vars.consent
+        if consent:
+            record["consent"] = consent
+
         # Insert the profile picture
         image = form_vars.image
         if image != None and  hasattr(image, "file"):
@@ -2562,6 +2568,10 @@ $.filterOptionsS3({
                              )
 
         self.s3_link_user(user)
+
+        # Track consent
+        if deployment_settings.get_auth_consent_tracking():
+            s3db.auth_Consent.register_consent(user_id)
 
         if current.response.s3.bulk is True:
             # Non-interactive imports should stop here

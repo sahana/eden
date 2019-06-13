@@ -807,6 +807,43 @@ class auth_Consent(object):
 
     # -------------------------------------------------------------------------
     @classmethod
+    def register_consent(cls, user_id):
+        """
+            Track consent responses given during user self-registration
+
+            @param user_id: the auth_user ID
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        ltable = s3db.pr_person_user
+        ptable = s3db.pr_person
+
+        # Look up the person ID
+        join = ptable.on(ptable.pe_id == ltable.pe_id)
+        person = db(ltable.user_id == user_id).select(ptable.id,
+                                                      join = join,
+                                                      limitby = (0, 1),
+                                                      ).first()
+        if person:
+            person_id = person.id
+
+            # Look up the consent response from temp user record
+            ttable = s3db.auth_user_temp
+            row = db(ttable.user_id == user_id).select(ttable.id,
+                                                       ttable.consent,
+                                                       limitby = (0, 1),
+                                                       ).first()
+            if row and row.consent:
+                # Track consent
+                cls.track(person_id, row.consent)
+
+                # Reset consent response in temp user record
+                row.update_record(consent=None)
+
+    # -------------------------------------------------------------------------
+    @classmethod
     def verify(cls, record_id):
         """
             Verify a consent record (checks the hash, not expiry)

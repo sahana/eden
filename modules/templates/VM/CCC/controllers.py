@@ -115,7 +115,7 @@ class register(S3CustomController):
                                                ),
                             ),
                       # Consent Question
-                      Field("consent_question",
+                      Field("consent",
                             label = T("Consent"),
                             widget = consent.widget,
                             ),
