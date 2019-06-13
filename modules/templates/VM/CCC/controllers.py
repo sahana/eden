@@ -76,6 +76,13 @@ class register(S3CustomController):
 
     def __call__(self):
 
+        auth = current.auth
+        auth_settings = auth.settings
+
+        # Redirect if already logged-in
+        if auth.is_logged_in():
+            redirect(auth_settings.logged_url)
+
         T = current.T
         db = current.db
         s3db = current.s3db
@@ -85,25 +92,91 @@ class register(S3CustomController):
         session = current.session
         settings = current.deployment_settings
 
-        auth = current.auth
-        auth_settings = auth.settings
         auth_messages = auth.messages
-
-        # Redirect if already logged-in
-        if auth.is_logged_in():
-            redirect(auth_settings.logged_url)
 
         utable = auth_settings.table_user
         passfield = auth_settings.password_field
+
+        # Check Type of Registration
+        individual = group = existing = False
+
+        get_vars_get = current.request.get_vars.get
+        if get_vars_get("individual"):
+            # Individual Volunteer
+            individual = True
+            title = T("Register as a Volunteer")
+            header = ""
+            f = utable.organisation_id
+            f.readable = f.writable = False
+
+        elif get_vars_get("group"):
+            # Volunteer Group
+            group = True
+            title = T("Register as a Volunteer Group")
+            header = ""
+            f = utable.organisation_id
+            f.readable = f.writable = False
+
+        elif get_vars_get("existing"):
+            # Volunteer for Existing Organisation
+            existing = True
+            title = T("Register as a Volunteer for an existing Organisation")
+            header = ""
+            # Cannot create a new Org here
+            f = utable.organisation_id
+            f.comment = None
+            # @ToDo: Filter dropdown to just those who are accepting volunteers
+
+        else:
+            # Organisation or Agency
+            title = T("Register as an Organisation or Agency")
+            header = P("This is for known CEP/Flood Action Group etc based within Cumbria. Please use ",
+                       A("Volunteer Group", _href=URL(args="register", vars={"group": 1})),
+                       " if you do not fall into these",
+                       )
+            # @ToDo: Filter dropdown to just those who are accepting volunteers
+            #f = utable.organisation_id
+            #f.comment = None
+            # @ToDo: Filter out all existing Orgs, ut allow creation of new one
+            #f.requires = IS_ONE_OF()
+
 
         # Instantiate Consent Tracker
         # TODO: limit to relevant data processing types
         consent = s3db.auth_Consent()
 
         # Form Fields
-        required_fields = []
+
+        #mobile_label = settings.get_ui_label_mobile_phone()
+
+        gtable = s3db.gis_location
+        districts = db((gtable.level == "L2") & (gtable.L1 == "Cumbria")).select(gtable.id,
+                                                                                 gtable.name)
+        districts = {d.id:d.name for d in districts}
+
         formfields = [utable.first_name,
                       utable.last_name,
+                      utable.organisation_id,
+                      Field("addr_L2",
+                            label = T("Where Based (District)"),
+                            requires = IS_IN_SET(districts),
+                            ),
+                      Field("addr_street",
+                            label = T("Street Address"),
+                            ),
+                      Field("addr_postcode",
+                            label = T("Postcode"),
+                            ),
+                      Field("mobile",
+                            label = T("Contact Number (Preferred)"),
+                            comment = DIV(_class = "tooltip",
+                                          _title = "%s|%s" % (T("Contact Number (Preferred)"),
+                                                              T("Ideally a Mobile Number, so that we can send you Text Messages.")),
+                                          ),
+                            ),
+                      Field("home_phone",
+                            label = T("Contact Number (Secondary)"),
+                            ),
                       utable.email,
                       utable[passfield],
                       # Password Verification Field
@@ -121,20 +194,13 @@ class register(S3CustomController):
                             ),
                       ]
 
-        # Mobile Phone (optional)
-        if settings.get_auth_registration_requests_mobile_phone():
-            label = settings.get_ui_label_mobile_phone()
-            formfields.insert(-1, Field("mobile",
-                                        label = label,
-                                        comment = DIV(_class = "tooltip",
-                                                      _title = "%s|%s" % (label, auth_messages.help_mobile_phone),
-                                                      ),
-
-                                        ))
-            if settings.get_auth_registration_mobile_phone_mandatory():
-                required_fields.append("mobile")
-
         # Generate labels (and mark required fields in the process)
+        required_fields = ["first_name",
+                           "last_name",
+                           "addr_street",
+                           "addr_postcode",
+                           "mobile",
+                           ]
         labels = s3_mark_required(formfields, mark_required=required_fields)[0]
 
         # Form buttons
@@ -168,8 +234,8 @@ class register(S3CustomController):
         auth.s3_register_validation()
 
         # Captcha, if configured
-        if auth_settings.captcha != None:
-            form[0].insert(-1, DIV("", auth_settings.captcha, ""))
+        #if auth_settings.captcha != None:
+        #    form[0].insert(-1, DIV("", auth_settings.captcha, ""))
 
         # Set default registration key, so new users are prevented
         # from logging in until approved
@@ -248,7 +314,7 @@ class register(S3CustomController):
                     auth.login_user(user)
 
             # Set a Cookie to present user with login box by default
-            auth.set_cookie()
+            #auth.set_cookie()
 
             # Log action
             log = auth_messages.register_log
@@ -273,7 +339,8 @@ class register(S3CustomController):
         # Custom View
         self._view(THEME, "register.html")
 
-        return {"title": T("Register"),
+        return {"title": title,
+                "header": header,
                 "form": form,
                 }
 

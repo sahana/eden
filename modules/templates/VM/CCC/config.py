@@ -25,12 +25,13 @@ def config(settings):
 
     # PrePopulate data
     settings.base.prepopulate += ("VM/CCC",)
-    #settings.base.prepopulate_demo += ("VM/CCC/Demo",)
+    settings.base.prepopulate_demo += ("VM/CCC/Demo",)
 
     # Authentication settings
     # Do new users need to verify their email address?
     settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
+    # - varies by path (see customise_auth_user_controller)
     #settings.auth.registration_requires_approval = True
     settings.auth.registration_requests_organisation = True
 
@@ -125,45 +126,11 @@ def config(settings):
     def customise_auth_user_controller(**attr):
 
         if current.request.args(0) == "register":
-            get_vars_get = current.request.get_vars.get
-            if get_vars_get("individual"):
-                # Individual Volunteer
-                current.response.title = T("Register as a Volunteer")
-                # Too late
-                #settings.auth.registration_requests_organisation = False
-                f = current.db.auth_user.organisation_id
-                f.readable = f.writable = False
-
-            elif get_vars_get("group"):
-                # Volunteer Group
-                current.response.title = T("Register as a Volunteer Group")
-                # Too late
-                #settings.auth.registration_requests_organisation = False
-                f = current.db.auth_user.organisation_id
-                f.readable = f.writable = False
-
-            elif get_vars_get("existing"):
-                # Volunteer for Existing Organisation
-                current.response.title = T("Register as a Volunteer for an existing Organisation")
-                # Cannot create a new Org here
-                f = current.db.auth_user.organisation_id
-                f.comment = None
-                # @ToDo: Filter dropdown to just those who are accepting volunteers
-
-            else:
-                # Organisation or Agency
-                from gluon import A, P, URL
-                response = current.response
-                response.title = T("Register as an Organisation or Agency")
-                response.s3_user_header = P("This is for known CEP/Flood Action Group etc based within Cumbria. Please use ",
-                                            A("Volunteer Group", _href=URL(args="register", vars={"group": 1})),
-                                            " if you do not fall into these",
-                                            )
-                # @ToDo: Filter dropdown to just those who are accepting volunteers
-                f = current.db.auth_user.organisation_id
-                #f.comment = None
-                # @ToDo: Filter out all existing Orgs, ut allow creation of new one
-                #f.requires = IS_ONE_OF()
+            # Not easy to tweak the URL in the login form's buttons
+            from gluon import redirect, URL
+            redirect(URL(c="default", f="index",
+                         args="register",
+                         vars=current.request.get_vars))
 
         return attr
 

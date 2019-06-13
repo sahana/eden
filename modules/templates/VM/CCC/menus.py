@@ -36,11 +36,32 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        return [MM("Volunteer Your Time", c="vol", f="index",
+        menu = [MM("Volunteer Your Time", c="vol", f="index",
                    ),
                 MM("Donate Items", c="req", f="index",
                    ),
                 ]
+
+        auth = current.auth
+        if auth.is_logged_in():
+            menu.append(MM("General Information and Advice", c="cms", f="post"))
+
+        if auth.s3_has_role("ADMIN"):
+            menu += [MM("Events", c="req", f="req",
+                        ),
+                     MM("All Documents", c="cms", f="post",
+                        ),
+                     ]
+        elif auth.s3_has_role("VOLUNTEER"):
+            menu += [MM("Events", c="req", f="req",
+                        ),
+                     MM("Organisation Documents", c="cms", f="post",
+                        ),
+                     MM("Contact Organisation Admins", c="cms", f="post",
+                        ),
+                     ]
+
+        return menu
 
     # -------------------------------------------------------------------------
     @classmethod
