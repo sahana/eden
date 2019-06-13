@@ -79,9 +79,7 @@ class S3MainMenu(default.S3MainMenu):
 
         auth = current.auth
         #s3 = current.response.s3
-        settings = current.deployment_settings
-
-        ADMIN = current.auth.get_system_roles().ADMIN
+        #settings = current.deployment_settings
 
         if not auth.is_logged_in():
             request = current.request
@@ -91,7 +89,7 @@ class S3MainMenu(default.S3MainMenu):
                "_next" in request.get_vars:
                 login_next = request.get_vars["_next"]
 
-            self_registration = settings.get_security_self_registration()
+            #self_registration = settings.get_security_self_registration()
             menu_personal = MP()(
                         #MP("Register", c="default", f="user",
                         #   m = "register",
@@ -108,6 +106,7 @@ class S3MainMenu(default.S3MainMenu):
             #                     ),
             #                  )
         else:
+            ADMIN = current.auth.get_system_roles().ADMIN
             s3_has_role = auth.s3_has_role
             is_org_admin = lambda i: not s3_has_role(ADMIN) and \
                                      s3_has_role("ORG_ADMIN")
@@ -132,7 +131,7 @@ class S3MainMenu(default.S3MainMenu):
     @classmethod
     def menu_about(cls):
 
-        ADMIN = current.auth.get_system_roles().ADMIN
+        #ADMIN = current.auth.get_system_roles().ADMIN
 
         menu_about = MA(c="default")(
             MA("Help", f="help"),

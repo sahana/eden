@@ -71,7 +71,9 @@
     {{else:}}
     <div class='large-7 medium-12 columns personal-menu-area'>
     {{pass}}
-     <div class="username">{{if auth.is_logged_in():}}{{=auth.user.email}}{{else:}}{{=T("anonymous user")}}{{pass}}<i class='fa fa-user'></i></div>
+     {{if auth.is_logged_in():}}
+     <div class="username">{{=auth.user.email}}<i class='fa fa-user'></i></div>
+     {{else:}}{{#=T("anonymous user")}}{{pass}}
      {{=current.menu.personal}}
     </div>
    </div>
