@@ -35,9 +35,15 @@ class index(S3CustomController):
                     item = DIV(XML(item.body),
                                BR(),
                                A(current.T("Edit"),
-                                 _href=URL(c="cms", f="post",
-                                           args=[item.id, "update"]),
-                                 _class="action-btn"))
+                                 _href = URL(c="cms", f="post",
+                                             args = [item.id, "update"],
+                                             vars = {"module": module,
+                                                     "resource": resource,
+                                                     },
+                                             ),
+                                 ),
+                                 _class="action-btn",
+                               )
                 else:
                     item = DIV(XML(item.body))
             elif ADMIN:
@@ -46,11 +52,13 @@ class index(S3CustomController):
                 else:
                     _class = "action-btn"
                 item = A(current.T("Edit"),
-                         _href=URL(c="cms", f="post", args="create",
-                                   vars={"module": module,
-                                         "resource": resource
-                                         }),
-                         _class="%s cms-edit" % _class)
+                         _href = URL(c="cms", f="post", args="create",
+                                     vars = {"module": module,
+                                             "resource": resource,
+                                             },
+                                     ),
+                         _class="%s cms-edit" % _class,
+                         )
             else:
                 item = ""
         else:
