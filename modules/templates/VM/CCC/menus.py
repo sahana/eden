@@ -93,10 +93,10 @@ class S3MainMenu(default.S3MainMenu):
 
             self_registration = settings.get_security_self_registration()
             menu_personal = MP()(
-                        MP("Register", c="default", f="user",
-                           m = "register",
-                           check = self_registration,
-                           ),
+                        #MP("Register", c="default", f="user",
+                        #   m = "register",
+                        #   check = self_registration,
+                        #   ),
                         MP("Login", c="default", f="user",
                            m = "login",
                            vars = {"_next": login_next},
