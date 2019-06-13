@@ -117,7 +117,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_auth_user_controller(**attr):
 
-        if arg == "register":
+        if current.request.args(0) == "register":
             get_vars_get = current.request.get_vars.get
             if get_vars_get("existing"):
                 # Volunteer for Existing Org
