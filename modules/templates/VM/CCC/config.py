@@ -146,7 +146,9 @@ def config(settings):
                 # Volunteer for Existing Organisation
                 current.response.title = T("Register as a Volunteer for an existing Organisation")
                 # Cannot create a new Org here
-                current.db.auth_user.organisation_id.comment = None
+                f = current.db.auth_user.organisation_id
+                f.comment = None
+                # @ToDo: Filter dropdown to just those who are accepting volunteers
 
             else:
                 # Organisation or Agency
@@ -157,6 +159,11 @@ def config(settings):
                                             A("Volunteer Group", _href=URL(args="register", vars={"group": 1})),
                                             " if you do not fall into these",
                                             )
+                # @ToDo: Filter dropdown to just those who are accepting volunteers
+                f = current.db.auth_user.organisation_id
+                #f.comment = None
+                # @ToDo: Filter out all existing Orgs, ut allow creation of new one
+                #f.requires = IS_ONE_OF()
 
         return attr
 
