@@ -521,13 +521,31 @@ def education():
         return True
     s3.prep = prep
 
-    return s3_rest_controller("pr", "education")
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def education_level():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller("pr", "education_level")
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def language():
+    """ RESTful CRUD controller """
+
+    def prep(r):
+        if r.method in ("create", "create.popup", "update", "update.popup"):
+            # Coming from Profile page?
+            person_id = get_vars.get("~.person_id", None)
+            if person_id:
+                field = s3db.pr_language.person_id
+                field.default = person_id
+                field.readable = field.writable = False
+
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def occupation_type():
@@ -609,7 +627,7 @@ def tooltip():
 
     if "formfield" in request.vars:
         response.view = "pr/ajaxtips/%s.html" % request.vars.formfield
-    return dict()
+    return {}
 
 # =============================================================================
 def filter():

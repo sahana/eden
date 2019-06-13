@@ -44,6 +44,7 @@ __all__ = (# PR Base Entities
            "PRDescriptionModel",
            "PREducationModel",
            "PRIdentityModel",
+           "PRLanguageModel",
            "PROccupationModel",
            "PRPersonDetailsModel",
            "PRPersonTagModel",
@@ -5381,6 +5382,73 @@ class PRIdentityModel(S3Model):
                                       #"ia_name"
                                       ],
                        )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class PRLanguageModel(S3Model):
+    """
+        Languages for Persons
+        - alternate model to Skills for alternate UX
+        - used by IFRC RDRP AP
+    """
+
+    names = ("pr_language",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Language
+        #
+        fluency_opts = {1:  T("Beginner"),
+                        2:  T("Intermediate"),
+                        3:  T("Advanced"),
+                        4:  T("Native language"),
+                        }
+
+        tablename = "pr_language"
+        self.define_table(tablename,
+                          self.pr_person_id(label = T("Person"),
+                                            ondelete = "CASCADE",
+                                            ),
+                          s3_language(),
+                          Field("writing", "integer",
+                                #default = None,
+                                label = T("Writing"),
+                                represent = S3Represent(options=fluency_opts),
+                                requires = IS_IN_SET(fluency_opts),
+                                ),
+                          Field("speaking", "integer",
+                                #default = None,
+                                label = T("Speaking"),
+                                represent = S3Represent(options=fluency_opts),
+                                requires = IS_IN_SET(fluency_opts),
+                                ),
+                          Field("understanding", "integer",
+                                #default = None,
+                                label = T("Understanding"),
+                                represent = S3Represent(options=fluency_opts),
+                                requires = IS_IN_SET(fluency_opts),
+                                ),
+                          #s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD Strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Language"),
+            title_display = T("Language Details"),
+            title_list = T("Languages"),
+            title_update = T("Edit Language"),
+            label_list_button = T("List Languages"),
+            msg_record_created = T("Language added"),
+            msg_record_modified = T("Language updated"),
+            msg_record_deleted = T("Language deleted"),
+            msg_list_empty = T("No Languages currently registered for this person"))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

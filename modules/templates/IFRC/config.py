@@ -4922,8 +4922,6 @@ def config(settings):
                                                       (T("Total experience"), "comments"),
                                                       (T("Designation(s)"), "job_title"),
                                                       ],
-                                      # Default renderer:
-                                      #"list_layout": hrm_experience_list_layout,
                                       "create_controller": "deploy",
                                       # Can't do this as this is the HR perspective, not Person perspective
                                       #"create_function": "person",
@@ -4947,8 +4945,6 @@ def config(settings):
                                                              (T("Country of Deployment"), "location_id"),
                                                              (T("Skills Utilized"), "responsibilities"),
                                                              ],
-                                             # Default renderer:
-                                             #"list_layout": hrm_experience_list_layout,
                                              "create_controller": "deploy",
                                              # Can't do this as this is the HR perspective, not Person perspective
                                              #"create_function": "person",
@@ -4956,6 +4952,34 @@ def config(settings):
                                              "create_var": "rdrt_ap_deployment",
                                              "pagesize": 2,
                                              }
+
+                        language_widget = {"label": "Languages",
+                                           "label_create": "Add Language",
+                                           "type": "datatable",
+                                           "dt_searching": False,
+                                           "tablename": "pr_language",
+                                           "filter": (FS("person_id") == person_id),
+                                           "icon": "comment-alt",
+                                           #"create_controller": "deploy",
+                                           # Can't do this as this is the HR perspective, not Person perspective
+                                           #"create_function": "person",
+                                           #"create_component": "language",
+                                           }
+
+                        skills_widget = {"label": "Areas of Expertise",
+                                         "label_create": "Add Skill",
+                                         "type": "datatable",
+                                         "tablename": "hrm_competency",
+                                         "filter": FS("person_id") == person_id,
+                                         "icon": "wrench",
+                                         "list_fields": ["skill_id",
+                                                         ],
+                                         "create_controller": "deploy",
+                                         # Can't do this as this is the HR perspective, not Person perspective
+                                         #"create_function": "person",
+                                         #"create_component": "competency",
+                                         "create_var": "rdrt_ap",
+                                         }
 
                         docs_widget = {"label": "Documents",
                                        "label_create": "Add Document",
@@ -4967,6 +4991,18 @@ def config(settings):
                                        #"list_layout": s3db.doc_document_list_layout,
                                        }
 
+                        from gluon import URL
+                        availability_widget = {"label": "Unavailability",
+                                               "type": "organizer",
+                                               "tablename": "deploy_unavailability",
+                                               "master": "pr_person/%s" % person_id,
+                                               "component": "unavailability",
+                                               "icon": "calendar",
+                                               "url": URL(c="deploy", f="person",
+                                                          args = [person_id, "unavailability"],
+                                                          ),
+                                               }
+
                         profile_widgets = [details_widget,
                                            contacts_widget,
                                            emergency_widget,
@@ -4974,7 +5010,10 @@ def config(settings):
                                            education_widget,
                                            job_widget,
                                            experience_widget,
+                                           language_widget,
+                                           skills_widget,
                                            docs_widget,
+                                           availability_widget,
                                            ]
                     else:
                         profile_widgets = []
@@ -5454,6 +5493,31 @@ def config(settings):
                        )
 
     settings.customise_hrm_appraisal_resource = customise_hrm_appraisal_resource
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_competency_resource(r, tablename):
+
+        if r.get_vars.get("rdrt_ap"):
+            # Simplify for RDRT AP
+            from s3 import IS_ONE_OF, S3Represent, S3SQLCustomForm
+            db = current.db
+            s3db = current.s3db
+
+            filter_opts = 
+
+            s3db.hrm_competency.skill_id.requires = IS_ONE_OF(db, "hrm_skill.id",
+                                                              S3Represent(lookup = "hrm_skill",
+                                                                          translate = True),
+                                                              filterby = "skill_type_id",
+                                                              filter_opts = filter_opts,
+                                                              sort = True,
+                                                              )
+            s3db.configure("hrm_competency",
+                           crud_form = S3SQLCustomForm("skill_id",
+                                                       ),
+                           )
+
+    settings.customise_hrm_competency_resource = customise_hrm_competency_resource
 
     # -------------------------------------------------------------------------
     def hrm_training_onaccept(form):
@@ -6779,6 +6843,120 @@ def config(settings):
         return attr
 
     settings.customise_pr_group_controller = customise_pr_group_controller
+
+    # -------------------------------------------------------------------------
+    def customise_pr_language_controller(**attr):
+
+        # Languages for RDRT AP
+        settings.L10n.languages = OrderedDict([
+            ("af", "Afrikaans"),
+            ("sq", "Albanian"),
+            ("am", "Amharic"),
+            ("ar", "Arabic"),
+            ("hy", "Armenian"),
+            ("az", "Azerbaijani"),
+            ("eu", "Basque"),
+            ("be", "Belarusian"),
+            ("bn", "Bengali"),
+            ("bs", "Bosnian"),
+            ("bg", "Bulgarian"),
+            ("ca", "Catalan"),
+            ("ceb", "Cebuano"),
+            ("ny", "Chichewa"),
+            ("zh", "Chinese"),
+            ("co", "Corsican"),
+            ("hr", "Croatian"),
+            ("cs", "Czech"),
+            ("da", "Danish"),
+            ("nl", "Dutch"),
+            ("en", "English"),
+            ("eo", "Esperanto"),
+            ("et", "Estonian"),
+            ("fil", "Filipino"),
+            ("fi", "Finnish"),
+            ("fr", "French"),
+            ("gl", "Galician"),
+            ("ka", "Georgian"),
+            ("de", "German"),
+            ("el", "Greek"), # "Greek, Modern (1453-)"
+            ("gu", "Gujarati"),
+            ("ht", "Haitian Creole"),
+            ("ha", "Hausa"),
+            ("haw", "Hawaiian"),
+            ("he", "Hebrew"),
+            ("hi", "Hindi"),
+            ("hmn", "Hmong"),
+            ("hu", "Hungarian"),
+            ("is", "Icelandic"),
+            ("ig", "Igbo"),
+            ("id", "Indonesian"),
+            ("ga", "Irish"),
+            ("it", "Italian"),
+            ("ja", "Japanese"),
+            ("jv", "Javanese"),
+            ("kn", "Kannada"),
+            ("kk", "Kazakh"),
+            ("km", "Khmer"),
+            ("ko", "Korean"),
+            ("kos", "Kosraean"),
+            ("ku", "Kurdish (Kurmanji)"),
+            ("ky", "Kyrgyz"),
+            ("lo", "Lao"),
+            ("la", "Latin"),
+            ("lv", "Latvian"),
+            ("lt", "Lithuanian"),
+            ("lb", "Luxembourgish"),
+            ("mk", "Macedonian"),
+            ("mg", "Malagasy"), # Madagascar
+            ("ms", "Malay"),
+            ("ml", "Malayalam"),
+            ("mt", "Maltese"),
+            ("mi", "Maori"),
+            ("mr", "Marathi"),
+            ("mn", "Mongolian"),
+            ("my", "Myanmar (Burmese)"),
+            ("ne", "Nepali"),
+            ("nn", "Norwegian"),
+            ("ps", "Pashto"),
+            ("fa", "Persian"),
+            ("pl", "Polish"),
+            ("pt", "Portuguese"),
+            ("pa", "Punjabi"),
+            ("ro", "Romanian"),
+            ("ru", "Russian"),
+            ("sm", "Samoan"),
+            ("sco", "Scots Gaelic"),
+            ("sr", "Serbian"),
+            ("st", "Sesotho"),
+            ("sn", "Shona"),
+            ("sd", "Sindhi"),
+            ("si", "Sinhala"),
+            ("sk", "Slovak"),
+            ("sl", "Slovenian"),
+            ("so", "Somali"),
+            ("es", "Spanish"),
+            ("su", "Sundanese"),
+            ("sw", "Swahili"),
+            ("sv", "Swedish"),
+            ("tg", "Tajik"),
+            ("ta", "Tamil"),
+            ("te", "Telugu"),
+            ("th", "Thai"),
+            ("tr", "Turkish"),
+            ("uk", "Ukrainian"),
+            ("ur", "Urdu"),
+            ("uz", "Uzbek"),
+            ("vi", "Vietnamese"),
+            ("cy", "Welsh"),
+            ("xh", "Xhosa"),
+            ("yi", "Yiddish"),
+            ("yo", "Yoruba"),
+            ("zu", "Zulu"),
+            ])
+
+        return attr
+
+    settings.customise_pr_language_controller = customise_pr_language_controller
 
     # =========================================================================
     def vol_programme_active(person_id):

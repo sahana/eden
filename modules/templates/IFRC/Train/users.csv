@@ -102,4 +102,4 @@ Kaikoura,Outreach Worker,kaikoura@example.com,eden,"PO_AGENCIES/org_organisation
 RDRT,Admin,rdrtadmin@example.com,eden,"RDRT_ADMIN/0",Africa Zone,,,
 RDRT,Regional,rdrtregional@example.com,eden,"RDRT_REGIONAL/0",Africa Zone,,,
 AP,RDRT Admin,aprdrtadmin@example.com,eden,"RDRT_ADMIN/0,AP_RDRT_ADMIN/0,message_editor",Asia-Pacific Region,,,
-Lillian,Aquino,lillian.acquino@redcross.org.ph,eden,RDRT_MEMBER,Philippine Red Cross,,,
+Lillian,Aquino,lillian.acquino@redcross.org.ph,eden,RDRT_MEMBER/0,Philippine Red Cross,,,

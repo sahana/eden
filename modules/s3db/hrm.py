@@ -2516,8 +2516,8 @@ class S3HRSkillModel(S3Model):
                                     requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "hrm_course.id",
                                                           course_represent,
-                                                          filterby="organisation_id",
-                                                          filter_opts=filter_opts,
+                                                          filterby = "organisation_id",
+                                                          filter_opts = filter_opts,
                                                           )),
                                     sortby = "name",
                                     comment = course_help,

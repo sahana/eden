@@ -2824,7 +2824,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                 ("so", "Somali"),
                 #("son", "Songhai languages"),
                 #("sot", "Sotho, Southern"),
-                ("st", "Sotho, Southern"),
+                ("st", "Sotho, Southern"), # Sesotho
                 #("spa", "Spanish; Castilian"),
                 ("es", "Spanish; Castilian"),
                 #("srd", "Sardinian"),
