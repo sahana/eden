@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
     Default Controllers
@@ -394,7 +395,6 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
               "registered": registered,
               "r": None, # Required for dataTable to work
               "datatable_ajax_source": datatable_ajax_source,
-
               }
 
     if get_vars.tour:
@@ -464,6 +464,7 @@ def organisation():
     else:
         from gluon.http import HTTP
         raise HTTP(415, ERROR.BAD_FORMAT)
+
     return items
 
 # -----------------------------------------------------------------------------
@@ -501,10 +502,11 @@ def message():
                  % {"system_name": settings.get_system_name(),
                     "email": request.vars.email}
     image = "email_icon.png"
-    return dict(title = title,
-                message = message,
-                image_src = "/%s/static/img/%s" % (appname, image)
-                )
+
+    return {"title": title,
+            "message": message,
+            "image_src": "/%s/static/img/%s" % (appname, image),
+            }
 
 # -----------------------------------------------------------------------------
 def rapid():
@@ -518,7 +520,7 @@ def rapid():
     session.s3.rapid_data_entry = val
 
     response.view = "xml.html"
-    return dict(item=str(session.s3.rapid_data_entry))
+    return {"item": str(session.s3.rapid_data_entry)}
 
 # -----------------------------------------------------------------------------
 def user():
@@ -544,6 +546,11 @@ def user():
     auth_settings.profile_onaccept = auth.s3_user_profile_onaccept
     auth_settings.register_onvalidation = register_validation
 
+    # Check for template-specific customisations
+    customise = settings.customise_auth_user_controller
+    if customise:
+        customise(arg=arg)
+
     self_registration = settings.get_security_self_registration()
     login_form = register_form = None
 
@@ -559,10 +566,7 @@ def user():
         auth_settings.actions_disabled = ("retrieve_password",
                                           )
 
-    # Check for template-specific customisations
-    customise = settings.customise_auth_user_controller
-    if customise:
-        customise(arg=arg)
+    header = response.s3_user_header or ""
 
     if arg == "login":
         title = response.title = T("Login")
@@ -573,11 +577,16 @@ def user():
         login_form = form
 
     elif arg == "register":
-        title = response.title = T("Register")
         # @ToDo: move this code to /modules/s3/s3aaa.py:def register()?
         if not self_registration:
             session.error = T("Registration not permitted")
             redirect(URL(f="index"))
+        if response.title:
+            # Customised
+            title = response.title
+        else:
+            # Default
+            title = response.title = T("Register")
         form = register_form = auth.register()
 
     elif arg == "change_password":
@@ -651,6 +660,7 @@ def user():
                     break
 
     return {"title": title,
+            "header": header,
             "form": form,
             "login_form": login_form,
             "register_form": register_form,
@@ -1332,7 +1342,7 @@ def help():
 
     response.title = T("Help")
 
-    return dict(item=item)
+    return {"item": item}
 
 # -----------------------------------------------------------------------------
 def privacy():
@@ -1341,7 +1351,7 @@ def privacy():
     _custom_view("privacy")
 
     response.title = T("Privacy")
-    return dict()
+    return {}
 
 # -----------------------------------------------------------------------------
 def tos():
@@ -1350,7 +1360,7 @@ def tos():
     _custom_view("tos")
 
     response.title = T("Terms of Service")
-    return dict()
+    return {}
 
 # -----------------------------------------------------------------------------
 def video():
@@ -1359,7 +1369,7 @@ def video():
     _custom_view("video")
 
     response.title = T("Video Tutorials")
-    return dict()
+    return {}
 
 # -----------------------------------------------------------------------------
 def contact():
@@ -1433,14 +1443,14 @@ def contact():
                     raise HTTP("404", "Unable to open Custom View: %s" % view)
 
                 response.title = T("Contact us")
-                return dict()
+                return {}
 
     if settings.has_module("cms"):
         # Use CMS
         return s3db.cms_index("default", "contact", page_name=T("Contact Us"))
 
     # Just use default HTML View
-    return dict()
+    return {}
 
 # -----------------------------------------------------------------------------
 def load_all_models():

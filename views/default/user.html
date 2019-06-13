@@ -1,6 +1,7 @@
 {{extend "layout.html"}}
 <div id='home'>
 {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+{{try:}}{{=XML(header)}}{{except:}}{{pass}}
 {{if request.args(0) == "login":}}
  {{include "auth/_login.html"}}
 {{elif request.args(0) == "register":}}

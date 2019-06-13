@@ -119,20 +119,29 @@ def config(settings):
 
         if current.request.args(0) == "register":
             get_vars_get = current.request.get_vars.get
-            if get_vars_get("existing"):
-                # Volunteer for Existing Org
-
-                pass
+            if get_vars_get("individual"):
+                # Individual Volunteer
+                current.response.title = T("Register as a Volunteer")
+                settings.registration_requests_organisation = False
 
             elif get_vars_get("group"):
                 # Volunteer Group
+                current.response.title = T("Register as a Volunteer Group")
+                settings.registration_requests_organisation = False
 
-                pass
+            elif get_vars_get("existing"):
+                # Volunteer for Existing Organisation
+                current.response.title = T("Register as a Volunteer for an existing Organisation")
 
             else:
-                # Individual Volunteer
-
-                pass
+                # Organisation or Agency
+                from gluon import A, P, URL
+                response = current.response
+                response.title = T("Register as an Organisation or Agency")
+                response.s3_user_header = P("This is for known CEP/Flood Action Group etc based within Cumbria. Please use ",
+                                            A("Volunteer Group", _href=URL(args="register", vars={"group": 1})),
+                                            " if you do not fall into these",
+                                            )
 
         return attr
 
