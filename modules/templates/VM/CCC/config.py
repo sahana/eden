@@ -25,7 +25,7 @@ def config(settings):
 
     # PrePopulate data
     settings.base.prepopulate += ("VM/CCC",)
-    settings.base.prepopulate_demo += ("VM/CCC/Demo",)
+    settings.base.prepopulate_demo = ("VM/CCC/Demo",)
 
     # Authentication settings
     # Do new users need to verify their email address?
