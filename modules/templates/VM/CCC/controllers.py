@@ -41,8 +41,8 @@ class index(S3CustomController):
                                                      "resource": resource,
                                                      },
                                              ),
-                                 ),
                                  _class="action-btn",
+                                 ),
                                )
                 else:
                     item = DIV(XML(item.body))
