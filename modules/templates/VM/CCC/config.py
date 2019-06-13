@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#from collections import OrderedDict
+from collections import OrderedDict
 
 from gluon import current
 from gluon.storage import Storage
@@ -34,6 +34,13 @@ def config(settings):
     #settings.auth.registration_requires_approval = True
     settings.auth.registration_requests_organisation = True
 
+    # -------------------------------------------------------------------------
+    # L10n (Localization) settings
+    settings.L10n.languages = OrderedDict([
+        ("en-gb", "English"),
+    ])
+    # Default Language
+    settings.L10n.default_language = "en-gb"
     # Uncomment to Hide the language toolbar
     settings.L10n.display_toolbar = False
 
@@ -122,16 +129,24 @@ def config(settings):
             if get_vars_get("individual"):
                 # Individual Volunteer
                 current.response.title = T("Register as a Volunteer")
-                settings.registration_requests_organisation = False
+                # Too late
+                #settings.auth.registration_requests_organisation = False
+                f = current.db.auth_user.organisation_id
+                f.readable = f.writable = False
 
             elif get_vars_get("group"):
                 # Volunteer Group
                 current.response.title = T("Register as a Volunteer Group")
-                settings.registration_requests_organisation = False
+                # Too late
+                #settings.auth.registration_requests_organisation = False
+                f = current.db.auth_user.organisation_id
+                f.readable = f.writable = False
 
             elif get_vars_get("existing"):
                 # Volunteer for Existing Organisation
                 current.response.title = T("Register as a Volunteer for an existing Organisation")
+                # Cannot create a new Org here
+                current.db.auth_user.organisation_id.comment = None
 
             else:
                 # Organisation or Agency

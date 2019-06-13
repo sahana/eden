@@ -16,7 +16,11 @@ def config(settings):
     # Uncomment to restrict to specific country/countries
     settings.gis.countries.append("GB")
 
+    # -------------------------------------------------------------------------
     # L10n (Localization) settings
+    settings.L10n.languages["en-gb"] = "English (United Kingdom)"
+    # Default Language (put this in custom template if-required)
+    #settings.L10n.default_language = "en-gb"
     # Default timezone for users
     settings.L10n.timezone = "Europe/London"
     # Default Country Code for telephone numbers
