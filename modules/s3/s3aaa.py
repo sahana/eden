@@ -1951,7 +1951,7 @@ $.filterOptionsS3({
 
             Lookups Pseudo-reference Integer fields from Names
             e.g.:
-            auth_membership.pe_id from organisation.name=<Org Name>
+            auth_membership.pe_id from org_organisation.name=<Org Name>
         """
 
         db = current.db
@@ -2105,9 +2105,9 @@ $.filterOptionsS3({
                 # Replace string with pe_id
                 element.text = new_value
                 # Store in case we get called again with same value
-                looked_up[pe_tablename][pe_value] = dict(pe_id=new_value,
-                                                         id=str(record_id),
-                                                         )
+                looked_up[pe_tablename][pe_value] = {"pe_id": new_value,
+                                                     "id": str(record_id),
+                                                     }
 
         # No longer required since we can use references in the import CSV
         # Organisations
