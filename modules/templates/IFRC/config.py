@@ -82,6 +82,7 @@ def config(settings):
                          "hrm_job_title",
                          "hrm_course",
                          "hrm_programme",
+                         "hrm_skill",
                          "member_membership_type",
                          "vol_award",
                          ):
@@ -5499,19 +5500,26 @@ def config(settings):
 
         if r.get_vars.get("rdrt_ap"):
             # Simplify for RDRT AP
+
             from s3 import IS_ONE_OF, S3Represent, S3SQLCustomForm
+
             db = current.db
             s3db = current.s3db
 
-            filter_opts = 
+            sttable = s3db.hrm_skill_type
+            RDRT_AP = db(sttable.name == "RDRT_AP").select(sttable.id,
+                                                           limitby = (0,1)
+                                                           ).first().id
 
-            s3db.hrm_competency.skill_id.requires = IS_ONE_OF(db, "hrm_skill.id",
-                                                              S3Represent(lookup = "hrm_skill",
-                                                                          translate = True),
-                                                              filterby = "skill_type_id",
-                                                              filter_opts = filter_opts,
-                                                              sort = True,
-                                                              )
+            f = s3db.hrm_competency.skill_id
+            f.comment = None
+            f.requires = IS_ONE_OF(db, "hrm_skill.id",
+                                   S3Represent(lookup = "hrm_skill",
+                                               translate = True),
+                                   filterby = "skill_type_id",
+                                   filter_opts = (RDRT_AP,),
+                                   sort = True,
+                                   )
             s3db.configure("hrm_competency",
                            crud_form = S3SQLCustomForm("skill_id",
                                                        ),
