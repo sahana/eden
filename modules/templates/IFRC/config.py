@@ -3185,7 +3185,8 @@ def config(settings):
 
 
         # CRUD Strings
-        current.response.s3.crud_strings["deploy_assignment"] = Storage(
+        s3 = current.response.s3
+        s3.crud_strings["deploy_assignment"] = Storage(
             label_create = T("Add Deployment"),
             title_display = T("Deployment Details"),
             title_list = T("Deployments"),
@@ -3203,6 +3204,11 @@ def config(settings):
         # Restrict Location to just Countries
         field = s3db.deploy_mission.location_id
         field.represent = S3Represent(lookup="gis_location", translate=True)
+
+        has_role = current.auth.s3_has_role
+        if has_role("RDRP_AP_ADMIN") and not has_role("ADMIN"):
+            from s3 import FS
+            s3.filter = FS("mission_id$organisation_id$name") == "Asia-Pacific Region"
 
         return attr
 
