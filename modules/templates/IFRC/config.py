@@ -4839,12 +4839,12 @@ def config(settings):
                         #name = s3_fullname(person)
                         pe_id = person.pe_id
 
-                        def dt_row_actions(tablename, c, f, get_var=None):
+                        def dt_row_actions(w_tablename, c, f, get_var=None):
                             def row_actions(r, list_id):
-                                editable = get_config(tablename, "editable")
+                                editable = get_config(w_tablename, "editable")
                                 if editable is None:
                                     editable = True
-                                deletable = get_config(tablename, "deletable")
+                                deletable = get_config(w_tablename, "deletable")
                                 if deletable is None:
                                     deletable = True
                                 if editable:
@@ -4949,13 +4949,13 @@ def config(settings):
                                             "create_var": "rdrt_ap",
                                             }
 
-                        tablename = "hrm_experience"
+                        w_tablename = "hrm_experience"
                         job_widget = {"label": "Current Job Role",
                                       "label_create": "Add Job Role",
                                       "type": "datatable",
-                                      "actions": dt_row_actions(tablename, "deploy", "experience", "rdrt_ap_current"),
+                                      "actions": dt_row_actions(w_tablename, "deploy", "experience", "rdrt_ap_current"),
                                       "dt_searching": False,
-                                      "tablename": tablename,
+                                      "tablename": w_tablename,
                                       "filter": (FS("person_id") == person_id) & \
                                                 (FS("activity_type") == None),
                                       "icon": "wrench",
@@ -4973,13 +4973,13 @@ def config(settings):
                                       "pagesize": 1,
                                       }
 
-                        tablename = "hrm_experience"
+                        w_tablename = "hrm_experience"
                         experience_widget = {"label": "NDRT / other Deployments",
                                              "label_create": "Add Deployment",
                                              "type": "datatable",
-                                             "actions": dt_row_actions(tablename, "deploy", "experience", "rdrt_ap_deployment"),
+                                             "actions": dt_row_actions(w_tablename, "deploy", "experience", "rdrt_ap_deployment"),
                                              "dt_searching": False,
-                                             "tablename": tablename,
+                                             "tablename": w_tablename,
                                              "filter": (FS("person_id") == person_id) & \
                                                        (FS("activity_type") == "rdrt"),
                                              "icon": "truck",
@@ -4998,13 +4998,13 @@ def config(settings):
                                              "pagesize": 2,
                                              }
 
-                        tablename = "pr_language"
+                        w_tablename = "pr_language"
                         language_widget = {"label": "Languages",
                                            "label_create": "Add Language",
                                            "type": "datatable",
-                                           "actions": dt_row_actions(tablename, "pr", "language"),
+                                           "actions": dt_row_actions(w_tablename, "pr", "language"),
                                            "dt_searching": False,
-                                           "tablename": tablename,
+                                           "tablename": w_tablename,
                                            "filter": (FS("person_id") == person_id),
                                            "icon": "comment-alt",
                                            #"create_controller": "deploy",
@@ -5013,13 +5013,13 @@ def config(settings):
                                            #"create_component": "language",
                                            }
 
-                        tablename = "hrm_competency"
+                        w_tablename = "hrm_competency"
                         skills_widget = {"label": "Areas of Expertise",
                                          "label_create": "Add Skill",
                                          "type": "datatable",
-                                         "actions": dt_row_actions(tablename, "deploy", "competency", "rdrt_ap"),
+                                         "actions": dt_row_actions(w_tablename, "deploy", "competency", "rdrt_ap"),
                                          "dt_searching": False,
-                                         "tablename": tablename,
+                                         "tablename": w_tablename,
                                          "filter": FS("person_id") == person_id,
                                          "icon": "wrench",
                                          "list_fields": ["skill_id",
