@@ -487,28 +487,28 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     profile = None
 
                 if auth.s3_has_role("RDRT_ADMIN"):
-                    gtable = s3db.pr_group
-                    group = db(gtable.name == "RDRT Focal Points").select(gtable.id,
-                                                                          cache = s3db.cache,
-                                                                          limitby=(0, 1)
-                                                                          ).first()
-                    if group:
-                        args = [group.id, "group_membership"]
-                    else:
-                        args = "create"
-                    focal_points = M("Focal Points",
-                                     c="deploy", f="group",
-                                     args = args,
-                                     )
-                    inbox = M("InBox",
-                              c="deploy", f="email_inbox",
-                              )
-                    training = M("Training",
-                                 c="deploy", f="training", m="summary")(
-                                    M("Create", m="create"),
-                                    M("Search Training", m="summary"),
-                                    M("Import Training Participants", m="import"),
-                                 )
+                    #gtable = s3db.pr_group
+                    #group = db(gtable.name == "RDRT Focal Points").select(gtable.id,
+                    #                                                      cache = s3db.cache,
+                    #                                                      limitby=(0, 1)
+                    #                                                      ).first()
+                    #if group:
+                    #    args = [group.id, "group_membership"]
+                    #else:
+                    #    args = "create"
+                    #focal_points = M("Focal Points",
+                    #                 c="deploy", f="group",
+                    #                 args = args,
+                    #                 )
+                    #inbox = M("InBox",
+                    #          c="deploy", f="email_inbox",
+                    #          )
+                    #training = M("Training",
+                    #             c="deploy", f="training", m="summary")(
+                    #                M("Create", m="create"),
+                    #                M("Search Training", m="summary"),
+                    #                M("Import Training Participants", m="import"),
+                    #             )
                     members = M("RDRT Members",
                                  c="deploy", f="human_resource", m="summary")(
                                     M("Find RDRT"),
@@ -530,15 +530,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                                    ),
                                       ),
                                )
-                    return M()(M("Alerts",
-                             c="deploy", f="alert")(
-                                M("Create", m="create"),
-                                inbox,
-                                focal_points,
-                                M("Settings",
-                                  c="deploy", f="email_channel",
-                                  p="update", t="msg_email_channel",
-                                  ),
+                    return M()(#M("Alerts",
+                             #c="deploy", f="alert")(
+                             #   M("Create", m="create"),
+                             #   inbox,
+                             #   focal_points,
+                             #   M("Settings",
+                             #     c="deploy", f="email_channel",
+                             #     p="update", t="msg_email_channel",
+                             #     ),
                            ),
                            profile,
                            M("Missions",
@@ -549,14 +549,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                 M("Closed Missions", m="summary",
                                   vars={"~.status__belongs": "1"}),
                            ),
-                           training,
-                           #M("Deployments",
-                           #  c="deploy", f="assignment", m="summary"
-                           #),
-                           members,
-                           M("Sectors",
-                             c="deploy", f="job_title", restrict=["ADMIN"],
+                           #training,
+                           M("Deployments",
+                             c="deploy", f="assignment", m="summary"
                            ),
+                           members,
+                           #M("Sectors",
+                           #  c="deploy", f="job_title", restrict=["ADMIN"],
+                           #),
                            #M("Online Manual", c="deploy", f="index"),
                        )
                 else:

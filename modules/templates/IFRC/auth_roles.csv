@@ -810,6 +810,7 @@ PO_AGENCIES,Outreach Referral Agencies,,,,org_organisation_organisation_type,,RE
 PO_AGENCIES,Outreach Referral Agencies,,,,po_organisation_area,,READ|CREATE|UPDATE|DELETE,,,,,
 RDRT_ADMIN,RDRT Admin,,deploy,,,,ALL,,,,,
 RDRT_ADMIN,RDRT Admin,,deploy,experience,,,ALL,,,,,
+RDRT_ADMIN,RDRT Admin,,,,deploy_mission,,ALL,,,,,
 RDRT_ADMIN,RDRT Admin,,hrm,hr_search,,,READ,,,,,
 RDRT_ADMIN,RDRT Admin,,hrm,skill_competencies,,,READ,,,,,
 RDRT_ADMIN,RDRT Admin,,pr,address,,,READ|CREATE|UPDATE|DELETE,,,,,
