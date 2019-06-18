@@ -539,7 +539,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                              #     c="deploy", f="email_channel",
                              #     p="update", t="msg_email_channel",
                              #     ),
-                           ),
+                           #),
                            profile,
                            M("Missions",
                              c="deploy", f="mission", m="summary")(
