@@ -4839,6 +4839,46 @@ def config(settings):
                         #name = s3_fullname(person)
                         pe_id = person.pe_id
 
+                        def dt_row_actions(tablename, c, f, get_var=None):
+                            def row_actions(r, list_id):
+                                editable = get_config(tablename, "editable")
+                                if editable is None:
+                                    editable = True
+                                deletable = get_config(tablename, "deletable")
+                                if deletable is None:
+                                    deletable = True
+                                if editable:
+                                    get_vars = {"refresh": list_id}
+                                    if get_var:
+                                        get_vars[get_var] = 1
+                                    actions = [{"label": T("Open"),
+                                                "url": URL(c=c, f=f,
+                                                           args=["[id]", "update.popup"],
+                                                           vars=get_vars),
+                                                "_class": "action-btn edit s3_modal",
+                                                },
+                                               ]
+                                else:
+                                    get_vars = {"refresh": list_id}
+                                    if get_var:
+                                        get_vars[get_var] = 1
+                                    actions = [{"label": T("Open"),
+                                                "url": URL(c=c, f=f,
+                                                           args=["[id]", "read.popup"],
+                                                           vars=get_vars),
+                                                "_class": "action-btn edit s3_modal",
+                                                },
+                                               ]
+                                if deletable:
+                                    actions.append({"label": T("Delete"),
+                                                    "_ajaxurl": URL(c=c, f=f,
+                                                                    args=["[id]", "delete.json"],
+                                                                    ),
+                                                    "_class": "action-btn delete-btn-ajax dt-ajax-delete",
+                                                    })
+                                return actions
+                            return row_actions
+
                         details_widget = {"label": "Personal Details",
                                           "tablename": "pr_person",
                                           "type": "datalist",
@@ -4909,11 +4949,13 @@ def config(settings):
                                             "create_var": "rdrt_ap",
                                             }
 
+                        tablename = "hrm_experience"
                         job_widget = {"label": "Current Job Role",
                                       "label_create": "Add Job Role",
                                       "type": "datatable",
+                                      "actions": dt_row_actions(tablename, "deploy", "experience", "rdrt_ap_current"),
                                       "dt_searching": False,
-                                      "tablename": "hrm_experience",
+                                      "tablename": tablename,
                                       "filter": (FS("person_id") == person_id) & \
                                                 (FS("activity_type") == None),
                                       "icon": "wrench",
@@ -4931,11 +4973,13 @@ def config(settings):
                                       "pagesize": 1,
                                       }
 
+                        tablename = "hrm_experience"
                         experience_widget = {"label": "NDRT / other Deployments",
                                              "label_create": "Add Deployment",
                                              "type": "datatable",
+                                             "actions": dt_row_actions(tablename, "deploy", "experience", "rdrt_ap_deployment"),
                                              "dt_searching": False,
-                                             "tablename": "hrm_experience",
+                                             "tablename": tablename,
                                              "filter": (FS("person_id") == person_id) & \
                                                        (FS("activity_type") == "rdrt"),
                                              "icon": "truck",
@@ -4954,11 +4998,13 @@ def config(settings):
                                              "pagesize": 2,
                                              }
 
+                        tablename = "pr_language"
                         language_widget = {"label": "Languages",
                                            "label_create": "Add Language",
                                            "type": "datatable",
+                                           "actions": dt_row_actions(tablename, "pr", "language"),
                                            "dt_searching": False,
-                                           "tablename": "pr_language",
+                                           "tablename": tablename,
                                            "filter": (FS("person_id") == person_id),
                                            "icon": "comment-alt",
                                            #"create_controller": "deploy",
@@ -4967,13 +5013,17 @@ def config(settings):
                                            #"create_component": "language",
                                            }
 
+                        tablename = "hrm_competency"
                         skills_widget = {"label": "Areas of Expertise",
                                          "label_create": "Add Skill",
                                          "type": "datatable",
-                                         "tablename": "hrm_competency",
+                                         "actions": dt_row_actions(tablename, "deploy", "competency", "rdrt_ap"),
+                                         "dt_searching": False,
+                                         "tablename": tablename,
                                          "filter": FS("person_id") == person_id,
                                          "icon": "wrench",
                                          "list_fields": ["skill_id",
+                                                         "comments",
                                                          ],
                                          "create_controller": "deploy",
                                          # Can't do this as this is the HR perspective, not Person perspective
@@ -5511,7 +5561,8 @@ def config(settings):
                                                            limitby = (0,1)
                                                            ).first().id
 
-            f = s3db.hrm_competency.skill_id
+            table = s3db.hrm_competency
+            f = table.skill_id
             f.comment = None
             f.requires = IS_ONE_OF(db, "hrm_skill.id",
                                    S3Represent(lookup = "hrm_skill",
@@ -5520,8 +5571,10 @@ def config(settings):
                                    filter_opts = (RDRT_AP,),
                                    sort = True,
                                    )
+            table.comments.comment = None
             s3db.configure("hrm_competency",
                            crud_form = S3SQLCustomForm("skill_id",
+                                                       "comments",
                                                        ),
                            )
 
