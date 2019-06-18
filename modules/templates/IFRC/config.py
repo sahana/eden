@@ -3206,9 +3206,9 @@ def config(settings):
         field.represent = S3Represent(lookup="gis_location", translate=True)
 
         has_role = current.auth.s3_has_role
-        if has_role("RDRP_AP_ADMIN") and not has_role("ADMIN"):
+        if has_role("AP_RDRT_ADMIN") and not has_role("ADMIN"):
             from s3 import FS
-            s3.filter = FS("mission_id$organisation_id$name") == "Asia-Pacific Region"
+            s3.filter = FS("~.mission_id$organisation_id$name") == "Asia-Pacific Region"
 
         return attr
 
