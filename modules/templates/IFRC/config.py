@@ -1159,14 +1159,23 @@ def config(settings):
 
     settings.auth.realm_entity_types = auth_realm_entity_types
 
-    def deploy_cc_groups(default):
-        """ Which Groups to cc: on Deployment Alerts """
+    def deploy_alerts(default):
+        """ Whether the system is used to send Alerts """
 
         if _is_asia_pacific():
-            return ["RDRT Focal Points"]
+            return False
         return default
 
-    settings.deploy.cc_groups = deploy_cc_groups
+    settings.deploy.alerts = deploy_alerts
+
+    #def deploy_cc_groups(default):
+    #    """ Which Groups to cc: on Deployment Alerts """
+
+    #    if _is_asia_pacific():
+    #        return ["RDRT Focal Points"]
+    #    return default
+
+    #settings.deploy.cc_groups = deploy_cc_groups
 
     def hide_third_gender(default):
         """ Whether to hide the third person gender """
@@ -3316,7 +3325,7 @@ def config(settings):
         report_fact = [(T("Number of Missions"), "count(id)"),
                        (T("Number of Countries"), "count(location_id)"),
                        (T("Number of Disaster Types"), "count(event_type_id)"),
-                       (T("Number of Responses"), "sum(response_count)"),
+                       #(T("Number of Responses"), "sum(response_count)"),
                        (T("Number of Deployments"), "sum(hrquantity)"),
                       ]
         report_axis = ["code",
@@ -3339,7 +3348,7 @@ def config(settings):
                        "event_type_id",
                        (T("Country"), "location_id"),
                        "code",
-                       (T("Responses"), "response_count"),
+                       #(T("Responses"), "response_count"),
                        (T("Members Deployed"), "hrquantity"),
                        "status",
                        ]
@@ -5077,6 +5086,16 @@ def config(settings):
 
                     from s3 import S3DateFilter, S3HierarchyFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
 
+                    stable = s3db.hrm_skill
+                    sttable = s3db.hrm_skill_type
+                    query = (stable.deleted == False) & \
+                            (stable.skill_type_id == sttable.id) & \
+                            (sttable.name == "RDRT_AP")
+                    skills = db(query).select(stable.id,
+                                              stable.name,
+                                              )
+                    aprdrt_skills = {skill.id:skill.name for skill in skills}
+
                     filter_widgets = [S3TextFilter(["person_id$first_name",
                                                     "person_id$middle_name",
                                                     "person_id$last_name",
@@ -5093,6 +5112,7 @@ def config(settings):
                                                        ),
                                       S3OptionsFilter("person_id$competency.skill_id",
                                                        label = T("Skill"),
+                                                       options = aprdrt_skills,
                                                        hidden = True,
                                                        ),
                                       S3OptionsFilter("person_id$language.language",

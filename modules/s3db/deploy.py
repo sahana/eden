@@ -152,51 +152,6 @@ class S3DeploymentModel(S3Model):
 
         # Profile
         list_layout = deploy_MissionProfileLayout()
-        alert_widget = {"label": "Alerts",
-                        "insert": lambda r, list_id, title, url: \
-                                         A(title,
-                                           _href = r.url(component = "alert",
-                                                         method = "create"),
-                                           _class = "action-btn profile-add-btn",
-                                           ),
-                        "label_create": "Create Alert",
-                        "type": "datalist",
-                        "list_fields": ["modified_on",
-                                        "mission_id",
-                                        "message_id",
-                                        "subject",
-                                        "body",
-                                        ],
-                        "tablename": "deploy_alert",
-                        "context": "mission",
-                        "list_layout": list_layout,
-                        "pagesize": 10,
-                        }
-
-        response_widget = {"label": "Responses",
-                           "insert": False,
-                           "type": "datalist",
-                           "tablename": "deploy_response",
-                           # Can't be 'response' as this clobbers web2py global
-                           "function": "response_message",
-                           "list_fields": [
-                               "created_on",
-                               "mission_id",
-                               "comments",
-                               "human_resource_id$id",
-                               "human_resource_id$person_id",
-                               "human_resource_id$organisation_id",
-                               "message_id$body",
-                               "message_id$from_address",
-                               "message_id$attachment.document_id$file",
-                               ],
-                           "context": "mission",
-                           "list_layout": list_layout,
-                           # The popup datalist isn't currently functional
-                           # (needs card layout applying) and not ideal UX anyway
-                           #"pagesize": 10,
-                           "pagesize": None,
-                           }
 
         hr_label = settings.get_deploy_hr_label()
         if hr_label == "Member":
@@ -248,6 +203,63 @@ class S3DeploymentModel(S3Model):
                        #"list_layout": s3db.doc_document_list_layouts,
                        }
 
+        if settings.get_deploy_alerts():
+            alert_widget = {"label": "Alerts",
+                            "insert": lambda r, list_id, title, url: \
+                                             A(title,
+                                               _href = r.url(component = "alert",
+                                                             method = "create"),
+                                               _class = "action-btn profile-add-btn",
+                                               ),
+                            "label_create": "Create Alert",
+                            "type": "datalist",
+                            "list_fields": ["modified_on",
+                                            "mission_id",
+                                            "message_id",
+                                            "subject",
+                                            "body",
+                                            ],
+                            "tablename": "deploy_alert",
+                            "context": "mission",
+                            "list_layout": list_layout,
+                            "pagesize": 10,
+                            }
+
+            response_widget = {"label": "Responses",
+                               "insert": False,
+                               "type": "datalist",
+                               "tablename": "deploy_response",
+                               # Can't be 'response' as this clobbers web2py global
+                               "function": "response_message",
+                               "list_fields": [
+                                   "created_on",
+                                   "mission_id",
+                                   "comments",
+                                   "human_resource_id$id",
+                                   "human_resource_id$person_id",
+                                   "human_resource_id$organisation_id",
+                                   "message_id$body",
+                                   "message_id$from_address",
+                                   "message_id$attachment.document_id$file",
+                                   ],
+                               "context": "mission",
+                               "list_layout": list_layout,
+                               # The popup datalist isn't currently functional
+                               # (needs card layout applying) and not ideal UX anyway
+                               #"pagesize": 10,
+                               "pagesize": None,
+                               }
+
+            profile_widgets = [alert_widget,
+                               response_widget,
+                               assignment_widget,
+                               docs_widget,
+                               ]
+        else:
+            profile_widgets = [assignment_widget,
+                               docs_widget,
+                               ]
+
         # Table configuration
         profile_url = URL(c="deploy", f="mission", args=["[id]", "profile"])
         configure(tablename,
@@ -264,11 +276,7 @@ class S3DeploymentModel(S3Model):
                   profile_cols = 1,
                   profile_header = lambda r: \
                                    deploy_rheader(r, profile=True),
-                  profile_widgets = [alert_widget,
-                                     response_widget,
-                                     assignment_widget,
-                                     docs_widget,
-                                     ],
+                  profile_widgets = profile_widgets,
                   summary = [{"name": "rheader",
                               "common": True,
                               "widgets": [{"method": self.add_button},

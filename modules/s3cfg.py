@@ -3416,6 +3416,12 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Deployments
     #
+    def get_deploy_alerts(self):
+        """
+            Whether the system is used to send Alerts
+        """
+        return self.__lazy("deploy", "alerts", default=True)
+
     def get_deploy_cc_groups(self):
         """
             List of Group names that are cc'd on Alerts
