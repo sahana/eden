@@ -598,10 +598,10 @@ def config(settings):
     # Uncomment to do a search for duplicates in AddPersonWidget2
     settings.pr.lookup_duplicates = True
 
-    # RDRT
+    # Surge (RDRT)
     settings.hrm.job_title_deploy = True
     settings.deploy.hr_label = "Member"
-    settings.deploy.team_label = "RDRT"
+    settings.deploy.team_label = "Surge"
     # Responses only come in via Email
     settings.deploy.responses_via_web = False
     settings.customise_deploy_home = deploy_index
@@ -5075,8 +5075,60 @@ def config(settings):
                     else:
                         profile_widgets = []
 
-                    resource.configure(#filter_widgets = filters,
-                                       #list_fields = list_fields,
+                    from s3 import S3DateFilter, S3HierarchyFilter, S3LocationFilter, S3TextFilter
+
+                    filter_widgets = [S3TextFilter(["person_id$first_name",
+                                                    "person_id$middle_name",
+                                                    "person_id$last_name",
+                                                    "person_id$email.value",
+                                                    ],
+                                                   label = T("Search"),
+                                                   ),
+                                      S3HierarchyFilter("organisation_id",
+                                                        leafonly = False,
+                                                        ),
+                                      S3LocationFilter("location_id",
+                                                       label = T("Location"),
+                                                       hidden = True,
+                                                       ),
+                                      S3DateFilter("available",
+                                                   label = T("Available for Deployment"),
+                                                   # Use custom selector to prevent automatic
+                                                   # parsing (which would result in an error)
+                                                   selector = "available",
+                                                   hide_time = True,
+                                                   hidden = True,
+                                                   ),
+                                      S3DateFilter("human_resource_id:deploy_assignment.start_date",
+                                                   label = T("Deployed"),
+                                                   hide_time = True,
+                                                   hidden = True,
+                                                   ),
+                                      ]
+
+                    phone_label = settings.get_ui_label_mobile_phone()
+                    s3db.org_organisation.root_organisation.label = T("National Society")
+                    list_fields = ["person_id",
+                                   "organisation_id$root_organisation",
+                                   (T("Skills"), "person_id$competency.skill_id"),
+                                   (T("Languages"), "person_id$language.language"),
+                                   #(T("Status"), "application.active"),
+                                   (T("Email"), "email.value"),
+                                   (phone_label, "phone.value"),
+                                   #(T("Address"), "person_id$address.location_id"),
+                                   "person_id$gender",
+                                   "person_id$date_of_birth",
+                                   "person_id$person_details.nationality",
+                                   #(T("Passport Number"), "person_id$passport.value"),
+                                   #(T("Passport Issuer"), "person_id$passport.ia_name"),
+                                   #(T("Passport Date"), "person_id$passport.valid_from"),
+                                   #(T("Passport Expires"), "person_id$passport.valid_until"),
+                                   #"person_id$physical_description.blood_type",
+                                   #(T("Emergency Contacts"), "person_id$contact_emergency.id"),
+                                   ]
+
+                    resource.configure(filter_widgets = filter_widgets,
+                                       list_fields = list_fields,
                                        profile_widgets = profile_widgets,
                                        profile_header = rdrt_member_profile_header,
                                        )
@@ -6787,11 +6839,11 @@ def config(settings):
             # Use legacy field for cleaner options
             f = s3db.pr_education.level
             f.readable = f.writable = True
-            #from gluon import IS_IN_SET
-            #f.requires = IS_IN_SET(("High School",
-            #                        "University / College",
-            #                        "Post Graduate",
-            #                        ))
+            from gluon import IS_IN_SET
+            f.requires = IS_IN_SET(("High School",
+                                    "University / College",
+                                    "Post Graduate",
+                                    ))
             s3db.configure("pr_education",
                            crud_form = S3SQLCustomForm((T("Qualification"), "level"),
                                                        (T("Field of Expertise"), "major"),
