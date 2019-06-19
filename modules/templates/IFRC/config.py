@@ -5075,7 +5075,7 @@ def config(settings):
                     else:
                         profile_widgets = []
 
-                    from s3 import S3DateFilter, S3HierarchyFilter, S3LocationFilter, S3TextFilter
+                    from s3 import S3DateFilter, S3HierarchyFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
 
                     filter_widgets = [S3TextFilter(["person_id$first_name",
                                                     "person_id$middle_name",
@@ -5089,6 +5089,18 @@ def config(settings):
                                                         ),
                                       S3LocationFilter("location_id",
                                                        label = T("Location"),
+                                                       hidden = True,
+                                                       ),
+                                      S3OptionsFilter("person_id$competency.skill_id",
+                                                       label = T("Skill"),
+                                                       hidden = True,
+                                                       ),
+                                      S3OptionsFilter("person_id$language.language",
+                                                       label = T("Language"),
+                                                       hidden = True,
+                                                       ),
+                                      S3OptionsFilter("person_id$gender",
+                                                       label = T("Gender"),
                                                        hidden = True,
                                                        ),
                                       S3DateFilter("available",
