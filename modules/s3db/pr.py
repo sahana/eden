@@ -1065,6 +1065,7 @@ class PRPersonModel(S3Model):
                                        "actuate": "replace",
                                        },
                        # Skills
+                       pr_language = "person_id",
                        hrm_certification = "person_id",
                        hrm_competency = "person_id",
                        hrm_credential = "person_id",
