@@ -18,6 +18,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,BR,State,Municipality,District,,
 ,BT,District,Sub-District,,
 ,BZ,District,,,
+,CD,Province,Territory/Commune,,,,
 ,CF,Prefecture,Sub-Prefecture,Commune,,
 ,CK,Island Council,Village Committee,,,
 ,CL,Region,Province,Commune,,
