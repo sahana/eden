@@ -77,7 +77,8 @@ def config(settings):
 
         # Do not apply realms for Master Data
         # @ToDo: Restore Realms and add a role/functionality support for Master Data
-        if tablename in ("hrm_certificate",
+        if tablename in ("event_event_type",
+                         "hrm_certificate",
                          "hrm_department",
                          "hrm_job_title",
                          "hrm_course",
