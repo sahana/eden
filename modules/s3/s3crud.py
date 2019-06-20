@@ -428,8 +428,7 @@ class S3CRUD(S3Method):
                 if not create_next:
                     next_vars = self._remove_filters(r.get_vars)
                     if r.component:
-                        self.next = r.url(method="",
-                                          vars=next_vars)
+                        self.next = r.url(method="", vars=next_vars)
                     else:
                         self.next = r.url(id="[id]",
                                           method="read",
@@ -995,27 +994,31 @@ class S3CRUD(S3Method):
             output["deduplicate"] = S3Merge.bookmark(r, tablename, record_id)
 
             # Redirection
-            if r.http == "POST" and "interim_save" in r.post_vars:
-                next_vars = self._remove_filters(r.get_vars)
-                self.next = r.url(target="[id]", method="update",
-                                  vars=next_vars)
+            if representation in ("popup", "iframe", "plain", "dl"):
+                self.next = None
             else:
-                update_next = _config("update_next")
-                if representation in ("popup", "iframe", "plain", "dl"):
-                    self.next = None
-                elif not update_next:
+                if r.http == "POST" and "interim_save" in r.post_vars:
+                    next_vars = self._remove_filters(r.get_vars)
+                    update_next = r.url(target = "[id]",
+                                        method = "update",
+                                        vars = next_vars,
+                                        )
+                else:
+                    update_next = _config("update_next")
+
+                if not update_next:
                     next_vars = self._remove_filters(r.get_vars)
                     if r.component:
                         self.next = r.url(method="", vars=next_vars)
                     else:
-                        self.next = r.url(id="[id]",
-                                          method="read",
-                                          vars=next_vars)
+                        self.next = r.url(id = "[id]",
+                                          method = "read",
+                                          vars = next_vars,
+                                          )
+                elif callable(update_next):
+                    self.next = update_next(r)
                 else:
-                    try:
-                        self.next = update_next(self)
-                    except TypeError:
-                        self.next = update_next
+                    self.next = update_next
 
         elif representation == "url":
             return self.import_url(r)

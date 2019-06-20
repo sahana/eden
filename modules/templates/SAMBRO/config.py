@@ -479,7 +479,7 @@ def config(settings):
                             current.msg.send_tweet(text=s3_str(twitter_text),
                                                    alert_id=alert_id,
                                                    )
-                        except tweepy.error.TweepError, e:
+                        except tweepy.error.TweepError as e:
                             current.log.debug("Sending tweets failed: %s" % e)
 
                 # Facebook Post
@@ -490,7 +490,7 @@ def config(settings):
                         current.msg.post_to_facebook(text=content,
                                                      alert_id=alert_id,
                                                      )
-                    except Exception, e:
+                    except Exception as e:
                         current.log.debug("Posting Alert to Facebook failed: %s" % e)
 
             addresses = record["addresses"]
@@ -679,8 +679,8 @@ def config(settings):
             else:
                 result = True
             MSG_CONTACT_OPTS = {"EMAIL": T("EMAIL"),
-                                "SMS"  : T("SMS"),
-                                "FTP"  : T("FTP"),
+                                "SMS": T("SMS"),
+                                "FTP": T("FTP"),
                                 }
             table.method.represent = S3Represent(options=MSG_CONTACT_OPTS,
                                                  multiple=True,

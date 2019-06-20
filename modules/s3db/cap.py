@@ -492,6 +492,8 @@ $.filterOptionsS3({
                                                            ),
                                          ),
                            ),
+                     # TODO introduce a separate "recipients"-field (list:reference pr_pentity)
+                     #      and translate it onaccept into addresses
                      Field("addresses", "list:string",
                            label = T("Recipients"),
                            requires = IS_EMPTY_OR(
@@ -1067,7 +1069,6 @@ class CAPInfoModel(S3Model):
                                  ),
                      Field("category", "list:string", # 1 or more allowed
                            label = T("Category"),
-                           required = IS_NOT_EMPTY(),
                            represent = S3Represent(options = cap_options["categories"],
                                                    multiple = True,
                                                    ),
@@ -2964,6 +2965,8 @@ class CAPHistoryModel(S3Model):
                                                              ),
                                          ),
                            ),
+                     # TODO introduce a separate "recipients"-field (list:reference pr_pentity)
+                     #      and translate it onaccept into addresses
                      Field("addresses", "list:string",
                            label = T("Recipients"),
                            requires = IS_EMPTY_OR(
@@ -4000,13 +4003,21 @@ def cap_sendername():
 # =============================================================================
 def get_cap_alert_addresses_opts():
     """
-        Get the pr_group.id required for cap_alert.addresses field
+        Get selectable options for the cap_alert.addresses field
+        - currently uses pr_group as selectable recipients, and
+          pr_group.id as identifier
+        - however, neither the pr_group.id or the pr_group.name are
+          valid addresses or identifiers in the sense of cap:addresses
+        - a possible solution to produce an addresses-list from an
+          internal selection of recipients could be to introduce a
+          separate "recipients" field (list:reference pr_pentity),
+          and translate it into an addresses-list onaccept (TODO)
 
-        TODO improve this docstring: what is this really used for?
-        TODO document return value
+        @returns: list of tuples (id, translated_group_name)
     """
 
     T = current.T
+
     gtable = current.s3db.pr_group
     rows = current.db(gtable.deleted == False).select(gtable.id,
                                                       gtable.name,
