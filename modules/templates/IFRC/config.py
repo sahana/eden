@@ -2166,7 +2166,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dc_response_resource(r, tablename):
         """
-            Only used by Bangkok CCST currently
+            Currently used by
+                * Bangkok CCST
+                * AP RDRT
         """
 
         from s3 import S3DateTime
@@ -4106,6 +4108,59 @@ def config(settings):
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
     # -------------------------------------------------------------------------
+    def deploy_dynamic_list_layout(list_id, item_id, resource, rfields, record):
+        """
+            dataList item renderer for 'Other Information' on the Surge Member Profile
+
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+        """
+
+        raw = record._row
+        tablename = resource.tablename
+
+        # Read the fields
+        db = current.db
+        s3db = current.s3db
+        ftable = s3db.s3_field
+        ttable = s3db.s3_table
+        query = (ftable.table_id == ttable.id) & \
+                (ttable.name == tablename)
+        fields = db(query).select(ftable.name,
+                                  ftable.label,
+                                  # Use the fact that each label starts with a number
+                                  orderby = ftable.label,
+                                  )
+
+        # Render the item
+        from gluon import B, DIV
+        contents = DIV(_class="media",
+                       )
+        cappend = contents.append
+        for field in fields:
+            if not field.label:
+                # response_id
+                continue
+            cappend(DIV(DIV(B("%s:" % field.label)),
+                        DIV(raw["%s.%s" % (tablename, field.name)] or "Not Answered"),
+                        )
+                    )
+
+        item = DIV(DIV(DIV(contents,
+                           _class="media-body",
+                           ),
+                       _class="media",
+                       ),
+                   _class="thumbnail",
+                   _id=item_id,
+                   )
+
+        return item
+
+    # -------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
         from s3 import FS
@@ -4660,7 +4715,7 @@ def config(settings):
                 AP = _is_asia_pacific()
 
                 if not AP:
-                    # Africa
+                    # Africa RDRT
                     # Exclude None-values for training course pivot axis
                     s3db.configure(tablename,
                                    report_exclude_empty = ("training.course_id",
@@ -4811,6 +4866,9 @@ def config(settings):
                                        profile_header = rdrt_member_profile_header,
                                        )
                 else:
+                    # AP RDRT
+
+                    # Old requirements:
                     #otable = s3db.org_organisation
                     #org = db(otable.name == AP_ZONE).select(otable.id,
                     #                                        limitby=(0, 1),
@@ -5082,6 +5140,67 @@ def config(settings):
                                            docs_widget,
                                            availability_widget,
                                            ]
+
+                        # All templates use the same component name for answers so need to add the right component manually
+                        dtable = s3db.s3_table
+                        ttable = s3db.dc_template
+                        query = (ttable.name == "Surge Member") & \
+                                (ttable.table_id == dtable.id)
+                        template = db(query).select(ttable.id,
+                                                    dtable.name,
+                                                    limitby=(0, 1),
+                                                    ).first()
+                        if template:
+                            template_id = template[ttable.id]
+                            dtablename = template[dtable.name]
+                            components = {dtablename: {"name": "answer",
+                                                       "joinby": "response_id",
+                                                       "multiple": False,
+                                                       }
+                                          }
+                            s3db.add_components("dc_response", **components)
+
+                            rtable = s3db.dc_response
+                            query = (rtable.person_id == person_id) & \
+                                    (rtable.template_id == template_id)
+                            respnse = db(query).select(rtable.id,
+                                                       limitby=(0, 1),
+                                                       ).first()
+                            if respnse:
+                                response_id = respnse[rtable.id]
+                                dtable = s3db[dtablename]
+                                answer = db(dtable.response_id == response_id).select(dtable.id,
+                                                                                      limitby = (0, 1)
+                                                                                      )
+                                if answer:
+                                    answer_id = answer.first().id
+                                else:
+                                    answer_id = dtable.insert(response_id = response_id)
+                            else:
+                                response_id = rtable.insert(template_id = template_id,
+                                                            person_id = person_id,
+                                                            )
+                                answer_id = s3db[dtablename].insert(response_id = response_id)
+
+                            dynamic_widget = {"label": "Other Information",
+                                              "label_create": "Update Information",
+                                              "type": "datalist",
+                                              "list_layout": deploy_dynamic_list_layout,
+                                              #"type": "datatable",
+                                              #"actions": dt_row_actions(dtablename, "dc", "respnse"),
+                                              #"dt_searching": False,
+                                              "tablename": dtablename,
+                                              "filter": FS("response_id") == response_id,
+                                              "icon": "comment-alt",
+                                              #"list_fields": ["question",
+                                              #                "answer",
+                                              #                ],
+                                              "create_controller": "dc",
+                                              "create_function": "respnse",
+                                              "create_args": [response_id, "answer", answer_id,"update.popup"],
+                                              }
+
+                            profile_widgets.insert(-2, dynamic_widget)
                     else:
                         profile_widgets = []
 

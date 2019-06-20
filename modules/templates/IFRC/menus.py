@@ -499,9 +499,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #                 c="deploy", f="group",
                     #                 args = args,
                     #                 )
-                    #inbox = M("InBox",
-                    #          c="deploy", f="email_inbox",
-                    #          )
+                    inbox = M("InBox",
+                              c="deploy", f="email_inbox",
+                              )
                     #training = M("Training",
                     #             c="deploy", f="training", m="summary")(
                     #                M("Create", m="create"),
@@ -529,35 +529,45 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                                    ),
                                       ),
                                )
-                    return M()(#M("Alerts",
-                             #c="deploy", f="alert")(
-                             #   M("Create", m="create"),
-                             #   inbox,
-                             #   focal_points,
-                             #   M("Settings",
-                             #     c="deploy", f="email_channel",
-                             #     p="update", t="msg_email_channel",
-                             #     ),
-                           #),
-                           profile,
-                           M("Missions",
-                             c="deploy", f="mission", m="summary")(
-                                M("Create", m="create"),
-                                M("Active Missions", m="summary",
-                                  vars={"~.status__belongs": "2"}),
-                                M("Closed Missions", m="summary",
-                                  vars={"~.status__belongs": "1"}),
-                           ),
-                           #training,
-                           M("Deployments",
-                             c="deploy", f="assignment", m="summary"
-                           ),
-                           members,
-                           #M("Sectors",
-                           #  c="deploy", f="job_title", restrict=["ADMIN"],
-                           #),
-                           #M("Online Manual", c="deploy", f="index"),
-                       )
+                    ttable = s3db.dc_template
+                    template = db(ttable.name == "Surge Member").select(ttable.id,
+                                                                        limitby=(0,1))
+                    if template:
+                        template_id = template.first().id
+                    else:
+                        template_id = None
+                    return M()(M("Alerts",
+                                 c="deploy", f="alert")(
+                                    M("Create", m="create"),
+                                    inbox,
+                                    #focal_points,
+                                    M("Settings",
+                                      c="deploy", f="email_channel",
+                                      p="update", t="msg_email_channel",
+                                      ),
+                                 ),
+                               profile,
+                               M("Missions",
+                                 c="deploy", f="mission", m="summary")(
+                                    M("Create", m="create"),
+                                    M("Active Missions", m="summary",
+                                      vars={"~.status__belongs": "2"}),
+                                    M("Closed Missions", m="summary",
+                                      vars={"~.status__belongs": "1"}),
+                                 ),
+                               #training,
+                               M("Deployments",
+                                 c="deploy", f="assignment", m="summary"
+                                 ),
+                               members,
+                               M("Questions",
+                                 c="dc", f="template", args=[template_id, "question"]
+                                 ),
+                               #M("Sectors",
+                               #  c="deploy", f="job_title", restrict=["ADMIN"],
+                               #  ),
+                               #M("Online Manual", c="deploy", f="index"),
+                               )
                 else:
                     return M()(profile)
 

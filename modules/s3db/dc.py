@@ -428,8 +428,8 @@ class DataCollectionTemplateModel(S3Model):
 
         # =====================================================================
         # Pass names back to global scope (s3.*)
-        return dict(dc_template_id = template_id,
-                    )
+        return {"dc_template_id": template_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -441,8 +441,8 @@ class DataCollectionTemplateModel(S3Model):
                                 writable = False,
                                 )
 
-        return dict(dc_template_id = lambda **attr: dummy("template_id"),
-                    )
+        return {"dc_template_id": lambda **attr: dummy("template_id"),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -875,10 +875,10 @@ class DataCollectionModel(S3Model):
 
         # =====================================================================
         # Pass names back to global scope (s3.*)
-        return dict(dc_response_id = response_id,
-                    dc_target_id = target_id,
-                    dc_answer_form = self.dc_answer_form,
-                    )
+        return {"dc_response_id": response_id,
+                "dc_target_id": target_id,
+                "dc_answer_form": self.dc_answer_form,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -890,9 +890,9 @@ class DataCollectionModel(S3Model):
                                 writable = False,
                                 )
 
-        return dict(dc_response_id = lambda **attr: dummy("response_id"),
-                    dc_target_id = lambda **attr: dummy("target_id"),
-                    )
+        return {"dc_response_id": lambda **attr: dummy("response_id"),
+                "dc_target_id": lambda **attr: dummy("target_id"),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod

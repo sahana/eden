@@ -1320,7 +1320,7 @@ class S3Profile(S3CRUD):
             if component:
                 args = [r.id, component, "create.popup"]
             else:
-                args = ["create.popup"]
+                args = widget_get("create_args", ["create.popup"])
             add_url = URL(c=c, f=f, args=args, vars=url_vars)
 
             if callable(insert):

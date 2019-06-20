@@ -1,0 +1,7 @@
+Template,Question,Question Position,Type,Options,Required,Code,Totals,Grid,Tooltip
+Surge Member,"1. Minimum of three years experience in the RC/RC Movement (NS/CD/PNS/ICRC)?",1,options,"['yes', 'no']",,,,,
+Surge Member,"2. Completed any one of the RDRT technical training – emergency shelter, water sanitation and hygiene promotion (Watsan), logistics, training of trainers course, health in emergencies, IT and Telecommunications?",2,options,"['yes', 'no']",,,,,
+Surge Member,"3. Completed NDRT training with a positive recommendation?",3,options,"['yes', 'no']",,,,,
+Surge Member,"4. Deployed in disaster response operations either nationally or internationally?",4,options,"['yes', 'no']",,,,,
+Surge Member,"5. Proficiency in English language speaking and writing?",5,options,"['yes', 'no']",,,,,
+Surge Member,"6. Additional preference shall be given to suitable female nominations (applicable to the nominations from South Asia); is it applicable to you?",6,options,"['yes', 'no']",,,,,
