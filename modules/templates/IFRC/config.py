@@ -1160,14 +1160,14 @@ def config(settings):
 
     settings.auth.realm_entity_types = auth_realm_entity_types
 
-    def deploy_alerts(default):
-        """ Whether the system is used to send Alerts """
+    #def deploy_alerts(default):
+    #    """ Whether the system is used to send Alerts """
 
-        if _is_asia_pacific():
-            return False
-        return default
+    #    if _is_asia_pacific():
+    #        return False
+    #    return default
 
-    settings.deploy.alerts = deploy_alerts
+    #settings.deploy.alerts = deploy_alerts
 
     #def deploy_cc_groups(default):
     #    """ Which Groups to cc: on Deployment Alerts """
