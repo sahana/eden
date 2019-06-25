@@ -3441,6 +3441,14 @@ class S3Config(Storage):
         """
         return self.deploy.get("manual_recipients", True)
 
+    def get_deploy_member_filters(self):
+        """
+            Custom set of filter_widgets for members (hrm_human_resource),
+            used in custom methods for member selection, e.g. deploy_apply
+            or deploy_alert_select_recipients
+        """
+        return self.__lazy("deploy", "member_filters", default=None)
+
     def get_deploy_post_to_twitter(self):
         """
             Whether to post the alerts in twitter
