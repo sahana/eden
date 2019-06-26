@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 import logging
@@ -301,10 +303,7 @@ class S3LogRecorder(object):
             return
         strbuf = self.strbuf
         if strbuf is None:
-            try:
-                from cStringIO import StringIO
-            except:
-                from StringIO import StringIO
+            from s3compat import StringIO
             strbuf = StringIO()
         handler = logging.StreamHandler(strbuf)
 
