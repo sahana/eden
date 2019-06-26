@@ -1643,6 +1643,34 @@ def deploy_member_filters(status=False):
                                                      },
                                           ))
 
+        if settings.get_deploy_select_ratings():
+            rating_opts = {1: 1,
+                           2: 2,
+                           3: 3,
+                           4: 4,
+                           }
+            filter_widgets.extend((S3OptionsFilter("application.status",
+                                                   label = T("Category"),
+                                                   options = {1: "I",
+                                                              2: "II",
+                                                              3: "III",
+                                                              4: "IV",
+                                                              5: "V",
+                                                              },
+                                                   cols = 5,
+                                                   ),
+                                   S3OptionsFilter("training.grade",
+                                                   label = T("Training Grade"),
+                                                   options = rating_opts,
+                                                   cols = 4,
+                                                   ),
+                                   S3OptionsFilter("appraisal.rating",
+                                                   label = T("Deployment Rating"),
+                                                   options = rating_opts,
+                                                   cols = 4,
+                                                   ),
+                                   ))
+
     return widgets
 
 # =============================================================================
@@ -1938,7 +1966,8 @@ def deploy_apply(r, **attr):
     elif r.http == "GET":
 
         # Filter widgets
-        filter_widgets = deploy_member_filters()
+        filter_widgets = settings.get_deploy_member_filters() or \
+                         deploy_member_filters()
 
         # List fields
         list_fields = ["id",
@@ -2187,34 +2216,8 @@ def deploy_alert_select_recipients(r, **attr):
                              )
 
     # Filter widgets (including roster status)
-    filter_widgets = deploy_member_filters(status=True)
-    if current.deployment_settings.get_deploy_select_ratings():
-        rating_opts = {1: 1,
-                       2: 2,
-                       3: 3,
-                       4: 4,
-                       }
-        filter_widgets.extend((S3OptionsFilter("application.status",
-                                               label = T("Category"),
-                                               options = {1: "I",
-                                                          2: "II",
-                                                          3: "III",
-                                                          4: "IV",
-                                                          5: "V",
-                                                          },
-                                               cols = 5,
-                                               ),
-                               S3OptionsFilter("training.grade",
-                                               label = T("Training Grade"),
-                                               options = rating_opts,
-                                               cols = 4,
-                                               ),
-                               S3OptionsFilter("appraisal.rating",
-                                               label = T("Deployment Rating"),
-                                               options = rating_opts,
-                                               cols = 4,
-                                               ),
-                               ))
+    filter_widgets = current.deployment_settings.get_deploy_member_filters() or \
+                     deploy_member_filters(status=True)
 
     if filter_widgets and representation == "html":
         # Apply filter defaults

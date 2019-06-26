@@ -1178,6 +1178,83 @@ def config(settings):
 
     #settings.deploy.cc_groups = deploy_cc_groups
 
+    def deploy_member_filters_ap():
+        """
+            AP RDRT:
+            Unified Filter Widgets for 'Summary' & 'Select Recipients'
+        """
+
+        from s3 import S3DateFilter, S3HierarchyFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
+
+        s3db = current.s3db
+        stable = s3db.hrm_skill
+        sttable = s3db.hrm_skill_type
+        query = (stable.deleted == False) & \
+                (stable.skill_type_id == sttable.id) & \
+                (sttable.name == "RDRT_AP")
+        skills = current.db(query).select(stable.id,
+                                          stable.name,
+                                          )
+        aprdrt_skills = {skill.id:skill.name for skill in skills}
+
+        filter_widgets = [S3TextFilter(["person_id$first_name",
+                                        "person_id$middle_name",
+                                        "person_id$last_name",
+                                        "person_id$email.value",
+                                        ],
+                                       label = T("Search"),
+                                       ),
+                          S3HierarchyFilter("organisation_id",
+                                            leafonly = False,
+                                            ),
+                          S3LocationFilter("location_id",
+                                           label = T("Location"),
+                                           hidden = True,
+                                           ),
+                          S3OptionsFilter("person_id$competency.skill_id",
+                                           label = T("Skill"),
+                                           options = aprdrt_skills,
+                                           hidden = True,
+                                           ),
+                          S3OptionsFilter("person_id$language.language",
+                                           label = T("Language"),
+                                           hidden = True,
+                                           ),
+                          S3OptionsFilter("person_id$gender",
+                                           label = T("Gender"),
+                                           hidden = True,
+                                           ),
+                          S3DateFilter("available",
+                                       label = T("Available for Deployment"),
+                                       # Use custom selector to prevent automatic
+                                       # parsing (which would result in an error)
+                                       selector = "available",
+                                       hide_time = True,
+                                       hidden = True,
+                                       ),
+                          S3DateFilter("human_resource_id:deploy_assignment.start_date",
+                                       label = T("Deployed"),
+                                       hide_time = True,
+                                       hidden = True,
+                                       ),
+                          ]
+
+        return filter_widgets
+
+    def deploy_member_filters(default):
+        """
+            Custom set of filter_widgets for members (hrm_human_resource),
+            used in custom methods for member selection, e.g. deploy_apply
+            or deploy_alert_select_recipients
+        """
+
+        if _is_asia_pacific():
+            filter_widgets = deploy_member_filters_ap()
+            return filter_widgets
+        return default
+
+    settings.deploy.member_filters = deploy_member_filters
+
     def hide_third_gender(default):
         """ Whether to hide the third person gender """
 
@@ -5204,60 +5281,6 @@ def config(settings):
                     else:
                         profile_widgets = []
 
-                    from s3 import S3DateFilter, S3HierarchyFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
-
-                    stable = s3db.hrm_skill
-                    sttable = s3db.hrm_skill_type
-                    query = (stable.deleted == False) & \
-                            (stable.skill_type_id == sttable.id) & \
-                            (sttable.name == "RDRT_AP")
-                    skills = db(query).select(stable.id,
-                                              stable.name,
-                                              )
-                    aprdrt_skills = {skill.id:skill.name for skill in skills}
-
-                    filter_widgets = [S3TextFilter(["person_id$first_name",
-                                                    "person_id$middle_name",
-                                                    "person_id$last_name",
-                                                    "person_id$email.value",
-                                                    ],
-                                                   label = T("Search"),
-                                                   ),
-                                      S3HierarchyFilter("organisation_id",
-                                                        leafonly = False,
-                                                        ),
-                                      S3LocationFilter("location_id",
-                                                       label = T("Location"),
-                                                       hidden = True,
-                                                       ),
-                                      S3OptionsFilter("person_id$competency.skill_id",
-                                                       label = T("Skill"),
-                                                       options = aprdrt_skills,
-                                                       hidden = True,
-                                                       ),
-                                      S3OptionsFilter("person_id$language.language",
-                                                       label = T("Language"),
-                                                       hidden = True,
-                                                       ),
-                                      S3OptionsFilter("person_id$gender",
-                                                       label = T("Gender"),
-                                                       hidden = True,
-                                                       ),
-                                      S3DateFilter("available",
-                                                   label = T("Available for Deployment"),
-                                                   # Use custom selector to prevent automatic
-                                                   # parsing (which would result in an error)
-                                                   selector = "available",
-                                                   hide_time = True,
-                                                   hidden = True,
-                                                   ),
-                                      S3DateFilter("human_resource_id:deploy_assignment.start_date",
-                                                   label = T("Deployed"),
-                                                   hide_time = True,
-                                                   hidden = True,
-                                                   ),
-                                      ]
-
                     phone_label = settings.get_ui_label_mobile_phone()
                     s3db.org_organisation.root_organisation.label = T("National Society")
                     list_fields = ["person_id",
@@ -5279,7 +5302,7 @@ def config(settings):
                                    #(T("Emergency Contacts"), "person_id$contact_emergency.id"),
                                    ]
 
-                    resource.configure(filter_widgets = filter_widgets,
+                    resource.configure(filter_widgets = deploy_member_filters_ap(),
                                        list_fields = list_fields,
                                        profile_widgets = profile_widgets,
                                        profile_header = rdrt_member_profile_header,
