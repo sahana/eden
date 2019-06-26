@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+# @status: fixed for Py3
+
 import os
 import sys
 
@@ -55,21 +57,13 @@ def update_check(settings):
     template_optional_dep = {}
     for template in templates:
         tr_path = os.path.join(app_path, "modules", "templates", template, "requirements.txt")
-        tor_path = os.path.join(app_path, "modules", "templates", template, "optional_requirements.txt")
         parse_requirements(template_dep, tr_path)
+        tor_path = os.path.join(app_path, "modules", "templates", template, "optional_requirements.txt")
         parse_requirements(template_optional_dep, tor_path)
 
-    # Remove optional dependencies which are already accounted for in template dependencies
-    unique = set(optional_dep.keys()).difference(set(template_dep.keys()))
-    for dependency in optional_dep.keys():
-        if dependency not in unique:
-            del optional_dep[dependency]
-
-    # Override optional dependency messages from template
-    unique = set(optional_dep.keys()).difference(set(template_optional_dep.keys()))
-    for dependency in optional_dep.keys():
-        if dependency not in unique:
-            del optional_dep[dependency]
+    # Drop optional dependencies that are already accounted for in template dependencies
+    tr = set(template_dep.keys()) | set(template_optional_dep.keys())
+    optional_dep = {k: optional_dep[k] for k in optional_dep if k not in tr}
 
     errors, warnings = s3_check_python_lib(global_dep, template_dep, template_optional_dep, optional_dep)
     # @ToDo: Move these to Template
@@ -78,24 +72,23 @@ def update_check(settings):
         if settings.get_database_type() != "postgres":
             errors.append("Climate unresolved dependency: PostgreSQL required")
         try:
-           import rpy2
+            import rpy2
         except ImportError:
-           errors.append("Climate unresolved dependency: RPy2 required")
+            errors.append("Climate unresolved dependency: RPy2 required")
         try:
-           from Scientific.IO import NetCDF
+            from Scientific.IO import NetCDF
         except ImportError:
-           warnings.append("Climate unresolved dependency: NetCDF required if you want to import readings")
+            warnings.append("Climate unresolved dependency: NetCDF required if you want to import readings")
         try:
-           from scipy import stats
+            from scipy import stats
         except ImportError:
-           warnings.append("Climate unresolved dependency: SciPy required if you want to generate graphs on the map")
+            warnings.append("Climate unresolved dependency: SciPy required if you want to generate graphs on the map")
 
     # -------------------------------------------------------------------------
     # Check Web2Py version
     #
-    # Currently, the minimum usable Web2py is determined by whether the
-    # Scheduler is available
-    web2py_minimum_version = "Version 2.4.7-stable+timestamp.2013.05.27.11.49.44"
+    # We require web2py-2.14.6 or later for PyDAL compatibility
+    web2py_minimum_version = "Version 2.14.6-stable+timestamp.2016.05.09.19.18.48"
     # Offset of datetime in return value of parse_version.
     datetime_index = 4
     web2py_version_ok = True
@@ -145,8 +138,8 @@ def update_check(settings):
     template_folder = os.path.join(app_path, "modules", "templates")
 
     template_files = {
-        # source : destination
-        "000_config.py" : os.path.join("models", "000_config.py"),
+        # source: destination
+        "000_config.py": os.path.join("models", "000_config.py"),
     }
 
     copied_from_template = []
@@ -159,18 +152,16 @@ def update_check(settings):
         except OSError:
             # Not found, copy from template
             if t == "000_config.py":
-                input = open(src_path)
-                output = open(dst_path, "w")
-                for line in input:
-                    if "akeytochange" in line:
-                        # Generate a random hmac_key to secure the passwords in case
-                        # the database is compromised
-                        import uuid
-                        hmac_key = uuid.uuid4()
-                        line = 'settings.auth.hmac_key = "%s"' % hmac_key
-                    output.write(line)
-                output.close()
-                input.close()
+                with open(src_path) as src:
+                    with open(dst_path, "w") as dst:
+                        for line in src:
+                            if "akeytochange" in line:
+                                # Generate a random hmac_key to secure the passwords in case
+                                # the database is compromised
+                                import uuid
+                                hmac_key = uuid.uuid4()
+                                line = 'settings.auth.hmac_key = "%s"' % hmac_key
+                            dst.write(line)
             else:
                 import shutil
                 shutil.copy(src_path, dst_path)
@@ -272,48 +263,48 @@ def s3_check_python_lib(global_mandatory, template_mandatory, template_optional,
     errors = []
     warnings = []
 
-    for dependency, err in global_mandatory.iteritems():
+    for dependency, err in global_mandatory.items():
         try:
             if "from" in dependency:
-                exec dependency
+                exec(dependency)
             else:
-                exec "import %s" % dependency
+                exec("import %s" % dependency)
         except ImportError:
             if err:
                 errors.append(err)
             else:
                 errors.append("S3 unresolved dependency: %s required for Sahana to run" % dependency)
 
-    for dependency, err in template_mandatory.iteritems():
+    for dependency, err in template_mandatory.items():
         try:
             if "from" in dependency:
-                exec dependency
+                exec(dependency)
             else:
-                exec "import %s" % dependency
+                exec("import %s" % dependency)
         except ImportError:
             if err:
                 errors.append(err)
             else:
                 errors.append("Unresolved template dependency: %s required" % dependency)
 
-    for dependency, warn in template_optional.iteritems():
+    for dependency, warn in template_optional.items():
         try:
             if "from" in dependency:
-                exec dependency
+                exec(dependency)
             else:
-                exec "import %s" % dependency
+                exec("import %s" % dependency)
         except ImportError:
             if warn:
                 warnings.append(warn)
             else:
                 warnings.append("Unresolved optional dependency: %s required" % dependency)
 
-    for dependency, warn in global_optional.iteritems():
+    for dependency, warn in global_optional.items():
         try:
             if "from" in dependency:
-                exec dependency
+                exec(dependency)
             else:
-                exec "import %s" % dependency
+                exec("import %s" % dependency)
         except ImportError:
             if warn:
                 warnings.append(warn)

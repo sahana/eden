@@ -1479,7 +1479,6 @@ def set_priority_js():
     #      - potentially harmful because it runs a (pointless) request cycle
     #      - pointless because it returns nothing
 
-    # TODO wptable could simply be table to improve readability
     wptable = s3db.cap_warning_priority
 
     # TODO Proper query? (exclude deleted records?)

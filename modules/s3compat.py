@@ -37,5 +37,9 @@ if PY2:
         from cStringIO import StringIO  # faster, where available
     except ImportError:
         from StringIO import StringIO
+    basestring = basestring
+    INTEGER_TYPES = (int, long)
 else:
     from io import StringIO
+    basestring = str
+    INTEGER_TYPES = (int,)

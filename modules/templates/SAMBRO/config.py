@@ -679,8 +679,8 @@ def config(settings):
             else:
                 result = True
             MSG_CONTACT_OPTS = {"EMAIL": T("EMAIL"),
-                                "SMS": T("SMS"),
-                                "FTP": T("FTP"),
+                                "SMS"  : T("SMS"),
+                                "FTP"  : T("FTP"),
                                 }
             table.method.represent = S3Represent(options=MSG_CONTACT_OPTS,
                                                  multiple=True,

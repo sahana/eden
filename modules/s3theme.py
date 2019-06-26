@@ -28,6 +28,7 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 
+    @status: fixed for Py3
 """
 
 __all__ = ("formstyle_bootstrap",
@@ -42,6 +43,8 @@ __all__ = ("formstyle_bootstrap",
 from gluon import CAT, DIV, FIELDSET, INPUT, LABEL, SELECT, \
                   TABLE, TAG, TD, TEXTAREA, TR
 from gluon.languages import lazyT
+
+from s3compat import basestring
 
 # =============================================================================
 class NAV(DIV):

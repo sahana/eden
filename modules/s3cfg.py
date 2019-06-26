@@ -28,6 +28,7 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 
+    @status: fixed for Py3
 """
 
 __all__ = ("S3Config",)
@@ -37,6 +38,7 @@ from collections import OrderedDict
 from gluon import current, URL
 from gluon.storage import Storage
 
+from s3compat import basestring, INTEGER_TYPES
 from s3theme import FORMSTYLES
 
 class S3Config(Storage):
@@ -1207,9 +1209,9 @@ class S3Config(Storage):
         currencies = self.__lazy("fin", "currencies", {})
         if currencies == {}:
             currencies = {
-                "EUR" : "Euros",
-                "GBP" : "Great British Pounds",
-                "USD" : "United States Dollars",
+                "EUR": "Euros",
+                "GBP": "Great British Pounds",
+                "USD": "United States Dollars",
             }
         return currencies
 
@@ -1908,10 +1910,10 @@ class S3Config(Storage):
 
         excluded_fields = self.pdf.get("excluded_fields")
         if excluded_fields is None:
-            excluded_fields = {"hms_hospital" : ["hrm_human_resource",
-                                                 ],
-                               "pr_group" : ["pr_group_membership",
-                                             ],
+            excluded_fields = {"hms_hospital": ["hrm_human_resource",
+                                                ],
+                               "pr_group": ["pr_group_membership",
+                                            ],
                                }
 
         return excluded_fields.get(resourcename, [])
@@ -4613,7 +4615,7 @@ class S3Config(Storage):
         """
         default_organisation = self.__lazy("org", "default_organisation", default=None)
         if default_organisation:
-            if not isinstance(default_organisation, (int, long)):
+            if not isinstance(default_organisation, INTEGER_TYPES):
                 # Check Session cache
                 default_organisation_id = current.session.s3.default_organisation_id
                 if default_organisation_id:
@@ -4642,7 +4644,7 @@ class S3Config(Storage):
         """
         default_site = self.org.get("default_site", None)
         if default_site:
-            if not isinstance(default_site, (int, long)):
+            if not isinstance(default_site, INTEGER_TYPES):
                 # Check Session cache
                 default_site_id = current.session.s3.default_site_id
                 if default_site_id:
