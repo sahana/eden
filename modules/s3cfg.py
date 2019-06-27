@@ -3712,7 +3712,7 @@ class S3Config(Storage):
         """
             Use response type categories
         """
-        return self.dvr.get("response_types", True)
+        return self.__lazy("dvr", "response_types", default=True)
 
     def get_dvr_response_types_hierarchical(self):
         """

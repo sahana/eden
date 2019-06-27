@@ -46,6 +46,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "response_themes_sectors": False,
                "response_themes_needs": False,
                "response_themes_optional": False,
+               "response_types": True,
                "response_use_organizer": False,
                }
 
@@ -82,6 +83,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "response_themes_sectors": True,
                       "response_themes_needs": True,
                       "response_themes_optional": True,
+                      "response_types": False,
                       "response_use_organizer": True,
                       },
               }
@@ -451,8 +453,8 @@ def config(settings):
     settings.dvr.response_themes_details = get_ui_option("response_themes_details")
     # Response themes are org-specific
     settings.dvr.response_themes_org_specific = True
-    # Do not use response types
-    settings.dvr.response_types = False
+    # Use response types
+    settings.dvr.response_types = get_ui_option("response_types")
     # Response types hierarchical
     settings.dvr.response_types_hierarchical = True
     # Response themes organized by sectors
