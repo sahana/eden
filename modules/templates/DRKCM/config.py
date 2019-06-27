@@ -2046,7 +2046,9 @@ def config(settings):
                                           "hours",
                                           ]
                 if settings.get_dvr_response_due_date():
-                    response_action_fields[1:1] = ["date_due"]
+                    response_action_fields.insert(1, "date_due")
+                if settings.get_dvr_response_types():
+                    response_action_fields.insert(0, "response_type_id")
 
                 s3db.add_custom_callback("dvr_response_action",
                                          "onvalidation",
@@ -2806,6 +2808,9 @@ def config(settings):
             use_due_date = settings.get_dvr_response_due_date()
             date_due = "date_due" if use_due_date else None
 
+            # Using response types?
+            response_type = "response_type_id" if settings.get_dvr_response_types() else None
+
             # Configure theme selector
             if r.tablename == "dvr_response_action":
                 is_master = True
@@ -2856,6 +2861,7 @@ def config(settings):
 
                     # Adapt list-fields to perspective
                     list_fields = ["case_activity_id",
+                                   response_type,
                                    "response_theme_ids",
                                    "comments",
                                    "human_resource_id",
@@ -2867,6 +2873,7 @@ def config(settings):
                     pdf_fields = ["date",
                                   #"human_resource_id",
                                   "case_activity_id",
+                                  response_type,
                                   "response_theme_ids",
                                   "comments",
                                   ]
@@ -2886,6 +2893,7 @@ def config(settings):
 
                 # Adapt list-fields to perspective
                 list_fields = [(T("ID"), "person_id$pe_label"),
+                               response_type,
                                "human_resource_id",
                                date_due,
                                "date",
@@ -2894,9 +2902,9 @@ def config(settings):
                                ]
 
                 if response_themes_details:
-                    list_fields[1:1] = [(T("Themes"), "dvr_response_action_theme.id")]
+                    list_fields[2:2] = [(T("Themes"), "dvr_response_action_theme.id")]
                 else:
-                    list_fields[1:1] = ["response_theme_ids", "comments"]
+                    list_fields[2:2] = ["response_theme_ids", "comments"]
 
                 if ui_options.get("response_themes_optional"):
                     # Show person_id (read-only)

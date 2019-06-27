@@ -1794,8 +1794,8 @@ class DVRResponseModel(S3Model):
 
         crud_form = S3SQLCustomForm("person_id",
                                     "case_activity_id",
-                                    theme_field,
                                     type_field,
+                                    theme_field,
                                     details_field,
                                     "human_resource_id",
                                     due_field,
