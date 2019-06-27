@@ -37,9 +37,16 @@ if PY2:
         from cStringIO import StringIO  # faster, where available
     except ImportError:
         from StringIO import StringIO
+    import urllib2
+    from urllib2 import HTTPError, urlopen
+    from urllib import urlencode
     basestring = basestring
     INTEGER_TYPES = (int, long)
 else:
     from io import StringIO
+    from urllib import request as urllib2
+    from urllib.error import HTTPError
+    from urllib.request import urlopen
+    from urllib.parse import urlencode
     basestring = str
     INTEGER_TYPES = (int,)

@@ -27,6 +27,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("FaceBookAccount",
@@ -37,11 +39,11 @@ __all__ = ("FaceBookAccount",
 
 import json
 import time
-import urllib
-import urllib2
 
 from gluon import current, HTTP, IS_SLUG, redirect, URL
 from gluon.contrib.login_methods.oauth20_account import OAuthAccount
+
+from s3compat import HTTPError, urlencode, urllib2, urlopen
 
 REDIRECT_MSG = "You are not authenticated: you are being redirected " \
                "to the <a href='%s'> authentication server</a>"
@@ -111,7 +113,7 @@ class FaceBookAccount(OAuthAccount):
                     data.update(self.args)
 
                 auth_request_url = "%s?%s" % (self.auth_url,
-                                              urllib.urlencode(data),
+                                              urlencode(data),
                                               )
                 raise HTTP(307,
                            REDIRECT_MSG % auth_request_url,
@@ -284,8 +286,8 @@ class GooglePlusAccount(OAuthAccount):
             open_url = None
             opener = self.__build_url_opener(self.token_url)
             try:
-                open_url = opener.open(self.token_url, urllib.urlencode(data))
-            except urllib2.HTTPError as e:
+                open_url = opener.open(self.token_url, urlencode(data))
+            except HTTPError as e:
                 raise Exception(e.read())
             finally:
                 del session.code # throw it away
@@ -323,7 +325,7 @@ class GooglePlusAccount(OAuthAccount):
                     data.update(self.args)
 
                 auth_request_url = "%s?%s" % (self.auth_url,
-                                              urllib.urlencode(data),
+                                              urlencode(data),
                                               )
                 raise HTTP(307,
                            REDIRECT_MSG % auth_request_url,
@@ -412,7 +414,7 @@ class GooglePlusAccount(OAuthAccount):
             @return: user info (dict)
         """
 
-        api_response = urllib.urlopen("%s?access_token=%s" % (cls.API_URL, token))
+        api_response = urlopen("%s?access_token=%s" % (cls.API_URL, token))
 
         user = json.loads(api_response.read())
         if not user:
@@ -509,8 +511,8 @@ class HumanitarianIDAccount(OAuthAccount):
             open_url = None
             opener = self.__build_url_opener(self.token_url)
             try:
-                open_url = opener.open(self.token_url, urllib.urlencode(data))
-            except urllib2.HTTPError as e:
+                open_url = opener.open(self.token_url, urlencode(data))
+            except HTTPError as e:
                 raise Exception(e.read())
             finally:
                 del session.code # throw it away
@@ -548,7 +550,7 @@ class HumanitarianIDAccount(OAuthAccount):
                     data.update(self.args)
 
                 auth_request_url = "%s?%s" % (self.auth_url,
-                                              urllib.urlencode(data),
+                                              urlencode(data),
                                               )
                 raise HTTP(307,
                            REDIRECT_MSG % auth_request_url,
@@ -619,7 +621,7 @@ class HumanitarianIDAccount(OAuthAccount):
             @return: user info (dict)
         """
 
-        api_response = urllib.urlopen("%s?access_token=%s" % (cls.API_URL, token))
+        api_response = urlopen("%s?access_token=%s" % (cls.API_URL, token))
 
         user = json.loads(api_response.read())
         if not user:
@@ -719,8 +721,8 @@ class OpenIDConnectAccount(OAuthAccount):
             open_url = None
             opener = self.__build_url_opener(self.token_url)
             try:
-                open_url = opener.open(self.token_url, urllib.urlencode(data))
-            except urllib2.HTTPError as e:
+                open_url = opener.open(self.token_url, urlencode(data))
+            except HTTPError as e:
                 raise Exception(e.read())
             finally:
                 del session.code # throw it away
@@ -758,7 +760,7 @@ class OpenIDConnectAccount(OAuthAccount):
                     data.update(self.args)
 
                 auth_request_url = "%s?%s" % (self.auth_url,
-                                              urllib.urlencode(data),
+                                              urlencode(data),
                                               )
                 raise HTTP(307,
                            REDIRECT_MSG % auth_request_url,
@@ -841,8 +843,8 @@ class OpenIDConnectAccount(OAuthAccount):
         userinfo = None
 
         try:
-            f = urllib2.urlopen(req)
-        except urllib2.HTTPError as e:
+            f = urlopen(req)
+        except HTTPError as e:
             message = "HTTP %s: %s" % (e.code, e.reason)
             current.log.error(message)
         else:
