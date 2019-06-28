@@ -33,20 +33,34 @@ import sys
 PY2 = sys.version_info[0] == 2
 
 if PY2:
+    import cPickle as pickle
     try:
         from cStringIO import StringIO  # faster, where available
     except ImportError:
         from StringIO import StringIO
+    import urlparse
     import urllib2
     from urllib2 import HTTPError, urlopen
     from urllib import urlencode
+    from HTMLParser import HTMLParser
     basestring = basestring
+    unichr = unichr
+    unicodeT = unicode
+    STRING_TYPES = (str, unicode)
+    long = long
     INTEGER_TYPES = (int, long)
 else:
+    import pickle
     from io import StringIO
+    from urllib import parse as urlparse
     from urllib import request as urllib2
     from urllib.error import HTTPError
     from urllib.request import urlopen
     from urllib.parse import urlencode
+    from html.parser import HTMLParser
     basestring = str
+    unichr = chr
+    unicodeT = str
+    STRING_TYPES = (str,)
+    long = int
     INTEGER_TYPES = (int,)

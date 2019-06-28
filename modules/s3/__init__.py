@@ -35,6 +35,7 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 
+    @status: fixed for Py3
 """
 # Import all names from the S3 modules that shall be accessible
 # under the s3base namespace:
