@@ -201,7 +201,6 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Personal Menu """
 
         auth = current.auth
-        s3 = current.response.s3
         settings = current.deployment_settings
 
         if not auth.is_logged_in():

@@ -1,0 +1,8 @@
+uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
+ANONYMOUS,Anonymous,,cms,page,,,READ,,,,,Evidence
+AUTHENTICATED,Authenticated,,cms,post,,,READ,,,,,Guides
+AUTHENTICATED,Authenticated,,dc,,,,CREATE,CREATE|READ|UPDATE|DELETE,,,,
+AUTHENTICATED,Authenticated,,project,,,,CREATE,CREATE|READ|UPDATE|DELETE,,,,
+ORG_ADMIN,Organisation Admin,User can update their organization-specific information,admin,user,,,ALL,,,,,
+ORG_ADMIN,Organisation Admin,User can update their organization-specific information,dc,,,,ALL,,,,,
+ORG_ADMIN,Organisation Admin,User can update their organization-specific information,project,,,,ALL,,,,,

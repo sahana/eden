@@ -8803,7 +8803,7 @@ class ICON(I):
     #
     icons = {
         # Font-Awesome 4
-        # http://fontawesome.io/icons/
+        # https://fontawesome.com/v4.7.0/icons/
         "font-awesome": {
             "_base": "fa",
             "active": "fa-check",
@@ -8837,7 +8837,9 @@ class ICON(I):
             "facebook": "fa-facebook",
             "facility": "fa-home",
             "file": "fa-file",
-            "file-alt": "fa-file-alt",
+            "file-alt": "fa-file-o",
+            "file-text": "fa-file-text",
+            "file-text-alt": "fa-file-text-o",
             "flag": "fa-flag",
             "flag-alt": "fa-flag-o",
             "folder-open-alt": "fa-folder-open-o",
@@ -8926,6 +8928,8 @@ class ICON(I):
             "facility": "fi-home",
             "file": "fi-page-filled",
             "file-alt": "fi-page",
+            "file-text": "fi-page-filled",
+            "file-text-alt": "fi-page",
             "flag": "fi-flag",
             "flag-alt": "fi-flag",
             "folder-open-alt": "fi-folder",
@@ -8977,7 +8981,7 @@ class ICON(I):
             "zoomout": "fi-zoom-out",
         },
         # Font-Awesome 3
-        # http://fontawesome.io/3.2.1/icons/
+        # https://fontawesome.com/v3.2.1/icons/
         "font-awesome3": {
             "_base": "icon",
             "active": "icon-check",
@@ -9006,6 +9010,8 @@ class ICON(I):
             "facility": "icon-home",
             "file": "icon-file",
             "file-alt": "icon-file-alt",
+            "file-text": "icon-file-text",
+            "file-text-alt": "icon-file-text-alt",
             "flag": "icon-flag",
             "flag-alt": "icon-flag-alt",
             "folder-open-alt": "icon-folder-open-alt",

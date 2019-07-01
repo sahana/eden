@@ -740,7 +740,14 @@ class DataCollectionModel(S3Model):
                        # Format for S3InlineComponent
                        hrm_event_target = {"joinby": "target_id",
                                            "multiple": False,
-                                           }
+                                           },
+
+                       project_project = {"link": "project_target",
+                                          "joinby": "target_id",
+                                          "key": "project_id",
+                                          "actuate": "replace",
+                                          },
+
                        )
 
         # CRUD strings
