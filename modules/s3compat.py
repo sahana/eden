@@ -50,6 +50,9 @@ if PY2:
     STRING_TYPES = (str, unicode)
     long = long
     INTEGER_TYPES = (int, long)
+    from types import ClassType
+    CLASS_TYPES = (type, ClassType)
+    xrange = xrange
 else:
     import pickle
     from io import StringIO
@@ -66,3 +69,6 @@ else:
     STRING_TYPES = (str,)
     long = int
     INTEGER_TYPES = (int,)
+    ClassType = type
+    CLASS_TYPES = (type,)
+    xrange = range

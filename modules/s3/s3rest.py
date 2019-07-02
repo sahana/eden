@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3Request",
@@ -36,15 +38,11 @@ import json
 import os
 import re
 import sys
-import types
-try:
-    from cStringIO import StringIO    # Faster, where available
-except ImportError:
-    from StringIO import StringIO
 
 from gluon import current, redirect, HTTP, URL
 from gluon.storage import Storage
 
+from s3compat import CLASS_TYPES, StringIO, basestring, urlopen
 from .s3datetime import s3_parse_datetime
 from .s3resource import S3Resource
 from .s3utils import s3_get_extension, s3_keep_messages, s3_remove_last_record_id, s3_store_last_record_id, s3_str
@@ -377,7 +375,7 @@ class S3Request(object):
             if handler is not None:
                 break
 
-        if isinstance(handler, (type, types.ClassType)):
+        if isinstance(handler, CLASS_TYPES):
             return handler()
         else:
             return handler
@@ -439,7 +437,7 @@ class S3Request(object):
 
         if handler is None:
             handler = resource.crud
-        if isinstance(handler, (type, types.ClassType)):
+        if isinstance(handler, CLASS_TYPES):
             handler = handler()
         return handler
 
@@ -657,7 +655,7 @@ class S3Request(object):
                                              self.name,
                                              component_name=self.component_name,
                                              method=self.method)
-            if isinstance(action, (type, types.ClassType)):
+            if isinstance(action, CLASS_TYPES):
                 self.custom_action = action()
             else:
                 self.custom_action = action
@@ -1028,10 +1026,9 @@ class S3Request(object):
                 except:
                     source = []
             elif fetchurls:
-                import urllib
                 try:
                     for u in fetchurls:
-                        source.append((u[0], urllib.urlopen(u[1])))
+                        source.append((u[0], urlopen(u[1])))
                 except:
                     source = []
             elif r.http != "GET":
@@ -2049,7 +2046,7 @@ class S3Method(object):
             @param get_vars: the URL vars as dict
         """
 
-        return Storage((k, v) for k, v in get_vars.iteritems()
+        return Storage((k, v) for k, v in get_vars.items()
                               if not REGEX_FILTER.match(k))
 
     # -------------------------------------------------------------------------

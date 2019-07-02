@@ -32,6 +32,8 @@
            - add site-map generator and renderer (easy)
            - rewrite action buttons/links as S3NavigationItems
            - ...and any todo's in the code
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3NavigationItem",
@@ -43,6 +45,8 @@ __all__ = ("S3NavigationItem",
 
 from gluon import *
 from gluon.storage import Storage
+
+from s3compat import basestring, xrange
 from .s3utils import s3_str
 
 # =============================================================================
@@ -224,7 +228,7 @@ class S3NavigationItem(object):
         # Layout attributes and options
         attr = Storage()
         opts = Storage()
-        for k, v in attributes.iteritems():
+        for k, v in attributes.items():
             if k[0] == "_":
                 attr[k] = v
             else:
@@ -745,7 +749,7 @@ class S3NavigationItem(object):
         #   7 = args match and vars match
         if level == 2:
             extra = 1
-            for k, v in link_vars.iteritems():
+            for k, v in link_vars.items():
                 if k not in rvars or k in rvars and rvars[k] != s3_str(v):
                     extra = 0
                     break
@@ -1207,11 +1211,16 @@ class S3NavigationItem(object):
         return len(self.components)
 
     # -------------------------------------------------------------------------
-    def __nonzero__(self):
+    def __bool__(self):
         """
             To be used instead of __len__ to determine the boolean value
             if this item, should always return True for instances
         """
+
+        return self is not None
+
+    def __nonzero__(self):
+        """ Python-2.7 backwards-compatibility """
 
         return self is not None
 
@@ -1697,7 +1706,7 @@ class S3ComponentTab(object):
         if self.vars is None:
             return True
         get_vars = r.get_vars
-        for k, v in self.vars.iteritems():
+        for k, v in self.vars.items():
             if v is None:
                 continue
             if k not in get_vars or \
