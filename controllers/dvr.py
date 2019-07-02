@@ -281,17 +281,19 @@ def person():
 
             elif component.tablename == "dvr_case_activity":
 
-                # Set default statuses for components
+                # Set default status
                 if settings.get_dvr_case_activity_use_status():
                     s3db.dvr_case_activity_default_status()
 
+                # Set defaults for inline responses
                 if settings.get_dvr_manage_response_actions():
-                    s3db.dvr_response_default_status()
+                    s3db.dvr_set_response_action_defaults()
 
             elif component.tablename == "dvr_response_action":
 
+                # Set defaults
                 if settings.get_dvr_manage_response_actions():
-                    s3db.dvr_response_default_status()
+                    s3db.dvr_set_response_action_defaults()
 
             elif r.component_name == "allowance" and \
                  r.method in (None, "update"):
@@ -708,8 +710,9 @@ def case_activity():
         else:
             status_field = "completed"
 
+        # Set defaults for inline responses
         if settings.get_dvr_manage_response_actions():
-            s3db.dvr_response_default_status()
+            s3db.dvr_set_response_action_defaults()
 
         if not r.record:
 
@@ -767,8 +770,9 @@ def due_followups():
         else:
             status_field = "completed"
 
+        # Set defaults for inline responses
         if settings.get_dvr_manage_response_actions():
-            s3db.dvr_response_default_status()
+            s3db.dvr_set_response_action_defaults()
 
         # Adapt CRUD strings to perspective
         s3.crud_strings["dvr_case_activity"]["title_list"] = T("Activities to follow up")
@@ -890,8 +894,8 @@ def response_action():
                                    field.represent,
                                    )
 
-        # Set initial status
-        table.status_id.default = s3db.dvr_response_default_status()
+        # Set defaults
+        s3db.dvr_set_response_action_defaults()
 
         # Create/delete requires context perspective
         insertable = deletable = False

@@ -138,6 +138,20 @@
             <!-- Name -->
             <data field="name"><xsl:value-of select="$Name"/></data>
 
+            <!-- Is Default? -->
+            <data field="is_default">
+                <xsl:attribute name="value">
+                    <xsl:choose>
+                        <xsl:when test="col[@field='Default']/text()='true'">
+                            <xsl:value-of select="'true'"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="'false'"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:attribute>
+            </data>
+
             <!-- Comments -->
             <xsl:variable name="Comments" select="col[@field='Comments']/text()"/>
             <xsl:if test="$Comments!=''">
