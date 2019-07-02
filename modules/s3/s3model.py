@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3Model",
@@ -328,7 +330,8 @@ class S3Model(object):
                             generic.append(n)
                     elif n.startswith("%s_" % prefix):
                         s3[n] = model
-                [module.__dict__[n](prefix) for n in generic]
+                for n in generic:
+                    module.__dict__[n](prefix)
         if name in s3:
             return s3[name]
         elif isinstance(default, Exception):
@@ -512,8 +515,9 @@ class S3Model(object):
             if not keys:
                 del config[tn]
             else:
-                [config[tn].pop(k, None) for k in keys]
-        return
+                table_config = config[tn]
+                for k in keys:
+                    table_config.pop(k, None)
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -1520,15 +1524,13 @@ class S3Model(object):
             key = cls.super_key(s)
             shared = get_config(tablename, "%s_fields" % tn)
             if not shared:
-                shared = dict((fn, fn)
-                              for fn in s.fields
-                              if fn != key and fn in table.fields)
+                shared = {fn: fn for fn in s.fields
+                                 if fn != key and fn in table.fields}
             else:
-                shared = dict((fn, shared[fn])
-                              for fn in shared
-                              if fn != key and \
-                                 fn in s.fields and \
-                                 shared[fn] in table.fields)
+                shared = {fn: shared[fn] for fn in shared
+                                         if fn != key and \
+                                            fn in s.fields and \
+                                            shared[fn] in table.fields}
             fields.extend(shared.values())
             fields.append(key)
             updates.append((tn, s, key, shared))
@@ -2021,7 +2023,7 @@ class S3DynamicModel(object):
         if isinstance(fieldopts, dict):
             options = fieldopts
             if translate:
-                options = dict((k, T(v)) for k, v in options.items())
+                options = {k: T(v) for k, v in options.items()}
             options_dict = options
             # Sort options unless sort_options is False (=default True)
             sort = settings.get("sort_options", True)

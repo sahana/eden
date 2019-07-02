@@ -43,6 +43,7 @@ if PY2:
     from urllib2 import HTTPError, urlopen
     from urllib import urlencode
     from HTMLParser import HTMLParser
+    reduce = reduce
     basestring = basestring
     unichr = unichr
     unicodeT = unicode
@@ -58,6 +59,7 @@ else:
     from urllib.request import urlopen
     from urllib.parse import urlencode
     from html.parser import HTMLParser
+    from functools import reduce
     basestring = str
     unichr = chr
     unicodeT = str

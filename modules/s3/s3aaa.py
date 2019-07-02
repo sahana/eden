@@ -27,6 +27,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("AuthS3",
@@ -55,6 +57,7 @@ from gluon.storage import Storage
 from gluon.tools import Auth, callback, DEFAULT, replace_id
 from gluon.utils import web2py_uuid
 
+from s3compat import basestring, reduce
 from s3dal import Row, Rows, Query, Table, Field, original_tablename
 from .s3datetime import S3DateTime
 from .s3error import S3PermissionError
@@ -1067,7 +1070,7 @@ Thank you"""
             last_visit=request.now,
             expiration = req_vars.get("remember", False) and \
                 settings.long_expiration or settings.expiration,
-            remember = req_vars.has_key("remember"),
+            remember = "remember" in req_vars,
             hmac_key = web2py_uuid()
             )
         self.user = user
@@ -1089,10 +1092,9 @@ Thank you"""
 
         # Set user's position
         # @ToDo: Per-User settings
-        if deployment_settings.get_auth_set_presence_on_login() and \
-           req_vars.has_key("auth_user_clientlocation") and \
-           req_vars.get("auth_user_clientlocation"):
-            position = req_vars.get("auth_user_clientlocation").split("|", 3)
+        client_location = req_vars.get("auth_user_clientlocation")
+        if deployment_settings.get_auth_set_presence_on_login() and client_location:
+            position = client_location.split("|", 3)
             userlat = float(position[0])
             userlon = float(position[1])
             accuracy = float(position[2]) / 1000 # Ensures accuracy is in km
@@ -1772,7 +1774,7 @@ Thank you"""
             if multiselect_widget:
                 language.widget = S3MultiSelectWidget(multiple=False)
         else:
-            language.default = languages.keys()[0]
+            language.default = list(languages.keys())[0]
             language.readable = language.writable = False
 
         utable.registration_key.label = messages.label_registration_key
@@ -2306,7 +2308,7 @@ $.filterOptionsS3({
         user_id = form_vars.id
 
         if not user_id:
-            return None
+            return
 
         record  = {"user_id": user_id}
 
@@ -3515,7 +3517,7 @@ $.filterOptionsS3({
         if gtable is not None:
             S3_SYSTEM_ROLES = self.S3_SYSTEM_ROLES
             query = (gtable.deleted != True) & \
-                     gtable.uuid.belongs(S3_SYSTEM_ROLES.values())
+                     gtable.uuid.belongs(set(S3_SYSTEM_ROLES.values()))
             rows = current.db(query).select(gtable.id, gtable.uuid)
             system_roles = Storage([(role.uuid, role.id) for role in rows])
         else:
@@ -3614,7 +3616,7 @@ $.filterOptionsS3({
                                     cacheable=True)
 
             # Add all group_ids to session.s3.roles
-            session.s3.roles.extend(list(set([row.group_id for row in rows])))
+            session.s3.roles.extend(row.group_id for row in rows)
 
             # Realms:
             # Permissions of a group apply only for records owned by any of
@@ -4045,7 +4047,7 @@ $.filterOptionsS3({
         elif for_pe is not DEFAULT:
             query &= (mtable.pe_id == for_pe)
         rows = current.db(query).select(mtable.group_id)
-        return list(set([row.group_id for row in rows]))
+        return list({row.group_id for row in rows})
 
     # -------------------------------------------------------------------------
     def s3_has_role(self, role, for_pe=None):
@@ -4546,7 +4548,8 @@ $.filterOptionsS3({
         return result
 
     # -------------------------------------------------------------------------
-    def s3_user_pe_id(self, user_id):
+    @staticmethod
+    def s3_user_pe_id(user_id):
         """
             Get the person pe_id for a user ID
 
@@ -4560,7 +4563,8 @@ $.filterOptionsS3({
         return row.pe_id if row else None
 
     # -------------------------------------------------------------------------
-    def s3_bulk_user_pe_id(self, user_ids):
+    @staticmethod
+    def s3_bulk_user_pe_id(user_ids):
         """
             Get the list of person pe_id for list of user_ids
 
@@ -4570,9 +4574,9 @@ $.filterOptionsS3({
         table = current.s3db.pr_person_user
         if not isinstance(user_ids, list):
             user_ids = [user_ids]
-        rows = current.db(table.user_id.belongs([user_id for user_id in user_ids])).\
-                                                            select(table.pe_id,
-                                                                   table.user_id)
+        rows = current.db(table.user_id.belongs(user_ids)).select(table.pe_id,
+                                                                  table.user_id,
+                                                                  )
         if rows:
             return {row.user_id: row.pe_id for row in rows}
         return None
@@ -4800,7 +4804,7 @@ $.filterOptionsS3({
             if not user_id and self.user:
                 user_id = self.user.id
             self.log_event(log, {"user_id": user_id,
-                                 "group_id":group_id,
+                                 "group_id": group_id,
                                  "check": has_role,
                                  })
         return has_role
@@ -5410,7 +5414,7 @@ $.filterOptionsS3({
             site_types = self.org_site_types
         else:
             if facility_type not in self.org_site_types:
-                return
+                return site_ids
             site_types = [s3db[facility_type]]
         for site_type in site_types:
             try:
@@ -5635,7 +5639,7 @@ class S3Permission(object):
         # Policy: which level of granularity do we want?
         self.policy = settings.get_security_policy()
         # ACLs to control access per controller:
-        self.use_cacls = self.policy in (3, 4, 5, 6, 7 ,8)
+        self.use_cacls = self.policy in (3, 4, 5, 6, 7, 8)
         # ACLs to control access per function within controllers:
         self.use_facls = self.policy in (4, 5, 6, 7, 8)
         # ACLs to control access per table:
@@ -6180,7 +6184,7 @@ class S3Permission(object):
 
         if not self.entity_realm:
             # Security Policy doesn't use Realms, so unrestricted
-            return
+            return None
 
         auth = self.auth
         sr = auth.get_system_roles()
@@ -6823,7 +6827,7 @@ class S3Permission(object):
                 # RFC1945/2617 compliance:
                 # Must raise an HTTP Auth challenge with status 401
                 challenge = {"WWW-Authenticate":
-                             u"Basic realm=\"%s\"" % current.request.application}
+                             "Basic realm=\"%s\"" % current.request.application}
                 raise HTTP(401, body=self.AUTHENTICATION_REQUIRED, **challenge)
 
     # -------------------------------------------------------------------------
@@ -7918,13 +7922,15 @@ class S3EntityRoleManager(S3Method):
 
         # Get the realm from the current realms
         if ADMIN in realms:
-            return realms[ADMIN]
+            realm = realms[ADMIN]
         elif ORG_ADMIN in realms:
-            return realms[ORG_ADMIN]
+            realm = realms[ORG_ADMIN]
         else:
             # raise an error here - user is not permitted
             # to access the role matrix
             auth.permission.fail()
+
+        return realm
 
     # -------------------------------------------------------------------------
     def get_modules(self):
@@ -8042,8 +8048,7 @@ class S3EntityRoleManager(S3Method):
         """
 
         fields = []
-        requires = IS_EMPTY_OR(IS_IN_SET(self.acls.keys(),
-                                         labels=self.acls.values()))
+        requires = IS_EMPTY_OR(IS_IN_SET(self.acls))
         for module_uid, module_label in self.modules.items():
             field = Field(module_uid,
                           label=module_label,
@@ -8197,14 +8202,12 @@ class S3OrgRoleManager(S3EntityRoleManager):
         if not self.user:
             assigned_roles = self.assigned_roles
 
-            realm_users = dict((k, v)
-                               for k, v in self.realm_users.items()
-                               if k not in assigned_roles)
+            realm_users = {k: v for k, v in self.realm_users.items()
+                                if k not in assigned_roles}
 
-            other_users = dict((k, v)
-                               for k, v in self.objects.items()
-                               if k not in assigned_roles and \
-                                  k not in self.realm_users)
+            other_users = {k: v for k, v in self.objects.items()
+                                if k not in assigned_roles and \
+                                   k not in self.realm_users}
 
             options = [("", ""),
                        (T("Users in my Organizations"), realm_users),
