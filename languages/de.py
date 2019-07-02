@@ -117,6 +117,7 @@
 'Action Details': 'Details zur Maßnahme',
 'Action Statistic': 'Maßnahmenstatistik',
 'Action Type': 'Maßnahmenart',
+'Action Types': 'Maßnahmenarten',
 'Action created': 'Maßnahme angelegt',
 'Action deleted': 'Maßnahme gelöscht',
 'Action successful - please wait...': 'Aktion erfolgreich - bitte warten...',
