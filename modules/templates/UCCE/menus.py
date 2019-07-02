@@ -107,7 +107,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def ucce():
         """ UCCE Side Menu """
 
-        return M()(M("Projects", c="project", f="project", m="datalist", icon="folder")(
+        return M()(M("Projects", c="project", f="project", m="datalist", icon="folder-alt")(
                      #M("Create", m="create"),
                        ),
                    M("Reports", c="dc", f="target", m="datalist", icon="bar-chart")(

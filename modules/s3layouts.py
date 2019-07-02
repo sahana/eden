@@ -277,7 +277,7 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
             if item.parent is not None:
                 if item.enabled and item.authorized:
 
-                    attr = dict(_id = item.attr._id)
+                    attr = {"_id": item.attr._id}
                     if item.attr._onclick:
                         attr["_onclick"] = item.attr._onclick
                     else:

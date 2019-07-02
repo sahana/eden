@@ -156,4 +156,99 @@ def config(settings):
         #)),
     ])
 
+    settings.ui.filter_clear = False
+    settings.search.filter_manager = False
+
+    # -------------------------------------------------------------------------
+    def customise_cms_post_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm, S3TextFilter
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Guide"),
+            title_display = T("Guide Details"),
+            title_list = T("Guides"),
+            title_update = T("Edit Guide"),
+            #title_upload = T("Import Guides"),
+            label_list_button = T("List Guides"),
+            label_delete_button = T("Delete Guide"),
+            msg_record_created = T("Guide added"),
+            msg_record_modified = T("Guide updated"),
+            msg_record_deleted = T("Guide deleted"),
+            msg_list_empty = T("No Guides currently registered"))
+
+        table = current.s3db.configure("cms_post",
+                                       crud_form = S3SQLCustomForm((T("Category"), "series_id"),
+                                                                   "name",
+                                                                   "body",
+                                                                   ),
+                                       list_fields = [(T("Category"), "series_id"),
+                                                      "name",
+                                                      "body",
+                                                      ],
+                                       filter_widgets = [S3TextFilter(["name",
+                                                                       #"series_id",
+                                                                       ],
+                                                                      #formstyle = text_filter_formstyle,
+                                                                      label = "",
+                                                                      _placeholder = T("Search guide"),
+                                                                      ),
+                                                         ],
+                                       )
+
+    settings.customise_cms_post_resource = customise_cms_post_resource
+
+    # -------------------------------------------------------------------------
+    def customise_dc_target_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm, S3TextFilter
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Survey"),
+            title_display = T("Survey Details"),
+            title_list = T("Surveys"),
+            title_update = T("Edit Survey"),
+            #title_upload = T("Import Surveys"),
+            label_list_button = T("List Surveys"),
+            label_delete_button = T("Delete Survey"),
+            msg_record_created = T("Survey added"),
+            msg_record_modified = T("Survey updated"),
+            msg_record_deleted = T("Survey deleted"),
+            msg_list_empty = T("No Surveys currently registered"))
+
+
+        table = current.s3db.configure("dc_target",
+                                       crud_form = S3SQLCustomForm("name"),
+                                       listadd = False,
+                                       list_fields = ["name"],
+                                       filter_widgets = [S3TextFilter(["name",
+                                                                       ],
+                                                                      #formstyle = text_filter_formstyle,
+                                                                      label = "",
+                                                                      _placeholder = T("Search project or survey"),
+                                                                      ),
+                                                         ],
+                                       )
+
+    settings.customise_dc_target_resource = customise_dc_target_resource
+
+    # -------------------------------------------------------------------------
+    def customise_project_project_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm, S3TextFilter
+
+        table = current.s3db.configure("project_project",
+                                       crud_form = S3SQLCustomForm("name"),
+                                       list_fields = ["name"],
+                                       filter_widgets = [S3TextFilter(["name",
+                                                                       ],
+                                                                      #formstyle = text_filter_formstyle,
+                                                                      label = "",
+                                                                      _placeholder = T("Search project or survey"),
+                                                                      ),
+                                                         ],
+                                       )
+
+    settings.customise_project_project_resource = customise_project_project_resource
+
 # END =========================================================================

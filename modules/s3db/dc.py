@@ -706,6 +706,7 @@ class DataCollectionModel(S3Model):
         #
         tablename = "dc_target"
         define_table(tablename,
+                     Field("name"),
                      template_id(),
                      s3_date(default = "now"),
                      # Enable in-templates as-required
