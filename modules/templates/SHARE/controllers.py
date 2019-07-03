@@ -371,8 +371,8 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     else:
         docs = ""
 
-    divider = LI("|")
-    divider["_aria-hidden"] = "true"
+    #divider = LI("|")
+    #divider["_aria-hidden"] = "true"
 
     toolbar = UL(#LI(share_btn,
                  #   _class="item",

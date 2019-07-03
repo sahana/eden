@@ -18,7 +18,7 @@ def config(settings):
 
     # PrePopulate data
     settings.base.prepopulate += ("UCCE",)
-    #settings.base.prepopulate_demo += ("UCCE/Demo",)
+    settings.base.prepopulate_demo += ("UCCE/Demo",)
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "UCCE"
@@ -29,10 +29,10 @@ def config(settings):
     # Should users be allowed to register themselves?
     #settings.security.self_registration = False
     # Do new users need to verify their email address?
-    #settings.auth.registration_requires_verification = True
+    settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
-    #settings.auth.registration_requires_approval = True
-    #settings.auth.registration_requests_organisation = True
+    settings.auth.registration_requires_approval = True
+    settings.auth.registration_requests_organisation = True
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
@@ -51,7 +51,7 @@ def config(settings):
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 
-    settings.security.policy = 5 # Table ACLs
+    settings.security.policy = 6 # Controller, Function, Table ACLs and Entity Realm
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -164,6 +164,8 @@ def config(settings):
 
         from s3 import S3SQLCustomForm, S3TextFilter
 
+        from templates.UCCE.controllers import cms_post_list_layout
+
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Create Guide"),
             title_display = T("Guide Details"),
@@ -177,31 +179,67 @@ def config(settings):
             msg_record_deleted = T("Guide deleted"),
             msg_list_empty = T("No Guides currently registered"))
 
-        table = current.s3db.configure("cms_post",
-                                       crud_form = S3SQLCustomForm((T("Category"), "series_id"),
-                                                                   "name",
-                                                                   "body",
-                                                                   ),
-                                       list_fields = [(T("Category"), "series_id"),
-                                                      "name",
-                                                      "body",
-                                                      ],
-                                       filter_widgets = [S3TextFilter(["name",
-                                                                       #"series_id",
-                                                                       ],
-                                                                      #formstyle = text_filter_formstyle,
-                                                                      label = "",
-                                                                      _placeholder = T("Search guide"),
-                                                                      ),
-                                                         ],
-                                       )
+        s3db = current.s3db
+        f = s3db.cms_post.series_id
+        f.label = T("Category")
+        f.readable = f.writable = True
+
+        s3db.configure("cms_post",
+                       crud_form = S3SQLCustomForm("series_id",
+                                                   "title",
+                                                   "body",
+                                                   ),
+                       list_fields = ["series_id",
+                                      "title",
+                                      "body",
+                                      ],
+                       list_layout = cms_post_list_layout,
+                       filter_widgets = [S3TextFilter(["title",
+                                                       "series_id",
+                                                       ],
+                                                      #formstyle = text_filter_formstyle,
+                                                      label = "",
+                                                      _placeholder = T("Search guide"),
+                                                      ),
+                                         ],
+                       )
 
     settings.customise_cms_post_resource = customise_cms_post_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_cms_post_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.method == "datalist":
+                # Filter out non-Guides
+                from s3 import FS
+                r.resource.add_filter(FS("post_module.module") == None)
+
+            return result
+        s3.prep = prep
+
+        attr["dl_rowsize"] = 2
+
+        return attr
+
+    settings.customise_cms_post_controller = customise_cms_post_controller
 
     # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
 
         from s3 import S3SQLCustomForm, S3TextFilter
+
+        from templates.UCCE.controllers import dc_target_list_layout
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Create Survey"),
@@ -217,37 +255,64 @@ def config(settings):
             msg_list_empty = T("No Surveys currently registered"))
 
 
-        table = current.s3db.configure("dc_target",
-                                       crud_form = S3SQLCustomForm("name"),
-                                       listadd = False,
-                                       list_fields = ["name"],
-                                       filter_widgets = [S3TextFilter(["name",
-                                                                       ],
-                                                                      #formstyle = text_filter_formstyle,
-                                                                      label = "",
-                                                                      _placeholder = T("Search project or survey"),
-                                                                      ),
-                                                         ],
-                                       )
+        current.s3db.configure("dc_target",
+                               crud_form = S3SQLCustomForm("name"),
+                               listadd = False,
+                               list_fields = ["name",
+                                              "project.name",
+                                              ],
+                               list_layout = dc_target_list_layout,
+                               filter_widgets = [S3TextFilter(["name",
+                                                               ],
+                                                              #formstyle = text_filter_formstyle,
+                                                              label = "",
+                                                              _placeholder = T("Search project or survey"),
+                                                              ),
+                                                 ],
+                               )
 
     settings.customise_dc_target_resource = customise_dc_target_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_dc_target_controller(**attr):
+
+        attr["dl_rowsize"] = 2
+
+        return attr
+
+    settings.customise_dc_target_controller = customise_dc_target_controller
 
     # -------------------------------------------------------------------------
     def customise_project_project_resource(r, tablename):
 
         from s3 import S3SQLCustomForm, S3TextFilter
 
-        table = current.s3db.configure("project_project",
-                                       crud_form = S3SQLCustomForm("name"),
-                                       list_fields = ["name"],
-                                       filter_widgets = [S3TextFilter(["name",
-                                                                       ],
-                                                                      #formstyle = text_filter_formstyle,
-                                                                      label = "",
-                                                                      _placeholder = T("Search project or survey"),
-                                                                      ),
-                                                         ],
-                                       )
+        from templates.UCCE.controllers import project_project_list_layout
+
+        s3db = current.s3db
+
+        user = current.auth.user
+        organisation_id = user and user.organisation_id
+        if organisation_id:
+            f = s3db.project_project.organisation_id
+            f.default = organisation_id
+            f.readable = f.writable = False
+
+        s3db.configure("project_project",
+                       crud_form = S3SQLCustomForm("organisation_id",
+                                                   "name",
+                                                   ),
+                       list_fields = ["name",
+                                      ],
+                       list_layout = project_project_list_layout,
+                       filter_widgets = [S3TextFilter(["name",
+                                                       ],
+                                                      #formstyle = text_filter_formstyle,
+                                                      label = "",
+                                                      _placeholder = T("Search project or survey"),
+                                                      ),
+                                         ],
+                       )
 
     settings.customise_project_project_resource = customise_project_project_resource
 
