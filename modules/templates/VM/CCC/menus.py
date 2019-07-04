@@ -44,18 +44,18 @@ class S3MainMenu(default.S3MainMenu):
 
         auth = current.auth
         if auth.is_logged_in():
-            menu.append(MM("General Information and Advice", c="cms", f="post"))
+            menu.append(MM("General Information and Advice", c="cms", f="post", m="datalist"))
 
         if auth.s3_has_role("ADMIN"):
             menu += [MM("Events", c="req", f="req",
                         ),
-                     MM("All Documents", c="cms", f="post",
+                     MM("All Documents", c="doc", f="document", m="datalist",
                         ),
                      ]
         elif auth.s3_has_role("VOLUNTEER"):
             menu += [MM("Events", c="req", f="req",
                         ),
-                     MM("Organisation Documents", c="cms", f="post",
+                     MM("Organisation Documents", c="doc", f="document", m="datalist",
                         ),
                      MM("Contact Organisation Admins", c="cms", f="post",
                         ),
@@ -160,5 +160,23 @@ class S3MainMenu(default.S3MainMenu):
             #MA("Version", f="about", restrict = ADMIN),
         )
         return menu_about
+
+# =============================================================================
+class S3OptionsMenu(default.S3OptionsMenu):
+    """ Custom Controller Menus """
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cms():
+        """ No Side Menu """
+
+        return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def doc():
+        """ No Side Menu """
+
+        return None
 
 # END =========================================================================

@@ -162,6 +162,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cms_post_resource(r, tablename):
 
+        from gluon import URL
         from s3 import S3SQLCustomForm, S3TextFilter
 
         from templates.UCCE.controllers import cms_post_list_layout
@@ -185,6 +186,7 @@ def config(settings):
         f.readable = f.writable = True
 
         s3db.configure("cms_post",
+                       create_next = URL(args="datalist"),
                        crud_form = S3SQLCustomForm("series_id",
                                                    "title",
                                                    "body",
@@ -228,6 +230,7 @@ def config(settings):
             return result
         s3.prep = prep
 
+        s3.dl_no_header = True
         attr["dl_rowsize"] = 2
 
         return attr
@@ -276,6 +279,7 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_dc_target_controller(**attr):
 
+        current.response.s3.dl_no_header = True
         attr["dl_rowsize"] = 2
 
         return attr
@@ -285,6 +289,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_project_project_resource(r, tablename):
 
+        from gluon import URL
         from s3 import S3SQLCustomForm, S3TextFilter
 
         from templates.UCCE.controllers import project_project_list_layout
@@ -299,6 +304,7 @@ def config(settings):
             f.readable = f.writable = False
 
         s3db.configure("project_project",
+                       create_next = URL(args="datalist"),
                        crud_form = S3SQLCustomForm("organisation_id",
                                                    "name",
                                                    ),
@@ -315,5 +321,14 @@ def config(settings):
                        )
 
     settings.customise_project_project_resource = customise_project_project_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_project_project_controller(**attr):
+
+        current.response.s3.dl_no_header = True
+
+        return attr
+
+    settings.customise_project_project_controller = customise_project_project_controller
 
 # END =========================================================================

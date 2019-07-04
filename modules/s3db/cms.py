@@ -1703,7 +1703,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                _class="s3-truncate",
                )
 
-    date = record["cms_post.date"]
+    date = record["cms_post.date"] or ""
     date = SPAN(date,
                 _class="date-title",
                 )

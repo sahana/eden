@@ -102,6 +102,168 @@ def config(settings):
         )),
     ])
 
+    settings.cms.richtext = True
+    settings.ui.filter_clear = False
+    settings.search.filter_manager = False
+
+    # -------------------------------------------------------------------------
+    def customise_auth_user_controller(**attr):
+
+        if current.request.args(0) == "register":
+            # Not easy to tweak the URL in the login form's buttons
+            from gluon import redirect, URL
+            redirect(URL(c="default", f="index",
+                         args="register",
+                         vars=current.request.get_vars))
+
+        return attr
+
+    settings.customise_auth_user_controller = customise_auth_user_controller
+
+    # -------------------------------------------------------------------------
+    def customise_cms_post_resource(r, tablename):
+
+        from gluon import URL
+        from s3 import S3SQLCustomForm, S3TextFilter
+
+        #from templates.VM.CCC.controllers import cms_post_list_layout
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Information"),
+        #    title_display = T("Guide Details"),
+            title_list = "",
+        #    title_update = T("Edit Guide"),
+        #    #title_upload = T("Import Guides"),
+        #    label_list_button = T("List Guides"),
+        #    label_delete_button = T("Delete Guide"),
+        #    msg_record_created = T("Guide added"),
+        #    msg_record_modified = T("Guide updated"),
+        #    msg_record_deleted = T("Guide deleted"),
+        #    msg_list_empty = T("No Guides currently registered")
+        )
+
+        s3db = current.s3db
+        #f = s3db.cms_post.series_id
+        #f.label = T("Category")
+        #f.readable = f.writable = True
+
+        s3db.configure("cms_post",
+                       create_next = URL(args="datalist"),
+                       crud_form = S3SQLCustomForm(#"series_id",
+                                                   "title",
+                                                   "body",
+                                                   ),
+                       list_fields = [#"series_id",
+                                      "title",
+                                      "body",
+                                      "date",
+                                      ],
+                       #list_layout = cms_post_list_layout,
+                       filter_widgets = [S3TextFilter(["title",
+                                                       #"series_id",
+                                                       ],
+                                                      #formstyle = text_filter_formstyle,
+                                                      label = "",
+                                                      _placeholder = T("Search"),
+                                                      ),
+                                         ],
+                       )
+
+    settings.customise_cms_post_resource = customise_cms_post_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_cms_post_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.method == "datalist":
+                # Filter out system posts
+                from s3 import FS
+                r.resource.add_filter(FS("post_module.module") == None)
+
+            return result
+        s3.prep = prep
+
+        s3.dl_no_header = True
+        #attr["dl_rowsize"] = 2
+
+        return attr
+
+    settings.customise_cms_post_controller = customise_cms_post_controller
+
+    # -------------------------------------------------------------------------
+    def customise_doc_document_resource(r, tablename):
+
+        from gluon import URL
+        from s3 import S3SQLCustomForm, S3TextFilter
+
+        #from templates.VM.CCC.controllers import doc_document_list_layout
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Document"),
+        #    title_display = T("Guide Details"),
+            title_list = "",
+        #    title_update = T("Edit Guide"),
+        #    #title_upload = T("Import Guides"),
+        #    label_list_button = T("List Guides"),
+        #    label_delete_button = T("Delete Guide"),
+        #    msg_record_created = T("Guide added"),
+        #    msg_record_modified = T("Guide updated"),
+        #    msg_record_deleted = T("Guide deleted"),
+        #    msg_list_empty = T("No Guides currently registered")
+        )
+
+        s3db = current.s3db
+
+        f = s3db.doc_document.organisation_id
+        user = current.auth.user
+        organisation_id = user and user.organisation_id
+        if organisation_id:
+            f.default = organisation_id
+        else:
+            f.readable = f.writable = True
+
+        s3db.configure("doc_document",
+                       create_next = URL(args="datalist"),
+                       crud_form = S3SQLCustomForm("organisation_id",
+                                                   "name",
+                                                   "file",
+                                                   ),
+                       list_fields = ["organisation_id",
+                                      "name",
+                                      "file",
+                                      ],
+                       #list_layout = doc_document_list_layout,
+                       filter_widgets = [S3TextFilter(["name",
+                                                       "organisation_id",
+                                                       ],
+                                                      #formstyle = text_filter_formstyle,
+                                                      label = "",
+                                                      _placeholder = T("Search"),
+                                                      ),
+                                         ],
+                       )
+
+    settings.customise_doc_document_resource = customise_doc_document_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_doc_document_controller(**attr):
+
+        current.response.s3.dl_no_header = True
+
+        return attr
+
+    settings.customise_doc_document_controller = customise_doc_document_controller
+
     # -------------------------------------------------------------------------
     def customise_req_home():
 
@@ -121,19 +283,5 @@ def config(settings):
                                       view = "VM/CCC/views/volunteer.html")
 
     settings.customise_vol_home = customise_vol_home
-
-    # -------------------------------------------------------------------------
-    def customise_auth_user_controller(**attr):
-
-        if current.request.args(0) == "register":
-            # Not easy to tweak the URL in the login form's buttons
-            from gluon import redirect, URL
-            redirect(URL(c="default", f="index",
-                         args="register",
-                         vars=current.request.get_vars))
-
-        return attr
-
-    settings.customise_auth_user_controller = customise_auth_user_controller
 
 # END =========================================================================
