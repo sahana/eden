@@ -16,7 +16,7 @@
          Branch.........................optional.....branch organisation name
          ...SubBranch,SubSubBranch...etc (indefinite depth, must specify all from root)
 
-         Link....................auth_user.link_user_to (=> human_resource.type)L Staff, Volunteer or Member
+         Link....................auth_user.link_user_to (=> human_resource.type): Staff, Volunteer or Member
          Facility Type...........s3db[tablename]
          Office..................org_site.name
          Organisation Group......org_group.name

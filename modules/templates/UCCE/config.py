@@ -33,6 +33,9 @@ def config(settings):
     # Do new users need to be approved by an administrator prior to being able to login?
     settings.auth.registration_requires_approval = True
     settings.auth.registration_requests_organisation = True
+    # Required for access to default realm permissions
+    settings.auth.registration_link_user_to = ["staff"]
+    settings.auth.registration_link_user_to_default = ["staff"]
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
@@ -118,6 +121,7 @@ def config(settings):
             restricted = True,
             module_type = 1
         )),
+        # Needed for default realm permissions
         # Currently-needed for Profile link:
         ("hrm", Storage(
             name_nice = T("Staff"),
@@ -201,7 +205,7 @@ def config(settings):
                                                        ],
                                                       #formstyle = text_filter_formstyle,
                                                       label = "",
-                                                      _placeholder = T("Search guide"),
+                                                      _placeholder = T("Search guides"),
                                                       ),
                                          ],
                        )

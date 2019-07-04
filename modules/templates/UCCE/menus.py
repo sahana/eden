@@ -114,15 +114,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
                      #restrict=[ADMIN])(
                      #M("Create", m="create"),
                      ),
-                   M("Guides", c="cms", f="post", m="datalist", icon="file-text-alt")(
+                   M("Guides", c="doc", f="document", m="datalist", icon="file-text-alt")(
                      #restrict=[ADMIN])(
                      #M("Create", m="create"),
                      ),
                    )
 
     # -------------------------------------------------------------------------
-    def cms(self):
-        """ Content Management Module """
+    def doc(self):
+        """ Documents Module """
 
         return self.ucce()
 

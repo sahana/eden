@@ -34,6 +34,9 @@ def config(settings):
     # - varies by path (see customise_auth_user_controller)
     #settings.auth.registration_requires_approval = True
     settings.auth.registration_requests_organisation = True
+    # Required for access to default realm permissions
+    settings.auth.registration_link_user_to = ["staff"]
+    settings.auth.registration_link_user_to_default = ["staff"]
 
     # -------------------------------------------------------------------------
     # L10n (Localization) settings
@@ -79,6 +82,12 @@ def config(settings):
         ("dc", Storage(
             name_nice = T("Assessments"),
             #description = "Data collection tool",
+            restricted = True,
+            module_type = 5
+        )),
+        ("hrm", Storage(
+            name_nice = T("Personnel"),
+            #description = "Human Resources Management",
             restricted = True,
             module_type = 5
         )),

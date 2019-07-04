@@ -682,18 +682,18 @@ class S3Config(Storage):
     def get_auth_registration_link_user_to(self):
         """
             Link User accounts to none or more of:
-            * Staff
-            * Volunteer
-            * Member
+            * staff
+            * volunteer
+            * member
         """
         return self.auth.get("registration_link_user_to")
 
     def get_auth_registration_link_user_to_default(self):
         """
             Link User accounts to none or more of:
-            * Staff
-            * Volunteer
-            * Member
+            * staff
+            * volunteer
+            * member
             Should be an iterable.
         """
         return self.auth.get("registration_link_user_to_default")
