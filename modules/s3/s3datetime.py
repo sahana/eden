@@ -27,6 +27,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("ISOFORMAT",
@@ -58,6 +60,8 @@ import re
 import time
 
 from gluon import current
+
+from s3compat import INTEGER_TYPES, basestring, xrange
 
 # =============================================================================
 # Constants
@@ -294,7 +298,7 @@ class S3DateTime(object):
         sign = 1
         offset_hrs = offset_min = 0
 
-        if isinstance(string, (int, long, float)):
+        if isinstance(string, INTEGER_TYPES + (float,)):
             offset_hrs = string
         elif isinstance(string, basestring):
             if string[:3] == "UTC":
@@ -1783,7 +1787,7 @@ def s3_relative_datetime(dtexpr):
     then = now
     for m in RELATIVE.finditer(dtexpr):
 
-        (sign, value, unit) = m.group(1,2,3)
+        (sign, value, unit) = m.group(1, 2, 3)
 
         try:
             value = int(value)

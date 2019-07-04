@@ -30,6 +30,8 @@
 
     NB Widgets are processed upon form submission (before form validation)
        in addition to when generating new forms (so are often processed twice)
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3ACLWidget",
@@ -108,6 +110,7 @@ from gluon.languages import lazyT
 from gluon.sqlhtml import *
 from gluon.storage import Storage
 
+from s3compat import INTEGER_TYPES, basestring, long, sorted_locale, unicodeT, xrange
 from .s3datetime import S3Calendar, S3DateTime
 from .s3utils import *
 from .s3validators import *
@@ -3246,7 +3249,7 @@ class S3GroupedOptionsWidget(FormWidget):
                         rows = current.db(query).select(ktable[pkey],
                                                         ktable[help_field])
                         for row in rows:
-                            helptext[unicode(row[pkey])] = row[help_field]
+                            helptext[s3_unicode(row[pkey])] = row[help_field]
 
         # Get all letters and their options
         letter_options = {}
@@ -3258,16 +3261,15 @@ class S3GroupedOptionsWidget(FormWidget):
                     letter_options[letter].append((key, label))
                 else:
                     letter_options[letter] = [(key, label)]
-        all_letters = letter_options.keys()
 
         # Sort letters
-        import locale
-        if all_letters:
-            all_letters.sort(locale.strcoll)
+        if letter_options:
+            all_letters = sorted_locale(letter_options.keys())
             first_letter = min(u"A", all_letters[0])
             last_letter = max(u"Z", all_letters[-1])
         else:
             # No point with grouping if we don't have any labels
+            all_letters = []
             size = 0
 
         size = self.size
@@ -3506,8 +3508,8 @@ class S3RadioOptionsWidget(FormWidget):
             if callable(help_field):
                 help_field = help_field(options)
             if isinstance(help_field, dict):
-                for key in help_field.keys():
-                    helptext[s3_unicode(key)] = help_field[key]
+                for k, v in help_field.items():
+                    helptext[s3_unicode(k)] = v
             else:
                 ktablename, pkey = s3_get_foreign_key(field)[:2]
                 if ktablename is not None:
@@ -3518,7 +3520,7 @@ class S3RadioOptionsWidget(FormWidget):
                         rows = current.db(query).select(ktable[pkey],
                                                         ktable[help_field])
                         for row in rows:
-                            helptext[unicode(row[pkey])] = row[help_field]
+                            helptext[s3_unicode(row[pkey])] = row[help_field]
 
         # Prepare output for _render_item()
         _options = []
@@ -3761,7 +3763,7 @@ i18n.upload_image='%s' ''' % (T("Please select a valid image!"),
             if callable(download_url):
                 download_url = download_url()
 
-            url = "%s/%s" % (download_url ,value)
+            url = "%s/%s" % (download_url, value)
             # Add Image
             crop_data_attr["_value"] = url
             append(FIELDSET(LEGEND(A(T("Upload different Image")),
@@ -4588,7 +4590,7 @@ class S3LocationSelector(S3Selector):
 
         if feature_required:
             show_map = True
-            if not any((points,lines, polygons, circles)):
+            if not any((points, lines, polygons, circles)):
                 points = True
             if lines or polygons or circles:
                 required = "wkt" if not points else "any"
@@ -4778,7 +4780,7 @@ class S3LocationSelector(S3Selector):
                     if s3.debug:
                         raise RuntimeError(error)
 
-        if not location_id and values.keys() == ["id"]:
+        if not location_id and list(values.keys()) == ["id"]:
             location_id = values["id"] = default
 
         # Update the values dict from the database
@@ -5499,13 +5501,11 @@ class S3LocationSelector(S3Selector):
             _placeholder = label
         else:
             _placeholder = None
-        if isinstance(value, unicode):
-            value = value.encode("utf-8")
-        widget = INPUT(_name=name,
-                       _id=input_id,
-                       _class=_class,
-                       _placeholder=_placeholder,
-                       value=value,
+        widget = INPUT(_name = name,
+                       _id = input_id,
+                       _class = _class,
+                       _placeholder = _placeholder,
+                       value = s3_str(value),
                        )
 
         return (_label, widget, input_id, hidden)
@@ -6026,7 +6026,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         ltable = s3db.gis_location
 
         if lx_ids:
-            query = ltable.id.belongs(lx_ids.values())
+            query = ltable.id.belongs(set(lx_ids.values()))
             limitby = (0, len(lx_ids))
             lx_names = current.db(query).select(ltable.id,
                                                 ltable.name,
@@ -6639,7 +6639,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
             # Select All / Unselect All doesn't make sense if multiple == False
             header_opt = False
         if not isinstance(search_opt, bool) and \
-           (search_opt == "auto" or isinstance(search_opt, (int, long))):
+           (search_opt == "auto" or isinstance(search_opt, INTEGER_TYPES)):
             max_options = 10 if search_opt == "auto" else search_opt
             if options_len > max_options:
                 search_opt = True
@@ -6861,7 +6861,7 @@ class S3CascadeSelectWidget(FormWidget):
         else:
             values = value
         for v in values:
-            if isinstance(v, (int, long)) or str(v).isdigit():
+            if isinstance(v, INTEGER_TYPES) or str(v).isdigit():
                 append(v)
 
         # Prepend value parser to field validator
@@ -7080,7 +7080,7 @@ class S3HierarchyWidget(FormWidget):
         else:
             values = value
         for v in values:
-            if isinstance(v, (int, long)) or str(v).isdigit():
+            if isinstance(v, INTEGER_TYPES) or str(v).isdigit():
                 append(v)
 
         # Prepend value parser to field validator
@@ -7361,7 +7361,7 @@ class S3OrganisationHierarchyWidget(OptionsWidget):
                     for row in rows:
                         options.append(row.as_dict())
                 else:
-                    raise SyntaxError, "widget cannot determine options of %s" % field
+                    raise SyntaxError("widget cannot determine options of %s" % field)
 
         javascript_array = '''%s_options=%s''' % (name,
                                                   json.dumps(options, separators=SEPARATORS))
@@ -8093,8 +8093,7 @@ class CheckboxesWidgetS3(OptionsWidget):
         if hasattr(requires[0], "options"):
             options = requires[0].options()
         else:
-            raise SyntaxError, "widget cannot determine options of %s" \
-                % field
+            raise SyntaxError("widget cannot determine options of %s" % field)
 
         options = [(k, v) for k, v in options if k != ""]
 
@@ -8696,18 +8695,11 @@ class S3QuestionWidget(FormWidget):
 
         _label = LABEL("%s: " % label, _for=input_id)
 
-        if isinstance(value, unicode):
-            value = value.encode("utf-8")
-
         # If the input is of type checkbox
         if name in ("is_required", "multiple"):
-            widget = INPUT(_type=_type,
-                           _id=input_id,
-                           value=value)
+            widget = INPUT(_type=_type, _id=input_id, value=s3_str(value))
         else:
-            widget = INPUT(_type=_type,
-                           _id=input_id,
-                           _value=value)
+            widget = INPUT(_type=_type, _id=input_id, _value=s3_str(value))
 
         return (_label, widget, input_id)
 

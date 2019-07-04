@@ -30,6 +30,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3CRUD",)
@@ -50,6 +52,7 @@ from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
 
+from s3compat import basestring, long
 from .s3datetime import S3DateTime, s3_decode_iso_datetime
 from .s3export import S3Exporter
 from .s3forms import S3SQLDefaultForm
@@ -666,7 +669,7 @@ class S3CRUD(S3Method):
                                         subheadings = subheadings,
                                         format = representation,
                                         )
-                except HTTP, e:
+                except HTTP as e:
                     message = current.ERROR.BAD_RECORD \
                               if e.status == 404 else e.message
                     r.error(e.status, message)
@@ -952,7 +955,7 @@ class S3CRUD(S3Method):
                                     link=link,
                                     subheadings=subheadings,
                                     format=representation)
-            except HTTP, e:
+            except HTTP as e:
                 message = current.ERROR.BAD_RECORD \
                           if e.status == 404 else e.message
                 r.error(e.status, message)
@@ -1736,8 +1739,8 @@ class S3CRUD(S3Method):
             # plain.html view for pagination to work properly!
             ajax_url = attr.get("list_ajaxurl", None)
             if not ajax_url:
-                ajax_vars = dict((k,v) for k, v in r.get_vars.iteritems()
-                                       if k not in ("start", "limit"))
+                ajax_vars = {k: v for k, v in r.get_vars.items()
+                                  if k not in ("start", "limit")}
                 ajax_url = r.url(representation="dl", vars=ajax_vars)
 
             # Render the list (even if empty => Ajax-section is required
