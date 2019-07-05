@@ -5,7 +5,7 @@ import uuid
 from gluon import *
 from s3 import S3CustomController, s3_mark_required
 
-THEME = "VM/CCC"
+THEME = "CCC"
 
 # =============================================================================
 class index(S3CustomController):

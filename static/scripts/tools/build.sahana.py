@@ -685,7 +685,7 @@ def main(argv):
     # Suppress closure warnings?
     warnings = "NOWARN" not in argv
 
-    if "CSS" in argv:
+    if "CSS" in argv or "css" in argv:
         # Build CSS only
         docss()
     else:

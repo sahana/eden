@@ -578,6 +578,9 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
     """
         Default dataList item renderer for Documents, e.g. on the HRM Profile
 
+        NB The CSS classes here refer to static/themes/bootstrap/cards.css & newsfeed.css
+        - so this CSS either needs moving to core or else this needs modifying for default CSS
+
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render

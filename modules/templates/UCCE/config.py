@@ -164,82 +164,82 @@ def config(settings):
     settings.search.filter_manager = False
 
     # -------------------------------------------------------------------------
-    def customise_cms_post_resource(r, tablename):
+    #def customise_cms_post_resource(r, tablename):
 
-        from gluon import URL
-        from s3 import S3SQLCustomForm, S3TextFilter
+    #    from gluon import URL
+    #    from s3 import S3SQLCustomForm, S3TextFilter
 
-        from templates.UCCE.controllers import cms_post_list_layout
+    #    from templates.UCCE.controllers import cms_post_list_layout
 
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create Guide"),
-            title_display = T("Guide Details"),
-            title_list = T("Guides"),
-            title_update = T("Edit Guide"),
-            #title_upload = T("Import Guides"),
-            label_list_button = T("List Guides"),
-            label_delete_button = T("Delete Guide"),
-            msg_record_created = T("Guide added"),
-            msg_record_modified = T("Guide updated"),
-            msg_record_deleted = T("Guide deleted"),
-            msg_list_empty = T("No Guides currently registered"))
+    #    current.response.s3.crud_strings[tablename] = Storage(
+    #        label_create = T("Create Guide"),
+    #        title_display = T("Guide Details"),
+    #        title_list = T("Guides"),
+    #        title_update = T("Edit Guide"),
+    #        #title_upload = T("Import Guides"),
+    #        label_list_button = T("List Guides"),
+    #        label_delete_button = T("Delete Guide"),
+    #        msg_record_created = T("Guide added"),
+    #        msg_record_modified = T("Guide updated"),
+    #        msg_record_deleted = T("Guide deleted"),
+    #        msg_list_empty = T("No Guides currently registered"))
 
-        s3db = current.s3db
-        f = s3db.cms_post.series_id
-        f.label = T("Category")
-        f.readable = f.writable = True
+    #    s3db = current.s3db
+    #    f = s3db.cms_post.series_id
+    #    f.label = T("Category")
+    #    f.readable = f.writable = True
 
-        s3db.configure("cms_post",
-                       create_next = URL(args="datalist"),
-                       crud_form = S3SQLCustomForm("series_id",
-                                                   "title",
-                                                   "body",
-                                                   ),
-                       list_fields = ["series_id",
-                                      "title",
-                                      "body",
-                                      ],
-                       list_layout = cms_post_list_layout,
-                       filter_widgets = [S3TextFilter(["title",
-                                                       "series_id",
-                                                       ],
-                                                      #formstyle = text_filter_formstyle,
-                                                      label = "",
-                                                      _placeholder = T("Search guides"),
-                                                      ),
-                                         ],
-                       )
+    #    s3db.configure("cms_post",
+    #                   create_next = URL(args="datalist"),
+    #                   crud_form = S3SQLCustomForm("series_id",
+    #                                               "title",
+    #                                               "body",
+    #                                               ),
+    #                   list_fields = ["series_id",
+    #                                  "title",
+    #                                  "body",
+    #                                  ],
+    #                   list_layout = cms_post_list_layout,
+    #                   filter_widgets = [S3TextFilter(["title",
+    #                                                   "series_id",
+    #                                                   ],
+    #                                                  #formstyle = text_filter_formstyle,
+    #                                                  label = "",
+    #                                                  _placeholder = T("Search guides"),
+    #                                                  ),
+    #                                     ],
+    #                   )
 
-    settings.customise_cms_post_resource = customise_cms_post_resource
+    #settings.customise_cms_post_resource = customise_cms_post_resource
 
     # -----------------------------------------------------------------------------
-    def customise_cms_post_controller(**attr):
+    #def customise_cms_post_controller(**attr):
 
-        s3 = current.response.s3
+    #    s3 = current.response.s3
 
-        # Custom postp
-        standard_prep = s3.prep
-        def prep(r):
-            # Call standard prep
-            if callable(standard_prep):
-                result = standard_prep(r)
-            else:
-                result = True
+    #    # Custom postp
+    #    standard_prep = s3.prep
+    #    def prep(r):
+    #        # Call standard prep
+    #        if callable(standard_prep):
+    #            result = standard_prep(r)
+    #        else:
+    #            result = True
 
-            if r.method == "datalist":
-                # Filter out non-Guides
-                from s3 import FS
-                r.resource.add_filter(FS("post_module.module") == None)
+    #        if r.method == "datalist":
+    #            # Filter out non-Guides
+    #            from s3 import FS
+    #            r.resource.add_filter(FS("post_module.module") == None)
 
-            return result
-        s3.prep = prep
+    #        return result
+    #    s3.prep = prep
 
-        s3.dl_no_header = True
-        attr["dl_rowsize"] = 2
+    #    s3.dl_no_header = True
+    #    attr["dl_rowsize"] = 2
 
-        return attr
+    #    return attr
 
-    settings.customise_cms_post_controller = customise_cms_post_controller
+    #settings.customise_cms_post_controller = customise_cms_post_controller
 
     # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
@@ -289,6 +289,75 @@ def config(settings):
         return attr
 
     settings.customise_dc_target_controller = customise_dc_target_controller
+
+    # -------------------------------------------------------------------------
+    def customise_doc_document_resource(r, tablename):
+
+        from gluon import URL
+        from s3 import S3SQLCustomForm, S3TextFilter
+
+        from templates.UCCE.controllers import doc_document_list_layout
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Guide"),
+            title_display = T("Guide Details"),
+            title_list = "",
+            title_update = T("Edit Guide"),
+            #title_upload = T("Import Guides"),
+            label_list_button = T("List Guides"),
+            label_delete_button = T("Delete Guide"),
+            msg_record_created = T("Guide added"),
+            msg_record_modified = T("Guide updated"),
+            msg_record_deleted = T("Guide deleted"),
+            msg_list_empty = T("No Guides currently registered")
+        )
+
+        s3db = current.s3db
+
+        f = s3db.doc_document.comments
+        f.comment = None
+
+        #f = s3db.doc_document.organisation_id
+        #user = current.auth.user
+        #organisation_id = user and user.organisation_id
+        #if organisation_id:
+        #    f.default = organisation_id
+        #else:
+        #    f.readable = f.writable = True
+
+        s3db.configure("doc_document",
+                       create_next = URL(args="datalist"),
+                       crud_form = S3SQLCustomForm(#"organisation_id",
+                                                   "name",
+                                                   "file",
+                                                   "comments",
+                                                   ),
+                       list_fields = [#"organisation_id",
+                                      "name",
+                                      "file",
+                                      "comments",
+                                      ],
+                       list_layout = doc_document_list_layout,
+                       filter_widgets = [S3TextFilter(["name",
+                                                       #"organisation_id",
+                                                       ],
+                                                      #formstyle = text_filter_formstyle,
+                                                      label = "",
+                                                      _placeholder = T("Search guides"),
+                                                      ),
+                                         ],
+                       )
+
+    settings.customise_doc_document_resource = customise_doc_document_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_doc_document_controller(**attr):
+
+        current.response.s3.dl_no_header = True
+
+        return attr
+
+    settings.customise_doc_document_controller = customise_doc_document_controller
 
     # -------------------------------------------------------------------------
     def customise_project_project_resource(r, tablename):
