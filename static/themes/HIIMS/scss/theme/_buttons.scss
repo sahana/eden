@@ -1,0 +1,153 @@
+// ============================================================================
+// Styles for Action Buttons
+// ============================================================================
+// VARIABLES
+
+// Foundation variables used:
+//$primary-color
+//$button-bg-color
+//$button-bg-hover
+//$alert-color
+//$alert-button-bg-hover
+
+// Action buttons defaults
+$action_btn_bgcolor: $button-bg-color !default;
+$action_btn_bgcolor_hover: $button-bg-hover !default;
+$action_btn_fgcolor: white !default;
+$action_btn_fgcolor_hover: white !default;
+
+// Standard action button
+$action_btn_bgcolor_default: $action_btn_bgcolor !default;
+$action_btn_bgcolor_default_hover: $action_btn_bgcolor_hover !default;
+$action_btn_fgcolor_default: $action_btn_fgcolor !default;
+$action_btn_fgcolor_default_hover: $action_btn_fgcolor_hover !default;
+
+// Debug action button (debug toolbar in footer)
+$action_btn_bgcolor_debug: #dddddd !default;
+$action_btn_bgcolor_debug_hover: #a0a0a0 !default;
+$action_btn_fgcolor_debug: $action_btn_fgcolor !default;
+$action_btn_fgcolor_debug_hover: $action_btn_fgcolor_hover !default;
+
+// Alert action button (e.g. delete-button)
+$action_btn_bgcolor_alert: $alert-color !default;
+$action_btn_bgcolor_alert_hover: $alert-button-bg-hover !default;
+$action_btn_fgcolor_alert: $action_btn_fgcolor !default;
+$action_btn_fgcolor_alert_hover: $action_btn_fgcolor_hover !default;
+
+// Disabled action buttons
+$action_btn_bgcolor_disabled: rgba(192,192,192,0.25) !default;
+$action_btn_fgcolor_disabled: $action_btn_fgcolor_hover !default;
+
+// ============================================================================
+// STYLES
+
+/* Action buttons */
+.action-btn,
+.delete-btn-ajax,
+.delete-btn,
+.selected-action {
+    @include tiny_button_style();
+    &[disabled],
+    &[disabled]:hover {
+        color: $action_btn_fgcolor_disabled;
+        background-color: $action_btn_bgcolor_disabled;
+    }
+}
+
+/* Default action buttons */
+.action-btn,
+.selected-action {
+    background-color: $action_btn_bgcolor_default;
+    color: $action_btn_fgcolor_default !important;
+    &:hover {
+        background-color: $action_btn_bgcolor_default_hover;
+        color: $action_btn_fgcolor_default_hover !important;
+    }
+}
+
+/* Alert-style action buttons (e.g. delete) */
+.delete-btn-ajax,
+.delete-btn {
+    background-color: $action_btn_bgcolor_alert;
+    color: $action_btn_fgcolor_alert !important;
+    &:hover {
+        background-color: $action_btn_bgcolor_alert_hover !important;
+        color: $action_btn_fgcolor_alert_hover !important;
+    }
+}
+
+/* Cancel button */
+.cancel-form-btn {
+    padding: 0.9375rem;
+}
+.cancel-form-btn:hover {
+    color: white;
+    background-color: $primary-color;
+}
+
+/* Full screen map button */
+.map_home .gis_fullscreen_map-btn {
+    font-weight: normal;
+    font-size: 0.8rem;
+    padding: 0.2rem;
+}
+
+/* Action buttons in datatables */
+.dataTable {
+    // need to override datatables CSS as that has more specific selectors
+    .action-btn,
+    .selected-action {
+        color: $action_btn_fgcolor_default;
+    }
+    .delete-btn,
+    .delete-btn-ajax {
+        color: $action_btn_fgcolor_alert;
+    }
+    td.actions {
+        white-space: nowrap;
+    }
+}
+
+/* Debug buttons in footer */
+#footer {
+    button.btn {
+        @include tiny_button_style();
+        margin-left: 2px;
+        margin-right: 2px;
+        color: $action_btn_fgcolor_debug;
+        background: $action_btn_bgcolor_debug;
+    }
+    button.btn:hover {
+        color: $action_btn_fgcolor_debug_hover;
+        background: $action_btn_bgcolor_debug_hover;
+    }
+}
+
+/* Action links */
+.action-lnk {
+    margin-left: 0.6rem;
+    &:first-child {
+        margin-left: 0;
+    }
+}
+body.rtl .action-lnk {
+    margin-left: 0;
+    margin-right: 0.6rem;
+    &:first-child {
+        margin-right: 0;
+    }
+}
+
+/* Caret */
+.caret {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: top;
+  border-top: 4px solid #000000;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  content: "";
+}
+
+// END ========================================================================

@@ -1,0 +1,27 @@
+@charset "UTF-8";
+
+/* Styling of the CAP Profile page */
+
+.cap-label {
+    color: #aaa;
+}
+.cap-value {
+    color: #506b80;
+}
+.cap-strong {
+    color: #f16b09;
+}
+.upper {
+    text-transform: uppercase;
+}
+.underline {
+    color: #aaa;
+    border-bottom: 1px solid;
+}
+h4.profile-sub-header{
+    background-color: #fff !important;
+}
+.cap-headline {
+    font-weight: bold;
+    font-size: large;
+}

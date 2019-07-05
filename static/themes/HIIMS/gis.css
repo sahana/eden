@@ -1,0 +1,673 @@
+/* GIS module */
+
+.embeddedComponent .map_wrapper {
+    min-width: 350px;
+}
+
+.map_wrapper {
+    /* Allow Absolutely positioned panels within */
+    position: relative;
+    /* Allow legendPanel to slide out */
+    overflow: hidden;
+    clear: right;
+}
+.map_wrapper.fullscreen {
+    /* Allow legendPanel to be visible */
+    overflow: visible;
+}
+/* Allow LayerTree to Scroll */
+.gis_west .x-panel-body {
+    overflow-y: auto;
+}
+/* Ensure Throbber shows centered on main map (but not on location selector)
+   - core definition in widgets.css */
+.map_loader {
+    margin-top: 50px;
+    margin-left: auto;
+    margin-right: auto;
+}
+form .map_loader {
+    margin-top: 0;
+}
+
+.x-form-item-label {
+    margin: 0 0 0 4px;
+}
+/* Workaround for Chrome browser not utilising full screen width */
+body.x-window-maximized-ct {
+    width: 100%;
+}
+/* Override widgets.css */
+.form-container form tr.x-toolbar-left-row td {
+    padding: 0;
+}
+
+/* Main Map */
+.map_home {
+    margin: 0 0 0 -12px;
+}
+.map_home .gis_fullscreen_map-btn {
+    font-weight: bold;
+    padding-left: 8px;
+}
+body.rtl .map_home .gis_fullscreen_map-btn {
+    float: left;
+}
+.gis_print_map-btn {
+    font-weight: bold;
+    float: right;
+    padding-right: 8px;
+}
+.notitle .ui-dialog-titlebar {
+    background-image: none !important;
+    border: 0;
+    padding: 0;
+}
+.notitle .ui-dialog-title {
+    margin: 0;
+    padding: 0;
+}
+.notitle .ui-dialog-titlebar-close {
+    margin-top: -10px;
+}
+
+.gis-map-window.x-resizable-pinned .x-window-tl {
+    height: 0;
+}
+
+/* Location Selector Widget */
+.form-container form button.gis_loc_select_btn {
+    padding: 4px;
+}
+.form-container form button.gis_loc_select_btn i.icon-map {
+    padding-right: 2px;
+}
+
+/* gis_LocationRepresent with icon to display the feature */
+.gis-display-feature i.icon-map-marker {
+    cursor: pointer;
+    cursor: hand;
+    padding-left: 5px;
+}
+
+.embeddedComponent .map_wrapper {
+    width: 100%;
+}
+
+.gis_coord_wrap .decimal {
+    width: 174px;
+}
+.gis_coord_wrap .gis_coord_dms input {
+    width: 37px;
+}
+.gis_coord_wrap .gis_coord_dms input.seconds {
+    width: 70px;
+}
+.gis_coord_wrap div {
+    padding-top: 8px;
+}
+
+/* LayerTree
+.x-tree .x-panel-bwrap {
+    overflow: auto;
+    overflow-x: hidden;
+} */
+.x-tree-elbow,
+.x-tree-elbow-end,
+.x-tree-node-icon {
+    display: none;
+}
+.x-tree-node-anchor {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+.x-tree-node {
+    font-size: 12px;
+}
+.x-tree-node-leaf {
+    margin-left: 10px;
+}
+/* Override Bootstrap */
+.x-tree-root-ct,
+.x-tree-node-ct {
+    margin: 0;
+}
+/* Override NVD3 (now done in there)
+svg[id^=OpenLayers] {
+    height: auto;
+    width: auto;
+} */
+
+/* Legend */
+.map_legend_div {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.map_wrapper.fullscreen .map_legend_div {
+    z-index: 9100;
+}
+/* A4 is 595 x 842 at 72 dpi */
+.map_wrapper.a4 .map_legend_div {
+    margin-bottom: -440px;
+}
+/* A3 is 842 x 1191 at 72 dpi */
+.map_wrapper.a3 .map_legend_div {
+    margin-bottom: -687px;
+    right: -140px;
+}
+/* A2 is 1191 x 1684 at 72 dpi */
+.map_wrapper.a2 .map_legend_div {
+    margin-bottom: -1036px;
+    right: -530px;
+}
+/* A1 is 1684 x 2384 at 72 dpi */
+.map_wrapper.a1 .map_legend_div {
+    margin-bottom: -1529px;
+    right: -2130px;
+}
+/* A0 is 2384 x 3375 at 72 dpi */
+.map_wrapper.a0 .map_legend_div {
+    margin-bottom: -2229px;
+    right: -3125px;
+}
+.map_legend_panel {
+    background-color: #fbfbfb;
+    border: solid;
+    border-radius: 5px 0 0 5px;
+    padding: 1px;
+    margin: 0 0 20px; /* Ref'd in hideLegend & showLegend in gis.js */
+    width: auto;
+    max-width: 800px;
+    max-height: 500px;
+    overflow-y: auto;
+    border-right: none;
+}
+.map_legend_panel  .x-panel-header-noborder {
+    border: none;
+}
+.map_legend_tab {
+    background-color: #fbfbfb;
+    border: solid;
+    border-width: 2px;
+    margin-top: 5px;
+    font-family: FontAwesome;
+    font-weight: normal;
+    font-style: normal;
+    text-decoration: inherit;
+    -webkit-font-smoothing: antialiased;
+    float: left;
+    border-radius: 3px 0 3px 3px;
+    border-right: none;
+    border-right-width: 0;
+    margin-right: -6px;
+    margin-left: -12px;
+    padding-left: 2px;
+    padding-right: 3px;
+}
+.map_legend_tab:before {
+    text-decoration: inherit;
+    display: inline-block;
+    speak: none;
+}
+.map_legend_tab.left:before {
+    /* http://fontawesome.io/3.2.1/icon/double-angle-left/ */
+    content: "\f100";
+}
+.map_legend_tab.right:before {
+    /* http://fontawesome.io/3.2.1/icon/double-angle-right/ */
+    content: "\f101";
+}
+.map_wrapper.print .map_legend_tab {
+    height: 0;
+}
+.map_wrapper.print .map_legend_tab.right:before,
+.map_wrapper.print .map_legend_tab.left:before {
+    content: normal;
+}
+.gis_legend_title {
+    font-weight: bold;
+    margin-top: 10px;
+}
+.gis_legend_desc {
+    max-width: 200px;
+}
+
+/* Throbber when not using toolbar */
+.layer_throbber.float {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+.layer_throbber.save {
+    /* Push Under Save Panel */
+    top: 65px;
+}
+
+/* Draw Polygon */
+.map_polygon_panel {
+    background-color: #fbfbfb;
+    position: absolute;
+    top: 10px;
+    height: 125px;
+    width: 350px;
+    margin-left: -175px; /* Half of the  Div width */
+    left: 50%;
+    border: solid;
+    border-radius: 2px;
+    border-width: 1px;
+    font-size: small;
+    text-align: center;
+    padding: 12px;
+}
+.map_polygon_buttons {
+    font-size: 0.75rem;
+    margin-top: 12px;
+    text-transform: uppercase;
+}
+.button.map_polygon_finish {
+    margin-right: 12px;
+}
+
+/* Save Panel */
+.map_save_panel {
+    background-color: #fbfbfb;
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 10px 0;
+    padding: 5px;
+    border: solid;
+    border-radius: 5px 0 0 5px;
+    /*width: 210px;*/
+    width: auto;
+}
+.map_wrapper.fullscreen .map_save_panel {
+    z-index: 9100;
+    margin-top: -100px;
+}
+.map_wrapper.print .map_save_button {
+    height: 0;
+    width: 0;
+    visibility: hidden;
+}
+.map_save_panel.off {
+    visibility: hidden;
+}
+.map_save_button {
+    background-color: #fbfbfb;
+    padding: 5px;
+    border: solid;
+    border-radius: 5px 5px 5px 5px;
+    width: auto;
+    cursor: pointer;
+    visibility: visible;
+    float: right;
+    /*margin-right: 10px;*/
+}
+.map_save_name {
+    font-weight: bold;
+    text-align: center;
+    padding: 5px;
+    margin-top: 2px;
+}
+.map_save_panel input {
+    width: 150px;
+    margin-top: 1px;
+    margin-right: 5px;
+}
+.map_save_panel input.checkbox {
+    width: 10px;
+    margin: 0 5px 0 0;
+}
+.map_save_panel .new_map {
+    font-size: small;
+}
+.map_save_panel .saved {
+    float: left;
+}
+.map_save_panel p {
+    float: left;
+    padding: 5px;
+    color: green;
+    margin: 0;
+}
+
+/* Saved Maps */
+#config-gis_config_pe_id-options-filter__row .s3-groupedopts-option {
+    /* Hide the Radios (we can click on labels) */
+    display: none;
+}
+#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget td:first-child {
+    border-right: solid 1px;
+    padding-right: 10px;
+}
+
+/* Current Coordinates */
+.olControlMousePosition {
+    font-size: 10px;
+    background-color: white;
+}
+
+/* Crosshair when positioning new features */
+.crosshair {
+    cursor: crosshair;
+}
+
+/* Google Layers */
+.olLayerGoogleCopyright {
+    right: 3px;
+    bottom: 2px;
+    left: auto;
+}
+.olLayerGooglePoweredBy {
+    left: 2px;
+    bottom: 2px;
+}
+.olForeignContainer div.olControlMousePosition {
+    bottom: 28px;
+}
+
+/* Tooltips */
+.gis_tooltip {
+    /* Need to over-ride the element.style */
+    opacity: 0.7 !important;
+}
+.gis_tooltip_content {
+    /*background-color: #ffffcb;*/
+    overflow: hidden;
+    padding: 3px;
+    margin: 10px;
+}
+
+/* Popups */
+.olPopup #plain {
+    max-width: 450px;
+}
+.olPopupCloseBox { /* Needed for Foundation-based themes for some reason */
+    margin-right: 15px;
+    margin-top: -8px;
+}
+.olFramedCloudPopupContent label {
+    padding-right: 5px;
+}
+.gis-map-window .olFramedCloudPopupContent td {
+    padding: 2px;
+}
+.gis_popup_row {
+    display: table-row;
+}
+.gis_popup_label {
+    display: table-cell;
+    font-weight: bold;
+    text-align: right;
+    padding-right: 2px;
+}
+.gis_popup_val {
+    display: table-cell;
+}
+
+#georsspopup h2,
+#kmlpopup h2 {
+    margin: 0;
+}
+
+/* GeoExt popups */
+.gx-popup-anc {
+    background: transparent url(../../img/gis/geoext/anchor.png) no-repeat 0 0;
+    position: relative;
+    top: -1px;
+    left: 5px;
+    z-index: 2;
+    height: 16px;
+    width: 31px;
+}
+
+/* Layer Legened */
+.gx-ruledrag-insert-below {
+    border-bottom: 1px dotted;
+}
+.gx-ruledrag-insert-above {
+    border-top: 1px dotted;
+}
+
+/* Toolbar */
+.mappnlcntr .zoomfull {
+    background-image: url(../../img/gis/mapfish/icon_zoomfull.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.mappnlcntr .zoomin {
+    background-image: url(../../img/gis/mapfish/icon_zoomin.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.mappnlcntr .zoomout {
+    background-image: url(../../img/gis/mapfish/icon_zoomout.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.mappnlcntr .pan-off {
+    background-image: url(../../img/gis/mapfish/icon_pan.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.mappnlcntr .measure-off {
+  background-image: url(../../img/gis/measuring-stick-off.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
+.mappnlcntr .measure-area {
+  background-image: url(../../img/gis/measure-area-off.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
+.mappnlcntr .modifyfeature {
+    background-image: url(../../img/gis/mapfish/move_vertex_off.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.mappnlcntr .drawpoint-off {
+  background-image: url(../../img/gis/add_point_off.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
+.mappnlcntr .drawline-off {
+  background-image: url(../../img/gis/mapfish/draw_line_off.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
+.mappnlcntr .drawpolygon-off {
+  background-image: url(../../img/gis/mapfish/draw_polygon_off.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
+.mappnlcntr .drawpolygonclear-off {
+  background-image: url(../../img/gis/mapfish/draw_polygon_clear_off.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
+.mappnlcntr .drawcircle-on {
+  background-image: url(../../img/draw_circle_on.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
+.mappnlcntr .info {
+  background-image: url(../../img/gis/mapfish/info.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
+.mappnlcntr .searchclick {
+    background-image: url(../../img/ext/information.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.mappnlcntr .searchbox {
+    background-image: url(../../img/ext/information-box.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.mappnlcntr .back {
+    background-image: url(../../img/gis/mapfish/resultset_previous.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.mappnlcntr .next {
+    background-image: url(../../img/gis/mapfish/resultset_next.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.mappnlcntr .print {
+    background-image: url(../../img/silk/printer.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.mappnlcntr .save {
+    background-image: url(../../img/ext/save.gif) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.x-btn-text.geolocation {
+  background-image: url(../../img/gis/geolocation.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
+.x-btn-text.potlatch {
+  background-image: url(../../img/gis/openstreetmap.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
+/*
+.x-btn-text.googleearth {
+  background-image: url(../../img/gis/geosilk/google_earth.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}*/
+.x-btn-text.streetview {
+  background-image: url(../../img/gis/streetview.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
+.gxp-icon-addlayers {
+    background-image: url(../../img/silk/add.png) !important;
+}
+.gxp-icon-addserver {
+    background-image: url(../../img/silk/server_add.png) !important;
+}
+.gxp-icon-getfeatureinfo {
+    background-image: url(../../img/silk/information.png) !important;
+}
+.gxp-icon-removelayers {
+    background-image: url(../../img/silk/delete.png) !important;
+}
+.gxp-icon-layerproperties {
+    background-image: url(../../img/silk/wrench.png) !important;
+}
+.icon-clearlayers {
+    background-image: url(../../img/silk/eye.png);
+}
+.mappnlcntr .movefeature {
+    background-image: url(../../img/gis/arrow_refresh.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.mappnlcntr .removefeature {
+    background-image: url(../../img/gis/remove_point_off.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.mappnlcntr .resizefeature {
+    background-image: url(../../img/gis/resize.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.mappnlcntr .rotatefeature {
+    background-image: url(../../img/gis/arrow_rotate_clockwise.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+
+/*
+.mappnlcntr .mf-print-action {
+    background-image: url(../../img/gis/mapfish/printer.png) !important;
+}
+.mappnlcntr .pan-on{
+    background-image: url(../../img/gis/openlayers/theme_default/pan_on.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.mappnlcntr .drawpoint-on {
+  background-image: url(../../img/gis/openlayers/theme_default/add_point_on.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
+.mappnlcntr .drawline-on {
+  background-image: url(../../img/gis/openlayers/theme_default/draw_line_on.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
+.mappnlcntr .drawpolygon-on{
+  background-image: url(../../img/gis/openlayers/theme_default/draw_polygon_on.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
+.mappnlcntr .measure-on {
+  background-image: url(../../img/gis/measuring-stick-on.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
+*/
+
+/* Print Preview
+.x-btn .icon-print {
+    background-image: url(../../img/silk/printer.png);
+}
+
+.gx-printpreview {
+    padding: 5px;
+} */
+
+/* fixes textarea scrollbar issue in FF on OSX */
+/* Print Preview
+.gx-printpreview  textarea.x-form-field {
+    padding: 1px 1px 1px 3px;
+}
+
+.gx-map-overlay {
+    z-index: 1000;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    text-align: left;
+}
+
+.gx-map-overlay .x-panel-body {
+    background-color: #D0DEF0;
+}
+
+.gx-map-overlay .olControlScaleLine {
+    bottom: 0;
+    left: 0;
+    position: relative !important;
+}
+
+.gx-northarrow {
+    background: transparent url(../../img/gis/geoext/north_arrow.png) no-repeat;
+    *-background: none;
+    *-filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='../../img/gis/geoext/north_arrow.png',sizingMethod='crop');
+    height: 24px;
+    width: 24px;
+}
+
+.gx-item-nowrap .x-box-item {
+    white-space: nowrap;
+} */
+
+/* cdauth GeoLocation
+.olControlcdauthGeoLocation {
+	position: absolute;
+	right: 3px;
+	font-size: smaller;
+	bottom: 6em;
+} */

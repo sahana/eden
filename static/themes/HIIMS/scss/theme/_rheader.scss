@@ -1,0 +1,161 @@
+// ============================================================================
+// Styles for Resource Headers
+// ============================================================================
+// VARIABLES
+
+// Foundation variables used:
+//$button-bg-color
+//$button-bg-hover
+
+// Active tab
+$rheader_tabs_bgcolor_active: #ffffff !default;
+$rheader_tabs_bgcolor_active_hover: #f1edec !default;
+$rheader_tabs_fgcolor_active: #666666 !default;
+$rheader_tabs_fgcolor_active_hover: #666666 !default;
+
+// Inactive tabs
+$rheader_tabs_bgcolor_inactive: $button-bg-color !default;
+$rheader_tabs_bgcolor_inactive_hover: $button-bg-hover !default;
+$rheader_tabs_fgcolor_inactive: #ffffff !default;
+$rheader_tabs_fgcolor_inactive_hover: #ffffff !default;
+
+// ============================================================================
+// STYLES
+
+/* Rheader */
+#rheader {
+    width: 100%;
+
+    // Profile pictures in rheaders
+    a.th {
+        img {
+            height: 60px;
+        }
+        margin-right: 10px;
+    }
+    .rheader-avatar {
+        clear: none;
+        display: inline-block;
+        float: none;
+        padding: 0;
+        vertical-align: top;
+    }
+    img.rheader-avatar {
+        margin-right: 0.8rem;
+    }
+    .rheader-content {
+        display: inline-block;
+    }
+    .rheader-title {
+        color: #333;
+        font-weight: bold;
+        font-size: 1.1rem;
+        line-height: 1.0;
+    }
+    table {
+        display: inline;
+        margin-bottom: 10px;
+        border: none;
+        tr {
+            background: none;
+        }
+    }
+}
+
+/* Rheader Tabs */
+div.tabs {
+    // Tabs section
+    display: block;
+    clear: none;
+
+    height: 1.9rem;
+    width: 100%;
+
+    margin: 0.5rem 0;
+    padding: 0;
+
+    line-height: 1.3rem;
+    text-align: left;
+
+    border-bottom: 1px solid $rheader_tabs_bgcolor_inactive;
+
+    span {
+        // General tabs
+        float: left;
+        display: inline;
+        position: relative;
+
+        margin: 0.2rem 0.2rem 0 0;
+        padding: 0.1rem 0.3rem 0.1rem;
+
+        border-radius: 3px 3px 0 0;
+
+        a {
+            color: $rheader_tabs_fgcolor_inactive !important;
+            text-decoration: none !important;
+            background: transparent !important;
+            &:hover {
+                background: transparent !important;
+            }
+        }
+
+        // Active tab
+        &.tab_here {
+            font-size: 1rem;
+            font-weight: bold;
+
+            margin: 0.2rem 0.35rem 0 0;
+            padding: 0.1rem 0.4rem 0.12rem;
+
+            background: $rheader_tabs_bgcolor_active;
+            border: {
+                color: $rheader_tabs_bgcolor_inactive;
+                style: solid;
+                width: rem_calc(2) 2px rem_calc(1) 3px;
+                bottom: {
+                    style: solid;
+                    color: $rheader_tabs_bgcolor_active;
+                }
+            }
+
+            &:hover {
+                background-color: $rheader_tabs_bgcolor_active_hover;
+            }
+            a {
+                color: $rheader_tabs_fgcolor_active !important;
+                &:hover {
+                    color: $rheader_tabs_fgcolor_active_hover !important;
+                }
+            }
+        }
+
+        // Inactive tabs
+        &.tab_last,
+        &.tab_other {
+            font-size: 0.9rem;
+
+            margin: 0.35rem 0.2rem 0 0;
+            padding: 0.1rem 0.3rem 0;
+
+            background-color: $rheader_tabs_bgcolor_inactive;
+            border: {
+                color: $rheader_tabs_bgcolor_inactive;
+                width: rem_calc(1) 1px rem_calc(1) 2px;
+                style: solid;
+            }
+
+            &:hover {
+                background-color: $rheader_tabs_bgcolor_inactive_hover;
+                border-color: $rheader_tabs_bgcolor_inactive_hover;
+            }
+            a {
+                color: $rheader_tabs_fgcolor_inactive !important;
+                &:hover {
+                    color: $rheader_tabs_fgcolor_inactive_hover !important;
+                }
+            }
+        }
+    }
+}
+
+// END ========================================================================

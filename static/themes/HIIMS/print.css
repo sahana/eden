@@ -1,0 +1,126 @@
+@charset "UTF-8";
+
+/*
+ * Print styles
+ * inlined to avoid required HTTP connection www.phpied.com/delay-loading-your-print-css/
+ */
+ 
+@media print {
+    /* Serif typefaces are the most legible in print, we want a clean white background without images. */
+    body {
+        /*
+        background: white;
+        background-color: transparent;
+        */
+        background: transparent;
+        color: black;
+        font-family: "Georgia", Times New Roman, Serif;
+        font-size: 12pt; /* This breaks users' ability to increase fontsize on-screen 1st */
+    }
+
+    /* Remove Items */
+    #menu_modules,
+    #menu_options,
+    #footer,
+    #rheader_tabs,
+    #searchCombo {
+        display: none;
+    }
+
+    /* Trim margins */
+    #content   {
+        background-color:transparent;
+        width: 100%;
+        float: none !important;
+        border: 0;
+        border-radius: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Simple styling with fontsize specified in points */
+    #content h1,
+    #content h2 {
+        background: white;
+        color: black;
+        font-size: 16pt;
+        border: 0;
+        border-radius: 0;
+        margin: 0;
+    }
+
+    #content h3 {
+        background: white;
+        color: black;
+        font-size: 14pt;
+        margin: 0;
+    }
+
+    /* Links can't be clicked, so mark them with simple underline */
+    a {
+        color: black;
+        background: transparent;
+        /* font-weight: bold; */
+        text-decoration: underline;
+    }
+
+    /* Give the destinations - needs to be selective. Internal navigation links aren't helpful */
+    /*
+    a:after,
+    a:link:after,
+    a:visited:after {
+        content: " ("attr(href)") ";
+        font-size: 90%;
+    }
+    */
+
+    /* Control placement of line-breaks */
+    #comments {
+        page-break-before: always;
+        /* page-break-after:always; */
+        /* page-break-after:avoid; */
+        /* page-break-before:avoid; */
+    }
+
+    /* Web2Py */
+    * {
+        background: transparent !important;
+        color: #444 !important;
+        text-shadow: none !important;
+    }
+    a, a:visited {
+        color: #444 !important;
+        text-decoration: underline;
+    }
+    a:after {
+        content: " (" attr(href) ")";
+    }
+    abbr:after {
+        content: " (" attr(title) ")";
+    }
+    /* Don't show links for images */
+    .ir a:after {
+        content: "";
+    }
+    pre, blockquote {
+        border: 1px solid #999;
+        page-break-inside: avoid;
+    }
+    /* css-discuss.incutio.com/wiki/Printing_Tables */
+    thead {
+        display: table-header-group;
+    }
+    tr, img {
+        page-break-inside: avoid;
+    }
+    @page {
+        margin: 0.5cm;
+    }
+    p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+    }
+    h2, h3 {
+        page-break-after: avoid;
+    }
+}

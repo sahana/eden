@@ -1,0 +1,212 @@
+/* Newsfeed */
+@font-face {
+    font-family: 'DRMP';
+    src:url('../../fonts/DRMP.eot');
+    src:url('../../fonts/DRMP.eot?#iefix') format('embedded-opentype'),
+        url('../../fonts/DRMP.woff') format('woff'),
+        url('../../fonts/DRMP.ttf') format('truetype'),
+        url('../../fonts/DRMP.svg#DRMP') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.icon-activity,
+.icon-alert,
+.icon-assessment,
+.icon-event,
+.icon-incident,
+.icon-map,
+.icon-news,
+.icon-plan,
+.icon-project,
+.icon-report,
+.icon-training_material {
+    font-family: 'DRMP';
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+}
+.icon-activity5:before,
+.icon-activity:before {
+    content: "\5b";
+}
+.icon-alert:before {
+    content: "\70";
+}
+.icon-assessment:before {
+    content: "\6f";
+}
+.icon-event:before {
+    content: "\69";
+}
+.icon-incident:before {
+    content: "\75";
+}
+.icon-map:before {
+    content: "\79";
+}
+.icon-news:before {
+    content: "\71";
+}
+.icon-plan:before {
+    content: "\74";
+}
+.icon-project:before {
+    content: "\72";
+}
+.icon-report:before {
+    content: "\65";
+}
+.icon-training_material:before {
+    content: "\77";
+}
+
+/* Page */
+.latest-updates,
+.list_formats {
+    margin-top: 0.5rem;
+}
+.latest-updates .action-btn.s3_modal {
+    float: right;
+    font-weight: normal;
+}
+body.rtl .latest-updates  .action-btn.s3_modal {
+    float: left;
+}
+
+.side-filter {
+    margin-top: 10px;
+}
+
+/* Filter form */
+.side-filter .form-row {
+    margin-left: 0.375rem;
+    margin-right: 0.375rem;
+    padding: 0;
+}
+.side-filter input[type="text"] {
+  width: 100% !important;
+}
+
+.dl-header {
+    font-size: 0.825rem;
+}
+.dl-exports {
+    margin: 0;
+}
+
+/* List items */
+.card-holder-home .dl-1-cols {
+    width: 100%;
+}
+.card-holder-home .dl-item {
+    padding: 0;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 1px 1px #aaaaa7;
+}
+.card-holder-home .dl-row.even,
+.card-holder-home .dl-row.odd,
+.card-holder-home .dl-row.even .dl-item,
+.card-holder-home .dl-row.odd .dl-item {
+    background-color: white;
+}
+
+/* Card header */
+.card-header {
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%) repeat scroll 0 0 rgba(0, 0, 0, 0);
+    font-size: 0.8rem;
+    padding: 0 0.175rem 0 0.325rem;
+    border-bottom: 1px solid #bdbdbb;
+}
+.card-header span {
+    padding: 0 5px 0 5px;
+    border-right: 1px solid #7f7f7f;
+}
+.card-header .edit-bar a {
+    color: #7f7f7f;
+    text-decoration: none;
+    padding-left: 0.175rem;
+}
+.card-header .location-title {
+    font-weight: bold;
+}
+.card-header .date-title {
+    color: #7f7f7f;
+}
+
+.card-footer {
+    margin-top: 0.2rem;
+    padding: 0;
+}
+.card-footer a.action-btn:first-child,
+.card-footer a.delete-btn:first-child {
+    margin-left: 0;
+}
+
+/* Card body */
+.dl-item .pull-right {
+    float: right;
+}
+body.rtl .dl-item .pull-right {
+    float: left;
+}
+.dl-item .pull-left {
+    float: left;
+    margin-right: 0.8rem;
+}
+body.rtl .dl-item .pull-left {
+    float: right;
+    margin-left: 0.8rem;
+}
+body.rtl .fright {
+    float: left !important;
+}
+.dl-item .media {
+    font-size: 0.8rem;
+    padding: 0.375rem;
+}
+.dl-item .card-subtitle {
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+.dl-item .date-title,
+.dl-item .card-person {
+    font-size: 0.7rem;
+}
+
+/* Inline contents */
+.dl-inline-data {
+    margin-top: 0.5rem;
+}
+.dl-inline-label,
+.dl-inline-value {
+    color: #999;
+    font-size: 0.7rem;
+    display: inline-block;
+}
+.dl-inline-label {
+    font-weight: normal;
+    padding-right: 0.2rem;
+}
+.dl-inline-label::after {
+    content: ":";
+}
+.dl-inline-value {
+    font-weight: bold;
+    padding-right: 0.8rem;
+}
+
+/* Tag-it */
+.dl-item ul.s3-tags {
+    font-size: 0.8rem;
+    margin: 0 0.375rem !important;
+    list-style: none;
+}
+.dl-item ul.s3-tags li.tagit-new {
+    padding: 0;
+}

@@ -1,0 +1,213 @@
+// ============================================================================
+// Styles for Page Sections and Global Elements
+// ============================================================================
+// VARIABLES
+
+// Foundation variables used:
+//$alert-color
+
+// Alerts
+$alert_border_color: #b2b2b2 !default;
+$alert_box_shadow_color: #aaaaa7 !default;
+
+// Render page titles with background color
+$title_background: true !default;
+$title_bgcolor: #F7F8F9 !default;
+
+// Throbber style [sunflower|simple]
+$throbber_style: sunflower !default;
+
+// Footer
+$footer_bgcolor: transparent !default;
+$footer_fgcolor: #999 !default;
+$footer_min_height: null !default;
+$footer_top_margin: 20px !default;
+
+// ============================================================================
+// STYLES
+
+/* Throbber style */
+@if $throbber_style == sunflower {
+    .inline-throbber {
+      background-image: url(../../img/sunflower_fade_indicator.gif);
+    }
+    .throbber,
+    .layer_throbber,
+    .map_loader {
+      background-image: url(../../img/sunflower_spin_throbber.gif);
+    }
+    .loading {
+      background: url(../../img/sunflower_spin_throbber.gif) center no-repeat !important;
+    }
+}
+
+/* Inline Sahana logo */
+.sahana-logo {
+  background: url(../../img/S3menu_logo.png) left top no-repeat;
+  text-shadow: none;
+  padding: 0;
+  margin-left: 5px;
+  margin-top: 10px;
+  width: 35px;
+  height: 28px;
+  display: inline-block;
+}
+
+/* Alerts */
+.alert.alert-error,
+.alert.alert-info,
+.alert.alert-warning,
+.alert.alert-success {
+    border: 1px solid $alert_border_color;
+    box-shadow: 0 1px 1px $alert_box_shadow_color;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
+    padding: 8px 35px 8px 14px;
+    position: relative;
+    width: auto;
+    z-index: 98;
+    border-radius: 4px;
+}
+
+/* Red indicators */
+.error,
+.expired,
+.req,
+.req_key {
+    color: $alert-color;
+    font-weight: bold;
+}
+.req_key {
+    font-size: 0.75rem;
+}
+
+/* Logged-in User Indicators */
+.username {
+    color: #666666;
+    padding: 0.5rem 0;
+    padding-right: 0.5rem;
+    font-size: 0.7rem;
+    i.icon, i.fa {
+        padding-left: 0.2rem;
+        padding-right: 0;
+    }
+}
+body.rtl {
+    .username {
+        padding-left: 0.5rem;
+        padding-right: 0;
+        i.icon, i.fa {
+            padding-left: 0;
+            padding-right: 0.2rem;
+        }
+        float: left;
+    }
+}
+
+/* Page Sections */
+.item-container form,
+.form-container form,
+#datalist-filter-form,
+#datatable-filter-form,
+#summary-filter-form,
+#summary-sections,
+.thumbnail {
+    border: 1px solid #E0E0E0;
+}
+.widget-container #list-btn-add {
+    margin-bottom: 0;
+    position: relative;
+    top: 1.0rem;
+}
+#component {
+    float: none;
+}
+.map_home {
+    margin: 0;
+    margin-top: 0.5rem;
+}
+
+/* Global Main Content Styles */
+#content {
+    a.help {
+        &:link {
+            color: #fff;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+        &:hover {
+            background-color: #336699;
+            text-decoration: underline;
+        }
+        &:visited {
+            font-weight: normal;
+            color: #666;
+        }
+    }
+    h1,
+    h2 {
+        font-size: 1.3em;
+        font-weight: bolder;
+        @if $title_background {
+            background-color: $title_bgcolor;
+            padding: 0.35rem;
+        }
+    }
+    h2 {
+        margin-top: 10px;
+        @if $title_background {
+            font-size: 1.0rem;
+            padding-left: 0.7rem;
+        }
+    }
+    h3 {
+        font-size: 1.1em;
+        padding-bottom: 5px;
+    }
+}
+
+/* Footer */
+#footer {
+    background: $footer_bgcolor;
+    padding-top: 20px;
+    @if $footer_min_height {
+        min-height: $footer_min_height;
+    }
+    border-top: 1px solid #F0F0F0;
+    margin-top: $footer_top_margin;
+    margin-bottom: 1rem;
+}
+#poweredby {
+    margin-right: 0.5rem;
+    text-align: right;
+    a {
+        color: $footer_fgcolor;
+        text-decoration: none;
+        font-size: 0.8rem;
+        margin-left: 0.2rem;
+    }
+}
+body.rtl {
+    #poweredby {
+        text-align: left;
+    }
+}
+
+// About Menu (in footer)
+.sub-nav.about-menu {
+    color: $footer_fgcolor;
+    a {
+        color: $footer_fgcolor;
+    }
+    text-align: left;
+    margin-left: 0;
+    margin-right: 0;
+}
+body.rtl {
+    .about-menu {
+        text-align: right;
+    }
+}
+
+// END ========================================================================

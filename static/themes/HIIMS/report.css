@@ -1,0 +1,323 @@
+/* Pivot Table and Time Plot Reports */
+.tp-form fieldset legend button:first-child,
+.pt-form fieldset legend button:first-child {
+  /* hide initially, made visible by script */
+  display: none;
+}
+
+.pt-form .pt-rows {
+  margin-right: 0.5rem;
+}
+.pt-form .pt-cols {
+  margin-left: 0.5rem;
+}
+.pt-form .pt-axis-options select,
+.pt-form .pt-axis-options label {
+  display: inline-block;
+  width: auto;
+}
+
+/* Chart options */
+.tp-chart-tops,
+.pt-chart-opts {
+  height: 1.0rem;
+}
+
+.tp-chart-icon,
+.pt-chart-icon {
+  width: 16px;
+  height: 16px;
+  float: left;
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+.tp-chart-label,
+.pt-chart-label {
+  font-size: 0.7rem;
+  float: left;
+  margin-right: 8px;
+}
+
+.tp-lchart {
+  background: url(../../img/report/lchart.png) center no-repeat;
+}
+
+.tp-bchart {
+  background: url(../../img/report/vchart.png) center no-repeat;
+}
+
+.pt-pchart {
+  background: url(../../img/report/pchart.png) center no-repeat;
+}
+
+.pt-vchart {
+  background: url(../../img/report/vchart.png) center no-repeat;
+}
+
+.pt-hchart {
+  background: url(../../img/report/hchart.png) center no-repeat;
+}
+
+.pt-schart {
+  background: url(../../img/report/pchart.png) center no-repeat;
+}
+
+/* Chart contents */
+.tp-chart-contents,
+.pt-chart-contents {
+  background-color: #fffdf6;
+  padding: 8px;
+  border: 1px solid #999;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  position: relative;
+}
+
+.pt-chart-contents .pt-chart-title {
+  position: absolute;
+  left: 8;
+  top: 0;
+}
+.pt-chart-contents .pt-chart-title h4 {
+  font-size: 1.0rem;
+  font-weight: normal;
+}
+.pt-chart-contents .pt-hide-chart {
+  cursor: pointer;
+  min-height: 16px;
+  min-width: 16px;
+  background: url(../../img/cross.png) right top no-repeat;
+}
+.pt-chart-contents .pt-chart {
+  margin-top: 20px;
+}
+.pt-chart-contents .pt-spectrum-pie {
+  height: 140px;
+}
+.pt-chart-contents .pt-spectrum-pie svg.nv {
+  float: left;
+  width: auto;
+}
+.pt-chart-contents .pt-spectrum-bar {
+  height: 280px;
+  clear: left;
+}
+.pt-chart-contents .pt-spectrum-form {
+  float: left;
+}
+.pt-chart-contents .pt-spectrum-form label {
+  font-weight: bold;
+  margin-right: 8px;
+  display: block;
+}
+.pt-chart-contents .pt-spectrum-form select {
+  font-size: 0.875rem;
+  max-width: 360px;
+}
+
+/* Onhover-tooltips */
+.pt-tooltip {
+  font-family: Arial;
+  font-size: 13px;
+  text-align: center;
+  padding: 4px;
+}
+.pt-tooltip .pt-tooltip-label {
+  font-weight: bold;
+}
+.pt-tooltip .pt-tooltip-label,
+.pt-tooltip .pt-tooltip-text {
+  max-width: 175px;
+  white-space: normal;
+}
+
+/* Table contents */
+.pt-table-contents {
+  min-height: 16px;
+}
+.pt-table-contents .pt-table {
+  overflow: auto;
+}
+.pt-table-contents .pt-table th {
+  /* override jQuery.dataTables.css */
+  border-bottom: 0;
+}
+.pt-table-contents .pt-table tr.pt-totals-row th.pt-totals-header {
+  /* override jQuery.dataTables.css */
+  border-bottom: 1px solid #ccc;
+  border-top: 2px solid #ccc;
+}
+.pt-table-contents .pt-table .pt-totals-header,
+.pt-table-contents .pt-table .pt-total,
+.pt-table-contents .pt-table .pt-row-total,
+.pt-table-contents .pt-table .pt-col-total {
+  font-weight: bold;
+}
+.pt-table-contents .pt-table .pt-total,
+.pt-table-contents .pt-table .pt-col-total {
+  border-top: 2px solid #ccc;
+}
+.pt-table-contents .pt-table .pt-total,
+.pt-table-contents .pt-table .pt-row-total {
+  border-left: 2px solid #ccc;
+}
+.pt-table-contents .pt-table .pt-cell-value {
+  display: inline;
+}
+.pt-table-contents .pt-table .pt-cell-value li {
+  font-size: 0.8rem;
+}
+.pt-table-contents .pt-table .pt-cell-records {
+  clear: left;
+}
+.pt-table-contents .pt-table td {
+  min-width: 60px;
+  padding-right: 16px;
+  white-space: nowrap;
+}
+.pt-table-contents .pt-table td .pt-cell-zoom {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  display: inline-block;
+  vertical-align: text-top;
+  margin-left: 5px;
+  background: url(../../img/silk/magnifier_zoom_in.png) no-repeat top right;
+}
+.pt-table-contents .pt-table td .pt-cell-zoom.opened {
+  background-image: url(../../img/silk/magnifier_zoom_out.png);
+}
+.pt-table-contents .pt-table tfoot {
+  font-style: italic;
+}
+
+/* Throbber */
+.tp-throbber,
+.pt-throbber {
+  float: right;
+  padding: 5px;
+  z-index: 999;
+}
+
+/* Empty-sections */
+.gi-empty,
+.tp-empty,
+.pt-empty,
+.pt-no-data {
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
+.tp-chart-controls,
+.tp-chart.contents,
+.pt-toggle-table,
+.pt-chart-controls,
+.pt-chart-contents,
+.pt-table-controls,
+.pt-table-contents {
+  clear: left;
+}
+
+/* Table toggle */
+.pt-toggle-table {
+    display: inline-block;
+}
+.pt-show-table,
+.pt-hide-table {
+  font-size: 10px;
+  cursor: pointer;
+  color: #039;
+  text-decoration: underline;
+  margin-bottom: 3px;
+}
+.pt-show-table {
+  display: none;
+}
+
+.pt-table-controls {
+    position: relative;
+    padding: 0.4rem 0;
+}
+
+/* Export formats */
+.pt-export-table {
+    text-align: right;
+    margin: 0.3rem;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+}
+.pt-export-opt {
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    cursor: pointer;
+}
+.pt-export-xls {
+    background-image: url('../../img/icon-xls.png');
+}
+
+/* In grouped tables, separate groups visually */
+.gi-table table {
+  border-collapse: separate;
+}
+.gi-table table thead td,
+.gi-table table tfoot td {
+  background-color: #333;
+  color: #fff;
+}
+
+.gi-group-header.gi-level-1 td {
+  background-color: #999;
+  color: #fff;
+}
+.gi-group-header.gi-level-1 td a {
+  color: #fff;
+}
+.gi-group-header.gi-level-2 td {
+  background-color: #eee;
+  border-top: 1px solid #999;
+}
+
+.gi-group-footer.gi-level-1 td {
+  background-color: #999;
+  color: #fff;
+  border-bottom: 1px dotted #666;
+}
+.gi-group-footer.gi-level-1 td a {
+  color: #fff;
+}
+.gi-group-footer.gi-level-2 td {
+  background-color: #eee;
+  border-bottom: 1px solid #999;
+}
+
+/* Show label for summary in tables */
+.gi-group-footer-inline-label {
+  display: inline-block;
+  font-size: 11px;
+  line-height: 1;
+  position: relative;
+  top: -0.1em;
+  margin: 0 0.25em 0 1em;
+  padding: 0.25em 0.75em;
+  text-transform: uppercase;
+  background-color: #ccc;
+  color: #666;
+}
+
+.gi-export-formats {
+  display: inline;
+}
+.gi-export-formats .gi-export {
+  height: 16px;
+  width: 16px;
+  display: inline-block;
+  padding-right: 1.2rem;
+  padding-bottom: 1.5rem;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}

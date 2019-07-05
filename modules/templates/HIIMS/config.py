@@ -24,7 +24,7 @@ def config(settings):
     # ["default", "default/users"]
     # Unless doing a manual DB migration, where prepopulate = 0
     # In Production, prepopulate = 0 (to save 1x DAL hit every page)
-    settings.base.prepopulate.append("HI")
+    settings.base.prepopulate.append("HIIMS")
 
     # Uncomment this to prefer scalability-optimized strategies globally
     #settings.base.bigtable = True
