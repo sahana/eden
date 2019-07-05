@@ -3,13 +3,13 @@ marker_red,34,20,marker_red.png
 marker_yellow,34,20,marker_yellow.png
 marker_amber,34,20,marker_amber.png
 marker_green,34,20,marker_green.png
-abduction,40,40,HIIMS/abduction.png
+abduction-kidnapping,40,40,HIIMS/abduction-kidnapping.png
 about,40,40,HIIMS/about.png
 add,40,40,HIIMS/add.png
 add-document,40,40,HIIMS/add-document.png
 advocacy,40,40,HIIMS/advocacy.png
 affected-population,40,40,HIIMS/affected-population.png
-agricutlture,40,40,HIIMS/agricutlture.png
+agriculture,40,40,HIIMS/agriculture.png
 airport,40,40,HIIMS/airport.png
 airport-affected,40,40,HIIMS/airport-affected.png
 airport-destroyed,40,40,HIIMS/airport-destroyed.png
@@ -73,7 +73,7 @@ data,40,40,HIIMS/data.png
 dead,40,40,HIIMS/dead.png
 debris-management,40,40,HIIMS/debris-management.png
 deployment,40,40,HIIMS/deployment.png
-detroyed,40,40,HIIMS/detroyed.png
+destroyed,40,40,HIIMS/destroyed.png
 detergent,40,40,HIIMS/detergent.png
 diplomatic-mission,40,40,HIIMS/diplomatic-mission.png
 distribution-site,40,40,HIIMS/distribution-site.png
@@ -189,7 +189,7 @@ pause,40,40,HIIMS/pause.png
 peacekeeping-force,40,40,HIIMS/peacekeeping-force.png
 people-in-need,40,40,HIIMS/people-in-need.png
 people-targeted,40,40,HIIMS/people-targeted.png
-people-with-physical-impairment,40,40,HIIMS/people-with-physical-impairment.png
+people-with-physical-impairments,40,40,HIIMS/people-with-physical-impairments.png
 permanent-camp,40,40,HIIMS/permanent-camp.png
 person-1,40,40,HIIMS/person-1.png
 person-2,40,40,HIIMS/person-2.png
@@ -204,8 +204,8 @@ port,40,40,HIIMS/port.png
 port-affected,40,40,HIIMS/port-affected.png
 port-destroyed,40,40,HIIMS/port-destroyed.png
 port-not-affected,40,40,HIIMS/port-not-affected.png
-portable-water,40,40,HIIMS/portable-water.png
-portable-water-source,40,40,HIIMS/portable-water-source.png
+potable-water,40,40,HIIMS/potable-water.png
+potable-water-source,40,40,HIIMS/potable-water-source.png
 pregnant,40,40,HIIMS/pregnant.png
 preparedness,40,40,HIIMS/preparedness.png
 previous-item,40,40,HIIMS/previous-item.png
@@ -228,7 +228,7 @@ rice,40,40,HIIMS/rice.png
 road,40,40,HIIMS/road.png
 road-affected,40,40,HIIMS/road-affected.png
 road-barrier,40,40,HIIMS/road-barrier.png
-road-block,40,40,HIIMS/road-block.png
+roadblock,40,40,HIIMS/roadblock.png
 road-destroyed,40,40,HIIMS/road-destroyed.png
 road-not-affected,40,40,HIIMS/road-not-affected.png
 robbery,40,40,HIIMS/robbery.png
@@ -263,12 +263,12 @@ soap,40,40,HIIMS/soap.png
 solid-waste,40,40,HIIMS/solid-waste.png
 spontaneous-site,40,40,HIIMS/spontaneous-site.png
 spring-water,40,40,HIIMS/spring-water.png
-self-management,40,40,HIIMS/self-management.png
+staff-management,40,40,HIIMS/staff-management.png
 stop,40,40,HIIMS/stop.png
 storm,40,40,HIIMS/storm.png
 storm-surge,40,40,HIIMS/storm-surge.png
 stove,40,40,HIIMS/stove.png
-submesible-pump,40,40,HIIMS/submesible-pump.png
+submersible-pump,40,40,HIIMS/submersible-pump.png
 sugar,40,40,HIIMS/sugar.png
 table,40,40,HIIMS/table.png
 tarpaulin,40,40,HIIMS/tarpaulin.png
@@ -277,7 +277,7 @@ temporary-camp,40,40,HIIMS/temporary-camp.png
 tent,40,40,HIIMS/tent.png
 toilet,40,40,HIIMS/toilet.png
 tornado,40,40,HIIMS/tornado.png
-tade-and-market,40,40,HIIMS/tade-and-market.png
+trade-and-market,40,40,HIIMS/trade-and-market.png
 train,40,40,HIIMS/train.png
 training,40,40,HIIMS/training.png
 transition-site,40,40,HIIMS/transition-site.png
@@ -300,7 +300,7 @@ violent-wind,40,40,HIIMS/violent-wind.png
 volcano,40,40,HIIMS/volcano.png
 walkie-talkie,40,40,HIIMS/walkie-talkie.png
 warning-error,40,40,HIIMS/warning-error.png
-water-sanitation-hygien,40,40,HIIMS/water-sanitation-hygien.png
+water-sanitation-hygiene,40,40,HIIMS/water-sanitation-hygiene.png
 water-source,40,40,HIIMS/water-source.png
 water-trucking,40,40,HIIMS/water-trucking.png
 zip-compressed,40,40,HIIMS/zip-compressed.png
