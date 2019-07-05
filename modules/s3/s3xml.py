@@ -31,7 +31,7 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 
-    @status: partially fixed for Py3, needs more work
+    @status: fixed for Py3
 """
 
 import json
@@ -48,7 +48,7 @@ except ImportError:
 from gluon import current, HTTP, URL, IS_EMPTY_OR
 from gluon.storage import Storage
 
-from s3compat import INTEGER_TYPES, basestring, long, urlopen, urlparse, xrange
+from s3compat import INTEGER_TYPES, PY2, basestring, long, urlopen, urlparse, xrange
 from .s3codec import S3Codec
 from .s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
 from .s3fields import S3RepresentLazy
@@ -344,9 +344,10 @@ class S3XML(S3Codec):
         """
 
         return etree.tostring(tree,
-                              xml_declaration=xml_declaration,
-                              encoding="utf-8",
-                              pretty_print=pretty_print)
+                              xml_declaration = xml_declaration,
+                              encoding = "utf-8" if PY2 else "unicode",
+                              pretty_print = pretty_print,
+                              )
 
     # -------------------------------------------------------------------------
     def tree(self, elements,
@@ -2594,8 +2595,6 @@ class S3XML(S3Codec):
             @param quotechar: quotation character
 
             @todo: add a character encoding parameter to skip the guessing
-
-            TODO rewrite for Py3
         """
 
         import csv
@@ -2645,14 +2644,16 @@ class S3XML(S3Codec):
             for line in source:
                 if e:
                     try:
-                        yield unicode(line, e, "strict").encode("utf-8")
+                        s = s3_unicode(line, e)
+                        yield s.encode("utf-8") if PY2 else s
                     except:
                         pass
                     else:
                         continue
                 for encoding in encodings:
                     try:
-                        yield unicode(line, encoding, "strict").encode("utf-8")
+                        s = s3_unicode(line, encoding)
+                        yield s.encode("utf-8") if PY2 else s
                     except:
                         continue
                     else:
@@ -2661,36 +2662,57 @@ class S3XML(S3Codec):
 
         hashtags = dict(hashtags) if hashtags else {}
 
-        try:
-            import StringIO
-            if not isinstance(source, StringIO.StringIO):
+        def read_from_csv(source):
+            try:
                 source = utf_8_encode(source)
-            reader = csv.DictReader(source,
-                                    delimiter=delimiter,
-                                    quotechar=quotechar)
-            ROW = TAG.row
-            for i, r in enumerate(reader):
-                # Skip empty rows
-                if not any(r.values()):
-                    continue
-                if i == 0:
-                    # Auto-detect hashtags
-                    items = dict((k, s3_unicode(v.strip()))
-                                 for k, v in r.items() if k and v and v.strip())
-                    if all(v[0] == "#" for v in items.values()):
-                        hashtags.update(items)
+                reader = csv.DictReader(source, delimiter=delimiter, quotechar=quotechar)
+                ROW = TAG.row
+                for i, r in enumerate(reader):
+                    # Skip empty rows
+                    if not any(r.values()):
                         continue
-                row = SubElement(root, ROW)
-                for k in r:
-                    if k:
-                        add_col(row, k, r[k], hashtags=hashtags)
-                if extra_data:
-                    for key in extra_data:
-                        if key not in r:
-                            add_col(row, key, extra_data[key], hashtags=hashtags)
-        except csv.Error:
-            e = sys.exc_info()[1]
-            raise HTTP(400, body=cls.json_message(False, 400, e))
+                    if i == 0:
+                        # Auto-detect hashtags
+                        items = {k: s3_unicode(v.strip())
+                                 for k, v in r.items() if k and v and v.strip()}
+                        if all(v[0] == "#" for v in items.values()):
+                            hashtags.update(items)
+                            continue
+                    row = SubElement(root, ROW)
+                    for k in r:
+                        if k:
+                            add_col(row, k, r[k], hashtags=hashtags)
+                    if extra_data:
+                        for key in extra_data:
+                            if key not in r:
+                                add_col(row, key, extra_data[key], hashtags=hashtags)
+            except csv.Error:
+                e = sys.exc_info()[1]
+                raise HTTP(400, body=cls.json_message(False, 400, e))
+
+
+        if PY2:
+            from StringIO import StringIO
+        else:
+            from io import StringIO
+        if not isinstance(source, StringIO):
+            try:
+                read_from_csv(source)
+            except UnicodeDecodeError:
+                e = sys.exc_info()[1]
+                try:
+                    fname, fmode = source.name, source.mode
+                except AttributeError:
+                    fname = fmode = None
+                if not PY2 and fname and fmode and "b" not in fmode:
+                    # Perhaps a file opened in text mode with wrong encoding,
+                    # => try to reopen in binary mode
+                    with open(fname, "rb") as bsource:
+                        read_from_csv(bsource)
+                else:
+                    raise HTTP(400, body=cls.json_message(False, 400, e))
+        else:
+            read_from_csv(source)
 
         # Use this to debug the source tree if needed:
         #sys.stderr.write(cls.tostring(root, pretty_print=True))
