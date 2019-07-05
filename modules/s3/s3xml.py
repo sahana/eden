@@ -2236,7 +2236,7 @@ class S3XML(S3Codec):
                 obj[PREFIX.text] = represent
 
             obj_key_list = list(obj.keys())
-            if obj_key_list and \
+            if len(obj_key_list) == 1 and \
                obj_key_list[0] in (PREFIX.text, TAG.item, TAG.list):
                 obj = obj[obj_key_list[0]]
 
