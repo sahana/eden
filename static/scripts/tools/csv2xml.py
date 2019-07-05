@@ -12,6 +12,8 @@
 import csv
 import sys
 
+PY2 = sys.version_info[0] == 2
+
 from lxml import etree
 from xml.sax.saxutils import escape, unescape
 
@@ -44,41 +46,56 @@ def parse(source):
     return result
 
 # -----------------------------------------------------------------------------
-def s3_unicode(s, encoding="utf-8"):
-    """
-        Convert an object into an unicode instance, to be used instead of
-        unicode(s) (Note: user data should never be converted into str).
+if PY2:
+    def s3_unicode(s, encoding="utf-8"):
+        """
+            Convert an object into an unicode instance, to be used
+            instead of unicode(s)
 
-        @param s: the object
-        @param encoding: the character encoding
-    """
+            @param s: the object
+            @param encoding: the character encoding
+        """
 
-    if type(s) is unicode:
-        return s
-    try:
-        if not isinstance(s, basestring):
-            if hasattr(s, "__unicode__"):
-                s = unicode(s)
+        if type(s) is unicode:
+            return s
+        try:
+            if not isinstance(s, basestring):
+                if hasattr(s, "__unicode__"):
+                    s = unicode(s)
+                else:
+                    try:
+                        s = unicode(str(s), encoding, "strict")
+                    except UnicodeEncodeError:
+                        if not isinstance(s, Exception):
+                            raise
+                        s = " ".join([s3_unicode(arg, encoding) for arg in s])
             else:
-                try:
-                    s = unicode(str(s), encoding, "strict")
-                except UnicodeEncodeError:
-                    if not isinstance(s, Exception):
-                        raise
-                    s = " ".join([s3_unicode(arg, encoding) for arg in s])
-        else:
-            s = s.decode(encoding)
-    except UnicodeDecodeError:
-        if not isinstance(s, Exception):
-            raise
-        else:
+                s = s.decode(encoding)
+        except UnicodeDecodeError:
+            if not isinstance(s, Exception):
+                raise
             s = " ".join([s3_unicode(arg, encoding) for arg in s])
-    return s
+        return s
+
+else:
+
+    def s3_unicode(s, encoding="utf-8"):
+        """
+            Convert an object into a str, for backwards-compatibility
+
+            @param s: the object
+            @param encoding: the character encoding
+        """
+
+        if type(s) is str:
+            return s
+        elif type(s) is bytes:
+            return s.decode(encoding, "strict")
+        else:
+            return str(s)
 
 # -------------------------------------------------------------------------
-def csv2tree(source,
-             delimiter=",",
-             quotechar='"'):
+def csv2tree(source, delimiter=",", quotechar='"'):
 
     # Increase field size to be able to import WKTs
     csv.field_size_limit(2**20 * 100)  # 100 megs
@@ -105,19 +122,21 @@ def csv2tree(source,
 
     def utf_8_encode(source):
 
-        encodings = ["utf-8-sig", "iso-8859-1"]
+        encodings = ("utf-8-sig", "iso-8859-1")
         e = encodings[0]
         for line in source:
             if e:
                 try:
-                    yield unicode(line, e, "strict").encode("utf-8")
+                    s = s3_unicode(line, e)
+                    yield s.encode("utf-8") if PY2 else s
                 except:
                     pass
                 else:
                     continue
             for encoding in encodings:
                 try:
-                    yield unicode(line, encoding, "strict").encode("utf-8")
+                    s = s3_unicode(line, encoding)
+                    yield s.encode("utf-8") if PY2 else s
                 except:
                     continue
                 else:
@@ -126,33 +145,51 @@ def csv2tree(source,
 
     hashtags = {}
 
-    import StringIO
-    if not isinstance(source, StringIO.StringIO):
-        source = utf_8_encode(source)
-    reader = csv.DictReader(source,
-                            delimiter=delimiter,
-                            quotechar=quotechar)
+    def read_from_csv(source):
 
-    for i, r in enumerate(reader):
-        # Skip empty rows
-        if not any(r.values()):
-            continue
-        if i == 0:
-            # Auto-detect hashtags
-            items = {}
-            for k, v in r.items():
-                if v:
-                    try:
-                        v = v.strip()
-                    except AttributeError: # v is a List
-                        v = s3_unicode(v)
-                    items[k] = v
-            if all(v[0] == '#' for v in items.values()):
-                hashtags.update(items)
+        source = utf_8_encode(source)
+        reader = csv.DictReader(source, delimiter=delimiter, quotechar=quotechar)
+
+        for i, r in enumerate(reader):
+            # Skip empty rows
+            if not any(r.values()):
                 continue
-        row = SubElement(root, ROW)
-        for k in r:
-            add_col(row, k, r[k], hashtags=hashtags)
+            if i == 0:
+                # Auto-detect hashtags
+                items = {}
+                for k, v in r.items():
+                    if v:
+                        try:
+                            v = v.strip()
+                        except AttributeError: # v is a List
+                            v = s3_unicode(v)
+                        items[k] = v
+                if all(v[0] == '#' for v in items.values()):
+                    hashtags.update(items)
+                    continue
+            row = SubElement(root, ROW)
+            for k in r:
+                add_col(row, k, r[k], hashtags=hashtags)
+
+    if PY2:
+        from StringIO import StringIO
+    else:
+        from io import StringIO
+    if not isinstance(source, StringIO):
+        try:
+            read_from_csv(source)
+        except UnicodeDecodeError as e:
+            try:
+                fname, fmode = source.name, source.mode
+            except AttributeError:
+                fname = fmode = None
+            if not PY2 and fname and fmode and "b" not in fmode:
+                # Perhaps a file opened in text mode with wrong encoding,
+                # => try to reopen in binary mode
+                with open(fname, "rb") as bsource:
+                    read_from_csv(bsource)
+            else:
+                raise e
 
     return  etree.ElementTree(root)
 
@@ -187,13 +224,16 @@ def main(argv):
     except:
         xslpath = None
 
-    csvfile = open(csvpath)
-    tree = csv2tree(csvfile)
+    with open(csvpath, "r") as csvfile:
+        tree = csv2tree(csvfile)
 
     if xslpath is not None:
         tree = transform(tree, xslpath)
 
-    sys.stdout.write(etree.tostring(tree, pretty_print=True))
+    sys.stdout.write(etree.tostring(tree,
+                                    encoding = "utf-8" if PY2 else "unicode",
+                                    pretty_print = True,
+                                    ))
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
