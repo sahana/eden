@@ -25,20 +25,18 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 import json
 import sys
 import datetime
 
-try:
-    from cStringIO import StringIO # Faster, where available
-except ImportError:
-    from StringIO import StringIO
-
 from gluon import current, URL, DIV
 from gluon.storage import Storage
 
+from s3compat import StringIO, unicodeT
 from .s3datetime import s3_parse_datetime, s3_utc
 from .s3rest import S3Method
 from .s3import import S3ImportItem
@@ -615,7 +613,8 @@ class S3Sync(S3Method):
                 item.conflict = False
 
     # -------------------------------------------------------------------------
-    def create_archive(self, dataset_id, task_id=None):
+    @staticmethod
+    def create_archive(dataset_id, task_id=None):
         """
             Create an archive for a data set
 
@@ -747,7 +746,8 @@ class S3Sync(S3Method):
         return self._config
 
     # -------------------------------------------------------------------------
-    def get_status(self):
+    @staticmethod
+    def get_status():
         """ Read the current sync status """
 
         table = current.s3db.sync_status
@@ -757,12 +757,13 @@ class S3Sync(S3Method):
         return row
 
     # -------------------------------------------------------------------------
-    def set_status(self, **attr):
+    @staticmethod
+    def set_status(**attr):
         """ Update the current sync status """
 
         table = current.s3db.sync_status
 
-        data = dict((k, attr[k]) for k in attr if k in table.fields)
+        data = {k: attr[k] for k in attr if k in table.fields}
         data["timestmp"] = datetime.datetime.utcnow()
 
         row = current.db().select(table._id, limitby=(0, 1)).first()
@@ -986,7 +987,7 @@ class S3SyncRepository(object):
         self.last_refresh = repository.last_refresh
 
         # Instantiate Adapter
-        import sync_adapter
+        from . import sync_adapter
         api = sync_adapter.__dict__.get(self.apitype)
         if api:
             adapter = api.S3SyncAdapter(self)
@@ -1242,18 +1243,17 @@ class S3SyncDataArchive(object):
         if not archive:
             raise RuntimeError("cannot add to closed archive")
 
-        # Convert unicode objects to str
-        if type(obj) is unicode:
-            obj = obj.encode("utf-8")
-
-        # Write the object
-        if type(obj) is str:
-            archive.writestr(name, obj)
-
-        elif hasattr(obj, "read"):
+        if hasattr(obj, "read"):
             if hasattr(obj, "seek"):
                 obj.seek(0)
             archive.writestr(name, obj.read())
+
+        elif type(obj) is str:
+            archive.writestr(name, obj)
+
+        elif isinstance(obj, unicodeT):
+            # Convert unicode objects to str (Py2 backwards-compatibility)
+            archive.writestr(name, obj.encode("utf-8"))
 
         else:
             raise TypeError("invalid object type")

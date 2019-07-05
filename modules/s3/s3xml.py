@@ -30,14 +30,14 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: partially fixed for Py3, needs more work
 """
 
-#import datetime
 import json
 import os
 import re
 import sys
-import urllib2
 
 try:
     from lxml import etree
@@ -48,6 +48,7 @@ except ImportError:
 from gluon import current, HTTP, URL, IS_EMPTY_OR
 from gluon.storage import Storage
 
+from s3compat import INTEGER_TYPES, basestring, long, urlopen, urlparse, xrange
 from .s3codec import S3Codec
 from .s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
 from .s3fields import S3RepresentLazy
@@ -226,7 +227,7 @@ class S3XML(S3Codec):
         self.error = None
         if isinstance(source, basestring) and source[:5] == "https":
             try:
-                source = urllib2.urlopen(source)
+                source = urlopen(source)
             except:
                 self.error = "XML Source error: %s" % sys.exc_info()[1]
                 return None
@@ -652,7 +653,7 @@ class S3XML(S3Codec):
                     if krecords:
                         uids = [r[UID] for r in krecords if r[UID]]
                         if ktablename != gtablename:
-                            uids = map(export_uid, uids)
+                            uids = [export_uid(uid) for uid in uids]
                     else:
                         continue
                 else:
@@ -776,7 +777,7 @@ class S3XML(S3Codec):
                     locations[location_id].append(reference)
         if locations:
             ltable = current.s3db.gis_location
-            rows = current.db(ltable._id.belongs(locations.keys())) \
+            rows = current.db(ltable._id.belongs(set(locations.keys()))) \
                              .select(ltable.id,
                                      ltable.lat,
                                      ltable.lon,
@@ -1559,7 +1560,7 @@ class S3XML(S3Codec):
                     if not filename:
                         filename = download_url.split("?")[0] or "upload.bin"
                     try:
-                        upload = urllib2.urlopen(download_url)
+                        upload = urlopen(download_url)
                     except IOError:
                         continue
 
@@ -2234,9 +2235,10 @@ class S3XML(S3Codec):
                             represent = float_represent
                 obj[PREFIX.text] = represent
 
-            if len(obj) == 1 and obj.keys()[0] in \
-               (PREFIX.text, TAG.item, TAG.list):
-                obj = obj[obj.keys()[0]]
+            obj_key_list = list(obj.keys())
+            if obj_key_list and \
+               obj_key_list[0] in (PREFIX.text, TAG.item, TAG.list):
+                obj = obj[obj_key_list[0]]
 
             return obj
 
@@ -2414,7 +2416,7 @@ class S3XML(S3Codec):
 
             # Find the sheet
             try:
-                if isinstance(sheet, (int, long)):
+                if isinstance(sheet, INTEGER_TYPES):
                     s = wb.sheet_by_index(sheet)
                 elif isinstance(sheet, basestring):
                     s = wb.sheet_by_name(sheet)
@@ -2592,6 +2594,8 @@ class S3XML(S3Codec):
             @param quotechar: quotation character
 
             @todo: add a character encoding parameter to skip the guessing
+
+            TODO rewrite for Py3
         """
 
         import csv
@@ -2728,7 +2732,6 @@ class S3EntityResolver(etree.Resolver):
             return None
 
         else:
-            import urlparse
             p = urlparse.urlparse(system_url)
 
             if p.scheme in ("", "file"):
@@ -2809,7 +2812,7 @@ class S3XMLFormat(object):
             else:
                 match = False
                 maxlen = 0
-                for tn, fields in items.iteritems():
+                for tn, fields in items.items():
                     if "*" in tn:
                         m = re.match(tn.replace("*", ".*"), tablename)
                         if not m:
@@ -2856,11 +2859,11 @@ class S3XMLFormat(object):
 
             fields = element.get("select", None)
             if fields is not None and fields != ALL:
-                fields = set([f.strip() for f in fields.split(",")])
+                fields = {f.strip() for f in fields.split(",")}
 
             exclude = element.get("exclude", None)
             if exclude is not None:
-                exclude = set([f.strip() for f in exclude.split(",")])
+                exclude = {f.strip() for f in exclude.split(",")}
 
             for table in tables:
                 tablename = table.strip()

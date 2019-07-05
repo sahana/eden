@@ -27,6 +27,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 import datetime
@@ -38,6 +40,7 @@ from gluon import current, A, DIV, Field, IS_EMPTY_OR, IS_IN_SET, TAG, URL, XML
 from gluon.storage import Storage
 from gluon.languages import lazyT
 
+from s3compat import PY2, basestring
 from s3dal import SQLCustomType
 from .s3datetime import S3DateTime
 from .s3navigation import S3ScriptItem
@@ -295,16 +298,20 @@ class S3Represent(object):
         self.slabels = None
         self.htemplate = None
 
-        # Attributes to simulate being a function for sqlhtml's represent()
+        # Attributes to simulate being a function for sqlhtml's count_expected_args()
         # Make sure we indicate only 1 position argument
-        self.func_code = Storage(co_argcount = 1)
-        self.func_defaults = None
+        if PY2:
+            self.func_code = Storage(co_argcount = 1)
+            self.func_defaults = None
+        else:
+            self.__code__ = Storage(co_argcount = 1)
+            self.__defaults__ = None
 
         # Detect lookup_rows override
-        if self.lookup_rows.__func__ is not S3Represent.lookup_rows.__func__:
-            self.custom_lookup = True
+        if PY2:
+            self.custom_lookup = self.lookup_rows.__func__ is not S3Represent.lookup_rows.__func__
         else:
-            self.custom_lookup = False
+            self.custom_lookup = self.lookup_rows.__func__ is not S3Represent.lookup_rows
 
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=None):
@@ -356,7 +363,7 @@ class S3Represent(object):
 
             # Represent None as self.none
             none = self.none
-            for k, v in row_dict.items():
+            for k, v in list(row_dict.items()):
                 if v is None:
                     row_dict[k] = none
 
@@ -556,8 +563,7 @@ class S3Represent(object):
             if show_link:
                 link = self.link
                 rows = self.rows
-                labels = dict((k, link(k, v, rows.get(k)))
-                               for k, v in labels.items())
+                labels = {k: link(k, v, rows.get(k)) for k, v in labels.items()}
             for k in values:
                 if k not in labels:
                     labels[k] = self.default
@@ -612,10 +618,8 @@ class S3Represent(object):
         if self.options is not None:
             if self.translate:
                 T = current.T
-                self.theset = dict((opt, T(label))
-                                   if isinstance(label, basestring) else (opt, label)
-                                   for opt, label in self.options.items()
-                                   )
+                self.theset = {opt: T(label) if isinstance(label, basestring) else label
+                               for opt, label in self.options.items()}
             else:
                 self.theset = self.options
         else:
@@ -752,8 +756,8 @@ class S3Represent(object):
                               for f in self.fields if hasattr(table, f)]
             else:
                 fields = []
-            rows = self.lookup_rows(key, lookup.keys(), fields=fields)
-            rows = dict((row[key], row) for row in rows)
+            rows = self.lookup_rows(key, list(lookup.keys()), fields=fields)
+            rows = {row[key]: row for row in rows}
             self.rows.update(rows)
             if h:
                 for k, row in rows.items():
@@ -1365,7 +1369,7 @@ def s3_currency(name="currency", **attr):
         attr["default"] = settings.get_fin_currency_default()
     if "requires" not in attr:
         currency_opts = settings.get_fin_currencies()
-        attr["requires"] = IS_IN_SET(currency_opts.keys(),
+        attr["requires"] = IS_IN_SET(list(currency_opts.keys()),
                                      zero=None)
     if "writable" not in attr:
         attr["writable"] = settings.get_fin_currency_writable()

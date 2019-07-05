@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3TimePlot",
@@ -46,10 +48,11 @@ from dateutil.rrule import *
 
 from gluon import current
 from gluon.storage import Storage
-from gluon.html import *
+from gluon.html import FORM, INPUT, TABLE, TAG, XML
 from gluon.validators import IS_IN_SET
 from gluon.sqlhtml import OptionsWidget
 
+from s3compat import basestring
 from .s3datetime import s3_decode_iso_datetime, s3_utc
 from .s3rest import S3Method
 from .s3query import FS
@@ -373,8 +376,7 @@ class S3TimePlot(S3Method):
                        "rows",
                        "cols",
                        )
-        get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
-                        if k in report_vars)
+        get_vars = {k: v for k, v in r.get_vars.items() if k in report_vars}
 
         # Fall back to report options defaults
         report_options = resource.get_config("timeplot_options", {})
@@ -585,10 +587,8 @@ class S3TimePlotForm(S3ReportForm):
         return fieldset
 
     # -------------------------------------------------------------------------
-    def time_options(self,
-                     options=None,
-                     get_vars=None,
-                     widget_id=None):
+    @staticmethod
+    def time_options(options=None, get_vars=None, widget_id=None):
         """
             @todo: docstring
         """
@@ -1019,7 +1019,7 @@ class S3TimeSeries(object):
         # Fields to extract
         cumulative = False
         event_start = rfields.get("event_start")
-        fields = set([event_start.selector])
+        fields = {event_start.selector}
         event_end = rfields.get("event_end")
         if event_end:
             fields.add(event_end.selector)
@@ -1397,11 +1397,11 @@ class S3TimeSeriesEvent(object):
         if value is DEFAULT:
             series = set()
         elif value is None:
-            series = set([None])
+            series = {None}
         elif type(value) is list:
             series = set(s3_flatlist(value))
         else:
-            series = set([value])
+            series = {value}
         return series
 
     # -------------------------------------------------------------------------
@@ -1694,7 +1694,7 @@ class S3TimeSeriesFact(object):
         if base:
             try:
                 base_rfield = resource.resolve_selector(base)
-            except (AttributeError, SyntaxError), e:
+            except (AttributeError, SyntaxError):
                 base_rfield = None
 
         # Resolve slope selector
@@ -2044,7 +2044,7 @@ class S3TimeSeriesPeriod(object):
                     matrix[key].append(aggregate(items))
 
             # Aggregate total
-            totals.append(aggregate(events.values()))
+            totals.append(aggregate(list(events.values())))
 
         self.totals = totals
         return totals

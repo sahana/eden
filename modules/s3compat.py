@@ -41,9 +41,11 @@ if PY2:
         from StringIO import StringIO
     import urlparse
     import urllib2
-    from urllib2 import HTTPError, urlopen
+    from urllib2 import HTTPError, URLError, urlopen
     from urllib import urlencode
+    from urllib import quote as urllib_quote
     from HTMLParser import HTMLParser
+    import Cookie
     reduce = reduce
     basestring = basestring
     unichr = unichr
@@ -60,10 +62,12 @@ else:
     from io import StringIO
     from urllib import parse as urlparse
     from urllib import request as urllib2
-    from urllib.error import HTTPError
+    from urllib.error import HTTPError, URLError
     from urllib.request import urlopen
     from urllib.parse import urlencode
+    from urllib.parse import quote as urllib_quote
     from html.parser import HTMLParser
+    from http import cookies as Cookie
     from functools import reduce
     basestring = str
     unichr = chr

@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 # @todo: remove all interactive error reporting out of the _private methods,
@@ -36,19 +38,13 @@ __all__ = ("S3Importer",
            "S3BulkImporter",
            )
 
-import cPickle
 import datetime
 import json
 import os
 import sys
-import urllib2 # Needed for error handling on fetch
 import uuid
 
 from copy import deepcopy
-try:
-    from cStringIO import StringIO    # Faster, where available
-except ImportError:
-    from StringIO import StringIO
 try:
     from lxml import etree
 except ImportError:
@@ -61,6 +57,7 @@ from gluon import current, redirect, URL, \
 from gluon.storage import Storage, Messages
 from gluon.tools import callback, fetch
 
+from s3compat import pickle, StringIO, basestring, urllib2, urlopen, HTTPError, URLError
 from s3dal import Field
 from .s3datetime import s3_utc
 from .s3rest import S3Method, S3Request
@@ -1299,7 +1296,7 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
 
         # Represent the data
         if represent:
-            _represent = represent.items()
+            _represent = list(represent.items())
             for row in rows:
                 record_id = row["s3_import_item.id"]
                 for column, method in _represent:
@@ -2036,7 +2033,7 @@ class S3ImportItem(object):
         # Check for mandatory fields
         required_fields = self._mandatory_fields()
 
-        all_fields = data.keys()
+        all_fields = list(data.keys())
 
         failed_references = []
         items = self.job.items
@@ -2313,8 +2310,7 @@ class S3ImportItem(object):
                         self.skip = True
                         return True
 
-                fields = data.keys()
-                for f in fields:
+                for f in data.keys():
                     if f in original:
                         # Check if unchanged
                         if type(original[f]) is datetime.datetime:
@@ -2578,7 +2574,7 @@ class S3ImportItem(object):
             @param data: the data dict
         """
 
-        for k, v in data.items():
+        for k, v in list(data.items()):
             if k[0] == "_":
                 fn = k[1:]
                 if fn in self.table.fields and fn not in data:
@@ -2637,7 +2633,7 @@ class S3ImportItem(object):
             field = reference.field
 
             # Resolve key tuples
-            if isinstance(field, (list,tuple)):
+            if isinstance(field, (list, tuple)):
                 pkey, fkey = field
             else:
                 pkey, fkey = ("id", field)
@@ -2724,7 +2720,8 @@ class S3ImportItem(object):
         if fieldtype.startswith("list:reference"):
             query = (table._id == record_id)
             record = db(query).select(table[field],
-                                        limitby=(0,1)).first()
+                                      limitby = (0, 1),
+                                      ).first()
             if record:
                 values = record[field]
                 if value not in values:
@@ -2786,7 +2783,7 @@ class S3ImportItem(object):
                     # This is likely to be a modified_on to avoid updating this field, which skipping does just fine too
                     continue
                 data.update({f: data_})
-            data_str = cPickle.dumps(data)
+            data_str = pickle.dumps(data)
             record.update(data=data_str)
 
         ritems = []
@@ -2840,7 +2837,7 @@ class S3ImportItem(object):
         self.id = None
         self.uid = row.record_uid
         if row.data is not None:
-            self.data = cPickle.loads(row.data)
+            self.data = pickle.loads(row.data)
         else:
             self.data = Storage()
         data = self.data
@@ -3121,7 +3118,7 @@ class S3ImportJob():
             add_item = self.add_item
             xml = current.xml
             UID = xml.UID
-            for celement in xml.components(element, names=cnames.keys()):
+            for celement in xml.components(element, names=list(cnames.keys())):
 
                 # Get the component tablename
                 ctablename = celement.get(xml.ATTRIBUTE.name, None)
@@ -3197,7 +3194,7 @@ class S3ImportJob():
             tree = self.tree
             if tree is not None:
                 fields = [table[f] for f in table.fields]
-                rfields = filter(s3_has_foreign_key, fields)
+                rfields = [f for f in fields if s3_has_foreign_key(f)]
                 item.references = lookahead(element,
                                             table=table,
                                             fields=rfields,
@@ -3345,7 +3342,7 @@ class S3ImportJob():
                     if record:
                         id_map[uid] = record.id
                 else:
-                    uids_ = map(import_uid, uids)
+                    uids_ = [import_uid(uid) for uid in uids]
                     query = (ktable[UID].belongs(uids_))
                     records = db(query).select(ktable.id,
                                                ktable[UID],
@@ -4058,8 +4055,8 @@ class S3BulkImporter(object):
             if filename[:7] == "http://":
                 req = urllib2.Request(url=filename)
                 try:
-                    f = urllib2.urlopen(req)
-                except urllib2.HTTPError as e:
+                    f = urlopen(req)
+                except HTTPError as e:
                     self.errorList.append("Could not access %s: %s" % (filename, e.read()))
                     return
                 except:
@@ -4502,7 +4499,7 @@ class S3BulkImporter(object):
         os.chdir(fontPath)
         try:
             _file = fetch(url)
-        except urllib2.URLError as exception:
+        except URLError as exception:
             current.log.error(exception)
             # Revert back to the working directory as before.
             os.chdir(cwd)
@@ -4567,7 +4564,7 @@ class S3BulkImporter(object):
             os.chdir(tempPath)
             try:
                 _file = fetch(url)
-            except urllib2.URLError as exception:
+            except URLError as exception:
                 current.log.error(exception)
                 # Revert back to the working directory as before.
                 os.chdir(cwd)

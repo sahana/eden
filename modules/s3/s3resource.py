@@ -29,6 +29,8 @@
     @group Resource API: S3Resource,
     @group Filter API: S3ResourceFilter
     @group Helper Classes: S3AxisFilter, S3ResourceData
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3AxisFilter",
@@ -42,11 +44,6 @@ import sys
 from itertools import chain
 
 try:
-    from cStringIO import StringIO # Faster, where available
-except ImportError:
-    from StringIO import StringIO
-
-try:
     from lxml import etree
 except ImportError:
     sys.stderr.write("ERROR: lxml module needed for XML handling\n")
@@ -58,6 +55,7 @@ from gluon.validators import IS_EMPTY_OR
 from gluon.storage import Storage
 from gluon.tools import callback
 
+from s3compat import StringIO, basestring, reduce, xrange
 from s3dal import Expression, Field, Row, Rows, Table, S3DAL, VirtualCommand
 from .s3data import S3DataTable, S3DataList
 from .s3datetime import s3_format_datetime
@@ -1235,7 +1233,7 @@ class S3Resource(object):
         if self._rows is None:
             return Rows(current.db)
         else:
-            colnames = map(str, fields)
+            colnames = [str(f) for f in fields]
             return Rows(current.db, self._rows, colnames=colnames)
 
     # -------------------------------------------------------------------------
@@ -1456,10 +1454,13 @@ class S3Resource(object):
             return 0
 
     # -------------------------------------------------------------------------
+    def __bool__(self):
+        """ Boolean test of this resource """
+
+        return self is not None
+
     def __nonzero__(self):
-        """
-            Boolean test of this resource
-        """
+        """ Python-2.7 backwards-compatibility """
 
         return self is not None
 
@@ -3324,7 +3325,8 @@ class S3Resource(object):
         current.s3db.clear_config(self.tablename, *keys)
 
     # -------------------------------------------------------------------------
-    def limitby(self, start=0, limit=0):
+    @staticmethod
+    def limitby(start=0, limit=0):
         """
             Convert start+limit parameters into a limitby tuple
                 - limit without start => start = 0
@@ -3695,7 +3697,7 @@ class S3Resource(object):
             # Sorting direction
             def direction(i):
                 sort_dir = get_vars["sSortDir_%s" % str(i)]
-                return sort_dir and " %s" % sort_dir or ""
+                return " %s" % sort_dir if sort_dir else ""
 
             # Get the fields to order by
             try:
@@ -3793,7 +3795,7 @@ class S3Resource(object):
         else:
             orderby = None
 
-        left_joins = left_joins.as_list(tablenames=left_joins.joins.keys())
+        left_joins = left_joins.as_list(tablenames=list(left_joins.joins.keys()))
         return (searchq, orderby, left_joins)
 
     # -------------------------------------------------------------------------
@@ -3824,7 +3826,7 @@ class S3Resource(object):
             left_joins = S3Joins(self.tablename)
             left_joins.extend(rfield.left)
 
-            tablenames = left_joins.joins.keys()
+            tablenames = list(left_joins.joins.keys())
             tablenames.append(self.tablename)
             af = S3AxisFilter(qdict, tablenames)
 
@@ -4151,19 +4153,19 @@ class S3Components(object):
         """
             Get the aliases of all exposed components ([alias])
         """
-        return self.exposed.keys()
+        return list(self.exposed.keys())
 
     def values(self):
         """
             Get all exposed components ([resource])
         """
-        return self.exposed.values()
+        return list(self.exposed.values())
 
     def items(self):
         """
             Get all exposed components ([(alias, resource)])
         """
-        return self.exposed.items()
+        return list(self.exposed.items())
 
     # -------------------------------------------------------------------------
     def __load(self, aliases, force=False):
@@ -4197,7 +4199,7 @@ class S3Components(object):
 
         hooks = s3db.get_components(master.table, names=new)
         if not hooks:
-            return
+            return {}
 
         for alias, hook in hooks.items():
 
@@ -4348,7 +4350,7 @@ class S3Components(object):
                 component = loaded.pop(alias, None)
                 if component:
                     link = component.link
-                    for k, v in links.items():
+                    for k, v in list(links.items()):
                         if v is link:
                             links.pop(k)
                     exposed.pop(alias, None)
@@ -5596,7 +5598,7 @@ class S3ResourceData(object):
             # Execute master query
             db = current.db
 
-            master_fields = qfields.keys()
+            master_fields = list(qfields.keys())
             if not groupby and not pagination and \
                has_id and ids and len(master_fields) == 1:
                 # We already have the ids, and master query doesn't select
@@ -5645,7 +5647,7 @@ class S3ResourceData(object):
                                                limitby = limitby,
                                                orderby_on_limitby = orderby_on_limitby,
                                                cacheable = not as_rows,
-                                               *qfields.values())
+                                               *list(qfields.values()))
 
                 # Restore virtual fields
                 if not virtual:
@@ -5804,7 +5806,7 @@ class S3ResourceData(object):
                         else:
                             result = results[record_id]
 
-                        data = frecords[record_id].keys()
+                        data = list(frecords[record_id].keys())
                         if len(data) == 1 and not list_type:
                             data = data[0]
                         result[colname] = data
@@ -6264,7 +6266,7 @@ class S3ResourceData(object):
         del fields["_left"]
 
         # Get all fields for subtable query
-        extract = fields.keys()
+        extract = list(fields.keys())
         for efield in efields:
             fields[efield.colname] = efield.field
         sfields = [f for f in fields.values() if f]
@@ -6418,7 +6420,7 @@ class S3ResourceData(object):
         # Render all unique values
         if hasattr(renderer, "bulk") and not list_type:
             per_row_lookup = False
-            fvalues = renderer.bulk(fvalues.keys(), list_type=False)
+            fvalues = renderer.bulk(list(fvalues.keys()), list_type=False)
         elif not per_row_lookup:
             for value in fvalues:
                 try:
@@ -6440,7 +6442,7 @@ class S3ResourceData(object):
 
             # List type with per-row lookup?
             if per_row_lookup:
-                value = record.keys()
+                value = list(record.keys())
                 if None in value and len(value) > 1:
                     value = [v for v in value if v is not None]
                 try:
@@ -6454,7 +6456,7 @@ class S3ResourceData(object):
             # Single value (master record)
             elif len(record) == 1 or \
                 not joined and not list_type:
-                value = record.keys()[0]
+                value = list(record.keys())[0]
                 result[colname] = fvalues[value] \
                                   if value in fvalues else none
                 if raw_data:
@@ -6465,7 +6467,7 @@ class S3ResourceData(object):
             else:
                 if hasattr(renderer, "render_list"):
                     # Prefer S3Represent's render_list (so it can be customized)
-                    data = renderer.render_list(record.keys(),
+                    data = renderer.render_list(list(record.keys()),
                                                 fvalues,
                                                 show_link = show_links,
                                                 )
@@ -6491,7 +6493,7 @@ class S3ResourceData(object):
 
                 result[colname] = data
                 if raw_data:
-                    result["_row"][colname] = record.keys()
+                    result["_row"][colname] = list(record.keys())
 
         # Restore linkto
         if show_link is not None:
@@ -6516,7 +6518,8 @@ class S3ResourceData(object):
             raise AttributeError
 
     # -------------------------------------------------------------------------
-    def getids(self, rows, pkey):
+    @staticmethod
+    def getids(rows, pkey):
         """
             Extract all unique record IDs from rows, preserving the
             order by first match
@@ -6540,7 +6543,8 @@ class S3ResourceData(object):
         return result
 
     # -------------------------------------------------------------------------
-    def getrows(self, rows, ids, pkey):
+    @staticmethod
+    def getrows(rows, ids, pkey):
         """
             Select a subset of rows by their record IDs
 
@@ -6559,7 +6563,8 @@ class S3ResourceData(object):
         return rows.find(subset)
 
     # -------------------------------------------------------------------------
-    def subset(self, rows, ids, start=None, limit=None, has_id=True):
+    @staticmethod
+    def subset(rows, ids, start=None, limit=None, has_id=True):
         """
             Build a subset [start:limit] from rows and ids
 
@@ -6609,7 +6614,7 @@ class S3ResourceData(object):
         else:
             # => we don't know any further left joins,
             #    but as a minimum we need to add this table
-            tablenames = set([rfield.tname])
+            tablenames = {rfield.tname}
 
         return tablenames
 
