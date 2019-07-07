@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("SecurityZonesModel",
@@ -307,32 +309,33 @@ class SecurityZonesModel(S3Model):
 
         db = current.db
         table = db.security_staff_type
-        set = db(table.id > 0).select(table.id,
-                                      table.name).as_dict()
+        names = db(table.id > 0).select(table.id,
+                                        table.name,
+                                        ).as_dict()
 
         if isinstance(opt, (list, tuple)):
             opts = opt
-            vals = [str(set.get(o)["name"]) for o in opts]
+            vals = [str(names.get(o)["name"]) for o in opts]
             multiple = True
         elif isinstance(opt, int):
             opts = [opt]
-            vals = str(set.get(opt)["name"])
+            vals = str(names.get(opt)["name"])
             multiple = False
         else:
             try:
                 opt = int(opt)
-            except:
+            except (ValueError, TypeError):
                 return current.messages["NONE"]
             else:
                 opts = [opt]
-                vals = str(set.get(opt)["name"])
+                vals = str(names.get(opt)["name"])
                 multiple = False
 
         if multiple:
             if len(opts) > 1:
                 vals = ", ".join(vals)
             else:
-                vals = len(vals) and vals[0] or ""
+                vals = vals[0] if vals else ""
         return vals
 
 # =============================================================================

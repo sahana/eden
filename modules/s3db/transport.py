@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3TransportModel",
@@ -885,10 +887,10 @@ class transport_BorderCrossingRepresent(S3Represent):
                 crossing.countries = [country]
                 output[crossing_id] = crossing
 
-        return output.values()
+        return list(output.values())
 
 # =============================================================================
-def transport_rheader(r, tabs=[]):
+def transport_rheader(r, tabs=None):
     """ Transport module resource headers """
 
     if r.representation != "html":

@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("WorkContextModel",
@@ -496,7 +498,7 @@ class WorkJobModel(S3Model):
         return
 
 # =============================================================================
-def work_rheader(r, tabs=[]):
+def work_rheader(r, tabs=None):
     """ Work module resource headers """
 
     if r.representation != "html":

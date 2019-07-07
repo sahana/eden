@@ -26,6 +26,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3VolunteerModel",
@@ -1125,7 +1127,7 @@ def vol_service_record(r, **attr):
                            TH(T("Training")),
                            TH(T("Hours"))))
         _hours = {}
-        for key in sorted(hours.iterkeys()):
+        for key in sorted(hours.keys()):
             _hours[key] = hours[key]
         total = 0
         for hour in hours:

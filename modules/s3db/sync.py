@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("SyncConfigModel",
@@ -512,8 +514,9 @@ class SyncRepositoryModel(S3Model):
 
         table = current.s3db.sync_task
         query = (table.repository_id == repository_id)
-        task = current.db(query).select(orderby=~table.last_pull,
-                                        limitby=(0,1)).first()
+        task = current.db(query).select(limitby = (0, 1),
+                                        orderby = ~table.last_pull,
+                                        ).first()
         if task and task.last_pull:
             return S3DateTime.datetime_represent(task.last_pull, utc=True)
         else:
@@ -531,8 +534,9 @@ class SyncRepositoryModel(S3Model):
 
         table = current.s3db.sync_task
         query = (table.repository_id == repository_id)
-        task = current.db(query).select(orderby=~table.last_push,
-                                        limitby=(0,1)).first()
+        task = current.db(query).select(limitby = (0, 1),
+                                        orderby = ~table.last_push,
+                                        ).first()
         if task and task.last_push:
             return S3DateTime.datetime_represent(task.last_push, utc=True)
         else:
@@ -954,10 +958,10 @@ class SyncTaskModel(S3Model):
 
         # Strategy (allowed import methods)
         sync_strategy = S3ImportItem.METHOD
+        all_strategies = list(sync_strategy.values())
 
-        sync_strategy_represent = lambda opt: opt and \
-                                    ", ".join([o for o in sync_strategy.values()
-                                            if o in opt]) or NONE
+        sync_strategy_represent = lambda opt: ", ".join(o for o in sync_strategy.values() if o in opt) \
+                                              if opt else NONE
 
         # Update method
         sync_update_method = {
@@ -1086,10 +1090,10 @@ class SyncTaskModel(S3Model):
                                          ),
                            ),
                      Field("strategy", "list:string",
-                           default = sync_strategy.values(),
+                           default = all_strategies,
                            label = T("Strategy"),
                            represent = sync_strategy_represent,
-                           requires = IS_IN_SET(sync_strategy.values(),
+                           requires = IS_IN_SET(all_strategies,
                                                 multiple = True,
                                                 zero = None,
                                                 ),

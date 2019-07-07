@@ -7,30 +7,33 @@
         * Monitoring of a Deployment
         * Upgrading a Deployment (tbc)
 
-@copyright: 2015-2019 (c) Sahana Software Foundation
-@license: MIT
+    @copyright: 2015-2019 (c) Sahana Software Foundation
+    @license: MIT
 
-Permission is hereby granted, free of charge, to any person
-obtaining a copy of this software and associated documentation
-files (the "Software"), to deal in the Software without
-restriction, including without limitation the rights to use,
-copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following
-conditions:
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use,
+    copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following
+    conditions:
 
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+    OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
+
 __all__ = ("S3SetupModel",
            "S3SetupMonitorModel",
            #"Storage2",
@@ -49,8 +52,10 @@ import random
 import string
 import time
 
-from ..s3 import *
 from gluon import *
+
+from ..s3 import *
+from s3compat import basestring
 
 TIME_FORMAT = "%b %d %Y %H:%M:%S"
 MSG_FORMAT = "%(now)s - %(category)s - %(data)s\n\n"
@@ -886,7 +891,7 @@ dropdown.change(function() {
             for server in servers:
                 if server.role == 2:
                     db_ip = server.host_ip
-                    private_key = server.private.key    
+                    private_key = server.private.key
                     remote_user = server.remote_user
                 else:
                     webserver_ip = server.host_ip
@@ -1592,7 +1597,7 @@ class S3SetupMonitorModel(S3Model):
 
             CLI API for shell scripts & to be called by S3Method
         """
-    
+
         db = current.db
         table = current.s3db.setup_monitor_task
 

@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3VehicleModel",)
@@ -177,7 +179,7 @@ class S3VehicleModel(S3Model):
                            ),
                      Field("mileage", "integer",
                            label = T("Current Mileage"),
-                           represent = lambda v: int_represent(v),
+                           represent = int_represent,
                            requires = IS_EMPTY_OR(
                                           IS_INT_IN_RANGE(0, None)
                                           ),
@@ -185,7 +187,7 @@ class S3VehicleModel(S3Model):
                      Field("service_mileage", "integer",
                            comment = T("Mileage"),
                            label = T("Service Due"),
-                           represent = lambda v: int_represent(v),
+                           represent = int_represent,
                            requires = IS_EMPTY_OR(
                                           IS_INT_IN_RANGE(0, None)
                                           ),

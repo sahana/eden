@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("OutreachAreaModel",
@@ -266,7 +268,7 @@ class OutreachAreaModel(S3Model):
             s3db.pr_remove_affiliation(row.pe_id, area_pe_id, role=ROLE)
 
         # Add current affiliation
-        from pr import OU
+        from .pr import OU
         s3db.pr_add_affiliation(organisation_pe_id, area_pe_id, role=ROLE, role_type=OU)
 
 # =============================================================================

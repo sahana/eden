@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3WaterModel",)
@@ -133,8 +135,6 @@ class S3WaterModel(S3Model):
             msg_record_modified = T("Zone updated"),
             msg_record_deleted = T("Zone deleted"),
             msg_list_empty = T("No Zones currently registered"))
-
-        zone_represent = S3Represent(lookup=tablename)
 
         # -----------------------------------------------------------------------------
         # Rivers

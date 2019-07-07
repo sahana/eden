@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3TranslateModel",)
@@ -50,8 +52,7 @@ class S3TranslateModel(S3Model):
         #
         from ..s3.s3translate import TranslateAPI
 
-        langlist = TranslateAPI.get_langcodes()
-        langlist.sort()
+        langlist = sorted(TranslateAPI.get_langcodes())
 
         tablename = "translate_language"
         define_table(tablename,

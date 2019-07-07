@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("RequestPriorityStatusModel",
@@ -267,7 +269,7 @@ class RequestModel(S3Model):
 
         # Default Request Type
         if len(req_types) == 1:
-            default_type = req_types.keys()[0]
+            default_type = list(req_types.keys())[0]
         else:
             default_type = current.request.get_vars.get("type")
             if default_type:
