@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3OrganisationModel",
@@ -84,6 +86,7 @@ import json
 from gluon import *
 
 from ..s3 import *
+from s3compat import StringIO
 from s3dal import Row
 from s3layouts import S3PopupLink
 
@@ -1927,7 +1930,7 @@ class S3OrganisationGroupTeamModel(S3Model):
             Update affiliations
         """
 
-        from pr import OU
+        from .pr import OU
 
         if hasattr(form, "vars"):
             _id = form.vars.id
@@ -2982,7 +2985,7 @@ def org_service_root_service(service_id):
 
         # If this node doesn't have the correct root, the children
         # won't have either, so update them all
-        nodes = descendants(set([service_id]))
+        nodes = descendants({service_id})
         db(table.id.belongs(nodes)).update(root_service=new_root)
 
     return new_root
@@ -5537,8 +5540,7 @@ class org_SiteRepresent(S3Represent):
             if show_link:
                 link = self.link
                 rows = self.rows
-                labels = dict((k, link(k, v, rows.get(k)))
-                               for k, v in labels.items())
+                labels = {k: link(k, v, rows.get(k)) for k, v in labels.items()}
             for v in values:
                 if v not in labels:
                     labels[v] = self.default
@@ -5627,7 +5629,7 @@ class org_SiteRepresent(S3Represent):
                 if instance_type in site_ids:
                     site_ids[instance_type].add(row.site_id)
                 else:
-                    site_ids[instance_type] = set([row.site_id])
+                    site_ids[instance_type] = {row.site_id}
 
             # Retrieve site ID / instance ID pairs per instance_type
             instance_ids = {}
@@ -6334,7 +6336,7 @@ def org_site_top_req_priority(row, tablename="org_facility"):
         return None
 
     try:
-        from req import REQ_STATUS_COMPLETE
+        from .req import REQ_STATUS_COMPLETE
     except ImportError:
         return None
 
@@ -7457,7 +7459,7 @@ def organisation_update_affiliations(record):
     else:
         branch_id = record.branch_id
 
-    from pr import OU
+    from .pr import OU
     BRANCHES = "Branches"
 
     db = current.db
@@ -7532,7 +7534,7 @@ def org_group_update_affiliations(record):
     if not org_pe_id:
         return
 
-    from pr import OU
+    from .pr import OU
     MEMBERS = "Members"
 
     db = current.db
@@ -7580,7 +7582,7 @@ def org_site_update_affiliations(record):
         @param record: the org_site instance record
     """
 
-    from pr import OU
+    from .pr import OU
     SITES = "Sites"
 
     db = current.db
@@ -7652,7 +7654,7 @@ def org_team_update_affiliations(record):
         # Nothing we can do
         return
 
-    from pr import OU
+    from .pr import OU
     TEAMS = "Groups" # Backwards-compatibility, but should be "Teams"
 
     db = current.db
@@ -7821,7 +7823,7 @@ class org_OrganisationDuplicate(object):
 
             if len(name_matches) == 1:
                 # Single name match (+ no parent item = no conflict)
-                match = name_matches.keys()[0]
+                match = list(name_matches.keys())[0]
                 name = name_matches[match].get("name")
                 if name:
                     item.data.name = name
@@ -7913,10 +7915,10 @@ class org_OrganisationDuplicate(object):
 
         if rows:
             # Get the parents for all matches
-            matches = dict((row.id, {"name": row.name}) for row in rows)
+            matches = {row.id: {"name": row.name} for row in rows}
 
             btable = s3db.org_organisation_branch
-            query = (btable.branch_id.belongs(matches.keys())) & \
+            query = (btable.branch_id.belongs(set(matches.keys()))) & \
                     (btable.deleted != True)
             links = db(query).select(btable.organisation_id,
                                      btable.branch_id,
@@ -8458,11 +8460,6 @@ class org_CapacityReport(S3Method):
         sheet1.col(0).width = width
 
         # Create the file
-        try:
-            from cStringIO import StringIO    # Faster, where available
-        except ImportError:
-            from StringIO import StringIO
-
         output = StringIO()
         book.save(output)
 

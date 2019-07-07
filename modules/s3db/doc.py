@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3DocumentLibrary",
@@ -38,7 +40,9 @@ import os
 
 from gluon import *
 from gluon.storage import Storage
+
 from ..s3 import *
+from s3compat import StringIO
 
 # =============================================================================
 class S3DocumentLibrary(S3Model):
@@ -433,8 +437,7 @@ class S3DocumentLibrary(S3Model):
                 filename = metadata.split(";", 1)[0]
                 f = Storage()
                 f.filename = uuid.uuid4().hex + filename
-                import cStringIO
-                f.file = cStringIO.StringIO(base64.decodestring(encoded_file))
+                f.file = StringIO(base64.decodestring(encoded_file))
                 doc = form_vars.file = f
                 if not form_vars.name:
                     form_vars.name = filename
@@ -751,31 +754,31 @@ class S3CKEditorModel(S3Model):
             Categories: word, excel, powerpoint, flash, pdf, image, video, audio, archive, other.
         """
 
+        ftype = "other"
+
         parts = os.path.splitext(filename)
-        if len(parts) < 2:
-            return "other"
-        else:
+        if len(parts) > 1:
             ext = parts[1][1:].lower()
             if ext in ("png", "jpg", "jpeg", "gif"):
-                return "image"
+                ftype = "image"
             elif ext in ("avi", "mp4", "m4v", "ogv", "wmv", "mpg", "mpeg"):
-                return "video"
+                ftype = "video"
             elif ext in ("mp3", "m4a", "wav", "ogg", "aiff"):
-                return "audio"
+                ftype = "audio"
             elif ext in ("zip", "7z", "tar", "gz", "tgz", "bz2", "rar"):
-                return "archive"
+                ftype = "archive"
             elif ext in ("doc", "docx", "dot", "dotx", "rtf"):
-                return "word"
+                ftype = "word"
             elif ext in ("xls", "xlsx", "xlt", "xltx", "csv"):
-                return "excel"
+                ftype = "excel"
             elif ext in ("ppt", "pptx"):
-                return "powerpoint"
+                ftype = "powerpoint"
             elif ext in ("flv", "swf"):
-                return "flash"
+                ftype = "flash"
             elif ext == "pdf":
-                return "pdf"
-            else:
-                return "other"
+                ftype = "pdf"
+
+        return ftype
 
 # =============================================================================
 class S3DataCardModel(S3Model):
@@ -941,7 +944,7 @@ class S3DataCardModel(S3Model):
             s3db.configure("doc_card_config",
                            insertable = False,
                            )
-        elif this and card_types.keys() == [this]:
+        elif this and list(card_types.keys()) == [this]:
             # All other types are already configured => can't change this
             table.card_type.writable = False
 

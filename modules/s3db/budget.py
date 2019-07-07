@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3BudgetModel",
@@ -1764,7 +1766,7 @@ class budget_CostItemRepresent(S3Represent):
             fields.insert(0, table[keyname])
 
             # Extract instance rows
-            query = (table[keyname].belongs(types[instance_type].keys()))
+            query = (table[keyname].belongs(set(types[instance_type].keys())))
             rows = db(query).select(*fields)
             self.queries += 1
 

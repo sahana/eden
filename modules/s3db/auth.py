@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("AuthDomainApproverModel",
@@ -641,7 +643,7 @@ class auth_Consent(object):
             error = invalid
         else:
             try:
-                option_ids = set(v[0] for v in parsed.values())
+                option_ids = {v[0] for v in parsed.values()}
             except (TypeError, IndexError):
                 error = invalid
             else:
@@ -748,11 +750,11 @@ class auth_Consent(object):
         ttable = s3db.auth_processing_type
         otable = s3db.auth_consent_option
 
-        option_fields = set(["id", "validity_period"]) | set(hash_fields)
+        option_fields = {"id", "validity_period"} | set(hash_fields)
         fields = [ttable.code] + [otable[fn] for fn in option_fields]
 
         join = ttable.on(ttable.id == otable.type_id)
-        query = (ttable.code.belongs(parsed.keys())) & \
+        query = (ttable.code.belongs(set(parsed.keys()))) & \
                 (otable.obsolete == False) & \
                 (otable.deleted == False)
         rows = db(query).select(join=join, *fields)

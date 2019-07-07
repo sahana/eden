@@ -27,6 +27,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3Report",
@@ -50,6 +52,7 @@ from gluon.sqlhtml import OptionsWidget
 from gluon.storage import Storage
 from gluon.validators import IS_IN_SET, IS_EMPTY_OR
 
+from s3compat import INTEGER_TYPES, basestring, xrange
 from .s3query import FS
 from .s3rest import S3Method
 from .s3utils import s3_flatlist, s3_has_foreign_key, s3_str, S3MarkupStripper, s3_represent_value
@@ -124,8 +127,7 @@ class S3Report(S3Method):
 
         # Extract the relevant GET vars
         report_vars = ("rows", "cols", "fact", "totals")
-        get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
-                        if k in report_vars)
+        get_vars = {k: v for k, v in r.get_vars.items() if k in report_vars}
 
         # Fall back to report options defaults
         report_options = get_config("report_options", {})
@@ -485,8 +487,7 @@ class S3Report(S3Method):
 
         # Extract the relevant GET vars
         report_vars = ("rows", "cols", "fact", "totals")
-        get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
-                        if k in report_vars)
+        get_vars = {k: v for k, v in r.get_vars.items() if k in report_vars}
 
         # Fall back to report options defaults
         report_options = get_config("report_options", {})
@@ -730,7 +731,7 @@ class S3Report(S3Method):
             # Build output item
             # - using TAG not str.join() to allow representations to contain
             #   XML helpers like A, SPAN or DIV
-            repr_str = TAG[""](repr_items).xml()
+            repr_str = s3_str(TAG[""](repr_items).xml())
             if key:
                 # Include raw field value for client-side de-duplication
                 output[record_id] = [repr_str, s3_str(raw[key])]
@@ -1483,7 +1484,7 @@ class S3PivotTableFact(object):
         else:
             # Numeric values required - some virtual fields
             # return '-' for None, so must type-check here:
-            values = [v for v in values if isinstance(v, (int, long, float))]
+            values = [v for v in values if isinstance(v, INTEGER_TYPES + (float,))]
 
             if method == "min":
                 try:
@@ -1815,7 +1816,7 @@ class S3PivotTable(object):
 
         # Retrieve the records ------------------------------------------------
         #
-        data = resource.select(self.rfields.keys(), limit=None)
+        data = resource.select(list(self.rfields.keys()), limit=None)
         drows = data["rows"]
         if drows:
 
@@ -1937,7 +1938,7 @@ class S3PivotTable(object):
         if self.empty:
             location_ids = []
         else:
-            numeric = lambda x: isinstance(x, (int, long, float))
+            numeric = lambda x: isinstance(x, INTEGER_TYPES + (float,))
             row_repr = s3_str
 
             ids = {}
@@ -2272,7 +2273,7 @@ class S3PivotTable(object):
                                 except AttributeError:
                                     continue
                                 if method == "sum" and \
-                                   isinstance(fvalue, (int, long, float)) and fvalue:
+                                   isinstance(fvalue, INTEGER_TYPES + (float,)) and fvalue:
                                     okeys.append(record_id)
                                 elif method == "count" and \
                                    fvalue is not None:
@@ -2668,7 +2669,7 @@ class S3PivotTable(object):
                     values = ids
                     row_values = row_records
                     col_values = row_records
-                    all_values = records.keys()
+                    all_values = list(records.keys())
                 else:
                     values = []
                     append = values.append

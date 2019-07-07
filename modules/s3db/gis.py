@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 from __future__ import division
@@ -57,6 +59,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
+from s3compat import StringIO, basestring
 from s3layouts import S3PopupLink
 
 # Compact JSON encoding
@@ -2353,8 +2356,7 @@ class S3GISConfigModel(S3Model):
             filename = metadata.split(";")[0]
             f = Storage()
             f.filename = uuid.uuid4().hex + filename
-            import cStringIO
-            f.file = cStringIO.StringIO(base64.decodestring(encoded_file))
+            f.file = StringIO(base64.decodestring(encoded_file))
             form_vars.image = image = f
 
         elif isinstance(image, str):

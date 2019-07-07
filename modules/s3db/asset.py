@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3AssetModel",
@@ -498,7 +500,7 @@ class S3AssetModel(S3Model):
         if auth.permission.format == "html":
             # T isn't JSON serializable
             site_types = auth.org_site_types
-            for key in site_types.keys():
+            for key in list(site_types.keys()):
                 site_types[key] = str(site_types[key])
             site_types = json.dumps(site_types)
             script = '''

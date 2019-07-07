@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("HospitalDataModel",
@@ -1102,7 +1104,7 @@ class CholeraTreatmentCapabilityModel(S3Model):
                      Field("problem_types", "list:integer",
                            label = T("Current problems, categories"),
                            represent = lambda optlist: \
-                                       optlist and ", ".join(map(str,optlist)) or T("N/A"),
+                                       optlist and ", ".join(str(o) for o in optlist) or T("N/A"),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(hms_problem_types,
                                                   zero=None,

@@ -58,6 +58,7 @@ if PY2:
     CLASS_TYPES = (type, ClassType)
     xrange = xrange
     sorted_locale = lambda x: sorted(x, cmp=locale.strcoll)
+    from itertools import izip_longest as zip_longest
 else:
     import pickle
     from io import StringIO
@@ -81,3 +82,4 @@ else:
     CLASS_TYPES = (type,)
     xrange = range
     sorted_locale = lambda x: sorted(x, key=locale.strxfrm)
+    from itertools import zip_longest

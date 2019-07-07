@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("BRCaseModel",
@@ -65,6 +67,7 @@ from gluon import *
 from gluon.storage import Messages, Storage
 
 from ..s3 import *
+from s3compat import long
 #from s3layouts import S3PopupLink
 
 CASE_GROUP = 7
@@ -2959,7 +2962,7 @@ class br_DocEntityRepresent(S3Represent):
             itable = s3db[instance_type]
 
             # Look up person and instance data
-            query = itable.doc_id.belongs(doc_entities.keys())
+            query = itable.doc_id.belongs(set(doc_entities.keys()))
             if instance_type == "pr_group":
                 mtable = s3db.pr_group_membership
                 left = [mtable.on((mtable.group_id == itable.id) & \
@@ -3417,7 +3420,7 @@ def br_household_size(group_id):
             (gtable.group_type == 7) & \
             (gtable.deleted != True)
     rows = db(query).select(ptable.id, join=join)
-    person_ids = set([row.id for row in rows])
+    person_ids = {row.id for row in rows}
 
     if person_ids:
         # Get case group members for each of these person_ids
@@ -3446,7 +3449,7 @@ def br_household_size(group_id):
             member_id = row[MEMBER]
             case_id = row[CASE]
             if case_id not in groups:
-                groups[case_id] = set([member_id])
+                groups[case_id] = {member_id}
             else:
                 groups[case_id].add(member_id)
 

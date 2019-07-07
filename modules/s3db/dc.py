@@ -27,6 +27,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("DataCollectionTemplateModel",
@@ -1103,19 +1105,19 @@ class DataCollectionModel(S3Model):
         sections = [{v["posn"]: v} for k, v in root_sections.items()]
         sections.sort()
         for s in sections:
-            section = s[s.items()[0][0]]
+            section = s[list(s.items())[0][0]]
             subsections = [{v["posn"]: v} for k, v in section["subsections"].items()]
             subsections.sort()
             section["subsections"] = subsections
             section["questions"].sort()
             for sub in subsections:
-                _sub = sub[sub.items()[0][0]]
+                _sub = sub[list(sub.items())[0][0]]
                 subsubsections = [{v["posn"]: v} for k, v in _sub["subsubsections"].items()]
                 subsubsections.sort()
                 _sub["subsubsections"] = subsubsections
                 _sub["questions"].sort()
                 for subsub in subsubsections:
-                    subsub[subsub.items()[0][0]]["questions"].sort()
+                    subsub[list(subsub.items())[0][0]]["questions"].sort()
 
         # Append questions to the form, with subheadings
         crud_fields = []
@@ -1123,7 +1125,7 @@ class DataCollectionModel(S3Model):
 
         # 1st add those questions without a section (likely the only questions then)
         for q in root_questions:
-            question = q[q.items()[0][0]]
+            question = q[list(q.items())[0][0]]
             fname = question["name"]
             if fname:
                 cappend((question["label"], fname))
@@ -1134,13 +1136,13 @@ class DataCollectionModel(S3Model):
         # Next add those questions with a section (likely the only questions then)
         subheadings = {}
         for s in sections:
-            section = s[s.items()[0][0]]
+            section = s[list(s.items())[0][0]]
             section_name = section["name"]
             # 1st add those questions without a subsection
             questions = section["questions"]
             first = True
             for question in questions:
-                question = question.items()[0][1]
+                question = list(question.items())[0][1]
                 fname = question["name"]
                 if fname:
                     cappend((question["label"], fname))
@@ -1154,12 +1156,12 @@ class DataCollectionModel(S3Model):
             # Next add those questions in a subsection
             subsections = section["subsections"]
             for sub in subsections:
-                _sub = sub[sub.items()[0][0]]
+                _sub = sub[list(sub.items())[0][0]]
                 subsection_name = _sub["name"]
                 questions = _sub["questions"]
                 ffirst = True
                 for question in questions:
-                    question = question.items()[0][1]
+                    question = list(question.items())[0][1]
                     fname = question["name"]
                     if fname:
                         cappend((question["label"], fname))
@@ -1177,12 +1179,12 @@ class DataCollectionModel(S3Model):
                 # Next add those questions in a subsubsection
                 subsubsections = _sub["subsubsections"]
                 for subsub in subsubsections:
-                    _subsub = subsub[subsub.items()[0][0]]
+                    _subsub = subsub[list(subsub.items())[0][0]]
                     subsubsection_name = _subsub["name"]
                     questions = _subsub["questions"]
                     fffirst = True
                     for question in questions:
-                        question = question.items()[0][1]
+                        question = list(question.items())[0][1]
                         fname = question["name"]
                         if fname:
                             cappend((question["label"], fname))

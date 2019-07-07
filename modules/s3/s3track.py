@@ -26,6 +26,7 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 
+    @status: fixed for Py3
 """
 
 from datetime import datetime, timedelta
@@ -233,8 +234,7 @@ class S3Trackable(object):
             fields.append(TRACK_ID)
             return fields
         elif hasattr(trackable, "update_record") or \
-             isinstance(trackable, Table) or \
-             isinstance(trackable, Row):
+             isinstance(trackable, (Table, Row)):
             return fields
 
         return None

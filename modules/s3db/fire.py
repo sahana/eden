@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3FireModel",
@@ -220,7 +222,7 @@ class S3FireStationModel(S3Model):
                            ),
                      Field("website",
                            label = T("Website"),
-                           represent = lambda url: s3_url_represent(url),
+                           represent = s3_url_represent,
                            requires = IS_EMPTY_OR(IS_URL()),
                            ),
                      #Field("fax",
@@ -547,7 +549,7 @@ class S3FireStationModel(S3Model):
         try:
             return "%s - %s" % (row.start_time, row.end_time)
         except:
-            current.messages.UNKNOWN_OPT
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod

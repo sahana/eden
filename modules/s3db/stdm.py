@@ -26,6 +26,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3SocialTenureDomainModel",
@@ -1188,11 +1190,11 @@ def stdm_rheader(r):
 
         elif tablename == "gis_location":
 
-            tabs = ((T("Basic Details"), None),
+            tabs = [(T("Basic Details"), None),
                     (T("Local Names"), "name"),
                     (T("Alternate Names"), "name_alt"),
                     (T("Key Value pairs"), "tag"),
-                    )
+                    ]
 
             rheader_fields = [["name"],
                               ]

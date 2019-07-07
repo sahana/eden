@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3DVIModel",)
@@ -50,7 +52,6 @@ class S3DVIModel(S3Model):
 
         T = current.T
         db = current.db
-        request = current.request
 
         person_id = self.pr_person_id
         location_id = self.gis_location_id
@@ -68,8 +69,8 @@ class S3DVIModel(S3Model):
         super_link = self.super_link
 
         dvi_id_status = {
-            1:T("Preliminary"),
-            2:T("Confirmed"),
+            1: T("Preliminary"),
+            2: T("Confirmed"),
         }
         dvi_id_status_filteropts = dict(dvi_id_status)
         dvi_id_status_filteropts[None] = T("Unidentified")
@@ -78,12 +79,12 @@ class S3DVIModel(S3Model):
         # Recovery Request
         #
         task_status = {
-            1:T("Not Started"),
-            2:T("Assigned"),
-            3:T("In Progress"),
-            4:T("Completed"),
-            5:T("Not Applicable"),
-            6:T("Not Possible")
+            1: T("Not Started"),
+            2: T("Assigned"),
+            3: T("In Progress"),
+            4: T("Completed"),
+            5: T("Not Applicable"),
+            6: T("Not Possible")
         }
 
         tablename = "dvi_recreq"
@@ -237,11 +238,11 @@ class S3DVIModel(S3Model):
                      dvi_recreq_id(),
                      s3_datetime("date_of_recovery",
                                  label = T("Date of Recovery"),
-                                 empty=False,
+                                 empty = False,
                                  default = "now",
-                                 future=0
+                                 future = 0
                                  ),
-                     Field("recovery_details","text"),
+                     Field("recovery_details", "text"),
                      Field("incomplete", "boolean",
                            label = T("Incomplete"),
                            represent = bool_repr),
@@ -251,7 +252,7 @@ class S3DVIModel(S3Model):
                      Field("burned_or_charred", "boolean",
                            label = T("Burned/charred"),
                            represent = bool_repr),
-                     Field("decomposed","boolean",
+                     Field("decomposed", "boolean",
                            label = T("Decomposed"),
                            represent = bool_repr),
                      self.pr_gender(label=T("Apparent Gender")),
@@ -385,18 +386,18 @@ class S3DVIModel(S3Model):
         # Identification Report
         #
         dvi_id_status = {
-            1:T("Preliminary"),
-            2:T("Confirmed"),
+            1: T("Preliminary"),
+            2: T("Confirmed"),
         }
 
         dvi_id_methods = {
-            1:T("Visual Recognition"),
-            2:T("Physical Description"),
-            3:T("Fingerprints"),
-            4:T("Dental Profile"),
-            5:T("DNA Profile"),
-            6:T("Combined Method"),
-            9:T("Other Evidence")
+            1: T("Visual Recognition"),
+            2: T("Physical Description"),
+            3: T("Fingerprints"),
+            4: T("Dental Profile"),
+            5: T("DNA Profile"),
+            6: T("Combined Method"),
+            9: T("Other Evidence")
         }
 
         tablename = "dvi_identification"

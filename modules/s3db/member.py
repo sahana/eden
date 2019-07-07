@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3MembersModel",
@@ -594,7 +596,7 @@ class S3MemberProgrammeModel(S3Model):
         return {}
 
 # =============================================================================
-def member_rheader(r, tabs=[]):
+def member_rheader(r, tabs=None):
     """ Resource headers for component views """
 
     if r.representation != "html":

@@ -1898,7 +1898,7 @@ class Traceback(object):
         lwords = traceback.split('"')
 
         # Make the short circuit compatible with <= python2.4
-        result = (len(lwords) != 0) and lwords[0] or ""
+        result = lwords[0] if len(lwords) else ""
 
         i = 1
 
@@ -1908,7 +1908,7 @@ class Traceback(object):
             if link == "":
                 result += '"' + lwords[i]
             else:
-                result += link
+                result += s3_str(link)
 
                 if i + 1 < len(lwords):
                     result += lwords[i + 1]
@@ -2715,6 +2715,8 @@ class S3MarkupStripper(HTMLParser):
     """ Simple markup stripper """
 
     def __init__(self):
+        super().__init__()
+        self.reset()
         self.reset()
         self.result = []
 

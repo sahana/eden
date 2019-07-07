@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3HRModel",
@@ -78,6 +80,7 @@ from gluon.sqlhtml import RadioWidget
 from gluon.storage import Storage
 
 from ..s3 import *
+from s3compat import long
 from s3layouts import S3PopupLink
 
 # Compact JSON encoding
@@ -6445,7 +6448,7 @@ def hrm_rheader(r, tabs=None, profile=False):
                     if activity_types == [NONE]:
                         activity_types = NONE
                     else:
-                        activity_types = activity_types.values()
+                        activity_types = list(activity_types.values())
                         activity_types.remove(NONE)
                         activity_types = ", ".join([s3_str(v) for v in activity_types])
                 else:
@@ -7005,7 +7008,7 @@ def hrm_competency_controller():
         return True
     s3.prep = prep
 
-    def postp(r,output):
+    def postp(r, output):
         if r.interactive:
             # Custom action button to add the member to a team
             S3CRUD.action_buttons(r)
