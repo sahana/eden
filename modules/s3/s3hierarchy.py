@@ -27,6 +27,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3Hierarchy", "S3HierarchyCRUD")
@@ -36,6 +38,8 @@ import json
 from gluon import *
 from gluon.storage import Storage
 from gluon.tools import callback
+
+from s3compat import long, unicodeT, xrange
 from .s3utils import s3_str
 from .s3rest import S3Method
 from .s3widgets import SEPARATORS
@@ -364,9 +368,9 @@ class S3HierarchyCRUD(S3Method):
                 row = current.db(query).select(h.pkey, limitby=(0, 1)).first()
                 if not row:
                     r.error(404, current.ERROR.BAD_RECORD)
-                roots = set([row[h.pkey]])
+                roots = {row[h.pkey]}
             else:
-                roots = set([self.record_id])
+                roots = {self.record_id}
         else:
             roots = h.roots
 
@@ -680,7 +684,7 @@ class S3Hierarchy(object):
             return
 
         # Serialize the theset
-        nodes_dict = dict()
+        nodes_dict = {}
         for node_id, node in theset.items():
             nodes_dict[node_id] = {"p": node["p"],
                                    "c": node["c"],
@@ -1457,11 +1461,8 @@ class S3Hierarchy(object):
                 self._represent(node_ids=[node_id], renderer=represent)
             if LABEL in node:
                 label = node[LABEL]
-            if type(label) is unicode:
-                try:
-                    label = label.encode("utf-8")
-                except UnicodeEncodeError:
-                    pass
+            if type(label) is unicodeT:
+                label = s3_str(label)
             return label
         return None
 

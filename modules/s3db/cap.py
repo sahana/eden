@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("CAPAlertModel",
@@ -50,7 +52,6 @@ __all__ = ("CAPAlertModel",
 
 import os
 import datetime
-import urllib2 # Needed for quoting & error handling on fetch
 
 from collections import OrderedDict
 
@@ -58,6 +59,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
+from s3compat import HTTPError, StringIO, URLError, basestring, urllib2
 from s3layouts import S3PopupLink
 
 OIDPATTERN = r"^[^,<&\s]+$"
@@ -2518,7 +2520,6 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
 
                 import uuid
                 import base64
-                from cStringIO import StringIO
 
                 image = Storage(filename = uuid.uuid4().hex + filename)
                 image.file = stream = StringIO(base64.decodestring(encoded_file))
@@ -4727,10 +4728,10 @@ class cap_ImportAlert(S3Method):
         tree = version = error = None
         try:
             content = opener.open(url)
-        except urllib2.HTTPError, e:
+        except HTTPError as e:
             # HTTP status
             error = "HTTP %s: %s" % (e.code, e.read())
-        except urllib2.URLError, e:
+        except URLError as e:
             # URL Error (network error)
             error = "CAP source unavailable (%s)" % e.reason
         except Exception:

@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3SQLCustomForm",
@@ -47,6 +49,7 @@ from gluon.sqlhtml import StringWidget
 from gluon.tools import callback
 from gluon.validators import Validator
 
+from s3compat import basestring, xrange
 from s3dal import Field, original_tablename
 from .s3query import FS
 from .s3utils import s3_mark_required, s3_store_last_record_id, s3_str, s3_validate
@@ -265,7 +268,7 @@ class S3SQLForm(object):
                            )
 
         form_rows = iter(form[0])
-        tr = form_rows.next()
+        tr = next(form_rows)
         i = 0
         while tr:
             # @ToDo: We need a better way of working than this!
@@ -300,7 +303,7 @@ class S3SQLForm(object):
                 headings = subheadings.get(f)
                 if not headings:
                     try:
-                        tr = form_rows.next()
+                        tr = next(form_rows)
                     except StopIteration:
                         break
                     else:
@@ -318,9 +321,9 @@ class S3SQLForm(object):
                     tr.attributes.update(_class="%s after_subheading" % tr.attributes["_class"])
                     for _i in range(0, inserted):
                         # Iterate over the rows we just created
-                        tr = form_rows.next()
+                        tr = next(form_rows)
             try:
-                tr = form_rows.next()
+                tr = next(form_rows)
             except StopIteration:
                 break
             else:
@@ -2985,7 +2988,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
                 if not delete:
                     # Get the values
-                    for f, d in item.iteritems():
+                    for f, d in item.items():
                         if f[0] != "_" and d and isinstance(d, dict):
 
                             field = table[f]
@@ -3307,8 +3310,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     data[idxname] = filename
                 else:
                     value = item[fname]["value"]
-                    if type(value) is unicode:
-                        value = value.encode("utf-8")
+                    if type(value) is unicodeT:
+                        value = s3_str(value)
                     widget = formfield.widget
                     if isinstance(widget, S3Selector):
                         # Use the widget parser to get at the selected ID
@@ -3749,7 +3752,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                 opts = self.get_options()
                 if zero is None:
                     # Remove the empty option
-                    opts = dict((k, v) for k, v in opts.items() if k != "")
+                    opts = {k: v for k, v in opts.items() if k != ""}
                 requires = IS_IN_SET(opts,
                                      multiple=multiple,
                                      zero=zero,
@@ -3759,9 +3762,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             dummy_field.requires = requires
 
         # Helper to extract widget options
-        widget_opts = lambda keys: dict((k, v)
-                                        for k, v in options.items()
-                                        if k in keys)
+        widget_opts = lambda keys: {k: v for k, v in options.items() if k in keys}
 
         # Instantiate the widget
         if widget == "groupedopts" or not widget and "cols" in options:
@@ -3965,8 +3966,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             result = represent.bulk([value])
 
         # Sort them
-        labels = result.values()
-        labels.sort()
+        labels = sorted(result.values())
 
         if self.options.get("render_list"):
             if value is None or value == [None]:

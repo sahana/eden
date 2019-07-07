@@ -47,6 +47,7 @@ if PY2:
     from HTMLParser import HTMLParser
     import Cookie
     reduce = reduce
+    reload = reload
     basestring = basestring
     unichr = unichr
     unicodeT = unicode
@@ -69,6 +70,7 @@ else:
     from html.parser import HTMLParser
     from http import cookies as Cookie
     from functools import reduce
+    from importlib import reload
     basestring = str
     unichr = chr
     unicodeT = str

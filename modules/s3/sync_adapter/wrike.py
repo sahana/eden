@@ -25,11 +25,12 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 import json
 import sys
-import urllib, urllib2
 
 try:
     from lxml import etree
@@ -39,6 +40,7 @@ except ImportError:
 
 from gluon import *
 
+from s3compat import HTTPError, urlencode, urllib2, urlopen, urlparse
 from ..s3datetime import s3_encode_iso_datetime
 from ..s3sync import S3SyncBaseAdapter
 from ..s3utils import s3_unicode
@@ -330,7 +332,6 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                                       "import.xsl")
 
             # Host name of the peer, used by the import stylesheet
-            import urlparse
             hostname = urlparse.urlsplit(repository.url).hostname
 
             # Conflict resolution callback
@@ -508,7 +509,6 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                            after this date/time (ISO-formatted string)
         """
 
-        fields = json.dumps(["parentIds", "description"])
         args = {"descendants": "true",
                 "fields": json.dumps(["parentIds",
                                       "description",
@@ -625,7 +625,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         if path:
             url = "/".join((url, path.lstrip("/")))
         if args:
-            url = "?".join((url, urllib.urlencode(args)))
+            url = "?".join((url, urlencode(args)))
 
         # Create the request
         req = urllib2.Request(url=url)
@@ -646,7 +646,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 req.add_header("Content-Type", "application/json")
         else:
             # URL-encode request data for auth
-            request_data = urllib.urlencode(data) if data else ""
+            request_data = urlencode(data) if data else ""
 
         # Indicate that we expect JSON response
         req.add_header("Accept", "application/json")
@@ -669,10 +669,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         message = None
         try:
             if method == "POST":
-                f = urllib2.urlopen(req, data=request_data)
+                f = urlopen(req, data=request_data)
             else:
-                f = urllib2.urlopen(req)
-        except urllib2.HTTPError as e:
+                f = urlopen(req)
+        except HTTPError as e:
             message = "HTTP %s: %s" % (e.code, e.reason)
         else:
             # Parse the response

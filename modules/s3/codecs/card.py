@@ -26,15 +26,12 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3PDFCard",
            )
-
-try:
-    from cStringIO import StringIO    # Faster, where available
-except ImportError:
-    from StringIO import StringIO
 
 try:
     from reportlab.lib.pagesizes import A4, LETTER, landscape, portrait
@@ -52,6 +49,7 @@ except ImportError:
 
 from gluon import current, HTTP
 
+from s3compat import StringIO
 from ..s3codec import S3Codec
 from ..s3resource import S3Resource
 from ..s3utils import s3_str

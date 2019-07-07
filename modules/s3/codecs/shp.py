@@ -26,22 +26,20 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3SHP",)
 
 import os
 
-try:
-    from cStringIO import StringIO    # Faster, where available
-except:
-    from StringIO import StringIO
-
 from gluon import *
 from gluon.contenttype import contenttype
 from gluon.storage import Storage
 from gluon.streamer import DEFAULT_CHUNK_SIZE
 
+from s3compat import StringIO
 from ..s3codec import S3Codec
 from ..s3utils import s3_unicode, s3_strip_markup
 
@@ -281,7 +279,7 @@ class S3SHP(S3Codec):
         # Open the shapefile
         if ds is None:
             # @ToDo: Bail gracefully
-            raise
+            raise RuntimeError("Could not open shapefile %s" % shapefilename)
 
         # Get the layer and iterate through the features
         lyr = ds.GetLayer(0)

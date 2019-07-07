@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3DeploymentOrganisationModel",
@@ -1279,7 +1281,7 @@ class S3DeploymentAlertModel(S3Model):
                 # @ToDo: Handle the multi-message nicely?
                 try:
                     msg.send_tweet(text=message)
-                except tweepy.error.TweepError, e:
+                except tweepy.error.TweepError as e:
                     current.log.debug("Sending tweets failed: %s" % e)
 
         # Update the Alert to show it's been Sent
@@ -1649,27 +1651,27 @@ def deploy_member_filters(status=False):
                            3: 3,
                            4: 4,
                            }
-            filter_widgets.extend((S3OptionsFilter("application.status",
-                                                   label = T("Category"),
-                                                   options = {1: "I",
-                                                              2: "II",
-                                                              3: "III",
-                                                              4: "IV",
-                                                              5: "V",
-                                                              },
-                                                   cols = 5,
-                                                   ),
-                                   S3OptionsFilter("training.grade",
-                                                   label = T("Training Grade"),
-                                                   options = rating_opts,
-                                                   cols = 4,
-                                                   ),
-                                   S3OptionsFilter("appraisal.rating",
-                                                   label = T("Deployment Rating"),
-                                                   options = rating_opts,
-                                                   cols = 4,
-                                                   ),
-                                   ))
+            widgets.extend((S3OptionsFilter("application.status",
+                                            label = T("Category"),
+                                            options = {1: "I",
+                                                       2: "II",
+                                                       3: "III",
+                                                       4: "IV",
+                                                       5: "V",
+                                                       },
+                                            cols = 5,
+                                            ),
+                            S3OptionsFilter("training.grade",
+                                            label = T("Training Grade"),
+                                            options = rating_opts,
+                                            cols = 4,
+                                            ),
+                            S3OptionsFilter("appraisal.rating",
+                                            label = T("Deployment Rating"),
+                                            options = rating_opts,
+                                            cols = 4,
+                                            ),
+                            ))
 
     return widgets
 
@@ -2040,7 +2042,7 @@ def deploy_apply(r, **attr):
             # Selection of Deploying Organisation
             if not organisation_id and len(deploying_orgs) > 1:
                 opts = [OPTION(v, _value=k)
-                        for k, v in deploying_orgs.iteritems()
+                        for k, v in deploying_orgs.items()
                         ]
                 form = SELECT(_id = "deploy_application_organisation_id",
                               _name = "organisation_id",
@@ -2753,7 +2755,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                     # Should be the same for all rows
                     mission_id = raw["deploy_response.mission_id"]
 
-            hr_ids = dcount.keys()
+            hr_ids = list(dcount.keys())
             if hr_ids:
 
                 # Number of previous deployments

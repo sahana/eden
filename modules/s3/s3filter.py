@@ -27,6 +27,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3FilterWidget",
@@ -59,6 +61,7 @@ from gluon import current, URL, A, DIV, FORM, INPUT, LABEL, OPTION, SELECT, \
 from gluon.storage import Storage
 from gluon.tools import callback
 
+from s3compat import INTEGER_TYPES, PY2, basestring, long, unicodeT
 from s3dal import Field
 from .s3datetime import s3_decode_iso_datetime, S3DateTime
 from .s3query import FS, S3ResourceField, S3ResourceQuery, S3URLQuery
@@ -173,7 +176,7 @@ class S3FilterWidget(object):
 
         attributes = Storage()
         options = Storage()
-        for k, v in attr.iteritems():
+        for k, v in attr.items():
             if k[0] == "_":
                 attributes[k] = v
             else:
@@ -1917,7 +1920,7 @@ class S3LocationFilter(S3FilterWidget):
             # Sort the options dicts
             for level in levels:
                 options = levels[level]["options"]
-                options = OrderedDict(sorted(options.iteritems()))
+                options = OrderedDict(sorted(options.items()))
         else:
             # Sort the options lists
             for level in levels:
@@ -2357,7 +2360,7 @@ class S3OptionsFilter(S3FilterWidget):
             options = opts.options
             if callable(options):
                 options = options()
-            opt_keys = options.keys()
+            opt_keys = list(options.keys())
 
         elif resource:
             # Determine the options from the field type
@@ -2489,7 +2492,7 @@ class S3OptionsFilter(S3FilterWidget):
                 else:
                     val = _val
                 if val not in opt_keys and \
-                   (not isinstance(val, (int, long)) or not str(val) in opt_keys):
+                   (not isinstance(val, INTEGER_TYPES) or not str(val) in opt_keys):
                     opt_keys.append(val)
 
         # No options?
@@ -2513,7 +2516,7 @@ class S3OptionsFilter(S3FilterWidget):
                             for opt, label in options.items()
                             ]
             else:
-                opt_list = options.items()
+                opt_list = list(options.items())
 
 
         elif callable(represent):
@@ -2530,19 +2533,22 @@ class S3OptionsFilter(S3FilterWidget):
                     del opt_dict[None]
                 if "" in opt_keys:
                     opt_dict[""] = EMPTY
-                opt_list = opt_dict.items()
+                opt_list = list(opt_dict.items())
 
             else:
                 # Simple represent function
-                args = {"show_link": False} \
-                       if "show_link" in represent.func_code.co_varnames else {}
+                if PY2:
+                    varnames = represent.func_code.co_varnames
+                else:
+                    varnames = represent.__code__.co_varnames
+                args = {"show_link": False} if "show_link" in varnames else {}
                 if multiple:
                     repr_opt = lambda opt: opt in (None, "") and (opt, EMPTY) or \
                                            (opt, represent([opt], **args))
                 else:
                     repr_opt = lambda opt: opt in (None, "") and (opt, EMPTY) or \
                                            (opt, represent(opt, **args))
-                opt_list = map(repr_opt, opt_keys)
+                opt_list = [repr_opt(k) for k in opt_keys]
 
         elif isinstance(represent, str) and ftype[:9] == "reference":
             # Represent is a string template to be fed from the
@@ -2675,7 +2681,7 @@ class S3HierarchyFilter(S3FilterWidget):
         if not isinstance(values, (list, tuple, set)):
             values = [values]
         for v in values:
-            if isinstance(v, (int, long)) or str(v).isdigit():
+            if isinstance(v, INTEGER_TYPES) or str(v).isdigit():
                 append(v)
 
         # Resolve the field selector
@@ -2751,7 +2757,7 @@ class S3HierarchyFilter(S3FilterWidget):
         # Detect and resolve __typeof queries
         resolve = S3ResourceQuery._resolve_hierarchy
         selector = resource.prefix_selector(selector)
-        for key, value in get_vars.items():
+        for key, value in list(get_vars.items()):
 
             if key.startswith(selector):
                 selectors, op = S3URLQuery.parse_expression(key)[:2]
@@ -2822,7 +2828,7 @@ class S3FilterForm(object):
 
         attributes = Storage()
         options = Storage()
-        for k, v in attr.iteritems():
+        for k, v in attr.items():
             if k[0] == "_":
                 attributes[k] = v
             else:
@@ -3722,7 +3728,7 @@ class S3FilterString(object):
         render = self._render
         substrings = []
         append = substrings.append
-        for alias, subqueries in queries.iteritems():
+        for alias, subqueries in queries.items():
 
             for subquery in subqueries:
                 s = render(resource, alias, subquery, labels=labels)
@@ -3866,7 +3872,7 @@ class S3FilterString(object):
             if ftype[5:8] in ("int", "ref"):
                 ftype = long
             else:
-                ftype = unicode
+                ftype = unicodeT
         elif ftype == "id" or ftype [:9] == "reference":
             ftype = long
         elif ftype == "integer":
@@ -3882,7 +3888,7 @@ class S3FilterString(object):
         elif ftype == "boolean":
             ftype = bool
         else:
-            ftype = unicode
+            ftype = unicodeT
 
         convert = S3TypeConverter.convert
         if type(value) is list:

@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 
-# 
+#
 # Copyright (C) 2007-2008  Camptocamp
-#  
+#
 # This file is part of MapFish Client
-#  
+#
 # MapFish Client is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-#  
+#
 # MapFish Client is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-#  
+#
 # You should have received a copy of the GNU General Public License
 # along with MapFish Client.  If not, see <http://www.gnu.org/licenses/>.
 #
@@ -60,7 +60,7 @@
 #  This example will cause the script to walk the `Geo` and
 #  `CrossBrowser` directories--and subdirectories thereof--and import
 #  all `*.js` files encountered. The dependency declarations will be extracted
-#  and then the source code from imported files will be output to 
+#  and then the source code from imported files will be output to
 #  a file named `openlayers.js` in an order which fulfils the dependencies
 #  specified.
 #
@@ -69,6 +69,7 @@
 #
 # -- Copyright 2005-2007 MetaCarta, Inc. / OpenLayers project --
 #
+# @status: fixed for Py3
 
 # TODO: Allow files to be excluded. e.g. `Crossbrowser/DebugMode.js`?
 # TODO: Report error when dependency can not be found rather than KeyError.
@@ -76,6 +77,8 @@
 import re
 import os
 import sys
+
+PY2 = sys.version_info[0] == 2
 
 SUFFIX_JAVASCRIPT = ".js"
 
@@ -110,7 +113,7 @@ def usage(filename):
     """
     Displays a usage message.
     """
-    print "%s [-c <config file>] <output.js> <directory> [...]" % filename
+    print("%s [-c <config file>] <output.js> <directory> [...]" % filename)
 
 
 class Config:
@@ -138,7 +141,7 @@ class Config:
     order listed).
 
     The files list in the `exclude` section will not be imported.
-    
+
     """
 
     def __init__(self, filename):
@@ -162,7 +165,7 @@ def getFiles(configDict, configFile = None):
 
     ## Build array of directories
     allDirs = []
-    for k, v in configDict.iteritems():
+    for k, v in configDict.items():
         if not v in allDirs:
             allDirs.append(v)
 
@@ -182,7 +185,7 @@ def getFiles(configDict, configFile = None):
                         allFiles.append(filepath)
 
     files = {}
-    order = [] # List of filepaths to output, in a dependency satisfying order 
+    order = [] # List of filepaths to output, in a dependency satisfying order
 
     ## Import file source code
     ## TODO: Do import when we walk the directories above?
@@ -195,7 +198,13 @@ def getFiles(configDict, configFile = None):
         else:
             filekey = "."
         fullpath = os.path.join(configDict[filekey], filepath)
-        content = open(fullpath, "U").read() # TODO: Ensure end of line @ EOF?
+        if PY2:
+            with open(fullpath, "U") as infile:
+                content = infile.read()
+        else:
+            with open(fullpath, "rt", encoding="utf-8") as infile:
+                content = infile.read()
+        #content = open(fullpath, "U").read() # TODO: Ensure end of line @ EOF?
         files[filepath] = SourceFile(filepath, content) # TODO: Chop path?
 
     #print
@@ -206,12 +215,12 @@ def getFiles(configDict, configFile = None):
     resolution_pass = 1
 
     while not complete:
-        order = [] # List of filepaths to output, in a dependency satisfying order 
+        order = [] # List of filepaths to output, in a dependency satisfying order
         nodes = []
         routes = []
         ## Resolve the dependencies
         #print "Resolution pass %s... " % resolution_pass
-        resolution_pass += 1 
+        resolution_pass += 1
 
         for filepath, info in files.items():
             nodes.append(filepath)
@@ -221,7 +230,7 @@ def getFiles(configDict, configFile = None):
         for dependencyLevel in toposort(nodes, routes):
             for filepath in dependencyLevel:
                 order.append(filepath)
-                if not files.has_key(filepath):
+                if filepath not in files:
                     #print "Importing: %s" % filepath
                     if "\\" in filepath:
                         filekey = filepath.replace("\\", "/").split("/")[0]
@@ -230,7 +239,13 @@ def getFiles(configDict, configFile = None):
                     else:
                         filekey = "."
                     fullpath = os.path.join(configDict[filekey], filepath)
-                    content = open(fullpath, "U").read() # TODO: Ensure end of line @ EOF?
+                    if PY2:
+                        with open(fullpath, "U") as infile:
+                            content = infile.read()
+                    else:
+                        with open(fullpath, "rt", encoding="utf-8") as infile:
+                            content = infile.read()
+                    #content = open(fullpath, "U").read() # TODO: Ensure end of line @ EOF?
                     files[filepath] = SourceFile(filepath, content) # TODO: Chop path?
 
         # Double check all dependencies have been met
@@ -242,8 +257,8 @@ def getFiles(configDict, configFile = None):
                     complete = False
         except:
             complete = False
-        
-        #print    
+
+        #print
 
 
     ## Move forced first and last files to the required position
@@ -283,7 +298,7 @@ if __name__ == "__main__":
     import getopt
 
     options, args = getopt.getopt(sys.argv[1:], "-c:")
-    
+
     try:
         outputFilename = args[0]
     except IndexError:
@@ -300,6 +315,6 @@ if __name__ == "__main__":
     configFile = None
     if options and options[0][0] == "-c":
         configFile = options[0][1]
-        print "Parsing configuration file: %s" % filename
+        print("Parsing configuration file: %s" % filename)
 
     run(configDict, outputFilename, configFile)

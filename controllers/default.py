@@ -291,7 +291,7 @@ return false}})''' % (T("Please Select a Facility")))
     register_div = None
     if AUTHENTICATED not in roles:
         # This user isn't yet logged-in
-        if request.cookies.has_key("registered"):
+        if "registered" in request.cookies:
             # This browser has logged-in before
             registered = True
 

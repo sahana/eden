@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 import json
@@ -663,7 +665,7 @@ class S3Delete(object):
         db = current.db
         if db._lazy_tables:
             # Must roll out all lazy tables to detect dependencies
-            for tn in db._LAZY_TABLES.keys():
+            for tn in list(db._LAZY_TABLES.keys()):
                 db[tn]
 
         references = self.table._referenced_by

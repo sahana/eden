@@ -37,6 +37,8 @@
     @todo: docstrings
 
     @ToDo: col-cnt, row-cnt & Length metadata should be automatable
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3SurveyTemplateModel",
@@ -83,16 +85,12 @@ __all__ = ("S3SurveyTemplateModel",
 
 import json
 
-try:
-    from cStringIO import StringIO    # Faster, where available
-except ImportError:
-    from StringIO import StringIO
-
 from gluon import *
 from gluon.storage import Storage
 from gluon.sqlhtml import *
 
 from ..s3 import *
+from s3compat import StringIO, xrange
 from s3chart import S3Chart
 
 DEBUG = False
@@ -1911,8 +1909,8 @@ $('#chart_btn').click(function(){
                 gqstn_type = gqstn["type"]
                 analysis_tool = survey_analysis_type[gqstn_type](gqstn_id, ganswers)
                 mapdict = analysis_tool.uniqueCount()
-                label = mapdict.keys()
-                data = mapdict.values()
+                label = list(mapdict.keys())
+                data = list(mapdict.values())
                 legend_labels.append(T("Count of Question"))
             else:
                 qstn = survey_getQuestionFromCode(numeric_question, series_id)
@@ -3307,8 +3305,7 @@ class survey_TranslateDownload(S3Method):
         row = 0
         sheet.write(row, 0, u"Original")
         sheet.write(row, 1, u"Translation")
-        original_list = original.keys()
-        original_list.sort()
+        original_list = sorted(original.keys())
 
         for text in original_list:
             row += 1
@@ -4540,7 +4537,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         self.webwidget = StringWidget
         self.typeDescription = None
         self.startPosn = (0, 0)
-        self.xlsWidgetSize = (6, 0)
+        self.xlsWidgetSize = [6, 0]
         self.xlsMargin = [0, 0]
         self.langDict = {}
         self.label = True
@@ -5044,7 +5041,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             return self.ANSWER_MISSING
         length = self.get("Length")
         if length is not None and length(data) > length:
-            return ANSWER_PARTLY_VALID # undefined!
+            return self.ANSWER_PARTLY_VALID
         return self.ANSWER_VALID
 
     # -------------------------------------------------------------------------
@@ -5219,17 +5216,17 @@ class S3QuestionTypeNumericWidget(S3QuestionTypeAbstractWidget):
         """
             This will validate the data passed in to the widget
         """
-        result = S3QuestionTypeAbstractWidget.validate(self, valueList)
-        if result != ANSWER_VALID:
+        result = S3QuestionTypeAbstractWidget.validate(self, valueList, qstn_id)
+        if result != self.ANSWER_VALID:
             return result
         #length = self.get("Length", 10)
         format = self.get("Format")
         data = value(valueList, 0) # value undefined!
         if format != None:
             try:
-                self.formattedValue(data, format)
+                self.formattedAnswer(data, format)
                 return self.ANSWER_VALID
-            except exceptions.ValueError:
+            except ValueError:
                 return self.ANSWER_INVALID
 
         return self.ANSWER_VALID
@@ -5295,40 +5292,40 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
             try:
                 for month in monthList: # monthList undefined!
                     if month in rawDate:
-                        search = re, search("\D\d\d\D", rawDate)
+                        search = re.search(r"\D\d\d\D", rawDate)
                         if search:
                             day = search.group()
                         else:
-                            search = re, search("^\d\d\D", rawDate)
+                            search = re.search(r"^\d\d\D", rawDate)
                             if search:
                                 day = search.group()
                             else:
-                                search = re, search("\D\d\d$", rawDate)
+                                search = re.search(r"\D\d\d$", rawDate)
                                 if search:
                                     day = search.group()
                                 else:
-                                    search = re, search("\D\d\D", rawDate)
+                                    search = re.search(r"\D\d\D", rawDate)
                                     if search:
                                         day = "0" + search.group()
                                     else:
-                                        search = re, search("^\d\D", rawDate)
+                                        search = re.search(r"^\d\D", rawDate)
                                         if search:
                                             day = "0" + search.group()
                                         else:
-                                            search = re, search("\D\d$", rawDate)
+                                            search = re.search(r"\D\d$", rawDate)
                                             if search:
                                                 day = "0" + search.group()
                                             else:
                                                 raise ValueError
-                        search = re, search("\D\d\d\d\d\D", rawDate)
+                        search = re.search(r"\D\d\d\d\d\D", rawDate)
                         if search:
                             year = search.group()
                         else:
-                            search = re, search("^\d\d\d\d\D", rawDate)
+                            search = re.search(r"^\d\d\d\d\D", rawDate)
                             if search:
                                 year = search.group()
                             else:
-                                search = re, search("\D\d\d\d\d$", rawDate)
+                                search = re.search(r"\D\d\d\d\d$", rawDate)
                                 if search:
                                     year = search.group()
                                 else:
@@ -5352,17 +5349,17 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
         """
             This will validate the data passed in to the widget
         """
-        result = S3QuestionTypeAbstractWidget.validate(self, valueList)
-        if result != ANSWER_VALID:
+        result = S3QuestionTypeAbstractWidget.validate(self, valueList, qstn_id)
+        if result != self.ANSWER_VALID:
             return result
         #length = self.get("length", 10)
         format = self.get("format")
         data = value(valueList, 0)
         if format != None:
             try:
-                self.formattedValue(data, format)
+                self.formattedAnswer(data, format)
                 return self.ANSWER_VALID
-            except exceptions.ValueError:
+            except ValueError:
                 return self.ANSWER_INVALID
 
         return self.ANSWER_VALID
@@ -5809,9 +5806,9 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
         data = value(valueList, 0)
         if format != None:
             try:
-                self.formattedValue(data, format)
+                self.formattedAnswer(data, format)
                 return self.ANSWER_VALID
-            except exceptions.ValueError:
+            except ValueError:
                 return self.ANSWER_INVALID
 
         return self.ANSWER_VALID

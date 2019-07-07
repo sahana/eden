@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 
+# @status: fixed for Py3
+
 import os
 import sys
 
 from gluon import current
 from gluon.storage import Storage
+
+from s3compat import reload
 
 __all__ = ("PluginLoader",
            )
@@ -79,7 +83,7 @@ class PluginLoader(object):
         if reload_all:
             cls.detect(reset_all=True)
 
-        for name in cls._registry().keys():
+        for name in list(cls._registry().keys()):
             cls.load(name)
 
     # -------------------------------------------------------------------------
@@ -113,6 +117,9 @@ class PluginLoader(object):
                           setup method to be re-run regardless of the
                           previous status
         """
+
+        if name[0] == "_":
+            return False
 
         log = current.log
 

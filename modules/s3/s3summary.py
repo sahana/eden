@@ -27,10 +27,13 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 from gluon import current, A, DIV, LI, UL
 
+from s3compat import basestring
 from .s3filter import S3FilterForm
 from .s3gis import MAP
 from .s3rest import S3Method

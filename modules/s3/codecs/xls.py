@@ -26,20 +26,18 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3XLS",
            )
 
-try:
-    from cStringIO import StringIO    # Faster, where available
-except:
-    from StringIO import StringIO
-
 from gluon import *
 from gluon.contenttype import contenttype
 from gluon.storage import Storage
 
+from s3compat import INTEGER_TYPES, StringIO, xrange
 from ..s3codec import S3Codec
 from ..s3utils import s3_str, s3_strip_markup, s3_unicode
 
@@ -777,7 +775,6 @@ class S3PivotTableXLS(object):
                   )
 
             # Current date/time (in local timezone)
-            import datetime
             from ..s3datetime import S3DateTime
             dt = S3DateTime.to_local(current.request.utcnow)
             write(sheet, 1, 0, dt, style = "subheader", numfmt = "datetime")
@@ -1047,10 +1044,6 @@ class S3PivotTableXLS(object):
             topright.vert = Alignment.VERT_TOP
             topright.wrap = 1
 
-            # Determine XLS datetime format
-            settings = current.deployment_settings
-            dtfmt = S3XLS.dt_format_translate(settings.get_L10n_datetime_format())
-
             # Styles
             XFStyle = xlwt.XFStyle
 
@@ -1149,7 +1142,7 @@ class S3PivotTableXLS(object):
         elif ftype == "virtual":
             # Probe the first value
             value = pt.cell[0][0][fact.layer]
-            if isinstance(value, (int, long)):
+            if isinstance(value, INTEGER_TYPES):
                 numfmt = "integer"
             elif isinstance(value, float):
                 numfmt = "double"

@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = (# PR Base Entities
@@ -115,8 +117,6 @@ __all__ = (# PR Base Entities
 import json
 import os
 
-from urllib import urlencode
-
 from gluon import current, redirect, URL, \
                   A, DIV, H2, H3, H5, IMG, LABEL, P, SPAN, TABLE, TAG, TH, TR, \
                   IS_LENGTH, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, IS_EMAIL, \
@@ -125,6 +125,7 @@ from gluon.storage import Storage
 from gluon.sqlhtml import RadioWidget
 
 from ..s3 import *
+from s3compat import INTEGER_TYPES, basestring, long, urlencode
 from s3dal import Field, Row
 from s3layouts import S3PopupLink
 
@@ -3377,7 +3378,7 @@ class PRForumModel(S3Model):
                       )
             body = "To approve this request, click here: %(url)s"
             translations = {}
-            languages = list(set([a["auth_user.language"] for a in admins]))
+            languages = list({a["auth_user.language"] for a in admins})
             for l in languages:
                 translations[l] = {"s": s3_str(T(subject, language = l)) % dict(forum_name = forum_name),
                                    "b": s3_str(T(body, language = l)) % dict(url = url),
@@ -3721,7 +3722,7 @@ class PRContactModel(S3Model):
                      Field("priority", "integer",
                            default = 1,
                            label = T("Priority"),
-                           requires = IS_IN_SET(range(1, 10)),
+                           requires = IS_IN_SET(list(range(1, 10))),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Priority"),
                                                            T("What order to be contacted in."))),
@@ -4364,7 +4365,7 @@ class PRPresenceModel(S3Model):
         table = db.pr_presence
         popts = current.s3db.pr_presence_opts
 
-        if isinstance(form, (int, long, str)):
+        if isinstance(form, INTEGER_TYPES + (str,)):
             record_id = form
         elif hasattr(form, "vars"):
             record_id = form.vars.id
@@ -5031,7 +5032,7 @@ class PRDescriptionModel(S3Model):
         ntable = db.pr_note
         ptable = s3db.pr_person
 
-        if isinstance(form, (int, long, str)):
+        if isinstance(form, INTEGER_TYPES + (str,)):
             record_id = form
         elif hasattr(form, "vars"):
             record_id = form.vars.id
@@ -6098,7 +6099,7 @@ class S3SavedFilterModel(S3Model):
             query = query.replace("'", "\"")
             try:
                 json.loads(query)
-            except ValueError, e:
+            except ValueError as e:
                 form.errors.query = "%s: %s" % (current.T("Query invalid"), e)
             form.vars.query = query
 
@@ -6402,11 +6403,11 @@ def pr_get_entities(pe_ids=None,
 
     if represent:
         if group and as_list:
-            return Storage([(t, repr_grp[t].values()) for t in repr_grp])
+            return Storage([(t, list(repr_grp[t].values())) for t in repr_grp])
         elif group:
             return repr_grp
         elif as_list:
-            return repr_flt.values()
+            return list(repr_flt.values())
         else:
             return repr_flt
     else:
@@ -6609,7 +6610,7 @@ class pr_PersonEntityRepresent(S3Represent):
                     continue
                 qfields.insert(0, table[keyname])
 
-                query = (table[keyname].belongs(types[instance_type].keys()))
+                query = (table[keyname].belongs(set(types[instance_type].keys())))
                 rows = db(query).select(*qfields)
             self.queries += 1
 
@@ -7235,11 +7236,11 @@ def pr_nationality_opts():
     T = current.T
 
     countries = current.gis.get_countries(key_type="code")
-    opts = sorted([(k, T(countries[k])) for k in countries.keys()],
+    opts = sorted(((k, T(countries[k])) for k in countries.keys()),
                   # NB applies server locale's sorting rules, not
                   #    the user's chosen language (not easily doable
                   #    in Python, would require pyICU or similar)
-                  key=lambda x: x[1],
+                  key=lambda x: s3_str(x[1]),
                   )
 
     # Stateless always last
@@ -8130,7 +8131,7 @@ class pr_Template(S3Method):
                 # Extract Data
                 resource = r.resource
                 mailmerge_fields = current.deployment_settings.get_doc_mailmerge_fields()
-                data = resource.select(mailmerge_fields.values(),
+                data = resource.select(list(mailmerge_fields.values()),
                                        represent = True,
                                        show_links = False,
                                        )
@@ -8533,7 +8534,7 @@ def pr_get_pe_id(entity, record_id=None):
                 if isinstance(f, Row) and "pe_id" in f:
                     return f["pe_id"]
             return None
-    elif isinstance(entity, (long, int)) or \
+    elif isinstance(entity, INTEGER_TYPES) or \
          isinstance(entity, basestring) and entity.isdigit():
         return entity
     else:
@@ -9070,15 +9071,15 @@ def pr_descendants(pe_ids, skip=None, root=True):
 
     if nodes:
         descendants = pr_descendants(nodes, skip=skip, root=False)
-        for child, nodes in descendants.iteritems():
-            for parent, children in result.iteritems():
+        for child, nodes in descendants.items():
+            for parent, children in result.items():
                 if child in children:
                     for node in nodes:
                         if node not in children:
                             children.append(node)
     if root:
-        for child, nodes in result.iteritems():
-            for parent, children in result.iteritems():
+        for child, nodes in result.items():
+            for parent, children in result.items():
                 if child in children:
                     for node in nodes:
                         if node not in children and node != parent:
@@ -9105,7 +9106,7 @@ def pr_get_descendants(pe_ids, entity_types=None, skip=None, ids=True):
         return []
     if type(pe_ids) is not set:
         pe_ids = set(pe_ids) \
-                 if isinstance(pe_ids, (list, tuple)) else set([pe_ids])
+                 if isinstance(pe_ids, (list, tuple)) else {pe_ids}
 
     db = current.db
     s3db = current.s3db
@@ -9154,7 +9155,7 @@ def pr_get_descendants(pe_ids, entity_types=None, skip=None, ids=True):
         if entity_types is not None:
             if type(entity_types) is not set:
                 if not isinstance(entity_types, (tuple, list)):
-                    entity_types = set([entity_types])
+                    entity_types = {entity_types}
                 else:
                     entity_types = set(entity_types)
             return [n[0] for n in result if n[1] in entity_types]

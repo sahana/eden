@@ -28,6 +28,8 @@
 
     @group Data Views: S3DataTable,
                        S3DataList
+
+    @status: fixed for Py3
 """
 
 import re
@@ -38,6 +40,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
+from s3compat import xrange
 from s3dal import Expression, S3DAL
 from .s3utils import s3_orderby_fields, s3_str, s3_unicode, s3_set_extension
 
@@ -469,7 +472,7 @@ class S3DataTable(object):
 
             # Auto-detect KML fields
             if "kml" not in formats and rfields:
-                kml_fields = set(["location_id", "site_id"])
+                kml_fields = {"location_id", "site_id"}
                 if any(rfield.fname in kml_fields for rfield in rfields):
                     formats["kml"] = default_url
 

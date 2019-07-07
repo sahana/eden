@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 import datetime
@@ -32,18 +34,11 @@ import json
 import os
 import string
 import sys
-import urlparse
-import urllib2
-from urllib import urlencode
 from uuid import uuid4
-
-try:
-    from cStringIO import StringIO # Faster, where available
-except:
-    from StringIO import StringIO
 
 from gluon import current, TABLE, THEAD, TBODY, TR, TD, TH, XML
 
+from s3compat import HTTPError, StringIO, urlencode, urllib2, urlopen, urlparse
 from .s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
 from .s3utils import s3_str, s3_truncate, s3_unicode
 
@@ -156,7 +151,7 @@ class S3Notifications(object):
             from .s3filter import S3FilterString
             resource = s3db.resource(r.resource)
             fstring = S3FilterString(resource, f.query)
-            for k, v in fstring.get_vars.iteritems():
+            for k, v in fstring.get_vars.items():
                 if v is not None:
                     if k in query:
                         value = query[k]
@@ -202,11 +197,11 @@ class S3Notifications(object):
         req.add_header("Content-Type", "application/json")
         success = False
         try:
-            response = json.loads(urllib2.urlopen(req).read())
+            response = json.loads(urlopen(req).read())
             message = response["message"]
             if response["status"] == "success":
                 success = True
-        except urllib2.HTTPError as e:
+        except HTTPError as e:
             message = ("HTTP %s: %s" % (e.code, e.read()))
         except:
             exc_info = sys.exc_info()[:2]

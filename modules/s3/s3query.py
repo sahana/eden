@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("FS",
@@ -43,6 +45,7 @@ import sys
 from gluon import current, IS_EMPTY_OR, IS_IN_SET
 from gluon.storage import Storage
 
+from s3compat import basestring, long, reduce, urlparse
 from s3dal import Field, Row
 from .s3fields import S3RepresentLazy
 from .s3utils import s3_get_foreign_key, s3_str, s3_unicode, S3TypeConverter
@@ -999,7 +1002,7 @@ class S3Joins(object):
             Get a list of names of all joined tables
         """
 
-        return self.joins.keys()
+        return list(self.joins.keys())
 
     # -------------------------------------------------------------------------
     def items(self):
@@ -1007,7 +1010,7 @@ class S3Joins(object):
             Get a list of tuples (tablename, [joins]) for all joined tables
         """
 
-        return self.joins.items()
+        return list(self.joins.items())
 
     # -------------------------------------------------------------------------
     def values(self):
@@ -1017,7 +1020,7 @@ class S3Joins(object):
             @return: a nested list like [[join, join, ...], ...]
         """
 
-        return self.joins.values()
+        return list(self.joins.values())
 
     # -------------------------------------------------------------------------
     def add(self, joins):
@@ -1061,7 +1064,7 @@ class S3Joins(object):
                 joins[tablename] = other[tablename]
                 if add:
                     add(tablename)
-        return other.keys()
+        return list(other.keys())
 
     # -------------------------------------------------------------------------
     def __repr__(self):
@@ -1166,9 +1169,9 @@ class S3Joins(object):
 
         # Sort joins (if possible)
         try:
-            return self.sort(joins_dict.values())
+            return self.sort(list(joins_dict.values()))
         except RuntimeError:
-            return joins_dict.values()
+            return list(joins_dict.values())
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -1677,14 +1680,14 @@ class S3ResourceQuery(object):
 
                 # Override field/keys
                 field = table[hierarchy.pkey.name]
-                keys = set([row[table._id.name] for row in rows])
+                keys = {row[table._id.name] for row in rows}
 
         nodeset, none = None, False
         if keys:
             # Lookup all descendant types from the hierarchy
             none = False
             if not isinstance(keys, (list, tuple, set)):
-                keys = set([keys])
+                keys = {keys}
             nodes = set()
             for node in keys:
                 if node is None:
@@ -2207,7 +2210,7 @@ class S3URLQuery(object):
         subquery = cls._subquery
         allof = lambda l, r: l if r is None else r if l is None else r & l
 
-        for key, value in get_vars.iteritems():
+        for key, value in get_vars.items():
 
             if not key:
                 continue
@@ -2296,7 +2299,6 @@ class S3URLQuery(object):
         else:
             return Storage()
 
-        import urlparse
         dget = urlparse.parse_qsl(query, keep_blank_values=1)
 
         get_vars = Storage()
@@ -2758,8 +2760,8 @@ class S3URLQueryParser(object):
         if len(second) > 1:
             second = {None: reduce(combine, second.values())}
 
-        falias = first.keys()[0]
-        salias = second.keys()[0]
+        falias = list(first.keys())[0]
+        salias = list(second.keys())[0]
 
         alias = falias if falias == salias else None
         return {alias: first[falias] | second[salias]}
@@ -2777,7 +2779,7 @@ class S3URLQueryParser(object):
 
         if len(query) == 1:
 
-            alias, sub = query.items()[0]
+            alias, sub = list(query.items())[0]
 
             if sub.op == S3ResourceQuery.OR and alias is None:
 

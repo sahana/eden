@@ -25,22 +25,19 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 import sys
 
 from gluon import *
 
+from s3compat import StringIO
 from ..s3sync import S3SyncBaseAdapter
-
 from ..s3query import S3URLQuery, FS
 from ..s3rest import S3Request
 from ..s3export import S3Exporter
-
-try:
-    from cStringIO import StringIO    # Faster, where available
-except:
-    from StringIO import StringIO
 
 # =============================================================================
 class S3SyncAdapter(S3SyncBaseAdapter):
