@@ -36,9 +36,9 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        menu = [MM("Volunteer Your Time", c="vol", f="index",
+        menu = [MM("Volunteer Your Time", c="default", f="index", args="volunteer",
                    ),
-                MM("Donate Items", c="req", f="index",
+                MM("Donate Items", c="default", f="index", args="donate",
                    ),
                 ]
 

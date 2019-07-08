@@ -1,8 +1,6 @@
 uid,role,description,controller,function,table,uacl,oacl,entity,Notes
 ANONYMOUS,Anonymous,,org,organisation,,READ|CREATE,,,Required for self-registration
 ANONYMOUS,Anonymous,,,,org_organisation,READ|CREATE,,,Required for self-registration
-ANONYMOUS,Anonymous,,req,index,,READ,,,
-ANONYMOUS,Anonymous,,vol,index,,READ,,,
 AUTHENTICATED,Authenticated,,gis,,,READ,,,
 AUTHENTICATED,Authenticated,,gis,layer_arcrest,,READ,,,
 AUTHENTICATED,Authenticated,,gis,layer_bing,,READ,,,

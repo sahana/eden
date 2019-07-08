@@ -184,12 +184,12 @@ def config(settings):
             restricted = True,
             module_type = None, # Not displayed
         )),
-        ("inv", Storage(
-            name_nice = T("Warehouses"),
-            #description = "Receiving and Sending Items",
-            restricted = True,
-            module_type = 4
-        )),
+        #("inv", Storage(
+        #    name_nice = T("Warehouses"),
+        #    #description = "Receiving and Sending Items",
+        #    restricted = True,
+        #    module_type = 4
+        #)),
         ("req", Storage(
             name_nice = T("Requests"),
             #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",

@@ -1372,6 +1372,17 @@ def video():
     return {}
 
 # -----------------------------------------------------------------------------
+def view():
+    """ Custom View """
+
+    view = request.args(0)
+
+    _custom_view(view)
+
+    response.title = view
+    return {}
+
+# -----------------------------------------------------------------------------
 def contact():
     """
         Give the user options to contact the site admins.
