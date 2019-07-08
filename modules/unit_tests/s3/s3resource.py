@@ -178,7 +178,7 @@ class ResourceAxisFilterTests(unittest.TestCase):
             s3db = current.s3db
 
             resource = s3db.resource(tablename)
-            q = (FS("facility_type_id").contains([1,2,3])) & \
+            q = (FS("facility_type_id").contains([1, 2, 3])) & \
                 (~(FS("facility_type_id") == 2))
             resource.add_filter(q)
             query = resource.get_query()
@@ -192,7 +192,7 @@ class ResourceAxisFilterTests(unittest.TestCase):
             assertTrue("3" in values)
 
             resource = s3db.resource(tablename)
-            q = (FS("facility_type_id").contains([1,2,3])) & \
+            q = (FS("facility_type_id").contains([1, 2, 3])) & \
                 (~(FS("facility_type_id") != 2))
             resource.add_filter(q)
             query = resource.get_query()
@@ -204,7 +204,7 @@ class ResourceAxisFilterTests(unittest.TestCase):
             assertTrue("3" in values)
 
             resource = s3db.resource(tablename)
-            q = (FS("facility_type_id").contains([1,2,3])) | \
+            q = (FS("facility_type_id").contains([1, 2, 3])) | \
                 (~(FS("facility_type_id") == 2))
             resource.add_filter(q)
             query = resource.get_query()
@@ -216,7 +216,7 @@ class ResourceAxisFilterTests(unittest.TestCase):
             assertTrue("3" in values)
 
             resource = s3db.resource(tablename)
-            q = (FS("facility_type_id").contains([1,2,3])) | \
+            q = (FS("facility_type_id").contains([1, 2, 3])) | \
                 (~(FS("facility_type_id") != 2))
             resource.add_filter(q)
             query = resource.get_query()
@@ -2693,7 +2693,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         component = resource.components["test"]
         table = component.table
         assertEqual(str(component.filter),
-                    str((table.office_type_id.belongs(4,5))))
+                    str((table.office_type_id.belongs(4, 5))))
 
         # Define a filtered component with empty filter value list
         s3db.add_components("org_organisation",
@@ -3038,12 +3038,12 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         assertEqual(str(resource.components.hq.filter), \
                     "(org_hq_office.office_type_id = 4)")
 
-        tree = resource.export_tree(mcomponents=["fieldoffice","hq"])
+        tree = resource.export_tree(mcomponents=["fieldoffice", "hq"])
         assertTrue(resource.components.fieldoffice._length > 0)
         assertTrue(resource.components.hq._length > 0)
         assertTrue(resource.components.office._length is None)
 
-        tree = resource.export_tree(mcomponents=["office","fieldoffice","hq"])
+        tree = resource.export_tree(mcomponents=["office", "fieldoffice", "hq"])
         assertTrue(resource.components.office._length > 0)
         assertTrue(resource.components.fieldoffice._length is None)
         assertTrue(resource.components.hq._length is None)
@@ -3944,18 +3944,18 @@ class LazyComponentsTests(unittest.TestCase):
         components = resource.components
 
         # Verify that initially no components are loaded
-        assertEqual(len(components.loaded.keys()), 0)
+        assertEqual(len(list(components.loaded.keys())), 0)
 
         # Verify that components can be loaded individually
         component = components.get("component_1")
         assertNotEqual(component, None)
         assertEqual(component.alias, "component_1")
-        assertEqual(len(components.loaded.keys()), 1)
+        assertEqual(len(list(components.loaded.keys())), 1)
 
         component = components.get("component_2")
         assertNotEqual(component, None)
         assertEqual(component.alias, "component_2")
-        assertEqual(len(components.loaded.keys()), 2)
+        assertEqual(len(list(components.loaded.keys())), 2)
 
     # -------------------------------------------------------------------------
     def testExposedAliases(self):
@@ -4010,7 +4010,7 @@ class LazyComponentsTests(unittest.TestCase):
         components = resource.components
 
         # Verify that initially, no component is loaded
-        assertEqual(len(components.loaded.keys()), 0)
+        assertEqual(len(list(components.loaded.keys())), 0)
         assertNotIn("component_2", components.loaded)
 
         # Verify that component can be loaded without being exposed
@@ -4038,9 +4038,9 @@ class LazyComponentsTests(unittest.TestCase):
         components = resource.components
 
         # Verify that initially, no component is loaded
-        assertEqual(len(components.loaded.keys()), 0)
+        assertEqual(len(list(components.loaded.keys())), 0)
         assertNotIn("component_2", components.loaded)
-        assertEqual(len(resource.links.keys()), 0)
+        assertEqual(len(list(resource.links.keys())), 0)
         assertNotIn("component_2__link", resource.links)
         assertNotIn("link_table_1", resource.links)
 
@@ -4067,7 +4067,7 @@ class LazyComponentsTests(unittest.TestCase):
         components = resource.components
 
         # Verify that initially, no component is loaded
-        assertEqual(len(components.loaded.keys()), 0)
+        assertEqual(len(list(components.loaded.keys())), 0)
         assertNotIn("component_1", components.loaded)
 
         # Verify that component can be loaded without being exposed
@@ -4097,7 +4097,7 @@ class LazyComponentsTests(unittest.TestCase):
         components = resource.components
 
         # Verify that initially, no component is loaded
-        assertEqual(len(components.loaded.keys()), 0)
+        assertEqual(len(list(components.loaded.keys())), 0)
 
         # Verify that exposed component is exposed
         component = components["component_2"]
@@ -4280,7 +4280,7 @@ class LazyComponentsTests(unittest.TestCase):
 
         # Verify initially exposed components
         exposed = components.exposed
-        assertEqual(len(exposed.keys()), 1)
+        assertEqual(len(list(exposed.keys())), 1)
         assertIn("component_2", exposed)
         assertIn("component_2", components.loaded)
         assertNotIn("component_1", exposed)
@@ -4292,7 +4292,7 @@ class LazyComponentsTests(unittest.TestCase):
         assertNotIn("component_2", components.exposed_aliases)
         assertNotIn("undefined", components.exposed_aliases)
         exposed = components.exposed
-        assertEqual(len(exposed.keys()), 1)
+        assertEqual(len(list(exposed.keys())), 1)
         assertIn("component_1", exposed)
         assertIn("component_1", components.loaded)
         assertNotIn("component_2", exposed)
@@ -4303,7 +4303,7 @@ class LazyComponentsTests(unittest.TestCase):
         assertIn("component_1", components.exposed_aliases)
         assertIn("component_2", components.exposed_aliases)
         exposed = components.exposed
-        assertEqual(len(exposed.keys()), 3)
+        assertEqual(len(list(exposed.keys())), 3)
         assertIn("component_1", exposed)
         assertIn("component_1", components.loaded)
         assertIn("component_2", exposed)
@@ -4316,14 +4316,14 @@ class LazyComponentsTests(unittest.TestCase):
         assertNotIn("component_1", components.exposed_aliases)
         assertNotIn("component_2", components.exposed_aliases)
         exposed = components.exposed
-        assertEqual(len(exposed.keys()), 0)
+        assertEqual(len(list(exposed.keys())), 0)
         assertNotIn("component_1", exposed)
         assertNotIn("component_1", components.loaded)
         assertNotIn("component_2", exposed)
         assertNotIn("component_2", components.loaded)
         assertNotIn("component_3", exposed)
         assertNotIn("component_3", components.loaded)
-        assertEqual(len(resource.links.keys()), 0)
+        assertEqual(len(list(resource.links.keys())), 0)
 
 # =============================================================================
 if __name__ == "__main__":

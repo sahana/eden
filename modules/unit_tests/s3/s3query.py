@@ -15,6 +15,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3 import *
+from s3compat import basestring
 
 try:
     import pyparsing
@@ -186,7 +187,7 @@ class FieldSelectorResolutionTests(unittest.TestCase):
         assertEqual(joins, {})
 
         assertTrue(isinstance(left, dict))
-        assertEqual(left.keys(), ["org_organisation"])
+        assertEqual(list(left.keys()), ["org_organisation"])
         assertEqual(len(left["org_organisation"]), 1)
         assertEqual(str(left["org_organisation"][0]), str(expected))
 
@@ -234,7 +235,7 @@ class FieldSelectorResolutionTests(unittest.TestCase):
         assertEqual(joins, {})
 
         assertTrue(isinstance(left, dict))
-        assertEqual(left.keys(), [ "org_organisation", "project_task"])
+        assertEqual(list(left.keys()), [ "org_organisation", "project_task"])
         assertEqual(len(left["org_organisation"]), 1)
         assertEqual(str(left["org_organisation"][0]), str(expected))
         assertEqual(len(left["project_task"]), 2)
@@ -407,7 +408,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
         joins, distinct = q._joins(resource, left=True)
         assertTrue(isinstance(joins, dict))
-        assertEqual(joins.keys(), ["org_organisation"])
+        assertEqual(list(joins.keys()), ["org_organisation"])
         assertTrue(isinstance(joins["org_organisation"], list))
         assertEqual(len(joins["org_organisation"]), 1)
         assertEqual(str(joins["org_organisation"][0]), str(expected))
@@ -438,7 +439,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
         # Test left joins
         joins, distinct = q._joins(resource, left=True)
-        assertEqual(joins.keys(), ["pr_identity"])
+        assertEqual(list(joins.keys()), ["pr_identity"])
         assertTrue(isinstance(joins["pr_identity"], list))
         assertEqual(str(joins["pr_identity"][0]), str(expected))
         assertTrue(distinct)
@@ -468,7 +469,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
                         (pr_contact.deleted != True))
 
         joins, distinct = q._joins(resource, left=True)
-        assertEqual(joins.keys(), ["pr_contact"])
+        assertEqual(list(joins.keys()), ["pr_contact"])
         assertTrue(isinstance(joins["pr_contact"], list))
         assertEqual(str(joins["pr_contact"][0]), str(expected))
         assertTrue(distinct)
@@ -507,7 +508,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
                         project_task_project.task_id == project_task.id)
 
         joins, distinct = q._joins(resource, left=True)
-        assertEqual(joins.keys(), ["project_task"])
+        assertEqual(list(joins.keys()), ["project_task"])
         assertTrue(isinstance(joins["project_task"], list))
         assertEqual(len(joins["project_task"]), 2)
         assertEqual(str(joins["project_task"][0]), str(expected_l))
@@ -530,7 +531,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
         # Test joins
         joins, distinct = q._joins(resource)
-        assertEqual(joins.keys(), [])
+        assertEqual(list(joins.keys()), [])
 
         # Test left joins
         project_project = resource.table
@@ -549,7 +550,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
                         project_task_project.task_id == project_task.id)
 
         joins, distinct = q._joins(resource, left=True)
-        assertEqual(joins.keys(), ["org_organisation", "project_task"])
+        assertEqual(list(joins.keys()), ["org_organisation", "project_task"])
 
         assertTrue(isinstance(joins["org_organisation"], list))
         assertEqual(len(joins["org_organisation"]), 1)
@@ -576,7 +577,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
         # Test joins
         joins, distinct = q._joins(resource)
-        assertEqual(joins.keys(), [])
+        assertEqual(list(joins.keys()), [])
 
         # Test left joins
         project_project = resource.table
@@ -588,7 +589,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
                         project_project.organisation_id == org_organisation.id)
 
         joins, distinct = q._joins(resource, left=True)
-        assertEqual(joins.keys(), ["org_organisation"])
+        assertEqual(list(joins.keys()), ["org_organisation"])
 
         assertTrue(isinstance(joins["org_organisation"], list))
         assertEqual(len(joins["org_organisation"]), 1)
@@ -791,7 +792,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
                         project_task_project.task_id == project_task.id)
 
         left = rfilter.get_joins(left=True, as_list=False)
-        assertEqual(left.keys(), ["org_organisation", "project_task"])
+        assertEqual(list(left.keys()), ["org_organisation", "project_task"])
         assertTrue(isinstance(left["org_organisation"], list))
         assertEqual(len(left["org_organisation"]), 1)
         assertEqual(str(left["org_organisation"][0]), str(expected))
@@ -840,7 +841,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
 
         # Left joins for cross-component filters
         left = rfilter.get_joins(left=True, as_list=False)
-        tablenames = left.keys()
+        tablenames = list(left.keys())
         assertEqual(len(tablenames), 2)
         assertTrue("org_organisation" in tablenames)
         assertTrue("project_project" in tablenames)
@@ -910,7 +911,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
         expected_p = pr_person.on(pr_identity.person_id == pr_person.id)
 
         left = rfilter.get_joins(left=True, as_list=False)
-        tablenames = left.keys()
+        tablenames = list(left.keys())
         assertEqual(len(tablenames), 3)
         assertTrue("hrm_human_resource" in tablenames)
         assertTrue("org_organisation" in tablenames)
@@ -963,7 +964,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
         expected = project_project.on(
                     project_activity.project_id == project_project.id)
 
-        tablenames = join.keys()
+        tablenames = list(join.keys())
         assertEqual(len(tablenames), 1)
         assertTrue("project_project" in tablenames)
 
@@ -1016,7 +1017,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
 
         # Reverse left join for the filter of the master table
         left = rfilter.get_joins(left=True, as_list=False)
-        tablenames = left.keys()
+        tablenames = list(left.keys())
         assertEqual(len(tablenames), 1)
         assertTrue("pr_person" in tablenames)
         expected = pr_person.on(
@@ -1058,7 +1059,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
         row = Storage()
 
         # Test matching date
-        query = FS("test") == datetime.datetime(2014,10,5).date()
+        query = FS("test") == datetime.datetime(2014, 10, 5).date()
 
         row.test = "2014-10-05"
         assertTrue(query(resource, row))
@@ -1068,7 +1069,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
         assertFalse(query(resource, row))
 
         # Test matching datetime
-        query = FS("test") == datetime.datetime(2014,10,5,10,0,0)
+        query = FS("test") == datetime.datetime(2014, 10, 5, 10, 0, 0)
 
         row.test = "2014-10-05 10:00:00"
         assertTrue(query(resource, row))
@@ -1080,7 +1081,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
         assertFalse(query(resource, row))
 
         # Test matching time
-        query = FS("test") == datetime.time(10,0,0)
+        query = FS("test") == datetime.time(10, 0, 0)
 
         row.test = "10:00:00"
         assertTrue(query(resource, row))
@@ -1185,7 +1186,7 @@ class ResourceContextFilterTests(unittest.TestCase):
         data = resource.select(["name"], limit=None)
         items = data["rows"]
         assertEqual(len(items), 3)
-        names = [item.values()[0] for item in items]
+        names = [list(item.values())[0] for item in items]
         assertTrue("Context1Office1" in names)
         assertTrue("Context1Office2" in names)
         assertTrue("Context2Office1" in names)
@@ -1198,7 +1199,7 @@ class ResourceContextFilterTests(unittest.TestCase):
         data = resource.select(["first_name"], limit=None)
         items = data["rows"]
         assertEqual(len(items), 3)
-        names = [item.values()[0] for item in items]
+        names = [list(item.values())[0] for item in items]
         assertTrue("Context1" in names)
         assertTrue("Context2" in names)
         assertTrue("Context12" in names)
@@ -1214,7 +1215,7 @@ class ResourceContextFilterTests(unittest.TestCase):
         data = resource.select(["name"], limit=None)
         items = data["rows"]
         assertEqual(len(items), 2)
-        names = [item.values()[0] for item in items]
+        names = [list(item.values())[0] for item in items]
         assertTrue("Context1Office1" in names)
         assertTrue("Context1Office2" in names)
         assertFalse("Context2Office1" in names)
@@ -1227,7 +1228,7 @@ class ResourceContextFilterTests(unittest.TestCase):
         data = resource.select(["first_name"], limit=None)
         items = data["rows"]
         assertEqual(len(items), 2)
-        names = [item.values()[0] for item in items]
+        names = [list(item.values())[0] for item in items]
         assertTrue("Context1" in names)
         assertFalse("Context2" in names)
         assertTrue("Context12" in names)
@@ -1243,7 +1244,7 @@ class ResourceContextFilterTests(unittest.TestCase):
         data = resource.select(["name"], limit=None)
         items = data["rows"]
         assertEqual(len(items), 1)
-        names = [item.values()[0] for item in items]
+        names = [list(item.values())[0] for item in items]
         assertFalse("Context1Office1" in names)
         assertFalse("Context1Office2" in names)
         assertTrue("Context2Office1" in names)
@@ -1256,7 +1257,7 @@ class ResourceContextFilterTests(unittest.TestCase):
         data = resource.select(["first_name"], limit=None)
         items = data["rows"]
         assertEqual(len(items), 2)
-        names = [item.values()[0] for item in items]
+        names = [list(item.values())[0] for item in items]
         assertFalse("Context1" in names)
         assertTrue("Context2" in names)
         assertTrue("Context12" in names)
@@ -1287,7 +1288,7 @@ class URLQuerySerializerTests(unittest.TestCase):
         assertNotEqual(u, None)
         assertTrue(isinstance(u, Storage))
         assertTrue(k in u)
-        assertEqual(len(u.keys()), 1)
+        assertEqual(len(list(u.keys())), 1)
         assertEqual(u[k], "Test")
 
     # -------------------------------------------------------------------------
@@ -1305,7 +1306,7 @@ class URLQuerySerializerTests(unittest.TestCase):
         assertNotEqual(u, None)
         assertTrue(isinstance(u, Storage))
         assertTrue(k in u)
-        assertEqual(len(u.keys()), 1)
+        assertEqual(len(list(u.keys())), 1)
         assertEqual(u[k], "Test*")
 
     # -------------------------------------------------------------------------
@@ -1324,7 +1325,7 @@ class URLQuerySerializerTests(unittest.TestCase):
         assertNotEqual(u, None)
         assertTrue(isinstance(u, Storage))
         assertTrue(k in u)
-        assertEqual(len(u.keys()), 1)
+        assertEqual(len(list(u.keys())), 1)
         assertEqual(u[k], "Test*")
 
     # -------------------------------------------------------------------------
@@ -1377,7 +1378,7 @@ class URLQuerySerializerTests(unittest.TestCase):
         assertNotEqual(u, None)
         assertTrue(isinstance(u, Storage))
         assertTrue(k in u)
-        assertEqual(len(u.keys()), 1)
+        assertEqual(len(list(u.keys())), 1)
         assertEqual(u[k], "Test*")
 
     # -------------------------------------------------------------------------
@@ -1396,7 +1397,7 @@ class URLQuerySerializerTests(unittest.TestCase):
         assertNotEqual(u, None)
         assertTrue(isinstance(u, Storage))
         assertTrue(k in u)
-        assertEqual(len(u.keys()), 1)
+        assertEqual(len(list(u.keys())), 1)
         assertEqual(u[k], "Test*,Other*")
 
     # -------------------------------------------------------------------------
@@ -1417,7 +1418,7 @@ class URLQuerySerializerTests(unittest.TestCase):
         assertNotEqual(u, None)
         assertTrue(isinstance(u, Storage))
         assertTrue(k in u)
-        assertEqual(len(u.keys()), 1)
+        assertEqual(len(list(u.keys())), 1)
         assertEqual(u[k], "Test*,Other*")
 
     # -------------------------------------------------------------------------
@@ -1435,7 +1436,7 @@ class URLQuerySerializerTests(unittest.TestCase):
         assertNotEqual(u, None)
         assertTrue(isinstance(u, Storage))
         assertTrue(k in u)
-        assertEqual(len(u.keys()), 1)
+        assertEqual(len(list(u.keys())), 1)
         assertEqual(u[k], "Test,Other")
 
 # =============================================================================
@@ -1483,7 +1484,7 @@ class URLFilterSerializerTests(unittest.TestCase):
         assertNotEqual(u, None)
         assertTrue(isinstance(u, Storage))
         assertTrue(k in u)
-        assertEqual(len(u.keys()), 1)
+        assertEqual(len(list(u.keys())), 1)
         assertEqual(u[k], "Test*,Other*")
 
 # =============================================================================
@@ -2118,7 +2119,7 @@ class URLQueryTests(unittest.TestCase):
             ('"NONE",1', ["NONE", "1"]),
             ('"NONE,1"', "NONE,1"),
             ('"NONE",NONE,1,"Test\\""', ['NONE', None, "1", 'Test"']),
-            (['"NONE",NONE,1','"Test\\"",None'], ['NONE', None, "1", 'Test"', None])
+            (['"NONE",NONE,1', '"Test\\"",None'], ['NONE', None, "1", 'Test"', None])
         ]
         for v, r in items:
             assertEqual((v, parse(v)), (v, r))
@@ -2616,7 +2617,7 @@ class URLQueryParserTests(unittest.TestCase):
 
         examples = (
             (("example", "eq", "1"), True, None, "1"),
-            (("test.example", "contains", "ab,cd,ef"), True, "test", ["ab","cd","ef"]),
+            (("test.example", "contains", "ab,cd,ef"), True, "test", ["ab", "cd", "ef"]),
             ((None, "gt", "1"), False, None, None),
             (("~.example", "like", "Ex*mple"), True, None, "ex%mple"),
         )

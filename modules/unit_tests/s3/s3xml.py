@@ -9,15 +9,12 @@ import json
 import os
 import unittest
 
-from gluon import *
-try:
-    from cStringIO import StringIO
-except:
-    from StringIO import StringIO
-
 from lxml import etree
 
+from gluon import *
+
 from s3 import S3Hierarchy, s3_meta_fields, S3Represent, S3RepresentLazy, S3XMLFormat, IS_ONE_OF
+from s3compat import StringIO
 
 from unit_tests import run_suite
 
@@ -516,7 +513,7 @@ class GetFieldOptionsTests(unittest.TestCase):
         options = dict(self.records)
         child_node = {"name": "option3",
                       "uuid": "OPTION3",
-                      "parent": options.keys()[0],
+                      "parent": list(options.keys())[0],
                       }
         child_id = table.insert(**child_node)
         options[child_id] = child_node
@@ -627,7 +624,7 @@ class GetFieldOptionsTests(unittest.TestCase):
         options = dict(self.records)
         child_node = {"name": "option3",
                       "uuid": "OPTION3",
-                      "parent": options.keys()[0],
+                      "parent": list(options.keys())[0],
                       }
         child_id = table.insert(**child_node)
         options[child_id] = child_node
@@ -730,7 +727,7 @@ class GetFieldOptionsTests(unittest.TestCase):
         options = dict(self.records)
         child_node = {"name": "option3",
                       "uuid": "OPTION3",
-                      "parent": options.keys()[0],
+                      "parent": list(options.keys())[0],
                       }
         child_id = table.insert(**child_node)
         options[child_id] = child_node
@@ -826,7 +823,7 @@ class GetFieldOptionsTests(unittest.TestCase):
         options = dict(self.records)
         child_node = {"name": "option3",
                       "uuid": "OPTION3",
-                      "parent": options.keys()[0],
+                      "parent": list(options.keys())[0],
                       }
         child_id = table.insert(**child_node)
         options[child_id] = child_node

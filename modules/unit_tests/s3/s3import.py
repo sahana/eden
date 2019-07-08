@@ -318,7 +318,7 @@ class FailedReferenceTests(unittest.TestCase):
         msg = json.loads(result)
         self.assertEqual(msg["status"], "failed")
 
-        error_resources = msg["tree"].keys()
+        error_resources = list(msg["tree"].keys())
         self.assertEqual(len(error_resources), 2)
         self.assertTrue("$_gis_location" in error_resources)
         self.assertTrue("$_org_office" in error_resources)
@@ -366,7 +366,7 @@ class FailedReferenceTests(unittest.TestCase):
         msg = json.loads(result)
         self.assertEqual(msg["status"], "failed")
 
-        error_resources = msg["tree"].keys()
+        error_resources = list(msg["tree"].keys())
         self.assertEqual(len(error_resources), 2)
         self.assertTrue("$_gis_location" in error_resources)
         self.assertTrue("$_org_office" in error_resources)

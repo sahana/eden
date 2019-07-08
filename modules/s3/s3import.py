@@ -2310,7 +2310,7 @@ class S3ImportItem(object):
                         self.skip = True
                         return True
 
-                for f in data.keys():
+                for f in list(data.keys()):
                     if f in original:
                         # Check if unchanged
                         if type(original[f]) is datetime.datetime:

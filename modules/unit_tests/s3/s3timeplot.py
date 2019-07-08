@@ -29,24 +29,24 @@ class EventTests(unittest.TestCase):
         assertEqual = self.assertEqual
 
         # Explicit None should give {None}
-        assertEqual(series(None), set([None]))
+        assertEqual(series(None), {None})
 
         # Single value should give {value}
-        assertEqual(series(0), set([0]))
-        assertEqual(series("A"), set(["A"]))
+        assertEqual(series(0), {0})
+        assertEqual(series("A"), {"A"})
 
         # Empty list should give {None}
         assertEqual(series([]), set())
         assertEqual(series([[], []]), set())
 
         # List should give equivalent set
-        assertEqual(series(["A", "B"]), set(["A", "B"]))
-        assertEqual(series(["A", None]), set(["A", None]))
-        assertEqual(series(["A", []]), set(["A"]))
+        assertEqual(series(["A", "B"]), {"A", "B"})
+        assertEqual(series(["A", None]), {"A", None})
+        assertEqual(series(["A", []]), {"A"})
 
         # Nested lists should be flattened
-        assertEqual(series(["A", ["B", "C"]]), set(["A", "B", "C"]))
-        assertEqual(series(["A", ["B", "A"]]), set(["A", "B"]))
+        assertEqual(series(["A", ["B", "C"]]), {"A", "B", "C"})
+        assertEqual(series(["A", ["B", "A"]]), {"A", "B"})
 
     # -------------------------------------------------------------------------
     def testConstruction(self):
@@ -93,7 +93,7 @@ class EventTests(unittest.TestCase):
         self.assertEqual(event.event_id, event_id)
         self.assertEqual(event.values, values)
         self.assertEqual(event["test"], values["test"])
-        self.assertEqual(event.rows, set(["A"]))
+        self.assertEqual(event.rows, {"A"})
         self.assertEqual(event.cols, set())
 
         # Test construction with values and row/col
@@ -108,19 +108,19 @@ class EventTests(unittest.TestCase):
         self.assertEqual(event.event_id, event_id)
         self.assertEqual(event.values, values)
         self.assertEqual(event["test"], values["test"])
-        self.assertEqual(event.rows, set(["B"]))
-        self.assertEqual(event.cols, set([1, 4, 7]))
+        self.assertEqual(event.rows, {"B"})
+        self.assertEqual(event.cols, {1, 4, 7})
 
     # -------------------------------------------------------------------------
     def testComparison(self):
         """ Test comparison method __lt__ for events (by sorting them) """
 
         data = [
-            (8, (2012,1,12), (2013,9,19)),
-            (2, None, (2013,4,21)),
-            (6, (2013,4,14), (2013,5,7)),
-            (3, (2012,4,21), (2013,6,3)),
-            (4, (2013,4,18), (2013,5,27)),
+            (8, (2012, 1, 12), (2013, 9, 19)),
+            (2, None, (2013, 4, 21)),
+            (6, (2013, 4, 14), (2013, 5, 7)),
+            (3, (2012, 4, 21), (2013, 6, 3)),
+            (4, (2013, 4, 18), (2013, 5, 27)),
         ]
 
         events = []
@@ -143,8 +143,8 @@ class PeriodTests(unittest.TestCase):
     def setUp(self):
 
         # Period
-        start = tp_datetime(2013,4,1)
-        end = tp_datetime(2013,7,1)
+        start = tp_datetime(2013, 4, 1)
+        end = tp_datetime(2013, 7, 1)
 
         period = S3TimeSeriesPeriod(start=start, end=end)
 

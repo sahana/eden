@@ -82,9 +82,9 @@ class S3TypeConverterTests(unittest.TestCase):
         #    so 2 hours East means the same day UTC, 06:00
         response.s3.tzinfo = S3DefaultTZ(+2)
         result = convert("2011-10-01")
-        assertEqual(result, datetime.date(2011, 10, 01))
+        assertEqual(result, datetime.date(2011, 10, 1))
         result = convert("01.05.2015")
-        assertEqual(result, datetime.date(2015, 05, 01))
+        assertEqual(result, datetime.date(2015, 5, 1))
 
         # Cross into the next day
         # => Date without time part means 08:00 local time zone,

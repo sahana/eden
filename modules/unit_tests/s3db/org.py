@@ -183,7 +183,7 @@ class OrgDeduplicationTests(unittest.TestCase):
 
         # Delete all links
         otable = s3db.org_organisation
-        query = otable.uuid.belongs(cls.TEST_ORGANISATIONS.keys())
+        query = otable.uuid.belongs(set(cls.TEST_ORGANISATIONS.keys()))
         rows = db(query).select(otable.id,
                                 otable.uuid,
                                 )
@@ -200,7 +200,7 @@ class OrgDeduplicationTests(unittest.TestCase):
                 db(query).delete()
 
         # Delete the orgs
-        query = otable.id.belongs(records.values())
+        query = otable.id.belongs(set(records.values()))
         db(query).delete()
 
         db.commit()
