@@ -84,7 +84,7 @@ class S3DashboardAgentTests(unittest.TestCase):
         # Create an array of agents for the widget
         agents = []
         append = agents.append
-        for i in xrange(num_agents):
+        for i in range(num_agents):
             agent = create_agent("agent%s" % i,
                                  config = {"param": "live%s" % i},
                                  )
@@ -244,7 +244,7 @@ class S3DashboardContextTests(unittest.TestCase):
         assertEqual(context.bulk, True)
 
         # Multiple "agent" vars
-        request._get_vars = Storage({"agent": ["widget-1","widget-2,widget-3"]})
+        request._get_vars = Storage({"agent": ["widget-1", "widget-2,widget-3"]})
         context = S3DashboardContext()
         assertTrue(type(context.agent) is list)
         for agent_id in agent_ids:

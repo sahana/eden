@@ -922,10 +922,10 @@ class S3RepresentLazy(object):
 # Use URNs according to http://tools.ietf.org/html/rfc4122
 s3uuid = SQLCustomType(type = "string",
                        native = "VARCHAR(128)",
-                       encoder = lambda x: "%s" % (uuid4().urn
-                                    if x == ""
-                                    else str(x.encode("utf-8"))),
-                       decoder = lambda x: x)
+                       encoder = lambda x: \
+                                 "%s" % (uuid4().urn if x == "" else s3_str(x)),
+                       decoder = lambda x: x,
+                       )
 
 # Representation of user roles (auth_group)
 auth_group_represent = S3Represent(lookup="auth_group", fields=["role"])

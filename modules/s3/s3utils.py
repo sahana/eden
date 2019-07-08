@@ -2715,8 +2715,7 @@ class S3MarkupStripper(HTMLParser):
     """ Simple markup stripper """
 
     def __init__(self):
-        super().__init__()
-        self.reset()
+        super(S3MarkupStripper, self).__init__()
         self.reset()
         self.result = []
 

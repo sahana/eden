@@ -9,6 +9,7 @@ import unittest
 from gluon.languages import lazyT
 
 from s3.s3fields import *
+from s3compat import basestring
 
 from unit_tests import run_suite
 
@@ -84,8 +85,8 @@ class S3RepresentTests(unittest.TestCase):
 
         # Standard variants
         self.assertEqual(r(1), "Test1")
-        self.assertEqual(r.multiple([1,2,3]), "Test1, Test2, Test3")
-        self.assertEqual(r.bulk([1,2,3]),
+        self.assertEqual(r.multiple([1, 2, 3]), "Test1, Test2, Test3")
+        self.assertEqual(r.bulk([1, 2, 3]),
                          {
                             1: "Test1",
                             2: "Test2",
@@ -100,26 +101,26 @@ class S3RepresentTests(unittest.TestCase):
 
         # Should work with both, single value and list
         self.assertEqual(r(1), "Test1")
-        self.assertEqual(r([1,2]), "Test1, Test2")
+        self.assertEqual(r([1, 2]), "Test1, Test2")
 
         # Multiple does always expect list of lists
-        self.assertRaises(ValueError, r.multiple, [1,2,3])
+        self.assertRaises(ValueError, r.multiple, [1, 2, 3])
 
         # Check multiple with list:type
-        result = r.multiple([[1,2]]).split(", ")
+        result = r.multiple([[1, 2]]).split(", ")
         self.assertTrue("Test1" in result)
         self.assertTrue("Test2" in result)
         self.assertEqual(len(result), 2)
 
         # Check that multiple with list:type de-duplicates properly
-        result = r.multiple([[1,2], [2,3]]).split(", ")
+        result = r.multiple([[1, 2], [2, 3]]).split(", ")
         self.assertTrue("Test1" in result)
         self.assertTrue("Test2" in result)
         self.assertTrue("Test3" in result)
         self.assertEqual(len(result), 3)
 
         # Check bulk with list:type
-        result = r.bulk([[1,2], [2,3]])
+        result = r.bulk([[1, 2], [2, 3]])
         self.assertEqual(len(result), 4)
         self.assertTrue(1 in result)
         self.assertEqual(result[1], "Test1")
@@ -343,7 +344,7 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         locations = (Storage(name="FK Represent TestLocation 1"),
                      Storage(name="FK Represent TestLocation 2"))
         ltable = s3db.gis_location
-        for i in xrange(len(locations)):
+        for i in range(len(locations)):
             location = locations[i]
             location_id = ltable.insert(**location)
             location["id"] = location_id
@@ -354,7 +355,7 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
                      Storage(name="FK Represent TestFacType Q"),
                      Storage(name="FK Represent TestFacType R"))
         ttable = s3db.org_facility_type
-        for i in xrange(len(fac_types)):
+        for i in range(len(fac_types)):
             fac_type = fac_types[i]
             fac_type_id = ttable.insert(**fac_type)
             fac_type["id"] = fac_type_id
@@ -375,7 +376,7 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
                 Storage(organisation_id=org.id,
                         facility_type_id=[fac_types[1].id, fac_types[2].id],
                         location_id=locations[1].id))
-        for i in xrange(len(facs)):
+        for i in range(len(facs)):
             fac = facs[i]
             fac_id = table.insert(**fac)
             fac["id"] = fac_id
@@ -923,7 +924,7 @@ class S3ExportLazyFKRepresentationTests(unittest.TestCase):
         locations = (Storage(name="FK Represent TestLocation 1"),
                      Storage(name="FK Represent TestLocation 2"))
         ltable = s3db.gis_location
-        for i in xrange(len(locations)):
+        for i in range(len(locations)):
             location = locations[i]
             location_id = ltable.insert(**location)
             location["id"] = location_id
@@ -934,7 +935,7 @@ class S3ExportLazyFKRepresentationTests(unittest.TestCase):
                      Storage(name="FK Represent TestFacType Q"),
                      Storage(name="FK Represent TestFacType R"))
         ttable = s3db.org_facility_type
-        for i in xrange(len(fac_types)):
+        for i in range(len(fac_types)):
             fac_type = fac_types[i]
             fac_type_id = ttable.insert(**fac_type)
             fac_type["id"] = fac_type_id
@@ -955,7 +956,7 @@ class S3ExportLazyFKRepresentationTests(unittest.TestCase):
                 Storage(organisation_id=org.id,
                         facility_type_id=[fac_types[1].id, fac_types[2].id],
                         location_id=locations[1].id))
-        for i in xrange(len(facs)):
+        for i in range(len(facs)):
             fac = facs[i]
             fac_id = db[tablename].insert(**fac)
             fac["id"] = fac_id

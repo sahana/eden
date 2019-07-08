@@ -1696,7 +1696,7 @@ class S3DefaultTZ(datetime.tzinfo):
 
     def __init__(self, offset=None):
 
-        super(S3DefaultTZ, self).__init__(self)
+        super(S3DefaultTZ, self).__init__()
 
         if offset:
             offset_sec = S3DateTime.get_offset_value(offset)

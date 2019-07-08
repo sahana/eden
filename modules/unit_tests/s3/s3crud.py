@@ -9,10 +9,8 @@ import json
 import unittest
 from gluon import current
 from gluon.storage import Storage
-try:
-    from cStringIO import StringIO
-except:
-    from StringIO import StringIO
+
+from s3compat import StringIO, basestring
 
 from unit_tests import run_suite
 

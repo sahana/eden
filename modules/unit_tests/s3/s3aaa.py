@@ -96,7 +96,7 @@ class AuthUtilsTests(unittest.TestCase):
             auth.s3_impersonate(None)
             try:
                 auth.permission.fail()
-            except HTTP, e:
+            except HTTP as e:
                 assertEqual(e.status, 303)
                 headers = e.headers
                 assertIn("Location", headers)
@@ -112,7 +112,7 @@ class AuthUtilsTests(unittest.TestCase):
             auth.s3_impersonate(None)
             try:
                 auth.permission.fail()
-            except HTTP, e:
+            except HTTP as e:
                 assertEqual(e.status, 401)
                 headers = e.headers
                 assertIn("WWW-Authenticate", headers)
@@ -124,7 +124,7 @@ class AuthUtilsTests(unittest.TestCase):
             auth.s3_impersonate("admin@example.com")
             try:
                 auth.permission.fail()
-            except HTTP, e:
+            except HTTP as e:
                 assertEqual(e.status, 403)
                 headers = e.headers
                 # No Auth challenge with 403
@@ -184,7 +184,8 @@ class SetRolesTests(unittest.TestCase):
             resource = s3db.resource("org_organisation",
                                      uid=["SRTO1", "SRTO2", "SRTO3"])
             rows = resource.select(["pe_id", "uuid"], as_rows=True)
-            orgs = dict((row.uuid, row.pe_id) for row in rows)
+
+            orgs = {row.uuid: row.pe_id for row in rows}
             self.org1 = orgs["SRTO1"]
             self.org2 = orgs["SRTO2"]
             self.org3 = orgs["SRTO3"]
@@ -224,7 +225,7 @@ class SetRolesTests(unittest.TestCase):
         assertTrue = self.assertTrue
 
         auth.s3_impersonate("normaluser@example.com")
-        realms = auth.user.realms.keys()
+        realms = list(auth.user.realms.keys())
         assertEqual(len(realms), 2)
         assertTrue(2 in realms)
         assertTrue(3 in realms)
@@ -247,7 +248,7 @@ class SetRolesTests(unittest.TestCase):
         assertTrue = self.assertTrue
 
         auth.s3_impersonate("normaluser@example.com")
-        realms = auth.user.realms.keys()
+        realms = list(auth.user.realms.keys())
         assertTrue(2 in realms)
         assertTrue(3 in realms)
         assertEqual(len(realms), 2)
@@ -270,7 +271,7 @@ class SetRolesTests(unittest.TestCase):
         assertTrue = self.assertTrue
 
         auth.s3_impersonate("normaluser@example.com")
-        realms = auth.user.realms.keys()
+        realms = list(auth.user.realms.keys())
         assertTrue(2 in realms)
         assertTrue(3 in realms)
         assertEqual(len(realms), 2)
@@ -302,7 +303,7 @@ class SetRolesTests(unittest.TestCase):
             auth.s3_assign_role(user_id, role, for_pe=self.org1)
 
             auth.s3_impersonate("normaluser@example.com")
-            realms = auth.user.realms.keys()
+            realms = list(auth.user.realms.keys())
             assertEqual(len(realms), 3)
             assertTrue(2 in realms)
             assertTrue(3 in realms)
@@ -346,7 +347,7 @@ class SetRolesTests(unittest.TestCase):
             auth.s3_assign_role(user_id, role, for_pe=org1)
 
             auth.s3_impersonate("normaluser@example.com")
-            realms = auth.user.realms.keys()
+            realms = list(auth.user.realms.keys())
             assertTrue(2 in realms)
             assertTrue(3 in realms)
             assertTrue(role in realms)
@@ -405,7 +406,7 @@ class SetRolesTests(unittest.TestCase):
             auth.s3_impersonate("normaluser@example.com")
 
             # Check the realms
-            realms = auth.user.realms.keys()
+            realms = list(auth.user.realms.keys())
             assertTrue(2 in realms)
             assertTrue(3 in realms)
             assertTrue(role in realms)
@@ -418,7 +419,7 @@ class SetRolesTests(unittest.TestCase):
                     assertEqual(auth.user.realms[r], None)
 
             # Check the delegations
-            delegations = auth.user.delegations.keys()
+            delegations = list(auth.user.delegations.keys())
             assertTrue(role in delegations)
             assertEqual(len(delegations), 1)
 
@@ -432,7 +433,7 @@ class SetRolesTests(unittest.TestCase):
             auth.s3_remove_delegation("TESTGROUP", org1, receiver=org3)
 
             # Check the delegations again
-            delegations = auth.user.delegations.keys()
+            delegations = list(auth.user.delegations.keys())
             assertFalse(role in delegations)
             assertEqual(len(delegations), 0)
 
@@ -1305,7 +1306,7 @@ class ACLManagementTests(unittest.TestCase):
             resource.import_xml(xmltree)
 
             resource = s3db.resource("org_organisation",
-                                     uid=["TAAO1","TAAO2","TAAO3"])
+                                     uid=["TAAO1", "TAAO2", "TAAO3"])
             rows = resource.select(["pe_id", "uuid"], as_rows=True)
             orgs = dict((row.uuid, row.pe_id) for row in rows)
             org1 = orgs["TAAO1"]
@@ -1491,7 +1492,7 @@ class HasPermissionTests(unittest.TestCase):
         # Create test entities
         table = s3db.org_organisation
         self.org = []
-        for i in xrange(3):
+        for i in range(3):
             record_id = table.insert(name="PermissionTestOrganisation%s" % i)
             record =  Storage(id=record_id)
             s3db.update_super(table, record)
@@ -2193,7 +2194,7 @@ class AccessibleQueryTests(unittest.TestCase):
         # Create test entities
         table = s3db.org_organisation
         self.org = []
-        for i in xrange(3):
+        for i in range(3):
             record_id = table.insert(name="PermissionTestOrganisation%s" % i)
             record =  Storage(id=record_id)
             s3db.update_super(table, record)
@@ -2431,7 +2432,7 @@ class AccessibleQueryTests(unittest.TestCase):
 
         # Test with TESTREADER
         auth.s3_assign_role(auth.user.id, self.reader, for_pe=self.org[0])
-        roles = set([2,3])
+        roles = {2, 3}
         expected = (((table.realm_entity == self.org[0]) | \
                    (table.realm_entity == None)) | \
                    ((((table.owned_by_user == None) & \
@@ -2440,7 +2441,7 @@ class AccessibleQueryTests(unittest.TestCase):
                    (table.owned_by_group.belongs(roles))))
         query = accessible_query("read", "org_permission_test", c=c, f=f)
         assertEqual(query, expected)
-        query = accessible_query("update",table,  c=c, f=f)
+        query = accessible_query("update", table, c=c, f=f)
         expected = ((((table.owned_by_user == auth.user.id) & \
                    ((table.realm_entity == self.org[0]) | \
                    (table.realm_entity == None))) | \
@@ -2457,7 +2458,7 @@ class AccessibleQueryTests(unittest.TestCase):
 
         # Test with TESTEDITOR
         auth.s3_assign_role(auth.user.id, self.editor, for_pe=self.org[0])
-        roles = set([2,3])
+        roles = {2, 3}
         query = accessible_query("read", table, c=c, f=f)
         expected = (((table.realm_entity == self.org[0]) | \
                    (table.realm_entity == None)) | \
@@ -2524,7 +2525,7 @@ class AccessibleQueryTests(unittest.TestCase):
                                    entity="any",
                                    )
         auth.s3_assign_role(auth.user.id, self.reader, for_pe=self.org[0])
-        roles = set([3,2,self.reader])
+        roles = {3, 2, self.reader}
 
         # Strict ownership: user has access to records within the
         # realms of the role, or which he owns either individually or
@@ -2552,7 +2553,7 @@ class AccessibleQueryTests(unittest.TestCase):
         assertEqual(query, expected)
 
         # Update permission is limited to owned records
-        query = accessible_query("update",table,  c=c, f=f)
+        query = accessible_query("update", table, c=c, f=f)
         expected = (((table.owned_by_user == auth.user.id) | \
                    ((table.owned_by_user == None) & \
                    (table.owned_by_group == None))) | \
@@ -2578,7 +2579,7 @@ class AccessibleQueryTests(unittest.TestCase):
                    (table.owned_by_group.belongs(roles))))
         assertEqual(query, expected)
 
-        query = accessible_query("update",table,  c=c, f=f)
+        query = accessible_query("update", table, c=c, f=f)
         expected = (((table.owned_by_user == auth.user.id) | \
                    ((table.owned_by_user == None) & \
                    (table.owned_by_group == None))) | \
@@ -2594,7 +2595,7 @@ class AccessibleQueryTests(unittest.TestCase):
 
         # Test with TESTEDITOR
         auth.s3_assign_role(auth.user.id, self.editor, for_pe=self.org[0])
-        roles = set([3,2])
+        roles = {3, 2}
         query = accessible_query("read", table, c=c, f=f)
         expected = (((table.realm_entity == self.org[0]) | \
                    (table.realm_entity == None)) | \
@@ -2671,7 +2672,7 @@ class AccessibleQueryTests(unittest.TestCase):
         user = auth.s3_user_pe_id(auth.s3_get_user_id("normaluser@example.com"))
         s3db.pr_add_affiliation(self.org[2], user, role="TestStaff")
         auth.s3_assign_role(auth.user.id, self.editor, for_pe=self.org[2])
-        roles = set([3,2])
+        roles = {3, 2}
 
         # User should only be able to access records of org[2]
         expected = (((table.realm_entity == self.org[2]) | \
@@ -2829,7 +2830,7 @@ class DelegationTests(unittest.TestCase):
         # Create test entities
         table = s3db.org_organisation
         self.org = []
-        for i in xrange(3):
+        for i in range(3):
             record_id = table.insert(name="PermissionTestOrganisation%s" % i)
             record =  Storage(id=record_id)
             s3db.update_super(table, record)
@@ -2907,7 +2908,7 @@ class DelegationTests(unittest.TestCase):
 
         # Check the delegations
         delegations = auth.user.delegations
-        assertEqual(delegations.keys(), [])
+        assertEqual(list(delegations.keys()), [])
 
         # Delegate the TESTREADER and TESTEDITOR roles for org1 to org2
         s3_delegate_role([READER, EDITOR], org1, receiver=org2)
@@ -2952,11 +2953,11 @@ class DelegationTests(unittest.TestCase):
         delegations = auth.s3_get_delegations(org1)
         assertNotEqual(delegations, None)
         assertTrue(isinstance(delegations, Storage))
-        assertEqual(delegations.keys(), [])
+        assertEqual(list(delegations.keys()), [])
 
         # Check the delegations
         delegations = auth.user.delegations
-        assertEqual(delegations.keys(), [])
+        assertEqual(list(delegations.keys()), [])
 
         # Remove delegation, affiliation and role
         pr_remove_affiliation(org3, user, role="TestStaff")

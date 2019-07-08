@@ -730,19 +730,12 @@ class S3XML(S3Codec):
             attr[RESOURCE] = r.table
 
             if show_ids:
-                if r.multiple:
-                    ids = str(as_json(r.id))
-                else:
-                    ids = str(r.id[0])
+                ids = str(as_json(r.id)) if r.multiple else str(r.id[0])
                 attr[ID] = ids
 
             if r.uid:
-
-                if r.multiple:
-                    uids = str(as_json(r.uid))
-                else:
-                    uids = str(r.uid[0])
-                attr[UID] = uids.decode("utf-8")
+                uids = as_json(r.uid) if r.multiple else r.uid[0]
+                attr[UID] = s3_unicode(uids)
 
                 # Render representation
                 if r.lazy is not None:
@@ -1184,7 +1177,7 @@ class S3XML(S3Codec):
         # UID
         if UID in table.fields and UID in record:
             uid = record[UID]
-            uid = str(table[UID].formatter(uid)).decode("utf-8")
+            uid = s3_unicode(table[UID].formatter(uid))
             if tablename != auth_group:
                 attrib[UID] = self.export_uid(uid)
             else:
@@ -1238,9 +1231,9 @@ class S3XML(S3Codec):
             value = None
 
             if fieldtype in ("datetime", "date", "time"):
-                value = s3_encode_iso_datetime(v).decode("utf-8")
+                value = s3_unicode(s3_encode_iso_datetime(v))
             elif fieldtype[:7] == "decimal":
-                value = str(formatter(v)).decode("utf-8")
+                value = s3_unicode(formatter(v))
 
             # Get the representation
             is_lazy = False
@@ -1314,7 +1307,7 @@ class S3XML(S3Codec):
                 attr[FIELD] = f
                 if represent or fieldtype not in ("string", "text"):
                     if value is None:
-                        value = to_json(v).decode("utf-8")
+                        value = s3_unicode(to_json(v))
                     attr[VALUE] = value
                 if is_lazy:
                     lazy.append((text, data, None, None))

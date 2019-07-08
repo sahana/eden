@@ -2393,7 +2393,7 @@ class S3URLQuery(object):
                     if w in NONE:
                         w = None
                     else:
-                        w = uquote(w).encode("utf-8")
+                        w = s3_str(uquote(w))
                     vlist.append(w)
                     w = ""
                 else:
@@ -2405,7 +2405,7 @@ class S3URLQuery(object):
             if w in NONE:
                 w = None
             else:
-                w = uquote(w).encode("utf-8")
+                w = s3_str(uquote(w))
             vlist.append(w)
         if len(vlist) == 1:
             return vlist[0]
@@ -2426,12 +2426,11 @@ class S3URLQuery(object):
         v = cls.parse_value(value)
 
         # Auto-lowercase, escape, and replace wildcards
-        like = lambda s: s3_unicode(s).lower() \
-                                      .replace("%", "\\%") \
-                                      .replace("_", "\\_") \
-                                      .replace("?", "_") \
-                                      .replace("*", "%") \
-                                      .encode("utf-8")
+        like = lambda s: s3_str(s3_unicode(s).lower() \
+                                             .replace("%", "\\%") \
+                                             .replace("_", "\\_") \
+                                             .replace("?", "_") \
+                                             .replace("*", "%"))
 
         q = None
 
