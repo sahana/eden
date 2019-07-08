@@ -6,6 +6,7 @@
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3aaa.py
 #
 import unittest
+import re
 
 from gluon import *
 from gluon.storage import Storage
@@ -13,6 +14,9 @@ from s3.s3aaa import S3EntityRoleManager, S3Permission
 from s3.s3fields import s3_meta_fields
 
 from unit_tests import run_suite
+
+# RE to handle IN-tuples in queries
+QUERY_PATTERN = re.compile(r"(.*)( IN \(([0-9,]*)\))(.*)")
 
 # =============================================================================
 class AuthUtilsTests(unittest.TestCase):
@@ -2492,6 +2496,7 @@ class AccessibleQueryTests(unittest.TestCase):
         table = current.s3db.org_permission_test
 
         assertEqual = self.assertEqual
+        assertSameQuery = self.assertSameQuery
 
         ALL = (table.id > 0)
         NONE = (table.id == 0)
@@ -2536,7 +2541,8 @@ class AccessibleQueryTests(unittest.TestCase):
                    (table.realm_entity == None)) | \
                    ((table.owned_by_user == auth.user.id) | \
                    (table.owned_by_group.belongs(roles))))
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         # Loose ownership: user has access to records within the realm
         # of the role, or which he owns either individually or as
@@ -2550,7 +2556,8 @@ class AccessibleQueryTests(unittest.TestCase):
                    ((table.owned_by_user == None) & \
                    (table.owned_by_group == None))) | \
                    (table.owned_by_group.belongs(roles))))
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         # Update permission is limited to owned records
         query = accessible_query("update", table, c=c, f=f)
@@ -2558,7 +2565,8 @@ class AccessibleQueryTests(unittest.TestCase):
                    ((table.owned_by_user == None) & \
                    (table.owned_by_group == None))) | \
                    (table.owned_by_group.belongs(roles)))
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         # No delete-permission on any record
         query = accessible_query("delete", table, c=c, f=f)
@@ -2577,14 +2585,16 @@ class AccessibleQueryTests(unittest.TestCase):
                    ((table.owned_by_user == None) & \
                    (table.owned_by_group == None))) | \
                    (table.owned_by_group.belongs(roles))))
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         query = accessible_query("update", table, c=c, f=f)
         expected = (((table.owned_by_user == auth.user.id) | \
                    ((table.owned_by_user == None) & \
                    (table.owned_by_group == None))) | \
                    (table.owned_by_group.belongs(roles)))
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         query = accessible_query("delete", table, c=c, f=f)
         assertEqual(query, NONE)
@@ -2603,10 +2613,12 @@ class AccessibleQueryTests(unittest.TestCase):
                    (table.owned_by_group == None)) & \
                    (table.realm_entity == None)) | \
                    (table.owned_by_group.belongs(roles))))
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         query = accessible_query("update", table, c=c, f=f)
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         query = accessible_query("delete", table, c=c, f=f)
         assertEqual(query, NONE)
@@ -2624,10 +2636,12 @@ class AccessibleQueryTests(unittest.TestCase):
                    (table.realm_entity == None)) | \
                    (table.owned_by_group.belongs(roles))))
         query = accessible_query("read", table, c=c, f=f)
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         query = accessible_query("update", table, c=c, f=f)
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         query = accessible_query("delete", table, c=c, f=f)
         assertEqual(query, NONE)
@@ -2775,6 +2789,48 @@ class AccessibleQueryTests(unittest.TestCase):
                                  #"run time exceeded (%.2fms > %.2fms)" %
                                  #(runtime, MAX_RUNTIME))
         #auth.s3_withdraw_role(auth.user.id, self.editor, for_pe=[])
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def assertSameQuery(cls, l, r, msg=None):
+        """
+            Custom assertion that two queries are equal
+
+            @param l: the first query
+            @param r: the second query
+        """
+
+        l, r = repr(l), repr(r)
+        if l == r:
+            return
+
+        equal = cls.compare_queries(l, r)
+        if not equal:
+            if msg is None:
+                msg = "Queries differ: %s != %s" % (l, r)
+            raise AssertionError(msg)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def compare_queries(cls, l, r):
+        """
+            Helper function to compare two queries, handles arbitrary
+            order of ' IN (x,y,z)' tuples.
+
+            @param l: the first query
+            @param r: the second query
+
+            @returns: True if the queries are equal, otherwise False
+        """
+
+        ml = QUERY_PATTERN.match(l)
+        mr = QUERY_PATTERN.match(r)
+        if ml and mr and \
+           ml.group(1) == mr.group(1) and \
+           set(ml.group(3).split(",")) == set(mr.group(3).split(",")):
+            return cls.compare_queries(ml.group(4), mr.group(4))
+
+        return False
 
 # =============================================================================
 class DelegationTests(unittest.TestCase):
