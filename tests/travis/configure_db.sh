@@ -29,7 +29,8 @@ elif [[ `echo $DB | cut -f1 -d"-"` == postgres ]]; then
         fi
 
         echo "pg8000 (default web2py postgres adapter) does not support some postgres 9.4 features. Using psycopg2 instead."
-        sudo pip install psycopg2 -q
+        sudo -H pip install psycopg2
+        sudo apt-get install -y python3-psycopg2
     fi
 
     if [[ `echo $DB | cut -f1 -d"+"` == postgres-9.6 ]]; then
@@ -40,7 +41,7 @@ elif [[ `echo $DB | cut -f1 -d"-"` == postgres ]]; then
 
         if [[ $DB == postgres-9.6+postgis ]]; then
             sudo apt-get -qq update
-            sudo apt-get install -y postgresql-9.6-postgis-2.3
+            sudo apt-get install -y postgresql-9.6-postgis-2.4
             psql -U postgres -d sahana -c "create extension postgis"
             psql -U postgres -q -d sahana -c "grant all on geometry_columns to travis;"
             psql -U postgres -q -d sahana -c "grant all on spatial_ref_sys to travis;"
@@ -48,7 +49,8 @@ elif [[ `echo $DB | cut -f1 -d"-"` == postgres ]]; then
         fi
 
         echo "pg8000 (default web2py postgres adapter) does not support some postgres 9.6 features. Using psycopg2 instead."
-        sudo pip install psycopg2 -q
+        sudo -H pip install psycopg2
+        sudo apt-get install -y python3-psycopg2
     fi
 
     sed -ie 's|\#settings.database.db_type = "postgres"|settings.database.db_type = "postgres"|' models/000_config.py
