@@ -2828,7 +2828,8 @@ class AccessibleQueryTests(unittest.TestCase):
         if ml and mr and \
            ml.group(1) == mr.group(1) and \
            set(ml.group(3).split(",")) == set(mr.group(3).split(",")):
-            return cls.compare_queries(ml.group(4), mr.group(4))
+            return ml.group(4) == mr.group(4) or \
+                   cls.compare_queries(ml.group(4), mr.group(4))
 
         return False
 
