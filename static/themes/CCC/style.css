@@ -1,0 +1,6 @@
+div.subheading {
+    padding-top: 10px !important;
+    padding-bottom: 5px;
+    border-bottom: thin solid #bbb;
+    font-weight: bold;
+}

@@ -1,6 +1,28 @@
 {{extend "layout.html"}}
-<div class="row">
+<div class='row'>
  <div class='medium-12 columns'>
- {{=item}}
+  {{=item1}}
+  <div class='medium-12 columns'>
+   <div class='medium-6 small-12 columns'>
+    <div class='panel radius'>
+     <a href='/{{=appname}}/default/index/register'>
+      <img src='/{{=appname}}/static/themes/CCC/img/volunteer.png'/>
+      <span class='service-link'>REGISTER AS A VOLUNTEER</span>
+     </a>
+    </div>
+   </div>
+  </div>
+  <p>If you are an established group from outside of Cumbria but wish to offer support as a group please use the link below to register:</p>
+  <div class='medium-12 columns'>
+   <div class='medium-6 small-12 columns'>
+    <div class='panel radius'>
+     <a href='/{{=appname}}/default/index/register?vol_group=1'>
+      <img src='/{{=appname}}/static/themes/CCC/img/volunteer.png'/>
+      <span class='service-link'>REGISTER AS A VOLUNTEER GROUP</span>
+     </a>
+    </div>
+   </div>
+  </div>
+  {{=item2}}
  </div>
 </div>
