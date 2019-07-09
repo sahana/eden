@@ -208,13 +208,11 @@
             </xsl:if>
             <!-- Link to Organisation -->
             <xsl:if test="$OrgName!=''">
-                <resource name="cms_post_organisation">
-                    <reference field="organisation_id" resource="org_organisation">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="$OrgName"/>
-                        </xsl:attribute>
-                    </reference>
-                </resource>
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$OrgName"/>
+                    </xsl:attribute>
+                </reference>
             </xsl:if>
 
             <!-- Link to Location -->

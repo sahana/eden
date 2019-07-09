@@ -1243,13 +1243,6 @@ def config(settings):
             #description = "Selective translation of strings based on module.",
             module_type = None,
         )),
-        # Uncomment to enable internal support requests
-        #("support", Storage(
-        #        name_nice = T("Support"),
-        #        #description = "Support Requests",
-        #        restricted = True,
-        #        module_type = None  # This item is handled separately for the menu
-        #    )),
         ("gis", Storage(
             name_nice = T("Map"),
             #description = "Situation Awareness & Geospatial Analysis",

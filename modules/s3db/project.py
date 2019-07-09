@@ -10919,11 +10919,9 @@ class S3ProjectTaskModel(S3Model):
                      Field("priority", "integer",
                            default = 3,
                            label = T("Priority"),
-                           represent = lambda opt: \
-                                       project_task_priority_opts.get(opt,
-                                                                      UNKNOWN_OPT),
+                           represent = S3Represent(options = project_task_priority_opts),
                            requires = IS_IN_SET(project_task_priority_opts,
-                                                zero=None),
+                                                zero = None),
                            ),
                      # Could be a Person, Team or Organisation
                      super_link("pe_id", "pr_pentity",
@@ -10971,11 +10969,9 @@ class S3ProjectTaskModel(S3Model):
                      Field("status", "integer",
                            default = 2,
                            label = T("Status"),
-                           represent = lambda opt: \
-                                    project_task_status_opts.get(opt,
-                                                                 UNKNOWN_OPT),
+                           represent = S3Represent(options = project_task_status_opts),
                            requires = IS_IN_SET(project_task_status_opts,
-                                                zero=None),
+                                                zero = None),
                            readable = staff,
                            writable = staff,
                            ),

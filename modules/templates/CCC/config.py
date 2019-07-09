@@ -120,26 +120,26 @@ def config(settings):
             name_nice = T("Map"),
             #description = "Situation Awareness & Geospatial Analysis",
             restricted = True,
-            module_type = 6,     # 6th item in the menu
+            module_type = None,
         )),
         ("pr", Storage(
             name_nice = T("Person Registry"),
             #description = "Central point to record details on People",
             restricted = True,
             access = "|1|",     # Only Administrators can see this module in the default menu (access to controller is possible to all still)
-            module_type = 10
+            module_type = None,
         )),
         ("org", Storage(
             name_nice = T("Organizations"),
             #description = 'Lists "who is doing what & where". Allows relief agencies to coordinate their activities',
             restricted = True,
-            module_type = 1
+            module_type = None,
         )),
         ("hrm", Storage(
             name_nice = T("Personnel"),
             #description = "Human Resources Management",
             restricted = True,
-            module_type = 5
+            module_type = None,
         )),
         #("vol", Storage(
         #    name_nice = T("Volunteers"),
@@ -151,13 +151,13 @@ def config(settings):
           name_nice = T("Content Management"),
           #description = "Content Management System",
           restricted = True,
-          module_type = 10,
+          module_type = None,
         )),
         ("doc", Storage(
             name_nice = T("Documents"),
             #description = "A library of digital resources, such as photos, documents and reports",
             restricted = True,
-            module_type = 10,
+            module_type = None,
         )),
         ("msg", Storage(
             name_nice = T("Messaging"),
@@ -176,7 +176,13 @@ def config(settings):
             name_nice = T("Assessments"),
             #description = "Data collection tool",
             restricted = True,
-            module_type = 5
+            module_type = None,
+        )),
+        ("project", Storage(
+            name_nice = T("Projects"),
+            #description = "Tasks for Contacts",
+            restricted = True,
+            module_type = None,
         )),
         ("supply", Storage(
             name_nice = T("Supply Chain Management"),
@@ -188,19 +194,33 @@ def config(settings):
         #    name_nice = T("Warehouses"),
         #    #description = "Receiving and Sending Items",
         #    restricted = True,
-        #    module_type = 4
+        #    module_type = None,
         #)),
         ("req", Storage(
             name_nice = T("Requests"),
             #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
             restricted = True,
-            module_type = 10,
+            module_type = None,
         )),
     ])
 
-    settings.cms.richtext = True
-    settings.ui.filter_clear = False
     settings.search.filter_manager = False
+    settings.ui.filter_clear = False
+
+    settings.cms.richtext = True
+
+    settings.hrm.event_course_mandatory = False
+
+    settings.project.task_priority_opts = {1: T("Low"),
+                                           2: T("Medium"),
+                                           3: T("High"),
+                                           }
+    settings.project.task_status_opts = {1: T("New"),
+                                         2: T("In-Progress"),
+                                         3: T("Closed"),
+                                         }
+
+    settings.req.req_type = ("People",)
 
     # -------------------------------------------------------------------------
     def customise_auth_user_controller(**attr):
@@ -272,7 +292,7 @@ def config(settings):
 
         s3 = current.response.s3
 
-        # Custom postp
+        # Custom prep
         standard_prep = s3.prep
         def prep(r):
             # Call standard prep
@@ -363,23 +383,163 @@ def config(settings):
     settings.customise_doc_document_controller = customise_doc_document_controller
 
     # -------------------------------------------------------------------------
-    def customise_req_home():
+    def customise_hrm_training_event_resource(r, tablename):
 
-        current.menu.options = None
-        return current.s3db.cms_index("req",
-                                      page_name = "Donate",
-                                      view = "CCC/views/donate.html")
+        from s3 import S3OptionsFilter, S3SQLCustomForm, S3TextFilter
 
-    settings.customise_req_home = customise_req_home
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("New Event"),
+            title_display = T("Event Details"),
+            title_list = T("Events"),
+            title_update = T("Edit Event"),
+            #title_upload = T("Import Events"),
+            label_list_button = T("List Events"),
+            label_delete_button = T("Delete Event"),
+            msg_record_created = T("Event added"),
+            msg_record_modified = T("Event updated"),
+            msg_record_deleted = T("Event deleted"),
+            msg_list_empty = T("No Events currently registered")
+        )
+
+        s3db = current.s3db
+
+        s3db.configure("hrm_training_event",
+                       crud_form = S3SQLCustomForm("name",
+                                                   "start_date",
+                                                   #"end_date",
+                                                   "location_id",
+                                                   "comments",
+                                                   ),
+                       list_fields = ["start_date",
+                                      "name",
+                                      "location_id",
+                                      ],
+                       filter_widgets = [S3TextFilter(["name",
+                                                       "comments",
+                                                       ],
+                                                      #formstyle = text_filter_formstyle,
+                                                      label = "",
+                                                      _placeholder = T("Search"),
+                                                      ),
+                                         ],
+                       )
+
+    settings.customise_hrm_training_event_resource = customise_hrm_training_event_resource
 
     # -------------------------------------------------------------------------
-    def customise_vol_home():
+    def customise_project_task_resource(r, tablename):
 
-        current.menu.options = None
-        return current.s3db.cms_index("vol",
-                                      page_name = "Volunteer",
-                                      view = "CCC/views/volunteer.html")
+        from s3 import S3OptionsFilter, S3SQLCustomForm, S3TextFilter
 
-    settings.customise_vol_home = customise_vol_home
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("New Message"),
+            title_display = T("Message Details"),
+            title_list = T("Messages"),
+            title_update = T("Edit Message"),
+            #title_upload = T("Import Messages"),
+            label_list_button = T("List Messages"),
+            label_delete_button = T("Delete Message"),
+            msg_record_created = T("Message added"),
+            msg_record_modified = T("Message updated"),
+            msg_record_deleted = T("Message deleted"),
+            msg_list_empty = T("No Messages currently created")
+        )
+
+        s3db = current.s3db
+
+        table = s3db.project_task
+        table.name.label = T("Subject")
+        table.description.label = T("Message")
+        if current.auth.s3_has_role("ORG_ADMIN"):
+            # @ToDo: Filter Assigned To to just OrgAdmins?
+            pass
+        else:
+            table.priority.readable = table.priority.writable = False
+            table.status.readable = table.status.writable = False
+            table.pe_id.readable = table.pe_id.writable = False
+            table.comments.readable = table.comments.writable = False
+
+        s3db.configure("project_task",
+                       crud_form = S3SQLCustomForm("name",
+                                                   "description",
+                                                   "priority",
+                                                   "status",
+                                                   "pe_id",
+                                                   "comments",
+                                                   ),
+                       list_fields = ["priority",
+                                      "status",
+                                      "pe_id",
+                                      "created_by",
+                                      "name",
+                                      ],
+                       filter_widgets = [S3TextFilter(["name",
+                                                       "description",
+                                                       "comments",
+                                                       ],
+                                                      #formstyle = text_filter_formstyle,
+                                                      label = "",
+                                                      _placeholder = T("Search"),
+                                                      ),
+                                         S3OptionsFilter("priority",
+                                                         options = settings.get_project_task_priority_opts(),
+                                                         cols = 3,
+                                         ),
+                                         S3OptionsFilter("status",
+                                                         options = settings.get_project_task_status_opts(),
+                                                         cols = 3,
+                                         ),
+                                        ],
+                       )
+
+    settings.customise_project_task_resource = customise_project_task_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_project_task_controller(**attr):
+
+        if current.auth.s3_has_role("ORG_ADMIN"):
+            # @ToDo: Default filter to hide Closed messages
+            pass
+        else:
+            s3 = current.response.s3
+
+            # Custom prep
+            standard_prep = s3.prep
+            def prep(r):
+                # Call standard prep
+                if callable(standard_prep):
+                    result = standard_prep(r)
+                else:
+                    result = True
+
+                if r.method not in ("create", "read", "update"):
+                    from gluon import redirect
+                    redirect(r.url(method="create"))
+                else:
+                    current.messages.UPDATE = "Edit"
+                    # Don't attempt to load comments
+                    s3.rfooter = None
+
+                return result
+            s3.prep = prep
+
+            # Custom postp
+            standard_postp = s3.postp
+            def postp(r, output):
+                # Call standard postp
+                if callable(standard_postp):
+                    output = standard_postp(r, output)
+
+                if r.method == "read" and "buttons" in output:
+                    output["buttons"].pop("list_btn")
+
+                return output
+            s3.postp = postp
+
+            attr["rheader"] = None
+
+        return attr
+
+    settings.customise_project_task_controller = customise_project_task_controller
 
 # END =========================================================================
