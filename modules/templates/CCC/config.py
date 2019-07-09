@@ -220,7 +220,125 @@ def config(settings):
                                          3: T("Closed"),
                                          }
 
-    settings.req.req_type = ("People",)
+    # Now using req_need, so unused:
+    #settings.req.req_type = ("People",)
+
+    def ccc_realm_entity(table, row):
+        """
+            Assign a Realm Entity to records
+        """
+
+        tablename = table._tablename
+
+        if tablename in ("hrm_training_event",
+                         "project_task",
+                         "req_need",
+                         ):
+            # Use the Org of the Creator
+            db = current.db
+            new_row = db(table.id == row.id).select(table.created_by,
+                                                    limitby = (0, 1),
+                                                    ).first()
+            user_id = new_row.created_by
+
+            utable = db.auth_user
+            otable = current.s3db.org_organisation
+            query = (utable.id == user_id) & \
+                    (utable.organisation_id == otable.id)
+            org = db(query).select(otable.pe_id,
+                                   limitby = (0, 1),
+                                   ).first()
+            if org:
+                return org.pe_id
+
+        # Use default rules
+        return 0
+
+    settings.auth.realm_entity = ccc_realm_entity
+
+    # -------------------------------------------------------------------------
+    def ccc_rheader(r):
+        """
+            Custom rheaders
+        """
+
+        if r.representation != "html":
+            # RHeaders only used in interactive views
+            return None
+
+        # Need to use this format as otherwise req_match?viewing=org_office.x
+        # doesn't have an rheader
+        from s3 import s3_rheader_resource, s3_rheader_tabs
+        tablename, record = s3_rheader_resource(r)
+
+        if record is None:
+            # List or Create form: rheader makes no sense here
+            return None
+
+        from gluon import DIV, TABLE, TR, TH
+
+        T = current.T
+
+        if tablename == "hrm_training_event":
+            T = current.T
+            tabs = [(T("Basic Details"), None),
+                    (T("Participants"), "participant"),
+                    ]
+
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            table = r.table
+            location_id = table.location_id
+            date_field = table.start_date
+            rheader = DIV(TABLE(TR(TH("%s: " % T("Date")),
+                                   date_field.represent(record.start_date),
+                                   ),
+                                TR(TH("%s: " % location_id.label),
+                                   location_id.represent(record.location_id),
+                                   )),
+                          rheader_tabs)
+
+        elif tablename == "pr_person":
+            T = current.T
+            tabs = [(T("Basic Details"), None),
+                    (T("Address"), "address"),
+                    (T("Contacts"), "contacts"),
+                    (T("Skills"), "competency"),
+                    ]
+            if current.auth.s3_has_role("ORG_ADMIN"):
+                tabs.insert(1, (T("Affiliation"), "human_resource"))
+
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            from s3 import s3_fullname
+
+            table = r.table
+            rheader = DIV(TABLE(TR(TH("%s: " % T("Name")),
+                                   s3_fullname(record),
+                                   )),
+                          rheader_tabs)
+
+        elif tablename == "req_need":
+            T = current.T
+            tabs = [(T("Basic Details"), None),
+                    #(T("Items"), "need_item"),
+                    (T("Skills"), "need_skill"),
+                    ]
+
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            table = r.table
+            location_id = table.location_id
+            date_field = table.date
+            rheader = DIV(TABLE(TR(TH("%s: " % date_field.label),
+                                   date_field.represent(record.date),
+                                   ),
+                                TR(TH("%s: " % location_id.label),
+                                   location_id.represent(record.location_id),
+                                   )),
+                          rheader_tabs)
+
+        return rheader
 
     # -------------------------------------------------------------------------
     def customise_auth_user_controller(**attr):
@@ -383,9 +501,101 @@ def config(settings):
     settings.customise_doc_document_controller = customise_doc_document_controller
 
     # -------------------------------------------------------------------------
+    def customise_hrm_competency_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.hrm_competency
+        table.competency_id.readable = table.competency_id.writable = False
+        table.organisation_id.readable = table.organisation_id.writable = False
+
+        s3db.configure("hrm_competency",
+                       list_fields = ["skill_id",
+                                      "comments",
+                                      ],
+                       )
+
+    settings.customise_hrm_competency_resource = customise_hrm_competency_resource
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_human_resource_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm, S3TextFilter
+
+        s3db = current.s3db
+
+        table = s3db.hrm_human_resource
+
+        if r.controller == "default":
+            list_fields = ["job_title_id",
+                           ]
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("New Affiliation"),
+                title_display = T("Affiliation Details"),
+                title_list = T("Affiliations"),
+                title_update = T("Edit Affiliation"),
+                #title_upload = T("Import Affiliations"),
+                label_list_button = T("List Affiliations"),
+                label_delete_button = T("Delete Affiliation"),
+                msg_record_created = T("Affiliation added"),
+                msg_record_modified = T("Affiliation updated"),
+                msg_record_deleted = T("Affiliation deleted"),
+                msg_list_empty = T("No Affiliations currently registered")
+            )
+        else:
+            list_fields = ["person_id",
+                           "job_title_id",
+                           (T("Skills"), "person_id$competency.skill_id"),
+                           (T("Email"), "email.value"),
+                           (T("Mobile Phone"), "phone.value"),
+                           ]
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("New Volunteer"),
+                title_display = T("Volunteer Details"),
+                title_list = T("Volunteers"),
+                title_update = T("Edit Volunteer"),
+                #title_upload = T("Import Volunteers"),
+                label_list_button = T("List Volunteers"),
+                label_delete_button = T("Delete Volunteer"),
+                msg_record_created = T("Volunteer added"),
+                msg_record_modified = T("Volunteer updated"),
+                msg_record_deleted = T("Volunteer deleted"),
+                msg_list_empty = T("No Volunteers currently registered")
+            )
+        filter_fields = ["person_id$first_name",
+                         "person_id$middle_name",
+                         "person_id$last_name",
+                         "job_title_id$name",
+                         "comments",
+                         ]
+        if current.auth.s3_has_role("ADMIN"):
+            list_fields.insert(0, "organisation_id")
+            filter_fields.insert(0, "organisation_id$name")
+        else:
+            table.organisation_id.writable = False
+            table.organisation_id.comment = None # No Create
+                       
+        s3db.configure("hrm_human_resource",
+                       crud_form = S3SQLCustomForm("organisation_id",
+                                                   "job_title_id",
+                                                   "person_id",
+                                                   "comments",
+                                                   ),
+                       list_fields = list_fields,
+                       filter_widgets = [S3TextFilter(filter_fields,
+                                                      #formstyle = text_filter_formstyle,
+                                                      label = "",
+                                                      _placeholder = T("Search"),
+                                                      ),
+                                         ],
+                       )
+
+    settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
+
+    # -------------------------------------------------------------------------
     def customise_hrm_training_event_resource(r, tablename):
 
-        from s3 import S3OptionsFilter, S3SQLCustomForm, S3TextFilter
+        from s3 import S3LocationSelector, S3OptionsFilter, S3SQLCustomForm, S3TextFilter
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("New Event"),
@@ -402,6 +612,12 @@ def config(settings):
         )
 
         s3db = current.s3db
+
+        table = s3db.hrm_training_event
+        table.name.readable = table.name.writable = True
+        f = table.location_id
+        f.readable = f.writable = True
+        f.widget = S3LocationSelector(show_address = True)
 
         s3db.configure("hrm_training_event",
                        crud_form = S3SQLCustomForm("name",
@@ -425,6 +641,52 @@ def config(settings):
                        )
 
     settings.customise_hrm_training_event_resource = customise_hrm_training_event_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_hrm_training_event_controller(**attr):
+
+        attr["rheader"] = ccc_rheader
+
+        return attr
+
+    settings.customise_hrm_training_event_controller = customise_hrm_training_event_controller
+
+    # -----------------------------------------------------------------------------
+    def customise_pr_person_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            s3.crud_strings[r.tablename] = Storage(
+                label_create = T("New Volunteer"),
+                title_display = T("Volunteer Details"),
+                title_list = T("Volunteers"),
+                title_update = T("Edit Volunteer"),
+                #title_upload = T("Import Volunteers"),
+                label_list_button = T("List Volunteers"),
+                label_delete_button = T("Delete Volunteer"),
+                msg_record_created = T("Volunteer added"),
+                msg_record_modified = T("Volunteer updated"),
+                msg_record_deleted = T("Volunteer deleted"),
+                msg_list_empty = T("No Volunteers currently registered")
+            )
+
+            return result
+        s3.prep = prep
+        
+        attr["rheader"] = ccc_rheader
+
+        return attr
+
+    settings.customise_pr_person_controller = customise_pr_person_controller
 
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
@@ -454,8 +716,12 @@ def config(settings):
             # @ToDo: Filter Assigned To to just OrgAdmins?
             pass
         else:
-            table.priority.readable = table.priority.writable = False
-            table.status.readable = table.status.writable = False
+            f = table.priority
+            f.default = 1
+            f.readable = f.writable = False
+            f = table.status
+            f.default = 1
+            f.readable = f.writable = False
             table.pe_id.readable = table.pe_id.writable = False
             table.comments.readable = table.comments.writable = False
 
@@ -536,10 +802,64 @@ def config(settings):
                 return output
             s3.postp = postp
 
-            attr["rheader"] = None
+        attr["rheader"] = None
 
         return attr
 
     settings.customise_project_task_controller = customise_project_task_controller
+
+    # -------------------------------------------------------------------------
+    def customise_req_need_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm, S3TextFilter
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("New Opportunity"),
+            title_display = T("Opportunity Details"),
+            title_list = T("Opportunities"),
+            title_update = T("Edit Opportunity"),
+            #title_upload = T("Import Opportunities"),
+            label_list_button = T("List Opportunities"),
+            label_delete_button = T("Delete Opportunity"),
+            msg_record_created = T("Opportunity added"),
+            msg_record_modified = T("Opportunity updated"),
+            msg_record_deleted = T("Opportunity deleted"),
+            msg_list_empty = T("No Opportunities currently registered")
+        )
+
+        s3db = current.s3db
+
+        table = s3db.req_need
+
+        s3db.configure("req_need",
+                       crud_form = S3SQLCustomForm("date",
+                                                   "location_id",
+                                                   "name",
+                                                   "comments",
+                                                   ),
+                       list_fields = ["date",
+                                      "location_id",
+                                      (T("Opportunity"), "name"),
+                                      ],
+                       filter_widgets = [S3TextFilter(["name",
+                                                       "comments",
+                                                       ],
+                                                      #formstyle = text_filter_formstyle,
+                                                      label = "",
+                                                      _placeholder = T("Search"),
+                                                      ),
+                                         ],
+                       )
+
+    settings.customise_req_need_resource = customise_req_need_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_req_need_controller(**attr):
+
+        attr["rheader"] = ccc_rheader
+
+        return attr
+
+    settings.customise_req_need_controller = customise_req_need_controller
 
 # END =========================================================================
