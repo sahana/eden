@@ -2162,13 +2162,9 @@ class URLQueryTests(unittest.TestCase):
         project_task_project = s3db.project_task_project
         project_task = s3db.project_task
 
-        url_query = OrderedDict([
-            ("project.organisation_id$name__like", "*test*"),
-            ("task.description__like!", "*test*"),
-            ])
-
-        #{"project.organisation_id$name__like": "*test*",
-         #"task.description__like!": "*test*"}
+        url_query = {"project.organisation_id$name__like": "*test*",
+                     "task.description__like!": "*test*",
+                     }
 
         resource = current.s3db.resource("project_project", vars=url_query)
         rfilter = resource.rfilter
@@ -2192,12 +2188,16 @@ class URLQueryTests(unittest.TestCase):
 
         # Check query
         query = rfilter.get_query()
-        expected = (((project_project.deleted != True) &
-                     (project_project.id > 0)) &
-                    ((org_organisation.name.lower().like("%test%")) &
-                    (~(project_task.description.lower().like("%test%")))))
+        expected1 = (((project_project.deleted != True) &
+                      (project_project.id > 0)) &
+                     ((org_organisation.name.lower().like("%test%")) &
+                     (~(project_task.description.lower().like("%test%")))))
+        expected2 = (((project_project.deleted != True) &
+                      (project_project.id > 0)) &
+                     ((~(project_task.description.lower().like("%test%"))) &
+                      (org_organisation.name.lower().like("%test%"))))
 
-        assertEqual(str(query), str(expected))
+        assertTrue(str(query) == str(expected1) or str(query) == str(expected2))
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
