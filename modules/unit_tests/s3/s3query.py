@@ -235,7 +235,7 @@ class FieldSelectorResolutionTests(unittest.TestCase):
         assertEqual(joins, {})
 
         assertTrue(isinstance(left, dict))
-        assertEqual(list(left.keys()), [ "org_organisation", "project_task"])
+        assertEqual(set(left.keys()), {"org_organisation", "project_task"})
         assertEqual(len(left["org_organisation"]), 1)
         assertEqual(str(left["org_organisation"][0]), str(expected))
         assertEqual(len(left["project_task"]), 2)
@@ -792,7 +792,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
                         project_task_project.task_id == project_task.id)
 
         left = rfilter.get_joins(left=True, as_list=False)
-        assertEqual(list(left.keys()), ["org_organisation", "project_task"])
+        assertEqual(set(left.keys()), {"org_organisation", "project_task"})
         assertTrue(isinstance(left["org_organisation"], list))
         assertEqual(len(left["org_organisation"]), 1)
         assertEqual(str(left["org_organisation"][0]), str(expected))
