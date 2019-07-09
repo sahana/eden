@@ -684,9 +684,8 @@ class ResourceFilterJoinTests(unittest.TestCase):
         assertTrue(isinstance(joins, list))
         assertEqual(len(joins), 3)
 
-        assertEqual(str(joins[0]), str(expected1))
-        assertEqual(str(joins[1]), str(expected2))
-        assertEqual(str(joins[2]), str(expected3))
+        assertEqual({str(j) for j in joins},
+                    {str(expected1), str(expected2), str(expected3)})
 
     # -------------------------------------------------------------------------
     def tearDown(self):

@@ -2830,15 +2830,13 @@ class S3XMLFormat(object):
                 match = items[tablename]
             else:
                 match = False
-                maxlen = 0
+                maxlen = -1
                 for tn, fields in items.items():
                     if "*" in tn:
-                        m = re.match(tn.replace("*", ".*"), tablename)
-                        if not m:
-                            continue
-                        l = m.span()[-1]
-                        if l > maxlen:
+                        l = len(tn) - tn.count("*")
+                        if l > maxlen and re.match(tn.replace("*", ".*"), tablename):
                             match = fields
+                            maxlen = l
                 if match is False:
                     match = items.get(ANY, default)
             return match
@@ -2856,6 +2854,7 @@ class S3XMLFormat(object):
         else:
             include = list(select) if select else None
             exclude = []
+
         return (include, exclude)
 
     # -------------------------------------------------------------------------
