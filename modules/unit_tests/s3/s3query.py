@@ -9,6 +9,7 @@ import datetime
 import json
 import unittest
 
+from collections import OrderedDict
 from lxml import etree
 
 from gluon import *
@@ -2161,8 +2162,13 @@ class URLQueryTests(unittest.TestCase):
         project_task_project = s3db.project_task_project
         project_task = s3db.project_task
 
-        url_query = {"project.organisation_id$name__like": "*test*",
-                     "task.description__like!": "*test*"}
+        url_query = OrderedDict([
+            ("project.organisation_id$name__like", "*test*"),
+            ("task.description__like!", "*test*"),
+            ])
+
+        #{"project.organisation_id$name__like": "*test*",
+         #"task.description__like!": "*test*"}
 
         resource = current.s3db.resource("project_project", vars=url_query)
         rfilter = resource.rfilter
