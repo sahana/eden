@@ -2493,7 +2493,7 @@ class S3AIRegex(object):
         u"eêèềẻểẽễéếẹệë",
         u"gǵĝ",
         u"hĥ",
-        u"iìỉĩíịîïİ",
+        u"iìỉĩíịîï\u0130",
         u"jĵ",
         u"kḱ",
         u"lĺ",
@@ -2550,7 +2550,10 @@ class S3AIRegex(object):
         ESCAPE = cls.ESCAPE
 
         escaped = False
-        for character in s3_unicode(string).lower():
+        for character in s3_unicode(string):
+
+            if character != u"\u0130": # "İ".lower() gives two characters!!
+                character = character.lower()
 
             result = None
 
