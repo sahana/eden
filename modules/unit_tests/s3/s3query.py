@@ -2737,8 +2737,8 @@ class URLQueryParserTests(unittest.TestCase):
         assertEqual(query.op, query.NOT)
         query = query.left
         assertEqual(query.op, query.AND)
-        assertEqual(query.left, q1)
-        assertEqual(query.right, q2)
+        assertTrue(query.left is q1 and query.right is q2 or
+                   query.left is q2 and query.right is q1)
 
     # -------------------------------------------------------------------------
     def testAnd(self):
