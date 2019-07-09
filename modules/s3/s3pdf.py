@@ -38,10 +38,13 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3 (just syntax, functionality broken as for Py2)
 """
 
 __all__ = ("S3PDF",)
 
+import datetime
 import json
 import math
 import os
@@ -50,21 +53,9 @@ import sys
 import subprocess
 import unicodedata
 
-from copy import deepcopy
-try:
-    from cStringIO import StringIO    # Faster, where available
-except:
-    from StringIO import StringIO
-from datetime import datetime, timedelta, date
-# Not using soupparser's unescape for now as it adds BeautifulSoup module
-# to the dependency list for just one utility
-#from lxml.html.soupparser import unescape
-from htmlentitydefs import name2codepoint
-
 from gluon import *
 from gluon.storage import Storage
 from gluon.contenttype import contenttype
-from gluon.languages import lazyT
 
 try:
     from lxml import etree
@@ -72,9 +63,10 @@ except ImportError:
     sys.stderr.write("ERROR: lxml module needed for XML handling\n")
     raise
 
+from s3compat import StringIO, name2codepoint, unichr, xrange
 from .s3datetime import S3DateTime
 from .s3rest import S3Method
-from .s3utils import s3_represent_value, s3_validate
+from .s3utils import s3_represent_value, s3_str, s3_unicode, s3_validate
 from .s3codec import S3Codec
 
 try:
@@ -92,21 +84,16 @@ except(ImportError):
         sys.stderr.write("S3 Debug: S3PDF: Python Image Library not installed\n")
         PILImported = False
 try:
-    from reportlab.lib.enums import TA_CENTER, TA_RIGHT
-    from reportlab.pdfbase import pdfmetrics
-
     from reportlab.pdfgen import canvas
     from reportlab.lib.fonts import tt2ps
     from reportlab.rl_config import canvas_basefontname as _baseFontName
-    from reportlab.platypus import BaseDocTemplate, SimpleDocTemplate, PageTemplate
+    from reportlab.platypus import BaseDocTemplate, PageTemplate
     from reportlab.platypus.frames import Frame
     from reportlab.platypus import Spacer, PageBreak, Paragraph
-    from reportlab.platypus import Table, TableStyle
+    from reportlab.platypus import Table
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import inch
-    from reportlab.lib.units import cm
     from reportlab.lib import colors
-    from reportlab.lib.colors import Color
     from reportlab.lib.pagesizes import A4, LETTER, landscape, portrait
     from reportlab.platypus.flowables import Flowable
     reportLabImported = True
@@ -471,7 +458,7 @@ class S3PDF(S3Method):
                                     continue
                                 fields.append(field)
                         if not fields:
-                            fields = [table.id]
+                            fields = [ptable.id]
                         label_fields = [f.label for f in fields]
 
                         for record in records:
@@ -702,7 +689,7 @@ class S3PDF(S3Method):
                         r.error(501, current.ERROR.BAD_REQUEST)
 
                     # Check if operation is valid on the given set_uuid
-                    statustable = s3db.ocr_form_status
+                    statustable = current.s3db.ocr_form_status
                     query = (statustable.image_set_uuid == setuuid)
                     row = db(query).select(statustable.job_uuid,
                                            limitby=(0, 1)).first()
@@ -769,7 +756,7 @@ class S3PDF(S3Method):
                             if field.has_options:
                                 if field.options and \
                                    field.options.count > MAX_FORM_OPTIONS_LIMIT:
-                                    if not crosslimit_options.has_key(resourcename):
+                                    if resourcename not in crosslimit_options:
                                         crosslimit_options[resourcename] = [fieldname]
                                     else:
                                         crosslimit_options[resourcename].append(fieldname)
@@ -780,11 +767,11 @@ class S3PDF(S3Method):
                         resourcename = resource_element.attrib.get("name")
                         for field in resource_element:
                             if field.tag == "data":
-                                if crosslimit_options.has_key(resourcename):
+                                if resourcename in crosslimit_options:
                                     fieldname = field.attrib.get("field")
                                     if fieldname in crosslimit_options[resourcename]:
                                         match_status = {}
-                                        value = field.text.encode("utf-8").lower()
+                                        value = s3_str(field.text).lower()
                                         for option in s3ocrdict[resourcename][fieldname].options.list:
                                             try:
                                                 fieldtext = option.label.lower()
@@ -818,10 +805,10 @@ class S3PDF(S3Method):
                                 for subfield in field:
                                     if subfield.tag == "data":
                                         fieldname = subfield.attrib.get("field")
-                                        if resourcename in crosslimit_options.keys() and\
-                                                fieldname in crosslimit_options[resourcename]:
+                                        if resourcename in crosslimit_options and\
+                                           fieldname in crosslimit_options[resourcename]:
                                             match_status = {}
-                                            value = subfield.text.encode("utf-8").lower()
+                                            value = s3_str(subfield.text).lower()
                                             for option in s3ocrdict[resourcename][fieldname].options.list:
                                                 try:
                                                     fieldtext = option.label.lower()
@@ -860,7 +847,7 @@ class S3PDF(S3Method):
                     jobuuid = self.resource.job.job_id
                     json2dict = json.loads(outputjson, strict=False)
 
-                    if json2dict.has_key("message"):
+                    if "message" in json2dict:
                         jobhaserrors = 1
                     else:
                         jobhaserrors = 0
@@ -1158,7 +1145,7 @@ class S3PDF(S3Method):
                     datadict = Storage()
                     for field in r.vars.keys():
                         resourcetable, fieldname = field.split("-")
-                        if not datadict.has_key(resourcetable):
+                        if resourcetable not in datadict:
                             datadict[resourcetable] = Storage()
 
                         datadict[resourcetable][fieldname] = r.vars[field]
@@ -1380,7 +1367,7 @@ class S3PDF(S3Method):
         # However, only the current and two previous rows are needed at once,
         # so we only store those.
         oneago = None
-        thisrow = range(1, len(seq2) + 1) + [0]
+        thisrow = list(range(1, len(seq2) + 1) + [0])
         for x in xrange(len(seq1)):
             # Python lists wrap around for negative indices, so put the
             # leftmost column at the *end* of the list. This matches with
@@ -1524,10 +1511,10 @@ class S3PDF(S3Method):
                                      isinstance(ocrdata, int))
                         if condition:
                             value = str(ocrdata)
-                        elif isinstance(ocrdata, date):
-                            value = date.strftime(ocrdata, "%Y-%m-%d")
-                        elif isinstance(ocrdata, datetime):
-                            value = datetime.strftime(ocrdata, "%Y-%m-%d %H:%M:%S")
+                        elif isinstance(ocrdata, datetime.date):
+                            value = datetime.date.strftime(ocrdata, "%Y-%m-%d")
+                        elif isinstance(ocrdata, datetime.datetime):
+                            value = datetime.datetime.strftime(ocrdata, "%Y-%m-%d %H:%M:%S")
                         else:
                             value = unicodedata.normalize("NFKD",
                                                           ocrdata).encode("ascii",
@@ -1752,7 +1739,7 @@ class S3PDF(S3Method):
                             value = value.strftime("%Y-%m-%d")
                         except(AttributeError):
                             try:
-                                value = datetime.strptime(value, "%Y-%m-%d")
+                                value = datetime.datetime.strptime(value, "%Y-%m-%d")
                                 value = value.strftime("%Y-%m-%d")
                             except(ValueError):
                                 value = ""
@@ -1787,7 +1774,7 @@ class S3PDF(S3Method):
                             value = value.strftime("%Y-%m-%d %H:%M:%S")
                         except(AttributeError):
                             try:
-                                value = datetime.strptime(value,"%Y-%m-%d %H:%M:%S")
+                                value = datetime.datetime.strptime(value,"%Y-%m-%d %H:%M:%S")
                                 value = value.strftime("%Y-%m-%d %H:%M:%S")
                             except(ValueError):
                                 value = ""
@@ -2208,7 +2195,7 @@ class S3PDF(S3Method):
                     set("default", str(fielddefault))
 
                 # For unknown field types
-                if fieldtype not in self.generic_ocr_field_type.values():
+                if fieldtype not in list(self.generic_ocr_field_type.values()):
                     set(TYPE, "string")
                     set(HASOPTIONS, "False")
                     set(LINES, "2")
@@ -2864,7 +2851,7 @@ class S3PDF(S3Method):
                                  doc.pagesize[1] - 1.3*inch, self.title
                                 )
         canvas.setFont("Helvetica-Bold", 8)
-        now = S3DateTime.datetime_represent(datetime.utcnow(), utc=True)
+        now = S3DateTime.datetime_represent(datetime.datetime.utcnow(), utc=True)
         canvas.drawCentredString(doc.pagesize[0] - 1.5 * inch,
                                  doc.pagesize[1] - 1.3 * inch, now
                                 )
@@ -3940,8 +3927,8 @@ class S3OCRImageParser(object):
                     s3xml_resource_etree = SubElement(s3xml_parent_resource_etree,
                                                       "resource")
             else:
-                    s3xml_resource_etree = SubElement(s3xml_root_etree,
-                                                      "resource")
+                s3xml_resource_etree = SubElement(s3xml_root_etree,
+                                                  "resource")
 
             s3xml_resource_etree.set("name",
                                      resource.attrib.get("name", None))
@@ -4002,8 +3989,8 @@ class S3OCRImageParser(object):
                                 try:
                                     page_origin = images[comp_page]["markers"]
                                 except(KeyError):
-                                     self.r.error(501,
-                                                  T("insufficient number of pages provided"))
+                                    self.r.error(501,
+                                                 T("insufficient number of pages provided"))
                                 crop_box = (
                                      int(page_origin[0][0]+\
                                              (comp_x*\
@@ -4033,8 +4020,8 @@ class S3OCRImageParser(object):
                                                       field_name=field.attrib.get("name"),
                                                       field_value=comp_value)
                                 if result:
-                                    OCRText.append(unicode.strip(comp_text.decode("utf-8")))
-                                    OCRValue.append(unicode.strip(comp_value.decode("utf-8")))
+                                    OCRText.append(s3_unicode(comp_text).strip())
+                                    OCRValue.append(s3_unicode(comp_value).strip())
 
                                 linenum += 1
 
@@ -4100,10 +4087,10 @@ class S3OCRImageParser(object):
                                     linenum += 1
                                     comp_count += 1
 
-                                    OCRedValues[comp_meta] = unicode.strip(output.decode("utf-8"))
+                                    OCRedValues[comp_meta] = s3_unicode(output).strip()
 
                                 # YYYY
-                                yyyy = datetime.now().year
+                                yyyy = datetime.datetime.now().year
                                 try:
                                     if int(OCRedValues["YYYY"]) in range(1800, 2300):
                                         yyyy = int(OCRedValues["YYYY"])
@@ -4211,7 +4198,7 @@ class S3OCRImageParser(object):
                                     linenum += 1
                                     comp_count += 1
 
-                                output = unicode.strip(ocrText.decode("utf-8"))
+                                output = s3_unicode(ocrText).strip()
                                 # Store OCRText
                                 if field_type in ["double", "integer"]:
                                     try:
@@ -4267,7 +4254,7 @@ class S3OCRImageParser(object):
             Convert local time to UTC
         """
 
-        timetuple = datetime.strptime("%s-%s-%s %s:%s:00" % (yyyy,
+        timetuple = datetime.datetime.strptime("%s-%s-%s %s:%s:00" % (yyyy,
                                                              mo,
                                                              dd,
                                                              hh,
@@ -4284,7 +4271,7 @@ class S3OCRImageParser(object):
                 sign = t[0]
                 hours = t[1:3]
                 minutes = t[3:5]
-            tdelta = timedelta(hours=int(hours), minutes=int(minutes))
+            tdelta = datetime.timedelta(hours=int(hours), minutes=int(minutes))
             if sign == "+":
                 utctime = timetuple - tdelta
             elif sign == "-":
@@ -4458,13 +4445,13 @@ class S3OCRImageParser(object):
 
                     if max_region > 0:
                         #a neighbour already has a region, new region is the smallest > 0
-                        new_region = min(filter(lambda i: i > 0, (region_n, region_w)))
+                        new_region = min([i for i in (region_n, region_w) if i > 0])
                         #update equivalences
                         if max_region > new_region:
                             if max_region in equivalences:
                                 equivalences[max_region].add(new_region)
                             else:
-                                equivalences[max_region] = set((new_region, ))
+                                equivalences[max_region] = {new_region}
                     else:
                         n_regions += 1
                         new_region = n_regions
@@ -4484,7 +4471,7 @@ class S3OCRImageParser(object):
                     else:
                         regions[r] = self.__Region(x, y)
 
-        return list(regions.itervalues())
+        return list(regions.values())
 
     # -------------------------------------------------------------------------
     def __getOrientation(self, markers):
@@ -4541,8 +4528,7 @@ class S3OCRImageParser(object):
                 centers[present] = r.centroid()
 
         # This is the list of all the markers on the form.
-        markers = list(centers.itervalues())
-        markers.sort()
+        markers = sorted(centers.values())
         l1 = sorted(markers[0:3], key=lambda y: y[1])
         l2 = markers[3:4]
         l3 = sorted(markers[4:7], key=lambda y: y[1])

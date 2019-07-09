@@ -27,6 +27,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 
     @todo: integrate S3XForms API
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3MobileFormList",
@@ -38,6 +40,8 @@ __all__ = ("S3MobileFormList",
 import json
 
 from gluon import *
+
+from s3compat import basestring
 from .s3datetime import s3_parse_datetime
 from .s3forms import S3SQLForm, S3SQLCustomForm, S3SQLDummyField, S3SQLField
 from .s3rest import S3Method
@@ -408,11 +412,7 @@ class S3MobileSchema(object):
             ktablename = None
 
         # Check that field type is supported
-        if fieldtype in SUPPORTED_FIELD_TYPES or is_foreign_key:
-            supported = True
-        else:
-            supported = False
-        if not supported:
+        if not is_foreign_key and fieldtype not in SUPPORTED_FIELD_TYPES:
             return None
 
         # Create a field description
@@ -484,7 +484,8 @@ class S3MobileSchema(object):
         return required
 
     # -------------------------------------------------------------------------
-    def get_options(self, field, lookup=None):
+    @staticmethod
+    def get_options(field, lookup=None):
         """
             Get the options for a field with IS_IN_SET
 
@@ -967,7 +968,7 @@ class S3MobileForm(object):
         for tn, record_ids in required_records.items():
             kresource = s3db.resource(tn, id=list(record_ids))
             spec = provided[tn][1]
-            fields = spec["schema"].keys()
+            fields = list(spec["schema"].keys())
             tree = kresource.export_tree(fields = fields,
                                          references = fields,
                                          msince = msince,
@@ -1148,10 +1149,10 @@ class S3MobileForm(object):
             supertables = [supertables]
 
         super_entities = {}
-        for tablename in supertables:
-            table = s3db.table(tablename)
-            if table:
-                super_entities[tablename] = table._id.name
+        for super_tablename in supertables:
+            super_table = s3db.table(super_tablename)
+            if super_table:
+                super_entities[super_tablename] = super_table._id.name
 
         return super_entities
 

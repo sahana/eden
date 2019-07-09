@@ -45,6 +45,7 @@ if PY2:
     from urllib import urlencode
     from urllib import quote as urllib_quote
     from HTMLParser import HTMLParser
+    from htmlentitydefs import name2codepoint
     import Cookie
     reduce = reduce
     reload = reload
@@ -69,6 +70,7 @@ else:
     from urllib.parse import urlencode
     from urllib.parse import quote as urllib_quote
     from html.parser import HTMLParser
+    from html.entities import name2codepoint
     from http import cookies as Cookie
     from functools import reduce
     from importlib import reload

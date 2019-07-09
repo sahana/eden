@@ -27,6 +27,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 from gluon import current, IS_NOT_IN_DB, \
@@ -61,7 +63,7 @@ class S3Merge(S3Method):
             @return: output object to send to the view
         """
 
-        output = dict()
+        output = {}
 
         auth = current.auth
         system_roles = auth.get_system_roles()
@@ -395,7 +397,7 @@ class S3Merge(S3Method):
         session = current.session
         response = current.response
 
-        output = dict()
+        output = {}
         tablename = self.tablename
 
         # Get the duplicate bookmarks
@@ -751,7 +753,7 @@ class S3Merge(S3Method):
         elif ftype == "blob":
             inp = None
         else:
-            ftype = ftype in widgets and ftype or "string"
+            ftype = ftype if ftype in widgets else "string"
             inp = widgets[ftype].widget(field, value, **attr)
 
         return inp
@@ -816,7 +818,8 @@ class S3RecordMerger(object):
         return success
 
     # -------------------------------------------------------------------------
-    def merge_realms(self, table, original, duplicate):
+    @staticmethod
+    def merge_realms(table, original, duplicate):
         """
             Merge the realms of two person entities (update all
             realm_entities in all records from duplicate to original)

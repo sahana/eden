@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3RoleManager",
@@ -36,6 +38,7 @@ import json
 
 from gluon import current, URL, DIV, SPAN, SQLFORM, INPUT, A, LI, UL
 
+from s3compat import StringIO, long
 from s3dal import Field
 from .s3crud import S3CRUD
 from .s3rest import S3Method
@@ -1787,11 +1790,11 @@ class S3RolesWidget(object):
 
         if self.mode == "roles":
             query = (table.user_id == record_id) & \
-                    (table.group_id.belongs(self.items.keys()))
+                    (table.group_id.belongs(set(self.items.keys())))
             field = table.group_id
         else:
             query = (table.group_id == record_id) & \
-                    (table.user_id.belongs(self.items.keys()))
+                    (table.user_id.belongs(set(self.items.keys())))
             field = table.user_id
 
         use_realms = self.use_realms
@@ -1928,7 +1931,7 @@ class S3RolesExport(object):
 
         # Look up all rules, ordered by UID, controller, function, table
         rtable = auth.permission.table
-        query = (rtable.group_id.belongs(role_dicts.keys())) & \
+        query = (rtable.group_id.belongs(set(role_dicts.keys()))) & \
                 (rtable.deleted == False)
         rules = db(query).select(rtable.id,
                                  rtable.group_id,
@@ -1966,10 +1969,6 @@ class S3RolesExport(object):
         """
 
         import csv
-        try:
-            from cStringIO import StringIO    # Faster, where available
-        except ImportError:
-            from StringIO import StringIO
 
         # Optional columns
         col_protected = self.col_protected

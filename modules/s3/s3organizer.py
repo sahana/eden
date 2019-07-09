@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: fixed for Py3
 """
 
 __all__ = ("S3Organizer",
@@ -46,6 +48,7 @@ import uuid
 from gluon import current, DIV, INPUT
 from gluon.storage import Storage
 
+from s3compat import basestring
 from .s3datetime import s3_decode_iso_datetime
 from .s3rest import S3Method
 from .s3utils import s3_str
