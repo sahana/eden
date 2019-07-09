@@ -14,8 +14,8 @@ from lxml import etree
 from gluon import *
 from gluon.storage import Storage
 
-from s3dal import Row
 from s3 import *
+from s3dal import Row
 
 from unit_tests import run_suite
 

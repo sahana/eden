@@ -14,7 +14,7 @@ from lxml import etree
 from gluon import *
 
 from s3 import S3Hierarchy, s3_meta_fields, S3Represent, S3RepresentLazy, S3XMLFormat, IS_ONE_OF
-from s3compat import StringIO
+from s3compat import BytesIO, StringIO
 
 from unit_tests import run_suite
 
@@ -1066,7 +1066,7 @@ class EntityResolverTests(unittest.TestCase):
 
         xml = current.xml
 
-        tree = xml.parse(StringIO(self.forbidden))
+        tree = xml.parse(BytesIO(self.forbidden.encode("utf-8")))
         self.assertEqual(tree, None)
         self.assertNotEqual(xml.error, None)
 
@@ -1076,7 +1076,7 @@ class EntityResolverTests(unittest.TestCase):
 
         xml = current.xml
 
-        tree = xml.parse(StringIO(self.abspath))
+        tree = xml.parse(BytesIO(self.abspath.encode("utf-8")))
         self.assertNotEqual(tree, None)
         self.assertEqual(xml.error, None)
 
@@ -1086,7 +1086,7 @@ class EntityResolverTests(unittest.TestCase):
 
         xml = current.xml
 
-        tree = xml.parse(StringIO(self.relpath))
+        tree = xml.parse(BytesIO(self.relpath.encode("utf-8")))
         self.assertNotEqual(tree, None)
         self.assertEqual(xml.error, None)
 
@@ -1097,7 +1097,7 @@ class EntityResolverTests(unittest.TestCase):
         resource = current.s3db.resource("org_organisation")
 
         with self.assertRaises(SyntaxError):
-            resource.import_xml(StringIO(self.forbidden))
+            resource.import_xml(BytesIO(self.forbidden.encode("utf-8")))
 
 # =============================================================================
 if __name__ == "__main__":

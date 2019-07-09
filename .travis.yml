@@ -5,7 +5,7 @@ language: python
 
 python:
   - "2.7"
-  #- "3.5"
+  - "3.5"
 
 # This tests against all the versions of DB supported by Eden
 env:

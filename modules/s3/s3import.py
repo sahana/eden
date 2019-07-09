@@ -63,7 +63,7 @@ from .s3datetime import s3_utc
 from .s3rest import S3Method, S3Request
 from .s3resource import S3Resource
 from .s3utils import s3_auth_user_represent_name, s3_get_foreign_key, \
-                     s3_has_foreign_key, s3_mark_required, s3_unicode
+                     s3_has_foreign_key, s3_mark_required, s3_str, s3_unicode
 from .s3validators import IS_JSONS3
 
 # =============================================================================
@@ -2127,7 +2127,7 @@ class S3ImportItem(object):
                     form.errors[k] = "[%s] %s" % (k, form.errors[k])
                 else:
                     e = e[0]
-                e.set(ERROR, str(form.errors[k]).decode("utf-8"))
+                e.set(ERROR, s3_unicode(form.errors[k]))
             self.error = current.ERROR.VALIDATION_ERROR
             accepted = False
 
@@ -3849,7 +3849,7 @@ class S3Duplicate(object):
             #    http://stackoverflow.com/questions/18507589/the-lower-function-on-international-characters-in-postgresql
             # => works fine on Debian servers if the locale is a .UTF-8 before
             #    the Postgres cluster is created
-            query = (field.lower() == s3_unicode(value).lower().encode("utf-8"))
+            query = (field.lower() == s3_str(s3_unicode(value).lower()))
         else:
             query = (field == value)
 

@@ -39,6 +39,7 @@ if PY2:
         from cStringIO import StringIO  # faster, where available
     except ImportError:
         from StringIO import StringIO
+    BytesIO = StringIO
     import urlparse
     import urllib2
     from urllib2 import HTTPError, URLError, urlopen
@@ -62,7 +63,7 @@ if PY2:
     from itertools import izip_longest as zip_longest
 else:
     import pickle
-    from io import StringIO
+    from io import StringIO, BytesIO
     from urllib import parse as urlparse
     from urllib import request as urllib2
     from urllib.error import HTTPError, URLError

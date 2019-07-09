@@ -341,13 +341,17 @@ class S3XML(S3Codec):
             @param tree: the element tree
             @param xml_declaration: add an XML declaration to the output
             @param pretty_print: provide pretty formatted output
+
+            @returns: the XML as str
         """
 
-        return etree.tostring(tree,
-                              xml_declaration = xml_declaration,
-                              encoding = "utf-8" if PY2 else "unicode",
-                              pretty_print = pretty_print,
-                              )
+        string = etree.tostring(tree,
+                                xml_declaration = xml_declaration,
+                                encoding = "utf-8",
+                                pretty_print = pretty_print,
+                                )
+
+        return string
 
     # -------------------------------------------------------------------------
     def tree(self, elements,
@@ -1548,7 +1552,7 @@ class S3XML(S3Codec):
                     # Download file from network location
                     if not isinstance(download_url, str):
                         try:
-                            download_url = download_url.encode("utf-8")
+                            download_url = s3_str(download_url)
                         except UnicodeEncodeError:
                             continue
                     if not filename:
@@ -1561,7 +1565,7 @@ class S3XML(S3Codec):
                 if upload:
                     if not isinstance(filename, str):
                         try:
-                            filename = filename.encode("utf-8")
+                            filename = s3_str(filename)
                         except UnicodeEncodeError:
                             continue
                     field = table[f]
@@ -1616,7 +1620,7 @@ class S3XML(S3Codec):
                     if not isinstance(value, (basestring, list, tuple, bool)):
                         v = str(value)
                     elif isinstance(value, basestring):
-                        v = value.encode("utf-8")
+                        v = s3_str(value)
                     else:
                         v = value
                     filename = None

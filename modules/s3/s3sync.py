@@ -36,7 +36,7 @@ import datetime
 from gluon import current, URL, DIV
 from gluon.storage import Storage
 
-from s3compat import StringIO, unicodeT
+from s3compat import BytesIO, unicodeT
 from .s3datetime import s3_parse_datetime, s3_utc
 from .s3rest import S3Method
 from .s3import import S3ImportItem
@@ -1196,15 +1196,15 @@ class S3SyncDataArchive(object):
         if fileobj is not None:
             if not hasattr(fileobj, "seek"):
                 # Possibly a addinfourl instance from urlopen,
-                # => must copy to StringIO buffer for random access
-                fileobj = StringIO(fileobj.read())
+                # => must copy to BytesIO buffer for random access
+                fileobj = BytesIO(fileobj.read())
             try:
                 archive = zipfile.ZipFile(fileobj, "r")
             except RuntimeError:
                 current.log.warn("invalid ZIP archive: %s" % sys.exc_info()[1])
                 archive = None
         else:
-            fileobj = StringIO()
+            fileobj = BytesIO()
             try:
                 archive = zipfile.ZipFile(fileobj, "w", compression, True)
             except RuntimeError:
@@ -1248,12 +1248,12 @@ class S3SyncDataArchive(object):
                 obj.seek(0)
             archive.writestr(name, obj.read())
 
-        elif type(obj) is str:
+        elif isinstance(obj, (str, bytes)):
             archive.writestr(name, obj)
 
         elif isinstance(obj, unicodeT):
             # Convert unicode objects to str (Py2 backwards-compatibility)
-            archive.writestr(name, obj.encode("utf-8"))
+            archive.writestr(name, s3_str(obj))
 
         else:
             raise TypeError("invalid object type")
