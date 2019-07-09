@@ -550,7 +550,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
                         project_task_project.task_id == project_task.id)
 
         joins, distinct = q._joins(resource, left=True)
-        assertEqual(list(joins.keys()), ["org_organisation", "project_task"])
+        assertEqual(set(joins.keys()), {"org_organisation", "project_task"})
 
         assertTrue(isinstance(joins["org_organisation"], list))
         assertEqual(len(joins["org_organisation"]), 1)
