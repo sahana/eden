@@ -53,11 +53,25 @@ class S3MainMenu(default.S3MainMenu):
                         ),
                      ]
         elif auth.s3_has_role("VOLUNTEER"):
-            menu += [MM("Events", c="req", f="req",
+            menu += [MM("Organisation Documents", c="doc", f="document", m="datalist",
                         ),
-                     MM("Organisation Documents", c="doc", f="document", m="datalist",
+                     MM("Events", c="hrm", f="training_event",
                         ),
-                     MM("Contact Organisation Admins", c="cms", f="post",
+                     MM("Volunteer Opportunities", c="req", f="req",
+                        ),
+                     MM("Contact Organisation Admins", c="project", f="task", m="create",
+                        ),
+                     ]
+        elif auth.s3_has_role("ORG_ADMIN"):
+            menu += [MM("Organisation Documents", c="doc", f="document", m="datalist",
+                        ),
+                     MM("Volunteers", c="hrm", f="human_resource",
+                        ),
+                     MM("Events", c="hrm", f="training_event",
+                        ),
+                     MM("Volunteer Opportunities", c="req", f="req",
+                        ),
+                     MM("Messages", c="project", f="task",
                         ),
                      ]
 

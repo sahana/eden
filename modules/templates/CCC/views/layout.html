@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="{{=T.accepted_language or "en"}}">{{# class="no-js" needed for modernizr }}
-<head>{{theme_styles=response.s3.theme_styles}}{{menu=current.menu}}
+<head>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 {{# Always force latest IE rendering engine (even in intranet) & Chrome Frame }}
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
@@ -18,7 +18,7 @@
 --> """}}
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 {{# Place favicon.ico and apple-touch-icon.png in the root of your domain and delete these references }}
-<link rel="shortcut icon" href="/{{=appname}}/static/themes/{{=theme_styles}}/favicon.ico" type="image/x-icon" />
+<link rel="shortcut icon" href="/{{=appname}}/static/themes/CCC/favicon.ico" type="image/x-icon" />
 {{# <link rel="apple-touch-icon" href="/=appname/static/favicon.png" /> }}
 {{# All JavaScript at the bottom, except for Modernizr which enables HTML5 elements & feature detects }}{{# This kills the map in IE8: VML.js }}
 {{#<script src="/=appname/static/scripts/modernizr.min.js"></script>}}
@@ -31,7 +31,7 @@
 {{pass}}
 {{if s3.debug:}}{{=s3base.s3_include_debug_css()}}{{else:}}
  {{# Built by /static/scripts/tools/build.sahana.py }}
- <link href="/{{=appname}}/static/themes/{{=theme_styles}}/eden.min.css" rel="stylesheet" type="text/css" />
+ <link href="/{{=appname}}/static/themes/CCC/eden.min.css" rel="stylesheet" type="text/css" />
 {{pass}}
 {{include "scripts_top.html"}}
 </head>
@@ -55,7 +55,7 @@
    <div class='row main-title'>
     <div class='large-5 medium-12 columns'>
      <a href='{{=URL(c="default", f="index")}}'>
-      {{org_menu = menu.org.render() if menu.org else ("", "")}}
+      {{org_menu = current.menu.org.render() if current.menu.org else ("", "")}}
       <div class="org-logo">{{=org_menu[1]}}</div>
       <div class="system-title">
        <h5 class="system-name">{{=settings.get_system_name()}}</h5>
@@ -63,7 +63,7 @@
       </div>
      </a>
     </div>
-    {{ml=menu.lang}}{{if ml.check_enabled():}}
+    {{ml=current.menu.lang}}{{if ml.check_enabled():}}
     <div class='large-push-5 large-2 medium-12 columns'>
      {{=ml}}
     </div>
@@ -72,21 +72,21 @@
     <div class='large-7 medium-12 columns personal-menu-area'>
     {{pass}}
      <div class="username">{{if auth.is_logged_in():}}{{=auth.user.email}}<i class='fa fa-user'></i>{{pass}}</div>
-     {{=menu.personal}}
+     {{=current.menu.personal}}
     </div>
    </div>
    <div class='row main-navigation'>
     <div class='small-12 columns'>
-     {{=menu.main}}
+     {{=current.menu.main}}
     </div>
    </div>
    <div class='row main-content'>
-   {{if menu.options is not None:}}
+   {{if current.menu.options is not None:}}
     <div class='small-6 columns end'>
      <a id='menu-options-toggle' class='tiny secondary button show-for-small' data-status='off' data-off='{{=T("Show Options")}}' data-on='{{=T("Hide Options")}}'>{{=T("Show Options")}}</a>
     </div>
     <div class='medium-3 large-2 columns hide-for-small' id='menu-options'>
-     {{=menu.options}}
+     {{=current.menu.options}}
     </div>
     <div class='medium-9 large-10 columns' id='content'>
    {{else:}}
@@ -101,7 +101,6 @@
        {{if response.flash:}}<div class='alert alert-success'>{{=response.flash}}</div>{{pass}}
       </div>
      </div>
-     {{#include "breadcrumbs.html"}}
      {{include}}
     </div>
    </div>
@@ -109,7 +108,7 @@
   <footer>
    <div id='footer'>
     <div class='medium-12 columns'>
-     {{include "../modules/templates/%s/views/footer.html" % response.s3.theme_layouts}}
+     {{include "../modules/templates/CCC/views/footer.html"}}
      {{if s3.debug:}}
      <div class="row">
       <div class='medium-12 columns'>{{=s3.toolbar()}}</div>
