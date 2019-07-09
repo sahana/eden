@@ -36,44 +36,41 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        menu = [MM("Volunteer Your Time", c="default", f="index", args="volunteer",
-                   ),
-                MM("Donate Items", c="default", f="index", args="donate",
-                   ),
-                ]
-
         auth = current.auth
-        if auth.is_logged_in():
-            menu.append(MM("General Information and Advice", c="cms", f="post", m="datalist"))
+        if not auth.is_logged_in():
+            menu = [MM("Volunteer Your Time", c="default", f="index", args="volunteer"),
+                    MM("Donate Items", c="default", f="index", args="donate"),
+                    ]
+            return menu
 
         if auth.s3_has_role("ADMIN"):
-            menu += [MM("Events", c="req", f="req",
-                        ),
-                     MM("All Documents", c="doc", f="document", m="datalist",
-                        ),
-                     ]
+            menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
+                    MM("All Documents", c="doc", f="document", m="datalist"),
+                    MM("Volunteers", c="hrm", f="human_resource"),
+                    MM("Events", c="hrm", f="training_event"),
+                    MM("Opportunities", c="req", f="need"),
+                    MM("Messages", c="project", f="task"),
+                    ]
         elif auth.s3_has_role("VOLUNTEER"):
-            menu += [MM("Organisation Documents", c="doc", f="document", m="datalist",
-                        ),
-                     MM("Events", c="hrm", f="training_event",
-                        ),
-                     MM("Volunteer Opportunities", c="req", f="req",
-                        ),
-                     MM("Contact Organisation Admins", c="project", f="task", m="create",
-                        ),
-                     ]
+            menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
+                    MM("Organisation Documents", c="doc", f="document", m="datalist"),
+                    MM("Events", c="hrm", f="training_event"),
+                    MM("Opportunities", c="req", f="need"),
+                    MM("Contact Organisation Admins", c="project", f="task", m="create"),
+                    ]
         elif auth.s3_has_role("ORG_ADMIN"):
-            menu += [MM("Organisation Documents", c="doc", f="document", m="datalist",
-                        ),
-                     MM("Volunteers", c="hrm", f="human_resource",
-                        ),
-                     MM("Events", c="hrm", f="training_event",
-                        ),
-                     MM("Volunteer Opportunities", c="req", f="req",
-                        ),
-                     MM("Messages", c="project", f="task",
-                        ),
-                     ]
+            menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
+                    MM("Organisation Documents", c="doc", f="document", m="datalist"),
+                    MM("Volunteers", c="hrm", f="human_resource"),
+                    MM("Events", c="hrm", f="training_event"),
+                    MM("Opportunities", c="req", f="need"),
+                    MM("Messages", c="project", f="task"),
+                    ]
+        else:
+            menu = [MM("Volunteer Your Time", c="default", f="index", args="volunteer"),
+                    MM("Donate Items", c="default", f="index", args="donate"),
+                    MM("General Information and Advice", c="cms", f="post", m="datalist"),
+                    ]
 
         return menu
 
@@ -189,6 +186,27 @@ class S3OptionsMenu(default.S3OptionsMenu):
     # -------------------------------------------------------------------------
     @staticmethod
     def doc():
+        """ No Side Menu """
+
+        return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm():
+        """ No Side Menu """
+
+        return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project():
+        """ No Side Menu """
+
+        return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def req():
         """ No Side Menu """
 
         return None

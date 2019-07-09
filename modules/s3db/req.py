@@ -2728,19 +2728,20 @@ class RequestNeedsSkillsModel(S3Model):
     def model(self):
 
         T = current.T
+        crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
         # Needs <=> Skills
         #
         skill_id = self.hrm_skill_id # Load normal model
-        CREATE = current.response.s3.crud_strings["hrm_skill"].label_create
+        CREATE_SKILL = crud_strings["hrm_skill"].label_create
 
         tablename = "req_need_skill"
         self.define_table(tablename,
                           self.req_need_id(empty = False),
                           skill_id(comment = S3PopupLink(c = "hrm",
                                                          f = "skill",
-                                                         label = CREATE,
+                                                         label = CREATE_SKILL,
                                                          tooltip = None,
                                                          vars = {"prefix": "req"},
                                                          ),
@@ -2766,6 +2767,21 @@ class RequestNeedsSkillsModel(S3Model):
                                                           ),
                                                  ),
                        )
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Skill"),
+            title_list = T("Skills"),
+            title_display = T("Skill"),
+            title_update = T("Edit Skill"),
+            #title_upload = T("Import Skills"),
+            label_list_button = T("List Skills"),
+            label_delete_button = T("Delete Skill"),
+            msg_record_created = T("Skill added"),
+            msg_record_modified = T("Skill updated"),
+            msg_record_deleted = T("Skill deleted"),
+            msg_list_empty = T("No Skills currently registered for this Request"),
+            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

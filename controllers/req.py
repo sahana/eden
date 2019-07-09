@@ -29,7 +29,7 @@ def index_alt():
 def is_affiliated():
     """
         Check if User is affiliated to an Organisation
-        @ToDo: Move this elsewhere
+        @ToDo: Move this elsewhere, like s3aaa or s3db/org
     """
 
     if not auth.is_logged_in():
