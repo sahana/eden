@@ -321,7 +321,7 @@ def dojs(dogis = False, warnings = True):
         import closure
         use_compressor = "closure"
         info("using local Closure Compiler")
-    except Exception, E:
+    except Exception as E:
         info("No closure (%s)" % E)
         info("Download from http://dl.google.com/closure-compiler/compiler-latest.zip")
         try:
