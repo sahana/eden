@@ -42,7 +42,7 @@ from gluon.storage import Storage
 from gluon.contenttype import contenttype
 from gluon.languages import lazyT
 
-from s3compat import StringIO, basestring, xrange
+from s3compat import BytesIO, basestring, xrange
 from ..s3codec import S3Codec
 from ..s3utils import s3_strip_markup, s3_unicode, s3_str
 
@@ -466,7 +466,7 @@ class EdenDocTemplate(BaseDocTemplate):
             Set up the standard page templates
         """
 
-        self.output = StringIO()
+        self.output = BytesIO()
 
         if orientation == "Auto":
             # Start with "Portrait", allow later adjustment

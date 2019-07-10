@@ -37,7 +37,7 @@ from gluon import *
 from gluon.contenttype import contenttype
 from gluon.storage import Storage
 
-from s3compat import INTEGER_TYPES, StringIO, xrange
+from s3compat import INTEGER_TYPES, BytesIO, xrange
 from ..s3codec import S3Codec
 from ..s3utils import s3_str, s3_strip_markup, s3_unicode
 
@@ -135,7 +135,7 @@ class S3XLS(S3Codec):
                                     rows: [{key:value}],
                                     }
             @param title: the title for the output document
-            @param as_stream: return the buffer (StringIO) rather than
+            @param as_stream: return the buffer (BytesIO) rather than
                               its contents (str), useful when the output
                               is supposed to be stored locally
             @param attr: keyword parameters
@@ -497,7 +497,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
             sheet.horz_split_pos = 1
 
         # Write output
-        output = StringIO()
+        output = BytesIO()
         book.save(output)
         output.seek(0)
 
@@ -525,7 +525,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
             @returns: the XLS file as stream
         """
 
-        output = StringIO()
+        output = BytesIO()
 
         book = S3PivotTableXLS(pt).encode(title)
         book.save(output)

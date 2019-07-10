@@ -40,7 +40,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3compat import xrange
+from s3compat import PY2, xrange
 from s3dal import Expression, S3DAL
 from .s3utils import s3_orderby_fields, s3_str, s3_unicode, s3_set_extension
 
@@ -693,6 +693,10 @@ class S3DataTable(object):
         # will then be parsed by s3.dataTable.js and the values used.
         config = Storage()
         config.id = id
+
+        # Py2 action-button labels are utf-8 encoded str (unicode in Py3)
+        config.utf8 = True if PY2 else False
+
         attr_get = attr.get
         config.dom = attr_get("dt_dom", settings.get_ui_datatables_dom())
         config.lengthMenu = attr_get("dt_lengthMenu",
