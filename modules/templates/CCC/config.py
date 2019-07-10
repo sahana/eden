@@ -520,7 +520,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
 
-        from s3 import S3SQLCustomForm, S3TextFilter
+        from s3 import S3OptionsFilter, S3SQLCustomForm, S3TextFilter
 
         s3db = current.s3db
 
@@ -567,6 +567,7 @@ def config(settings):
                          "person_id$last_name",
                          "job_title_id$name",
                          "comments",
+                         "person_id$competency.skill_id$name",
                          ]
         if current.auth.s3_has_role("ADMIN"):
             list_fields.insert(0, "organisation_id")
@@ -587,6 +588,8 @@ def config(settings):
                                                       label = "",
                                                       _placeholder = T("Search"),
                                                       ),
+                                         S3OptionsFilter("person_id$competency.skill_id",
+                                                         ),
                                          ],
                        )
 
@@ -665,19 +668,72 @@ def config(settings):
             else:
                 result = True
 
-            s3.crud_strings[r.tablename] = Storage(
-                label_create = T("New Volunteer"),
-                title_display = T("Volunteer Details"),
-                title_list = T("Volunteers"),
-                title_update = T("Edit Volunteer"),
-                #title_upload = T("Import Volunteers"),
-                label_list_button = T("List Volunteers"),
-                label_delete_button = T("Delete Volunteer"),
-                msg_record_created = T("Volunteer added"),
-                msg_record_modified = T("Volunteer updated"),
-                msg_record_deleted = T("Volunteer deleted"),
-                msg_list_empty = T("No Volunteers currently registered")
-            )
+            if r.get_vars.get("reserves"):
+                # Reserve Volunteers
+                from s3 import FS, S3OptionsFilter, S3TextFilter
+                resource = r.resource
+                # Filter out people affiliated with an Organisation
+                resource.add_filter(FS("human_resource.id") == None)
+                # Filter out people with the Admin role
+                db = current.db
+                mtable = db.auth_membership
+                gtable = db.auth_group
+                query = (gtable.uuid == "ADMIN") & \
+                        (gtable.id == mtable.group_id)
+                admins = db(query).select(mtable.user_id)
+                admins = [a.user_id for a in admins]
+                resource.add_filter(~FS("user.id").belongs(admins))
+
+                resource.configure(list_fields = ["first_name",
+                                                  "middle_name",
+                                                  "last_name",
+                                                  (T("Skills"), "competency.skill_id"),
+                                                  (T("Email"), "email.value"),
+                                                  (T("Mobile Phone"), "phone.value"),
+                                                  ],
+                                   filter_widgets = [S3TextFilter(["first_name",
+                                                                   "middle_name",
+                                                                   "last_name",
+                                                                   "comments",
+                                                                   "competency.skill_id$name",
+                                                                   ],
+                                                                  #formstyle = text_filter_formstyle,
+                                                                  label = "",
+                                                                  _placeholder = T("Search"),
+                                                                  ),
+                                                     S3OptionsFilter("competency.skill_id",
+                                                                     ),
+                                                     ],
+                                   )
+                s3.crud_strings[r.tablename] = Storage(
+                    label_create = T("New Reserve Volunteer"),
+                    title_display = T("Reserve Volunteer Details"),
+                    title_list = T("Reserve Volunteers"),
+                    title_update = T("Edit Reserve Volunteer"),
+                    #title_upload = T("Import Reserve Volunteers"),
+                    label_list_button = T("List Reserve Volunteers"),
+                    label_delete_button = T("Delete Reserve Volunteer"),
+                    msg_record_created = T("Reserve Volunteer added"),
+                    msg_record_modified = T("Reserve Volunteer updated"),
+                    msg_record_deleted = T("Reserve Volunteer deleted"),
+                    msg_list_empty = T("No Reserve Volunteers currently registered")
+                )
+            else:
+                # Organisation Volunteers
+                # (only used for hrm/person profile)
+                s3.crud_strings[r.tablename] = Storage(
+                    label_create = T("New Volunteer"),
+                    title_display = T("Volunteer Details"),
+                    title_list = T("Volunteers"),
+                    title_update = T("Edit Volunteer"),
+                    #title_upload = T("Import Volunteers"),
+                    label_list_button = T("List Volunteers"),
+                    label_delete_button = T("Delete Volunteer"),
+                    msg_record_created = T("Volunteer added"),
+                    msg_record_modified = T("Volunteer updated"),
+                    msg_record_deleted = T("Volunteer deleted"),
+                    msg_list_empty = T("No Volunteers currently registered")
+                )
 
             return result
         s3.prep = prep

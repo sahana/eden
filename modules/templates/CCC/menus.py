@@ -46,7 +46,7 @@ class S3MainMenu(default.S3MainMenu):
         if auth.s3_has_role("ADMIN"):
             menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
                     MM("All Documents", c="doc", f="document", m="datalist"),
-                    MM("Volunteers", c="hrm", f="human_resource"),
+                    MM("Volunteers", c="hrm", f="human_resource")(MM("Reserves", c="pr", f="person", vars={"reserves": 1})),
                     MM("Events", c="hrm", f="training_event"),
                     MM("Opportunities", c="req", f="need"),
                     MM("Messages", c="project", f="task"),
@@ -61,7 +61,7 @@ class S3MainMenu(default.S3MainMenu):
         elif auth.s3_has_role("ORG_ADMIN"):
             menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
                     MM("Organisation Documents", c="doc", f="document", m="datalist"),
-                    MM("Volunteers", c="hrm", f="human_resource"),
+                    MM("Volunteers", c="hrm", f="human_resource")(MM("Reserves", c="pr", f="person", vars={"reserves": 1})),
                     MM("Events", c="hrm", f="training_event"),
                     MM("Opportunities", c="req", f="need"),
                     MM("Messages", c="project", f="task"),
