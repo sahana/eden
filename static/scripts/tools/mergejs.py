@@ -24,7 +24,7 @@
 #  This example will cause the script to walk the `Geo` and
 #  `CrossBrowser` directories--and subdirectories thereof--and import
 #  all `*.js` files encountered. The dependency declarations will be extracted
-#  and then the source code from imported files will be output to 
+#  and then the source code from imported files will be output to
 #  a file named `openlayers.js` in an order which fulfils the dependencies
 #  specified.
 #
@@ -33,13 +33,18 @@
 #
 # -- Copyright 2005-2011 OpenLayers contributors / OpenLayers project --
 #
+# @status: fixed for Py3
 
 # TODO: Allow files to be excluded. e.g. `Crossbrowser/DebugMode.js`?
 # TODO: Report error when dependency can not be found rather than KeyError.
 
+from __future__ import print_function
+
 import re
 import os
 import sys
+
+PY2 = sys.version_info[0] == 2
 
 SUFFIX_JAVASCRIPT = ".js"
 
@@ -78,7 +83,7 @@ def usage(filename):
     """
     Displays a usage message.
     """
-    print "%s [-c <config file>] <output.js> <directory> [...]" % filename
+    print("%s [-c <config file>] <output.js> <directory> [...]" % filename)
 
 
 class Config:
@@ -110,7 +115,7 @@ class Config:
     The files list in the `exclude` section will not be imported.
 
     Any text appearing after a # symbol indicates a comment.
-    
+
     """
 
     def __init__(self, filename):
@@ -139,7 +144,7 @@ def undesired(filepath, excludes):
                 exclude = True
                 break
     return exclude
-            
+
 
 def run (sourceDirectory, outputFilename = None, configFile = None):
     cfg = None
@@ -174,12 +179,18 @@ def run (sourceDirectory, outputFilename = None, configFile = None):
     ## Import file source code
     ## TODO: Do import when we walk the directories above?
     for filepath in allFiles:
-        print "Importing: %s" % filepath
+        print("Importing: %s" % filepath)
         fullpath = os.path.join(sourceDirectory, filepath).strip()
-        content = open(fullpath, "U").read() # TODO: Ensure end of line @ EOF?
+        if PY2:
+            with open(fullpath, "U") as infile:
+                content = infile.read()
+        else:
+            with open(fullpath, "rt", encoding="utf-8") as infile:
+                content = infile.read()
+        #content = open(fullpath, "U").read() # TODO: Ensure end of line @ EOF?
         files[filepath] = SourceFile(filepath, content) # TODO: Chop path?
 
-    print
+    print()
 
     from toposort import toposort
 
@@ -190,54 +201,60 @@ def run (sourceDirectory, outputFilename = None, configFile = None):
         complete = True
 
         ## Resolve the dependencies
-        print "Resolution pass %s... " % resolution_pass
-        resolution_pass += 1 
+        print("Resolution pass %s... " % resolution_pass)
+        resolution_pass += 1
 
         for filepath, info in files.items():
             for path in info.requires:
-                if not files.has_key(path):
+                if path not in files:
                     complete = False
                     fullpath = os.path.join(sourceDirectory, path).strip()
                     if os.path.exists(fullpath):
-                        print "Importing: %s" % path
-                        content = open(fullpath, "U").read() # TODO: Ensure end of line @ EOF?
+                        print("Importing: %s" % path)
+                        if PY2:
+                            with open(fullpath, "U") as infile:
+                                content = infile.read()
+                        else:
+                            with open(fullpath, "rt", encoding="utf-8") as infile:
+                                content = infile.read()
+                        #content = open(fullpath, "U").read() # TODO: Ensure end of line @ EOF?
                         files[path] = SourceFile(path, content) # TODO: Chop path?
                     else:
                         raise MissingImport("File '%s' not found (required by '%s')." % (path, filepath))
-        
+
     # create dictionary of dependencies
     dependencies = {}
     for filepath, info in files.items():
         dependencies[filepath] = info.requires
 
-    print "Sorting..."
+    print("Sorting...")
     order = toposort(dependencies) #[x for x in toposort(dependencies)]
 
     ## Move forced first and last files to the required position
     if cfg:
-        print "Re-ordering files..."
+        print("Re-ordering files...")
         order = cfg.forceFirst + [item
                      for item in order
                      if ((item not in cfg.forceFirst) and
                          (item not in cfg.forceLast))] + cfg.forceLast
-    
-    print
+
+    print()
     ## Output the files in the determined order
     result = []
 
     for fp in order:
         f = files[fp]
-        print "Exporting: ", f.filepath
+        print("Exporting: ", f.filepath)
         result.append(HEADER % f.filepath)
         source = f.source
         result.append(source)
         if not source.endswith("\n"):
             result.append("\n")
 
-    print "\nTotal files merged: %d " % len(files)
+    print("\nTotal files merged: %d " % len(files))
 
     if outputFilename:
-        print "\nGenerating: %s" % (outputFilename)
+        print("\nGenerating: %s" % (outputFilename))
         open(outputFilename, "w").write("".join(result))
     return "".join(result)
 
@@ -245,7 +262,7 @@ if __name__ == "__main__":
     import getopt
 
     options, args = getopt.getopt(sys.argv[1:], "-c:")
-    
+
     try:
         outputFilename = args[0]
     except IndexError:
@@ -260,6 +277,6 @@ if __name__ == "__main__":
     configFile = None
     if options and options[0][0] == "-c":
         configFile = options[0][1]
-        print "Parsing configuration file: %s" % filename
+        print("Parsing configuration file: %s" % filename)
 
     run( sourceDirectory, outputFilename, configFile )
