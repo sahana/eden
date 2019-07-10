@@ -35,7 +35,7 @@ def index():
     #total_agencies = define_resource("po_referral_organisation",
     #                                 filter=filter).count(distinct=True)
     total_agencies = define_resource("po_organisation_household").select(fields=["organisation_id"])
-    total_agencies = len(set([o["po_organisation_household.organisation_id"] for o in total_agencies.rows]))
+    total_agencies = len({o["po_organisation_household.organisation_id"] for o in total_agencies.rows})
 
     # => Number of follow ups (broken down into pending/completed)
     # Option 1

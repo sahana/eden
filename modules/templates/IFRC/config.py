@@ -9,7 +9,7 @@ from gluon.storage import Storage
 
 from s3 import S3Represent
 
-from controllers import deploy_index
+from .controllers import deploy_index
 
 def config(settings):
     """
@@ -2423,7 +2423,7 @@ def config(settings):
         click = "Please click this link to complete the survey"
         line4 = "Thank you for your participation."
         translations = {}
-        languages = list(set([p["auth_user.language"] for p in persons]))
+        languages = list({p["auth_user.language"] for p in persons})
         if default_language not in languages:
             languages.append(default_language)
         date_represent = S3DateTime.date_represent # We want Dates not datetime which etable.start_date uses
@@ -3741,7 +3741,7 @@ def config(settings):
             from s3 import s3_comments_widget, IS_ONE_OF, S3Represent, S3SQLCustomForm#, S3MultiSelectWidget
             db = current.db
             s3db = current.s3db
-            
+
             # Limit Orgs to RC roots
             ttable = s3db.org_organisation_type
             try:
@@ -7643,9 +7643,9 @@ def config(settings):
                         # Use default form (legacy)
                         s3db.clear_config("hrm_human_resource", "crud_form")
 
-            
+
             if controller == "deploy":
-                
+
                 AP = _is_asia_pacific()
                 if AP:
                     from s3 import S3SQLCustomForm, S3SQLInlineComponent

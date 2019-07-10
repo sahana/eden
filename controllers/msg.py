@@ -79,7 +79,7 @@ def contact():
     """
         RESTful CRUD controller for the Contact Form
     """
-    
+
     def prep(r):
         if not auth.s3_has_role("ADMIN"):
             r.method = "create"
@@ -1505,10 +1505,7 @@ def twitter_search():
     table.is_processed.readable = False
     table.is_searched.readable = False
 
-    langs = settings.get_L10n_languages().keys()
-
     # Tweak languages to those supported by Twitter
-
     S3Msg = s3base.S3Msg()
     try:
         import tweepy
@@ -1523,7 +1520,7 @@ def twitter_search():
         twitter_api = twitter_settings[0]
 
         try:
-            supported_languages = map(lambda x: str(x["code"]), twitter_api.supported_languages())
+            supported_languages = [str(x["code"]) for x in twitter_api.supported_languages()]
         except (tweepy.TweepError, AttributeError):
             # List according to Twitter 1.1 API https://dev.twitter.com/docs/api/1.1/get/help/languages
             pass
@@ -1534,6 +1531,7 @@ def twitter_search():
     new_langs = []
     lang_default = current.response.s3.language
 
+    langs = set(settings.get_L10n_languages().keys())
     for l in langs:
         if l in supported_languages:
             new_langs.append(l)
@@ -2269,16 +2267,16 @@ def readKeyGraph(queryID):
 
     f = open("%s.txt" % queryID, "r")
 
-    topics = int(f.next())
+    topics = int(next(f))
 
     nodelabel = {}
     E = []
     nodetopic = {}
     for x in range(0, topics):
         thisnodes = []
-        nodes = int(f.next().split("KEYGRAPH_NODES:")[1])
+        nodes = int(next(f).split("KEYGRAPH_NODES:")[1])
         for y in range(0, nodes):
-            s = f.next()
+            s = next(f)
             nodeid = s.split(":")[0]
             nodetopic[str(nodeid)] = x
             l1 = s.split(":")[1]
@@ -2287,17 +2285,17 @@ def readKeyGraph(queryID):
                 nodelabel[str(nodeid)] = unicode(l2.strip())
             except:
                 pass
-        edges = int(f.next().split("KEYGRAPH_EDGES:")[1])
+        edges = int(next(f).split("KEYGRAPH_EDGES:")[1])
         edges = edges / 2
         for y in range(0,edges):
-            s = f.next()
+            s = next(f)
             n1 = s.split(" ")[0].strip()
             n2 = s.split(" ")[1].strip()
             if (n1 in nodelabel.keys()) and (n2 in nodelabel.keys()):
                 E.append((str(n1), str(n2)))
 
-        f.next()
-        f.next()
+        next(f)
+        next(f)
 
     """
     for x in range(0,len(E)):
@@ -2312,9 +2310,9 @@ def readKeyGraph(queryID):
     g.add_vertices([ str(s) for s in nodelabel.keys()])
     #g.add_nodes_from(nodelabel)
     g.add_edges(E)
-    g.vs["name"] = nodelabel.values()
+    g.vs["name"] = list(nodelabel.values())
     g.vs["label"] = g.vs["name"]
-    g.vs["doc_id"] = nodelabel.keys()
+    g.vs["doc_id"] = list(nodelabel.keys())
     layout = g.layout_lgl()
     #layout = g.layout_kamada_kawai()
     visual_style = {}

@@ -541,7 +541,7 @@ def config(settings):
 
                 if method == "filter":
                     # Apply filter_vars
-                    for k, v in get_vars.iteritems():
+                    for k, v in get_vars.items():
                         # We only expect a maximum of 1 of these, no need to append
                         if k == "dashboard":
                             from templates.WACOP.controllers import dashboard_filter
@@ -2086,7 +2086,7 @@ def config(settings):
                                   tablename = tablename)
         elif method == "filter":
             # Apply filter_vars
-            for k, v in r.get_vars.iteritems():
+            for k, v in r.get_vars.items():
                 # We only expect a maximum of 1 of these, no need to append
                 from s3 import FS
                 current.response.s3.filter = (FS(k) == v)

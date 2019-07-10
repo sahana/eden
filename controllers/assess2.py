@@ -2499,7 +2499,7 @@ def custom_assess(custom_assess_fields, location_id=None):
                                                           limitby=(0, 1)
                                                           ).first()
                     sector_id = row.sector_id
-                    if sector_id in sector_summary.keys():
+                    if sector_id in sector_summary:
                         sector_summary[sector_id].append(severity)
                     elif sector_id:
                         sector_summary[sector_id] = [severity]
@@ -2508,7 +2508,7 @@ def custom_assess(custom_assess_fields, location_id=None):
 
         # Add Cluster summaries
         # @ToDo: make sure that this doesn't happen if there are sectors in the assess
-        for sector_id in sector_summary.keys():
+        for sector_id in sector_summary:
             severity_values = sector_summary[sector_id]
             db.assess_summary.insert(assess_id = assess_id,
                                      sector_id = sector_id,

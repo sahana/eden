@@ -1495,7 +1495,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                        "comments",
                        ]
 
-        from controllers import project_ActivityRepresent
+        from .controllers import project_ActivityRepresent
         natable = s3db.req_need_activity
         #f = natable.activity_id
         #f.represent = project_ActivityRepresent()
@@ -1633,7 +1633,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             on the homepage
         """
 
-        from controllers import HomepageStatistics
+        from .controllers import HomepageStatistics
         HomepageStatistics.update_data()
 
     settings.tasks.homepage_stats_update = homepage_stats_update
@@ -2137,7 +2137,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                        ]
 
         if r.id and r.resource.tablename == tablename and r.record.need_id:
-            from controllers import req_NeedRepresent
+            from .controllers import req_NeedRepresent
             f = table.need_id
             f.represent = req_NeedRepresent()
             f.writable = False

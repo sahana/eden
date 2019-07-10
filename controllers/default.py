@@ -115,7 +115,7 @@ def index():
                 if hasattr(custom, page):
                     controller = getattr(custom, page)()
                 elif page != "login":
-                    raise(HTTP(404, "Function not found: %s()" % page))
+                    raise HTTP(404, "Function not found: %s()" % page)
                 else:
                     controller = custom.index()
                 output = controller()
@@ -1048,7 +1048,7 @@ def apath(path=""):
     opath = up(request.folder)
     # @ToDo: This path manipulation is very OS specific.
     while path[:3] == "../": opath, path=up(opath), path[3:]
-    return os.path.join(opath,path).replace("\\", "/")
+    return os.path.join(opath, path).replace("\\", "/")
 
 def about():
     """
@@ -1524,7 +1524,7 @@ def get_settings():
         auth.permission.fail()
 
     elif not settings.get_base_allow_testing():
-        raise(HTTP("405", "Testing not allowed"))
+        raise HTTP("405", "Testing not allowed")
 
     else:
         arg = request.args(0)
@@ -1547,7 +1547,7 @@ def get_settings():
 
             return response.json(return_settings)
 
-        raise(HTTP("400", "Invalid/Missing argument"))
+        raise HTTP("400", "Invalid/Missing argument")
 
 # -----------------------------------------------------------------------------
 def _custom_view(filename):

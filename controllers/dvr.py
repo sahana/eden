@@ -585,7 +585,7 @@ def group_membership():
                                  person_id = record_id,
                                  group_head = True,
                                  )
-                    group_ids = set((group_id,))
+                    group_ids = {group_id}
                 resource.add_filter(FS("person_id") != record_id)
             else:
                 group_ids = set()

@@ -36,7 +36,7 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        from config import drk_default_shelter
+        from .config import drk_default_shelter
         shelter_id = drk_default_shelter()
 
         has_role = current.auth.s3_has_role
@@ -216,7 +216,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def cr():
         """ CR / Shelter Registry """
 
-        from config import drk_default_shelter
+        from .config import drk_default_shelter
         shelter_id = drk_default_shelter()
 
         if not shelter_id:

@@ -98,7 +98,7 @@ $('#show-login').click(function(e){
             s3.jquery_ready.append(script)
 
             # This user isn't yet logged-in
-            if current.request.cookies.has_key("registered"):
+            if "registered" in current.request.cookies:
                 # This browser has logged-in before
                 registered = True
 

@@ -543,7 +543,7 @@ def bg_graph_model():
             meta_graphmodel = dict(group='Undefined', color='#ECECEC')
 
         group = meta_graphmodel['group'].replace(' ', '')
-        if not subgraphs.has_key(group):
+        if group not in subgraphs:
             subgraphs[group] = dict(meta=meta_graphmodel, tables=[])
             subgraphs[group]['tables'].append(tablename)
         else:
@@ -552,7 +552,7 @@ def bg_graph_model():
         graph.add_node(tablename, name=tablename, shape='plaintext',
                        label=table_template(tablename))
 
-    for n, key in enumerate(subgraphs.iterkeys()):
+    for n, key in enumerate(subgraphs.keys()):
         graph.subgraph(nbunch=subgraphs[key]['tables'],
                     name='cluster%d' % n,
                     style='filled',

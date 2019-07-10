@@ -382,7 +382,7 @@ def save_vote():
 
     # Decode the data
     try:
-        rankings = request.post_vars.keys()[0].split(",")
+        rankings = list(request.post_vars.keys())[0].split(",")
     except IndexError:
         status = current.xml.json_message(False, 400, "No Options Ranked")
         raise HTTP(400, body=status)

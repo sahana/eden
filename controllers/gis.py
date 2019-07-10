@@ -149,7 +149,7 @@ def define_map(height = None,
     search = settings.get_gis_search_geonames()
 
     if config.wmsbrowser_url:
-        wms_browser = {"name" : config.wmsbrowser_name,
+        wms_browser = {"name": config.wmsbrowser_name,
                        "url" : config.wmsbrowser_url,
                        }
     else:
@@ -506,14 +506,14 @@ def location():
                             zoom = zoom + 2
                         else:
                             lat = lon = zoom = None
-                            bbox = {"lon_min" : record.lon_min,
-                                    "lat_min" : record.lat_min,
-                                    "lon_max" : record.lon_max,
-                                    "lat_max" : record.lat_max,
+                            bbox = {"lon_min": record.lon_min,
+                                    "lat_min": record.lat_min,
+                                    "lon_max": record.lon_max,
+                                    "lat_max": record.lat_max,
                                     }
-                        feature_resources = {"name"      : T("Location"),
-                                             "id"        : "location",
-                                             "active"    : True,
+                        feature_resources = {"name"  : T("Location"),
+                                             "id"    : "location",
+                                             "active": True,
                                              }
                         # Is there a layer defined for Locations?
                         ftable = s3db.gis_layer_feature
@@ -600,7 +600,7 @@ def location():
             table.end_date.readable = table.end_date.writable = False
             # Show the options for the currently-active gis_config
             levels = gis.get_relevant_hierarchy_levels(as_dict=True)
-            level_keys = levels.keys()
+            level_keys = list(levels.keys())
             if "L0" in level_keys:
                 # Don't add Countries
                 levels.popitem(last=False)
@@ -3530,8 +3530,8 @@ def maps():
         # Get the data from the POST
         source = request.body.read()
         if isinstance(source, basestring):
-            import cStringIO
-            source = cStringIO.StringIO(source)
+            from s3compat import StringIO
+            source = StringIO(source)
 
         # Decode JSON
         source = json.load(source)
@@ -3614,8 +3614,8 @@ def maps():
         # Get the data from the PUT
         source = request.body.read()
         if isinstance(source, basestring):
-            import cStringIO
-            source = cStringIO.StringIO(source)
+            from s3compat import StringIO
+            source = StringIO(source)
 
         # Decode JSON
         source = json.load(source)
@@ -3757,7 +3757,7 @@ def proxy():
     """
 
     import socket
-    import urllib2
+    from s3compat import URLError, urllib2, urlopen
     import cgi
 
     if auth.is_logged_in():
@@ -3799,7 +3799,7 @@ def proxy():
         qs = request["wsgi"].environ["QUERY_STRING"]
 
         d = cgi.parse_qs(qs)
-        if d.has_key("url"):
+        if "url" in d:
             url = d["url"][0]
         else:
             url = "http://www.openlayers.org"
@@ -3816,7 +3816,7 @@ def proxy():
     try:
         host = url.split("/")[2]
         if allowedHosts and not host in allowedHosts:
-            raise(HTTP(403, "Host not permitted: %s" % host))
+            raise HTTP(403, "Host not permitted: %s" % host)
 
         elif url.startswith("http://") or url.startswith("https://"):
             if method == "POST":
@@ -3825,29 +3825,29 @@ def proxy():
                 body = request.body.read(length)
                 r = urllib2.Request(url, body, headers)
                 try:
-                    y = urllib2.urlopen(r)
-                except urllib2.URLError:
-                    raise(HTTP(504, "Unable to reach host %s" % r))
+                    y = urlopen(r)
+                except URLError:
+                    raise HTTP(504, "Unable to reach host %s" % r)
             else:
                 # GET
                 try:
-                    y = urllib2.urlopen(url)
-                except urllib2.URLError:
-                    raise(HTTP(504, "Unable to reach host %s" % url))
+                    y = urlopen(url)
+                except URLError:
+                    raise HTTP(504, "Unable to reach host %s" % url)
 
             i = y.info()
-            if i.has_key("Content-Type"):
+            if "Content-Type" in i:
                 ct = i["Content-Type"]
             else:
                 ct = None
             if allowed_content_types:
                 # Check for allowed content types
                 if not ct:
-                    raise(HTTP(406, "Unknown Content"))
+                    raise HTTP(406, "Unknown Content")
                 elif not ct.split(";")[0] in allowed_content_types:
                     # @ToDo?: Allow any content type from allowed hosts (any port)
                     #if allowedHosts and not host in allowedHosts:
-                    raise(HTTP(403, "Content-Type not permitted"))
+                    raise HTTP(403, "Content-Type not permitted")
 
             msg = y.read()
             y.close()
@@ -3859,10 +3859,10 @@ def proxy():
 
         else:
             # Bad Request
-            raise(HTTP(400))
+            raise HTTP(400)
 
     except Exception as e:
-        raise(HTTP(500, "Some unexpected error occurred. Error text was: %s" % str(e)))
+        raise HTTP(500, "Some unexpected error occurred. Error text was: %s" % str(e))
 
 # =============================================================================
 def screenshot():

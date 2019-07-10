@@ -353,7 +353,7 @@ def importxml(db, xmlinput):
         @todo: deprecate
     """
 
-    import cStringIO
+    from s3compat import StringIO
     import xml.dom.minidom
 
     try:
@@ -365,7 +365,7 @@ def importxml(db, xmlinput):
     csvout = csvheader(parent, doc.childNodes[0].childNodes)
     for subnode in doc.childNodes:
         csvout = csvout + csvdata(subnode.childNodes)
-    fh = cStringIO.StringIO()
+    fh = StringIO()
     fh.write(csvout)
     fh.seek(0, 0)
     db[parent].import_from_csv_file(fh)
@@ -417,10 +417,7 @@ def submission():
     if not auth.s3_logged_in():
         auth.permission.fail()
 
-    try:
-        from cStringIO import StringIO    # Faster, where available
-    except:
-        from StringIO import StringIO
+    from s3compat import StringIO
     import cgi
     from lxml import etree
 
