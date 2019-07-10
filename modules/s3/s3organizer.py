@@ -231,7 +231,7 @@ class S3Organizer(S3Method):
             resource_config["colors"] = config.get("colors")
 
         # Generate form key
-        formkey = uuid.uuid4().get_hex()
+        formkey = uuid.uuid4().hex
 
         # Store form key in session
         session = current.session

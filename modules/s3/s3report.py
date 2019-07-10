@@ -2438,8 +2438,6 @@ class S3PivotTable(object):
         ftype = rfield.ftype
 
         sortby = "value"
-        key = lambda item: item[index][sortby]
-
         if ftype in ("integer", "string"):
             # Sort option keys by their representation
             requires = rfield.requires
@@ -2455,15 +2453,22 @@ class S3PivotTable(object):
             # Sort foreign keys by their representation
             sortby = "text"
 
-        elif ftype == "date":
-            # Can't compare date objects to None
-            mindate = datetime.date.min
-            key = lambda item: item[index][sortby] or mindate
+        # Replacements for None when sorting
+        minnum = -float('inf')
+        minval = {"integer": minnum,
+                  "float": minnum,
+                  "string": "",
+                  "date": datetime.date.min,
+                  "datetime": datetime.datetime.min,
+                  }
 
-        elif ftype == "datetime":
-            # Can't compare datetime objects to None
-            mindate = datetime.datetime.min
-            key = lambda item: item[index][sortby] or mindate
+        # Sorting key function
+        def key(item):
+            value = item[index][sortby]
+            if value is None:
+                return "" if sortby == "text" else minval.get(ftype)
+            else:
+                return value
 
         items.sort(key=key)
 
