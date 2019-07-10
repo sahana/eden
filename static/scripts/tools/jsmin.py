@@ -28,9 +28,14 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+#
+# @status: fixed for Py3
 # */
 
-from StringIO import StringIO
+try:
+    from io import StringIO
+except:
+    from StringIO import StringIO
 
 def jsmin(js):
     ins = StringIO(js)
