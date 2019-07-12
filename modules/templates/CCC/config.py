@@ -211,18 +211,21 @@ def config(settings):
 
     settings.hrm.event_course_mandatory = False
 
-    settings.project.task_priority_opts = {1: T("Low"),
-                                           2: T("Medium"),
-                                           3: T("High"),
-                                           }
-    settings.project.task_status_opts = {1: T("New"),
-                                         2: T("In-Progress"),
-                                         3: T("Closed"),
-                                         }
+    settings.pr.hide_third_gender = False
+
+    #settings.project.task_priority_opts = {1: T("Low"),
+    #                                       2: T("Medium"),
+    #                                       3: T("High"),
+    #                                       }
+    #settings.project.task_status_opts = {1: T("New"),
+    #                                     2: T("In-Progress"),
+    #                                     3: T("Closed"),
+    #                                     }
 
     # Now using req_need, so unused:
     #settings.req.req_type = ("People",)
 
+    # -------------------------------------------------------------------------
     def ccc_realm_entity(table, row):
         """
             Assign a Realm Entity to records
@@ -298,14 +301,37 @@ def config(settings):
                                    )),
                           rheader_tabs)
 
+        elif tablename == "org_organisation":
+            T = current.T
+            tabs = [(T("Basic Details"), None),
+                    (T("Offices"), "office"),
+                    (T("Locations Served"), "location"),
+                    (T("Volunteers"), "human_resource"),
+                    ]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            from s3 import s3_fullname
+
+            table = r.table
+            rheader = DIV(TABLE(TR(TH("%s: " % T("Name")),
+                                   record.name,
+                                   )),
+                          rheader_tabs)
+
         elif tablename == "pr_person":
             T = current.T
             tabs = [(T("Basic Details"), None),
                     (T("Address"), "address"),
                     (T("Contacts"), "contacts"),
-                    (T("Skills"), "competency"),
+                    (T("Emergency Contacts"), "contact_emergency"),
                     ]
-            if current.auth.s3_has_role("ORG_ADMIN"):
+            has_role = current.auth.s3_has_role
+            if has_role("DONOR"):
+                # @ToDo: Add Items offered
+                pass
+            else:
+                tabs.append((T("Skills"), "competency"))
+            if has_role("ORG_ADMIN"):
                 tabs.insert(1, (T("Affiliation"), "human_resource"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -521,10 +547,19 @@ def config(settings):
     def customise_hrm_human_resource_resource(r, tablename):
 
         from s3 import S3OptionsFilter, S3SQLCustomForm, S3TextFilter
+        from s3layouts import S3PopupLink
 
         s3db = current.s3db
 
         table = s3db.hrm_human_resource
+        f = table.job_title_id
+        f.label = T("Role")
+        f.comment = S3PopupLink(c = "hrm",
+                                f = "job_title",
+                                label = T("New Job Title"),
+                                title = T("Role"),
+                                tooltip = T("The volunteer's role"),
+                                )
 
         if r.controller == "default":
             list_fields = ["job_title_id",
@@ -596,6 +631,25 @@ def config(settings):
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
     # -------------------------------------------------------------------------
+    def customise_hrm_job_title_resource(r, tablename):
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("New Role"),
+            title_display = T("Role Details"),
+            title_list = T("Roles"),
+            title_update = T("Edit Role"),
+            #title_upload = T("Import Roles"),
+            label_list_button = T("List Roles"),
+            label_delete_button = T("Delete Role"),
+            msg_record_created = T("Role added"),
+            msg_record_modified = T("Role updated"),
+            msg_record_deleted = T("Role deleted"),
+            msg_list_empty = T("No Roles currently registered")
+        )
+
+    settings.customise_hrm_job_title_resource = customise_hrm_job_title_resource
+
+    # -------------------------------------------------------------------------
     def customise_hrm_training_event_resource(r, tablename):
 
         from s3 import S3LocationSelector, S3OptionsFilter, S3SQLCustomForm, S3TextFilter
@@ -654,6 +708,89 @@ def config(settings):
 
     settings.customise_hrm_training_event_controller = customise_hrm_training_event_controller
 
+    # -------------------------------------------------------------------------
+    def customise_org_organisation_resource(r, tablename):
+
+        from s3 import S3OptionsFilter, S3SQLCustomForm, S3SQLInlineLink, S3TextFilter
+
+        s3db = current.s3db
+
+        #table = s3db.org_organisation
+
+        s3db.configure("org_organisation",
+                       crud_form = S3SQLCustomForm("name",
+                                                   S3SQLInlineLink("organisation_type",
+                                                                   field = "organisation_type_id",
+                                                                   label = T("Type"),
+                                                                   ),
+                                                   "phone",
+                                                   "website",
+                                                   "comments",
+                                                   ),
+                       list_fields = ["name",
+                                      (T("Type"), "organisation_organisation_type.organisation_type_id"),
+                                      ],
+                       filter_widgets = [S3TextFilter(["name",
+                                                       "comments",
+                                                       ],
+                                                      #formstyle = text_filter_formstyle,
+                                                      label = "",
+                                                      _placeholder = T("Search"),
+                                                      ),
+                                         S3OptionsFilter("organisation_organisation_type.organisation_type_id",
+                                                         label = T("Type"),
+                                                         ),
+                                         S3OptionsFilter("organisation_location.location_id",
+                                                         label = T("Locations Served"),
+                                                         ),
+                                        ],
+                       )
+
+    settings.customise_org_organisation_resource = customise_org_organisation_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_org_organisation_controller(**attr):
+
+        attr["rheader"] = ccc_rheader
+
+        return attr
+
+    settings.customise_org_organisation_controller = customise_org_organisation_controller
+
+    # -------------------------------------------------------------------------
+    def customise_org_organisation_location_resource(r, tablename):
+
+        from gluon import IS_EMPTY_OR, IS_IN_SET
+
+        s3db = current.s3db
+        gtable = s3db.gis_location
+        districts = current.db((gtable.level == "L2") & (gtable.L1 == "Cumbria")).select(gtable.id,
+                                                                                         gtable.name)
+        districts = {d.id:d.name for d in districts}
+
+        f = s3db.org_organisation_location.location_id
+        f.requires = IS_EMPTY_OR(IS_IN_SET(districts))
+        f.widget = None
+
+    settings.customise_org_organisation_location_resource = customise_org_organisation_location_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_person_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm
+
+        current.s3db.configure("pr_person",
+                               crud_form = S3SQLCustomForm("first_name",
+                                                           "middle_name",
+                                                           "last_name",
+                                                           "date_of_birth",
+                                                           (T("Gender"), "gender"),
+                                                           "comments",
+                                                           ),
+                               )
+
+    settings.customise_pr_person_resource = customise_pr_person_resource
+
     # -----------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
@@ -668,21 +805,20 @@ def config(settings):
             else:
                 result = True
 
-            if r.get_vars.get("reserves"):
+            get_vars_get = r.get_vars.get
+            if get_vars_get("reserves"):
                 # Reserve Volunteers
                 from s3 import FS, S3OptionsFilter, S3TextFilter
                 resource = r.resource
-                # Filter out people affiliated with an Organisation
-                resource.add_filter(FS("human_resource.id") == None)
-                # Filter out people with the Admin role
+                # Only include Reserves
                 db = current.db
                 mtable = db.auth_membership
                 gtable = db.auth_group
-                query = (gtable.uuid == "ADMIN") & \
+                query = (gtable.uuid == "RESERVE") & \
                         (gtable.id == mtable.group_id)
-                admins = db(query).select(mtable.user_id)
-                admins = [a.user_id for a in admins]
-                resource.add_filter(~FS("user.id").belongs(admins))
+                reserves = db(query).select(mtable.user_id)
+                reserves = [m.user_id for m in reserves]
+                resource.add_filter(FS("user.id").belongs(reserves))
 
                 resource.configure(list_fields = ["first_name",
                                                   "middle_name",
@@ -718,6 +854,58 @@ def config(settings):
                     msg_record_deleted = T("Reserve Volunteer deleted"),
                     msg_list_empty = T("No Reserve Volunteers currently registered")
                 )
+            elif get_vars_get("donors"):
+                # Donors
+                from s3 import FS, S3OptionsFilter, S3TextFilter
+                resource = r.resource
+                # Only include Donors
+                db = current.db
+                mtable = db.auth_membership
+                gtable = db.auth_group
+                query = (gtable.uuid == "DONOR") & \
+                        (gtable.id == mtable.group_id)
+                donors = db(query).select(mtable.user_id)
+                donors = [d.user_id for d in donors]
+                resource.add_filter(FS("user.id").belongs(donors))
+
+                resource.configure(list_fields = [# @ToDo: Add Organisation freetext
+                                                  "first_name",
+                                                  "middle_name",
+                                                  "last_name",
+                                                  # @ToDo: Add Items
+                                                  #(T("Skills"), "competency.skill_id"),
+                                                  (T("Email"), "email.value"),
+                                                  (T("Mobile Phone"), "phone.value"),
+                                                  ],
+                                   filter_widgets = [S3TextFilter(["first_name",
+                                                                   "middle_name",
+                                                                   "last_name",
+                                                                   "comments",
+                                                                   # @ToDo: Add Items
+                                                                   #"competency.skill_id$name",
+                                                                   ],
+                                                                  #formstyle = text_filter_formstyle,
+                                                                  label = "",
+                                                                  _placeholder = T("Search"),
+                                                                  ),
+                                                     # @ToDo: Add Items
+                                                     #S3OptionsFilter("competency.skill_id",
+                                                     #                ),
+                                                     ],
+                                   )
+                s3.crud_strings[r.tablename] = Storage(
+                    label_create = T("New Donor"),
+                    title_display = T("Donor Details"),
+                    title_list = T("Donors"),
+                    title_update = T("Edit Donor"),
+                    #title_upload = T("Import Donors"),
+                    label_list_button = T("List Donors"),
+                    label_delete_button = T("Delete Donor"),
+                    msg_record_created = T("Donor added"),
+                    msg_record_modified = T("Donor updated"),
+                    msg_record_deleted = T("Donor deleted"),
+                    msg_list_empty = T("No Donors currently registered")
+                )
             else:
                 # Organisation Volunteers
                 # (only used for hrm/person profile)
@@ -738,6 +926,9 @@ def config(settings):
             return result
         s3.prep = prep
         
+        # Hide the search box on component tabs, as confusing & not useful
+        attr["dtargs"] = {"dt_searching": False,
+                          }
         attr["rheader"] = ccc_rheader
 
         return attr
@@ -772,26 +963,26 @@ def config(settings):
             # @ToDo: Filter Assigned To to just OrgAdmins?
             pass
         else:
-            f = table.priority
-            f.default = 1
-            f.readable = f.writable = False
-            f = table.status
-            f.default = 1
-            f.readable = f.writable = False
-            table.pe_id.readable = table.pe_id.writable = False
+        #    f = table.priority
+        #    f.default = 1
+        #    f.readable = f.writable = False
+        #    f = table.status
+        #    f.default = 1
+        #    f.readable = f.writable = False
+        #    table.pe_id.readable = table.pe_id.writable = False
             table.comments.readable = table.comments.writable = False
 
         s3db.configure("project_task",
                        crud_form = S3SQLCustomForm("name",
                                                    "description",
-                                                   "priority",
-                                                   "status",
-                                                   "pe_id",
+                                                   #"priority",
+                                                   #"status",
+                                                   #"pe_id",
                                                    "comments",
                                                    ),
-                       list_fields = ["priority",
-                                      "status",
-                                      "pe_id",
+                       list_fields = [#"priority",
+                                      #"status",
+                                      #"pe_id",
                                       "created_by",
                                       "name",
                                       ],
@@ -803,14 +994,14 @@ def config(settings):
                                                       label = "",
                                                       _placeholder = T("Search"),
                                                       ),
-                                         S3OptionsFilter("priority",
-                                                         options = settings.get_project_task_priority_opts(),
-                                                         cols = 3,
-                                         ),
-                                         S3OptionsFilter("status",
-                                                         options = settings.get_project_task_status_opts(),
-                                                         cols = 3,
-                                         ),
+                                         #S3OptionsFilter("priority",
+                                         #                options = settings.get_project_task_priority_opts(),
+                                         #                cols = 3,
+                                         #                ),
+                                         #S3OptionsFilter("status",
+                                         #                options = settings.get_project_task_status_opts(),
+                                         #                cols = 3,
+                                         #                ),
                                         ],
                        )
 

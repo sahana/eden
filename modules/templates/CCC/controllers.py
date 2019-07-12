@@ -3,7 +3,7 @@
 import uuid
 
 from gluon import *
-from s3 import IS_ONE_OF, S3CustomController, S3MultiSelectWidget, s3_mark_required
+from s3 import IS_ONE_OF, S3CustomController, S3MultiSelectWidget, s3_mark_required, s3_phone_requires
 
 THEME = "CCC"
 
@@ -210,6 +210,66 @@ class donate(S3CustomController):
         return output
 
 # =============================================================================
+class donor(S3CustomController):
+    """ Custom Home Page """
+
+    def __call__(self):
+
+        output = {}
+
+        # Allow editing of page content from browser using CMS module
+        system_roles = current.auth.get_system_roles()
+        ADMIN = system_roles.ADMIN in current.session.s3.roles
+        s3db = current.s3db
+        table = s3db.cms_post
+        ltable = s3db.cms_post_module
+        module = "default"
+
+        resource = "Donor"
+        query = (ltable.module == module) & \
+                (ltable.resource == resource) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        item = current.db(query).select(table.body,
+                                        table.id,
+                                        limitby=(0, 1)).first()
+        if item:
+            if ADMIN:
+                item = DIV(XML(item.body),
+                           BR(),
+                           A(current.T("Edit"),
+                             _href = URL(c="cms", f="post",
+                                         args = [item.id, "update"],
+                                         vars = {"module": module,
+                                                 "resource": resource,
+                                                 },
+                                         ),
+                             _class="action-btn",
+                             ),
+                           )
+            else:
+                item = DIV(XML(item.body))
+        elif ADMIN:
+            if current.response.s3.crud.formstyle == "bootstrap":
+                _class = "btn"
+            else:
+                _class = "action-btn"
+            item = A(current.T("Edit"),
+                     _href = URL(c="cms", f="post", args="create",
+                                 vars = {"module": module,
+                                         "resource": resource,
+                                         },
+                                 ),
+                     _class="%s cms-edit" % _class,
+                     )
+        else:
+            item = ""
+        output["item"] = item
+
+        self._view(THEME, "donor.html")
+        return output
+
+# =============================================================================
 class register(S3CustomController):
     """ Custom Registration Page """
 
@@ -256,7 +316,7 @@ class register(S3CustomController):
             formfields = [utable.first_name,
                           utable.last_name,
                           Field("addr_L2",
-                                label = T("Where Based (District)"),
+                                label = T("District (if in Cumbria)"),
                                 requires = IS_EMPTY_OR(IS_IN_SET(districts)),
                                 ),
                           Field("addr_street",
@@ -267,6 +327,7 @@ class register(S3CustomController):
                                 ),
                           Field("mobile",
                                 label = T("Contact Number (Preferred)"),
+                                requires = s3_phone_requires,
                                 comment = DIV(_class = "tooltip",
                                               _title = "%s|%s" % (T("Contact Number (Preferred)"),
                                                                   T("Ideally a Mobile Number, so that we can send you Text Messages.")),
@@ -274,6 +335,7 @@ class register(S3CustomController):
                                 ),
                           Field("home_phone",
                                 label = T("Contact Number (Secondary)"),
+                                requires = IS_EMPTY_OR(s3_phone_requires),
                                 ),
                           utable.email,
                           utable[passfield],
@@ -290,11 +352,8 @@ class register(S3CustomController):
                           s3db.hrm_multi_skill_id(empty = False,
                                                   label = T("Volunteer Offer"),
                                                   ),
-                          Field("skills_other",
-                                label = T("If Other, please specify"),
-                                ),
-                          Field("free", "boolean",
-                                label = T("Offering to Volunteer Free of Charge?"),
+                          Field("skills_details",
+                                label = T("Please specify details"),
                                 ),
                           Field("where_operate", "list:string",
                                 label = T("Where would you be willing to operate?"),
@@ -309,15 +368,23 @@ class register(S3CustomController):
                                 label = T("Do you have any significant health or medical requirements?"),
                                 comment = T("such as asthma, allergies, diabetes, heart condition"),
                                 ),
-                          Field("emergency_contact",
-                                label = T("Person to be contacted in case of an emergency"),
-                                requires = IS_NOT_EMPTY(),
-                                ),
                           Field("convicted", "boolean",
                                 label = T("Have you ever been convicted of a criminal offence?"),
                                 ),
                           Field("pending_prosecutions", "boolean",
                                 label = T("Have you any prosecutions pending?"),
+                                ),
+                          Field("emergency_contact_name",
+                                label = T("Contact Name"),
+                                requires = IS_NOT_EMPTY(),
+                                ),
+                          Field("emergency_contact_number",
+                                label = T("Contact Number"),
+                                requires = s3_phone_requires,
+                                ),
+                          Field("emergency_contact_relationship",
+                                label = T("Relationship"),
+                                requires = IS_NOT_EMPTY(),
                                 ),
                           # GDPR Consent
                           Field("consent",
@@ -341,7 +408,7 @@ class register(S3CustomController):
 
             return formfields, required_fields
 
-        get_vars_get = current.request.get_vars.get
+        get_vars_get = request.get_vars.get
         org = get_vars_get("org")
         if org:
             # Volunteer for Existing Organisation
@@ -375,7 +442,7 @@ class register(S3CustomController):
                                 requires = IS_NOT_EMPTY(),
                                 ),
                           s3db.org_organisation_type_id(),
-                          Field("addr_L2",
+                          Field("addr_L2", "reference gis_location",
                                 label = T("Where Based (District)"),
                                 requires = IS_EMPTY_OR(IS_IN_SET(districts)),
                                 ),
@@ -384,6 +451,12 @@ class register(S3CustomController):
                                 ),
                           Field("addr_postcode",
                                 label = T("Postcode"),
+                                ),
+                          Field("where_operate", "list:reference gis_location",
+                                label = T("Where would you be willing to operate?"),
+                                requires = IS_EMPTY_OR(IS_IN_SET(districts, multiple=True)),
+                                widget = S3MultiSelectWidget(header="",
+                                                             selectedList=3),
                                 ),
                           # Group Leader 1
                           utable.first_name,
@@ -476,12 +549,12 @@ class register(S3CustomController):
                           Field("organisation",
                                 label = T("Name of Organization"),
                                 ),
-                          Field("addr_L2",
-                                label = T("Where Based (District)"),
-                                requires = IS_EMPTY_OR(IS_IN_SET(districts)),
-                                ),
                           Field("addr_street",
                                 label = T("Street Address"),
+                                ),
+                          Field("addr_L2", "reference gis_location",
+                                label = T("District"),
+                                requires = IS_EMPTY_OR(IS_IN_SET(districts)),
                                 ),
                           Field("addr_postcode",
                                 label = T("Postcode"),
@@ -521,17 +594,14 @@ class register(S3CustomController):
                                 widget = S3MultiSelectWidget(header="",
                                                              selectedList=3),
                                 ),
-                          Field("items_other",
-                                label = T("If Other, please specify"),
+                          Field("items_details",
+                                label = T("Please specify details"),
                                 ),
-                          Field("free", "boolean",
-                                label = T("Is the offer Free of Charge?"),
-                                ),
-                          Field("delivery",
-                                label = T("Delivery Options?"),
+                          Field("delivery", "boolean",
+                                label = T("Are you able to Deliver?"),
                                 ),
                           Field("availability",
-                                label = T("Length or time the offer is available?"),
+                                label = T("Length of time the offer is available?"),
                                 ),
                           # GDPR Consent
                           Field("consent",
@@ -610,6 +680,19 @@ class register(S3CustomController):
                                 label = T("Email"),
                                 requires = IS_EMPTY_OR(IS_EMAIL()),
                                 ),
+                          Field("password2", "password", length=512,
+                                label = T("Password"),
+                                requires = CRYPT(key=auth.settings.hmac_key,
+                                                 min_length=settings.get_auth_password_min_length(),
+                                                 digest_alg="sha512"),
+                                ),
+                          Field("password2_two", "password",
+                                label = auth_messages.verify_password,
+                                requires = IS_EXPR("value==%s" % \
+                                                   repr(request.vars.get("password2")),
+                                                   error_message = auth_messages.mismatched_password,
+                                                   ),
+                                ),
                           Field("mobile2",
                                 label = T("Contact Number (Preferred)"),
                                 comment = DIV(_class = "tooltip",
@@ -619,10 +702,6 @@ class register(S3CustomController):
                                 ),
                           Field("home_phone2",
                                 label = T("Contact Number (Secondary)"),
-                                ),
-                          Field("L2",
-                                label = T("Where Based (District)"),
-                                requires = IS_EMPTY_OR(IS_IN_SET(districts)),
                                 ),
                           Field("vols", "integer",
                                 label = T("Approximate Number of Volunteers"),
@@ -637,22 +716,23 @@ class register(S3CustomController):
                           s3db.hrm_multi_skill_id(empty = False,
                                                   label = T("Volunteer Offer"),
                                                   ),
-                          Field("skills_other",
-                                label = T("If Other, please specify"),
+                          Field("skills_details",
+                                label = T("Please specify details"),
                                 ),
-                          Field("free", "boolean",
-                                label = T("Offering to Volunteer Free of Charge?"),
-                                ),
-                          Field("where_operate", "list:string",
+                          Field("where_operate", "list:reference gis_location",
                                 label = T("Where would you be willing to operate?"),
                                 requires = IS_EMPTY_OR(IS_IN_SET(districts, multiple=True)),
                                 widget = S3MultiSelectWidget(header="",
                                                              selectedList=3),
                                 ),
-                          Field("emergency_contact",
-                                label = T("Person to be contacted in case of an emergency"),
+                          Field("emergency_contact_name",
+                                label = T("Contact Name"),
                                 comment = T("Contact must not be listed as a leader above"),
                                 requires = IS_NOT_EMPTY(),
+                                ),
+                          Field("emergency_contact_number",
+                                label = T("Contact Number"),
+                                requires = s3_phone_requires,
                                 ),
                           # GDPR Consent
                           Field("consent",
@@ -716,23 +796,51 @@ class register(S3CustomController):
         # Identify form for CSS & JS Validation
         form.add_class("auth_register")
 
+        # Add Subheadings
         if agency:
-            # Add Subheadings
             form[0].insert(5, DIV("Group Leader 1",
                                   _class = "subheading",
                                   ))
             form[0].insert(15, DIV("Group Leader 2",
                                    _class = "subheading",
                                    ))
+            form[0].insert(23, DIV(_class = "subheading",
+                                   ))
 
+        elif donor:
+            pass
         elif group:
-            # Add Subheadings
             form[0].insert(1, DIV("Group Leader 1",
                                   _class = "subheading",
                                   ))
             form[0].insert(11, DIV("Group Leader 2",
                                    _class = "subheading",
                                    ))
+            form[0].insert(19, DIV(_class = "subheading",
+                                   ))
+            form[0].insert(-4, DIV("Person to be contacted in case of an emergency",
+                                   _class = "subheading",
+                                   ))
+            form[0].insert(-2, DIV(_class = "subheading",
+                                   ))
+        else:
+            # Individual / Existing
+            form[0].insert(2, DIV("Home Address",
+                                  _class = "subheading",
+                                  ))
+            form[0].insert(6, DIV(_class = "subheading",
+                                  ))
+            # Volunteer Offer
+            form[0].insert(11, DIV(_class = "subheading",
+                                   ))
+            form[0].insert(13, DIV(_class = "subheading",
+                                   ))
+            form[0].insert(-5, DIV("Person to be contacted in case of an emergency",
+                                   _class = "subheading",
+                                   ))
+            form[0].insert(-2, DIV(_class = "subheading",
+                                   ))
+            
 
         # Inject client-side Validation
         auth.s3_register_validation()
@@ -941,6 +1049,47 @@ class volunteer(S3CustomController):
         else:
             item2 = ""
         output["item2"] = item2
+
+        resource = "Volunteer3"
+        query = (ltable.module == module) & \
+                (ltable.resource == resource) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        item = current.db(query).select(table.body,
+                                        table.id,
+                                        limitby=(0, 1)).first()
+        if item:
+            if ADMIN:
+                item3 = DIV(XML(item.body),
+                            BR(),
+                            A(current.T("Edit"),
+                              _href = URL(c="cms", f="post",
+                                          args = [item.id, "update"],
+                                          vars = {"module": module,
+                                                  "resource": resource,
+                                                  },
+                                          ),
+                              _class="action-btn",
+                              ),
+                            )
+            else:
+                item3 = DIV(XML(item.body))
+        elif ADMIN:
+            if current.response.s3.crud.formstyle == "bootstrap":
+                _class = "btn"
+            else:
+                _class = "action-btn"
+            item3 = A(current.T("Edit"),
+                      _href = URL(c="cms", f="post", args="create",
+                                  vars = {"module": module,
+                                          "resource": resource,
+                                          },
+                                  ),
+                      _class="%s cms-edit" % _class,
+                      )
+        else:
+            item3 = ""
+        output["item3"] = item3
 
         self._view(THEME, "volunteer.html")
         return output

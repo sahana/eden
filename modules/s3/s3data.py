@@ -214,11 +214,13 @@ class S3DataTable(object):
             self.id_counter += 1
         self.id = id
 
-        bulkActions = attr.get("dt_bulk_actions", None)
-        bulkCol = attr.get("dt_bulk_col", 0)
+        attr_get = attr.get
+
+        bulkActions = attr_get("dt_bulk_actions", None)
+        bulkCol = attr_get("dt_bulk_col", 0)
         if bulkCol > len(flist):
             bulkCol = len(flist)
-        action_col = attr.get("dt_action_col", 0)
+        action_col = attr_get("dt_action_col", 0)
         if action_col != 0:
             if action_col == -1 or action_col >= len(flist):
                 action_col = len(flist) -1
@@ -233,7 +235,7 @@ class S3DataTable(object):
             if bulkCol <= action_col:
                 action_col += 1
 
-        pagination = attr.get("dt_pagination", "true") == "true"
+        pagination = attr_get("dt_pagination", "true") == "true"
         if pagination:
             real_end = self.end
             self.end = self.start + 1
@@ -406,6 +408,7 @@ class S3DataTable(object):
         if s3.dataTable_group:
             attr.dt_group = s3.dataTable_group
         # Nothing using currently
+        # - and not worth enabling as not used by standard CRUD
         #if s3.dataTable_NoSearch:
         #    attr.dt_searching = not s3.dataTable_NoSearch
         if s3.dataTable_dom:

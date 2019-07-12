@@ -4,4 +4,5 @@ Allerdale,Volunteer,allerdale_vol@example.com,eden,VOLUNTEER,Allerdale Community
 Allerdale,OrgAdmin,allerdale_admin@example.com,eden,ORG_ADMIN,Allerdale Community Organisation,staff
 Eden,Volunteer,eden_vol@example.com,eden,VOLUNTEER,Eden Community Organisation,staff
 Eden,OrgAdmin,eden_admin@example.com,eden,ORG_ADMIN,Eden Community Organisation,staff
-Reserve,Volunteer,reserve@example.com,eden,"RESERVE/pr_group.name=Reserves",
+Reserve,Volunteer,reserve@example.com,eden,"RESERVE/pr_forum.name=Reserves",,
+Corporate,Donor,donor@example.com,eden,"DONOR/pr_forum.name=Donors",,

@@ -2,7 +2,7 @@
 
 from gluon import current, URL
 from s3 import IS_ISO639_2_LANGUAGE_CODE
-from s3layouts import MM
+from s3layouts import M, MM
 try:
     from .layouts import *
 except ImportError:
@@ -43,30 +43,42 @@ class S3MainMenu(default.S3MainMenu):
                     ]
             return menu
 
-        if auth.s3_has_role("ADMIN"):
+        has_role = auth.s3_has_role
+        if has_role("ADMIN"):
             menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
                     MM("All Documents", c="doc", f="document", m="datalist"),
+                    MM("Donors", c="pr", f="person", vars={"donors": 1})(MM("Update General Information", c="cms", f="post", vars={"~.name": "Donor"}, m="update")),
                     MM("Volunteers", c="hrm", f="human_resource")(MM("Reserves", c="pr", f="person", vars={"reserves": 1})),
                     MM("Events", c="hrm", f="training_event"),
                     MM("Opportunities", c="req", f="need"),
                     MM("Messages", c="project", f="task"),
                     ]
-        elif auth.s3_has_role("VOLUNTEER"):
+        elif has_role("VOLUNTEER"):
             menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
                     MM("Organisation Documents", c="doc", f="document", m="datalist"),
                     MM("Events", c="hrm", f="training_event"),
                     MM("Opportunities", c="req", f="need"),
                     MM("Contact Organisation Admins", c="project", f="task", m="create"),
                     ]
-        elif auth.s3_has_role("ORG_ADMIN"):
+        elif has_role("ORG_ADMIN"):
             menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
                     MM("Organisation Documents", c="doc", f="document", m="datalist"),
-                    MM("Volunteers", c="hrm", f="human_resource")(MM("Reserves", c="pr", f="person", vars={"reserves": 1})),
+                    MM("Donors", c="pr", f="person", vars={"donors": 1}),
+                    MM("Volunteers", c="hrm", f="human_resource")([MM("Reserves", c="pr", f="person", vars={"reserves": 1}),
+                                                                   MM("Groups", c="pr", f="group"),
+                                                                   ]
+                                                                  ),
                     MM("Events", c="hrm", f="training_event"),
                     MM("Opportunities", c="req", f="need"),
                     MM("Messages", c="project", f="task"),
                     ]
+        elif has_role("DONOR"):
+            menu = [MM("Volunteer Your Time", c="default", f="index", args="volunteer"),
+                    MM("Donate Items", c="default", f="index", args="donate"),
+                    MM("General Information", c="default", f="index", m="donor"),
+                    ]
         else:
+            # Reserve Volunteer
             menu = [MM("Volunteer Your Time", c="default", f="index", args="volunteer"),
                     MM("Donate Items", c="default", f="index", args="donate"),
                     MM("General Information and Advice", c="cms", f="post", m="datalist"),
@@ -177,6 +189,82 @@ class S3OptionsMenu(default.S3OptionsMenu):
     """ Custom Controller Menus """
 
     # -------------------------------------------------------------------------
+    def admin(self):
+        """ ADMIN menu """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+        settings_messaging = self.settings_messaging()
+
+        settings = current.deployment_settings
+        consent_tracking = lambda i: settings.get_auth_consent_tracking()
+        is_data_repository = lambda i: settings.get_sync_data_repository()
+        translate = settings.has_module("translate")
+
+        # NB: Do not specify a controller for the main menu to allow
+        #     re-use of this menu by other controllers
+        return M(restrict=[ADMIN])(
+                    #M("Setup", c="setup", f="deployment")(
+                    #    #M("Create", m="create"),
+                    #    #M("Servers", f="server")(
+                    #    #),
+                    #    #M("Instances", f="instance")(
+                    #    #),
+                    #),
+                    #M("Settings", c="admin", f="setting")(
+                    #    settings_messaging,
+                    #),
+                    M("User Management", c="admin", f="user")(
+                        M("Create User", m="create"),
+                        M("List All Users"),
+                        M("Import Users", m="import"),
+                        M("List All Roles", f="role"),
+                        #M("List All Organization Approvers & Whitelists", f="organisation"),
+                        #M("Roles", f="group"),
+                        #M("Membership", f="membership"),
+                    ),
+                    M("Organizations", c="org", f="organisation")(
+                        M("Types", f="organisation_type"),
+                        M("Job Titles", c="hrm", f="job_title"),
+                        ),
+                    M("Consent Tracking", c="admin", link=False, check=consent_tracking)(
+                        M("Processing Types", f="processing_type"),
+                        M("Consent Options", f="consent_option"),
+                        ),
+                    #M("CMS", c="cms", f="post")(
+                    #),
+                    M("Database", c="appadmin", f="index")(
+                        M("Raw Database access", c="appadmin", f="index")
+                    ),
+                    M("Error Tickets", c="admin", f="errors"),
+                    #M("Monitoring", c="setup", f="server")(
+                    #    M("Checks", f="monitor_check"),
+                    #    M("Servers", f="server"),
+                    #    M("Tasks", f="monitor_task"),
+                    #    M("Logs", f="monitor_run"),
+                    #),
+                    #M("Synchronization", c="sync", f="index")(
+                    #    M("Settings", f="config", args=[1], m="update"),
+                    #    M("Repositories", f="repository"),
+                    #    M("Public Data Sets", f="dataset", check=is_data_repository),
+                    #    M("Log", f="log"),
+                    #),
+                    #M("Edit Application", a="admin", c="default", f="design",
+                      #args=[request.application]),
+                    #M("Translation", c="admin", f="translate", check=translate)(
+                    #   M("Select Modules for translation", c="admin", f="translate",
+                    #     m="create", vars=dict(opt="1")),
+                    #   M("Upload translated files", c="admin", f="translate",
+                    #     m="create", vars=dict(opt="2")),
+                    #   M("View Translation Percentage", c="admin", f="translate",
+                    #     m="create", vars=dict(opt="3")),
+                    #   M("Add strings manually", c="admin", f="translate",
+                    #     m="create", vars=dict(opt="4"))
+                    #),
+                    #M("View Test Result Reports", c="admin", f="result"),
+                    #M("Portable App", c="admin", f="portable")
+                )
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def cms():
         """ No Side Menu """
@@ -193,6 +281,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
     # -------------------------------------------------------------------------
     @staticmethod
     def hrm():
+        """ No Side Menu """
+
+        return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr():
         """ No Side Menu """
 
         return None

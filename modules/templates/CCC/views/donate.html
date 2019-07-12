@@ -9,7 +9,7 @@
 <div class='row'>
  <div class='large-6 medium-6 small-12 columns'>
   <div class='panel radius'>
-   {{if auth.s3_logged_in():}}<a href='/{{=appname}}/req/commit/create'>
+   {{if auth.s3_logged_in():}}<a href='/{{=appname}}/default/person'>
    {{else:}}<a href='/{{=appname}}/default/index/register?donor=1'>{{pass}}
     <img src='/{{=appname}}/static/themes/CCC/img/gift.png'/>
     <span class='service-link'>REGISTER A DONATION</span>

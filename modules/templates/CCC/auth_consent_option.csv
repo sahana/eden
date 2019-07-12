@@ -1,2 +1,3 @@
 Code,Type,Title,Explanation,Valid From,OptOut,Mandatory,Comments
-STOREPID,Storing Personal Data,Store my Personal Data,We can store your personal data and use it for some purpose.,2019-06-01,false,true,
+FOC,Free of Charge,Free of Charge,You do not expect any payment for your donation.,2019-07-01,false,true,
+STOREPID,Storing Personal Data,Store my Personal Data,We can store your personal data and use it for some purpose.,2019-07-01,false,true,
