@@ -25,8 +25,6 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @status: fixed for Py3
 """
 
 __all__ = ("S3Request",
@@ -2082,15 +2080,17 @@ def s3_request(*args, **kwargs):
                                implements fallbacks
     """
 
+    catch_errors = kwargs.pop("catch_errors", True)
+
     error = None
     try:
         r = S3Request(*args, **kwargs)
     except (AttributeError, SyntaxError):
-        if kwargs.get("catch_errors") is False:
+        if catch_errors is False:
             raise
         error = 400
     except KeyError:
-        if kwargs.get("catch_errors") is False:
+        if catch_errors is False:
             raise
         error = 404
     if error:

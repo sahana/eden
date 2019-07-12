@@ -37,8 +37,6 @@
     @todo: docstrings
 
     @ToDo: col-cnt, row-cnt & Length metadata should be automatable
-
-    @status: fixed for Py3
 """
 
 __all__ = ("S3SurveyTemplateModel",

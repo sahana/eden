@@ -29,8 +29,6 @@
     @group Resource API: S3Resource,
     @group Filter API: S3ResourceFilter
     @group Helper Classes: S3AxisFilter, S3ResourceData
-
-    @status: fixed for Py3
 """
 
 __all__ = ("S3AxisFilter",

@@ -27,8 +27,6 @@
     OTHER DEALINGS IN THE SOFTWARE.
 
     @todo: integrate S3XForms API
-
-    @status: fixed for Py3
 """
 
 __all__ = ("S3MobileFormList",
@@ -224,6 +222,8 @@ class S3MobileSchema(object):
                              "boolean",
                              "reference",
                              "upload",
+                             "list:string",
+                             "list:integer",
                              )
 
     # -------------------------------------------------------------------------
@@ -514,7 +514,7 @@ class S3MobileSchema(object):
             #    for proper authorization, customise_* and filtering
             return None
 
-        elif fieldtype in ("string", "integer"):
+        elif fieldtype in ("string", "integer", "list:string", "list:integer"):
 
             # Check for IS_IN_SET, and extract the options
             if isinstance(requires, IS_IN_SET):

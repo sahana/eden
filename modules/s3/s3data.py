@@ -28,8 +28,6 @@
 
     @group Data Views: S3DataTable,
                        S3DataList
-
-    @status: fixed for Py3
 """
 
 import re

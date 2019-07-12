@@ -27,8 +27,6 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @status: fixed for Py3
 """
 
 __all__ = ("single_phone_number_pattern",
@@ -2095,6 +2093,8 @@ class IS_DYNAMIC_FIELDTYPE(Validator):
                        "string",
                        "text",
                        "upload",
+                       "list:integer",
+                       "list:string",
                        )
 
     def __init__(self,

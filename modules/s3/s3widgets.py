@@ -30,8 +30,6 @@
 
     NB Widgets are processed upon form submission (before form validation)
        in addition to when generating new forms (so are often processed twice)
-
-    @status: fixed for Py3
 """
 
 __all__ = ("S3ACLWidget",

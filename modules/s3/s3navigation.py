@@ -32,8 +32,6 @@
            - add site-map generator and renderer (easy)
            - rewrite action buttons/links as S3NavigationItems
            - ...and any todo's in the code
-
-    @status: fixed for Py3
 """
 
 __all__ = ("S3NavigationItem",
