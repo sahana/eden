@@ -2095,6 +2095,8 @@ class IS_DYNAMIC_FIELDTYPE(Validator):
                        "string",
                        "text",
                        "upload",
+                       "list:integer",
+                       "list:string",
                        )
 
     def __init__(self,

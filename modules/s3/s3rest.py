@@ -2082,15 +2082,17 @@ def s3_request(*args, **kwargs):
                                implements fallbacks
     """
 
+    catch_errors = kwargs.pop("catch_errors", True)
+
     error = None
     try:
         r = S3Request(*args, **kwargs)
     except (AttributeError, SyntaxError):
-        if kwargs.get("catch_errors") is False:
+        if catch_errors is False:
             raise
         error = 400
     except KeyError:
-        if kwargs.get("catch_errors") is False:
+        if catch_errors is False:
             raise
         error = 404
     if error:
