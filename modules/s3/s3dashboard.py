@@ -29,7 +29,6 @@
     OTHER DEALINGS IN THE SOFTWARE.
 
     @status: experimental, work in progress
-    @status: fixed for Py3
 """
 
 __all__ = ("S3Dashboard",

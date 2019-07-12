@@ -38,8 +38,6 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @status: fixed for Py3 (just syntax, functionality broken as for Py2)
 """
 
 __all__ = ("S3PDF",)

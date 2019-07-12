@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# @status: fixed for Py3
-
 import os
 import sys
 

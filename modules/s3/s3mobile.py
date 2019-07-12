@@ -27,8 +27,6 @@
     OTHER DEALINGS IN THE SOFTWARE.
 
     @todo: integrate S3XForms API
-
-    @status: fixed for Py3
 """
 
 __all__ = ("S3MobileFormList",

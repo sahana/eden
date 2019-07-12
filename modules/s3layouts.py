@@ -28,8 +28,6 @@
 
     @todo: - complete layout implementations
            - render "selected" (flag in item)
-
-    @status: fixed for Py3
 """
 
 __all__ = ("S3MainMenuDefaultLayout",
