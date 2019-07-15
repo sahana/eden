@@ -31,6 +31,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,EC,Province,Canton,Parish,,,
 ,FI,Regional State Administrative Agency,Region,Sub-region,Municipality,,
 ,FJ,Division,Province,District,,,,
+,GB,Country,County,District,Parish,,
 ,GE,"Region / Republic",District,,,,
 ,GN,Region,Prefecture,Sub-prefecture,,,
 ,GR,Decentralized Administration,Region,Regional Unit,Municipality,,

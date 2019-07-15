@@ -816,7 +816,7 @@ def config(settings):
 
         s3db = current.s3db
         gtable = s3db.gis_location
-        districts = current.db((gtable.level == "L2") & (gtable.L1 == "Cumbria")).select(gtable.id,
+        districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
                                                                                          gtable.name)
         districts = {d.id:d.name for d in districts}
 
@@ -950,7 +950,7 @@ def config(settings):
 
         s3db = current.s3db
         gtable = s3db.gis_location
-        districts = current.db((gtable.level == "L2") & (gtable.L1 == "Cumbria")).select(gtable.id,
+        districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
                                                                                          gtable.name)
         districts = {d.id:d.name for d in districts}
 
@@ -1402,7 +1402,7 @@ def config(settings):
                                        label = "",
                                        _placeholder = T("Search"),
                                        ),
-                          S3OptionsFilter("location_id$L2",
+                          S3OptionsFilter("location_id$L3",
                                           label = T("District"),
                                           ),
                           S3OptionsFilter("need_skill.skill_id"),
