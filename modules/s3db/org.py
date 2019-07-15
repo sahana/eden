@@ -1978,12 +1978,13 @@ class S3OrganisationLocationModel(S3Model):
                             requires = IS_LOCATION(),
                             widget = S3LocationAutocompleteWidget()
                           ),
+                          s3_comments(),
                           *s3_meta_fields()
                           )
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("New Location"),
+            label_create = T("Add Location"),
             title_display = T("Location"),
             title_list = T("Locations"),
             title_update = T("Edit Location"),

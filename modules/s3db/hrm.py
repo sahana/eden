@@ -2011,6 +2011,7 @@ class S3HRSkillModel(S3Model):
              "hrm_skill",
              "hrm_competency_rating",
              "hrm_competency",
+             #"hrm_competency_id",
              "hrm_credential",
              "hrm_training",
              "hrm_trainings",
@@ -3522,7 +3523,8 @@ class S3HRSkillModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"hrm_course_id": course_id,
+        return {#"hrm_competency_id": competency_id,
+                "hrm_course_id": course_id,
                 "hrm_skill_id": skill_id,
                 "hrm_multi_skill_id": multi_skill_id,
                 "hrm_multi_skill_represent": multi_skill_represent,
@@ -3545,7 +3547,8 @@ class S3HRSkillModel(S3Model):
                                         readable = False,
                                         writable = False)
 
-        return {"hrm_course_id": lambda **attr: dummy("course_id"),
+        return {#"hrm_competency_id": lambda **attr: dummy("competency_id"),
+                "hrm_course_id": lambda **attr: dummy("course_id"),
                 "hrm_skill_id": lambda **attr: dummy("skill_id"),
                 "hrm_multi_skill_id": lambda **attr: dummy_listref("skill_id"),
                 }

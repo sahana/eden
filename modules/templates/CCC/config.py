@@ -318,6 +318,23 @@ def config(settings):
                                    )),
                           rheader_tabs)
 
+        elif tablename == "pr_group":
+            T = current.T
+            tabs = [(T("Basic Details"), None),
+                    (T("Leaders"), "group_membership"),
+                    #(T("Locations"), "group_location"),
+                    #(T("Skills"), "competency"),
+                    ]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            from s3 import s3_fullname
+
+            table = r.table
+            rheader = DIV(TABLE(TR(TH("%s: " % T("Name")),
+                                   record.name,
+                                   )),
+                          rheader_tabs)
+
         elif tablename == "pr_person":
             T = current.T
             tabs = [(T("Basic Details"), None),
@@ -326,13 +343,23 @@ def config(settings):
                     (T("Emergency Contacts"), "contact_emergency"),
                     ]
             has_role = current.auth.s3_has_role
-            if has_role("DONOR"):
+            if has_role("ADMIN"):
+                # Show tabs dependent on get_vars
+                if r.get_vars.get("donor"):
+                    # @ToDo: Add Items offered
+                    pass
+                else:
+                    tabs.append((T("Skills"), "competency"))
+                    tabs.insert(1, (T("Affiliation"), "human_resource"))
+            elif has_role("DONOR"):
                 # @ToDo: Add Items offered
                 pass
+            elif has_role("GROUP_ADMIN"):
+                tabs.append((T("Group"), "group"))
             else:
                 tabs.append((T("Skills"), "competency"))
-            if has_role("ORG_ADMIN"):
-                tabs.insert(1, (T("Affiliation"), "human_resource"))
+                if has_role("ORG_ADMIN"):
+                    tabs.insert(1, (T("Affiliation"), "human_resource"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
@@ -775,6 +802,177 @@ def config(settings):
     settings.customise_org_organisation_location_resource = customise_org_organisation_location_resource
 
     # -------------------------------------------------------------------------
+    def customise_pr_group_resource(r, tablename):
+
+        from gluon import IS_EMPTY_OR, IS_INT_IN_RANGE, IS_NOT_EMPTY
+        from s3 import IS_INT_AMOUNT, S3OptionsFilter, S3SQLCustomForm, S3SQLInlineLink, S3TextFilter, s3_phone_requires
+
+        s3db = current.s3db
+
+        # Filtered components
+        s3db.add_components("pr_group",
+                            pr_group_tag = ({"name": "volunteers",
+                                             "joinby": "group_id",
+                                             "filterby": {"tag": "volunteers"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "transport",
+                                             "joinby": "group_id",
+                                             "filterby": {"tag": "transport"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "skill_details",
+                                             "joinby": "group_id",
+                                             "filterby": {"tag": "skill_details"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "contact_name",
+                                             "joinby": "group_id",
+                                             "filterby": {"tag": "contact_name"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "contact_number",
+                                             "joinby": "group_id",
+                                             "filterby": {"tag": "contact_number"},
+                                             "multiple": False,
+                                             },
+                                            ),
+                            )
+
+        # Individual settings for specific tag components
+        components_get = s3db.resource(tablename).components.get
+
+        integer_represent = IS_INT_AMOUNT.represent
+
+        volunteers = components_get("volunteers")
+        f = volunteers.table.value
+        f.represent = integer_represent
+        f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
+
+        contact_name = components_get("contact_name")
+        f = contact_name.table.value
+        f.requires = IS_NOT_EMPTY()
+        f.comment = T("Contact must not be listed as a leader")
+
+        contact_number = components_get("contact_number")
+        f = contact_number.table.value
+        f.requires = s3_phone_requires
+
+        s3db.configure("pr_group",
+                       crud_form = S3SQLCustomForm("name",
+                                                   (T("# Volunteers"), "volunteers.value"),
+                                                   (T("Mode of Transport"), "transport.value"),
+                                                   S3SQLInlineLink("skill",
+                                                                   field = "skill_id",
+                                                                   label = T("Volunteer Offer"),
+                                                                   ),
+                                                   (T("Skill Details"), "skill_details.value"),
+                                                   S3SQLInlineLink("location",
+                                                                   field = "location_id",
+                                                                   label = T("Where would you be willing to operate?"),
+                                                                   ),
+                                                   (T("Emergency Contact Name"), "contact_name.value"),
+                                                   (T("Emergency Contact Number"), "contact_number.value"),
+                                                   "comments",
+                                                   ),
+                       list_fields = ["name",
+                                      (T("# Volunteers"), "volunteers.value"),
+                                      (T("Mode of Transport"), "transport.value"),
+                                      # Not working:
+                                      #(T("Leaders"), "group_membership.person_id"),
+                                      (T("Locations"), "group_location.location_id"),
+                                      (T("Skills"), "group_competency.skill_id"),
+                                      (T("Skill Details"), "skill_details.value"),
+                                      "comments",
+                                      ],
+                       filter_widgets = [S3TextFilter(["name",
+                                                       "group_membership.person_id$first_name",
+                                                       "group_membership.person_id$middle_name",
+                                                       "group_membership.person_id$last_name",
+                                                       "group_location.location_id",
+                                                       "group_competency.skill_id",
+                                                       "skill_details.value",
+                                                       "comments",
+                                                       ],
+                                                      #formstyle = text_filter_formstyle,
+                                                      label = "",
+                                                      _placeholder = T("Search"),
+                                                      ),
+                                         S3OptionsFilter("group_location.location_id",
+                                                         label = T("Location Served"),
+                                                         ),
+                                         S3OptionsFilter("group_competency.skill_id",
+                                                         label = T("Skill"),
+                                                         ),
+                                         ],
+                       )
+
+    settings.customise_pr_group_resource = customise_pr_group_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_pr_group_controller(**attr):
+
+        attr["rheader"] = ccc_rheader
+
+        return attr
+
+    settings.customise_pr_group_controller = customise_pr_group_controller
+
+    # -------------------------------------------------------------------------
+    def customise_pr_group_location_resource(r, tablename):
+
+        from gluon import IS_EMPTY_OR, IS_IN_SET
+
+        s3db = current.s3db
+        gtable = s3db.gis_location
+        districts = current.db((gtable.level == "L2") & (gtable.L1 == "Cumbria")).select(gtable.id,
+                                                                                         gtable.name)
+        districts = {d.id:d.name for d in districts}
+
+        f = s3db.pr_group_location.location_id
+        f.requires = IS_EMPTY_OR(IS_IN_SET(districts))
+        f.widget = None
+
+    settings.customise_pr_group_location_resource = customise_pr_group_location_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_group_membership_resource(r, tablename):
+
+        from s3 import S3AddPersonWidget, S3SQLCustomForm
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Leader"),
+            title_display = T("Leader Details"),
+            title_list = T("Leaders"),
+            title_update = T("Edit Leader"),
+            #title_upload = T("Import Leaders"),
+            label_list_button = T("List Leaders"),
+            label_delete_button = T("Delete Leader"),
+            msg_record_created = T("Leader added"),
+            msg_record_modified = T("Leader updated"),
+            msg_record_deleted = T("Leader deleted"),
+            msg_list_empty = T("No Leaders currently registered")
+        )
+
+        s3db = current.s3db
+
+        table = s3db.pr_group_membership
+        table.person_id.widget = S3AddPersonWidget(controller="pr")
+
+        s3db.configure("pr_group_membership",
+                       crud_form = S3SQLCustomForm("person_id",
+                                                   "comments",
+                                                   ),
+                       list_fields = ["person_id",
+                                      "person_id$phone",
+                                      "person_id$email",
+                                      "comments",
+                                      ],
+                       )
+
+    settings.customise_pr_group_membership_resource = customise_pr_group_membership_resource
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
 
         from s3 import S3SQLCustomForm
@@ -794,6 +992,16 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
+        # Custom Component
+        current.s3db.add_components("pr_person",
+                                    pr_group = {"link": "pr_group_membership",
+                                                "joinby": "person_id",
+                                                "key": "group_id",
+                                                "actuate": "replace",
+                                                "multiple": False,
+                                                },
+                                    )
+
         s3 = current.response.s3
 
         # Custom prep
@@ -804,6 +1012,13 @@ def config(settings):
                 result = standard_prep(r)
             else:
                 result = True
+
+            if r.component_name == "group_membership":
+                r.resource.components._components["group_membership"].configure(listadd = False,
+                                                                                list_fields = [(T("Name"), "group_id$name"),
+                                                                                               "group_id$comments",
+                                                                                               ],
+                                                                                )
 
             get_vars_get = r.get_vars.get
             if get_vars_get("reserves"):

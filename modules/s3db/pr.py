@@ -51,6 +51,11 @@ __all__ = (# PR Base Entities
 
            "PRReligionModel",
 
+           # Group Components
+           "PRGroupCompetencyModel",
+           "PRGroupLocationModel",
+           "PRGroupTagModel",
+
            # S3 Models
            "S3ImageLibraryModel",
            "S3RoleDelegationModel",
@@ -2513,6 +2518,20 @@ class PRGroupModel(S3Model):
         self.add_components(tablename,
                             pr_group_membership = "group_id",
 
+                            # Tags
+                            pr_group_tag = {"name": "tag",
+                                            "joinby": "group_id",
+                                            },
+
+                            # Locations
+                            gis_location = {"link": "pr_group_location",
+                                            "joinby": "group_id",
+                                            "key": "location_id",
+                                            "actuate": "hide",
+                                            "autodelete": False,
+                                            },
+                            pr_group_location = "group_id",
+
                             # Shelter (Camp) Registry
                             cr_shelter_allocation = {"joinby": "group_id",
                                                      # A group can be assigned to only one shelter
@@ -2559,6 +2578,15 @@ class PRGroupModel(S3Model):
                                                 "autodelete": False,
                                                 },
                             org_organisation_team = "group_id",
+
+                            # Skills
+                            hrm_skill = {"link": "pr_group_competency",
+                                        "joinby": "group_id",
+                                        "key": "skill_id",
+                                        "actuate": "hide",
+                                        "autodelete": False,
+                                        },
+                            pr_group_competency = "group_id",
 
                             # Posts
                             cms_post = {"link": "cms_post_team",
@@ -3031,6 +3059,140 @@ class PRGroupModel(S3Model):
         except AttributeError:
             # => Set to default of None
             return None
+
+# =============================================================================
+class PRGroupCompetencyModel(S3Model):
+    """
+        Group Competency Model
+        - Skills available in a Group
+    """
+
+    names = ("pr_group_competency",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Groups <> Skills Link Table
+        #
+        tablename = "pr_group_competency"
+        self.define_table(tablename,
+                          self.pr_group_id(),
+                          self.hrm_skill_id(),
+                          #self.hrm_competency_id(),
+                          s3_comments(),
+                          *s3_meta_fields()
+                          )
+
+        # CRUD Strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Skill"),
+            title_display = T("Skill"),
+            title_list = T("Skills"),
+            title_update = T("Edit Skill"),
+            title_upload = T("Import Skills"),
+            label_list_button = T("List Skills"),
+            msg_record_created = T("Skill added to Group"),
+            msg_record_modified = T("Skill updated"),
+            msg_record_deleted = T("Skill removed from Group"),
+            msg_list_empty = T("No Skills found for this Group"))
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("group_id",
+                                                            "skill_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+
+# =============================================================================
+class PRGroupLocationModel(S3Model):
+    """
+        Group Location Model
+        - Locations served by a Group
+    """
+
+    names = ("pr_group_location",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Groups <> Locations Link Table
+        #
+        tablename = "pr_group_location"
+        self.define_table(tablename,
+                          self.pr_group_id(),
+                          self.gis_location_id(
+                            #represent = self.gis_LocationRepresent(sep=", "),
+                            requires = IS_LOCATION(),
+                            widget = S3LocationAutocompleteWidget()
+                          ),
+                          s3_comments(),
+                          *s3_meta_fields()
+                          )
+
+        # CRUD Strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Location"),
+            title_display = T("Location"),
+            title_list = T("Locations"),
+            title_update = T("Edit Location"),
+            title_upload = T("Import Location data"),
+            label_list_button = T("List Locations"),
+            msg_record_created = T("Location added to Group"),
+            msg_record_modified = T("Location updated"),
+            msg_record_deleted = T("Location removed from Group"),
+            msg_list_empty = T("No Locations found for this Group"))
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("group_id",
+                                                            "location_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class PRGroupTagModel(S3Model):
+    """
+        Group Tags
+    """
+
+    names = ("pr_group_tag",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        tablename = "pr_group_tag"
+        self.define_table(tablename,
+                          self.pr_group_id(ondelete = "CASCADE"),
+                          Field("tag",
+                                label = T("Key"),
+                                ),
+                          Field("value",
+                                label = T("Value"),
+                                ),
+                          #s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("group_id", "tag"),
+                                                 ignore_case = True,
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
 
 # =============================================================================
 class PRForumModel(S3Model):
