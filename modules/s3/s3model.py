@@ -41,7 +41,7 @@ from gluon.tools import callback
 from s3dal import Table, Field, original_tablename
 from .s3navigation import S3ScriptItem
 from .s3resource import S3Resource
-from .s3validators import IS_ONE_OF
+from .s3validators import IS_ONE_OF, IS_JSONS3
 from .s3widgets import s3_comments_widget, s3_richtext_widget
 
 DYNAMIC_PREFIX = "s3dt"
@@ -1908,6 +1908,8 @@ class S3DynamicModel(object):
                 construct = cls._boolean_field
             elif fieldtype in ("integer", "double"):
                 construct = cls._numeric_field
+            elif fieldtype == "json":
+                construct = cls._json_field
             else:
                 construct = cls._generic_field
 
@@ -2341,6 +2343,33 @@ class S3DynamicModel(object):
 
         if widget:
             field.widget = widget
+
+        return field
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _json_field(tablename, row):
+        """
+            Boolean field constructor
+
+            @param tablename: the table name
+            @param row: the s3_field Row
+
+            @return: the Field instance
+        """
+
+        fieldname = row.name
+        fieldtype = row.field_type
+
+        default = row.default_value
+        if default:
+            value, error = IS_JSONS3()(default)
+            default = None if error else value
+
+        field = Field(fieldname, fieldtype,
+                      default = default,
+                      requires = IS_JSONS3(),
+                      )
 
         return field
 

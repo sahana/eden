@@ -2093,6 +2093,7 @@ class IS_DYNAMIC_FIELDTYPE(Validator):
                        "string",
                        "text",
                        "upload",
+                       "json",
                        "list:integer",
                        "list:string",
                        )

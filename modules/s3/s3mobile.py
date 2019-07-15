@@ -222,6 +222,7 @@ class S3MobileSchema(object):
                              "boolean",
                              "reference",
                              "upload",
+                             "json",
                              "list:string",
                              "list:integer",
                              )
