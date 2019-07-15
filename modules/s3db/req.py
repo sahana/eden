@@ -34,6 +34,7 @@ __all__ = ("RequestPriorityStatusModel",
            "RequestRecurringModel",
            "RequestNeedsModel",
            "RequestNeedsActivityModel",
+           "RequestNeedsContactModel",
            "RequestNeedsDemographicsModel",
            "RequestNeedsItemsModel",
            "RequestNeedsSkillsModel",
@@ -2380,7 +2381,15 @@ class RequestNeedsModel(S3Model):
         self.define_table(tablename,
                           self.super_link("doc_id", "doc_entity"),
                           self.gis_location_id(), # Can be hidden, e.g. if using Sites (can then sync this onaccept)
-                          s3_date(default = "now"),
+                          s3_datetime(default = "now",
+                                      widget = "date",
+                                      ),
+                          s3_datetime("end_date",
+                                      label = T("End Date"),
+                                      # Enable in Templates if-required
+                                      readable = False,
+                                      writable = False,
+                                      ),
                           self.req_priority(),
                           s3_comments("name",
                                       label = T("Summary of Needs"),
@@ -2423,6 +2432,9 @@ class RequestNeedsModel(S3Model):
                                                 "key": "organisation_id",
                                                 "multiple": False,
                                                 },
+                            req_need_organisation = {"joinby": "need_id",
+                                                     "multiple": False,
+                                                     },
                             org_sector = {"link": "req_need_sector",
                                           "joinby": "need_id",
                                           "key": "sector_id",
@@ -2436,6 +2448,10 @@ class RequestNeedsModel(S3Model):
                             project_activity = {"link": "req_need_activity",
                                                 "joinby": "need_id",
                                                 "key": "activity_id",
+                                                },
+                            req_need_contact = {"joinby": "need_id",
+                                                # Can redefine as multiple=True in template if-required
+                                                "multiple": False,
                                                 },
                             req_need_demographic = "need_id",
                             req_need_item = "need_id",
@@ -2509,6 +2525,45 @@ class RequestNeedsActivityModel(S3Model):
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary=("need_id",
                                                           "activity_id",
+                                                          ),
+                                                 ),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class RequestNeedsContactModel(S3Model):
+    """
+        Simple Requests Management System
+        - optional link to Contacts (People)
+    """
+
+    names = ("req_need_contact",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Needs <=> Persons
+        #
+
+        tablename = "req_need_contact"
+        self.define_table(tablename,
+                          self.req_need_id(empty = False),
+                          self.pr_person_id(empty = False,
+                                            label = T("Contact"),
+                                            ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary=("need_id",
+                                                          "person_id",
                                                           ),
                                                  ),
                        )

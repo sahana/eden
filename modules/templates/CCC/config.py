@@ -231,11 +231,15 @@ def config(settings):
             Assign a Realm Entity to records
         """
 
+        if current.auth.s3_has_role("ADMIN"):
+            # Use default rules
+            return 0
+
         tablename = table._tablename
 
-        if tablename in ("hrm_training_event",
+        if tablename in (#"hrm_training_event",
                          "project_task",
-                         "req_need",
+                         #"req_need",
                          ):
             # Use the Org of the Creator
             db = current.db
@@ -372,24 +376,25 @@ def config(settings):
                           rheader_tabs)
 
         elif tablename == "req_need":
-            T = current.T
-            tabs = [(T("Basic Details"), None),
-                    #(T("Items"), "need_item"),
-                    (T("Skills"), "need_skill"),
-                    ]
+            #T = current.T
+            #tabs = [(T("Basic Details"), None),
+            #        #(T("Items"), "need_item"),
+            #        (T("Skills"), "need_skill"),
+            #        ]
 
-            rheader_tabs = s3_rheader_tabs(r, tabs)
+            #rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            table = r.table
-            location_id = table.location_id
-            date_field = table.date
-            rheader = DIV(TABLE(TR(TH("%s: " % date_field.label),
-                                   date_field.represent(record.date),
-                                   ),
-                                TR(TH("%s: " % location_id.label),
-                                   location_id.represent(record.location_id),
-                                   )),
-                          rheader_tabs)
+            #table = r.table
+            #location_id = table.location_id
+            #date_field = table.date
+            #rheader = DIV(TABLE(TR(TH("%s: " % date_field.label),
+            #                       date_field.represent(record.date),
+            #                       ),
+            #                    TR(TH("%s: " % location_id.label),
+            #                       location_id.represent(record.location_id),
+            #                       )),
+            #              rheader_tabs)
+            rheader = None
 
         return rheader
 
@@ -624,6 +629,7 @@ def config(settings):
                 msg_record_deleted = T("Volunteer deleted"),
                 msg_list_empty = T("No Volunteers currently registered")
             )
+
         filter_fields = ["person_id$first_name",
                          "person_id$middle_name",
                          "person_id$last_name",
@@ -631,12 +637,23 @@ def config(settings):
                          "comments",
                          "person_id$competency.skill_id$name",
                          ]
+
+        filter_widgets = [S3TextFilter(filter_fields,
+                                       #formstyle = text_filter_formstyle,
+                                       label = "",
+                                       _placeholder = T("Search"),
+                                       ),
+                          S3OptionsFilter("person_id$competency.skill_id"),
+                          ]
+
         if current.auth.s3_has_role("ADMIN"):
-            list_fields.insert(0, "organisation_id")
             filter_fields.insert(0, "organisation_id$name")
+            filter_widgets.append(S3OptionsFilter("organisation_id"))
+            list_fields.insert(0, "organisation_id")
         else:
-            table.organisation_id.writable = False
-            table.organisation_id.comment = None # No Create
+            f = table.organisation_id
+            f.readable = f.writable = False
+            f.comment = None # No Create
                        
         s3db.configure("hrm_human_resource",
                        crud_form = S3SQLCustomForm("organisation_id",
@@ -645,14 +662,7 @@ def config(settings):
                                                    "comments",
                                                    ),
                        list_fields = list_fields,
-                       filter_widgets = [S3TextFilter(filter_fields,
-                                                      #formstyle = text_filter_formstyle,
-                                                      label = "",
-                                                      _placeholder = T("Search"),
-                                                      ),
-                                         S3OptionsFilter("person_id$competency.skill_id",
-                                                         ),
-                                         ],
+                       filter_widgets = filter_widgets,
                        )
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
@@ -703,25 +713,40 @@ def config(settings):
         f.readable = f.writable = True
         f.widget = S3LocationSelector(show_address = True)
 
+        list_fields = ["start_date",
+                       "name",
+                       "location_id",
+                       ]
+
+        filter_widgets = [S3TextFilter(["name",
+                                        "comments",
+                                        ],
+                                       #formstyle = text_filter_formstyle,
+                                       label = "",
+                                       _placeholder = T("Search"),
+                                       ),
+                          ]
+
+        auth = current.auth
+        if auth.s3_has_role("ADMIN"):
+            filter_widgets.append(S3OptionsFilter("organisation_id",
+                                                  label = T("Organization")))
+            list_fields.insert(0, (T("Organization"), "organisation_id"))
+        else:
+            f = table.organisation_id
+            f.default = auth.user.organisation_id
+            f.readable = f.writable = False
+
         s3db.configure("hrm_training_event",
-                       crud_form = S3SQLCustomForm("name",
+                       crud_form = S3SQLCustomForm("organisation_id",
+                                                   "name",
                                                    "start_date",
                                                    #"end_date",
                                                    "location_id",
                                                    "comments",
                                                    ),
-                       list_fields = ["start_date",
-                                      "name",
-                                      "location_id",
-                                      ],
-                       filter_widgets = [S3TextFilter(["name",
-                                                       "comments",
-                                                       ],
-                                                      #formstyle = text_filter_formstyle,
-                                                      label = "",
-                                                      _placeholder = T("Search"),
-                                                      ),
-                                         ],
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
                        )
 
     settings.customise_hrm_training_event_resource = customise_hrm_training_event_resource
@@ -1271,9 +1296,87 @@ def config(settings):
     settings.customise_project_task_controller = customise_project_task_controller
 
     # -------------------------------------------------------------------------
+    def req_need_organisation_onaccept(form):
+        """
+            Set the realm of the parent req_need to that of the organisation
+        """
+
+        db = current.db
+        s3db = current.s3db
+        rntable = s3db.req_need
+        otable = s3db.org_organisation
+
+        form_vars_get = form.vars.get
+
+        need_id = form_vars_get("need_id")
+        organisation_id = form_vars_get("organisation_id")
+        if not need_id or not organisation_id:
+            rnotable = s3db.req_need_organisation
+            record_id = form_vars_get("id")
+            record = db(rnotable.id == record_id).select(rnotable.need_id,
+                                                         rnotable.organisation_id,
+                                                         limitby = (0, 1),
+                                                         ).first()
+            need_id = record.need_id
+            organisation_id = record.organisation_id
+
+        org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                      limitby = (0, 1),
+                                                      ).first()
+        realm_entity = org.pe_id
+
+        db(rntable.id == need_id).update(realm_entity = realm_entity)
+
+    # -------------------------------------------------------------------------
     def customise_req_need_resource(r, tablename):
 
-        from s3 import S3SQLCustomForm, S3TextFilter
+        from s3 import IS_ONE_OF, IS_UTC_DATETIME, S3CalendarWidget, S3DateTime, \
+                       S3SQLCustomForm, S3SQLInlineComponent, \
+                       S3OptionsFilter, S3TextFilter, s3_comments_widget
+
+        s3db = current.s3db
+
+        # Filtered components
+        s3db.add_components("req_need",
+                            req_need_tag = ({"name": "age_restrictions",
+                                             "joinby": "need_id",
+                                             "filterby": {"tag": "age_restrictions"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "practical_info",
+                                             "joinby": "need_id",
+                                             "filterby": {"tag": "practical_info"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "parking",
+                                             "joinby": "need_id",
+                                             "filterby": {"tag": "parking"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "bring",
+                                             "joinby": "need_id",
+                                             "filterby": {"tag": "bring"},
+                                             "multiple": False,
+                                             },
+                                            ),
+                            )
+
+        # Individual settings for specific tag components
+        components_get = s3db.resource(tablename).components.get
+
+        practical_info = components_get("practical_info")
+        f = practical_info.table.value
+        f.widget = lambda f, v: \
+            s3_comments_widget(f, v, _placeholder = "including directions to location of the opportunity")
+
+        table = s3db.req_need
+        table.name.label = T("Description")
+        f = table.date
+        f.label = T("Start Date")
+        f.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+        f.requires = IS_UTC_DATETIME()
+        f.widget = S3CalendarWidget(timepicker = True)
+        table.end_date.readable = table.end_date.writable = True
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("New Opportunity"),
@@ -1289,28 +1392,84 @@ def config(settings):
             msg_list_empty = T("No Opportunities currently registered")
         )
 
-        s3db = current.s3db
+        person_id = s3db.req_need_contact.person_id
+        person_id.comment = None # No Create
 
-        table = s3db.req_need
+        filter_widgets = [S3TextFilter(["name",
+                                        "comments",
+                                        ],
+                                       #formstyle = text_filter_formstyle,
+                                       label = "",
+                                       _placeholder = T("Search"),
+                                       ),
+                          S3OptionsFilter("location_id$L2",
+                                          label = T("District"),
+                                          ),
+                          S3OptionsFilter("need_skill.skill_id"),
+                          ]
+                       
+        list_fields = ["date",
+                       "end_date",
+                       "location_id",
+                       #(T("Opportunity"), "name"),
+                       "name",
+                       "need_contact.person_id",
+                       "need_skill.skill_id",
+                       "need_skill.quantity",
+                       ]
+
+        auth = current.auth
+        if auth.s3_has_role("ADMIN"):
+            filter_widgets.insert(-2, S3OptionsFilter("need_organisation.organisation_id"))
+            list_fields.insert(0, "need_organisation.organisation_id")
+        else:
+            organisation_id = auth.user.organisation_id
+            f = s3db.req_need_organisation.organisation_id
+            f.default = organisation_id
+            # Needs to be in the form
+            #f.readable = f.writable = False
+            f.requires = s3db.org_organisation_requires(updateable=True)
+            f.comment = None # No Create
+
+            # Dropdown, not Autocomplete
+            person_id.widget = None
+            # Filtered to people affiliated with this Org
+            db = current.db
+            hrtable = s3db.hrm_human_resource
+            persons = db(hrtable.organisation_id == organisation_id).select(hrtable.person_id)
+            persons = [p.person_id for p in persons]
+            person_id.requires = IS_ONE_OF(db, "pr_person.id",
+                                           person_id.represent,
+                                           orderby = "pr_person.first_name",
+                                           sort = True,
+                                           filterby = "id",
+                                           filter_opts = persons,
+                                           )
 
         s3db.configure("req_need",
-                       crud_form = S3SQLCustomForm("date",
+                       crud_form = S3SQLCustomForm("need_organisation.organisation_id",
+                                                   "date",
+                                                   "end_date",
                                                    "location_id",
                                                    "name",
+                                                   "need_contact.person_id",
+                                                   S3SQLInlineComponent("need_skill",
+                                                                        label = "",
+                                                                        fields = ["skill_id", "quantity"],
+                                                                        multiple = False,
+                                                                        ),
+                                                   (T("Age Restrictions"), "age_restrictions.value"),
+                                                   (T("Practical Information"), "practical_info.value"),
+                                                   (T("Parking Options"), "parking.value"),
+                                                   (T("What to Bring"), "bring.value"),
                                                    "comments",
                                                    ),
-                       list_fields = ["date",
-                                      "location_id",
-                                      (T("Opportunity"), "name"),
-                                      ],
-                       filter_widgets = [S3TextFilter(["name",
-                                                       "comments",
-                                                       ],
-                                                      #formstyle = text_filter_formstyle,
-                                                      label = "",
-                                                      _placeholder = T("Search"),
-                                                      ),
-                                         ],
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+        s3db.configure("req_need_organisation",
+                       onaccept = req_need_organisation_onaccept,
                        )
 
     settings.customise_req_need_resource = customise_req_need_resource
