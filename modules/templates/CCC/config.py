@@ -711,7 +711,9 @@ def config(settings):
         table.name.readable = table.name.writable = True
         f = table.location_id
         f.readable = f.writable = True
-        f.widget = S3LocationSelector(show_address = True)
+        f.widget = S3LocationSelector(levels = ("L3"),
+                                      required_levels = ("L3"),
+                                      show_address = True)
 
         list_fields = ["start_date",
                        "name",
@@ -1331,7 +1333,7 @@ def config(settings):
     def customise_req_need_resource(r, tablename):
 
         from s3 import IS_ONE_OF, IS_UTC_DATETIME, S3CalendarWidget, S3DateTime, \
-                       S3SQLCustomForm, S3SQLInlineComponent, \
+                       S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent, \
                        S3OptionsFilter, S3TextFilter, s3_comments_widget
 
         s3db = current.s3db
@@ -1377,6 +1379,9 @@ def config(settings):
         f.requires = IS_UTC_DATETIME()
         f.widget = S3CalendarWidget(timepicker = True)
         table.end_date.readable = table.end_date.writable = True
+        table.location_id.widget = S3LocationSelector(levels = ("L3"),
+                                                      required_levels = ("L3"),
+                                                      show_address = True)
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("New Opportunity"),
