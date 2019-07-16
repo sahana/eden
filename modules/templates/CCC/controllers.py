@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import json
 import uuid
 
 from gluon import *
-from s3 import IS_ONE_OF, S3CustomController, S3MultiSelectWidget, s3_mark_required, s3_phone_requires
+from gluon.storage import Storage
+from s3 import IS_ONE_OF, S3CustomController, S3MultiSelectWidget, \
+               s3_mark_required, s3_phone_requires, s3_str
 
 THEME = "CCC"
 
@@ -211,7 +214,7 @@ class donate(S3CustomController):
 
 # =============================================================================
 class donor(S3CustomController):
-    """ Custom Home Page """
+    """ Custom Page """
 
     def __call__(self):
 
@@ -302,12 +305,12 @@ class register(S3CustomController):
 
         # Lookup Lists
         gtable = s3db.gis_location
-        districts = db((gtable.level == "L2") & (gtable.L1 == "Cumbria")).select(gtable.id,
+        districts = db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
                                                                                  gtable.name)
         districts = {d.id:d.name for d in districts}
 
         # Check Type of Registration
-        agency = existing = individual = group = donor = False
+        agency = donor = existing = group = False
 
         def individual_formfields():
             """
@@ -315,7 +318,7 @@ class register(S3CustomController):
             """
             formfields = [utable.first_name,
                           utable.last_name,
-                          Field("addr_L2",
+                          Field("addr_L3",
                                 label = T("District (if in Cumbria)"),
                                 requires = IS_EMPTY_OR(IS_IN_SET(districts)),
                                 ),
@@ -333,7 +336,7 @@ class register(S3CustomController):
                                                                   T("Ideally a Mobile Number, so that we can send you Text Messages.")),
                                               ),
                                 ),
-                          Field("home_phone",
+                          Field("home",
                                 label = T("Contact Number (Secondary)"),
                                 requires = IS_EMPTY_OR(s3_phone_requires),
                                 ),
@@ -398,7 +401,6 @@ class register(S3CustomController):
                                "addr_street",
                                "addr_postcode",
                                "mobile",
-                               "free",
                                "disability",
                                "health",
                                "emergency_contact",
@@ -418,7 +420,7 @@ class register(S3CustomController):
                                               limitby = (0, 1)
                                               ).first()
             if not row:
-                current.session.error = T("Organization not found")
+                session.error = T("Organization not found")
                 redirect(URL(vars={}))
             title = T("Register as a Volunteer for %(org)s") % {"org": row.name}
             header = ""
@@ -442,7 +444,7 @@ class register(S3CustomController):
                                 requires = IS_NOT_EMPTY(),
                                 ),
                           s3db.org_organisation_type_id(),
-                          Field("addr_L2", "reference gis_location",
+                          Field("addr_L3", "reference gis_location",
                                 label = T("Where Based (District)"),
                                 requires = IS_EMPTY_OR(IS_IN_SET(districts)),
                                 ),
@@ -474,7 +476,7 @@ class register(S3CustomController):
                                                                   T("Ideally a Mobile Number, so that we can send you Text Messages.")),
                                               ),
                                 ),
-                          Field("home_phone",
+                          Field("home",
                                 label = T("Contact Number (Secondary)"),
                                 ),
                           utable.email,
@@ -511,7 +513,7 @@ class register(S3CustomController):
                                                                   T("Ideally a Mobile Number, so that we can send you Text Messages.")),
                                               ),
                                 ),
-                          Field("home_phone2",
+                          Field("home2",
                                 label = T("Contact Number (Secondary)"),
                                 ),
                           # GDPR Consent
@@ -527,7 +529,6 @@ class register(S3CustomController):
                                "addr_street",
                                "addr_postcode",
                                "mobile",
-                               "free",
                                "disability",
                                "health",
                                "emergency_contact",
@@ -549,12 +550,21 @@ class register(S3CustomController):
                           Field("organisation",
                                 label = T("Name of Organization"),
                                 ),
-                          Field("addr_street",
-                                label = T("Street Address"),
+                          Field("organisation_type",
+                                label = T("Type of Organization"),
+                                requires = IS_EMPTY_OR(
+                                            IS_IN_SET([T("Business Donor"),
+                                                       T("Individual Donor"),
+                                                       T("Public Sector Organization"),
+                                                       T("Voluntary Sector Organization"),
+                                                       ])),
                                 ),
-                          Field("addr_L2", "reference gis_location",
+                          Field("addr_L3", "reference gis_location",
                                 label = T("District"),
                                 requires = IS_EMPTY_OR(IS_IN_SET(districts)),
+                                ),
+                          Field("addr_street",
+                                label = T("Street Address"),
                                 ),
                           Field("addr_postcode",
                                 label = T("Postcode"),
@@ -616,7 +626,6 @@ class register(S3CustomController):
                                "addr_street",
                                "addr_postcode",
                                "mobile",
-                               "free",
                                "delivery",
                                "availability",
                                ]
@@ -650,7 +659,7 @@ class register(S3CustomController):
                                                                   T("Ideally a Mobile Number, so that we can send you Text Messages.")),
                                               ),
                                 ),
-                          Field("home_phone",
+                          Field("home",
                                 label = T("Contact Number (Secondary)"),
                                 ),
                           utable.email,
@@ -682,16 +691,18 @@ class register(S3CustomController):
                                 ),
                           Field("password2", "password", length=512,
                                 label = T("Password"),
-                                requires = CRYPT(key=auth.settings.hmac_key,
-                                                 min_length=settings.get_auth_password_min_length(),
-                                                 digest_alg="sha512"),
+                                requires = IS_EMPTY_OR(
+                                            CRYPT(key=auth.settings.hmac_key,
+                                                  min_length=settings.get_auth_password_min_length(),
+                                                  digest_alg="sha512")),
                                 ),
                           Field("password2_two", "password",
                                 label = auth_messages.verify_password,
-                                requires = IS_EXPR("value==%s" % \
-                                                   repr(request.vars.get("password2")),
-                                                   error_message = auth_messages.mismatched_password,
-                                                   ),
+                                requires = IS_EMPTY_OR(
+                                            IS_EXPR("value==%s" % \
+                                                    repr(request.vars.get("password2")),
+                                                    error_message = auth_messages.mismatched_password,
+                                                    )),
                                 ),
                           Field("mobile2",
                                 label = T("Contact Number (Preferred)"),
@@ -700,7 +711,7 @@ class register(S3CustomController):
                                                                   T("Ideally a Mobile Number, so that we can send you Text Messages.")),
                                               ),
                                 ),
-                          Field("home_phone2",
+                          Field("home2",
                                 label = T("Contact Number (Secondary)"),
                                 ),
                           Field("vols", "integer",
@@ -747,12 +758,10 @@ class register(S3CustomController):
                                "addr_street",
                                "addr_postcode",
                                "mobile",
-                               "free",
                                ]
 
         else:
             # Individual Volunteer
-            individual = True
             title = T("Register as a Volunteer")
             header = P("Please use ",
                        A("Volunteer Group", _href=URL(args="register", vars={"vol_group": 1})),
@@ -855,22 +864,94 @@ class register(S3CustomController):
                         onvalidation = auth_settings.register_onvalidation,
                         ):
 
+            form_vars = form.vars
+
             # Create the user record
-            user_id = utable.insert(**utable._filter_fields(form.vars, id=False))
-            form.vars.id = user_id
+            user_id = utable.insert(**utable._filter_fields(form_vars, id=False))
+            form_vars.id = user_id
 
-            # Save temporary user fields
-            auth.s3_user_register_onaccept(form)
+            # Save temporary user fields in db.auth_user_temp
+            # Default just handles mobile, home, consent
+            #auth.s3_user_register_onaccept(form)
 
-            # Where to go next?
-            register_next = request.vars._next or auth_settings.register_next
+            temptable = db.auth_user_temp
+            record  = {"user_id": user_id}
+
+            # Store the mobile_phone ready to go to pr_contact
+            mobile = form_vars.mobile
+            record["mobile"] = mobile
+
+            # Store Consent Question Response
+            consent = form_vars.consent
+            record["consent"] = consent
+
+            # Store the home_phone ready to go to pr_contact
+            home = form_vars.home
+            if home:
+                record["home"] = home
+
+            # Store Custom fields
+            if agency:
+                custom = {"registration_type": "agency",
+                          "addr_L3": form_vars.addr_L3,
+                          "addr_street": form_vars.addr_street,
+                          "addr_postcode": form_vars.addr_postcode,
+                          }
+            elif donor:
+                custom = {"registration_type": "donor",
+                          "organisation": form_vars.organisation,
+                          "organisation_type": form_vars.organisation_type,
+                          "addr_L3": form_vars.addr_L3,
+                          "addr_street": form_vars.addr_street,
+                          "addr_postcode": form_vars.addr_postcode,
+                          "item_id": form_vars.item_id,
+                          "items_details": form_vars.items_details,
+                          }
+            elif existing:
+                custom = {"registration_type": "existing",
+                          "addr_L3": form_vars.addr_L3,
+                          "addr_street": form_vars.addr_street,
+                          "addr_postcode": form_vars.addr_postcode,
+                          "skill_id": form_vars.skill_id,
+                          "skills_details": form_vars.skills_details,
+                          "emergency_contact_name": form_vars.emergency_contact_name,
+                          "emergency_contact_number": form_vars.emergency_contact_number,
+                          "emergency_contact_relationship": form_vars.emergency_contact_relationship,
+                          }
+            elif group:
+                custom = {"registration_type": "group",
+                          "group": form_vars.group,
+                          # Assume outside Cumbria
+                          #"addr_L3": form_vars.addr_L3,
+                          "addr_street": form_vars.addr_street,
+                          "addr_postcode": form_vars.addr_postcode,
+                          "skill_id": form_vars.skill_id,
+                          "skills_details": form_vars.skills_details,
+                          "emergency_contact_name": form_vars.emergency_contact_name,
+                          "emergency_contact_number": form_vars.emergency_contact_number,
+                          #"emergency_contact_relationship": form_vars.emergency_contact_relationship,
+                          }
+            else:
+                custom = {"registration_type": "individual",
+                          "addr_L3": form_vars.addr_L3,
+                          "addr_street": form_vars.addr_street,
+                          "addr_postcode": form_vars.addr_postcode,
+                          "skill_id": form_vars.skill_id,
+                          "skills_details": form_vars.skills_details,
+                          "emergency_contact_name": form_vars.emergency_contact_name,
+                          "emergency_contact_number": form_vars.emergency_contact_number,
+                          "emergency_contact_relationship": form_vars.emergency_contact_relationship,
+                          }
+            record["custom"] = json.dumps(custom)
+
+            temptable.update_or_insert(**record)
 
             # Post-process the new user record
             users = db(utable.id > 0).select(utable.id, limitby=(0, 2))
             if len(users) == 1:
                 # 1st user to register doesn't need verification/approval
                 auth.s3_approve_user(form.vars)
-                current.session.confirmation = auth_messages.registration_successful
+                session.confirmation = auth_messages.registration_successful
 
                 # 1st user gets Admin rights
                 admin_group_id = 1
@@ -886,10 +967,14 @@ class register(S3CustomController):
                 # Send welcome email
                 auth.s3_send_welcome_email(form.vars)
 
-            elif auth_settings.registration_requires_verification:
+                # Where to go next?
+                register_next = request.vars._next or auth_settings.register_next
+
+            else:
+                # Verify User Email
                 # System Details for Verification Email
                 system = {"system_name": settings.get_system_name(),
-                          "url": "%s/default/user/verify_email/%s" % (response.s3.base_url, key),
+                          "url": "%s/default/index/verify_email/%s" % (response.s3.base_url, key),
                           }
 
                 # Try to send the Verification Email
@@ -900,7 +985,14 @@ class register(S3CustomController):
                                                  message = auth_messages.verify_email % system,
                                                  ):
                     response.error = auth_messages.email_verification_failed
-                    return form
+
+                    # Custom View
+                    self._view(THEME, "register.html")
+
+                    return {"title": title,
+                            "header": header,
+                            "form": form,
+                            }
 
                 # Redirect to Verification Info page
                 register_next = URL(c = "default",
@@ -909,39 +1001,16 @@ class register(S3CustomController):
                                     vars = {"email": form.vars.email},
                                     )
 
-            else:
-                # Does the user need to be approved?
-                approved = auth.s3_verify_user(form.vars)
-
-                if approved:
-                    # Log them in
-                    if "language" not in form.vars:
-                        # Was missing from login form
-                        form.vars.language = T.accepted_language
-                    user = Storage(utable._filter_fields(form.vars, id=True))
-                    auth.login_user(user)
-
-            # Set a Cookie to present user with login box by default
-            #auth.set_cookie()
-
             # Log action
-            log = auth_messages.register_log
-            if log:
-                auth.log_event(log, form.vars)
+            #if log:
+            auth.log_event(auth_messages.register_log, form.vars)
 
-            # Run onaccept for registration form
-            onaccept = auth_settings.register_onaccept
-            if onaccept:
-                onaccept(form)
+            # Run custom onaccept for registration form
+            #onaccept = auth_settings.register_onaccept
+            #if onaccept:
+            #    onaccept(form)
 
             # Redirect
-            if not register_next:
-                register_next = auth.url(args = request.args)
-            elif isinstance(register_next, (list, tuple)):
-                # fix issue with 2.6
-                register_next = register_next[0]
-            elif register_next and not register_next[0] == "/" and register_next[:4] != "http":
-                register_next = auth.url(register_next.replace("[id]", str(form.vars.id)))
             redirect(register_next)
 
         # Custom View
@@ -951,6 +1020,326 @@ class register(S3CustomController):
                 "header": header,
                 "form": form,
                 }
+
+# =============================================================================
+class verify_email(S3CustomController):
+    """ Custom verify_email Page """
+
+    def __call__(self):
+
+        db = current.db
+        auth = current.auth
+        auth_settings = auth.settings
+
+        key = current.request.args[-1]
+        utable = auth_settings.table_user
+        query = (utable.registration_key == key)
+        user = db(query).select(limitby=(0, 1)).first()
+        if not user:
+            redirect(auth_settings.verify_email_next)
+
+        auth_messages = auth.messages
+
+        session = current.session
+        settings = current.deployment_settings
+
+        user_id = user.id
+
+        # Determine registration type & read custom fields
+        temptable = db.auth_user_temp
+        record = db(temptable.user_id == user_id).select(temptable.custom,
+                                                         limitby = (0, 1),
+                                                         ).first()
+        custom = json.loads(record.custom)
+
+        organisation_id = user.organisation_id
+        if not organisation_id:
+            # Donor/Individual/Group, so doesn't need approval
+            # Calls s3_link_user() which calls s3_link_to_person() which applies 'normal' data from db.auth_user_temp (home_phone, mobile_phone, consent)
+            auth.s3_approve_user(user)# Would make agency user ORG_ADMIN automatically, however they take a different path
+
+            registration_type = custom["registration_type"]
+
+            s3db = current.s3db
+            get_config = s3db.get_config
+
+            # Apply custom fields & Assign correct Roles
+            if registration_type == "donor":
+                # Donor
+
+                # Create Home Address
+                gtable = s3db.gis_location
+                record = {"parent": custom["addr_L3"],
+                          "addr_street": custom["addr_street"],
+                          "addr_postcode": custom["addr_postcode"],
+                          }
+                location_id = gtable.insert(**record)
+                record["id"] = location_id
+                onaccept = get_config("gis_location", "create_onaccept") or \
+                           get_config("gis_location", "onaccept")
+                if callable(onaccept):
+                    gform = Storage(vars = record)
+                    onaccept(gform)
+
+                pe_id = auth.s3_user_pe_id(user_id)
+                atable = s3db.pr_address
+                record = {"pe_id": pe_id,
+                          "location_id": location_id,
+                          }
+                address_id = atable.insert(**record)
+                record["id"] = address_id
+                onaccept = get_config("pr_address", "create_onaccept") or \
+                           get_config("pr_address", "onaccept")
+                if callable(onaccept):
+                    aform = Storage(vars = record)
+                    onaccept(aform)
+
+                # Assign correct Role
+                ftable = s3db.pr_forum
+                forum = db(ftable.name == "Donors").select(ftable.pe_id,
+                                                           limitby = (0, 1)
+                                                           ).first()
+                auth.add_membership(user_id = user_id,
+                                    role = "Donor",
+                                    entity = forum.pe_id,
+                                    )
+
+            elif registration_type == "group":
+                # Group
+
+                # Create Group
+                gtable = s3db.pr_group
+                group = {"name": custom["group"]}
+                group_id = gtable.insert(**group)
+                group["id"] = group_id
+                s3db.update_super(gtable, group)
+
+                # Create Home Address
+                gtable = s3db.gis_location
+                record = {# Assume outside Cumbria
+                          #"parent": custom["addr_L3"],
+                          "addr_street": custom["addr_street"],
+                          "addr_postcode": custom["addr_postcode"],
+                          }
+                location_id = gtable.insert(**record)
+                record["id"] = location_id
+                onaccept = get_config("gis_location", "create_onaccept") or \
+                           get_config("gis_location", "onaccept")
+                if callable(onaccept):
+                    gform = Storage(vars = record)
+                    onaccept(gform)
+
+                pe_id = auth.s3_user_pe_id(user_id)
+                atable = s3db.pr_address
+                record = {"pe_id": pe_id,
+                          "location_id": location_id,
+                          }
+                address_id = atable.insert(**record)
+                record["id"] = address_id
+                onaccept = get_config("pr_address", "create_onaccept") or \
+                           get_config("pr_address", "onaccept")
+                if callable(onaccept):
+                    aform = Storage(vars = record)
+                    onaccept(aform)
+
+                # Add Leader(s) to Group
+                ptable = s3db.pr_person
+                person = db(ptable.pe_id == pe_id).select(ptable.id,
+                                                          limitby = (0, 1),
+                                                          ).first()
+                mtable = s3db.pr_group_membership
+                record = {"group_id": group_id,
+                          "person_id": person.id,
+                          "group_head": True,
+                          }
+                membership_id = mtable.insert(**record)
+                record["id"] = membership_id
+                onaccept = get_config("pr_group_membership", "create_onaccept") or \
+                           get_config("pr_group_membership", "onaccept")
+                if callable(onaccept):
+                    mform = Storage(vars = record)
+                    onaccept(mform)
+
+                # Create 2nd Leader
+                # @ToDo
+
+                # Create Skills
+                ctable = s3db.pr_group_competency
+                for skill_id in custom["skill_id"]
+                    record = {"group_id": group_id,
+                              "skill_id": skill_id,
+                              }
+                    ctable.insert(**record)
+
+                ttable = s3db.pr_group_tag
+                record = {"group_id": group_id,
+                          "tag": "skills_details",
+                          "value": custom["skills_details"],
+                          }
+                ttable.insert(**record)
+
+                # Emergency Contact
+                record = {"group_id": group_id,
+                          "tag": "contact_name",
+                          "value": custom["emergency_contact_name"],
+                          }
+                ttable.insert(**record)
+                record = {"group_id": group_id,
+                          "tag": "contact_number",
+                          "value": custom["emergency_contact_number"],
+                          }
+                ttable.insert(**record)
+
+                # Assign correct Role
+                auth.add_membership(user_id = user_id,
+                                    role = "Volunteer Group Leader",
+                                    entity = group["pe_id"],
+                                    )
+
+            else:
+                # Individual
+                get_config = s3db.get_config
+
+                # Create Home Address
+                gtable = s3db.gis_location
+                record = {"parent": custom["addr_L3"],
+                          "addr_street": custom["addr_street"],
+                          "addr_postcode": custom["addr_postcode"],
+                          }
+                location_id = gtable.insert(**record)
+                record["id"] = location_id
+                onaccept = get_config("gis_location", "create_onaccept") or \
+                           get_config("gis_location", "onaccept")
+                if callable(onaccept):
+                    gform = Storage(vars = record)
+                    onaccept(gform)
+
+                pe_id = auth.s3_user_pe_id(user_id)
+                atable = s3db.pr_address
+                record = {"pe_id": pe_id,
+                          "location_id": location_id,
+                          }
+                address_id = atable.insert(**record)
+                record["id"] = address_id
+                onaccept = get_config("pr_address", "create_onaccept") or \
+                           get_config("pr_address", "onaccept")
+                if callable(onaccept):
+                    aform = Storage(vars = record)
+                    onaccept(aform)
+
+                # Create Skills
+                ctable = s3db.hrm_competency
+                for skill_id in custom["skill_id"]
+                    record = {"group_id": group_id,
+                              "skill_id": skill_id,
+                              }
+                    ctable.insert(**record)
+
+                # @ToDo
+                #ttable = s3db.pr_person_tag
+                #record = {"person_id": person_id,
+                #          "tag": "skills_details",
+                #          "value": custom["skills_details"],
+                #          }
+                #ttable.insert(**record)
+
+                # Health/Criminal
+                # @ToDo
+
+                # Emergency Contact
+                etable = s3db.pr_emergency_contact
+                record = {"pe_id": pe_id,
+                          "name": custom["emergency_contact_name"],
+                          "phone": custom["emergency_contact_number"],
+                          "relationship": custom["emergency_contact_relationship"],
+                          }
+                etable.insert(**record)
+
+                # Assign correct Role
+                ftable = s3db.pr_forum
+                forum = db(ftable.name == "Reserves").select(ftable.pe_id,
+                                                             limitby = (0, 1)
+                                                             ).first()
+                auth.add_membership(user_id = user_id,
+                                    role = "Reserve Volunteer",
+                                    entity = forum.pe_id,
+                                    )
+
+            # Log them in
+            user = Storage(utable._filter_fields(user, id=True))
+            auth.login_user(user)
+
+            #if log:
+            auth.log_event(auth_messages.verify_email_log, user)
+
+            session.confirmation = auth_messages.email_verified
+            session.flash = auth_messages.registration_successful
+
+            if registration_type == "donor":
+                # Show General Information for Donors
+                _next = URL(c="default", f="index", args="donor")
+            else:
+                # Individual / Group
+                # Show General Information & Advice
+                _next = URL(c="cms", f="post", args="datalist")
+            redirect(_next)
+
+        db(utable.id == user_id).update(registration_key = "pending")
+        session.information = settings.get_auth_registration_pending_approval()
+
+        # Lookup the Approvers
+        gtable = db.auth_group
+        mtable = db.auth_membership
+        if custom["registration_type"] == "agency":
+            # Agencies are approved by ADMIN(s)
+            query = (gtable.uuid == "ADMIN") & \
+                    (gtable.id == mtable.group_id) & \
+                    (mtable.user_id == utable.id)
+            approvers = db(query).select(utable.email)
+        else:
+            # Existing, so approved by ORG_ADMIN(s)
+            query = (gtable.uuid == "ORG_ADMIN") & \
+                    (gtable.id == mtable.group_id) & \
+                    (mtable.user_id == utable.id) & \
+                    (utable.organisation_id == organisation_id)
+            approvers = db(query).select(utable.email)
+
+        # Mail the Approver(s)
+        first_name = user.first_name
+        last_name = user.last_name
+        email = user.email
+        base_url = current.response.s3.base_url
+        system_name = settings.get_system_name()
+        # NB This is a cut-down version of the original which doesn't support multi-lingual
+        subject = "%(system_name)s - New User Registration Approval Pending" % \
+                    {"system_name": system_name}
+        message = s3_str(auth_messages.approve_user % \
+                    {"system_name": system_name,
+                     "first_name": first_name,
+                     "last_name": last_name,
+                     "email": email,
+                     "url": "%(base_url)s/admin/user/%(id)s" % \
+                            {"base_url": base_url,
+                             "id": user_id,
+                             },
+                     })
+
+        mailer = auth_settings.mailer
+        if mailer.settings.server:
+            for approver in approvers:
+                result = mailer.send(to = approver,
+                                     subject = subject,
+                                     message = message,
+                                     )
+        else:
+            # Email system not configured (yet)
+            result = None
+        if not result:
+            # Don't prevent registration just because email not configured
+            #db.rollback()
+            session.error = auth_messages.email_send_failed
+
+        redirect(auth_settings.verify_email_next)
 
 # =============================================================================
 class volunteer(S3CustomController):

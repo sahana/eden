@@ -31,7 +31,7 @@ def config(settings):
     # Do new users need to verify their email address?
     settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
-    # - varies by path (see customise_auth_user_controller)
+    # - varies by path (see register() in controllers.py)
     #settings.auth.registration_requires_approval = True
     settings.auth.registration_requests_organisation = True
     # Required for access to default realm permissions
@@ -848,9 +848,9 @@ def config(settings):
                                              "filterby": {"tag": "transport"},
                                              "multiple": False,
                                              },
-                                            {"name": "skill_details",
+                                            {"name": "skills_details",
                                              "joinby": "group_id",
-                                             "filterby": {"tag": "skill_details"},
+                                             "filterby": {"tag": "skills_details"},
                                              "multiple": False,
                                              },
                                             {"name": "contact_name",
@@ -893,7 +893,7 @@ def config(settings):
                                                                    field = "skill_id",
                                                                    label = T("Volunteer Offer"),
                                                                    ),
-                                                   (T("Skill Details"), "skill_details.value"),
+                                                   (T("Skills Details"), "skills_details.value"),
                                                    S3SQLInlineLink("location",
                                                                    field = "location_id",
                                                                    label = T("Where would you be willing to operate?"),
@@ -909,7 +909,7 @@ def config(settings):
                                       #(T("Leaders"), "group_membership.person_id"),
                                       (T("Locations"), "group_location.location_id"),
                                       (T("Skills"), "group_competency.skill_id"),
-                                      (T("Skill Details"), "skill_details.value"),
+                                      (T("Skills Details"), "skill_details.value"),
                                       "comments",
                                       ],
                        filter_widgets = [S3TextFilter(["name",
@@ -918,7 +918,7 @@ def config(settings):
                                                        "group_membership.person_id$last_name",
                                                        "group_location.location_id",
                                                        "group_competency.skill_id",
-                                                       "skill_details.value",
+                                                       "skills_details.value",
                                                        "comments",
                                                        ],
                                                       #formstyle = text_filter_formstyle,
@@ -991,8 +991,8 @@ def config(settings):
                                                    "comments",
                                                    ),
                        list_fields = ["person_id",
-                                      "person_id$phone",
-                                      "person_id$email",
+                                      (T("Phone"), "person_id$phone.value"),
+                                      (T("Email"), "person_id$email.value"),
                                       "comments",
                                       ],
                        )
@@ -1419,6 +1419,8 @@ def config(settings):
                        #(T("Opportunity"), "name"),
                        "name",
                        "need_contact.person_id",
+                       #(T("Phone"), "need_contact.person_id$phone.value"),
+                       #(T("Email"), "need_contact.person_id$email.value"),
                        "need_skill.skill_id",
                        "need_skill.quantity",
                        ]
@@ -1452,6 +1454,8 @@ def config(settings):
                                            )
 
         s3db.configure("req_need",
+                       # Needs a custom handler as default handler only supports default forms
+                       #copyable = True,
                        crud_form = S3SQLCustomForm("need_organisation.organisation_id",
                                                    "date",
                                                    "end_date",
@@ -1482,6 +1486,31 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_req_need_controller(**attr):
 
+        #s3 = current.response.s3
+
+        # Custom prep
+        #standard_prep = s3.prep
+        #def prep(r):
+        #    # Call standard prep
+        #    if callable(standard_prep):
+        #        result = standard_prep(r)
+        #    else:
+        #        result = True
+
+        #    if r.method == "read":
+        #        # Show the Contact's Phone & Email
+        #        # @ToDo: Do this only for Vols whose Application has been succesful
+        #        # @ToDo: Create custom version of this which bypasses ACLs since
+        #        #        - Will fail for normal Vols as they can't see other Vols anyway
+        #        #        - Also failing for OrgAdmin as the user-added Phone is in the Personal PE not the Org's
+        #        s3db = current.s3db
+        #        s3db.req_need_contact.person_id.represent = s3db.pr_PersonRepresentContact(show_email = True,
+        #                                                                                   show_link = False,
+        #                                                                                   )
+
+        #    return result
+        #s3.prep = prep
+        
         attr["rheader"] = ccc_rheader
 
         return attr

@@ -453,10 +453,10 @@ class S3LocationModel(S3Model):
         """
 
         auth = current.auth
-        form_vars = form.vars
-        location_id = form_vars.id
+        form_vars_get = form.vars.get
+        location_id = form_vars_get("id")
 
-        if form_vars.path and current.response.s3.bulk:
+        if form_vars_get("path") and current.response.s3.bulk:
             # Don't import path from foreign sources as IDs won't match
             db = current.db
             db(db.gis_location.id == location_id).update(path=None)
@@ -466,7 +466,7 @@ class S3LocationModel(S3Model):
             # Update the Path (async if-possible)
             # (skip during prepop)
             feature = json.dumps({"id": location_id,
-                                  "level": form_vars.get("level", False),
+                                  "level": form_vars_get("level", False),
                                   })
             current.s3task.async("gis_update_location_tree",
                                  args = [feature],
@@ -1067,8 +1067,8 @@ class S3LocationModel(S3Model):
         if (not limit or limit > MAX_SEARCH_RESULTS) and \
            resource.count() > MAX_SEARCH_RESULTS:
             output = json.dumps([
-                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % \
-                    dict(max=MAX_SEARCH_RESULTS)))
+                {"label": s3_str(current.T("There are more than %(max)s results, please input more characters.") % \
+                    {"max": MAX_SEARCH_RESULTS})}
                 ], separators=SEPARATORS)
 
         elif loc_select:

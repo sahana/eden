@@ -2868,7 +2868,7 @@ class PRGroupModel(S3Model):
         """
 
         if hasattr(form, "vars"):
-            record_id = form.vars.id
+            record_id = form.vars.get("id")
         elif isinstance(form, Row) and "id" in form:
             record_id = form.id
         else:
@@ -6981,8 +6981,6 @@ class pr_PersonRepresentContact(pr_PersonRepresent):
             query = (key == values[0])
         else:
             query = key.belongs(values)
-
-        fields = ["id"]
 
         rows = db(query).select(table.id,
                                 table.pe_id,
