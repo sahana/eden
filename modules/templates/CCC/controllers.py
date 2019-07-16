@@ -209,6 +209,89 @@ class donate(S3CustomController):
             item3 = ""
         output["item3"] = item3
 
+        resource = "Donate4"
+        query = (ltable.module == module) & \
+                (ltable.resource == resource) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        item = current.db(query).select(table.body,
+                                        table.id,
+                                        limitby=(0, 1)).first()
+        if item:
+            if ADMIN:
+                item4 = DIV(XML(item.body),
+                            BR(),
+                            A(current.T("Edit"),
+                              _href = URL(c="cms", f="post",
+                                          args = [item.id, "update"],
+                                          vars = {"module": module,
+                                                  "resource": resource,
+                                                  },
+                                          ),
+                              _class="action-btn",
+                              ),
+                            )
+            else:
+                item4 = DIV(XML(item.body))
+        elif ADMIN:
+            if current.response.s3.crud.formstyle == "bootstrap":
+                _class = "btn"
+            else:
+                _class = "action-btn"
+            item4 = A(current.T("Edit"),
+                      _href = URL(c="cms", f="post", args="create",
+                                  vars = {"module": module,
+                                          "resource": resource,
+                                          },
+                                  ),
+                      _class="%s cms-edit" % _class,
+                      )
+        else:
+            item4 = ""
+        output["item4"] = item4
+
+        resource = "Donate5"
+        query = (ltable.module == module) & \
+                (ltable.resource == resource) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        item = current.db(query).select(table.body,
+                                        table.id,
+                                        limitby=(0, 1)).first()
+        if item:
+            if ADMIN:
+                item5 = DIV(XML(item.body),
+                            BR(),
+                            A(current.T("Edit"),
+                              _href = URL(c="cms", f="post",
+                                          args = [item.id, "update"],
+                                          vars = {"module": module,
+                                                  "resource": resource,
+                                                  },
+                                          ),
+                              _class="action-btn",
+                              ),
+                            )
+            else:
+                item5 = DIV(XML(item.body))
+        elif ADMIN:
+            if current.response.s3.crud.formstyle == "bootstrap":
+                _class = "btn"
+            else:
+                _class = "action-btn"
+            item5 = A(current.T("Edit"),
+                      _href = URL(c="cms", f="post", args="create",
+                                  vars = {"module": module,
+                                          "resource": resource,
+                                          },
+                                  ),
+                      _class="%s cms-edit" % _class,
+                      )
+        else:
+            item5 = ""
+        output["item5"] = item5
+
+
         self._view(THEME, "donate.html")
         return output
 
@@ -1165,7 +1248,7 @@ class verify_email(S3CustomController):
 
                 # Create Skills
                 ctable = s3db.pr_group_competency
-                for skill_id in custom["skill_id"]
+                for skill_id in custom["skill_id"]:
                     record = {"group_id": group_id,
                               "skill_id": skill_id,
                               }
@@ -1229,7 +1312,7 @@ class verify_email(S3CustomController):
 
                 # Create Skills
                 ctable = s3db.hrm_competency
-                for skill_id in custom["skill_id"]
+                for skill_id in custom["skill_id"]:
                     record = {"group_id": group_id,
                               "skill_id": skill_id,
                               }
