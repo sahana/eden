@@ -1741,7 +1741,7 @@ Thank you"""
 
         first_name = utable.first_name
         first_name.label = T("First Name") #messages.label_first_name
-        first_name.requires = IS_NOT_EMPTY(error_message=messages.is_empty),
+        first_name.requires = IS_NOT_EMPTY(error_message=messages.is_empty)
 
         last_name = utable.last_name
         last_name.label = T("Last Name") #messages.label_last_name

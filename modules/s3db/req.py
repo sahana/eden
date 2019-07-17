@@ -5118,10 +5118,10 @@ class req_CheckMethod(S3Method):
                                 else:
                                     status = SPAN(T("YES"), _class="req_status_complete")
                             else:
-                                status = SPAN(T("NO"), _class="req_status_none"),
+                                status = SPAN(T("NO"), _class="req_status_none")
                         else:
                             inv_quantity = T("N/A")
-                            status = SPAN(T("N/A"), _class="req_status_none"),
+                            status = SPAN(T("N/A"), _class="req_status_none")
 
                         items.append(TR(#A(req_item.id),
                                         supply_item_represent(req_item.item_id),
@@ -5290,10 +5290,10 @@ class req_CheckMethod(S3Method):
                             else:
                                 status = SPAN(T("YES"), _class="req_status_complete")
                         else:
-                            status = SPAN(T("NO"), _class="req_status_none"),
+                            status = SPAN(T("NO"), _class="req_status_none")
                     else:
                         org_quantity = T("N/A")
-                        status = SPAN(T("N/A"), _class="req_status_none"),
+                        status = SPAN(T("N/A"), _class="req_status_none")
 
                     items.append(TR(#A(req_item.id),
                                     multi_skill_represent(skills),
