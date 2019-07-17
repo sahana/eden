@@ -39,7 +39,6 @@ __all__ = ("S3OrganisationModel",
            "S3OrganisationResourceModel",
            "S3OrganisationSectorModel",
            "S3OrganisationServiceModel",
-           "S3OrganisationSummaryModel",
            "S3OrganisationTagModel",
            "S3OrganisationTeamModel",
            "S3OrganisationTypeTagModel",
@@ -52,7 +51,6 @@ __all__ = ("S3OrganisationModel",
            "org_facility_rheader",
            "S3RoomModel",
            "S3OfficeModel",
-           "S3OfficeSummaryModel",
            "S3OfficeTypeTagModel",
            "org_organisation_logo",
            "org_organisation_address",
@@ -463,12 +461,6 @@ class S3OrganisationModel(S3Model):
                                                   ),
                                )
 
-        if settings.get_org_summary():
-            # Include Summary fields in form
-            position = crud_fields.index("year")
-            crud_fields.insert(position + 1, "summary.national_staff")
-            crud_fields.insert(position + 2, "summary.international_staff")
-
         crud_form = S3SQLCustomForm(*crud_fields)
 
         # CRUD strings
@@ -858,15 +850,6 @@ class S3OrganisationModel(S3Model):
                                                },
                            )
 
-        # Organisation Summary data
-        if settings.get_org_summary():
-            add_components(tablename,
-                           org_organisation_summary = {"name": "summary",
-                                                       "joinby": "organisation_id",
-                                                       "multiple": False,
-                                                       },
-                           )
-
         # ---------------------------------------------------------------------
         # Organisation <-> Organisation Type
         #
@@ -918,12 +901,24 @@ class S3OrganisationModel(S3Model):
     @staticmethod
     def org_organisation_onaccept(form):
         """
-            If a logo was uploaded then create the extra versions.
-            Process injected fields
+            Set default root_organisation ID
+            If a logo was uploaded then create the extra versions
         """
 
-        newfilename = form.vars.logo_newfilename
+        form_vars_get = form.vars.get
+
+        # Set default root_organisation ID
+        db = current.db
+        record_id = form_vars_get("id")
+        if record_id:
+            otable = db.org_organisation
+            query = (otable.id == record_id) & \
+                    (otable.root_organisation == None)
+            db(query).update(root_organisation = otable.id)
+
+        newfilename = form_vars_get("logo_newfilename")
         if newfilename:
+            # Create the extra versions of the Logo
             s3db = current.s3db
             image = form.request_vars.logo
             s3db.pr_image_modify(image.file,
@@ -937,52 +932,6 @@ class S3OrganisationModel(S3Model):
                                  size = (None, 60),
                                  to_format = "bmp",
                                  )
-
-        # Set default root_organisation ID
-        db = current.db
-        try:
-            record_id = form.vars.id
-        except AttributeError:
-            pass
-        else:
-            otable = db.org_organisation
-            query = (otable.id == record_id) & \
-                    (otable.root_organisation == None)
-            db(query).update(root_organisation = otable.id)
-
-        # Process Injected Fields
-        if not current.deployment_settings.get_org_summary():
-            return
-
-        post_vars = current.request.post_vars
-        record_id = post_vars.id
-        if not record_id:
-            # Not a POST request (e.g. import), hence no injected fields either
-            return
-
-        table = current.s3db.org_organisation_summary
-        query = (table.organisation_id == record_id)
-        existing = db(query).select(table.id,
-                                    limitby=(0, 1)).first()
-        if "national_staff" in post_vars:
-            national_staff = post_vars.national_staff
-        else:
-            national_staff = None
-        if "international_staff" in post_vars:
-            international_staff = post_vars.international_staff
-        else:
-            international_staff = None
-
-        if existing:
-            db(query).update(national_staff=national_staff,
-                             international_staff=international_staff
-                             )
-        elif national_staff or international_staff:
-            table.insert(organisation_id=id,
-                         national_staff=national_staff,
-                         international_staff=international_staff
-                         )
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2104,7 +2053,7 @@ class S3OrganisationResourceModel(S3Model):
                           # Instance
                           super_link("data_id", "stats_data"),
                           self.org_organisation_id(ondelete="CASCADE"),
-                          # Add this when deprecating S3OfficeSummaryModel
+                          # Consider adding this
                           #self.super_link("site_id", "org_site",
                           #                label = current.deployment_settings.get_org_site_label(),
                           #                instance_types = auth.org_site_types,
@@ -2988,39 +2937,6 @@ def org_service_root_service(service_id):
         db(table.id.belongs(nodes)).update(root_service=new_root)
 
     return new_root
-
-# =============================================================================
-class S3OrganisationSummaryModel(S3Model):
-    """
-        Organisation Summary fields visible when settings.org.summary = True
-
-        @ToDo: Deprecate in favour of S3OrganisationResourceModel
-    """
-
-    names = ("org_organisation_summary",)
-
-    def model(self):
-
-        T = current.T
-
-        # ---------------------------------------------------------------------
-        # Summary data
-        #
-        tablename = "org_organisation_summary"
-        self.define_table(tablename,
-                          self.org_organisation_id(ondelete="CASCADE"),
-                          Field("national_staff", "integer", # national is a reserved word in Postgres
-                                label = T("# of National Staff"),
-                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
-                                ),
-                          Field("international_staff", "integer",
-                                label = T("# of International Staff"),
-                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
-                                ),
-                          *s3_meta_fields())
-
-        # Pass names back to global scope (s3.*)
-        return {}
 
 # =============================================================================
 class S3OrganisationTagModel(S3Model):
@@ -4801,12 +4717,6 @@ class S3OfficeModel(S3Model):
                        "obsolete",
                        "comments",
                        ]
-        org_summary = settings.get_org_summary()
-        if org_summary:
-            # Include Summary fields in form
-            position = crud_fields.index("email")
-            crud_fields.insert(position + 1, "summary.national_staff")
-            crud_fields.insert(position + 2, "summary.international_staff")
 
         crud_form = S3SQLCustomForm(*crud_fields)
 
@@ -4934,14 +4844,6 @@ class S3OfficeModel(S3Model):
                   update_realm = True,
                   )
 
-        if org_summary:
-            add_components(tablename,
-                           org_office_summary = {"name": "summary",
-                                                 "joinby": "office_id",
-                                                 "multiple": False,
-                                                 },
-                           )
-
         # Pass names back to global scope (s3.*)
         return {"org_office_type_id": office_type_id,
                 }
@@ -4954,70 +4856,8 @@ class S3OfficeModel(S3Model):
             * Process injected fields
         """
 
-        form_vars = form.vars
-
         # Affiliation, record ownership and component ownership
-        org_update_affiliations("org_office", form_vars)
-
-        if current.deployment_settings.get_org_summary():
-
-            db = current.db
-            office_id = form_vars.id
-            table = current.s3db.org_office_summary
-            query = (table.office_id == office_id)
-            existing = db(query).select(table.id,
-                                        limitby=(0, 1)).first()
-            post_vars = current.request.post_vars
-            national_staff = post_vars.get("national_staff", None)
-            international_staff = post_vars.get("international_staff", None)
-
-            if existing:
-                db(query).update(national_staff = national_staff,
-                                 international_staff = international_staff
-                                 )
-            elif national_staff or international_staff:
-                table.insert(office_id = office_id,
-                             national_staff = national_staff,
-                             international_staff = international_staff
-                             )
-
-# =============================================================================
-class S3OfficeSummaryModel(S3Model):
-    """
-        Office Summary fields visible when settings.org.summary = True
-
-        @ToDo: Deprecate in favour of S3OrganisationResourceModel
-    """
-
-    names = ("org_office_summary",)
-
-    def model(self):
-
-        T = current.T
-
-        # ---------------------------------------------------------------------
-        # Summary data
-        #
-        tablename = "org_office_summary"
-        self.define_table(tablename,
-                          Field("office_id",
-                                label = T("Office"),
-                                ondelete = "CASCADE",
-                                requires = IS_ONE_OF(current.db, "org_office.id",
-                                                     "%(name)s"),
-                                ),
-                          Field("national_staff", "integer", # national is a reserved word in Postgres
-                                label = T("# of National Staff"),
-                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
-                                ),
-                          Field("international_staff", "integer",
-                                label = T("# of International Staff"),
-                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
-                                ),
-                          *s3_meta_fields())
-
-        # Pass names back to global scope (s3.*)
-        return {}
+        org_update_affiliations("org_office", form.vars)
 
 # =============================================================================
 class S3OfficeTypeTagModel(S3Model):
@@ -7592,9 +7432,9 @@ def org_site_update_affiliations(record):
     atable = db.pr_affiliation
 
     o_pe_id = None
-    s_pe_id = record.pe_id
+    s_pe_id = record.get("pe_id")
 
-    organisation_id = record.organisation_id
+    organisation_id = record.get("organisation_id")
     if organisation_id:
         org = db(otable.id == organisation_id).select(otable.pe_id,
                                                       limitby=(0, 1)).first()

@@ -30,6 +30,7 @@
 __all__ = ("S3SupplyModel",
            "S3SupplyDistributionModel",
            "S3SupplyDistributionDVRActivityModel",
+           "S3DonorPersonModel",
            "supply_item_rheader",
            "supply_item_controller",
            "supply_item_entity_controller",
@@ -1742,6 +1743,49 @@ class S3SupplyDistributionDVRActivityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
+        return {}
+
+# =============================================================================
+class S3DonorPersonModel(S3Model):
+    """
+        Link table between People & Items
+    """
+
+    names = ("supply_person_item",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Link table between People & Items
+        #
+        tablename = "supply_person_item"
+        self.define_table(tablename,
+                          self.supply_item_id(empty = False,
+                                              ondelete = "CASCADE",
+                                              ),
+                          self.pr_person_id(empty = False,
+                                            ondelete = "CASCADE",
+                                            ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Item"),
+            title_display = T("Item Details"),
+            title_list = T("Items"),
+            title_update = T("Edit Item"),
+            #title_upload = T("Import Items"),
+            label_list_button = T("List Items"),
+            label_delete_button = T("Remove Item"),
+            msg_record_created = T("Item added"),
+            msg_record_modified = T("Item updated"),
+            msg_record_deleted = T("Item removed"),
+            msg_list_empty = T("No Items currently registered for this person")
+        )
+
+        # Pass names back to global scope (s3.*)
         return {}
 
 # =============================================================================

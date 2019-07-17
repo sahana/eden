@@ -4862,13 +4862,6 @@ class S3Config(Storage):
         """
         return self.org.get("site_check")
 
-    def get_org_summary(self):
-        """
-            Whether to use Summary fields for Organisation/Office:
-                # National/International staff
-        """
-        return self.org.get("summary", False)
-
     def set_org_dependent_field(self,
                                 tablename=None,
                                 fieldname=None,

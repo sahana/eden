@@ -659,7 +659,7 @@ class register(S3CustomController):
                                                                   T("Ideally a Mobile Number, so that we can send you Text Messages.")),
                                               ),
                                 ),
-                          Field("work_phone",
+                          Field("home",
                                 label = T("Contact Number (Secondary)"),
                                 ),
                           utable.email,
@@ -675,7 +675,7 @@ class register(S3CustomController):
                           
                           # Goods / Services
                           Field("item_id", "list:reference supply_item",
-                                label = T("Goods/ Services"),
+                                label = T("Goods / Services"),
                                 ondelete = "SET NULL",
                                 represent = s3db.supply_ItemRepresent(multiple=True),
                                 requires = IS_ONE_OF(db, "supply_item.id",
@@ -890,13 +890,13 @@ class register(S3CustomController):
 
         # Add Subheadings
         if agency:
-            form[0].insert(5, DIV("Group Leader 1",
+            form[0].insert(6, DIV("Group Leader 1",
                                   _class = "subheading",
                                   ))
-            form[0].insert(15, DIV("Group Leader 2",
+            form[0].insert(16, DIV("Group Leader 2",
                                    _class = "subheading",
                                    ))
-            form[0].insert(23, DIV(_class = "subheading",
+            form[0].insert(24, DIV(_class = "subheading",
                                    ))
 
         elif donor:
@@ -923,9 +923,7 @@ class register(S3CustomController):
             form[0].insert(6, DIV(_class = "subheading",
                                   ))
             # Volunteer Offer
-            form[0].insert(11, DIV(_class = "subheading",
-                                   ))
-            form[0].insert(13, DIV(_class = "subheading",
+            form[0].insert(12, DIV(_class = "subheading",
                                    ))
             form[0].insert(-5, DIV("Person to be contacted in case of an emergency",
                                    _class = "subheading",
@@ -976,9 +974,21 @@ class register(S3CustomController):
             # Store Custom fields
             if agency:
                 custom = {"registration_type": "agency",
+                          "organisation": form_vars.organisation,
+                          "organisation_type_id": form_vars.organisation_type_id,
                           "addr_L3": form_vars.addr_L3,
                           "addr_street": form_vars.addr_street,
                           "addr_postcode": form_vars.addr_postcode,
+                          "where_operate": form_vars.where_operate or [],
+                          "addr_street1": form_vars.addr_street1,
+                          "addr_postcode1": form_vars.addr_postcode1,
+                          "first_name2": form_vars.first_name2,
+                          "last_name2": form_vars.last_name2,
+                          "addr_street2": form_vars.addr_street2,
+                          "addr_postcode2": form_vars.addr_postcode2,
+                          "email2": form_vars.email2,
+                          "mobile2": form_vars.mobile2,
+                          "home2": form_vars.home2,
                           }
             elif donor:
                 custom = {"registration_type": "donor",
@@ -987,19 +997,10 @@ class register(S3CustomController):
                           "addr_L3": form_vars.addr_L3,
                           "addr_street": form_vars.addr_street,
                           "addr_postcode": form_vars.addr_postcode,
-                          "item_id": form_vars.item_id,
+                          "item_id": form_vars.item_id or [],
                           "items_details": form_vars.items_details,
-                          }
-            elif existing:
-                custom = {"registration_type": "existing",
-                          "addr_L3": form_vars.addr_L3,
-                          "addr_street": form_vars.addr_street,
-                          "addr_postcode": form_vars.addr_postcode,
-                          "skill_id": form_vars.skill_id,
-                          "skills_details": form_vars.skills_details,
-                          "emergency_contact_name": form_vars.emergency_contact_name,
-                          "emergency_contact_number": form_vars.emergency_contact_number,
-                          "emergency_contact_relationship": form_vars.emergency_contact_relationship,
+                          "delivery": form_vars.delivery,
+                          "availability": form_vars.availability,
                           }
             elif group:
                 custom = {"registration_type": "group",
@@ -1008,23 +1009,36 @@ class register(S3CustomController):
                           #"addr_L3": form_vars.addr_L3,
                           "addr_street": form_vars.addr_street,
                           "addr_postcode": form_vars.addr_postcode,
-                          "skill_id": form_vars.skill_id,
+                          "first_name2": form_vars.first_name2,
+                          "last_name2": form_vars.last_name2,
+                          "addr_street2": form_vars.addr_street2,
+                          "addr_postcode2": form_vars.addr_postcode2,
+                          "email2": form_vars.email2,
+                          "password2": form_vars.password2,
+                          "mobile2": form_vars.mobile2,
+                          "home2": form_vars.home2,
+                          "skill_id": form_vars.skill_id or [],
                           "skills_details": form_vars.skills_details,
                           "emergency_contact_name": form_vars.emergency_contact_name,
                           "emergency_contact_number": form_vars.emergency_contact_number,
-                          #"emergency_contact_relationship": form_vars.emergency_contact_relationship,
                           }
             else:
-                custom = {"registration_type": "individual",
-                          "addr_L3": form_vars.addr_L3,
+                # Individual or Existing
+                custom = {"addr_L3": form_vars.addr_L3,
                           "addr_street": form_vars.addr_street,
                           "addr_postcode": form_vars.addr_postcode,
-                          "skill_id": form_vars.skill_id,
+                          "skill_id": form_vars.skill_id or [],
                           "skills_details": form_vars.skills_details,
                           "emergency_contact_name": form_vars.emergency_contact_name,
                           "emergency_contact_number": form_vars.emergency_contact_number,
                           "emergency_contact_relationship": form_vars.emergency_contact_relationship,
+                          # @ToDo: Add Health/Criminal
                           }
+                if existing:
+                    custom["registration_type"] = "existing"
+                else:
+                    custom["registration_type"] = "individual"
+            
             record["custom"] = json.dumps(custom)
 
             temptable.update_or_insert(**record)
@@ -1128,225 +1142,26 @@ class verify_email(S3CustomController):
 
         user_id = user.id
 
-        # Determine registration type & read custom fields
+        # Read custom fields to determine registration type
         temptable = db.auth_user_temp
         record = db(temptable.user_id == user_id).select(temptable.custom,
                                                          limitby = (0, 1),
                                                          ).first()
         custom = json.loads(record.custom)
+        registration_type = custom["registration_type"]
 
-        organisation_id = user.organisation_id
-        if not organisation_id:
+        if registration_type == "agency":
+            agency = True
+        else:
+            agency = False
+            organisation_id = user.organisation_id
+
+        if not agency and not organisation_id:
             # Donor/Individual/Group, so doesn't need approval
             # Calls s3_link_user() which calls s3_link_to_person() which applies 'normal' data from db.auth_user_temp (home_phone, mobile_phone, consent)
-            auth.s3_approve_user(user)# Would make agency user ORG_ADMIN automatically, however they take a different path
-
-            registration_type = custom["registration_type"]
-
-            s3db = current.s3db
-            get_config = s3db.get_config
-
-            # Apply custom fields & Assign correct Roles
-            if registration_type == "donor":
-                # Donor
-
-                # Create Home Address
-                gtable = s3db.gis_location
-                record = {"parent": custom["addr_L3"],
-                          "addr_street": custom["addr_street"],
-                          "addr_postcode": custom["addr_postcode"],
-                          }
-                location_id = gtable.insert(**record)
-                record["id"] = location_id
-                onaccept = get_config("gis_location", "create_onaccept") or \
-                           get_config("gis_location", "onaccept")
-                if callable(onaccept):
-                    gform = Storage(vars = record)
-                    onaccept(gform)
-
-                pe_id = auth.s3_user_pe_id(user_id)
-                atable = s3db.pr_address
-                record = {"pe_id": pe_id,
-                          "location_id": location_id,
-                          }
-                address_id = atable.insert(**record)
-                record["id"] = address_id
-                onaccept = get_config("pr_address", "create_onaccept") or \
-                           get_config("pr_address", "onaccept")
-                if callable(onaccept):
-                    aform = Storage(vars = record)
-                    onaccept(aform)
-
-                # Assign correct Role
-                ftable = s3db.pr_forum
-                forum = db(ftable.name == "Donors").select(ftable.pe_id,
-                                                           limitby = (0, 1)
-                                                           ).first()
-                auth.add_membership(user_id = user_id,
-                                    role = "Donor",
-                                    entity = forum.pe_id,
-                                    )
-
-            elif registration_type == "group":
-                # Group
-
-                # Create Group
-                gtable = s3db.pr_group
-                group = {"name": custom["group"]}
-                group_id = gtable.insert(**group)
-                group["id"] = group_id
-                s3db.update_super(gtable, group)
-
-                # Create Home Address
-                gtable = s3db.gis_location
-                record = {# Assume outside Cumbria
-                          #"parent": custom["addr_L3"],
-                          "addr_street": custom["addr_street"],
-                          "addr_postcode": custom["addr_postcode"],
-                          }
-                location_id = gtable.insert(**record)
-                record["id"] = location_id
-                onaccept = get_config("gis_location", "create_onaccept") or \
-                           get_config("gis_location", "onaccept")
-                if callable(onaccept):
-                    gform = Storage(vars = record)
-                    onaccept(gform)
-
-                pe_id = auth.s3_user_pe_id(user_id)
-                atable = s3db.pr_address
-                record = {"pe_id": pe_id,
-                          "location_id": location_id,
-                          }
-                address_id = atable.insert(**record)
-                record["id"] = address_id
-                onaccept = get_config("pr_address", "create_onaccept") or \
-                           get_config("pr_address", "onaccept")
-                if callable(onaccept):
-                    aform = Storage(vars = record)
-                    onaccept(aform)
-
-                # Add Leader(s) to Group
-                ptable = s3db.pr_person
-                person = db(ptable.pe_id == pe_id).select(ptable.id,
-                                                          limitby = (0, 1),
-                                                          ).first()
-                mtable = s3db.pr_group_membership
-                record = {"group_id": group_id,
-                          "person_id": person.id,
-                          "group_head": True,
-                          }
-                membership_id = mtable.insert(**record)
-                record["id"] = membership_id
-                onaccept = get_config("pr_group_membership", "create_onaccept") or \
-                           get_config("pr_group_membership", "onaccept")
-                if callable(onaccept):
-                    mform = Storage(vars = record)
-                    onaccept(mform)
-
-                # Create 2nd Leader
-                # @ToDo
-
-                # Create Skills
-                ctable = s3db.pr_group_competency
-                for skill_id in custom["skill_id"]:
-                    record = {"group_id": group_id,
-                              "skill_id": skill_id,
-                              }
-                    ctable.insert(**record)
-
-                ttable = s3db.pr_group_tag
-                record = {"group_id": group_id,
-                          "tag": "skills_details",
-                          "value": custom["skills_details"],
-                          }
-                ttable.insert(**record)
-
-                # Emergency Contact
-                record = {"group_id": group_id,
-                          "tag": "contact_name",
-                          "value": custom["emergency_contact_name"],
-                          }
-                ttable.insert(**record)
-                record = {"group_id": group_id,
-                          "tag": "contact_number",
-                          "value": custom["emergency_contact_number"],
-                          }
-                ttable.insert(**record)
-
-                # Assign correct Role
-                auth.add_membership(user_id = user_id,
-                                    role = "Volunteer Group Leader",
-                                    entity = group["pe_id"],
-                                    )
-
-            else:
-                # Individual
-                get_config = s3db.get_config
-
-                # Create Home Address
-                gtable = s3db.gis_location
-                record = {"parent": custom["addr_L3"],
-                          "addr_street": custom["addr_street"],
-                          "addr_postcode": custom["addr_postcode"],
-                          }
-                location_id = gtable.insert(**record)
-                record["id"] = location_id
-                onaccept = get_config("gis_location", "create_onaccept") or \
-                           get_config("gis_location", "onaccept")
-                if callable(onaccept):
-                    gform = Storage(vars = record)
-                    onaccept(gform)
-
-                pe_id = auth.s3_user_pe_id(user_id)
-                atable = s3db.pr_address
-                record = {"pe_id": pe_id,
-                          "location_id": location_id,
-                          }
-                address_id = atable.insert(**record)
-                record["id"] = address_id
-                onaccept = get_config("pr_address", "create_onaccept") or \
-                           get_config("pr_address", "onaccept")
-                if callable(onaccept):
-                    aform = Storage(vars = record)
-                    onaccept(aform)
-
-                # Create Skills
-                ctable = s3db.hrm_competency
-                for skill_id in custom["skill_id"]:
-                    record = {"group_id": group_id,
-                              "skill_id": skill_id,
-                              }
-                    ctable.insert(**record)
-
-                # @ToDo
-                #ttable = s3db.pr_person_tag
-                #record = {"person_id": person_id,
-                #          "tag": "skills_details",
-                #          "value": custom["skills_details"],
-                #          }
-                #ttable.insert(**record)
-
-                # Health/Criminal
-                # @ToDo
-
-                # Emergency Contact
-                etable = s3db.pr_emergency_contact
-                record = {"pe_id": pe_id,
-                          "name": custom["emergency_contact_name"],
-                          "phone": custom["emergency_contact_number"],
-                          "relationship": custom["emergency_contact_relationship"],
-                          }
-                etable.insert(**record)
-
-                # Assign correct Role
-                ftable = s3db.pr_forum
-                forum = db(ftable.name == "Reserves").select(ftable.pe_id,
-                                                             limitby = (0, 1)
-                                                             ).first()
-                auth.add_membership(user_id = user_id,
-                                    role = "Reserve Volunteer",
-                                    entity = forum.pe_id,
-                                    )
+            # Calls auth_user_onaccept in config.py to apply custom fields & set custom roles
+            # (When called by the approve method in admin/user, makes agency user ORG_ADMIN automatically)
+            auth.s3_approve_user(user)
 
             # Log them in
             user = Storage(utable._filter_fields(user, id=True))
@@ -1368,12 +1183,12 @@ class verify_email(S3CustomController):
             redirect(_next)
 
         db(utable.id == user_id).update(registration_key = "pending")
-        session.information = settings.get_auth_registration_pending_approval()
+        session.information = "Thank you for validating your email. Your user account is still pending for approval by the administrator. You will get a notification by email when your account is activated."
 
         # Lookup the Approvers
         gtable = db.auth_group
         mtable = db.auth_membership
-        if custom["registration_type"] == "agency":
+        if agency:
             # Agencies are approved by ADMIN(s)
             query = (gtable.uuid == "ADMIN") & \
                     (gtable.id == mtable.group_id) & \
@@ -1410,7 +1225,7 @@ class verify_email(S3CustomController):
         mailer = auth_settings.mailer
         if mailer.settings.server:
             for approver in approvers:
-                result = mailer.send(to = approver,
+                result = mailer.send(to = approver.email,
                                      subject = subject,
                                      message = message,
                                      )

@@ -1071,6 +1071,11 @@ class PRPersonModel(S3Model):
                        # Skills
                        pr_language = "person_id",
                        hrm_certification = "person_id",
+                       hrm_skill = {"link": "hrm_competency",
+                                    "joinby": "person_id",
+                                    "key": "skill_id",
+                                    "actuate": "hide",
+                                    },
                        hrm_competency = "person_id",
                        hrm_credential = "person_id",
                        hrm_training = "person_id",
@@ -1111,15 +1116,16 @@ class PRPersonModel(S3Model):
                        # Education history
                        pr_education = "person_id",
                        # Occupation Types
-                       pr_occupation_type = {
-                           "link": "pr_occupation_type_person",
-                           "joinby": "person_id",
-                           "key": "occupation_type_id",
-                           "actuate": "link",
-                           "autodelete": False,
-                           },
+                       pr_occupation_type = {"link": "pr_occupation_type_person",
+                                             "joinby": "person_id",
+                                             "key": "occupation_type_id",
+                                             "actuate": "link",
+                                             "autodelete": False,
+                                             },
+
                        # Group Memberships
                        pr_group_membership = "person_id",
+
                        # Identity Documents
                        pr_identity = (# All Identity Documents
                                       {"name": "identity",
@@ -1146,8 +1152,17 @@ class PRPersonModel(S3Model):
                                             },
                        # Tags
                        pr_person_tag = "person_id",
+
                        # Seized Items (owner)
                        security_seized_item = "person_id",
+                       
+                       # Supply Items (Donor)
+                       supply_item = {"link": "supply_person_item",
+                                      "joinby": "person_id",
+                                      "key": "item_id",
+                                      "actuate": "hide",
+                                      },
+                       supply_person_item = "person_id",
                        )
 
         # Beneficiary/Case Management
@@ -3838,6 +3853,7 @@ class PRContactModel(S3Model):
         T = current.T
 
         configure = self.configure
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         messages = current.messages
         super_link = self.super_link
@@ -3910,7 +3926,7 @@ class PRContactModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        current.response.s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             label_create = T("Add Contact Information"),
             title_display = T("Contact Details"),
             title_list = T("Contact Information"),
@@ -3970,6 +3986,19 @@ class PRContactModel(S3Model):
                            ),
                      s3_comments(),
                      *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Emergency Contact"),
+            title_display = T("Emergency Contact Details"),
+            title_list = T("Emergency Contacts"),
+            title_update = T("Edit Emergency Contact"),
+            label_list_button = T("List Emergency Contacts"),
+            label_delete_button = T("Delete Emergency Contact"),
+            msg_record_created = T("Emergency Contact Added"),
+            msg_record_modified = T("Emergency Contact Updated"),
+            msg_record_deleted = T("Emergency Contact Deleted"),
+            msg_list_empty = T("No emergency contacts registered"))
 
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("pe_id",),

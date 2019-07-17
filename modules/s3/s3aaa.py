@@ -1594,6 +1594,7 @@ Thank you"""
         labels = s3_mark_required(utable)[0]
 
         # If we have an opt_in and some post_vars then update the opt_in value
+        # @ToDo: Replace with an AuthConsent-integrated solution
         opt_in_to_email = deployment_settings.get_auth_opt_in_to_email()
         if opt_in_to_email:
             team_list = deployment_settings.get_auth_opt_in_team_list()
@@ -1667,7 +1668,7 @@ Thank you"""
                         formname="profile",
                         onvalidation=onvalidation,
                         hideerror=settings.hideerror):
-            self.auth_user_onaccept(form.vars.email, self.user.id)
+            #self.s3_auth_user_register_onaccept(form.vars.email, self.user.id)
             self.user.update(utable._filter_fields(form.vars))
             session.flash = messages.profile_updated
             if log:
@@ -2264,14 +2265,30 @@ $.filterOptionsS3({
         s3.jquery_ready.append('''s3_register_validation()''')
 
     # -------------------------------------------------------------------------
-    def auth_user_onaccept(self, email, user_id):
-        db = current.db
+    def s3_auth_user_register_onaccept(self, email, user_id):
+        """
+            S3 framework function
+
+            Allows customisation of the process for creating/updating users
+            - called by s3_approve_user when new users are created or approved
+            - (was called by 'profile' method for updates, but no longer)
+        """
+
+        # Check for any custom functionality
+        onaccept = current.s3db.get_config("auth_user", "register_onaccept")
+        if callable(onaccept):
+            onaccept(user_id)
+
+        # Default functionality
+
+        # Handle any OpenFire Chat Server integration
         if self.settings.login_userfield != "username":
             deployment_settings = current.deployment_settings
-            chat_username = email.replace("@", "_")
-            db(db.auth_user.id == user_id).update(username = chat_username)
             chat_server = deployment_settings.get_chat_server()
             if chat_server:
+                chat_username = email.replace("@", "_")
+                db = current.db
+                db(db.auth_user.id == user_id).update(username = chat_username)
                 chatdb = DAL(deployment_settings.get_chatdb_string(), migrate=False)
                 # Using RawSQL as table not created in web2py
                 sql_query="insert into ofGroupUser values (\'%s\',\'%s\' ,0);" % (chat_server["groupname"], chat_username)
@@ -2588,11 +2605,12 @@ $.filterOptionsS3({
         if deployment_settings.get_auth_consent_tracking():
             s3db.auth_Consent.register_consent(user_id)
 
+        user_email = db(utable.id == user_id).select(utable.email,
+                                                     ).first().email
+        self.s3_auth_user_register_onaccept(user_email, user_id)
+
         if current.response.s3.bulk is True:
             # Non-interactive imports should stop here
-            user_email = db(utable.id == user_id).select(utable.email,
-                                                         ).first().email
-            self.auth_user_onaccept(user_email, user_id)
             return
 
         # Allow them to login
@@ -2615,9 +2633,6 @@ $.filterOptionsS3({
                 # logged-in, so approve by system authority
                 org_resource.approve(approved_by = 0)
 
-        user_email = db(utable.id == user_id).select(utable.email,
-                                                     ).first().email
-        self.auth_user_onaccept(user_email, user_id)
         # Send Welcome mail
         self.s3_send_welcome_email(user, password)
 
@@ -3225,11 +3240,11 @@ $.filterOptionsS3({
             else:
                 # Create new HR record
                 customise(hr_id = None)
-                record = Storage(person_id=person_id,
-                                 organisation_id=organisation_id,
+                record = Storage(person_id = person_id,
+                                 organisation_id = organisation_id,
                                  site_id = site_id,
-                                 type=hr_type,
-                                 owned_by_user=user_id,
+                                 type = hr_type,
+                                 owned_by_user = user_id,
                                  )
                 hr_id = htable.insert(**record)
                 record["id"] = hr_id
@@ -4063,7 +4078,7 @@ $.filterOptionsS3({
         return list({row.group_id for row in rows})
 
     # -------------------------------------------------------------------------
-    def s3_has_role(self, role, for_pe=None):
+    def s3_has_role(self, role, for_pe=None, include_admin=True):
         """
             Check whether the currently logged-in user has a certain role
             (auth_group membership).
@@ -4071,9 +4086,11 @@ $.filterOptionsS3({
             @param role: the record ID or UID of the role
             @param for_pe: check for this particular realm, possible values:
 
-                           None - for any entity
-                           0 - site-wide
-                           X - for entity X
+                           - None: for any entity
+                           - 0: site-wide
+                           - X: for entity X
+
+            @param include_admin: ADMIN matches all Roles
         """
 
         # Allow override
@@ -4102,7 +4119,7 @@ $.filterOptionsS3({
             return False
 
         # Administrators have all roles
-        if system_roles.ADMIN in realms:
+        if include_admin and system_roles.ADMIN in realms:
             return True
 
         # Resolve role ID/UID
@@ -4127,6 +4144,7 @@ $.filterOptionsS3({
             realm = realms[role]
             if realm is None or for_pe is None or for_pe in realm:
                 return True
+
         return False
 
     # -------------------------------------------------------------------------
