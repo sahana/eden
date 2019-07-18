@@ -1311,7 +1311,7 @@ def config(settings):
                 if ctablename == "org_organisation_tag":
                     tag = data.get("tag")
                     if tag == "org_id":
-                        org_id = data.value
+                        org_id = data.get("value")
                         break
 
         if not org_id:
