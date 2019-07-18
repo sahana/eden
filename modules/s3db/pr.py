@@ -6097,9 +6097,17 @@ class PRReligionModel(S3Model):
         define_table(tablename,
                      religion_id(ondelete="RESTRICT",
                                  ),
-                     self.org_organisation_id(ondelete="CASCADE",
+                     self.org_organisation_id(empty = False,
+                                              ondelete="CASCADE",
                                               ),
                      *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("religion_id",
+                                                            "organisation_id",
+                                                            ),
+                                                 ),
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

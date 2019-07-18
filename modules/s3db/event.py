@@ -2234,6 +2234,13 @@ class S3IncidentReportModel(S3Model):
                                             ),
                      *s3_meta_fields())
 
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("incident_report_id",
+                                                            "incident_id",
+                                                            ),
+                                                 ),
+                       )
+
         # Pass names back to global scope (s3.*)
         return {}
 
@@ -2262,6 +2269,13 @@ class S3EventActivityModel(S3Model):
                           self.project_activity_id(#ondelete = "CASCADE", # default anyway
                                                    ),
                           *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            "activity_id",
+                                                            ),
+                                                 ),
+                       )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -2293,6 +2307,11 @@ class S3EventRequestModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            "incident_id",
+                                                            "req_id",
+                                                            ),
+                                                 ),
                        onaccept = lambda form: \
                         set_event_from_incident(form, "event_request"),
                        )
@@ -2506,6 +2525,13 @@ class S3IncidentReportOrganisationGroupModel(S3Model):
                                 ),
                           self.org_group_id(empty=False),
                           *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("incident_report_id",
+                                                            "org_group_id",
+                                                            ),
+                                                 ),
+                       )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -2759,6 +2785,13 @@ class S3IncidentTypeTagModel(S3Model):
                           Field("value", label=T("Value")),
                           s3_comments(),
                           *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("incident_type_id",
+                                                            "tag",
+                                                            ),
+                                                 ),
+                       )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -3118,6 +3151,14 @@ class S3EventBookmarkModel(S3Model):
                                 ),
                           *s3_meta_fields())
 
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            "incident_id",
+                                                            "user_id",
+                                                            ),
+                                                 ),
+                       )
+
         #current.response.s3.crud_strings[tablename] = Storage(
         #    label_create = T("Bookmark Incident"), # or Event
         #    title_display = T("Bookmark Details"),
@@ -3147,6 +3188,7 @@ class S3EventCMSModel(S3Model):
 
         #T = current.T
 
+        configure = self.configure
         define_table = self.define_table
 
         post_id = self.cms_post_id
@@ -3179,10 +3221,15 @@ class S3EventCMSModel(S3Model):
         #    msg_record_deleted = T("Tag removed"),
         #    msg_list_empty = T("No Posts currently tagged to this event"))
 
-        self.configure(tablename,
-                       onaccept = lambda form: \
-                        set_event_from_incident(form, "event_post"),
-                       )
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("event_id",
+                                                       "incident_id",
+                                                       "post_id",
+                                                       ),
+                                            ),
+                  onaccept = lambda form: \
+                    set_event_from_incident(form, "event_post"),
+                  )
 
         # ---------------------------------------------------------------------
         # Link table between Posts & Incident Types
@@ -3195,6 +3242,13 @@ class S3EventCMSModel(S3Model):
                                                  ondelete = "CASCADE",
                                                  ),
                      *s3_meta_fields())
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("post_id",
+                                                       "incident_type_id",
+                                                       ),
+                                            ),
+                  )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -3229,6 +3283,14 @@ class S3EventCMSTagModel(S3Model):
                                           ondelete = "CASCADE",
                                           ),
                           *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            "incident_id",
+                                                            "tag_id",
+                                                            ),
+                                                 ),
+                       )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -3270,6 +3332,11 @@ class S3EventDCModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("event_id",
+                                                       "incident_id",
+                                                       "response_id",
+                                                       ),
+                                            ),
                   onaccept = lambda form: \
                     set_event_from_incident(form, "event_response"),
                   )
@@ -3286,6 +3353,11 @@ class S3EventDCModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("event_id",
+                                                       "incident_id",
+                                                       "target_id",
+                                                       ),
+                                            ),
                   onaccept = lambda form: \
                     set_event_from_incident(form, "event_target"),
                   )
@@ -3378,6 +3450,14 @@ class S3EventForumModel(S3Model):
         #    msg_record_modified = T("Sharing updated"),
         #    msg_record_deleted = T("Incident no longer shared"),
         #    msg_list_empty = T("No Incidents currently shared"))
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            "incident_id",
+                                                            "forum_id",
+                                                            ),
+                                                 ),
+                       )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -3785,6 +3865,11 @@ class S3EventImpactModel(S3Model):
 
         # Table configuration
         self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            "incident_id",
+                                                            "impact_id",
+                                                            ),
+                                                 ),
                        onaccept = lambda form: \
                         set_event_from_incident(form, "event_event_impact"),
                        )
@@ -3842,6 +3927,13 @@ class S3EventMapModel(S3Model):
             msg_record_deleted = T("Map Profile removed"),
             msg_list_empty = T("No Map Profiles currently registered in this incident"))
 
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("incident_id",
+                                                            "config_id",
+                                                            ),
+                                                 ),
+                       )
+
         # Pass names back to global scope (s3.*)
         return {}
 
@@ -3878,6 +3970,11 @@ class S3EventNeedModel(S3Model):
 
         # Table configuration
         self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            "incident_id",
+                                                            "need_id",
+                                                            ),
+                                                 ),
                        onaccept = lambda form: \
                         set_event_from_incident(form, "event_event_need"),
                        )
@@ -3931,6 +4028,11 @@ class S3EventNeedResponseModel(S3Model):
 
         # Table configuration
         self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            "incident_id",
+                                                            "need_response_id",
+                                                            ),
+                                                 ),
                        onaccept = lambda form: \
                         set_event_from_incident(form, "event_event_need_response"),
                        )
@@ -4048,6 +4150,14 @@ class S3EventProjectModel(S3Model):
                           self.project_project_id(#ondelete = "CASCADE", # default anyway
                                                   ),
                           *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            #"incident_id",
+                                                            "project_id",
+                                                            ),
+                                                 ),
+                       )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -4662,6 +4772,14 @@ class S3EventShelterModel(S3Model):
                 msg_record_deleted = T("Event removed"),
                 msg_list_empty = T("No Events currently tagged to this Shelter")
                 )
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            #"incident_id",
+                                                            "shelter_id",
+                                                            ),
+                                                 ),
+                       )
 
         # Pass names back to global scope (s3.*)
         return {}

@@ -1785,6 +1785,13 @@ class S3DonorPersonModel(S3Model):
             msg_list_empty = T("No Items currently registered for this person")
         )
 
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("item_id",
+                                                            "person_id",
+                                                            ),
+                                                 ),
+                       )
+
         # Pass names back to global scope (s3.*)
         return {}
 

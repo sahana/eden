@@ -1833,6 +1833,13 @@ class S3OrganisationGroupPersonModel(S3Model):
                      status_id(),
                      *s3_meta_fields())
 
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("org_group_id",
+                                                            "person_id",
+                                                            ),
+                                                 ),
+                       )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         return {}
@@ -1864,6 +1871,10 @@ class S3OrganisationGroupTeamModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("org_group_id",
+                                                            "group_id",
+                                                            ),
+                                                 ),
                        onaccept = self.org_group_team_onaccept,
                        )
 
@@ -1985,6 +1996,13 @@ class S3OrganisationOrganisationModel(S3Model):
                           # Add this later if 2 or more usecases need to share this same table within a single template
                           #role_id(),
                           *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("organisation_id",
+                                                            "parent_id",
+                                                            ),
+                                                 ),
+                       )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -3005,6 +3023,10 @@ class S3OrganisationTeamModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("organisation_id",
+                                                            "group_id",
+                                                            ),
+                                                 ),
                        onaccept = self.organisation_team_onaccept,
                        ondelete = self.organisation_team_ondelete,
                        )

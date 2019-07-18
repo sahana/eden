@@ -3546,6 +3546,13 @@ class RequestTaskModel(S3Model):
                           #self.req_req_skill_id(),
                           *s3_meta_fields())
 
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("task_id",
+                                                            "req_id",
+                                                            ),
+                                                 ),
+                       )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -4139,9 +4146,14 @@ class CommitPersonModel(S3Model):
             msg_record_deleted = T("Person removed from Commitment"),
             msg_list_empty = T("No People currently committed"))
 
-        # @ToDo: Fix this before enabling
-        #self.configure(tablename,
-        #               onaccept = self.commit_person_onaccept)
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("commit_id",
+                                                            "human_resource_id",
+                                                            ),
+                                                 ),
+                       # @ToDo: Fix this before enabling
+                       #onaccept = self.commit_person_onaccept,
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
