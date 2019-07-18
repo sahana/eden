@@ -1296,7 +1296,7 @@ def config(settings):
             # Assume not a duplicate, so allow creation of a new Org
             return
 
-        if len(duplicates) == 1:
+        if len(duplicate_names) == 1:
             # Only 1 existing Org with this name, so assume this is a duplicate
             item.id = duplicate_names.first()["org_organisation.id"]
             item.method = item.METHOD.UPDATE
