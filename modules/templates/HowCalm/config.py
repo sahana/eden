@@ -1311,6 +1311,7 @@ def config(settings):
                 current.log.warning("Multiple existing orgs with this name, but we have no org_id in the source...we have no way of knowing which is the correct match, so creating a duplicate.")
             return
 
+        ttable = current.s3db.org_organisation_tag
         query = (table.name == name) & \
                 (ttable.organisation_id == table.id) & \
                 (ttable.tag == "org_id") & \
@@ -1322,6 +1323,9 @@ def config(settings):
             # Existing Org with same org_id => Duplicate
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
+
+    # Allow custom deduplicator to be used in scripts
+    settings.org_organisation_duplicate = org_organisation_duplicate
 
     # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
