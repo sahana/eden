@@ -1264,6 +1264,66 @@ def config(settings):
     settings.customise_org_facility_controller = customise_org_facility_controller
 
     # -------------------------------------------------------------------------
+    def org_organisation_duplicate(item):
+        """
+            Import item deduplication
+            - names are not unique so we use Org ID as the unique key
+            - Note that this does allow duplicates in...we could solve most of
+              these by checking Street Address, but would then need to merge Org IDs...
+        """
+
+        db = current.db
+
+        data = item.data
+
+        # First check for duplicate name
+        name = data.get("name")
+        if not name:
+            # hmm, nothing we can do
+            return
+
+        table = item.table
+        duplicates = db(table.name == name).select(table.id,
+                                                   limitby=(0, 2)
+                                                   )
+        if not duplicates:
+            # Definitely not a Duplicate that we can identify, so continue
+            return
+
+        # Name matches, so check Org ID
+        org_id = None
+        for citem in item.components:
+            data = citem.data
+            if data:
+                ctablename = citem.tablename
+                if ctablename == "org_organisation_tag":
+                    tag = data.get("tag")
+                    if tag == "org_id":
+                        org_id = data.value
+                        break
+
+        if not org_id:
+            if len(duplicates) == 1:
+                # Only 1 existing Org with this name, so assume this is a duplicate
+                item.id = duplicates.first().id
+                item.method = item.METHOD.UPDATE
+            else:
+                current.log.warning("Multiple existing orgs with this name, but we have no org_id in the source...we have no way of knowing which is the correct match, so creating a duplicate.")
+            return
+
+        query = (table.name == name) & \
+                (ttable.organisation_id == table.id) & \
+                (ttable.tag == "org_id") & \
+                (ttable.value == org_id)
+        duplicate = db(query).select(table.id,
+                                     limitby=(0, 1)
+                                     ).first()
+        if duplicate:
+            # Existing Org with same org_id => Duplicate
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
 
         from s3 import S3LocationSelector
