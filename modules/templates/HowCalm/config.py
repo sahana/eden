@@ -1267,7 +1267,8 @@ def config(settings):
     def org_organisation_duplicate(item):
         """
             Import item deduplication
-            - names are not unique so we use Org ID as the unique key
+            - names are not unique so we use Org ID as the unique key if names match
+                (Can't use as completely Unique key as there are multiple Orgs with the same ID at times!)
             - Note that this does allow duplicates in...we could solve most of
               these by checking Street Address, but would then need to merge Org IDs...
         """
@@ -1283,14 +1284,25 @@ def config(settings):
             return
 
         table = item.table
-        duplicates = db(table.name == name).select(table.id,
-                                                   limitby=(0, 2)
-                                                   )
-        if not duplicates:
-            # Definitely not a Duplicate that we can identify, so continue
+        ttable = current.s3db.org_organisation_tag
+        query = (table.name == name)
+        left = ttable.on((ttable.organisation_id == table.id) & \
+                         (ttable.tag == "org_id"))
+        duplicate_names = db(query).select(table.id,
+                                           ttable.value,
+                                           #limitby = (0, 3),
+                                           )
+        if not duplicate_names:
+            # Assume not a duplicate, so allow creation of a new Org
             return
 
-        # Name matches, so check Org ID
+        if len(duplicates) == 1:
+            # Only 1 existing Org with this name, so assume this is a duplicate
+            item.id = duplicate_names.first()["org_organisation.id"]
+            item.method = item.METHOD.UPDATE
+            return
+
+        # Multiple Name matches, so check Org ID
         org_id = None
         for citem in item.components:
             data = citem.data
@@ -1303,26 +1315,19 @@ def config(settings):
                         break
 
         if not org_id:
-            if len(duplicates) == 1:
-                # Only 1 existing Org with this name, so assume this is a duplicate
-                item.id = duplicates.first().id
-                item.method = item.METHOD.UPDATE
-            else:
-                current.log.warning("Multiple existing orgs with this name, but we have no org_id in the source...we have no way of knowing which is the correct match, so creating a duplicate.")
+            current.log.warning("Multiple existing orgs with this name, but we have no org_id in the source...we have no way of knowing which is the correct match, so creating a duplicate.")
             return
 
-        ttable = current.s3db.org_organisation_tag
-        query = (table.name == name) & \
-                (ttable.organisation_id == table.id) & \
-                (ttable.tag == "org_id") & \
-                (ttable.value == org_id)
-        duplicate = db(query).select(table.id,
-                                     limitby=(0, 1)
-                                     ).first()
-        if duplicate:
-            # Existing Org with same org_id => Duplicate
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
+        # See which Org has the same Org ID
+        for org in duplicate_names:
+            if org["org_organisation.value"] == org_id:
+                # We found it!
+                item.id = org["org_organisation.id"]
+                item.method = item.METHOD.UPDATE
+                return
+
+        current.log.warning("Multiple existing orgs with this name, we have an org_id in the source but this doesn't match any of the existing orgs, so creating a duplicate.")
+        return
 
     # Allow custom deduplicator to be used in scripts
     settings.org_organisation_duplicate = org_organisation_duplicate
