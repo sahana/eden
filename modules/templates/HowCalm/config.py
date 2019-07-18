@@ -1320,7 +1320,7 @@ def config(settings):
 
         # See which Org has the same Org ID
         for org in duplicate_names:
-            if org["org_organisation.value"] == org_id:
+            if org["org_organisation_tag.value"] == org_id:
                 # We found it!
                 item.id = org["org_organisation.id"]
                 item.method = item.METHOD.UPDATE
