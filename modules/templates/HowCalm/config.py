@@ -1606,6 +1606,7 @@ def config(settings):
         s3db.configure("org_organisation",
                        crud_form = crud_form,
                        create_next = profile_url,
+                       deduplicate = org_organisation_duplicate,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        popup_url = profile_url,
