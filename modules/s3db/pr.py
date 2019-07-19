@@ -47,6 +47,7 @@ __all__ = (# PR Base Entities
            "PRLanguageModel",
            "PROccupationModel",
            "PRPersonDetailsModel",
+           "PRPersonLocationModel",
            "PRPersonTagModel",
 
            "PRReligionModel",
@@ -1150,6 +1151,14 @@ class PRPersonModel(S3Model):
                        pr_person_details = {"joinby": "person_id",
                                             "multiple": False,
                                             },
+                       # Locations
+                       gis_location = {"link": "pr_person_location",
+                                       "joinby": "person_id",
+                                       "key": "location_id",
+                                       "actuate": "hide",
+                                       },
+                       pr_person_location = "person_id",
+
                        # Tags
                        pr_person_tag = "person_id",
 
@@ -3122,7 +3131,6 @@ class PRGroupCompetencyModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return {}
-
 
 # =============================================================================
 class PRGroupLocationModel(S3Model):
@@ -5958,6 +5966,57 @@ class PRPersonDetailsModel(S3Model):
         #
         return {"pr_marital_status_opts": marital_status_opts,
                 }
+
+# =============================================================================
+class PRPersonLocationModel(S3Model):
+    """
+        Person Location Model
+        - Locations served by a Person
+    """
+
+    names = ("pr_person_location",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Persons <> Locations Link Table
+        #
+        tablename = "pr_person_location"
+        self.define_table(tablename,
+                          self.pr_person_id(),
+                          self.gis_location_id(
+                            #represent = self.gis_LocationRepresent(sep=", "),
+                            requires = IS_LOCATION(),
+                            widget = S3LocationAutocompleteWidget()
+                          ),
+                          s3_comments(),
+                          *s3_meta_fields()
+                          )
+
+        # CRUD Strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Location"),
+            title_display = T("Location"),
+            title_list = T("Locations"),
+            title_update = T("Edit Location"),
+            title_upload = T("Import Location data"),
+            label_list_button = T("List Locations"),
+            msg_record_created = T("Location added to Person"),
+            msg_record_modified = T("Location updated"),
+            msg_record_deleted = T("Location removed from Person"),
+            msg_list_empty = T("No Locations found for this Person"))
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("person_id",
+                                                            "location_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
 
 # =============================================================================
 class PRPersonTagModel(S3Model):

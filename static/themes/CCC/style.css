@@ -4,3 +4,31 @@ div.subheading {
     border-bottom: thin solid #bbb;
     font-weight: bold;
 }
+#auth_user_convictions {
+    float: left;
+}
+#auth_user_convictions div,
+#auth_user_significant_physical div,
+#auth_user_some_physical div,
+#auth_user_little_physical div,
+#pr_person_sub_convictions_value div,
+#pr_person_sub_significant_physical_value div,
+#pr_person_sub_some_physical_value div,
+#pr_person_sub_little_physical_value div {
+    float: right;
+}
+#auth_user_convictions div:first-child,
+#auth_user_significant_physical div:first-child,
+#auth_user_some_physical div:first-child,
+#auth_user_little_physical div:first-child,
+#pr_person_sub_convictions_value div:first-child,
+#pr_person_sub_significant_physical_value div:first-child,
+#pr_person_sub_some_physical_value div:first-child,
+#pr_person_sub_little_physical_value div:first-child {
+    float: left;
+}
+#auth_user_convictions + div {
+    float: right;
+}
+
+

@@ -5,7 +5,8 @@ import uuid
 
 from gluon import *
 from gluon.storage import Storage
-from s3 import IS_ONE_OF, S3CustomController, S3MultiSelectWidget, \
+from s3 import IS_ONE_OF, S3CustomController, S3Method, S3MultiSelectWidget, \
+               S3Profile, S3SQLCustomForm, \
                s3_mark_required, s3_phone_requires, s3_str
 
 THEME = "CCC"
@@ -356,6 +357,145 @@ class donor(S3CustomController):
         return output
 
 # =============================================================================
+class personAdditional(S3Method):
+    """
+        Additional Information Tab
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "person" and \
+           r.id and \
+           not r.component and \
+           r.representation in ("html", "aadata"):
+
+            T = current.T
+            s3db = current.s3db
+
+            tablename = "pr_person"
+
+            # Filtered components
+            s3db.add_components(tablename,
+                                pr_person_tag = ({"name": "convictions",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "convictions"},
+                                                  "multiple": False,
+                                                  },
+                                                 {"name": "significant_physical",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "significant_physical"},
+                                                  "multiple": False,
+                                                  },
+                                                 {"name": "some_physical",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "some_physical"},
+                                                  "multiple": False,
+                                                  },
+                                                 {"name": "little_physical",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "little_physical"},
+                                                  "multiple": False,
+                                                  },
+                                                 {"name": "health_details",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "health_details"},
+                                                  "multiple": False,
+                                                  },
+                                                 ),
+                                )
+
+            # Individual settings for specific tag components
+            components_get = s3db.resource(tablename).components.get
+
+            convictions = components_get("convictions")
+            f = convictions.table.value
+            f.requires = IS_IN_SET({"0": T("No"),
+                                    "1": T("Yes"),
+                                    })
+            f.widget = lambda f, v: \
+                            SQLFORM.widgets.radio.widget(f, v,
+                                                         style="divs")
+
+            significant_physical = components_get("significant_physical")
+            f = significant_physical.table.value
+            f.requires = IS_IN_SET({"0": T("No"),
+                                    "1": T("Yes"),
+                                    })
+            f.widget = lambda f, v: \
+                            SQLFORM.widgets.radio.widget(f, v,
+                                                         style="divs")
+
+            some_physical = components_get("some_physical")
+            f = some_physical.table.value
+            f.requires = IS_IN_SET({"0": T("No"),
+                                    "1": T("Yes"),
+                                    })
+            f.widget = lambda f, v: \
+                            SQLFORM.widgets.radio.widget(f, v,
+                                                         style="divs")
+
+            little_physical = components_get("little_physical")
+            f = little_physical.table.value
+            f.requires = IS_IN_SET({"0": T("No"),
+                                    "1": T("Yes"),
+                                    })
+            f.widget = lambda f, v: \
+                            SQLFORM.widgets.radio.widget(f, v,
+                                                         style="divs")
+
+            form = S3SQLCustomForm(#"where_operate.value",
+                                   (T("Do you have any unspent convictions?"), "convictions.value"),
+                                   (T("That require significant physical activity (including lifting and carrying) and may involve being outdoors (e.g. clean up of affected properties)"), "significant_physical.value"),
+                                   (T("That require some physical activity and may involve being outdoors (e.g. door knocking)"), "some_physical.value"),
+                                   (T("That require little physical activity and are based indoors (e.g. preparing refreshments)"), "little_physical.value"),
+                                   (T("If you wish, you can give us some further information on any fitness, medical or mobility issues that might limit the kind of activities you are able to volunteer for; this will help us to suggest suitable opportunities for you"), "health_details.value"),
+                                   )
+
+            form = {"type": "form",
+                    #"label": ,
+                    #"icon": ,
+                    "tablename": tablename,
+                    "sqlform": form,
+                    }
+
+            profile_widgets= [form,
+                              ]
+
+            if r.representation == "html":
+                response = current.response
+                # Maintain normal rheader for consistency
+                rheader = attr["rheader"]
+                profile_header = TAG[""](H2(response.s3.crud_strings["pr_person"].title_display),
+                                         DIV(rheader(r), _id="rheader"),
+                                         )
+            else:
+                profile_header = None
+
+            s3db.configure(tablename,
+                           profile_cols = 1,
+                           profile_header = profile_header,
+                           profile_widgets = profile_widgets,
+                           )
+
+            profile = S3Profile()
+            profile.tablename = tablename
+            profile.request = r
+            output = profile.profile(r, **attr)
+            if r.representation == "html":
+                output["title"] = response.title = T("Additional Information")
+            return output
+
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+
+# =============================================================================
 class register(S3CustomController):
     """ Custom Registration Page """
 
@@ -386,7 +526,7 @@ class register(S3CustomController):
         # TODO: limit to relevant data processing types
         consent = s3db.auth_Consent()
 
-        # Lookup Lists
+        # Lookup Districts
         gtable = s3db.gis_location
         districts = db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
                                                                                  gtable.name)
@@ -447,18 +587,45 @@ class register(S3CustomController):
                                 widget = S3MultiSelectWidget(header="",
                                                              selectedList=3),
                                 ),
-                          Field("disability", "boolean",
-                                label = T("Do you consider yourself to have a disability, illness or injury which could prevent you from carrying out particular tasks?"),
+                          Field("convictions", "integer",
+                                label = T("Do you have any unspent convictions?"),
+                                comment = T("Please tick 'Yes' if you have any convictions that are not yet spent under the Rehabilitation of Offenders Act 1974. The term 'convictions' is used to refer to any sentence or disposal issued by a court. If all your convictions are spent, you can tick 'No'. If you're not sure if your convictions are unspent or spent, you can use a tool available at www.disclosurecalculator.org.uk and read guidance at hub.unlock.org.uk/roa"),
+                                requires = IS_IN_SET({0: T("No"),
+                                                      1: T("Yes"),
+                                                      }),
+                                widget = lambda f, v: \
+                                    SQLFORM.widgets.radio.widget(f, v,
+                                                                 style="divs"),
                                 ),
-                          Field("health", "boolean",
-                                label = T("Do you have any significant health or medical requirements?"),
-                                comment = T("such as asthma, allergies, diabetes, heart condition"),
+                          Field("significant_physical", "integer",
+                                label = T("That require significant physical activity (including lifting and carrying) and may involve being outdoors (e.g. clean up of affected properties)"),
+                                requires = IS_IN_SET({0: T("No"),
+                                                      1: T("Yes"),
+                                                      }),
+                                widget = lambda f, v: \
+                                    SQLFORM.widgets.radio.widget(f, v,
+                                                                 style="divs"),
                                 ),
-                          Field("convicted", "boolean",
-                                label = T("Have you ever been convicted of a criminal offence?"),
+                          Field("some_physical", "integer",
+                                label = T("That require some physical activity and may involve being outdoors (e.g. door knocking)"),
+                                requires = IS_IN_SET({0: T("No"),
+                                                      1: T("Yes"),
+                                                      }),
+                                widget = lambda f, v: \
+                                    SQLFORM.widgets.radio.widget(f, v,
+                                                                 style="divs"),
                                 ),
-                          Field("pending_prosecutions", "boolean",
-                                label = T("Have you any prosecutions pending?"),
+                          Field("little_physical", "integer",
+                                label = T("That require little physical activity and are based indoors (e.g. preparing refreshments)"),
+                                requires = IS_IN_SET({0: T("No"),
+                                                      1: T("Yes"),
+                                                      }),
+                                widget = lambda f, v: \
+                                    SQLFORM.widgets.radio.widget(f, v,
+                                                                 style="divs"),
+                                ),
+                          Field("health_details",
+                                label = T("If you wish, you can give us some further information on any fitness, medical or mobility issues that might limit the kind of activities you are able to volunteer for; this will help us to suggest suitable opportunities for you"),
                                 ),
                           Field("emergency_contact_name",
                                 label = T("Contact Name"),
@@ -484,11 +651,7 @@ class register(S3CustomController):
                                "addr_street",
                                "addr_postcode",
                                "mobile",
-                               "disability",
-                               "health",
                                "emergency_contact",
-                               "convicted",
-                               "pending_prosecutions",
                                ]
 
             return formfields, required_fields
@@ -612,11 +775,6 @@ class register(S3CustomController):
                                "addr_street",
                                "addr_postcode",
                                "mobile",
-                               "disability",
-                               "health",
-                               "emergency_contact",
-                               "convicted",
-                               "pending_prosecutions",
                                ]
 
         elif get_vars_get("donor"):
@@ -925,12 +1083,15 @@ class register(S3CustomController):
             # Volunteer Offer
             form[0].insert(12, DIV(_class = "subheading",
                                    ))
+            # Health
+            form[0].insert(17, DIV("Many of the opportunities available following an incident require volunteers to be fit and active, may involve working in dirty or dusty environments, and could involve being outdoors - for example, removing damaged furniture and cleaning affected buildings, or lifting, packaging and distributing donated items. Some volunteer roles will be less physically demanding - for example, knocking on doors to check people are OK and gather information, making refreshments and helping with administration. Are you interested in opportunities:",
+                                   _class = "subheading",
+                                   ))
             form[0].insert(-5, DIV("Person to be contacted in case of an emergency",
                                    _class = "subheading",
                                    ))
             form[0].insert(-2, DIV(_class = "subheading",
                                    ))
-            
 
         # Inject client-side Validation
         auth.s3_register_validation()
@@ -1029,10 +1190,15 @@ class register(S3CustomController):
                           "addr_postcode": form_vars.addr_postcode,
                           "skill_id": form_vars.skill_id or [],
                           "skills_details": form_vars.skills_details,
+                          "where_operate": form_vars.where_operate or [],
+                          "convictions": form_vars.convictions,
+                          "significant_physical": form_vars.significant_physical,
+                          "some_physical": form_vars.some_physical,
+                          "little_physical": form_vars.little_physical,
+                          "health_details": form_vars.health_details,
                           "emergency_contact_name": form_vars.emergency_contact_name,
                           "emergency_contact_number": form_vars.emergency_contact_number,
                           "emergency_contact_relationship": form_vars.emergency_contact_relationship,
-                          # @ToDo: Add Health/Criminal
                           }
                 if existing:
                     custom["registration_type"] = "existing"
@@ -1068,7 +1234,7 @@ class register(S3CustomController):
                 register_next = request.vars._next or auth_settings.register_next
 
             else:
-                # Verify User Email
+                # Request User Verify their Email
                 # System Details for Verification Email
                 system = {"system_name": settings.get_system_name(),
                           "url": "%s/default/index/verify_email/%s" % (response.s3.base_url, key),
@@ -1158,9 +1324,12 @@ class verify_email(S3CustomController):
 
         if not agency and not organisation_id:
             # Donor/Individual/Group, so doesn't need approval
+            # Add hook to process custom fields
+            current.s3db.configure("auth_user",
+                                   register_onaccept = auth_user_register_onaccept,
+                                   )
             # Calls s3_link_user() which calls s3_link_to_person() which applies 'normal' data from db.auth_user_temp (home_phone, mobile_phone, consent)
-            # Calls auth_user_onaccept in config.py to apply custom fields & set custom roles
-            # (When called by the approve method in admin/user, makes agency user ORG_ADMIN automatically)
+            # Calls s3_auth_user_register_onaccept() which calls our custom auth_user_register_onaccept
             auth.s3_approve_user(user)
 
             # Log them in
@@ -1380,5 +1549,447 @@ class volunteer(S3CustomController):
 
         self._view(THEME, "volunteer.html")
         return output
+
+# =============================================================================
+def auth_user_register_onaccept(user_id):
+    """
+        Process Custom Fields
+    """
+
+    db = current.db
+
+    # Read custom fields & determine registration type
+    temptable = db.auth_user_temp
+    record = db(temptable.user_id == user_id).select(temptable.custom,
+                                                     limitby = (0, 1),
+                                                     ).first()
+    if not record:
+        # Hopefully just prepop
+        return
+
+    auth = current.auth
+    s3db = current.s3db
+    get_config = s3db.get_config
+
+    custom = json.loads(record.custom)
+    registration_type = custom["registration_type"]
+
+    # Apply custom fields & Assign correct Roles
+    if registration_type == "agency":
+        # Agency
+
+        # Create Home Address
+        gtable = s3db.gis_location
+        record = {"addr_street": custom["addr_street1"],
+                  "addr_postcode": custom["addr_postcode1"],
+                  }
+        location_id = gtable.insert(**record)
+        record["id"] = location_id
+        location_onaccept = get_config("gis_location", "create_onaccept") or \
+                            get_config("gis_location", "onaccept")
+        if callable(location_onaccept):
+            gform = Storage(vars = record)
+            location_onaccept(gform)
+
+        pe_id = auth.s3_user_pe_id(user_id)
+        atable = s3db.pr_address
+        record = {"pe_id": pe_id,
+                  "location_id": location_id,
+                  }
+        address_id = atable.insert(**record)
+        record["id"] = address_id
+        address_onaccept = get_config("pr_address", "create_onaccept") or \
+                           get_config("pr_address", "onaccept")
+        if callable(address_onaccept):
+            aform = Storage(vars = record)
+            address_onaccept(aform)
+
+        # Create Organisation
+        otable = s3db.org_organisation
+        organisation = {"name": custom["organisation"],
+                        }
+        organisation_id = otable.insert(**organisation)
+        organisation["id"] = organisation_id
+        s3db.update_super(otable, organisation)
+        onaccept = get_config("org_organisation", "create_onaccept") or \
+                   get_config("org_organisation", "onaccept")
+        if callable(onaccept):
+            oform = Storage(vars = organisation)
+            onaccept(oform)
+
+        ltable = s3db.org_organisation_organisation_type
+        ltable.insert(organisation_id = organisation_id,
+                      organisation_type_id = custom["organisation_type_id"],
+                      )
+        # Currently no need to onaccept since we don't have type-dependent realm entities
+
+        ltable = s3db.org_organisation_location
+        for location_id in custom["where_operate"]:
+            ltable.insert(organisation_id = organisation_id,
+                          location_id = location_id,
+                          )
+            # Currently no need to onaccept as none defined
+
+        # Update User Record with organisation_id
+        db(db.auth_user.id == user_id).update(organisation_id = organisation_id)
+
+        # Lookup Person
+        ptable = s3db.pr_person
+        person = db(ptable.pe_id == pe_id).select(ptable.id,
+                                                  limitby = (0, 1),
+                                                  ).first()
+        person_id = person.id
+
+        # Create HR record to allow default realm to operate
+        auth.s3_link_to_human_resource(Storage(id = user_id,
+                                               organisation_id = organisation_id,
+                                               ),
+                                       person_id, hr_type=1)
+
+        # Assign correct Role
+        auth.add_membership(user_id = user_id,
+                            role = "Organisation Administrator",
+                            # Leave to Default Realm to make easier to switch affiliations
+                            #entity = organisation["pe_id"],
+                            )
+
+        # Create Office
+        record = {"parent": custom["addr_L3"],
+                  "addr_street": custom["addr_street"],
+                  "addr_postcode": custom["addr_postcode"],
+                  }
+        location_id = gtable.insert(**record)
+        record["id"] = location_id
+        if callable(location_onaccept):
+            gform = Storage(vars = record)
+            location_onaccept(gform)
+
+        otable = s3db.org_office
+        record = {"name": custom["organisation"],
+                  "organisation_id": organisation_id,
+                  }
+        office_id = otable.insert(**record)
+        record["id"] = office_id
+        s3db.update_super(otable, record)
+        onaccept = get_config("org_office", "create_onaccept") or \
+                   get_config("org_office", "onaccept")
+        if callable(onaccept):
+            oform = Storage(vars = record)
+            onaccept(oform)
+
+        # Create 2nd Leader
+        # @ToDo
+
+    elif registration_type == "donor":
+        # Donor
+
+        # Create Home Address
+        gtable = s3db.gis_location
+        record = {"parent": custom["addr_L3"],
+                  "addr_street": custom["addr_street"],
+                  "addr_postcode": custom["addr_postcode"],
+                  }
+        location_id = gtable.insert(**record)
+        record["id"] = location_id
+        onaccept = get_config("gis_location", "create_onaccept") or \
+                   get_config("gis_location", "onaccept")
+        if callable(onaccept):
+            gform = Storage(vars = record)
+            onaccept(gform)
+
+        pe_id = auth.s3_user_pe_id(user_id)
+        atable = s3db.pr_address
+        record = {"pe_id": pe_id,
+                  "location_id": location_id,
+                  "owned_by_user": user_id,
+                  }
+        address_id = atable.insert(**record)
+        record["id"] = address_id
+        onaccept = get_config("pr_address", "create_onaccept") or \
+                   get_config("pr_address", "onaccept")
+        if callable(onaccept):
+            aform = Storage(vars = record)
+            onaccept(aform)
+
+        # Lookup Person
+        ptable = s3db.pr_person
+        person = db(ptable.pe_id == pe_id).select(ptable.id,
+                                                  limitby = (0, 1),
+                                                  ).first()
+        person_id = person.id
+
+        # Create Items
+        itable = s3db.supply_person_item
+        for item_id in custom["item_id"]:
+            record = {"person_id": person_id,
+                      "item_id": item_id,
+                      }
+            itable.insert(**record)
+
+        ttable = s3db.pr_person_tag
+        record = {"person_id": person_id,
+                  "tag": "items_details",
+                  "value": custom["items_details"],
+                  }
+        ttable.insert(**record)
+
+        record = {"person_id": person_id,
+                  "tag": "organisation",
+                  "value": custom["organisation"],
+                  }
+        ttable.insert(**record)
+
+        record = {"person_id": person_id,
+                  "tag": "organisation_type",
+                  "value": custom["organisation_type"],
+                  }
+        ttable.insert(**record)
+
+        record = {"person_id": person_id,
+                  "tag": "delivery",
+                  "value": "Y" if custom["delivery"] else "N",
+                  }
+        ttable.insert(**record)
+
+        record = {"person_id": person_id,
+                  "tag": "availability",
+                  "value": custom["availability"],
+                  }
+        ttable.insert(**record)
+
+        # Assign correct Role
+        ftable = s3db.pr_forum
+        forum = db(ftable.name == "Donors").select(ftable.pe_id,
+                                                   limitby = (0, 1)
+                                                   ).first()
+        auth.add_membership(user_id = user_id,
+                            role = "Donor",
+                            entity = forum.pe_id,
+                            )
+
+    elif registration_type == "group":
+        # Group
+
+        # Create Group
+        gtable = s3db.pr_group
+        group = {"name": custom["group"]}
+        group_id = gtable.insert(**group)
+        group["id"] = group_id
+        s3db.update_super(gtable, group)
+
+        # Create Home Address
+        gtable = s3db.gis_location
+        record = {# Assume outside Cumbria
+                  #"parent": custom["addr_L3"],
+                  "addr_street": custom["addr_street"],
+                  "addr_postcode": custom["addr_postcode"],
+                  }
+        location_id = gtable.insert(**record)
+        record["id"] = location_id
+        location_onaccept = get_config("gis_location", "create_onaccept") or \
+                            get_config("gis_location", "onaccept")
+        if callable(location_onaccept):
+            gform = Storage(vars = record)
+            location_onaccept(gform)
+
+        pe_id = auth.s3_user_pe_id(user_id)
+        atable = s3db.pr_address
+        record = {"pe_id": pe_id,
+                  "location_id": location_id,
+                  }
+        address_id = atable.insert(**record)
+        record["id"] = address_id
+        address_onaccept = get_config("pr_address", "create_onaccept") or \
+                           get_config("pr_address", "onaccept")
+        if callable(address_onaccept):
+            aform = Storage(vars = record)
+            address_onaccept(aform)
+
+        # Add Leader(s) to Group
+        ptable = s3db.pr_person
+        person = db(ptable.pe_id == pe_id).select(ptable.id,
+                                                  limitby = (0, 1),
+                                                  ).first()
+        mtable = s3db.pr_group_membership
+        record = {"group_id": group_id,
+                  "person_id": person.id,
+                  "group_head": True,
+                  }
+        membership_id = mtable.insert(**record)
+        record["id"] = membership_id
+        onaccept = get_config("pr_group_membership", "create_onaccept") or \
+                   get_config("pr_group_membership", "onaccept")
+        if callable(onaccept):
+            mform = Storage(vars = record)
+            onaccept(mform)
+
+        # Assign correct Role
+        auth.add_membership(user_id = user_id,
+                            role = "Volunteer Group Leader",
+                            entity = group["pe_id"],
+                            )
+
+        # Create 2nd Leader
+        # @ToDo
+
+        # Create Group Skills
+        ctable = s3db.pr_group_competency
+        for skill_id in custom["skill_id"]:
+            record = {"group_id": group_id,
+                      "skill_id": skill_id,
+                      }
+            ctable.insert(**record)
+
+        ttable = s3db.pr_group_tag
+        record = {"group_id": group_id,
+                  "tag": "skills_details",
+                  "value": custom["skills_details"],
+                  }
+        ttable.insert(**record)
+
+        # Emergency Contact
+        record = {"group_id": group_id,
+                  "tag": "contact_name",
+                  "value": custom["emergency_contact_name"],
+                  }
+        ttable.insert(**record)
+        record = {"group_id": group_id,
+                  "tag": "contact_number",
+                  "value": custom["emergency_contact_number"],
+                  }
+        ttable.insert(**record)
+
+    else:
+        # Individual / Existing
+
+        # Create Home Address
+        gtable = s3db.gis_location
+        record = {"parent": custom["addr_L3"],
+                  "addr_street": custom["addr_street"],
+                  "addr_postcode": custom["addr_postcode"],
+                  }
+        location_id = gtable.insert(**record)
+        record["id"] = location_id
+        onaccept = get_config("gis_location", "create_onaccept") or \
+                   get_config("gis_location", "onaccept")
+        if callable(onaccept):
+            gform = Storage(vars = record)
+            onaccept(gform)
+
+        pe_id = auth.s3_user_pe_id(user_id)
+        atable = s3db.pr_address
+        record = {"pe_id": pe_id,
+                  "location_id": location_id,
+                  "owned_by_user": user_id,
+                  }
+        address_id = atable.insert(**record)
+        record["id"] = address_id
+        onaccept = get_config("pr_address", "create_onaccept") or \
+                   get_config("pr_address", "onaccept")
+        if callable(onaccept):
+            aform = Storage(vars = record)
+            onaccept(aform)
+
+        # Lookup Person
+        ptable = s3db.pr_person
+        person = db(ptable.pe_id == pe_id).select(ptable.id,
+                                                  limitby = (0, 1),
+                                                  ).first()
+        person_id = person.id
+
+        # Create Skills
+        ctable = s3db.hrm_competency
+        for skill_id in custom["skill_id"]:
+            record = {"person_id": person_id,
+                      "skill_id": skill_id,
+                      "owned_by_user": user_id,
+                      }
+            ctable.insert(**record)
+
+        ttable = s3db.pr_person_tag
+        record = {"person_id": person_id,
+                  "tag": "skills_details",
+                  "value": custom["skills_details"],
+                  }
+        ttable.insert(**record)
+
+        # Where Operate
+        ltable = s3db.pr_person_location
+        for location_id in custom["where_operate"]:
+            record = {"person_id": person_id,
+                      "location_id": location_id,
+                      }
+            ltable.insert(**record)
+
+        # Additional Information
+        record = {"person_id": person_id,
+                  "tag": "convictions",
+                  "value": custom["convictions"],
+                  }
+        ttable.insert(**record)
+
+        record = {"person_id": person_id,
+                  "tag": "significant_physical",
+                  "value": custom["significant_physical"],
+                  }
+        ttable.insert(**record)
+
+        record = {"person_id": person_id,
+                  "tag": "some_physical",
+                  "value": custom["some_physical"],
+                  }
+        ttable.insert(**record)
+
+        record = {"person_id": person_id,
+                  "tag": "little_physical",
+                  "value": custom["little_physical"],
+                  }
+        ttable.insert(**record)
+
+        record = {"person_id": person_id,
+                  "tag": "health_details",
+                  "value": custom["health_details"],
+                  }
+        ttable.insert(**record)
+
+        # Emergency Contact
+        etable = s3db.pr_contact_emergency
+        record = {"pe_id": pe_id,
+                  "name": custom["emergency_contact_name"],
+                  "phone": custom["emergency_contact_number"],
+                  "relationship": custom["emergency_contact_relationship"],
+                  "owned_by_user": user_id,
+                  }
+        etable.insert(**record)
+
+        # Assign correct Role
+        utable = db.auth_user
+        user = db(utable.id == user_id).select(utable.organisation_id,
+                                               limitby = (0, 1)
+                                               ).first()
+        organisation_id = user.organisation_id
+        if organisation_id:
+            # Existing
+            #otable = s3db.org_organisation
+            #org = db(otable.id == organisation_id).select(otable.pe_id,
+            #                                              limitby = (0, 1)
+            #                                              ).first()
+            auth.add_membership(user_id = user_id,
+                                role = "Community Volunteer",
+                                # Leave to Default Realm to make easier to switch affiliations
+                                #entity = org.pe_id,
+                                )
+        else:
+            # Reserve
+            ftable = s3db.pr_forum
+            forum = db(ftable.name == "Reserves").select(ftable.pe_id,
+                                                         limitby = (0, 1)
+                                                         ).first()
+            auth.add_membership(user_id = user_id,
+                                role = "Reserve Volunteer",
+                                entity = forum.pe_id,
+                                )
+
+        return
 
 # END =========================================================================
