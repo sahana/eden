@@ -73,6 +73,12 @@ class S3MainMenu(default.S3MainMenu):
                     MM("Opportunities", c="req", f="need"),
                     MM("Messages", c="project", f="task"),
                     ]
+        elif has_role("GROUP_ADMIN"):
+            menu = [MM("Volunteer Your Time", c="default", f="index", args="volunteer"),
+                    MM("Donate Items", c="default", f="index", args="donate"),
+                    MM("General Information and Advice", c="cms", f="post", m="datalist"),
+                    MM("Group", c="pr", f="group", m="update"),
+                    ]
         elif has_role("DONOR"):
             menu = [MM("Volunteer Your Time", c="default", f="index", args="volunteer"),
                     MM("Donate Items", c="default", f="index", args="donate"),

@@ -1175,7 +1175,7 @@ class register(S3CustomController):
                           "addr_street2": form_vars.addr_street2,
                           "addr_postcode2": form_vars.addr_postcode2,
                           "email2": form_vars.email2,
-                          "password2": form_vars.password2,
+                          "password2": str(form_vars.password2),
                           "mobile2": form_vars.mobile2,
                           "home2": form_vars.home2,
                           "skill_id": form_vars.skill_id or [],
@@ -1564,7 +1564,7 @@ def auth_user_register_onaccept(user_id):
                                                      limitby = (0, 1),
                                                      ).first()
     if not record:
-        # Hopefully just prepop
+        # Prepop or Group Leader 2
         return
 
     auth = current.auth
@@ -1846,6 +1846,8 @@ def auth_user_register_onaccept(user_id):
         group_id = gtable.insert(**group)
         group["id"] = group_id
         s3db.update_super(gtable, group)
+        realm_entity = group["pe_id"]
+        db(gtable.id == group_id).update(realm_entity = realm_entity)
 
         # Create Home Address
         gtable = s3db.gis_location
@@ -1866,6 +1868,8 @@ def auth_user_register_onaccept(user_id):
         atable = s3db.pr_address
         record = {"pe_id": pe_id,
                   "location_id": location_id,
+                  "owned_by_user": user_id,
+                  "realm_entity": realm_entity,
                   }
         address_id = atable.insert(**record)
         record["id"] = address_id
@@ -1875,7 +1879,7 @@ def auth_user_register_onaccept(user_id):
             aform = Storage(vars = record)
             address_onaccept(aform)
 
-        # Add Leader(s) to Group
+        # Add Leader to Group
         ptable = s3db.pr_person
         person = db(ptable.pe_id == pe_id).select(ptable.id,
                                                   limitby = (0, 1),
@@ -1887,20 +1891,89 @@ def auth_user_register_onaccept(user_id):
                   }
         membership_id = mtable.insert(**record)
         record["id"] = membership_id
-        onaccept = get_config("pr_group_membership", "create_onaccept") or \
-                   get_config("pr_group_membership", "onaccept")
-        if callable(onaccept):
+        membership_onaccept = get_config("pr_group_membership", "create_onaccept") or \
+                              get_config("pr_group_membership", "onaccept")
+        if callable(membership_onaccept):
             mform = Storage(vars = record)
-            onaccept(mform)
+            membership_onaccept(mform)
 
         # Assign correct Role
         auth.add_membership(user_id = user_id,
                             role = "Volunteer Group Leader",
-                            entity = group["pe_id"],
+                            entity = realm_entity,
                             )
 
-        # Create 2nd Leader
-        # @ToDo
+        # 2nd Leader
+        # Create User
+        user2 = Storage(first_name = custom["first_name2"],
+                        last_name = custom["last_name2"],
+                        email = custom["email2"],
+                        password = custom["password2"],
+                        )
+        user_id = db.auth_user.insert(**user2)
+        user2.id = user_id
+        # Approve User (Creates Person & Email)
+        auth.s3_approve_user(user2)
+
+        pe_id = auth.s3_user_pe_id(user_id)
+
+        # Add Address
+        record = {"addr_street": custom["addr_street2"],
+                  "addr_postcode": custom["addr_postcode2"],
+                  }
+        location_id = gtable.insert(**record)
+        record["id"] = location_id
+        if callable(location_onaccept):
+            gform = Storage(vars = record)
+            location_onaccept(gform)
+
+        record = {"pe_id": pe_id,
+                  "location_id": location_id,
+                  "realm_entity": realm_entity,
+                  }
+        address_id = atable.insert(**record)
+        record["id"] = address_id
+        if callable(address_onaccept):
+            aform = Storage(vars = record)
+            address_onaccept(aform)
+
+        # Add Contacts
+        ctable = s3db.pr_contact
+        # Currently no need to onaccept as none defined
+        record = {"pe_id": pe_id,
+                  "contact_method": "SMS",
+                  "value": custom["mobile2"],
+                  "realm_entity": realm_entity,
+                  }
+        ctable.insert(**record)
+        home_phone = custom["home2"]
+        if home_phone:
+            record = {"pe_id": pe_id,
+                      "contact_method": "HOME_PHONE",
+                      "value": home_phone,
+                      "realm_entity": realm_entity,
+                      }
+            ctable.insert(**record)
+
+        # Add Leader to Group
+        person = db(ptable.pe_id == pe_id).select(ptable.id,
+                                                  limitby = (0, 1),
+                                                  ).first()
+        record = {"group_id": group_id,
+                  "person_id": person.id,
+                  "group_head": True,
+                  }
+        membership_id = mtable.insert(**record)
+        record["id"] = membership_id
+        if callable(membership_onaccept):
+            mform = Storage(vars = record)
+            membership_onaccept(mform)
+
+        # Assign correct Role
+        auth.add_membership(user_id = user_id,
+                            role = "Volunteer Group Leader",
+                            entity = realm_entity,
+                            )
 
         # Create Group Skills
         ctable = s3db.pr_group_competency
@@ -2060,6 +2133,6 @@ def auth_user_register_onaccept(user_id):
                                 entity = forum.pe_id,
                                 )
 
-        return
+    return
 
 # END =========================================================================

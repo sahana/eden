@@ -2543,6 +2543,13 @@ class PRGroupModel(S3Model):
 
         # Components
         self.add_components(tablename,
+                            pr_person = {"link": "pr_group_membership",
+                                         "joinby": "group_id",
+                                         "key": "person_id",
+                                         # This allows native=True to break members out if tab is 'person'
+                                         # - used by CCC
+                                         "actuate": "replace",
+                                         },
                             pr_group_membership = "group_id",
 
                             # Tags

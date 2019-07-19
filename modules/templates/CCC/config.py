@@ -325,7 +325,9 @@ def config(settings):
         elif tablename == "pr_group":
             T = current.T
             tabs = [(T("Basic Details"), None),
-                    (T("Leaders"), "group_membership"),
+                    # 'Person' allows native tab breakout
+                    #(T("Members"), "group_membership"),
+                    (T("Members"), "person"),
                     #(T("Locations"), "group_location"),
                     #(T("Skills"), "competency"),
                     ]
@@ -349,24 +351,20 @@ def config(settings):
                     ]
             has_role = current.auth.s3_has_role
             if has_role("ADMIN"):
-                # Show tabs dependent on get_vars
                 if not r.get_vars.get("donors"):
                     tabs.append((T("Additional Information"), "additional"))
-            elif has_role("DONOR") or has_role("GROUP_ADMIN"):
+            elif has_role("DONOR"):
+                # Better on main form using S3SQLInlineLink
+                #tabs.append((T("Goods / Services"), "item"))
                 pass
-            #        tabs.append((T("Skills"), "competency"))
-            #        tabs.insert(1, (T("Affiliation"), "human_resource"))
-            #    else:
-            #        tabs.append((T("Goods / Services"), "item"))
-            #elif has_role("DONOR"):
-            #    tabs.append((T("Goods / Services"), "item"))
-            #elif has_role("GROUP_ADMIN"):
-            #    tabs.append((T("Group"), "group"))
+            elif has_role("GROUP_ADMIN"):
+                # Better as menu item, to be able to access tab(s)
+                #tabs.append((T("Group"), "group"))
+                pass
             else:
                 tabs.append((T("Additional Information"), "additional"))
-            #    tabs.append((T("Skills"), "competency"))
-            #    if has_role("ORG_ADMIN"):
-            #        tabs.insert(1, (T("Affiliation"), "human_resource"))
+                # Better on main form using S3SQLInlineLink  
+                #tabs.append((T("Skills"), "competency"))
             if has_role("ORG_ADMIN"):
                 tabs.insert(1, (T("Affiliation"), "human_resource"))
 
@@ -958,7 +956,48 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_pr_group_controller(**attr):
 
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.component_name == "person":
+                s3.crud_strings["pr_person"] = Storage(
+                    label_create = T("New Member"),
+                    title_display = T("Member Details"),
+                    title_list = T("Members"),
+                    title_update = T("Edit Member"),
+                    #title_upload = T("Import Members"),
+                    label_list_button = T("List Members"),
+                    label_delete_button = T("Delete Member"),
+                    msg_record_created = T("Member added"),
+                    msg_record_modified = T("Member updated"),
+                    msg_record_deleted = T("Member deleted"),
+                    msg_list_empty = T("No Members currently registered")
+                    )
+
+                r.component.configure(list_fields = ["first_name",
+                                                     "middle_name",
+                                                     "last_name",
+                                                     (T("Email"), "email.value"),
+                                                     (T("Mobile Phone"), "phone.value"),
+                                                     "comments",
+                                                     ],
+                                      )
+
+            return result
+        s3.prep = prep
+
         attr["rheader"] = ccc_rheader
+
+        # Allow components with components (i.e. persons) to breakout from tabs
+        attr["native"] = True
 
         return attr
 
@@ -1223,7 +1262,7 @@ def config(settings):
                     msg_record_modified = T("Reserve Volunteer updated"),
                     msg_record_deleted = T("Reserve Volunteer deleted"),
                     msg_list_empty = T("No Reserve Volunteers currently registered")
-                )
+                    )   
             elif get_vars_get("donors") or has_role("DONOR", include_admin=False):
                 # Donors
                 from s3 import FS, S3OptionsFilter, S3TextFilter
@@ -1273,7 +1312,22 @@ def config(settings):
                     msg_record_modified = T("Donor updated"),
                     msg_record_deleted = T("Donor deleted"),
                     msg_list_empty = T("No Donors currently registered")
-                )
+                    ) 
+            elif has_role("GROUP_ADMIN", include_admin=False):
+                # Group Members
+                s3.crud_strings[r.tablename] = Storage(
+                    label_create = T("New Member"),
+                    title_display = T("Member Details"),
+                    title_list = T("Members"),
+                    title_update = T("Edit Member"),
+                    #title_upload = T("Import Members"),
+                    label_list_button = T("List Members"),
+                    label_delete_button = T("Delete Member"),
+                    msg_record_created = T("Member added"),
+                    msg_record_modified = T("Member updated"),
+                    msg_record_deleted = T("Member deleted"),
+                    msg_list_empty = T("No Members currently registered")
+                    )
             else:
                 # Organisation Volunteers
                 # (only used for hrm/person profile)
@@ -1289,7 +1343,7 @@ def config(settings):
                     msg_record_modified = T("Volunteer updated"),
                     msg_record_deleted = T("Volunteer deleted"),
                     msg_list_empty = T("No Volunteers currently registered")
-                )
+                    )
 
             return result
         s3.prep = prep

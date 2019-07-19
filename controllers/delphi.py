@@ -48,10 +48,10 @@ def index():
         result.append((group, latest_problems, actions))
 
     response.title = module_name
-    return dict(groups_problems = result,
-                name = T("Active Problems"),
-                module_name = module_name,
-                )
+    return {"groups_problems": result,
+            "name": T("Active Problems"),
+            "module_name": module_name,
+            }
 
 # =============================================================================
 # Groups
@@ -99,9 +99,9 @@ def group():
 
     if not s3_has_role("DelphiAdmin"):
         s3db.configure("delphi_group",
-                       deletable=False,
+                       deletable = False,
                        # Remove ability to create new Groups
-                       #insertable=False
+                       #insertable = False
                        )
 
     def prep(r):
