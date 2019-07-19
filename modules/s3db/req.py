@@ -3107,6 +3107,7 @@ class RequestNeedsPersonModel(S3Model):
                           self.req_need_id(empty = False),
                           self.pr_person_id(empty = False),
                           Field("status", "integer",
+                                default = 4, # Invited
                                 label = T("Status"),
                                 represent = S3Represent(options=status_opts),
                                 requires = IS_EMPTY_OR(

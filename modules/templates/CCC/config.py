@@ -615,6 +615,7 @@ def config(settings):
                                 )
 
         if r.controller == "default":
+            # Personal Profile
             list_fields = ["job_title_id",
                            ]
             current.response.s3.crud_strings[tablename] = Storage(
@@ -659,11 +660,21 @@ def config(settings):
                          "person_id$competency.skill_id$name",
                          ]
 
+        gtable = s3db.gis_location
+        districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
+                                                                                         gtable.name,
+                                                                                         cache = s3db.cache)
+        districts = {d.id:d.name for d in districts}
+
         filter_widgets = [S3TextFilter(filter_fields,
                                        #formstyle = text_filter_formstyle,
                                        label = "",
                                        _placeholder = T("Search"),
                                        ),
+                          S3OptionsFilter("person_id$person_location.location_id",
+                                          label = T("Locations Served"),
+                                          options = districts,
+                                          ),
                           S3OptionsFilter("person_id$competency.skill_id"),
                           ]
 
@@ -840,7 +851,8 @@ def config(settings):
         s3db = current.s3db
         gtable = s3db.gis_location
         districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
-                                                                                         gtable.name)
+                                                                                         gtable.name,
+                                                                                         cache = s3db.cache)
         districts = {d.id:d.name for d in districts}
 
         f = s3db.org_organisation_location.location_id
@@ -947,7 +959,7 @@ def config(settings):
                                                       _placeholder = T("Search"),
                                                       ),
                                          S3OptionsFilter("group_location.location_id",
-                                                         label = T("Location Served"),
+                                                         label = T("Locations Served"),
                                                          ),
                                          S3OptionsFilter("group_competency.skill_id",
                                                          label = T("Skill"),
@@ -1015,7 +1027,8 @@ def config(settings):
         s3db = current.s3db
         gtable = s3db.gis_location
         districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
-                                                                                         gtable.name)
+                                                                                         gtable.name,
+                                                                                         cache = s3db.cache)
         districts = {d.id:d.name for d in districts}
 
         f = s3db.pr_group_location.location_id
@@ -1233,6 +1246,12 @@ def config(settings):
                 reserves = [m.user_id for m in reserves]
                 resource.add_filter(FS("user.id").belongs(reserves))
 
+                gtable = s3db.gis_location
+                districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
+                                                                                                 gtable.name,
+                                                                                                 cache = s3db.cache)
+                districts = {d.id:d.name for d in districts}
+
                 resource.configure(list_fields = ["first_name",
                                                   "middle_name",
                                                   "last_name",
@@ -1250,6 +1269,10 @@ def config(settings):
                                                                   label = "",
                                                                   _placeholder = T("Search"),
                                                                   ),
+                                                     S3OptionsFilter("person_location.location_id",
+                                                                     label = T("Locations Served"),
+                                                                     options = districts,
+                                                                     ),
                                                      S3OptionsFilter("competency.skill_id",
                                                                      ),
                                                      ],
@@ -1390,14 +1413,17 @@ def config(settings):
     def customise_pr_person_location_resource(r, tablename):
 
         from gluon import IS_EMPTY_OR, IS_IN_SET
+        from s3 import S3Represent
 
         s3db = current.s3db
         gtable = s3db.gis_location
         districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
-                                                                                         gtable.name)
+                                                                                         gtable.name,
+                                                                                         cache = s3db.cache)
         districts = {d.id:d.name for d in districts}
 
         f = s3db.pr_person_location.location_id
+        f.represent = S3Represent(options = districts)
         f.requires = IS_EMPTY_OR(IS_IN_SET(districts))
         f.widget = None
 
@@ -1812,10 +1838,14 @@ def config(settings):
 
         current.response.s3.crud_labels["DELETE"] = "Remove"
 
-        current.s3db.configure("req_need_person",
-                               # Don't add people here (they are either invited or apply
-                               listadd = False,
-                               )
+        s3db = current.s3db
+
+        s3db.req_need_person.person_id.represent = s3db.pr_PersonRepresent(show_link=True)
+
+        s3db.configure("req_need_person",
+                       # Don't add people here (they are either invited or apply)
+                       listadd = False,
+                       )
 
     settings.customise_req_need_person_resource = customise_req_need_person_resource
 
