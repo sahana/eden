@@ -1647,10 +1647,11 @@ def auth_user_register_onaccept(user_id):
                                        person_id, hr_type=1)
 
         # Assign correct Role
+        realm_entity = organisation["pe_id"]
         auth.add_membership(user_id = user_id,
                             role = "Organisation Administrator",
                             # Leave to Default Realm to make easier to switch affiliations
-                            #entity = organisation["pe_id"],
+                            #entity = realm_entity,
                             )
 
         # Create Office
@@ -1677,8 +1678,77 @@ def auth_user_register_onaccept(user_id):
             oform = Storage(vars = record)
             onaccept(oform)
 
-        # Create 2nd Leader
-        # @ToDo
+        # 2nd Leader
+        # Create Person
+        record = {"first_name": custom["first_name2"],
+                  "last_name": custom["last_name2"],
+                  "realm_entity": realm_entity,
+                  }
+        person_id = ptable.insert(**record)
+        record["id"] = person_id
+        s3db.update_super(ptable, record)
+        onaccept = get_config("pr_person", "create_onaccept") or \
+                   get_config("pr_person", "onaccept")
+        if callable(onaccept):
+            pform = Storage(vars = record)
+            onaccept(pform)
+
+        # Add Address
+        pe_id = record.get("pe_id")
+        record = {"addr_street": custom["addr_street2"],
+                  "addr_postcode": custom["addr_postcode2"],
+                  }
+        location_id = gtable.insert(**record)
+        record["id"] = location_id
+        if callable(location_onaccept):
+            gform = Storage(vars = record)
+            location_onaccept(gform)
+
+        record = {"pe_id": pe_id,
+                  "location_id": location_id,
+                  "realm_entity": realm_entity,
+                  }
+        address_id = atable.insert(**record)
+        record["id"] = address_id
+        if callable(address_onaccept):
+            aform = Storage(vars = record)
+            address_onaccept(aform)
+
+        # Add Contacts
+        ctable = s3db.pr_contact
+        record = {"pe_id": pe_id,
+                  "contact_method": "EMAIL",
+                  "value": custom["email2"],
+                  "realm_entity": realm_entity,
+                  }
+        ctable.insert(**record)
+        # Currently no need to onaccept as none defined
+        record = {"pe_id": pe_id,
+                  "contact_method": "SMS",
+                  "value": custom["mobile2"],
+                  "realm_entity": realm_entity,
+                  }
+        ctable.insert(**record)
+        record = {"pe_id": pe_id,
+                  "contact_method": "HOME_PHONE",
+                  "value": custom["home2"],
+                  "realm_entity": realm_entity,
+                  }
+        ctable.insert(**record)
+
+        # Add Human Resource
+        hrtable = s3db.hrm_human_resource
+        record = {"organisation_id": organisation_id,
+                  "person_id": person_id,
+                  "realm_entity": realm_entity,
+                  }
+        human_resource_id = hrtable.insert(**record)
+        record["id"] = human_resource_id
+        onaccept = get_config("hrm_human_resource", "create_onaccept") or \
+                   get_config("hrm_human_resource", "onaccept")
+        if callable(onaccept):
+            hrform = Storage(vars = record)
+            onaccept(hrform)
 
     elif registration_type == "donor":
         # Donor

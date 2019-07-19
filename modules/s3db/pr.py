@@ -1318,14 +1318,14 @@ class PRPersonModel(S3Model):
         db = current.db
         s3db = current.s3db
 
-        form_vars = form.vars
-        person_id = form_vars.id
+        form_vars_get = form.vars.get
+        person_id = form_vars_get("id")
 
         ptable = s3db.pr_person
         ltable = s3db.pr_person_user
         utable = current.auth.settings.table_user
 
-        # Find a user for this person
+        # Check if this person has a User account
         query = (ptable.id == person_id) & \
                 (ltable.pe_id == ptable.pe_id) & \
                 (utable.id == ltable.user_id)
@@ -1334,27 +1334,30 @@ class PRPersonModel(S3Model):
                                 utable.last_name,
                                 limitby=(0, 1)).first()
 
-        # If there is a user and their first or other name have changed
         if user:
+            # Update in case Names have changed
+            first_name = form_vars_get("first_name")
+            middle_name = form_vars_get("middle_name")
+            last_name = form_vars_get("last_name")
             middle_as_last = current.deployment_settings.get_L10n_mandatory_middlename()
             if middle_as_last:
                 # RMSAmericas: Map the Person's middle_name to the User's last_name
-                if form_vars.first_name and \
-                   (user.first_name != form_vars.first_name or \
-                   user.last_name != form_vars.middle_name):
+                if first_name and \
+                   (user.first_name != first_name or \
+                   user.last_name != middle_name):
                     # Update the user record
                     query = (utable.id == user.id)
-                    db(query).update(first_name = form_vars.first_name,
-                                     last_name = form_vars.middle_name,
+                    db(query).update(first_name = first_name,
+                                     last_name = middle_name,
                                      )
             else:
-                if form_vars.first_name and \
-                   (user.first_name != form_vars.first_name or \
-                   user.last_name != form_vars.last_name):
+                if first_name and \
+                   (user.first_name != first_name or \
+                   user.last_name != last_name):
                     # Update the user record
                     query = (utable.id == user.id)
-                    db(query).update(first_name = form_vars.first_name,
-                                     last_name = form_vars.last_name,
+                    db(query).update(first_name = first_name,
+                                     last_name = last_name,
                                      )
 
     # -------------------------------------------------------------------------

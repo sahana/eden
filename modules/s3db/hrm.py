@@ -5694,7 +5694,7 @@ def hrm_human_resource_onaccept(form):
         # e.g. Coming from s3_register callback
         form_vars = form
 
-    record_id = form_vars.id
+    record_id = form_vars.get("id")
     if not record_id:
         return
 
