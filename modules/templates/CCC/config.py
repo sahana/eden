@@ -1400,6 +1400,68 @@ def config(settings):
     settings.customise_pr_person_location_resource = customise_pr_person_location_resource
 
     # -------------------------------------------------------------------------
+    def project_task_create_onaccept(form):
+        """
+            When a Task is created:
+                * Notify OrgAdmins
+        """
+
+        from gluon import URL
+        from s3 import s3_fullname
+
+        form_vars_get = form.vars.get
+        task_id = form_vars_get("id")
+
+        # Lookup the Author details
+        db = current.db
+        s3db = current.s3db
+        ttable = s3db.project_task
+        otable = s3db.org_organisation
+        utable = db.auth_user
+        query = (ttable.id == task_id) & \
+                (ttable.created_by == utable.id)
+        user = db(query).select(utable.first_name,
+                                utable.last_name,
+                                utable.organisation_id,
+                                limitby = (0, 1)
+                                ).first()
+        fullname = s3_fullname(user)
+
+        # Lookup the ORG_ADMINs
+        gtable = db.auth_group
+        mtable = db.auth_membership
+        query = (gtable.uuid == "ORG_ADMIN") & \
+                (gtable.id == mtable.group_id) & \
+                (mtable.user_id == utable.id) & \
+                (utable.organisation_id == user.organisation_id)
+        org_admins = db(query).select(utable.email)
+
+        # Construct Email message
+        system_name = settings.get_system_name_short()
+        subject = "%s: Message sent from %s" % \
+            (system_name,
+             fullname,
+             )
+        url = "%s%s" % (settings.get_base_public_url(),
+                        URL(c="project", f="task", args=[task_id]))
+
+        message = "%s has sent you a Message on %s\n\nSubject: %s\nMessage: %s\n\nYou can view the message here: %s" % \
+            (fullname,
+             system_name,
+             form_vars_get("name"),
+             form_vars_get("description") or "",
+             url,
+             )
+
+        # Send message to each
+        send_email = current.msg.send_email
+        for admin in org_admins:
+            send_email(to = admin.email,
+                       subject = subject,
+                       message = message,
+                       )
+
+    # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
 
         from s3 import S3OptionsFilter, S3SQLCustomForm, S3TextFilter
@@ -1437,6 +1499,8 @@ def config(settings):
             table.comments.readable = table.comments.writable = False
 
         s3db.configure("project_task",
+                       # Can simply replace the default one
+                       create_onaccept = project_task_create_onaccept,
                        crud_form = S3SQLCustomForm("name",
                                                    "description",
                                                    #"priority",
