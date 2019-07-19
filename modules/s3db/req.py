@@ -40,6 +40,7 @@ __all__ = ("RequestPriorityStatusModel",
            "RequestNeedsSkillsModel",
            "RequestNeedsLineModel",
            "RequestNeedsOrganisationModel",
+           "RequestNeedsPersonModel",
            "RequestNeedsSectorModel",
            "RequestNeedsSiteModel",
            "RequestNeedsTagModel",
@@ -2455,12 +2456,18 @@ class RequestNeedsModel(S3Model):
                                                 },
                             req_need_demographic = "need_id",
                             req_need_item = "need_id",
-                            req_need_skill = "need_id",
                             req_need_line = "need_id",
+                            req_need_person = "need_id",
+                            req_need_skill = "need_id",
                             req_need_tag = {"name": "tag",
                                             "joinby": "need_id",
                                             },
                             )
+
+        # Custom Methods
+        self.set_method("req", "need",
+                        method = "assign",
+                        action = self.pr_AssignMethod(component="need_person"))
 
         # NB Only instance of this being used (SHARE) over-rides this to show the req_number
         represent = S3Represent(lookup = tablename,
@@ -3062,6 +3069,72 @@ class RequestNeedsOrganisationModel(S3Model):
                                                           ),
                                                  ),
                        )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class RequestNeedsPersonModel(S3Model):
+    """
+        Simple Requests Management System
+        - optional link to People (used for assignments to Skills)
+        - currently assumes that Need just has a single Skill, so no need to say which skill the person is for
+        - used by CCC
+    """
+
+    names = ("req_need_person",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Needs <=> Persons
+        #
+        status_opts = {1: T("Applied"),
+                       2: T("Approved"),
+                       3: T("Rejected"),
+                       4: T("Invited"),
+                       5: T("Accepted"),
+                       6: T("Declined"),
+                       }
+
+        tablename = "req_need_person"
+        self.define_table(tablename,
+                          self.req_need_id(empty = False),
+                          self.pr_person_id(empty = False),
+                          Field("status", "integer",
+                                label = T("Status"),
+                                represent = S3Represent(options=status_opts),
+                                requires = IS_EMPTY_OR(
+                                            IS_IN_SET(status_opts)),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary=("need_id",
+                                                          "person_id",
+                                                          ),
+                                                 ),
+                       )
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Person"),
+            title_display = T("Person Details"),
+            title_list = T("People"),
+            title_update = T("Edit Person"),
+            #title_upload = T("Import People"),
+            label_list_button = T("List People"),
+            label_delete_button = T("Remove Person"),
+            msg_record_created = T("Person added"),
+            msg_record_modified = T("Person updated"),
+            msg_record_deleted = T("Person removed"),
+            msg_list_empty = T("No People currently linked to this Need")
+        )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

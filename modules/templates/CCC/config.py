@@ -379,25 +379,29 @@ def config(settings):
                           rheader_tabs)
 
         elif tablename == "req_need":
-            #T = current.T
-            #tabs = [(T("Basic Details"), None),
-            #        #(T("Items"), "need_item"),
-            #        (T("Skills"), "need_skill"),
-            #        ]
+            if not current.auth.s3_has_role("ORG_ADMIN"):
+                # @ToDo: Button to Apply (rheader or rfooter)
+                return None
+            T = current.T
+            tabs = [(T("Basic Details"), None),
+                    #(T("Items"), "need_item"),
+                    #(T("Skills"), "need_skill"),
+                    (T("People"), "need_person"),
+                    (T("Invite"), "assign"),
+                    ]
 
-            #rheader_tabs = s3_rheader_tabs(r, tabs)
+            rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            #table = r.table
-            #location_id = table.location_id
-            #date_field = table.date
-            #rheader = DIV(TABLE(TR(TH("%s: " % date_field.label),
-            #                       date_field.represent(record.date),
-            #                       ),
-            #                    TR(TH("%s: " % location_id.label),
-            #                       location_id.represent(record.location_id),
-            #                       )),
-            #              rheader_tabs)
-            rheader = None
+            table = r.table
+            location_id = table.location_id
+            date_field = table.date
+            rheader = DIV(TABLE(TR(TH("%s: " % date_field.label),
+                                   date_field.represent(record.date),
+                                   ),
+                                TR(TH("%s: " % location_id.label),
+                                   location_id.represent(record.location_id),
+                                   )),
+                          rheader_tabs)
 
         return rheader
 
@@ -1802,6 +1806,18 @@ def config(settings):
         return attr
 
     settings.customise_req_need_controller = customise_req_need_controller
+
+    # -------------------------------------------------------------------------
+    def customise_req_need_person_resource(r, tablename):
+
+        current.response.s3.crud_labels["DELETE"] = "Remove"
+
+        current.s3db.configure("req_need_person",
+                               # Don't add people here (they are either invited or apply
+                               listadd = False,
+                               )
+
+    settings.customise_req_need_person_resource = customise_req_need_person_resource
 
     # -------------------------------------------------------------------------
     def customise_supply_person_item_resource(r, tablename):
