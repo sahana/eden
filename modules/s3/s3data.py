@@ -30,6 +30,11 @@
                        S3DataList
 """
 
+__all__ = ("S3DataTable",
+           "S3DataList",
+           "S3DataListLayout",
+           )
+
 import re
 
 from itertools import islice

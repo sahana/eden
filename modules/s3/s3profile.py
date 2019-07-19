@@ -27,6 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ("S3Profile",
+           )
+
 from gluon import current, redirect
 from gluon.html import *
 from gluon.storage import Storage

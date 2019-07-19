@@ -41,9 +41,8 @@ import json
 import re
 import sys
 
-from dateutil.relativedelta import *
-from dateutil.rrule import *
-
+from dateutil.relativedelta import relativedelta
+from dateutil.rrule import DAILY, HOURLY, MONTHLY, WEEKLY, YEARLY, rrule
 from gluon import current
 from gluon.storage import Storage
 from gluon.html import FORM, INPUT, TABLE, TAG, XML
