@@ -47,6 +47,7 @@ __all__ = ("S3ProjectModel",
            "S3ProjectHRModel",
            #"S3ProjectIndicatorModel",
            "S3ProjectLocationModel",
+           "S3ProjectMasterKeyModel",
            "S3ProjectOrganisationModel",
            "S3ProjectPlanningModel",
            "S3ProjectProgrammeModel",
@@ -672,6 +673,13 @@ class S3ProjectModel(S3Model):
                                     "key": "target_id",
                                     "actuate": "replace",
                                     },
+                       # Master Keys
+                       project_project_masterkey = "project_id",
+                       auth_masterkey = {"link": "project_project_masterkey",
+                                         "joinby": "project_id",
+                                         "key": "masterkey_id",
+                                         "actuate": "replace",
+                                         },
 
                        # Project Needs (e.g. Funding, Volunteers)
                        req_project_needs = {"joinby": "project_id",
@@ -4041,6 +4049,33 @@ class S3ProjectLocationModel(S3Model):
                                                        ).first()
             if person and not person.realm_entity:
                 person.update_record(realm_entity = realm_entity)
+
+# =============================================================================
+class S3ProjectMasterKeyModel(S3Model):
+    """
+        Link Projects to Master Keys for Mobile Data Entry
+    """
+
+    names = ("project_project_masterkey",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # Projects <> Master Keys
+        #
+        self.define_table("project_project_masterkey",
+                          self.project_project_id(empty = False),
+                          self.auth_masterkey_id(empty = False),
+                          *s3_meta_fields())
+
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class S3ProjectOrganisationModel(S3Model):
@@ -10121,7 +10156,7 @@ class S3ProjectTagModel(S3Model):
         #
         tablename = "project_project_tag"
         self.define_table(tablename,
-                          self.project_project_id(),
+                          self.project_project_id(empty = False),
                           # key is a reserved word in MySQL
                           Field("tag",
                                 label = T("Key"),

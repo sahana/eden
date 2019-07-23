@@ -30,6 +30,7 @@
 __all__ = ("AuthDomainApproverModel",
            "AuthUserOptionsModel",
            "AuthConsentModel",
+           "AuthMasterKeyModel",
            "auth_Consent",
            "auth_user_options_get_osm"
            )
@@ -454,6 +455,51 @@ class AuthConsentModel(S3Model):
 
         query = ctable.id.belongs(set(row.id for row in rows))
         db(query).update(expires_on = today)
+
+# =============================================================================
+class AuthMasterKeyModel(S3Model):
+    """
+        Model to store Master Keys
+        - used for Authentication from Mobile App to e.g. Surveys
+    """
+
+    names = ("auth_masterkey",
+             "auth_masterkey_id",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # Master Keys
+        #
+        tablename = "auth_masterkey"
+        self.define_table(tablename,
+                          Field("name", unique=True,
+                                #label = T("Master Key"),
+                                ),
+                          # Which 'dummy' user this master key links to:
+                          Field("user_id", current.auth.settings.table_user),
+                          *s3_meta_fields())
+
+        represent = S3Represent(lookup=tablename)
+
+        masterkey_id = S3ReusableField("masterkey_id", "reference %s" % tablename,
+                                       #label = T("Master Key"),
+                                       ondelete = "CASCADE",
+                                       represent = represent,
+                                       requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(current.db, "project_project.id",
+                                                              represent,
+                                                              )),
+                                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"auth_masterkey_id": masterkey_id,
+                }
 
 # =============================================================================
 class auth_Consent(object):

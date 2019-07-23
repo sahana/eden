@@ -173,7 +173,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
     raw = record._row
     record_id = record["project_project.id"]
     title = record["project_project.name"]
-    master_key = raw["project_master_key_project_tag.value"]
+    master_key = raw["auth_masterkey.name"]
     target_ids = raw["project_project_target.target_id"]
 
     if target_ids:

@@ -146,6 +146,8 @@
         <xsl:variable name="FirstName" select="col[@field='FPFirstName']/text()"/>
         <xsl:variable name="LastName" select="col[@field='FPLastName']/text()"/>
 
+        <xsl:variable name="MasterKey" select="col[@field='MasterKey']/text()"/>
+
         <!-- Projects -->
         <resource name="project_project">
             <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
@@ -340,6 +342,16 @@
                 </reference>
             </xsl:if>
 
+            <xsl:if test="$MasterKey!=''">
+                <resource name="project_project_masterkey">
+                    <reference field="masterkey_id" resource="auth_masterkey">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('MasterKey:', $MasterKey)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+
             <!-- Arbitrary Tags -->
             <xsl:for-each select="col[starts-with(@field, 'KV')]">
                 <xsl:call-template name="KeyValue"/>
@@ -367,6 +379,15 @@
             <xsl:with-param name="list"><xsl:value-of select="$Locations"/></xsl:with-param>
             <xsl:with-param name="arg">location_res</xsl:with-param>
         </xsl:call-template>
+
+        <xsl:if test="$MasterKey!=''">
+            <resource name="auth_masterkey">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('MasterKey:', $MasterKey)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$MasterKey"/></data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 
@@ -610,7 +631,6 @@
             <!-- Link to Organisation -->
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
-
                     <xsl:value-of select="concat('ProjectOrganisation:', $OrgName)"/>
                 </xsl:attribute>
             </reference>

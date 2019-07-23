@@ -469,16 +469,6 @@ def config(settings):
 
         s3db = current.s3db
 
-        # Filtered components
-        s3db.add_components("project_project",
-                            project_project_tag = ({"name": "master_key",
-                                                    "joinby": "project_id",
-                                                    "filterby": {"tag": "master_key"},
-                                                    "multiple": False,
-                                                    },
-                                                   ),
-                            )
-
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("New project"),
             #title_display = T("Project Details"),
@@ -545,7 +535,7 @@ def config(settings):
                 current.s3db.configure("project_project",
                                        list_fields = ["name",
                                                       "project_target.target_id",
-                                                      "master_key.value",
+                                                      "masterkey.name",
                                                       ],
                                        )
 
