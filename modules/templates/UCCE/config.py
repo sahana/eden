@@ -164,9 +164,98 @@ def config(settings):
     settings.search.filter_manager = False
 
     # -------------------------------------------------------------------------
+    def ucce_rheader(r):
+        """
+            Custom rheaders
+        """
+
+        if r.representation != "html":
+            # RHeaders only used in interactive views
+            return None
+
+        # Need to use this format as otherwise req_match?viewing=org_office.x
+        # doesn't have an rheader
+        from s3 import s3_rheader_resource, s3_rheader_tabs
+        tablename, record = s3_rheader_resource(r)
+
+        if record is None:
+            # List or Create form: rheader makes no sense here
+            return None
+
+        from gluon import DIV, TABLE, TR, TH
+
+        T = current.T
+
+        if tablename == "dc_template":
+            T = current.T
+            #tabs = [(T("Basic Details"), None),
+            #        (T("Participants"), "participant"),
+            #        ]
+
+            #rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            table = r.table
+            rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+                                   record.name,
+                                   )),
+                          #rheader_tabs,
+                          )
+
+        return rheader
+
+    # -------------------------------------------------------------------------
+    def dc_target_create_onaccept(form):
+        """
+            Create a Template with the same name as the Target
+            Link the Target to this new Template
+        """
+
+        form_vars_get = form.vars.get
+
+        template_id = form_vars_get("template_id")
+        if template_id:
+            # We already have a template, e.g. prepop
+            return
+
+        s3db = current.s3db
+        target_id = form_vars_get("id")
+        name = form_vars_get("name")
+
+        template = {"name": name}
+        template_id = s3db.dc_template.insert(**template)
+        template["id"] = template_id
+        onaccept = s3db.get_config("dc_template", "create_onaccept")
+        onaccept(Storage(vars = template))
+
+        current.db(s3db.dc_target.id == target_id).update(template_id = template_id)
+
+    # -------------------------------------------------------------------------
+    def dc_target_ondelete(form):
+        """
+            Delete the associated Template
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        target_id = form.id
+
+        table = s3db.dc_target
+        record = db(table.id == target_id).select(table.deleted_fk,
+                                                  limitby = (0, 1),
+                                                  ).first()
+        if record:
+            import json
+            deleted_fks = json.loads(record.deleted_fk)
+            template_id = deleted_fks.get("template_id")
+            resource = s3db.resource("dc_template",
+                                     filter=(s3db.dc_template.id == template_id))
+            resource.delete()
+
+    # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
 
-        #from gluon import URL
+        from gluon import URL
         from s3 import S3SQLCustomForm, S3TextFilter
 
         from templates.UCCE.controllers import dc_target_list_layout
@@ -192,7 +281,8 @@ def config(settings):
 
 
         s3db.configure("dc_target",
-                       #create_next = URL(c="dc", f="template", args=["[id]", "question"]),
+                       create_next = URL(c="dc", f="template", vars={"target_id": "[id]"}),
+                       create_onaccept = dc_target_create_onaccept,
                        crud_form = S3SQLCustomForm((T("Survey name"), "name")),
                        listadd = False,
                        list_fields = ["name",
@@ -200,6 +290,7 @@ def config(settings):
                                       "project_target.project_id",
                                       ],
                        list_layout = dc_target_list_layout,
+                       ondelete = dc_target_ondelete,
                        filter_widgets = [S3TextFilter(["name",
                                                        "project.name",
                                                        ],
@@ -221,6 +312,53 @@ def config(settings):
         return attr
 
     settings.customise_dc_target_controller = customise_dc_target_controller
+
+    # -------------------------------------------------------------------------
+    def dc_template_update_onaccept(form):
+        """
+            Ensure that the Survey using this Template has the same name as the Template
+        """
+
+        s3db = current.s3db
+        form_vars_get = form.vars.get
+
+        template_id = form_vars_get("id")
+        name = form_vars_get("name")
+
+        current.db(s3db.dc_target.template_id == template_id).update(name = name)
+
+    # -------------------------------------------------------------------------
+    def customise_dc_template_resource(r, tablename):
+
+        current.response.s3.crud_strings[tablename].title_display = T("Editor")
+
+        s3db = current.s3db
+
+        s3db.configure("dc_template",
+                       update_onaccept = dc_template_update_onaccept
+                       )
+
+    settings.customise_dc_template_resource = customise_dc_template_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_dc_template_controller(**attr):
+
+        target_id =  current.request.get_vars.get("target_id")
+        if target_id:
+            # Find the Template for this Target
+            ttable = current.s3db.dc_target
+            target = current.db(ttable.id == target_id).select(ttable.template_id,
+                                                               limitby = (0, 1),
+                                                               ).first()
+            if target:
+                from gluon import redirect, URL
+                redirect(URL(c="dc", f="template", args=[target.template_id, "question"]))
+
+        attr["rheader"] = ucce_rheader
+
+        return attr
+
+    settings.customise_dc_template_controller = customise_dc_template_controller
 
     # -------------------------------------------------------------------------
     def customise_doc_document_resource(r, tablename):
@@ -282,6 +420,46 @@ def config(settings):
     settings.customise_doc_document_controller = customise_doc_document_controller
 
     # -------------------------------------------------------------------------
+    def project_project_ondelete(form):
+        """
+            Delete the associated Targets & Templates
+        """
+
+        import json
+
+        db = current.db
+        s3db = current.s3db
+
+        project_id = form.id
+        target_ids = []
+        template_ids = []
+
+
+        ltable = s3db.project_project_target
+        rows = db(ltable.deleted == True).select(ltable.deleted_fk)
+        for row in rows:
+            deleted_fks = json.loads(row.deleted_fk)
+            if deleted_fks.get("project_id") == project_id:
+                target_id = deleted_fks.get("target_id")
+                target_ids.append(target_id)
+
+        if not target_ids:
+            return
+
+        table = s3db.dc_target
+        targets = db(table.id.belongs(target_ids)).select(table.template_id)
+        for target in targets:
+            template_ids.append(target.template_id)
+
+        resource = s3db.resource("dc_template",
+                                 filter=(s3db.dc_template.id.belongs(template_ids)))
+        resource.delete()
+        # ondelete CASCADE will clear these:
+        #resource = s3db.resource("dc_target",
+        #                         filter=(s3db.dc_target.id.belongs(target_ids)))
+        #resource.delete()
+
+    # -------------------------------------------------------------------------
     def customise_project_project_resource(r, tablename):
 
         from gluon import URL
@@ -335,6 +513,7 @@ def config(settings):
                        #               "project_target.target_id",
                        #               ],
                        list_layout = project_project_list_layout,
+                       ondelete = project_project_ondelete,
                        filter_widgets = [S3TextFilter(["name",
                                                        "target.name",
                                                        ],

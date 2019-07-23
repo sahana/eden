@@ -115,6 +115,7 @@ class DataCollectionTemplateModel(S3Model):
         represent = S3Represent(lookup=tablename)
         template_id = S3ReusableField("template_id", "reference %s" % tablename,
                                       label = T("Template"),
+                                      ondelete = "CASCADE",
                                       represent = represent,
                                       requires = IS_ONE_OF(db, "dc_template.id",
                                                            represent,
@@ -452,17 +453,16 @@ class DataCollectionTemplateModel(S3Model):
                 - Create & link a Dynamic Table to use to store the Questions
         """
 
-        form_vars = form.vars
-        try:
-            template_id = form_vars.id
-        except AttributeError:
+        form_vars_get = form.vars.get
+        template_id = form_vars_get("id")
+        if not template_id:
             return
 
         db = current.db
         s3db = current.s3db
 
-        title = form_vars.get("name")
-        master = form_vars.get("master")
+        title = form_vars_get("name")
+        master = form_vars_get("master")
         if master is None:
             # Load full record
             ttable = s3db.dc_template

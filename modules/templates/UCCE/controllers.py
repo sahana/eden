@@ -180,6 +180,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
         targets = db(ttable.id.belongs(target_ids)).select(ttable.id,
                                                            ttable.name,
                                                            ttable.status,
+                                                           ttable.template_id,
                                                            )
         rtable = s3db.dc_response
     else:
@@ -191,17 +192,15 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
     bappend = body.append
     for target in targets:
         target_id = target.id
+        template_id = target.template_id
         if permit("update", ttable, record_id=target_id):
             edit_btn = A(ICON("edit"),
                          SPAN("edit",
                               _class = "show-for-sr",
                               ),
-                         _href=URL(c="dc", f="target",
-                                   args=[target_id, "update.popup"],
-                                   vars={"refresh": list_id,
-                                         "record": record_id}
+                         _href=URL(c="dc", f="template",
+                                   args=[template_id, "question"],
                                    ),
-                         _class="s3_modal",
                          #_title=T("Edit %(type)s") % dict(type=series_title),
                          _title=T("Edit"),
                          )
