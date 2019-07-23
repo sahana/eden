@@ -5374,12 +5374,6 @@ class S3Config(Storage):
         """
         return self.project.get("organisation_lead_role", 1)
 
-    def get_project_task_tag(self):
-        """
-            Use Tags in Tasks
-        """
-        return self.project.get("task_tag", False)
-
     def get_project_task_status_opts(self):
         """
             The list of options for the Status of a Task.

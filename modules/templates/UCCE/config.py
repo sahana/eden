@@ -164,86 +164,9 @@ def config(settings):
     settings.search.filter_manager = False
 
     # -------------------------------------------------------------------------
-    #def customise_cms_post_resource(r, tablename):
-
-    #    from gluon import URL
-    #    from s3 import S3SQLCustomForm, S3TextFilter
-
-    #    from templates.UCCE.controllers import cms_post_list_layout
-
-    #    current.response.s3.crud_strings[tablename] = Storage(
-    #        label_create = T("Create Guide"),
-    #        title_display = T("Guide Details"),
-    #        title_list = T("Guides"),
-    #        title_update = T("Edit Guide"),
-    #        #title_upload = T("Import Guides"),
-    #        label_list_button = T("List Guides"),
-    #        label_delete_button = T("Delete Guide"),
-    #        msg_record_created = T("Guide added"),
-    #        msg_record_modified = T("Guide updated"),
-    #        msg_record_deleted = T("Guide deleted"),
-    #        msg_list_empty = T("No Guides currently registered"))
-
-    #    s3db = current.s3db
-    #    f = s3db.cms_post.series_id
-    #    f.label = T("Category")
-    #    f.readable = f.writable = True
-
-    #    s3db.configure("cms_post",
-    #                   create_next = URL(args="datalist"),
-    #                   crud_form = S3SQLCustomForm("series_id",
-    #                                               "title",
-    #                                               "body",
-    #                                               ),
-    #                   list_fields = ["series_id",
-    #                                  "title",
-    #                                  "body",
-    #                                  ],
-    #                   list_layout = cms_post_list_layout,
-    #                   filter_widgets = [S3TextFilter(["title",
-    #                                                   "series_id",
-    #                                                   ],
-    #                                                  #formstyle = text_filter_formstyle,
-    #                                                  label = "",
-    #                                                  _placeholder = T("Search guides"),
-    #                                                  ),
-    #                                     ],
-    #                   )
-
-    #settings.customise_cms_post_resource = customise_cms_post_resource
-
-    # -----------------------------------------------------------------------------
-    #def customise_cms_post_controller(**attr):
-
-    #    s3 = current.response.s3
-
-    #    # Custom postp
-    #    standard_prep = s3.prep
-    #    def prep(r):
-    #        # Call standard prep
-    #        if callable(standard_prep):
-    #            result = standard_prep(r)
-    #        else:
-    #            result = True
-
-    #        if r.method == "datalist":
-    #            # Filter out non-Guides
-    #            from s3 import FS
-    #            r.resource.add_filter(FS("post_module.module") == None)
-
-    #        return result
-    #    s3.prep = prep
-
-    #    s3.dl_no_header = True
-    #    attr["dl_rowsize"] = 2
-
-    #    return attr
-
-    #settings.customise_cms_post_controller = customise_cms_post_controller
-
-    # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
 
+        #from gluon import URL
         from s3 import S3SQLCustomForm, S3TextFilter
 
         from templates.UCCE.controllers import dc_target_list_layout
@@ -251,7 +174,8 @@ def config(settings):
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Create Survey"),
             title_display = T("Survey Details"),
-            title_list = T("Surveys"),
+            #title_list = T("Surveys"),
+            title_list = "",
             title_update = T("Edit Survey"),
             #title_upload = T("Import Surveys"),
             label_list_button = T("List Surveys"),
@@ -261,22 +185,30 @@ def config(settings):
             msg_record_deleted = T("Survey deleted"),
             msg_list_empty = T("No Surveys currently registered"))
 
+        s3db = current.s3db
 
-        current.s3db.configure("dc_target",
-                               crud_form = S3SQLCustomForm("name"),
-                               listadd = False,
-                               list_fields = ["name",
-                                              "project.name",
-                                              ],
-                               list_layout = dc_target_list_layout,
-                               filter_widgets = [S3TextFilter(["name",
-                                                               ],
-                                                              #formstyle = text_filter_formstyle,
-                                                              label = "",
-                                                              _placeholder = T("Search project or survey"),
-                                                              ),
-                                                 ],
-                               )
+        # Lift mandatory link to template so that we can create the template onaccept
+        s3db.dc_target.template_id.requires
+
+
+        s3db.configure("dc_target",
+                       #create_next = URL(c="dc", f="template", args=["[id]", "question"]),
+                       crud_form = S3SQLCustomForm((T("Survey name"), "name")),
+                       listadd = False,
+                       list_fields = ["name",
+                                      "status",
+                                      "project_target.project_id",
+                                      ],
+                       list_layout = dc_target_list_layout,
+                       filter_widgets = [S3TextFilter(["name",
+                                                       "project.name",
+                                                       ],
+                                                      #formstyle = text_filter_formstyle,
+                                                      label = "",
+                                                      _placeholder = T("Search project or survey"),
+                                                      ),
+                                         ],
+                       )
 
     settings.customise_dc_target_resource = customise_dc_target_resource
 
@@ -301,6 +233,7 @@ def config(settings):
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Add Guide"),
             title_display = T("Guide Details"),
+            #title_list = T("Guides"),
             title_list = "",
             title_update = T("Edit Guide"),
             #title_upload = T("Import Guides"),
@@ -317,29 +250,18 @@ def config(settings):
         f = s3db.doc_document.comments
         f.comment = None
 
-        #f = s3db.doc_document.organisation_id
-        #user = current.auth.user
-        #organisation_id = user and user.organisation_id
-        #if organisation_id:
-        #    f.default = organisation_id
-        #else:
-        #    f.readable = f.writable = True
-
         s3db.configure("doc_document",
                        create_next = URL(args="datalist"),
-                       crud_form = S3SQLCustomForm(#"organisation_id",
-                                                   "name",
+                       crud_form = S3SQLCustomForm("name",
                                                    "file",
                                                    "comments",
                                                    ),
-                       list_fields = [#"organisation_id",
-                                      "name",
+                       list_fields = ["name",
                                       "file",
                                       "comments",
                                       ],
                        list_layout = doc_document_list_layout,
                        filter_widgets = [S3TextFilter(["name",
-                                                       #"organisation_id",
                                                        ],
                                                       #formstyle = text_filter_formstyle,
                                                       label = "",
@@ -369,6 +291,33 @@ def config(settings):
 
         s3db = current.s3db
 
+        # Filtered components
+        s3db.add_components("project_project",
+                            project_project_tag = ({"name": "master_key",
+                                                    "joinby": "project_id",
+                                                    "filterby": {"tag": "master_key"},
+                                                    "multiple": False,
+                                                    },
+                                                   ),
+                            )
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("New project"),
+            #title_display = T("Project Details"),
+            # Only used in /target/create?
+            title_display = T("Editor"),
+            #title_list = T("Projects"),
+            title_list = "",
+            title_update = T("Edit project name"),
+            #title_upload = T("Import Projects"),
+            label_list_button = T("List Projects"),
+            label_delete_button = T("Delete Projects"),
+            msg_record_created = T("Project added"),
+            msg_record_modified = T("Project updated"),
+            msg_record_deleted = T("Project deleted"),
+            msg_list_empty = T("No Projects currently registered")
+        )
+
         user = current.auth.user
         organisation_id = user and user.organisation_id
         if organisation_id:
@@ -379,12 +328,15 @@ def config(settings):
         s3db.configure("project_project",
                        create_next = URL(args="datalist"),
                        crud_form = S3SQLCustomForm("organisation_id",
-                                                   "name",
+                                                   (T("New project name"), "name"),
                                                    ),
-                       list_fields = ["name",
-                                      ],
+                       # Ignored here as set in Prep in default controller
+                       #list_fields = ["name",
+                       #               "project_target.target_id",
+                       #               ],
                        list_layout = project_project_list_layout,
                        filter_widgets = [S3TextFilter(["name",
+                                                       "target.name",
                                                        ],
                                                       #formstyle = text_filter_formstyle,
                                                       label = "",
@@ -398,7 +350,32 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_project_project_controller(**attr):
 
-        current.response.s3.dl_no_header = True
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.method == "datalist":
+                # Over-ride list_fields set in default prep
+                current.s3db.configure("project_project",
+                                       list_fields = ["name",
+                                                      "project_target.target_id",
+                                                      "master_key.value",
+                                                      ],
+                                       )
+
+            return result
+        s3.prep = prep
+
+        s3.dl_no_header = True
+
+        attr["rheader"] = None
 
         return attr
 

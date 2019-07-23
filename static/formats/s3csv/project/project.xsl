@@ -14,6 +14,7 @@
          Code.................string..........Project Code (optional)
          Description..........string..........Project short description
          Objectives...........string..........Project objectives
+         KV:XX................string..........project_project_tag Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          Comments.............string..........Project comments
          Programme............string..........Project Programme
          Status...............string..........Project status
@@ -339,6 +340,11 @@
                 </reference>
             </xsl:if>
 
+            <!-- Arbitrary Tags -->
+            <xsl:for-each select="col[starts-with(@field, 'KV')]">
+                <xsl:call-template name="KeyValue"/>
+            </xsl:for-each>
+
         </resource>
 
         <xsl:call-template name="splitList">
@@ -548,6 +554,24 @@
             </resource>
         </xsl:if>
 
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="KeyValue">
+        <xsl:variable name="Key" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+            <!-- @ToDo
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list" select="$Value"/>
+                <xsl:with-param name="arg">tag</xsl:with-param>
+            </xsl:call-template> -->
+            <resource name="project_project_tag">
+                <data field="tag"><xsl:value-of select="$Key"/></data>
+                <data field="value"><xsl:value-of select="$Value"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

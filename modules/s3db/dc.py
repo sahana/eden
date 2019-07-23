@@ -698,6 +698,25 @@ class DataCollectionModel(S3Model):
         location_id = self.gis_location_id
         template_id = self.dc_template_id
 
+        # Status (Optional control of workflow)
+        #  Draft
+        #    - questions can be modified
+        #    - cannot hold data
+        #    - not visible to normal users (e.g. in mobile client)
+        #  Active
+        #    - questions cannot be modified
+        #    - can hold data
+        #    - visible to normal users (e.g. in mobile client)
+        #  Inactive
+        #    - questions cannot be modified
+        #    - can hold data
+        #    - not visible to normal users (e.g. in mobile client)
+
+        status_opts = {1: T("Draft"),
+                       2: T("Active"),
+                       3: T("Inactive"),
+                       }
+
         # =====================================================================
         # Data Collection Target
         # - planning of Assessments / Surveys
@@ -708,6 +727,12 @@ class DataCollectionModel(S3Model):
         define_table(tablename,
                      Field("name"),
                      template_id(),
+                     Field("status", "integer",
+                           default = 1,
+                           label = T("Status"),
+                           represent = S3Represent(options = status_opts),
+                           requires = IS_IN_SET(status_opts),
+                           ),
                      s3_date(default = "now"),
                      # Enable in-templates as-required
                      s3_language(readable = False,
@@ -743,7 +768,8 @@ class DataCollectionModel(S3Model):
                                            "multiple": False,
                                            },
 
-                       project_project = {"link": "project_target",
+                       project_project_target = "target_id",
+                       project_project = {"link": "project_project_target",
                                           "joinby": "target_id",
                                           "key": "project_id",
                                           "actuate": "replace",

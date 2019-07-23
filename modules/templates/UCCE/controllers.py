@@ -15,74 +15,6 @@ class index(S3CustomController):
         return {}
 
 # =============================================================================
-#def cms_post_list_layout(list_id, item_id, resource, rfields, record):
-#    """
-#        dataList item renderer for Guides
-
-#        @param list_id: the HTML ID of the list
-#        @param item_id: the HTML ID of the item
-#        @param resource: the S3Resource to render
-#        @param rfields: the S3ResourceFields to render
-#        @param record: the record as dict
-#    """
-
-#    T = current.T
-
-#    table = current.s3db.cms_post
-
-#    #raw = record._row
-#    record_id = record["cms_post.id"]
-#    title = record["cms_post.title"]
-#    category = record["cms_post.series_id"]
-
-#    # Toolbar
-#    permit = current.auth.s3_has_permission
-#    if permit("update", table, record_id=record_id):
-#        edit_btn = A(ICON("edit"),
-#                     SPAN("edit",
-#                          _class = "show-for-sr",
-#                          ),
-#                     _href=URL(c="cms", f="post",
-#                               args=[record_id, "update.popup"],
-#                               vars={"refresh": list_id,
-#                                     "record": record_id}
-#                               ),
-#                     _class="s3_modal",
-#                     #_title=T("Edit %(type)s") % dict(type=series_title),
-#                     _title=T("Edit"),
-#                     )
-#    else:
-#        edit_btn = ""
-#    if permit("delete", table, record_id=record_id):
-#        delete_btn = A(ICON("delete"),
-#                       SPAN("delete",
-#                           _class = "show-for-sr",
-#                           ),
-#                      _class="dl-item-delete",
-#                      _title=T("Delete"),
-#                      )
-#    else:
-#        delete_btn = ""
-
-#    toolbar = UL(LI(edit_btn,
-#                    _class="item",
-#                    ),
-#                 LI(delete_btn,
-#                    _class="item",
-#                    ),
-#                 _class="controls",
-#                 )
-
-#    item = DIV(toolbar,
-#               category,
-#               title,
-#               _class = "card",
-#               _id = item_id,
-#               )
-
-#    return item
-
-# =============================================================================
 def dc_target_list_layout(list_id, item_id, resource, rfields, record):
     """
         dataList item renderer for Reports.
@@ -94,10 +26,10 @@ def dc_target_list_layout(list_id, item_id, resource, rfields, record):
         @param record: the record as dict
     """
 
-    T = current.T
+    #T = current.T
 
     #raw = record._row
-    record_id = record["dc_target.id"]
+    #record_id = record["dc_target.id"]
     title = record["dc_target.name"]
 
     item = DIV(title,
@@ -232,15 +164,155 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
     """
 
     T = current.T
+    db = current.db
+    s3db = current.s3db
 
-    table = current.s3db.project_project
+    table = s3db.project_project
+    ttable = s3db.dc_target
 
-    #raw = record._row
+    raw = record._row
     record_id = record["project_project.id"]
     title = record["project_project.name"]
+    master_key = raw["project_master_key_project_tag.value"]
+    target_ids = raw["project_project_target.target_id"]
+
+    if target_ids:
+        targets = db(ttable.id.belongs(target_ids)).select(ttable.id,
+                                                           ttable.name,
+                                                           ttable.status,
+                                                           )
+        rtable = s3db.dc_response
+    else:
+        targets = []
+
+    permit = current.auth.s3_has_permission
+
+    body = DIV(_class="row")
+    bappend = body.append
+    for target in targets:
+        target_id = target.id
+        if permit("update", ttable, record_id=target_id):
+            edit_btn = A(ICON("edit"),
+                         SPAN("edit",
+                              _class = "show-for-sr",
+                              ),
+                         _href=URL(c="dc", f="target",
+                                   args=[target_id, "update.popup"],
+                                   vars={"refresh": list_id,
+                                         "record": record_id}
+                                   ),
+                         _class="s3_modal",
+                         #_title=T("Edit %(type)s") % dict(type=series_title),
+                         _title=T("Edit"),
+                         )
+        else:
+            edit_btn = ""
+        if permit("delete", ttable, record_id=target_id):
+            delete_btn = A(ICON("delete"),
+                           SPAN("delete",
+                               _class = "show-for-sr",
+                               ),
+                          _href=URL(c="dc", f="target",
+                                   args=[target_id, "delete"],
+                                   vars={"refresh": list_id,
+                                         "record": record_id}
+                                   ),
+                           _title=T("Delete"),
+                          )
+        else:
+            delete_btn = ""
+        if permit("create", ttable):
+            copy_btn = A(ICON("copy"),
+                         SPAN("copy",
+                              _class = "show-for-sr",
+                             ),
+                         _href=URL(c="dc", f="target",
+                                   args=[target_id, "copy"],
+                                   vars={"refresh": list_id}
+                                   ),
+                         _title=T("Copy"),
+                         )
+        else:
+            copy_btn = ""
+        status = target.status
+        if status == 1:
+            # Draft
+            responses = DIV("Draft")
+            upload_btn = ""
+            report_btn = ""
+            switch = ""
+        else:
+            responses = db(rtable.target_id == target_id).count()
+            responses = DIV("%s Responses" % responses)
+            upload_btn = A(ICON("upload"),
+                           SPAN("upload",
+                                _class = "show-for-sr",
+                                ),
+                           _href=URL(c="dc", f="target",
+                                     args=[target_id, "upload"],
+                                     ),
+                           _title=T("Upload"),
+                           )
+            report_btn = A(ICON("bar-chart"),
+                           SPAN("report",
+                                _class = "show-for-sr",
+                                ),
+                           _href=URL(c="dc", f="target",
+                                     args=[target_id, "report"],
+                                     ),
+                           _title=T("Report"),
+                           )
+            switch_id = "target_status_%s" % target_id
+            if status == 2:
+                input = INPUT(_id=switch_id,
+                              _type="checkbox",
+                              _checked="checked",
+                              )
+            elif status == 3:
+                input = INPUT(_id=switch_id,
+                              _type="checkbox",
+                              )
+            switch = DIV(input,
+                         # Inner Labels require Foundation 6
+                         # https://foundation.zurb.com/sites/docs/switch.html#inner-labels
+                         LABEL(SPAN("ON",
+                                    _class="switch-active",
+                                    #_aria-hidden="true",
+                                    ),
+                               SPAN("OFF",
+                                    _class="switch-inactive",
+                                    #_aria-hidden="true",
+                                    ),
+                               _for=switch_id,
+                               ),
+                         _class="switch round large",
+                         )
+
+        bappend(DIV(DIV(_class="card-inner-header"),
+                    DIV(target.name),
+                    responses,
+                    DIV(edit_btn, copy_btn, delete_btn),
+                    DIV(upload_btn, report_btn),
+                    switch,
+                    _class="thumbnail medium-2 columns",
+                    ))
+
+    if permit("create", ttable):
+        # Create Button
+        create_btn = A(ICON("plus"),
+                     SPAN("Create new survey",
+                          ),
+                     _href=URL(c="project", f="project",
+                               args=[record_id, "target", "create"],
+                               ),
+                     _title=T("Create new survey"),
+                     )
+        bappend(DIV(create_btn,
+                    _class="thumbnail medium-2 columns end",
+                    ))
+
 
     # Toolbar
-    permit = current.auth.s3_has_permission
     if permit("update", table, record_id=record_id):
         edit_btn = A(ICON("edit"),
                      SPAN("edit",
@@ -267,20 +339,45 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                       )
     else:
         delete_btn = ""
+    if permit("create", table):
+        copy_btn = A(ICON("copy"),
+                     SPAN("copy",
+                          _class = "show-for-sr",
+                         ),
+                     _href=URL(c="project", f="project",
+                               args=[record_id, "copy"],
+                               vars={"refresh": list_id}
+                               ),
+                     _title=T("Copy"),
+                     )
+    else:
+        copy_btn = ""
 
-    toolbar = UL(LI(edit_btn,
-                    _class="item",
-                    ),
-                 LI(delete_btn,
-                    _class="item",
-                    ),
-                 _class="controls",
-                 )
+    toolbar = DIV(edit_btn,
+                  copy_btn,
+                  delete_btn,
+                  _class="edit-bar fright",
+                  )
 
-    item = DIV(toolbar,
-               title,
-               _class = "card",
-               _id = item_id,
+    item = DIV(DIV(ICON("icon"),
+                   SPAN(" %s" % title,
+                        _class="card-title"),
+                   toolbar,
+                   _class="card-header",
+                   ),
+               DIV(DIV(DIV(body,
+                           _class="media",
+                           ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               DIV(SPAN("Master key: %s" % master_key,
+                        _class="card-title"),
+                   _class="card-header",
+                   ),
+               _class="thumbnail",
+               _id=item_id,
                )
 
     return item

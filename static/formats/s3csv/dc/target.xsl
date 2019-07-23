@@ -8,6 +8,7 @@
          CSV fields:
          Name....................dc_target.name
          Template................dc_template.name
+         Status..................dc_target.status
          Project.................project_project.name (Optional link to Project)
 
     *********************************************************************** -->
@@ -43,9 +44,15 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
         <xsl:variable name="project" select="col[@field='Project']/text()"/>
+        <xsl:variable name="status" select="col[@field='Status']/text()"/>
 
         <resource name="dc_target">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
+
+            <xsl:if test="$status!=''">
+                <!-- @ToDo: Support represented text values as well as raw integers -->
+                <data field="status"><xsl:value-of select="$status"/></data>
+            </xsl:if>
 
             <!-- Link to Template -->
             <reference field="template_id" resource="dc_template">
@@ -53,9 +60,9 @@
                     <xsl:value-of select="col[@field='Template']"/>
                 </xsl:attribute>
             </reference>
-
+           
             <xsl:if test="$project!=''">
-                <resource name="project_target">
+                <resource name="project_project_target">
                     <!-- Link to Project -->
                     <reference field="project_id" resource="project_project">
                         <xsl:attribute name="tuid">
