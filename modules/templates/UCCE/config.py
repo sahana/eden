@@ -207,27 +207,45 @@ def config(settings):
     def dc_target_create_onaccept(form):
         """
             Create a Template with the same name as the Target
+                Copy the masterkey to the s3_table
             Link the Target to this new Template
         """
 
         form_vars_get = form.vars.get
-
         template_id = form_vars_get("template_id")
         if template_id:
             # We already have a template, e.g. prepop
             return
 
+        db = current.db
         s3db = current.s3db
         target_id = form_vars_get("id")
         name = form_vars_get("name")
 
         template = {"name": name}
-        template_id = s3db.dc_template.insert(**template)
+        tetable = s3db.dc_template
+        template_id = tetable.insert(**template)
         template["id"] = template_id
         onaccept = s3db.get_config("dc_template", "create_onaccept")
         onaccept(Storage(vars = template))
 
-        current.db(s3db.dc_target.id == target_id).update(template_id = template_id)
+        tatable = s3db.dc_target
+        db(tatable.id == target_id).update(template_id = template_id)
+
+        ltable = s3db.project_project_target
+        pmtable = s3db.project_project_masterkey
+        query = (ltable.target_id == target_id) & \
+                (ltable.project_id == pmtable.project_id)
+        link = db(query).select(pmtable.masterkey_id,
+                                limitby = (0, 1)
+                                ).first()
+        query = (tatable.id == target_id) & \
+                (tetable.id == tatable.template_id)
+        template = db(query).select(tetable.table_id,
+                                    limitby = (0, 1)
+                                    ).first()
+
+        db(s3db.s3_table.id == template.table_id).update(masterkey_id = link.masterkey_id)
 
     # -------------------------------------------------------------------------
     def dc_target_ondelete(form):
@@ -460,6 +478,35 @@ def config(settings):
         #resource.delete()
 
     # -------------------------------------------------------------------------
+    def project_project_target_create_onaccept(form):
+        """
+            Copy the masterkey to the s3_table
+            - used during prepop
+        """
+
+        form_vars_get = form.vars.get
+        project_id = form_vars_get("project_id")
+        target_id = form_vars_get("target_id")
+
+        db = current.db
+        s3db = current.s3db
+
+        pmtable = s3db.project_project_masterkey
+        link = db(pmtable.project_id == project_id).select(pmtable.masterkey_id,
+                                                           limitby = (0, 1)
+                                                           ).first()
+        tatable = s3db.dc_target
+        tetable = s3db.dc_template
+        query = (tatable.id == target_id) & \
+                (tetable.id == tatable.template_id)
+        template = db(query).select(tetable.table_id,
+                                    limitby = (0, 1)
+                                    ).first()
+
+        if template:
+            db(s3db.s3_table.id == template.table_id).update(masterkey_id = link.masterkey_id)
+
+    # -------------------------------------------------------------------------
     def customise_project_project_resource(r, tablename):
 
         from gluon import URL
@@ -512,6 +559,10 @@ def config(settings):
                                                       _placeholder = T("Search project or survey"),
                                                       ),
                                          ],
+                       )
+
+        s3db.configure("project_project_target",
+                       create_onaccept = project_project_target_create_onaccept,
                        )
 
     settings.customise_project_project_resource = customise_project_project_resource
