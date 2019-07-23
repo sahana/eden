@@ -490,7 +490,7 @@ class AuthMasterKeyModel(S3Model):
                                        ondelete = "CASCADE",
                                        represent = represent,
                                        requires = IS_EMPTY_OR(
-                                                    IS_ONE_OF(current.db, "project_project.id",
+                                                    IS_ONE_OF(current.db, "auth_masterkey.id",
                                                               represent,
                                                               )),
                                        )
