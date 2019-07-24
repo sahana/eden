@@ -184,10 +184,7 @@ def config(settings):
 
         from gluon import DIV, TABLE, TR, TH
 
-        T = current.T
-
         if tablename == "dc_template":
-            T = current.T
             #tabs = [(T("Basic Details"), None),
             #        (T("Participants"), "participant"),
             #        ]
@@ -295,7 +292,7 @@ def config(settings):
         s3db = current.s3db
 
         # Lift mandatory link to template so that we can create the template onaccept
-        s3db.dc_target.template_id.requires
+        #s3db.dc_target.template_id.requires
 
 
         s3db.configure("dc_target",

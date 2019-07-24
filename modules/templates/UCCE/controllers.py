@@ -263,15 +263,15 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                            )
             switch_id = "target_status_%s" % target_id
             if status == 2:
-                input = INPUT(_id=switch_id,
-                              _type="checkbox",
-                              _checked="checked",
-                              )
+                checkbox = INPUT(_id = switch_id,
+                                 _type = "checkbox",
+                                 _checked = "checked",
+                                 )
             elif status == 3:
-                input = INPUT(_id=switch_id,
-                              _type="checkbox",
-                              )
-            switch = DIV(input,
+                checkbox = INPUT(_id = switch_id,
+                                 _type = "checkbox",
+                                 )
+            switch = DIV(checkbox,
                          # Inner Labels require Foundation 6
                          # https://foundation.zurb.com/sites/docs/switch.html#inner-labels
                          LABEL(SPAN("ON",
