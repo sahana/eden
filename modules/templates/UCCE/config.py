@@ -435,6 +435,43 @@ def config(settings):
     settings.customise_doc_document_controller = customise_doc_document_controller
 
     # -------------------------------------------------------------------------
+    def project_project_onaccept(form):
+        """
+            Create & link the Master Key
+        """
+
+        from random import randint
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.auth_masterkey
+
+        not_unique = True
+        while not_unique:
+            masterkey = "%s-%s-%s" % (str(randint(0,999)).zfill(3),
+                                      str(randint(0,999)).zfill(3),
+                                      str(randint(0,999)).zfill(3),
+                                      )
+            exists = db(table.name == masterkey).select(table.id,
+                                                        limitby = (0, 1)
+                                                        )
+            if not exists:
+                not_unique = False
+
+        utable = db.auth_user
+        user = db(utable.email == "mobile_user@example.com").select(utable.id,
+                                                                    limitby = (0, 1)
+                                                                    ).first()
+
+        masterkey_id = table.insert(name = masterkey,
+                                    user_id = user.id,
+                                    )
+
+        s3db.project_project_masterkey.insert(masterkey_id = masterkey_id,
+                                              project_id = form.vars.get("id"),
+                                              )
+
+    # -------------------------------------------------------------------------
     def project_project_ondelete(form):
         """
             Delete the associated Targets & Templates
@@ -539,6 +576,8 @@ def config(settings):
 
         s3db.configure("project_project",
                        create_next = URL(args="datalist"),
+                       # No need to chain as default one not relevant for this usecase:
+                       create_onaccept = project_project_onaccept,
                        crud_form = S3SQLCustomForm("organisation_id",
                                                    (T("New project name"), "name"),
                                                    ),

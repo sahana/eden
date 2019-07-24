@@ -4302,6 +4302,11 @@ class S3BulkImporter(object):
         """
 
         current.response.s3.import_prep = current.auth.s3_import_prep
+
+        current.s3db.add_components("auth_user",
+                                    auth_masterkey = "user_id",
+                                    )
+
         user_task = [1,
                      "auth",
                      "user",
