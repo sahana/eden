@@ -526,23 +526,84 @@ def config(settings):
         return rheader
 
     # -------------------------------------------------------------------------
-    def hrm_list_fields():
+    def hrm_list_fields(r):
         """
             DRY Helper
         """
 
-        list_fields = [(T("Person Name"), "person_id"),
-                       (T("Organization"), "organisation_id"),
-                       (T("Type"), "job_title_id"),
-                       (T("Languages Spoken"), "person_id$languages_spoken.value"),
-                       (T("Religious Title"), "person_id$religious_title.value"),
-                       (T("Position Title"), "person_id$position_title.value"),
-                       #(T("ECDM"), "person_id$em_comms.value"),
-                       ]
+        s3db = current.s3db
 
-        current.s3db.configure("hrm_human_resource",
-                               list_fields = list_fields,
-                               )
+        if r.representation == "xls":
+            # Filtered components
+            s3db.add_components("org_organisation",
+                                org_organisation_tag = ({"name": "org_id",
+                                                         "joinby": "organisation_id",
+                                                         "filterby": {"tag": "org_id"},
+                                                         "multiple": False,
+                                                         },
+                                                        ),
+                                )
+
+            s3db.add_components("pr_pentity",
+                                pr_contact = (# Office Fax:
+                                              {"name": "fax",
+                                               "joinby": "pe_id",
+                                               "filterby": {
+                                                    "contact_method": "FAX",
+                                                    },
+                                               },
+                                              # Personal Email:
+                                              {"name": "personal_email",
+                                               "joinby": "pe_id",
+                                               "filterby": {
+                                                    "contact_method": "EMAIL",
+                                                    "priority": 2,
+                                                    },
+                                               },
+                                              # Work Email:
+                                              {"name": "work_email",
+                                               "joinby": "pe_id",
+                                               "filterby": {
+                                                    "contact_method": "EMAIL",
+                                                    "priority": 1,
+                                                    },
+                                               },
+                                              )
+                                )
+
+            list_fields = [(T("First Name"), "person_id$first_name"),
+                           (T("Middle Name"), "person_id$middle_name"),
+                           (T("Last Name"), "person_id$last_name"),
+                           (T("Organization"), "organisation_id"),
+                           (T("Organization ID"), "organisation_id$org_id.value"),
+                           (T("Type"), "job_title_id"),
+                           (T("Languages Spoken"), "person_id$competency.skill_id"),
+                           (T("Other Languages"), "person_id$other_languages.value"),
+                           (T("Religious Title"), "person_id$religious_title.value"),
+                           (T("Position Title"), "person_id$position_title.value"),
+                           (T("Pronouns"), "person_id$gender"),
+                           (T("Mailing Address"), "person_id$address.location_id"),
+                           (T("Cell Phone"), "person_id$phone.value"),
+                           (T("Office Phone"), "person_id$work_phone.value"),
+                           (T("Emergency Phone"), "person_id$home_phone.value"),
+                           (T("Office Fax"), "person_id$fax.value"),
+                           (T("Personal Email"), "person_id$personal_email.value"),
+                           (T("Work Email"), "person_id$work_email.value"),
+                           #(T("ECDM"), "person_id$em_comms.value"),
+                           ]
+        else:
+            list_fields = [(T("Person Name"), "person_id"),
+                           (T("Organization"), "organisation_id"),
+                           (T("Type"), "job_title_id"),
+                           (T("Languages Spoken"), "person_id$competency.skill_id"),
+                           (T("Religious Title"), "person_id$religious_title.value"),
+                           (T("Position Title"), "person_id$position_title.value"),
+                           #(T("ECDM"), "person_id$em_comms.value"),
+                           ]
+
+        s3db.configure("hrm_human_resource",
+                       list_fields = list_fields,
+                       )
 
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
@@ -567,7 +628,7 @@ def config(settings):
                                listadd = False,
                                )
 
-        hrm_list_fields()
+        hrm_list_fields(r)
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
@@ -593,7 +654,7 @@ def config(settings):
 
             s3db = current.s3db
 
-            hrm_list_fields()
+            hrm_list_fields(r)
 
             from s3 import S3HierarchyFilter, \
                            S3NotEmptyFilter, \
@@ -1001,8 +1062,6 @@ def config(settings):
 
         crud_form = S3SQLCustomForm(*crud_fields)
 
-        
-
         from s3 import S3OptionsFilter, S3TextFilter #, S3HierarchyFilter, S3LocationFilter
         filter_widgets = [
             S3TextFilter(["name"],
@@ -1036,16 +1095,41 @@ def config(settings):
             #                ),
             ]
             
-        list_fields = [#"organisation_id",
-                       #"name",
-                       (T("Physical Address"), "location_id$addr_street"),
-                       (T("# of Congregations at this Facility"), "congregations.value"),
-                       (T("Building Status"), "status.facility_status"),
-                       (T("Call?"), "em_call.value"),
-                       #(T("OEM RRC"), "oem_ready.value"),
-                       ]
-        if r.function == "facility":
-            list_fields.insert(0, "organisation_id")
+        if r.representation == "xls":
+            # Filtered components
+            s3db.add_components("org_organisation",
+                                org_organisation_tag = ({"name": "org_id",
+                                                         "joinby": "organisation_id",
+                                                         "filterby": {"tag": "org_id"},
+                                                         "multiple": False,
+                                                         },
+                                                        ),
+                                )
+            list_fields = ["organisation_id",
+                           (T("Organization ID"), "organisation_id$org_id.value"),
+                           "name",
+                           (T("Facility Type"), "site_facility_type.facility_type_id"),
+                           (T("Borough"), "location_id$L3"),
+                           (T("Street Address"), "location_id$addr_street"),
+                           (T("Zipcode"), "location_id$addr_postcode"),
+                           (T("# of Congregations at this Facility"), "congregations.value"),
+                           (T("Cross Streets"), "cross_streets$value"),
+                           (T("Building Status"), "status.facility_status"),
+                           (T("Call?"), "em_call.value"),
+                           #(T("OEM RRC"), "oem_ready.value"),
+                           "comments",
+                           ]
+        else:
+            list_fields = [#"organisation_id",
+                           #"name",
+                           (T("Physical Address"), "location_id$addr_street"),
+                           (T("# of Congregations at this Facility"), "congregations.value"),
+                           (T("Building Status"), "status.facility_status"),
+                           (T("Call?"), "em_call.value"),
+                           #(T("OEM RRC"), "oem_ready.value"),
+                           ]
+            if r.function == "facility":
+                list_fields.insert(0, "organisation_id")
 
         profile_url = URL(c="org", f="facility",
                           args = ["[id]", "profile"])
@@ -1491,9 +1575,16 @@ def config(settings):
                                                ],
                            )
 
-        s3db.pr_religion_organisation.religion_id.represent = S3Represent(lookup = "pr_religion",
-                                                                          hierarchy = "%s, %s"
-                                                                          )
+        if r.representation == "xls":
+            xls = True
+            # Override hyperlink
+            NONE = current.messages["NONE"]
+            s3db.org_organisation.website.represent = lambda v: v or NONE
+        else:
+            xls = False
+            s3db.pr_religion_organisation.religion_id.represent = S3Represent(lookup = "pr_religion",
+                                                                              hierarchy = "%s, %s"
+                                                                              )
 
         method = r.method
         if method == "read":
@@ -1592,7 +1683,26 @@ def config(settings):
                             ),
             ]
 
-        if method == "review":
+        if xls:
+            list_fields = ["name",
+                           (T("ID"), "org_id.value"),
+                           # Replace with something like S3Hierarchy.export_xls() ?
+                           (T("Religion"), "religion_organisation.religion_id"),
+                           (T("Parent Religion"), "religion_organisation.religion_id$parent"),
+                           # Not working
+                           #(T("Grandparent Religion"), "religion_organisation.religion_id$parent$parent"),
+                           #(T("GreatGrandparent Religion"), "religion_organisation.religion_id$parent$parent$parent"),
+                           (T("Organization Type"), "organisation_organisation_type.organisation_type_id"),
+                           "website",
+                           (T("Facebook"), "facebook.value"),
+                           (T("# C. Board"), "board.value"),
+                           (T("Internet Access"), "internet.value"),
+                           "comments",
+                           (T("Facility Address"), "main_facility.location_id$addr_street"),
+                           (T("Borough"), "main_facility.location_id$L3"),
+                           (T("Zipcode"), "main_facility.location_id$addr_postcode"),
+                           ]
+        elif method == "review":
             from s3 import S3DateTime
             s3db.org_organisation.created_on.represent = \
                 lambda dt: S3DateTime.date_represent(dt, utc=True)
