@@ -625,6 +625,8 @@ def config(settings):
                                                       "masterkey.name",
                                                       ],
                                        )
+                # Inject JS to handle deletion of Inner cards
+                s3.scripts.append("/%s/static/themes/UCCE/js/projects.js" % r.application)
 
             return result
         s3.prep = prep

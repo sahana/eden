@@ -981,7 +981,7 @@ class S3DataTable(object):
 class S3DataList(object):
     """
         Class representing a list of data cards
-        -clien-side implementation in static/scripts/S3/s3.dataLists.js
+        -client-side implementation in static/scripts/S3/s3.dataLists.js
     """
 
     # -------------------------------------------------------------------------

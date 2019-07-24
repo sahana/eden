@@ -1,4 +1,3 @@
 First Name,Last Name,Email,Password,Role,Organisation,Link,MasterKey
 Oxfam,Admin,oxfam@example.com,eden,ORG_ADMIN,Oxfam,staff,
 Save the children,Admin,save@example.com,eden,ORG_ADMIN,Save the Children,staff,
-Mobile,User,mobile_user@example.com,eden,MOBILE_USER,,,123-456-789

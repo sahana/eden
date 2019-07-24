@@ -679,6 +679,7 @@ class S3ProjectModel(S3Model):
                                          "joinby": "project_id",
                                          "key": "masterkey_id",
                                          "actuate": "replace",
+                                         "multiple": False,
                                          },
 
                        # Project Needs (e.g. Funding, Volunteers)

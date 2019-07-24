@@ -177,11 +177,15 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
     target_ids = raw["project_project_target.target_id"]
 
     if target_ids:
-        targets = db(ttable.id.belongs(target_ids)).select(ttable.id,
-                                                           ttable.name,
-                                                           ttable.status,
-                                                           ttable.template_id,
-                                                           )
+        if isinstance(target_ids, list):
+            query = (ttable.id.belongs(target_ids))
+        else:
+            query = (ttable.id == target_ids)
+        targets = db(query).select(ttable.id,
+                                   ttable.name,
+                                   ttable.status,
+                                   ttable.template_id,
+                                   )
         rtable = s3db.dc_response
     else:
         targets = []
@@ -209,15 +213,12 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
         if permit("delete", ttable, record_id=target_id):
             delete_btn = A(ICON("delete"),
                            SPAN("delete",
-                               _class = "show-for-sr",
-                               ),
-                          _href=URL(c="dc", f="target",
-                                   args=[target_id, "delete"],
-                                   vars={"refresh": list_id,
-                                         "record": record_id}
-                                   ),
+                                _class = "show-for-sr",
+                                ),
+                           _class="dl-survey-delete",
+                           _id="survey-%s" % target_id,
                            _title=T("Delete"),
-                          )
+                           )
         else:
             delete_btn = ""
         if permit("create", ttable):
