@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from gluon import *
-from s3 import ICON, S3CustomController
+from s3 import ICON, S3CustomController, S3Method
 
 THEME = "UCCE"
 
@@ -262,19 +262,22 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                      ),
                            _title=T("Report"),
                            )
-            switch_id = "target_status_%s" % target_id
+            switch_id = "target_status-%s" % target_id
             if status == 2:
-                checkbox = INPUT(_id = switch_id,
-                                 _type = "checkbox",
-                                 _checked = "checked",
+                checkbox = INPUT(_id=switch_id,
+                                 _type="checkbox",
+                                 _checked="checked",
+                                 _class="switch-input",
                                  )
             elif status == 3:
-                checkbox = INPUT(_id = switch_id,
-                                 _type = "checkbox",
+                checkbox = INPUT(_id=switch_id,
+                                 _type="checkbox",
+                                 _class="switch-input",
                                  )
             switch = DIV(checkbox,
                          # Inner Labels require Foundation 6
                          # https://foundation.zurb.com/sites/docs/switch.html#inner-labels
+                         # - have backported the Foundation 6 CSS into style.css instead of using the Foundation 5 SCSS
                          LABEL(SPAN("ON",
                                     _class="switch-active",
                                     #_aria-hidden="true",
@@ -283,9 +286,10 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                     _class="switch-inactive",
                                     #_aria-hidden="true",
                                     ),
-                               _for=switch_id,
+                               _for = switch_id,
+                               _class="switch-paddle rounded",
                                ),
-                         _class="switch round large",
+                         _class="switch large",
                          )
 
         bappend(DIV(DIV(_class="card-inner-header"),
@@ -381,5 +385,69 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                )
 
     return item
+
+# =============================================================================
+class dc_TargetActivate(S3Method):
+    """
+        Activate a Survey
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "target" and \
+           r.http == "POST" and \
+           r.representation == "json":
+            table = r.table
+            target_id = r.id
+            if not current.auth.s3_has_permission("update", table, record_id=target_id):
+                r.unauthorised()
+            # Update Status
+            current.db(table.id == target_id).update(status = 2)
+            output = current.xml.json_message(True, 200, current.T("Survey Activated"))
+            current.response.headers["Content-Type"] = "application/json"
+            return output
+        r.error(405, current.ERROR.BAD_METHOD)
+
+# =============================================================================
+class dc_TargetDeactivate(S3Method):
+    """
+        Deactivate a Survey
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "target" and \
+           r.http == "POST" and \
+           r.representation == "json":
+            table = r.table
+            target_id = r.id
+            if not current.auth.s3_has_permission("update", table, record_id=target_id):
+                r.unauthorised()
+            # Delete Responses
+            s3db = current.s3db
+            rtable = s3db.dc_response
+            resource = s3db.resource("dc_response", filter=(rtable.target_id == target_id))
+            resource.delete()
+            # Update Status
+            current.db(table.id == target_id).update(status = 3)
+            output = current.xml.json_message(True, 200, current.T("Survey Deactivated"))
+            current.response.headers["Content-Type"] = "application/json"
+            return output
+        r.error(405, current.ERROR.BAD_METHOD)
+
 
 # END =========================================================================

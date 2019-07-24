@@ -39,8 +39,8 @@ $(document).ready(function(){
         });
     };
 
-    // Click-event for dl-survey-delete
     var bindItemEvents = function(){
+        // Click-event for dl-survey-delete
         dl.find('.dl-survey-delete')
           .css({cursor: 'pointer'})
           .unbind('click.dl')
@@ -53,6 +53,36 @@ $(document).ready(function(){
                 event.preventDefault();
                 return false;
             }
+        });
+        // Change-event for switches
+        dl.find('.switch input')
+          .unbind('change.dl')
+          .on('change.dl', function(event) {
+            var $this = $(this),
+                method,
+                recordID = $this.attr('id').split('-').pop();
+            if ($this.prop('checked')) {
+                method = 'activate';
+            } else{
+                method = 'deactivate';
+            }
+            ajaxMethod({
+                'url': S3.Ap.concat('/dc/target/') + recordID + '/' + method + '.json',
+                'type': 'POST',
+                'dataType': 'json',
+                'success': function(data) {
+                    // Nothing needed here
+                },
+                'error': function(request, status, error) {
+                    var msg;
+                    if (error == 'UNAUTHORIZED') {
+                        msg = i18n.gis_requires_login;
+                    } else {
+                        msg = request.responseText;
+                    }
+                    console.log(msg);
+                }
+            });
         });
     };
 

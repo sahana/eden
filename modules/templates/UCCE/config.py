@@ -321,6 +321,18 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_dc_target_controller(**attr):
 
+        # Custom Methods
+        from templates.UCCE.controllers import dc_TargetActivate
+        from templates.UCCE.controllers import dc_TargetDeactivate
+        
+        set_method = current.s3db.set_method
+        set_method("dc", "target",
+                   method = "activate",
+                   action = dc_TargetActivate())
+        set_method("dc", "target",
+                   method = "deactivate",
+                   action = dc_TargetDeactivate())
+
         current.response.s3.dl_no_header = True
         attr["dl_rowsize"] = 2
 

@@ -33,7 +33,8 @@
 @import '../../foundation/scss/components/side-nav';
 //@import '../../foundation/scss/components/split-buttons';
 //@import '../../foundation/scss/components/sub-nav';
-@import '../../foundation/scss/components/switches';
+// We use the backported version from Foundation 6 in style.css
+//@import '../../foundation/scss/components/switches';
 @import '../../foundation/scss/components/tables';
 @import '../../foundation/scss/components/tabs';
 //@import '../../foundation/scss/components/thumbs';
