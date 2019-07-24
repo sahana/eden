@@ -476,8 +476,9 @@ class AuthMasterKeyModel(S3Model):
         #
         tablename = "auth_masterkey"
         self.define_table(tablename,
-                          Field("name", unique=True,
+                          Field("name", length=254, unique=True,
                                 #label = T("Master Key"),
+                                requires = IS_LENGTH(254),
                                 ),
                           # Which 'dummy' user this master key links to:
                           Field("user_id", current.auth.settings.table_user),
