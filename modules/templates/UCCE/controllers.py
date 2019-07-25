@@ -351,8 +351,14 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                        SPAN("delete",
                            _class = "show-for-sr",
                            ),
-                      _class="dl-item-delete",
-                      _title=T("Delete"),
+                       _href=URL(c="project", f="project",
+                                 args=[record_id, "delete_confirm.popup"],
+                                 #vars={"refresh": list_id,
+                                 #      "record": record_id}
+                                 ),
+                      #_class="dl-item-delete",
+                      _class="s3_modal",
+                      _title=T("Delete project"), # Visible in both popup & popover
                       )
     else:
         delete_btn = ""
@@ -569,6 +575,111 @@ class dc_TargetDeactivate(S3Method):
                 # Message
                 current.response.headers["Content-Type"] = "application/json"
                 output = current.xml.json_message(True, 200, current.T("Survey Deactivated"))
+
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
+
+# =============================================================================
+class dc_ProjectDelete(S3Method):
+    """
+        Delete a Project
+            - confirmation popup
+            - delete all linked Surveys
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "project":
+            if r.representation == "popup":
+                # Display interactive popup to confirm
+                T = current.T
+                # Inject JS to handle buttons with AJAX
+                current.response.s3.scripts.append("/%s/static/themes/UCCE/js/activate_popup.js" % r.application)
+
+                items = [DIV(P(T("Are you sure you want to delete the project? All surveys and data will be deleted as well.")),
+                             _class="row",
+                             ),
+                         DIV(INPUT(_type="checkbox",
+                                   _id="checkbox1",
+                                   ),
+                             LABEL(T("Delete all collected data")),
+                             _class="row",
+                             ),
+                         DIV(INPUT(_type="checkbox",
+                                   _id="checkbox2",
+                                   ),
+                             LABEL(T("Delete all surveys within this project")),
+                             _class="row",
+                             ),
+                         ]
+                cancel_btn = A(T("Cancel"),
+                               _href="#",
+                               _class="button secondary round",
+                               )
+                action_btn = A(T("Delete project"),
+                               _href=URL(c="project", f="project",
+                                         args=[r.id, "delete_confirm"]),
+                               _class="button round disabled",
+                               _target="_top",
+                               )
+
+                S3CustomController._view(THEME, "activate_popup.html")
+                output = {"items": items,
+                          "cancel_btn": cancel_btn,
+                          "action_btn": action_btn,
+                          }
+
+            elif r.interactive:
+                # Popup has confirmed the action
+                # Action the request
+                table = r.table
+                project_id = r.id
+                if not current.auth.s3_has_permission("delete", table, record_id=project_id):
+                    r.unauthorised()
+                db = current.db
+                s3db = current.s3db
+                # Lookup Targets
+                ltable = s3db.project_project_target
+                links = db(ltable.project_id == project_id).select(ltable.target_id)
+                target_ids = [l.target_id for l in links]
+                # Delete Responses
+                rtable = s3db.dc_response
+                resource = s3db.resource("dc_response", filter=(rtable.target_id.belongs(target_ids)))
+                resource.delete()
+                # Lookup Templates
+                ttable = s3db.dc_target
+                query = (ttable.id.belongs(target_ids))
+                targets = db(query).select(ttable.template_id)
+                template_ids = [t.template_id for t in targets]
+                # Delete Targets
+                resource = s3db.resource("dc_target", filter=(query))
+                resource.delete()
+                # Delete Templates
+                tetable = s3db.dc_template
+                resource = s3db.resource("dc_template", filter=(tetable.id.belongs(template_ids)))
+                resource.delete()
+                # Delete Project
+                resource = s3db.resource("project_project", filter=(table.id == project_id))
+                resource.delete()
+                # Message
+                current.session.confirmation = current.T("Project deleted")
+                # Redirect
+                # @ToDo: Do this without a full page refresh
+                # - self.parent.dl.datalist('reloadAjaxItem', project_id)
+                # - message
+                # - self.parent.S3.popup_remove();
+                redirect(URL(c="project", f="project", args=["datalist"]))
 
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)

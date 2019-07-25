@@ -671,6 +671,14 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_project_project_controller(**attr):
 
+        # Custom Method
+        from templates.UCCE.controllers import dc_ProjectDelete
+
+        s3db = current.s3db
+        s3db.set_method("project", "project",
+                        method = "delete_confirm",
+                        action = dc_ProjectDelete())
+
         s3 = current.response.s3
 
         # Custom postp
@@ -684,13 +692,14 @@ def config(settings):
 
             if r.method == "datalist":
                 # Over-ride list_fields set in default prep
-                current.s3db.configure("project_project",
-                                       list_fields = ["name",
-                                                      "project_target.target_id",
-                                                      "masterkey.name",
-                                                      ],
-                                       )
-                # Inject JS to handle deletion of Inner cards
+                s3db.configure("project_project",
+                               list_fields = ["name",
+                                              "project_target.target_id",
+                                              "masterkey.name",
+                                              ],
+                               )
+                # Inject JS to handle Switches & deletion of Inner cards
+                # @ToDo: Deletion should probably have a delete_confirm method
                 s3.scripts.append("/%s/static/themes/UCCE/js/projects.js" % r.application)
 
             return result
