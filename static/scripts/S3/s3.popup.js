@@ -14,6 +14,7 @@ function s3_popup_refresh_caller(popupData) {
 
     // The GET vars (=URL query parameters)
     var $_GET = getQueryParams(document.location.search),
+        parentWindow = window.parent,
         callerWidget,
         i,
         j,
@@ -36,10 +37,10 @@ function s3_popup_refresh_caller(popupData) {
 
     if (undefined !== refresh) {
         if (! isNaN(parseInt(refresh))) {
-            self.parent.location.reload(true);
+            parentWindow.location.reload(true);
         }
         // Update DataList/DataTable (if appropriate)
-        callerWidget = self.parent.$('#' + refresh);
+        callerWidget = parentWindow.$('#' + refresh);
         if (callerWidget.hasClass('dl')) {
             // Refresh dataList
             var record = $_GET.record;
@@ -61,7 +62,7 @@ function s3_popup_refresh_caller(popupData) {
             } catch(e) {}
         }
         // Update the layer on the Maps (if appropriate)
-        maps = self.parent.S3.gis.maps;
+        maps = parentWindow.S3.gis.maps;
         if (typeof maps != 'undefined') {
             for (mapID in maps) {
                 map = maps[mapID];
@@ -87,22 +88,22 @@ function s3_popup_refresh_caller(popupData) {
 
         // Notify all filter forms that target data have changed
         // and filter options may need to be updated accordingly
-        self.parent.$('.filter-form').trigger('dataChanged', refresh);
+        parentWindow.$('.filter-form').trigger('dataChanged', refresh);
 
         // Remove popup
-        self.parent.S3.popup_remove();
+        parentWindow.S3.popup_remove();
         return;
     }
 
     // Is this a Map popup? (e.g. PoI entry)
     layerID = $_GET.refresh_layer;
     if (typeof layerID != 'undefined') {
-        maps = self.parent.S3.gis.maps;
+        maps = parentWindow.S3.gis.maps;
         if (typeof maps != 'undefined') {
             if (layerID != 'undefined') {
                 layerID = parseInt(layerID);
             }
-            var draftLayerName = self.parent.i18n.gis_draft_layer;
+            var draftLayerName = parentWindow.i18n.gis_draft_layer;
             for (mapID in maps) {
                 map = maps[mapID];
                 layers = map.layers;
@@ -140,13 +141,13 @@ function s3_popup_refresh_caller(popupData) {
     var nodeID = $_GET.node;
     if (nodeID) {
         // Refresh the node in the hierarchy
-        var hierarchy = self.parent.$('#' + $_GET.hierarchy),
-            node = self.parent.$('#' + nodeID);
+        var hierarchy = parentWindow.$('#' + $_GET.hierarchy),
+            node = parentWindow.$('#' + nodeID);
         if (hierarchy && node) {
             hierarchy.hierarchicalcrud('refreshNode', node);
         }
         // Remove the dialog
-        self.parent.S3.popup_remove();
+        parentWindow.S3.popup_remove();
         return;
     }
 
@@ -162,14 +163,14 @@ function s3_popup_refresh_caller(popupData) {
         }
 
         // Inform the agent that it's done (agent will remove the dialog)
-        self.parent.$('#' + agent).trigger('configSaved', data);
+        parentWindow.$('#' + agent).trigger('configSaved', data);
         return;
     }
 
     // Location selector?
     var level = $_GET.level;
     if (typeof level != 'undefined') {
-        self.parent.S3.popup_remove();
+        parentWindow.S3.popup_remove();
         return;
     }
 
@@ -181,7 +182,7 @@ function s3_popup_refresh_caller(popupData) {
         // All code after this is there to update the caller, so pointless
         // to continue beyond this point without it.
         s3_debug('Neither calling element nor refresh-target specified in popup URL!');
-        self.parent.S3.popup_remove();
+        parentWindow.S3.popup_remove();
         return;
     } else {
         s3_debug('Caller: ', caller);
@@ -190,9 +191,9 @@ function s3_popup_refresh_caller(popupData) {
     var personID = $_GET.person_id;
     if (typeof personID != 'undefined') {
         // Person Selector
-        var field = self.parent.$('#' + caller);
+        var field = parentWindow.$('#' + caller);
         field.val(personID).change();
-        self.parent.S3.popup_remove();
+        parentWindow.S3.popup_remove();
         return;
     }
 
@@ -204,7 +205,7 @@ function s3_popup_refresh_caller(popupData) {
 
     if (typeof child === 'undefined') {
         // Use default
-        var url = '' + self.location;
+        var url = '' + window.location;
         relativeURL = url.replace(re, '');
         args = relativeURL.split('?')[0].split('/');
         var requestFunction = args[1].split(".")[0];
@@ -216,7 +217,7 @@ function s3_popup_refresh_caller(popupData) {
     s3_debug('childResource', childResource);
 
     var parent = $_GET.parent,
-        parentURL = '' + self.parent.location,
+        parentURL = '' + parentWindow.location,
         parentResource,
         lookupPrefix = $_GET.prefix;
 
@@ -266,11 +267,11 @@ function s3_popup_refresh_caller(popupData) {
     var optionsURL = S3.Ap.concat('/' + lookupPrefix + '/' + parentResource + '/options.s3json?field=' + childResource);
 
     // Identify the widget type (Dropdown, Checkboxes, Hierarchy or Autocomplete)
-    callerWidget = self.parent.$('#' + caller);
+    callerWidget = parentWindow.$('#' + caller);
     s3_debug('callerWidget', callerWidget);
 
     var inline = (caller.substring(0, 4) == 'sub_'),
-        dummy = self.parent.$('#dummy_' + caller),
+        dummy = parentWindow.$('#dummy_' + caller),
         hasDummy = (undefined !== dummy.val());
     s3_debug('hasDummy', hasDummy);
 
@@ -283,13 +284,13 @@ function s3_popup_refresh_caller(popupData) {
 
     if (checkboxes) {
         // The number of columns
-        cols = self.parent.$('#' + caller + ' tbody tr:first').children().length;
+        cols = parentWindow.$('#' + caller + ' tbody tr:first').children().length;
         append = [];
     } else {
-        options = self.parent.$('#' + caller + ' >option');
+        options = parentWindow.$('#' + caller + ' >option');
         isDropdown = callerWidget.prop('tagName').toLowerCase() == 'select';
         /* S3SearchAutocompleteWidget should do something like this instead */
-        //var dummy = self.parent.$('input[name="item_id_search_simple_simple"]');
+        //var dummy = parentWindow.$('input[name="item_id_search_simple_simple"]');
         //var hasDummy = (dummy.val() != undefined);
         if (isDropdown) {
             append = [];
@@ -312,7 +313,7 @@ function s3_popup_refresh_caller(popupData) {
 
         if (!newOptions || !newOptions.length) {
             s3_debug('No options available to refresh parent field');
-            self.parent.S3.popup_remove();
+            parentWindow.S3.popup_remove();
             return;
         }
 
@@ -358,7 +359,7 @@ function s3_popup_refresh_caller(popupData) {
                     callerPrefix = caller.split('_').slice(0, -1).join('_');
                 for (i = 0; i < allSelects.length; i++) {
                     suffix = allSelects[i];
-                    var s = self.parent.$('#' + callerPrefix + suffix);
+                    var s = parentWindow.$('#' + callerPrefix + suffix);
                     s.empty().append(append.join(''));
                 }
             } else {
@@ -384,7 +385,7 @@ function s3_popup_refresh_caller(popupData) {
             // We have been called next to a CheckboxesWidgetS3
             // Read the current value(s)
             var values = [];
-            self.parent.$('#' + caller + ' input').each(function() {
+            parentWindow.$('#' + caller + ' input').each(function() {
                 if ( $(this).prop('checked') ) {
                     values.push($(this).val());
                 }
@@ -416,7 +417,7 @@ function s3_popup_refresh_caller(popupData) {
             values.push(lastOptionValue);
             //callerWidget.val(values).change();
             for (i = 0; i < values.length; i++) {
-                self.parent.$('#' + caller + ' input[value="' + values[i] + '"]').prop('checked', true);
+                parentWindow.$('#' + caller + ' input[value="' + values[i] + '"]').prop('checked', true);
             }
         }
 
@@ -427,7 +428,7 @@ function s3_popup_refresh_caller(popupData) {
         //    }, 1);
 
         // Clean-up
-        self.parent.S3.popup_remove();
+        parentWindow.S3.popup_remove();
     });
 }
 

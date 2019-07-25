@@ -19,10 +19,10 @@ $(document).ready(function(){
             'url': S3.Ap.concat('/dc/target/') + recordID + '/delete.json',
             'type': 'POST',
             'dataType': 'json',
-            'success': function(data) {
+            'success': function(/* data */) {
                 // Refresh the outer Project
                 dl.datalist('ajaxReloadItem', projectID);
-                dl.on('listUpdate', function(event) {
+                dl.on('listUpdate', function(/* event */) {
                     // Subsequent Page Load
                     bindItemEvents();
                 });
@@ -57,7 +57,7 @@ $(document).ready(function(){
         // Change-event for switches
         dl.find('.switch input')
           .off('change.ucce')
-          .on('change.ucce', function(event) {
+          .on('change.ucce', function(/* event */) {
             var $this = $(this),
                 method,
                 recordID = $this.attr('id').split('-').pop();
@@ -70,7 +70,7 @@ $(document).ready(function(){
                 'url': S3.Ap.concat('/dc/target/') + recordID + '/' + method + '.json',
                 'type': 'POST',
                 'dataType': 'json',
-                'success': function(data) {
+                'success': function(/* data */) {
                     // Nothing needed here
                 },
                 'error': function(request, status, error) {

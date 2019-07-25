@@ -6,7 +6,7 @@ $(document).ready(function(){
         var $this = $(this);
         if ($this.hasClass('secondary')) {
             // Cancel: close Popup
-            self.parent.S3.popup_remove();
+            window.parent.S3.popup_remove();
         } else if ($this.hasClass('disabled')) {
             event.preventDefault();
                 return false;
