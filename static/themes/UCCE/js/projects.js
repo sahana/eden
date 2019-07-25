@@ -43,8 +43,8 @@ $(document).ready(function(){
         // Click-event for dl-survey-delete
         dl.find('.dl-survey-delete')
           .css({cursor: 'pointer'})
-          .unbind('click.dl')
-          .on('click.dl', function(event) {
+          .unbind('click.ucce')
+          .on('click.ucce', function(event) {
             if (confirm(i18n.delete_confirmation)) {
                 // Ajax-delete the item
                 ajaxDeleteItem(this);
@@ -56,8 +56,8 @@ $(document).ready(function(){
         });
         // Change-event for switches
         dl.find('.switch input')
-          .unbind('change.dl')
-          .on('change.dl', function(event) {
+          .unbind('change.ucce')
+          .on('change.ucce', function(event) {
             var $this = $(this),
                 method,
                 recordID = $this.attr('id').split('-').pop();

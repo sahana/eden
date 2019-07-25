@@ -163,6 +163,8 @@ def config(settings):
     settings.dc.mobile_data = True
     # Don't Create Assessments on Mobile
     settings.dc.mobile_inserts = False
+    # Sections can be Hierarchical
+    settings.dc.sections_hierarchical = True
 
     def dc_target_onaccept(form):
         """

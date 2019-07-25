@@ -182,7 +182,7 @@ def config(settings):
             # List or Create form: rheader makes no sense here
             return None
 
-        from gluon import DIV, TABLE, TR, TH
+        from gluon import A, DIV, TABLE, TR, TH, URL
 
         if tablename == "dc_template":
             #tabs = [(T("Basic Details"), None),
@@ -191,9 +191,62 @@ def config(settings):
 
             #rheader_tabs = s3_rheader_tabs(r, tabs)
 
+            db = current.db
+            s3db = current.s3db
+
+            ttable = s3db.dc_target
+            target = db(ttable.template_id == record.id).select(ttable.id,
+                                                                ttable.status,
+                                                                limitby = (0, 1)
+                                                                ).first()
+            try:
+                target_id = target.id
+                target_status = target.status
+            except:
+                target_id = None
+                target_status = None
+
+            if not target_status:
+                # No Target linked...something odd happening
+                button = ""
+            elif target_status == 2:
+                # Active
+                button = A(T("Deactivate"),
+                           _href=URL(c="dc", f="target",
+                                     args=[target_id, "deactivate.popup"],
+                                     ),
+                           _class="action-btn s3_modal",
+                           _title=T("Deactivate Survey"),
+                           )
+            else:
+                # Draft / Deactivated
+                button = A(T("Activate"),
+                           _href=URL(c="dc", f="target",
+                                     args=[target_id, "activate.popup"],
+                                     ),
+                           _class="action-btn s3_modal",
+                           _title=T("Activate Survey"),
+                           )
+
+            ptable = s3db.project_project
+            ltable = s3db.project_project_target
+            query = (ltable.target_id == target_id) & \
+                    (ltable.project_id == ptable.id)
+            project = db(query).select(ptable.name,
+                                       limitby = (0, 1)
+                                       ).first()
+            try:
+                project_name = project.name
+            except:
+                project_name = ""
+
             table = r.table
-            rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+            rheader = DIV(TABLE(TR(# @ToDo: make this editable
+                                   TH("%s: " % T("Survey name")),
                                    record.name,
+                                   TH("%s: " % T("Project")),
+                                   project_name,
+                                   button,
                                    )),
                           #rheader_tabs,
                           )
@@ -590,7 +643,7 @@ def config(settings):
                        create_next = URL(args="datalist"),
                        # No need to chain as default one not relevant for this usecase:
                        create_onaccept = project_project_onaccept,
-                       crud_form = S3SQLCustomForm("organisation_id",
+                       crud_form = S3SQLCustomForm((T("Organization"), "organisation_id"),
                                                    (T("New project name"), "name"),
                                                    ),
                        # Ignored here as set in Prep in default controller

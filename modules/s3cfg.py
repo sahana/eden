@@ -3402,7 +3402,7 @@ class S3Config(Storage):
 
     def get_dc_mobile_data(self):
         """
-            Whether Mobile Clients should download Assessments
+            Whether Mobile Clients should download Assessments (Data not just Forms)
             - e.g. when these are created through Targetting
         """
         return self.dc.get("mobile_data", False)
@@ -3412,6 +3412,12 @@ class S3Config(Storage):
             Whether Mobile Clients should create Assessments locally
         """
         return self.dc.get("mobile_inserts", True)
+
+    def get_dc_sections_hierarchical(self):
+        """
+            Whether Assessments have nested Sections
+        """
+        return self.dc.get("sections_hierarchical", False)
 
     # -------------------------------------------------------------------------
     # Deployments

@@ -197,19 +197,34 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
     for target in targets:
         target_id = target.id
         template_id = target.template_id
+        status = target.status
         if permit("update", ttable, record_id=target_id):
+            if status == 1:
+                # Draft - can Edit freely
+                edit_url = URL(c="dc", f="template",
+                               args=[template_id, "question"],
+                               )
+                _title = T("Edit") # Only used in popover
+                _class = ""
+            else:
+                # Activated/Deactivated - need to change status before can edit
+                edit_url = URL(c="dc", f="target",
+                               args=[target_id, "deactivate.popup"],
+                               )
+                _title = T("Edit survey") # Used in popup as well as popover
+                _class = "s3_modal"
+ 
             edit_btn = A(ICON("edit"),
                          SPAN("edit",
                               _class = "show-for-sr",
                               ),
-                         _href=URL(c="dc", f="template",
-                                   args=[template_id, "question"],
-                                   ),
-                         #_title=T("Edit %(type)s") % dict(type=series_title),
-                         _title=T("Edit"),
+                         _href=edit_url,
+                         _title=_title,
+                         _class=_class,
                          )
         else:
             edit_btn = ""
+
         if permit("delete", ttable, record_id=target_id):
             delete_btn = A(ICON("delete"),
                            SPAN("delete",
@@ -234,7 +249,6 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                          )
         else:
             copy_btn = ""
-        status = target.status
         if status == 1:
             # Draft
             responses = DIV("Draft")
@@ -328,7 +342,6 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                      "record": record_id}
                                ),
                      _class="s3_modal",
-                     #_title=T("Edit %(type)s") % dict(type=series_title),
                      _title=T("Edit"),
                      )
     else:
@@ -401,18 +414,61 @@ class dc_TargetActivate(S3Method):
             @param attr: controller arguments
         """
 
-        if r.name == "target" and \
-           r.http == "POST" and \
-           r.representation == "json":
-            table = r.table
-            target_id = r.id
-            if not current.auth.s3_has_permission("update", table, record_id=target_id):
-                r.unauthorised()
-            # Update Status
-            current.db(table.id == target_id).update(status = 2)
-            output = current.xml.json_message(True, 200, current.T("Survey Activated"))
-            current.response.headers["Content-Type"] = "application/json"
-            return output
+        if r.name == "target":
+           if r.representation == "popup":
+                # Display interactive popup to confirm
+                T = current.T
+                # Inject JS to handle buttons with AJAX
+                current.response.s3.scripts.append("/%s/static/themes/UCCE/js/activate_popup.js" % r.application)
+
+                items = [DIV(P(T("Once the survey is activated, it will be linked to the respective project master key.")),
+                             P(T("Survey must be deactivated before making any edits.")),
+                             _class="row",
+                             ),
+                         ]
+                cancel_btn = A(T("Cancel"),
+                               _href="#",
+                               _class="button secondary round",
+                               )
+                action_btn = A(T("Activate survey"),
+                               _href=URL(c="dc", f="target",
+                                         args=[r.id, "activate"]),
+                               _class="button alert round",
+                               _target="_top",
+                               )
+                output = {"items": items,
+                          "cancel_btn": cancel_btn,
+                          "action_btn": action_btn,
+                          }
+                S3CustomController._view(THEME, "activate_popup.html")
+                return output
+           elif r.interactive:
+                # Popup has confirmed the action
+                # Action the Request
+                table = r.table
+                target_id = r.id
+                if not current.auth.s3_has_permission("update", table, record_id=target_id):
+                    r.unauthorised()
+                # Update Status
+                current.db(table.id == target_id).update(status = 2)
+                # Message
+                current.session.confirmation = current.T("Survey Activated")
+                # Redirect
+                redirect(URL(c="project", f="project", args="datalist"))
+           elif r.http == "POST" and \
+            r.representation == "json":
+                # AJAX method
+                # Action the request
+                table = r.table
+                target_id = r.id
+                if not current.auth.s3_has_permission("update", table, record_id=target_id):
+                    r.unauthorised()
+                # Update Status
+                current.db(table.id == target_id).update(status = 2)
+                # Message
+                output = current.xml.json_message(True, 200, current.T("Survey Activated"))
+                current.response.headers["Content-Type"] = "application/json"
+                return output
         r.error(405, current.ERROR.BAD_METHOD)
 
 # =============================================================================
@@ -430,24 +486,82 @@ class dc_TargetDeactivate(S3Method):
             @param attr: controller arguments
         """
 
-        if r.name == "target" and \
-           r.http == "POST" and \
-           r.representation == "json":
-            table = r.table
-            target_id = r.id
-            if not current.auth.s3_has_permission("update", table, record_id=target_id):
-                r.unauthorised()
-            # Delete Responses
-            s3db = current.s3db
-            rtable = s3db.dc_response
-            resource = s3db.resource("dc_response", filter=(rtable.target_id == target_id))
-            resource.delete()
-            # Update Status
-            current.db(table.id == target_id).update(status = 3)
-            output = current.xml.json_message(True, 200, current.T("Survey Deactivated"))
-            current.response.headers["Content-Type"] = "application/json"
-            return output
-        r.error(405, current.ERROR.BAD_METHOD)
+        if r.name == "target":
+           if r.representation == "popup":
+                # Display interactive popup to confirm
+                T = current.T
+                # Inject JS to handle buttons with AJAX
+                current.response.s3.scripts.append("/%s/static/themes/UCCE/js/activate_popup.js" % r.application)
 
+                items = [DIV(P(T("In order to edit it, the survey will be deactivated and all data collected will be deleted.")),
+                             _class="row",
+                             ),
+                         DIV(INPUT(_type="checkbox",
+                                   _id="checkbox1",
+                                   ),
+                             LABEL(T("Delete all collected data")),
+                             _class="row",
+                             ),
+                         DIV(INPUT(_type="checkbox",
+                                   _id="checkbox2",
+                                   ),
+                             LABEL(T("Deactivate survey")),
+                             _class="row",
+                             ),
+                         ]
+                cancel_btn = A(T("Cancel"),
+                               _href="#",
+                               _class="button secondary round",
+                               )
+                action_btn = A(T("Edit survey"),
+                               _href=URL(c="dc", f="target",
+                                         args=[r.id, "deactivate"]),
+                               _class="button round disabled",
+                               _target="_top",
+                               )
+                output = {"items": items,
+                          "cancel_btn": cancel_btn,
+                          "action_btn": action_btn,
+                          }
+                S3CustomController._view(THEME, "activate_popup.html")
+                return output
+           elif r.interactive:
+                # Popup has confirmed the action
+                # Action the Request
+                table = r.table
+                target_id = r.id
+                if not current.auth.s3_has_permission("update", table, record_id=target_id):
+                    r.unauthorised()
+                s3db = current.s3db
+                # Delete Responses
+                rtable = s3db.dc_response
+                resource = s3db.resource("dc_response", filter=(rtable.target_id == target_id))
+                resource.delete()
+                # Update Status
+                current.db(table.id == target_id).update(status = 3)
+                # Message
+                current.session.confirmation = current.T("Survey Deactivated")
+                # Redirect
+                redirect(URL(c="dc", f="template", args=[r.record.template_id, "question"]))
+           elif r.http == "POST" and \
+            r.representation == "json":
+                # AJAX method
+                # Action the request
+                table = r.table
+                target_id = r.id
+                if not current.auth.s3_has_permission("update", table, record_id=target_id):
+                    r.unauthorised()
+                s3db = current.s3db
+                # Delete Responses
+                rtable = s3db.dc_response
+                resource = s3db.resource("dc_response", filter=(rtable.target_id == target_id))
+                resource.delete()
+                # Update Status
+                current.db(table.id == target_id).update(status = 3)
+                # Message
+                output = current.xml.json_message(True, 200, current.T("Survey Deactivated"))
+                current.response.headers["Content-Type"] = "application/json"
+                return output
+        r.error(405, current.ERROR.BAD_METHOD)
 
 # END =========================================================================

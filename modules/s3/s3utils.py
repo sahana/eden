@@ -1963,8 +1963,8 @@ class S3CustomController(object):
         @ToDo: Add Helper Function for dataLists
     """
 
-    @classmethod
-    def _view(cls, template, filename):
+    @staticmethod
+    def _view(template, filename):
         """
             Use a custom view template
 

@@ -152,7 +152,7 @@ class DataCollectionTemplateModel(S3Model):
         #
         # @ToDo: l10n
         #
-        hierarchical_sections = True # @ToDo: deployment_setting if need to support non-SCPHIMS contexts
+        hierarchical_sections = settings.get_dc_sections_hierarchical()
 
         tablename = "dc_section"
         define_table(tablename,
