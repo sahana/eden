@@ -202,7 +202,7 @@ def config(settings):
             try:
                 target_id = target.id
                 target_status = target.status
-            except:
+            except AttributeError:
                 target_id = None
                 target_status = None
 
@@ -237,10 +237,10 @@ def config(settings):
                                        ).first()
             try:
                 project_name = project.name
-            except:
+            except AttributeError:
                 project_name = ""
 
-            table = r.table
+            #table = r.table
             rheader = DIV(TABLE(TR(# @ToDo: make this editable
                                    TH("%s: " % T("Survey name")),
                                    record.name,
@@ -377,7 +377,7 @@ def config(settings):
         # Custom Methods
         from templates.UCCE.controllers import dc_TargetActivate
         from templates.UCCE.controllers import dc_TargetDeactivate
-        
+
         set_method = current.s3db.set_method
         set_method("dc", "target",
                    method = "activate",

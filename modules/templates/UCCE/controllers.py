@@ -213,7 +213,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                )
                 _title = T("Edit survey") # Used in popup as well as popover
                 _class = "s3_modal"
- 
+
             edit_btn = A(ICON("edit"),
                          SPAN("edit",
                               _class = "show-for-sr",
@@ -415,7 +415,7 @@ class dc_TargetActivate(S3Method):
         """
 
         if r.name == "target":
-           if r.representation == "popup":
+            if r.representation == "popup":
                 # Display interactive popup to confirm
                 T = current.T
                 # Inject JS to handle buttons with AJAX
@@ -436,13 +436,14 @@ class dc_TargetActivate(S3Method):
                                _class="button alert round",
                                _target="_top",
                                )
+
+                S3CustomController._view(THEME, "activate_popup.html")
                 output = {"items": items,
                           "cancel_btn": cancel_btn,
                           "action_btn": action_btn,
                           }
-                S3CustomController._view(THEME, "activate_popup.html")
-                return output
-           elif r.interactive:
+
+            elif r.interactive:
                 # Popup has confirmed the action
                 # Action the Request
                 table = r.table
@@ -455,8 +456,8 @@ class dc_TargetActivate(S3Method):
                 current.session.confirmation = current.T("Survey Activated")
                 # Redirect
                 redirect(URL(c="project", f="project", args="datalist"))
-           elif r.http == "POST" and \
-            r.representation == "json":
+
+            elif r.http == "POST" and r.representation == "json":
                 # AJAX method
                 # Action the request
                 table = r.table
@@ -465,11 +466,17 @@ class dc_TargetActivate(S3Method):
                     r.unauthorised()
                 # Update Status
                 current.db(table.id == target_id).update(status = 2)
+
                 # Message
-                output = current.xml.json_message(True, 200, current.T("Survey Activated"))
                 current.response.headers["Content-Type"] = "application/json"
-                return output
-        r.error(405, current.ERROR.BAD_METHOD)
+                output = current.xml.json_message(True, 200, current.T("Survey Activated"))
+
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
 
 # =============================================================================
 class dc_TargetDeactivate(S3Method):
@@ -487,7 +494,7 @@ class dc_TargetDeactivate(S3Method):
         """
 
         if r.name == "target":
-           if r.representation == "popup":
+            if r.representation == "popup":
                 # Display interactive popup to confirm
                 T = current.T
                 # Inject JS to handle buttons with AJAX
@@ -519,13 +526,14 @@ class dc_TargetDeactivate(S3Method):
                                _class="button round disabled",
                                _target="_top",
                                )
+
+                S3CustomController._view(THEME, "activate_popup.html")
                 output = {"items": items,
                           "cancel_btn": cancel_btn,
                           "action_btn": action_btn,
                           }
-                S3CustomController._view(THEME, "activate_popup.html")
-                return output
-           elif r.interactive:
+
+            elif r.interactive:
                 # Popup has confirmed the action
                 # Action the Request
                 table = r.table
@@ -543,8 +551,8 @@ class dc_TargetDeactivate(S3Method):
                 current.session.confirmation = current.T("Survey Deactivated")
                 # Redirect
                 redirect(URL(c="dc", f="template", args=[r.record.template_id, "question"]))
-           elif r.http == "POST" and \
-            r.representation == "json":
+
+            elif r.http == "POST" and r.representation == "json":
                 # AJAX method
                 # Action the request
                 table = r.table
@@ -559,9 +567,14 @@ class dc_TargetDeactivate(S3Method):
                 # Update Status
                 current.db(table.id == target_id).update(status = 3)
                 # Message
-                output = current.xml.json_message(True, 200, current.T("Survey Deactivated"))
                 current.response.headers["Content-Type"] = "application/json"
-                return output
-        r.error(405, current.ERROR.BAD_METHOD)
+                output = current.xml.json_message(True, 200, current.T("Survey Deactivated"))
+
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
 
 # END =========================================================================
