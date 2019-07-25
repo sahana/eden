@@ -742,7 +742,7 @@
             var dl = this;
             $datalist.find('.dl-item-delete')
                      .css({cursor: 'pointer'})
-                     .unbind('click.dl')
+                     .off('click.dl')
                      .on('click.dl', function(event) {
                 if (confirm(i18n.delete_confirmation)) {
                     dl._ajaxDeleteItem(this);

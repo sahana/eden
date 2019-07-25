@@ -43,7 +43,7 @@ $(document).ready(function(){
         // Click-event for dl-survey-delete
         dl.find('.dl-survey-delete')
           .css({cursor: 'pointer'})
-          .unbind('click.ucce')
+          .off('click.ucce')
           .on('click.ucce', function(event) {
             if (confirm(i18n.delete_confirmation)) {
                 // Ajax-delete the item
@@ -56,7 +56,7 @@ $(document).ready(function(){
         });
         // Change-event for switches
         dl.find('.switch input')
-          .unbind('change.ucce')
+          .off('change.ucce')
           .on('change.ucce', function(event) {
             var $this = $(this),
                 method,
