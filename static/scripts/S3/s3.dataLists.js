@@ -87,13 +87,13 @@
      * Custom append-callback for $.infinitescroll,
      * applied by setting behavior='append' and appendCallback=false
      */
-    $.infinitescroll.prototype._callback_append = function(data, url) {
+    $.infinitescroll.prototype._callback_append = function(data /*, url */) {
 
         var frag = document.createDocumentFragment();
 
         data.each(function() {
             frag.appendChild(this);
-        })
+        });
         $(this).get()[0].appendChild(frag);
     };
 
@@ -244,11 +244,11 @@
                     maxPage: maxPage
                 },
                 // Function to be called after Ajax-loading and appending new data
-                function(data) {
+                function(/* data */) {
                     $datalist.find('.dl-row:last:in-viewport').each(function() {
                         // Last item is within the viewport, so try to
                         // load more items to fill the viewport
-                        $this = $(this);
+                        var $this = $(this);
                         if (!$this.hasClass('autoretrieve')) {
                             // prevent further auto-retrieve attempts if this
                             // one doesn't produce any items:
@@ -325,6 +325,7 @@
                     $datalist.trigger('listUpdate');
                 },
                 'error': function(request, status, error) {
+                    var msg;
                     if (error == 'UNAUTHORIZED') {
                         msg = i18n.gis_requires_login;
                     } else {
@@ -355,7 +356,7 @@
             var dlData = JSON.parse($pagination0.val());
             var startIndex = dlData.startindex,
                 pageSize = dlData.pagesize,
-                totalItems = dlData.totalitems,
+                //totalItems = dlData.totalitems,
                 ajaxURL = dlData.ajaxurl;
 
             if (pageSize === null) {
@@ -390,9 +391,6 @@
                     $pagination0.val(JSON.stringify(dlData));
                 } catch(e) {}
             }
-
-            var start = startIndex,
-                limit = pageSize;
 
             // Ajax-load the list
             var dl = this;
@@ -459,6 +457,7 @@
                     $datalist.trigger('listUpdate');
                 },
                 'error': function(request, status, error) {
+                    var msg;
                     if (error == 'UNAUTHORIZED') {
                         msg = i18n.gis_requires_login;
                     } else {
@@ -505,7 +504,7 @@
                 'url': this._urlAppend(ajaxURL, 'delete=' + recordID),
                 'type': 'POST',
                 'dataType': 'json',
-                'success': function(data) {
+                'success': function(/* data */) {
                     // Remove the card
                     dl._removeItem(item, dlData);
                 },
@@ -598,6 +597,7 @@
                     dl._bindItemEvents();
                 },
                 'error': function(request, status, error) {
+                    var msg;
                     if (error == 'UNAUTHORIZED') {
                         msg = i18n.gis_requires_login;
                     } else {
@@ -628,7 +628,7 @@
                     if (key.s3_layer_id == needle) {
                         var layer = layers[val],
                             found = false,
-                            uuid = data['uuid']; // The Record UUID
+                            uuid = data.uuid; // The Record UUID
                         Ext.iterate(layer.feaures, function(key, val, obj) {
                             if (key.properties.id == uuid) {
                                 // Remove the feature
@@ -719,13 +719,15 @@
          */
         getTotalItems: function() {
 
-            var pagination = $(this.element).find('input.dl-pagination');
+            var $datalist = $(this.element),
+                pagination = $datalist.find('input.dl-pagination');
+
             if (!pagination.length) {
                 // No pagination = all items in the list, so just count them
                 return $datalist.find('.dl-item').length;
             }
 
-            return JSON.parse($(pagination[0]).val())['totalitems'];
+            return JSON.parse($(pagination[0]).val()).totalitems;
         },
 
         /**
