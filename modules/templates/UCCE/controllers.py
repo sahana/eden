@@ -425,7 +425,7 @@ class dc_TargetActivate(S3Method):
                 # Display interactive popup to confirm
                 T = current.T
                 # Inject JS to handle buttons with AJAX
-                current.response.s3.scripts.append("/%s/static/themes/UCCE/js/activate_popup.js" % r.application)
+                current.response.s3.scripts.append("/%s/static/themes/UCCE/js/confirm_popup.js" % r.application)
 
                 items = [DIV(P(T("Once the survey is activated, it will be linked to the respective project master key.")),
                              P(T("Survey must be deactivated before making any edits.")),
@@ -443,7 +443,7 @@ class dc_TargetActivate(S3Method):
                                _target="_top",
                                )
 
-                S3CustomController._view(THEME, "activate_popup.html")
+                S3CustomController._view(THEME, "confirm_popup.html")
                 output = {"items": items,
                           "cancel_btn": cancel_btn,
                           "action_btn": action_btn,
@@ -504,7 +504,7 @@ class dc_TargetDeactivate(S3Method):
                 # Display interactive popup to confirm
                 T = current.T
                 # Inject JS to handle buttons with AJAX
-                current.response.s3.scripts.append("/%s/static/themes/UCCE/js/activate_popup.js" % r.application)
+                current.response.s3.scripts.append("/%s/static/themes/UCCE/js/confirm_popup.js" % r.application)
 
                 items = [DIV(P(T("In order to edit it, the survey will be deactivated and all data collected will be deleted.")),
                              _class="row",
@@ -533,7 +533,7 @@ class dc_TargetDeactivate(S3Method):
                                _target="_top",
                                )
 
-                S3CustomController._view(THEME, "activate_popup.html")
+                S3CustomController._view(THEME, "confirm_popup.html")
                 output = {"items": items,
                           "cancel_btn": cancel_btn,
                           "action_btn": action_btn,
@@ -605,7 +605,7 @@ class dc_ProjectDelete(S3Method):
                 # Display interactive popup to confirm
                 T = current.T
                 # Inject JS to handle buttons with AJAX
-                current.response.s3.scripts.append("/%s/static/themes/UCCE/js/activate_popup.js" % r.application)
+                current.response.s3.scripts.append("/%s/static/themes/UCCE/js/confirm_popup.js" % r.application)
 
                 items = [DIV(P(T("Are you sure you want to delete the project? All surveys and data will be deleted as well.")),
                              _class="row",
@@ -634,7 +634,7 @@ class dc_ProjectDelete(S3Method):
                                _target="_top",
                                )
 
-                S3CustomController._view(THEME, "activate_popup.html")
+                S3CustomController._view(THEME, "confirm_popup.html")
                 output = {"items": items,
                           "cancel_btn": cancel_btn,
                           "action_btn": action_btn,
