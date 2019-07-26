@@ -8475,6 +8475,8 @@ class S3QuestionWidget(FormWidget):
         A Question widget which takes attributes
         of a typical question as input and converts
         it into a JSON
+
+        Currently unused!
     """
 
     # -------------------------------------------------------------------------

@@ -54,6 +54,7 @@ class DataCollectionTemplateModel(S3Model):
     names = ("dc_template",
              "dc_template_id",
              "dc_section",
+             "dc_instruction",
              "dc_question",
              "dc_question_l10n",
              )
@@ -62,8 +63,9 @@ class DataCollectionTemplateModel(S3Model):
 
         T = current.T
         db = current.db
+        s3 = current.response.s3
 
-        crud_strings = current.response.s3.crud_strings
+        crud_strings = s3.crud_strings
         settings = current.deployment_settings
 
         add_components = self.add_components
@@ -142,6 +144,7 @@ class DataCollectionTemplateModel(S3Model):
         # Components
         add_components(tablename,
                        dc_question = "template_id",
+                       dc_instruction = "template_id",
                        dc_section = "template_id",
                        )
 
@@ -226,6 +229,30 @@ class DataCollectionTemplateModel(S3Model):
                   )
 
         # =====================================================================
+        # Instructions
+        #
+        # @ToDo: i18n
+        #
+        hierarchical_sections = settings.get_dc_sections_hierarchical()
+
+        tablename = "dc_instruction"
+        define_table(tablename,
+                     template_id(),
+                     section_id(),
+                     Field("posn", "integer",
+                           label = T("Position"),
+                           ),
+                     s3_comments("what_to_do",
+                                 label = T("What to do"),
+                                 comment = None,
+                                 ),
+                     s3_comments("what_to_say",
+                                 label = T("What to say"),
+                                 comment = None,
+                                 ),
+                     *s3_meta_fields())
+
+        # =====================================================================
         # Questions
         #
         type_opts = {1: T("Text"),
@@ -239,10 +266,18 @@ class DataCollectionTemplateModel(S3Model):
                      9: T("Grid"), # Pseudo-question
                      10: T("Large Text"),
                      11: T("Rich Text"),
+                     12: T("Likert-scale"),
+                     13: T("Heatmap"),
                      #: T("Organization"),
                      #: T("Location"),
                      #: T("Person"),
                      }
+
+        likert_opts = {1: T("Agreement (Disagree - Agree)"),
+                       2: T("Satisfaction (Smiley scale)"),
+                       3: T("Satisfaction (Dissatisfied - Satisfied)"),
+                       4: T("Pain scale (3 point)"),
+                       }
 
         tablename = "dc_question"
         define_table(tablename,
@@ -275,8 +310,7 @@ class DataCollectionTemplateModel(S3Model):
                      Field("field_type", "integer", notnull=True,
                            default = 1, # string
                            label = T("Field Type"),
-                           represent = lambda opt: \
-                                            type_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options=type_opts),
                            requires = IS_IN_SET(type_opts),
                            ),
                      Field("options", "json",
@@ -332,6 +366,22 @@ class DataCollectionTemplateModel(S3Model):
                                                            ),
                                          ),
                            ),
+                     Field("file", "upload",
+                           autodelete = True,
+                           label = T("Image"),
+                           length = current.MAX_FILENAME_LENGTH,
+                           represent = self.doc_image_represent,
+                           requires = IS_EMPTY_OR(
+                                        IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)),
+                                        # Distingish from prepop
+                                        null = "",
+                                      ),
+                           # upload folder needs to be visible to the download() function as well as the upload
+                           uploadfolder = os.path.join(current.request.folder,
+                                                       "uploads",
+                                                       "images"),
+                           widget = S3ImageCropWidget((600, 600)),
+                           ),
                      s3_comments(label = T("Tooltip"),
                                  represent = s3_text_represent,
                                  comment = DIV(_class="tooltip",
@@ -371,7 +421,7 @@ class DataCollectionTemplateModel(S3Model):
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Question"),
+            label_create = T("Add Question"),
             title_display = T("Question Details"),
             title_list = T("Questions"),
             title_update = T("Edit Question"),
