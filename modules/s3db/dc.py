@@ -233,8 +233,6 @@ class DataCollectionTemplateModel(S3Model):
         #
         # @ToDo: i18n
         #
-        hierarchical_sections = settings.get_dc_sections_hierarchical()
-
         tablename = "dc_instruction"
         define_table(tablename,
                      template_id(),
