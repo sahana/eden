@@ -1094,7 +1094,7 @@ def config(settings):
             #                #hidden = True,
             #                ),
             ]
-            
+
         if r.representation == "xls":
             # Filtered components
             s3db.add_components("org_organisation",
@@ -1568,11 +1568,12 @@ def config(settings):
         f.default = "N"
 
         religion = components_get("religion")
-        religion.configure(hierarchy_levels = ["Religion",
-                                               "Faith Tradition",
-                                               "Denomination",
-                                               "Judicatory Body",
-                                               ],
+        religion_hierarchy_levels = ["Religion",
+                                     "Faith Tradition",
+                                     "Denomination",
+                                     "Judicatory Body",
+                                     ]
+        religion.configure(hierarchy_levels = religion_hierarchy_levels,
                            )
 
         if r.representation == "xls":
@@ -1580,6 +1581,13 @@ def config(settings):
             # Override hyperlink
             NONE = current.messages["NONE"]
             s3db.org_organisation.website.represent = lambda v: v or NONE
+
+            # Expand the religion column into individual columns per hierarchy level
+            s3db.configure("org_organisation",
+                           xls_expand_hierarchy = {
+                               "religion_organisation.religion_id": religion_hierarchy_levels,
+                               },
+                           )
         else:
             xls = False
             s3db.pr_religion_organisation.religion_id.represent = S3Represent(lookup = "pr_religion",

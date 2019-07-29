@@ -33,7 +33,7 @@ __all__ = ("S3Hierarchy", "S3HierarchyCRUD")
 
 import json
 
-from gluon import *
+from gluon import DIV, FORM, LI, UL, current
 from gluon.storage import Storage
 from gluon.tools import callback
 
@@ -43,6 +43,8 @@ from .s3rest import S3Method
 from .s3widgets import SEPARATORS
 
 DEFAULT = lambda: None
+
+LABEL = "l"
 
 # =============================================================================
 class S3HierarchyCRUD(S3Method):
@@ -1401,7 +1403,6 @@ class S3Hierarchy(object):
         """
 
         theset = self.theset
-        LABEL = "l"
 
         if node_ids is None:
             node_ids = self.nodes.keys()
@@ -1448,8 +1449,6 @@ class S3Hierarchy(object):
             @param represent: the node ID representation method
         """
 
-        LABEL = "l"
-
         theset = self.theset
         node = theset.get(node_id)
         if node:
@@ -1463,6 +1462,38 @@ class S3Hierarchy(object):
                 label = s3_str(label)
             return label
         return None
+
+    # -------------------------------------------------------------------------
+    def repr_expand(self, node_ids, levels=None, represent=None):
+        """
+            Helper function to represent a set of nodes as lists
+            of their respective ancestors starting by the root node
+
+            @param node_ids: the node_ids (iterable)
+            @param levels: the number of levels to include (counting from root)
+            @param represent: a representation function for each ancestor
+
+            @returns: a dict {node_id: ["Label", "Label", ...]}
+                      => each label list is padded with "-" to reach the
+                         requested number of levels (TODO make this configurable)
+        """
+
+        paths = {}
+        all_parents = set()
+        for node_id in node_ids:
+            paths[node_id] = path = self.path(node_id)
+            all_parents |= set(path)
+
+        self._represent(all_parents, renderer=represent)
+
+        theset = self.theset
+        result = {}
+        for node_id, path in paths.items():
+            p = (path + [None] * levels)[:levels]
+            l = [theset[parent][LABEL] if parent else "-" for parent in p]
+            result[node_id] = l
+
+        return result
 
     # -------------------------------------------------------------------------
     def _json(self, node_id, represent=None, depth=0, max_depth=None):

@@ -37,7 +37,7 @@ from gluon.storage import Storage
 
 from s3compat import INTEGER_TYPES, BytesIO, xrange
 from ..s3codec import S3Codec
-from ..s3utils import s3_str, s3_strip_markup, s3_unicode
+from ..s3utils import s3_str, s3_strip_markup, s3_unicode, s3_get_foreign_key
 
 # =============================================================================
 class S3XLS(S3Codec):
@@ -87,6 +87,10 @@ class S3XLS(S3Codec):
         if orderby is None:
             orderby = resource.get_config("orderby")
 
+        # Hierarchical FK Expansion:
+        # setting = {field_selector: [LevelLabel, LevelLabel, ...]}
+        expand_hierarchy = resource.get_config("xls_expand_hierarchy")
+
         data = resource.select(list_fields,
                                left = left,
                                limit = None,
@@ -95,6 +99,7 @@ class S3XLS(S3Codec):
                                orderby = orderby,
                                represent = True,
                                show_links = False,
+                               raw_data = True if expand_hierarchy else False,
                                )
 
         rfields = data.rfields
@@ -105,15 +110,75 @@ class S3XLS(S3Codec):
         heading = {}
         for rfield in rfields:
             if rfield.show:
-                lfields.append(rfield.colname)
-                heading[rfield.colname] = rfield.label or \
-                            rfield.field.name.capitalize().replace("_", " ")
-                if rfield.ftype == "virtual":
-                    types.append("string")
+
+                levels = expand_hierarchy.get(rfield.selector)
+                if levels:
+                    num_levels = len(levels)
+                    colnames = self.expand_hierarchy(rfield, num_levels, rows)
+                    lfields.extend(colnames)
+                    types.extend(["string"] * num_levels)
+                    T = current.T
+                    for i, colname in enumerate(colnames):
+                        heading[colname] = T(levels[i])
                 else:
-                    types.append(rfield.ftype)
+                    lfields.append(rfield.colname)
+                    heading[rfield.colname] = rfield.label or \
+                                rfield.field.name.capitalize().replace("_", " ")
+                    if rfield.ftype == "virtual":
+                        types.append("string")
+                    else:
+                        types.append(rfield.ftype)
 
         return (title, types, lfields, heading, rows)
+
+    # -------------------------------------------------------------------------
+    def expand_hierarchy(self, rfield, num_levels, rows):
+        """
+            Expand a hierarchical foreign key column into one column
+            per hierarchy level
+
+            @param rfield: the column (S3ResourceField)
+            @param num_levels: the number of levels (from root)
+            @param rows: the Rows from S3ResourceData
+        """
+
+        field = rfield.field
+        if not field or rfield.ftype[:9] != "reference":
+            return
+
+        # Get the look-up table
+        ktablename = s3_get_foreign_key(field, m2m=False)[0]
+        if not ktablename:
+            return
+
+        colname = rfield.colname
+        represent = field.represent
+
+        # Get the hierarchy
+        from ..s3hierarchy import S3Hierarchy
+        h = S3Hierarchy(ktablename)
+        if not h.config:
+            return
+
+        # Collect the values from rows
+        values = set(row["_row"][colname] for row in rows)
+
+        # Generate the expanded values
+        expanded = h.repr_expand(values,
+                                 levels = num_levels,
+                                 represent = represent,
+                                 )
+
+        # ...and add them into the rows
+        colnames = ["%s__%s" % (colname, l) for l in range(num_levels)]
+        for row in rows:
+            value = row["_row"][colname]
+            hcols = expanded.get(value)
+            for level in range(num_levels):
+                v = hcols[level] if hcols else None
+                row[colnames[level]] = v
+
+        return colnames
 
     # -------------------------------------------------------------------------
     def encode(self, data_source, title=None, as_stream=False, **attr):
@@ -417,6 +482,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                     col_index += 1
                     continue
 
+                print("field", field)
                 if field not in row:
                     represent = ""
                 else:

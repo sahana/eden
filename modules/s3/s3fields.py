@@ -705,7 +705,7 @@ class S3Represent(object):
                         lookup[parent] = False
                         lookup_parent(parent)
                     return
-                for node_id in lookup.keys():
+                for node_id in list(lookup.keys()):
                     lookup_parent(node_id)
             else:
                 h = None
