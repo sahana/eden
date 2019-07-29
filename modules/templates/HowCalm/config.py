@@ -1694,12 +1694,9 @@ def config(settings):
         if xls:
             list_fields = ["name",
                            (T("ID"), "org_id.value"),
-                           # Replace with something like S3Hierarchy.export_xls() ?
+                           # Will be expanded into 4 individual columns
+                           # as per xls_expand_hierarchy setting:
                            (T("Religion"), "religion_organisation.religion_id"),
-                           (T("Parent Religion"), "religion_organisation.religion_id$parent"),
-                           # Not working
-                           #(T("Grandparent Religion"), "religion_organisation.religion_id$parent$parent"),
-                           #(T("GreatGrandparent Religion"), "religion_organisation.religion_id$parent$parent$parent"),
                            (T("Organization Type"), "organisation_organisation_type.organisation_type_id"),
                            "website",
                            (T("Facebook"), "facebook.value"),
