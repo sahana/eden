@@ -560,7 +560,12 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
             return []
 
         # Collect the values from rows
-        values = set(row["_row"][colname] for row in rows)
+        values = set()
+        for row in rows:
+            value = row["_row"][colname]
+            if type(value) is list:
+                value = value[0]
+            values.add(value)
 
         # Generate the expanded values
         expanded = h.repr_expand(values,
@@ -572,10 +577,11 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
         colnames = ["%s__%s" % (colname, l) for l in range(num_levels)]
         for row in rows:
             value = row["_row"][colname]
+            if type(value) is list:
+                value = value[0]
             hcols = expanded.get(value)
             for level in range(num_levels):
-                v = hcols[level] if hcols else None
-                row[colnames[level]] = v
+                row[colnames[level]] = hcols[level] if hcols else None
 
         return colnames
 
