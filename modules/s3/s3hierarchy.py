@@ -422,7 +422,8 @@ class S3HierarchyCRUD(S3Method):
         codec = S3Codec.get_codec("xls")
         result = codec.encode(output,
                               title = resource.name,
-                              list_fields=hcolumns+columns)
+                              list_fields = hcolumns+columns,
+                              )
 
         # Reponse headers and file name are set in codec
         return result

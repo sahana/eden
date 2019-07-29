@@ -31,7 +31,7 @@
 __all__ = ("S3XLS",
            )
 
-from gluon import *
+from gluon import HTTP, current
 from gluon.contenttype import contenttype
 from gluon.storage import Storage
 
@@ -132,61 +132,12 @@ class S3XLS(S3Codec):
         return (title, types, lfields, heading, rows)
 
     # -------------------------------------------------------------------------
-    def expand_hierarchy(self, rfield, num_levels, rows):
-        """
-            Expand a hierarchical foreign key column into one column
-            per hierarchy level
-
-            @param rfield: the column (S3ResourceField)
-            @param num_levels: the number of levels (from root)
-            @param rows: the Rows from S3ResourceData
-        """
-
-        field = rfield.field
-        if not field or rfield.ftype[:9] != "reference":
-            return
-
-        # Get the look-up table
-        ktablename = s3_get_foreign_key(field, m2m=False)[0]
-        if not ktablename:
-            return
-
-        colname = rfield.colname
-        represent = field.represent
-
-        # Get the hierarchy
-        from ..s3hierarchy import S3Hierarchy
-        h = S3Hierarchy(ktablename)
-        if not h.config:
-            return
-
-        # Collect the values from rows
-        values = set(row["_row"][colname] for row in rows)
-
-        # Generate the expanded values
-        expanded = h.repr_expand(values,
-                                 levels = num_levels,
-                                 represent = represent,
-                                 )
-
-        # ...and add them into the rows
-        colnames = ["%s__%s" % (colname, l) for l in range(num_levels)]
-        for row in rows:
-            value = row["_row"][colname]
-            hcols = expanded.get(value)
-            for level in range(num_levels):
-                v = hcols[level] if hcols else None
-                row[colnames[level]] = v
-
-        return colnames
-
-    # -------------------------------------------------------------------------
-    def encode(self, data_source, title=None, as_stream=False, **attr):
+    def encode(self, resource, **attr):
         """
             Export data as a Microsoft Excel spreadsheet
 
-            @param data_source: the source of the data that is to be encoded
-                                as a spreadsheet, can be either of:
+            @param resource: the source of the data that is to be encoded
+                             as a spreadsheet, can be either of:
                                 1) an S3Resource
                                 2) an array of value dicts (dict of
                                    column labels as first item, list of
@@ -197,12 +148,12 @@ class S3XLS(S3Codec):
                                     types: {key: type},
                                     rows: [{key:value}],
                                     }
-            @param title: the title for the output document
-            @param as_stream: return the buffer (BytesIO) rather than
-                              its contents (str), useful when the output
-                              is supposed to be stored locally
-            @param attr: keyword parameters
 
+            @param attr: keyword arguments (see below)
+
+            @keyword as_stream: return the buffer (BytesIO) rather than
+                                its contents (str), useful when the output
+                                is supposed to be stored locally
             @keyword title: the main title of the report
             @keyword list_fields: fields to include in list views
             @keyword report_groupby: used to create a grouping of the result:
@@ -245,22 +196,22 @@ class S3XLS(S3Codec):
         use_colour = attr.get("use_colour", False)
         evenodd = attr.get("evenodd", True)
 
-        # Extract the data from the data_source
-        if isinstance(data_source, dict):
-            headers = data_source.get("headers", {})
-            lfields = data_source.get("columns", list_fields)
-            column_types = data_source.get("types")
+        # Extract the data from the resource
+        if isinstance(resource, dict):
+            headers = resource.get("headers", {})
+            lfields = resource.get("columns", list_fields)
+            column_types = resource.get("types")
             types = [column_types[col] for col in lfields]
-            rows = data_source.get("rows")
-        elif isinstance(data_source, (list, tuple)):
-            headers = data_source[0]
-            types = data_source[1]
-            rows = data_source[2:]
+            rows = resource.get("rows")
+        elif isinstance(resource, (list, tuple)):
+            headers = resource[0]
+            types = resource[1]
+            rows = resource[2:]
             lfields = list_fields
         else:
             if not list_fields:
-                list_fields = data_source.list_fields()
-            (title, types, lfields, headers, rows) = self.extract(data_source,
+                list_fields = resource.list_fields()
+            (title, types, lfields, headers, rows) = self.extract(resource,
                                                                   list_fields,
                                                                   )
 
@@ -386,7 +337,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                         sheet.col(col_index).width = 16 * COL_WIDTH_MULTIPLIER
 
         # Initialize counters
-        totalCols = col_index
+        total_cols = col_index
         # Move the rows down if a title row is included
         if title_row:
             row_index = title_row_length
@@ -419,7 +370,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                 if subheading != represent:
                     # Start of new group - write group header
                     subheading = represent
-                    current_sheet.write_merge(row_index, row_index, 0, totalCols,
+                    current_sheet.write_merge(row_index, row_index, 0, total_cols,
                                              subheading,
                                              subheader_style,
                                              )
@@ -451,7 +402,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                         current_sheet.write_merge(row_index,
                                                   row_index,
                                                   0,
-                                                  totalCols - 1,
+                                                  total_cols - 1,
                                                   label,
                                                   style,
                                                   )
@@ -482,7 +433,6 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                     col_index += 1
                     continue
 
-                print("field", field)
                 if field not in row:
                     represent = ""
                 else:
@@ -565,7 +515,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
         book.save(output)
         output.seek(0)
 
-        if as_stream:
+        if attr.get("as_stream", False):
             return output
 
         # Response headers
@@ -576,6 +526,58 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
         response.headers["Content-disposition"] = disposition
 
         return output.read()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def expand_hierarchy(rfield, num_levels, rows):
+        """
+            Expand a hierarchical foreign key column into one column
+            per hierarchy level
+
+            @param rfield: the column (S3ResourceField)
+            @param num_levels: the number of levels (from root)
+            @param rows: the Rows from S3ResourceData
+
+            @returns: list of keys (column names) for the inserted columns
+        """
+
+        field = rfield.field
+        if not field or rfield.ftype[:9] != "reference":
+            return []
+
+        # Get the look-up table
+        ktablename = s3_get_foreign_key(field, m2m=False)[0]
+        if not ktablename:
+            return []
+
+        colname = rfield.colname
+        represent = field.represent
+
+        # Get the hierarchy
+        from ..s3hierarchy import S3Hierarchy
+        h = S3Hierarchy(ktablename)
+        if not h.config:
+            return []
+
+        # Collect the values from rows
+        values = set(row["_row"][colname] for row in rows)
+
+        # Generate the expanded values
+        expanded = h.repr_expand(values,
+                                 levels = num_levels,
+                                 represent = represent,
+                                 )
+
+        # ...and add them into the rows
+        colnames = ["%s__%s" % (colname, l) for l in range(num_levels)]
+        for row in rows:
+            value = row["_row"][colname]
+            hcols = expanded.get(value)
+            for level in range(num_levels):
+                v = hcols[level] if hcols else None
+                row[colnames[level]] = v
+
+        return colnames
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1068,11 +1070,9 @@ class S3PivotTableXLS(object):
         styles = self._styles
         if styles is None:
 
-            import xlwt
+            from xlwt import Alignment, XFStyle
 
             # Alignments
-            Alignment = xlwt.Alignment
-
             center = Alignment()
             center.horz = Alignment.HORZ_CENTER
             center.vert = Alignment.VERT_CENTER
@@ -1109,10 +1109,7 @@ class S3PivotTableXLS(object):
             topright.wrap = 1
 
             # Styles
-            XFStyle = xlwt.XFStyle
-
-            # Points to Twips
-            twips = lambda pt: 20 * pt
+            twips = lambda pt: 20 * pt # Points to Twips
 
             def style(fontsize=10, bold=False, italic=False, align=None):
                 """ XFStyle builder helper """
