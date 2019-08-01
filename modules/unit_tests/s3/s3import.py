@@ -13,6 +13,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3 import S3Duplicate, S3ImportItem, S3ImportJob, s3_meta_fields
+from s3.s3import import S3ObjectReferences
 
 from unit_tests import run_suite
 
@@ -627,6 +628,313 @@ class MtimeImportTests(unittest.TestCase):
         assertEqual(row.modified_on, mtime)
 
 # =============================================================================
+class ObjectReferencesTests(unittest.TestCase):
+    """ Tests for S3ObjectReferences """
+
+    # -------------------------------------------------------------------------
+    def testDiscoverFromObject(self):
+        """ Test reference discovery in object """
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        obj = {"key_1": "value_1",
+               "$k_key_2": {"resource": "org_organisation",
+                            "tuid": "ORG1",
+                            },
+               "key3": "value_3",
+               }
+
+        refs = S3ObjectReferences(obj).refs
+
+        assertTrue(isinstance(refs, list))
+        assertEqual(len(refs), 1)
+
+        ref = refs[0]
+        assertEqual(len(ref), 3)
+        assertEqual(ref[0], "org_organisation")
+        assertEqual(ref[1], "tuid")
+        assertEqual(ref[2], "ORG1")
+
+    # -------------------------------------------------------------------------
+    def testDiscoverFromList(self):
+        """ Test reference discovery in list with objects """
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        obj = ["item1",
+               {"$k_key_2": {"resource": "org_organisation",
+                             "uuid": "ORG1",
+                             },
+                },
+               129384,
+               None,
+               ]
+
+        refs = S3ObjectReferences(obj).refs
+
+        assertTrue(isinstance(refs, list))
+        assertEqual(len(refs), 1)
+
+        ref = refs[0]
+        assertEqual(len(ref), 3)
+        assertEqual(ref[0], "org_organisation")
+        assertEqual(ref[1], "uuid")
+        assertEqual(ref[2], "ORG1")
+
+    # -------------------------------------------------------------------------
+    def testDiscoverFromNested(self):
+        """ Test reference discovery in nested objects """
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        obj = ["item1",
+               {"complex": [{"someint": 3465,
+                             "astring": "example",
+                             },
+                            {"$k_key_2": {"resource": "pr_person",
+                                          "tuid": "PR2",
+                                          },
+                             "somebool": True,
+                             },
+                            ],
+                },
+               129384,
+               None,
+               ]
+
+        refs = S3ObjectReferences(obj).refs
+
+        assertTrue(isinstance(refs, list))
+        assertEqual(len(refs), 1)
+
+        ref = refs[0]
+        assertEqual(len(ref), 3)
+        assertEqual(ref[0], "pr_person")
+        assertEqual(ref[1], "tuid")
+        assertEqual(ref[2], "PR2")
+
+    # -------------------------------------------------------------------------
+    def testDiscoverMultiple(self):
+        """ Test discovery of multiple references """
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+        assertIn = self.assertIn
+
+        obj = ["item1",
+               {"complex": [{"someint": 3465,
+                             "astring": "example",
+                             },
+                            {"$k_key_2": {"resource": "pr_person",
+                                          "tuid": "PR2",
+                                          },
+                             "somebool": True,
+                             },
+                            ],
+                "$k_key_1": {"r": "org_organisation",
+                             "u": "ORG1",
+                             },
+                },
+               129384,
+               None,
+               ]
+
+        refs = S3ObjectReferences(obj).refs
+
+        assertTrue(isinstance(refs, list))
+        assertEqual(len(refs), 2)
+
+        for ref in refs:
+            uid = ref[2]
+            assertIn(uid, ("PR2", "ORG1"))
+            if uid == "ORG1":
+                assertEqual(ref[0], "org_organisation")
+                assertEqual(ref[1], "uuid")
+            else:
+                assertEqual(ref[0], "pr_person")
+                assertEqual(ref[1], "tuid")
+
+    # -------------------------------------------------------------------------
+    def testDiscoverInvalid(self):
+        """ Test reference discovery in presence of invalid keys """
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        obj = ["item1",
+               {"$k_key_3": [{"someint": 3465,
+                              "astring": "example",
+                              },
+                             {"$k_key_2": {"resource": "req_req",
+                                           "uuid": "REQ0928",
+                                           },
+                              "somebool": True,
+                              },
+                             ],
+                "$k_key_1": {"name": "org_organisation",
+                             "id": "ORG1",
+                             },
+                },
+               129384,
+               None,
+               ]
+
+        refs = S3ObjectReferences(obj).refs
+
+        assertTrue(isinstance(refs, list))
+        assertEqual(len(refs), 1)
+
+        ref = refs[0]
+        assertEqual(len(ref), 3)
+        assertEqual(ref[0], "req_req")
+        assertEqual(ref[1], "uuid")
+        assertEqual(ref[2], "REQ0928")
+
+    # -------------------------------------------------------------------------
+    def testResolveObject(self):
+        """ Test reference resolution in an object """
+
+        obj = {"key_1": "value_1",
+               "$k_key_2": {"resource": "org_organisation",
+                            "tuid": "ORG1",
+                            },
+               "key3": "value_3",
+               }
+
+        S3ObjectReferences(obj).resolve("org_organisation", "tuid", "ORG1", 57)
+
+        target = obj
+        self.assertNotIn("$k_key_2", target)
+        self.assertIn("key_2", target)
+        self.assertEqual(target["key_2"], 57)
+
+    # -------------------------------------------------------------------------
+    def testResolveList(self):
+        """ Test reference resolution in a list with objects """
+
+        obj = ["item1",
+               {"$k_key_2": {"resource": "org_organisation",
+                             "uuid": "ORG1",
+                             },
+                },
+               129384,
+               None,
+               ]
+
+        S3ObjectReferences(obj).resolve("org_organisation", "uuid", "ORG1", 57)
+
+        target = obj[1]
+        self.assertNotIn("$k_key_2", target)
+        self.assertIn("key_2", target)
+        self.assertEqual(target["key_2"], 57)
+
+    # -------------------------------------------------------------------------
+    def testResolveNested(self):
+        """ Test reference resolution in nested objects """
+
+        obj = ["item1",
+               {"complex": [{"someint": 3465,
+                             "astring": "example",
+                             },
+                            {"$k_key_2": {"resource": "pr_person",
+                                          "tuid": "PR2",
+                                          },
+                             "somebool": True,
+                             },
+                            ],
+                },
+               129384,
+               None,
+               ]
+
+        S3ObjectReferences(obj).resolve("pr_person", "tuid", "PR2", 3283)
+
+        target = obj[1]["complex"][1]
+        self.assertNotIn("$k_key_2", target)
+        self.assertIn("key_2", target)
+        self.assertEqual(target["key_2"], 3283)
+
+    # -------------------------------------------------------------------------
+    def testResolveMultiple(self):
+        """ Test resolution of multiple references in nested objects """
+
+        assertNotIn = self.assertNotIn
+        assertIn = self.assertIn
+        assertEqual = self.assertEqual
+
+        obj = ["item1",
+               {"complex": [{"someint": 3465,
+                             "astring": "example",
+                             },
+                            {"$k_key_2": {"resource": "pr_person",
+                                          "tuid": "PR2",
+                                          },
+                             "somebool": True,
+                             },
+                            ],
+                "$k_key_1": {"r": "org_organisation",
+                             "u": "ORG1",
+                             },
+                },
+               129384,
+               {"$k_key_3": {"r": "pr_person",
+                             "t": "PR2",
+                             },
+                },
+               ]
+
+        refs = S3ObjectReferences(obj)
+        refs.resolve("pr_person", "tuid", "PR2", 3283)
+        refs.resolve("org_organisation", "uuid", "ORG1", 14)
+
+        target = obj[1]["complex"][1]
+        assertNotIn("$k_key_2", target)
+        assertIn("key_2", target)
+        assertEqual(target["key_2"], 3283)
+
+        target = obj[3]
+        assertNotIn("$k_key_3", target)
+        assertIn("key_3", target)
+        assertEqual(target["key_3"], 3283)
+
+        target = obj[1]
+        assertNotIn("$k_key_1", target)
+        assertIn("key_1", target)
+        assertEqual(target["key_1"], 14)
+
+    # -------------------------------------------------------------------------
+    def testResolveInvalid(self):
+        """ Test reference resolution in nested objects with invalid keys """
+
+        obj = ["item1",
+               {"$k_key_3": [{"someint": 3465,
+                              "astring": "example",
+                              },
+                             {"$k_key_2": {"resource": "req_req",
+                                           "uuid": "REQ0928",
+                                           },
+                              "somebool": True,
+                              },
+                             ],
+                "$k_key_1": {"name": "org_organisation",
+                             "id": "ORG1",
+                             },
+                },
+               129384,
+               None,
+               ]
+
+        S3ObjectReferences(obj).resolve("req_req", "uuid", "REQ0928", 3)
+
+        target = obj[1]["$k_key_3"][1]
+        self.assertNotIn("$k_key_2", target)
+        self.assertIn("key_2", target)
+        self.assertEqual(target["key_2"], 3)
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
@@ -637,6 +945,7 @@ if __name__ == "__main__":
         FailedReferenceTests,
         DuplicateDetectionTests,
         MtimeImportTests,
-    )
+        ObjectReferencesTests,
+        )
 
 # END ========================================================================

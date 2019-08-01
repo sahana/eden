@@ -3728,6 +3728,139 @@ class S3ImportJob():
                 item.load_parent = None
 
 # =============================================================================
+class S3ObjectReferences(object):
+    """
+        Helper class to discover and resolve references in a JSON object;
+        handles both uuid- and tuid-based references
+
+        - traverses the object to find dict items of any of these formats:
+                "$k_<name>": {"r": <tablename>, "u": <uuid>}
+                "$k_<name>": {"resource": <tablename>, "uuid": <uuid>}
+                "$k_<name>": {"r": <tablename>, "t": <tuid>}
+                "$k_<name>": {"resource": <tablename>, "tuid": <tuid>}
+
+        - resolve() replaces them with:
+                "<name>": <db_id>
+    """
+
+    TABLENAME_KEYS = ("resource", "r")
+    UUID_KEYS = ("uuid", "u")
+    TUID_KEYS = ("tuid", "t")
+
+    def __init__(self, obj):
+        """
+            Constructor
+
+            @param obj: the object to inspect (parsed)
+        """
+
+        self.obj = obj
+
+        self._refs = None
+        self._objs = None
+
+    # -------------------------------------------------------------------------
+    @property
+    def refs(self):
+        """
+            List of references discovered in the object (lazy property)
+
+            @returns: a list of tuples (tablename, uidtype, uid)
+        """
+
+        if self._refs is None:
+            self._refs = []
+            self._objs = {}
+            self._traverse(self.obj)
+        return self._refs
+
+    # -------------------------------------------------------------------------
+    @property
+    def objs(self):
+        """
+            A dict with pointers to the references inside the object
+
+            @returns: a dict {(tablename, uidtype, uid): (obj, key)}
+        """
+
+        if self._objs is None:
+            self._refs = []
+            self._objs = {}
+            self._traverse(self.obj)
+        return self._objs
+
+    # -------------------------------------------------------------------------
+    def _traverse(self, obj):
+        """
+            Traverse a (possibly nested) object and find all references,
+            populates self.refs and self.objs
+
+            @param obj: the object to inspect
+        """
+
+        refs = self._refs
+        objs = self._objs
+
+        if type(obj) is list:
+            for item in obj:
+                self._traverse(item)
+
+        elif type(obj) is dict:
+
+            for key, value in obj.items():
+
+                if key[:3] == "$k_" and type(value) is dict:
+
+                    tablename = uid = uid_type = None
+
+                    for k in self.TABLENAME_KEYS:
+                        tablename = value.get(k)
+                        if tablename:
+                            break
+                    if tablename:
+                        for k in self.UUID_KEYS:
+                            uid = value.get(k)
+                            if uid:
+                                uid_type = "uuid"
+                                break
+                    if tablename and not uid:
+                        for k in self.TUID_KEYS:
+                            uid = value.get(k)
+                            if uid:
+                                uid_type = "tuid"
+                                break
+                    if not tablename or not uid:
+                        self._traverse(value)
+                    else:
+                        ref = (tablename, uid_type, uid)
+                        if ref not in objs:
+                            refs.append(ref)
+                            objs[ref] = [(obj, key)]
+                        else:
+                            objs[ref].append((obj, key))
+                else:
+                    self._traverse(value)
+
+    # -------------------------------------------------------------------------
+    def resolve(self, tablename, uidtype, uid, value):
+        """
+            Resolve a reference in self.obj with the given value; will
+            resolve all occurences of the reference
+
+            @param tablename: the referenced table
+            @param uidtype: the type of uid (uuid or tuid)
+            @param uid: the uuid or tuid
+            @param value: the value to resolve the reference
+        """
+
+        items = self.objs.get((tablename, uidtype, uid))
+        if items:
+            for obj, key in items:
+                if len(key) > 3:
+                    obj[key[3:]] = value
+                obj.pop(key, None)
+
+# =============================================================================
 class S3Duplicate(object):
     """ Standard deduplicator method """
 
