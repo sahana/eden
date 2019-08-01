@@ -349,12 +349,12 @@ i18n.delphi_vote="''', str(T("Save Vote")), '''"'''))
                           args=["S3", "s3.delphi.js"]))
 
     response.view = "delphi/vote.html"
-    return dict(rheader = rheader,
-                duser = duser,
-                votes = votes,
-                options = options,
-                rankings = rankings,
-                )
+    return {"rheader": rheader,
+            "duser": duser,
+            "votes": votes,
+            "options": options,
+            "rankings": rankings,
+            }
 
 # -----------------------------------------------------------------------------
 def save_vote():

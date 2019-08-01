@@ -75,7 +75,7 @@ __all__ = ("S3ACLWidget",
            "S3TimeIntervalWidget",
            #"S3UploadWidget",
            "S3FixedOptionsWidget",
-           "S3QuestionWidget",
+           "S3QuestionEditorWidget",
            "CheckboxesWidgetS3",
            "s3_comments_widget",
            "s3_richtext_widget",
@@ -8470,13 +8470,10 @@ class S3XMLContents(object):
         return re.sub(r"\{\{(.+?)\}\}", self.link, self.contents)
 
 # =============================================================================
-class S3QuestionWidget(FormWidget):
+class S3QuestionEditorWidget(FormWidget):
     """
-        A Question widget which takes attributes
-        of a typical question as input and converts
-        it into a JSON
-
-        Currently unused!
+        A Question Editor widget for DC
+        Client-side JS in s3.ui.question.js
     """
 
     # -------------------------------------------------------------------------

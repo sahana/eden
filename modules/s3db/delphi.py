@@ -343,6 +343,7 @@ class S3DelphiModel(S3Model):
         # ---------------------------------------------------------------------
         tablename = "delphi_vote"
         define_table(tablename,
+                     # @ToDo: Add User here too? Or is created_by sufficient?
                      problem_id(),
                      solution_id(empty = False),
                      Field("rank", "integer",
@@ -390,9 +391,9 @@ class S3DelphiModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return dict(delphi_solution_represent = solution_represent,
-                    delphi_DelphiUser = S3DelphiUser,
-                    )
+        return {"delphi_solution_represent": solution_represent,
+                "delphi_DelphiUser": S3DelphiUser,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod

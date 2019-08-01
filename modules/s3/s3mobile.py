@@ -637,6 +637,20 @@ class S3MobileSchema(object):
                          }
                 mappend(field)
 
+            elif isinstance(element, S3SQLInlineInstruction):
+                field = {"type": "instructions",
+                         "do": element.do,
+                         "say": element.say,
+                         #"name": element.selector,
+                         }
+                mappend(field)
+
+            elif isinstance(element, S3SQLSectionBreak):
+                field = {"type": "break",
+                         #"name": element.selector,
+                         }
+                mappend(field)
+
         if resource.parent and not resource.linktable:
 
             # Include the parent key

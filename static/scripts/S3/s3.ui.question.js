@@ -1,3 +1,6 @@
+/*
+ * Client-side JS for S3QuestionEditorWidget
+ */
 (function($, undefined) {
     "use strict";
     var addQuestionID = 0;

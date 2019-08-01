@@ -30,6 +30,8 @@
 __all__ = ("S3SQLCustomForm",
            "S3SQLDefaultForm",
            "S3SQLDummyField",
+           "S3SQLInlineInstruction",
+           "S3SQLSectionBreak",
            "S3SQLVirtualField",
            "S3SQLSubFormLayout",
            "S3SQLVerticalSubFormLayout",
@@ -1788,6 +1790,7 @@ class S3SQLDummyField(S3SQLFormElement):
         A Dummy Field
 
         A simple DIV which can then be acted upon with JavaScript
+        - used by dc_question Grids
     """
 
     # -------------------------------------------------------------------------
@@ -1829,6 +1832,129 @@ class S3SQLDummyField(S3SQLFormElement):
 
         return DIV(_class="s3-dummy-field",
                    )
+
+# =============================================================================
+class S3SQLSectionBreak(S3SQLFormElement):
+    """
+        A Section Break
+
+        A simple DIV which can then be acted upon with JavaScript &/or Styled
+        - used by dc_template.layout
+    """
+
+    # -------------------------------------------------------------------------
+    def __init__(self):
+        """
+            Constructor to define the form element, to be extended
+            in subclass.
+        """
+
+        pass
+
+    # -------------------------------------------------------------------------
+    def resolve(self, resource):
+        """
+            Method to resolve this form element against the calling resource.
+
+            @param resource: the resource
+            @return: a tuple
+                        (
+                            subtable alias (or None for main table),
+                            original field name,
+                            Field instance for the form renderer
+                        )
+        """
+
+        selector = ""
+
+        field = Field(selector,
+                      default = "",
+                      label = "",
+                      widget = self,
+                      )
+
+        return None, selector, field
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attributes):
+        """
+            Widget renderer for the input field. To be implemented in
+            subclass (if required) and to be set as widget=self for the
+            field returned by the resolve()-method of this form element.
+
+            @param field: the input field
+            @param value: the value to populate the widget
+            @param attributes: attributes for the widget
+            @return: the widget for this form element as HTML helper
+        """
+
+        return DIV(_class="s3-section-break",
+                   )
+
+# =============================================================================
+class S3SQLInlineInstruction(S3SQLFormElement):
+    """
+        Inline Instructions
+
+        A simple DIV which can then be acted upon with JavaScript &/or Styled
+        - used by dc_template.layout
+    """
+
+    # -------------------------------------------------------------------------
+    def __init__(self, do, say, **options):
+        """
+            Constructor to define the form element, to be extended
+            in subclass.
+
+            @param do: What to Do
+            @param say: What to Say
+        """
+
+        self.do = do
+        self.say = say
+
+    # -------------------------------------------------------------------------
+    def resolve(self, resource):
+        """
+            Method to resolve this form element against the calling resource.
+
+            @param resource: the resource
+            @return: a tuple
+                        (
+                            subtable alias (or None for main table),
+                            original field name,
+                            Field instance for the form renderer
+                        )
+        """
+
+        selector = ""
+
+        field = Field(selector,
+                      default = "",
+                      label = "",
+                      widget = self,
+                      )
+
+        return None, selector, field
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attributes):
+        """
+            Widget renderer for the input field. To be implemented in
+            subclass (if required) and to be set as widget=self for the
+            field returned by the resolve()-method of this form element.
+
+            @param field: the input field
+            @param value: the value to populate the widget
+            @param attributes: attributes for the widget
+            @return: the widget for this form element as HTML helper
+        """
+
+        element = DIV(_class="s3-inline-instructions",
+                      )
+        element["data-do"] = self.do
+        element["data-say"] = self.say
+        return element
 
 # =============================================================================
 class S3SQLSubForm(S3SQLFormElement):
