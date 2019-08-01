@@ -11,6 +11,7 @@ import unittest
 
 from gluon import *
 from gluon.storage import Storage
+from lxml import etree
 
 from s3 import S3Duplicate, S3ImportItem, S3ImportJob, s3_meta_fields
 from s3.s3import import S3ObjectReferences
@@ -935,6 +936,85 @@ class ObjectReferencesTests(unittest.TestCase):
         self.assertEqual(target["key_2"], 3)
 
 # =============================================================================
+class ObjectReferencesImportTests(unittest.TestCase):
+    """ Tests for import of references in JSON field values """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        db = current.db
+
+        # Define tables for test
+        db.define_table("ort_master",
+                        Field("jsontest", "json"),
+                        *s3_meta_fields())
+        db.define_table("ort_referenced",
+                        Field("name"),
+                        *s3_meta_fields())
+
+    @classmethod
+    def tearDownClass(cls):
+
+        db = current.db
+
+        db.ort_referenced.drop()
+        db.ort_master.drop()
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        current.auth.override = True
+
+    def tearDown(self):
+
+        current.auth.override = False
+
+    # -------------------------------------------------------------------------
+    def testImpliedImport(self):
+        """ Verify that JSON references are scheduled for implicit import """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        xmlstr = """
+<s3xml>
+    <resource name="ort_master">
+        <data field="jsontest">["item1",{"complex":[{"someint":3465,"astring":"example"},{"$k_key_2":{"resource":"ort_referenced","tuid":"REF1"},"somebool":true}]},129384,null]</data>
+    </resource>
+    <resource name="ort_referenced" tuid="REF1">
+        <data field="name">Test</data>
+    </resource>
+</s3xml>"""
+
+        # Create an import job
+        tree = etree.fromstring(xmlstr)
+        job = S3ImportJob(current.db.ort_master, tree)
+
+        # Add the ort_master element to it
+        element = tree.findall('resource[@name="ort_master"][1]')[0]
+        job.add_item(element)
+
+        # Verify that the ort_referenced item has been added implicitly
+        items = job.items
+        assertEqual(len(items), 2)
+        for item_id, item in items.items():
+
+            if str(item.table) == "ort_master":
+
+                # Should be exactly one reference
+                references = item.references
+                assertEqual(len(references), 1)
+
+                # ...in the "jsontest" field
+                reference = references[0]
+                assertEqual(reference.field, "jsontest")
+
+                # Verify that the referenced item has been scheduled
+                item_id = reference.entry.item_id
+                assertTrue(item_id in items)
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
@@ -946,6 +1026,7 @@ if __name__ == "__main__":
         DuplicateDetectionTests,
         MtimeImportTests,
         ObjectReferencesTests,
+        ObjectReferencesImportTests,
         )
 
 # END ========================================================================
