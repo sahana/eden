@@ -3311,6 +3311,7 @@ class S3ImportJob():
                     ktable = s3db.table(tablename)
                     if ktable is None:
                         continue
+                    uids = [import_uid(uid)] if attr == "uuid" else [uid]
                 else:
                     tablename = element.get(ATTRIBUTE.name, None)
                     ktable, uid = reference
