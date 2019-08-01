@@ -1222,6 +1222,10 @@ class dc_TargetReport(S3Method):
 
         Results in charts for quantitative questions and
                    full text of the qualitative answers
+
+        Used by IFRC bkk_training_evaluation
+
+        @ToDo: Add support for Grids
     """
 
     # -------------------------------------------------------------------------
@@ -1291,7 +1295,7 @@ class dc_TargetReport(S3Method):
         dtable = s3db.s3_table
         query = (ttable.id == template_id) & \
                 (ttable.table_id == dtable.id)
-        template = db(query).select(ttable.layout, # @ToDo: Use this to order Questions!
+        template = db(query).select(ttable.layout,
                                     dtable.name,
                                     limitby=(0, 1),
                                     ).first()
@@ -1307,7 +1311,7 @@ class dc_TargetReport(S3Method):
                                      )
 
         # Answers
-        atable = s3db.table(template.name)
+        atable = s3db.table(template["s3_table.name"])
         answer_fields = [atable[f] for f in fields]
         answer_fields.append(rtable.person_id) # For Stats & Contacts
         query = (rtable.target_id == target_id) & \
@@ -1353,15 +1357,24 @@ class dc_TargetReport(S3Method):
                  "replied_female": replied_female,
                  }
 
-        # List of Questions
-        ID = "dc_question.id"
-        NAME = "dc_question.name"
-        OPTIONS = "dc_question.options"
-        for question in questions:
-            question.id = question[ID]
-            question.name = question[NAME]
-            answers = fields[question[FIELD_NAME]]
-            options = question[OPTIONS]
+        # Ordered List of Questions
+        questions_dict = questions.as_dict(key="dc_question.id")
+        questions = []
+        qappend = questions.append
+        layout = template["dc_template.layout"]
+        for posn in layout:
+            item = layout[posn]
+            if item["type"] != "question":
+                # Ignore 
+                continue
+            question_id = item["id"]
+            row = questions_dict[question_id]
+            question = Storage()
+            q = row["dc_question"]
+            question.id = q["id"]
+            question.name = q["name"]
+            answers = fields[row["s3_field"]["name"]]
+            options = q["options"]
             if options:
                 options = [s3_str(opt) for opt in options]
                 unsorted_options = {opt: 0 for opt in options}
@@ -1371,6 +1384,8 @@ class dc_TargetReport(S3Method):
             else:
                 question.options = None
                 question.answers = answers
+
+            qappend(question)
 
         # Contacts
         ctable = s3db.pr_contact
@@ -1573,7 +1588,6 @@ def dc_rheader(r, tabs=None):
         if tablename == "dc_template":
 
             tabs = ((T("Basic Details"), None),
-                    (T("Sections"), "section"),
                     (T("Questions"), "question"),
                     )
 

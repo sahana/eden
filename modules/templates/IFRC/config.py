@@ -6041,7 +6041,7 @@ def config(settings):
                             responded = len([resp.date for resp in responses if resp.date is not None])
                             response_rate = "%s / %s" % (responded, total)
                             return response_rate
-                        etable.month6_resp = s3_fieldmethod("month12_resp", month12_resp)
+                        etable.month12_resp = s3_fieldmethod("month12_resp", month12_resp)
 
                         list_fields = ["name",
                                        ("EO", "created_by"),
