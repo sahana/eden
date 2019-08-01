@@ -633,8 +633,8 @@ class ObjectReferencesTests(unittest.TestCase):
         assertEqual = self.assertEqual
 
         obj = {"key_1": "value_1",
-               "$k_key_2": {"resource": "org_organisation",
-                            "tuid": "ORG1",
+               "$k_key_2": {"@resource": "org_organisation",
+                            "@tuid": "ORG1",
                             },
                "key3": "value_3",
                }
@@ -658,8 +658,8 @@ class ObjectReferencesTests(unittest.TestCase):
         assertEqual = self.assertEqual
 
         obj = ["item1",
-               {"$k_key_2": {"resource": "org_organisation",
-                             "uuid": "ORG1",
+               {"$k_key_2": {"@resource": "org_organisation",
+                             "@uuid": "ORG1",
                              },
                 },
                129384,
@@ -688,8 +688,8 @@ class ObjectReferencesTests(unittest.TestCase):
                {"complex": [{"someint": 3465,
                              "astring": "example",
                              },
-                            {"$k_key_2": {"resource": "pr_person",
-                                          "tuid": "PR2",
+                            {"$k_key_2": {"@resource": "pr_person",
+                                          "@tuid": "PR2",
                                           },
                              "somebool": True,
                              },
@@ -722,8 +722,8 @@ class ObjectReferencesTests(unittest.TestCase):
                {"complex": [{"someint": 3465,
                              "astring": "example",
                              },
-                            {"$k_key_2": {"resource": "pr_person",
-                                          "tuid": "PR2",
+                            {"$k_key_2": {"@resource": "pr_person",
+                                          "@tuid": "PR2",
                                           },
                              "somebool": True,
                              },
@@ -762,8 +762,8 @@ class ObjectReferencesTests(unittest.TestCase):
                {"$k_key_3": [{"someint": 3465,
                               "astring": "example",
                               },
-                             {"$k_key_2": {"resource": "req_req",
-                                           "uuid": "REQ0928",
+                             {"$k_key_2": {"@resource": "req_req",
+                                           "@uuid": "REQ0928",
                                            },
                               "somebool": True,
                               },
@@ -792,8 +792,8 @@ class ObjectReferencesTests(unittest.TestCase):
         """ Test reference resolution in an object """
 
         obj = {"key_1": "value_1",
-               "$k_key_2": {"resource": "org_organisation",
-                            "tuid": "ORG1",
+               "$k_key_2": {"@resource": "org_organisation",
+                            "@tuid": "ORG1",
                             },
                "key3": "value_3",
                }
@@ -810,8 +810,8 @@ class ObjectReferencesTests(unittest.TestCase):
         """ Test reference resolution in a list with objects """
 
         obj = ["item1",
-               {"$k_key_2": {"resource": "org_organisation",
-                             "uuid": "ORG1",
+               {"$k_key_2": {"@resource": "org_organisation",
+                             "@uuid": "ORG1",
                              },
                 },
                129384,
@@ -833,8 +833,8 @@ class ObjectReferencesTests(unittest.TestCase):
                {"complex": [{"someint": 3465,
                              "astring": "example",
                              },
-                            {"$k_key_2": {"resource": "pr_person",
-                                          "tuid": "PR2",
+                            {"$k_key_2": {"@resource": "pr_person",
+                                          "@tuid": "PR2",
                                           },
                              "somebool": True,
                              },
@@ -863,8 +863,8 @@ class ObjectReferencesTests(unittest.TestCase):
                {"complex": [{"someint": 3465,
                              "astring": "example",
                              },
-                            {"$k_key_2": {"resource": "pr_person",
-                                          "tuid": "PR2",
+                            {"$k_key_2": {"@resource": "pr_person",
+                                          "@tuid": "PR2",
                                           },
                              "somebool": True,
                              },
@@ -907,8 +907,8 @@ class ObjectReferencesTests(unittest.TestCase):
                {"$k_key_3": [{"someint": 3465,
                               "astring": "example",
                               },
-                             {"$k_key_2": {"resource": "req_req",
-                                           "uuid": "REQ0928",
+                             {"$k_key_2": {"@resource": "req_req",
+                                           "@uuid": "REQ0928",
                                            },
                               "somebool": True,
                               },
@@ -973,7 +973,7 @@ class ObjectReferencesImportTests(unittest.TestCase):
         xmlstr = """
 <s3xml>
     <resource name="ort_master">
-        <data field="jsontest">["item1",{"complex":[{"someint":3465,"astring":"example"},{"$k_key_2":{"resource":"ort_referenced","tuid":"REF1"},"somebool":true}]},129384,null]</data>
+        <data field="jsontest">["item1",{"complex":[{"someint":3465,"astring":"example"},{"$k_key_2":{"@resource":"ort_referenced","@tuid":"REF1"},"somebool":true}]},129384,null]</data>
     </resource>
     <resource name="ort_referenced" tuid="REF1">
         <data field="name">Test</data>

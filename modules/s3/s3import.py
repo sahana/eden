@@ -3831,9 +3831,9 @@ class S3ObjectReferences(object):
 
         - traverses the object to find dict items of any of these formats:
                 "$k_<name>": {"r": <tablename>, "u": <uuid>}
-                "$k_<name>": {"resource": <tablename>, "uuid": <uuid>}
+                "$k_<name>": {"@resource": <tablename>, "@uuid": <uuid>}
                 "$k_<name>": {"r": <tablename>, "t": <tuid>}
-                "$k_<name>": {"resource": <tablename>, "tuid": <tuid>}
+                "$k_<name>": {"@resource": <tablename>, "@tuid": <tuid>}
 
         - resolve() replaces them with:
                 "<name>": <db_id>
@@ -3846,9 +3846,9 @@ class S3ObjectReferences(object):
             S3ObjectReferences(obj).resolve("req_req", "uuid", "REQ1", 57)
     """
 
-    TABLENAME_KEYS = ("resource", "r")
-    UUID_KEYS = ("uuid", "u")
-    TUID_KEYS = ("tuid", "t")
+    TABLENAME_KEYS = ("@resource", "r")
+    UUID_KEYS = ("@uuid", "u")
+    TUID_KEYS = ("@tuid", "t")
 
     def __init__(self, obj):
         """
