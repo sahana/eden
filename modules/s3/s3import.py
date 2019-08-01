@@ -2546,19 +2546,32 @@ class S3ImportItem(object):
         # Update referencing items
         if self.update and self.id:
             for u in self.update:
-                item = u.get("item", None)
+
+                # The other import item that shall be updated
+                item = u.get("item")
                 if not item:
                     continue
-                field = u.get("field", None)
+
+                # The field in the other item that shall be updated
+                field = u.get("field")
                 if isinstance(field, (list, tuple)):
+                    # The field references something else than the
+                    # primary key of this table => look it up
                     pkey, fkey = field
                     query = (table.id == self.id)
-                    row = db(query).select(table[pkey],
-                                           limitby=(0, 1)).first()
-                    if row:
-                        item._update_reference(fkey, row[pkey])
+                    row = db(query).select(table[pkey], limitby=(0, 1)).first()
+                    ref_id = row[pkey]
                 else:
-                    item._update_reference(field, self.id)
+                    # The field references the primary key of this table
+                    pkey, fkey = None, field
+                    ref_id = self.id
+
+                if "refkey" in u:
+                    # Target field is a JSON object
+                    item._update_objref(fkey, u["refkey"], ref_id)
+                else:
+                    # Target field is a reference or list:reference
+                    item._update_reference(fkey, ref_id)
 
         return True
 
@@ -2636,10 +2649,23 @@ class S3ImportItem(object):
             else:
                 pkey, fkey = ("id", field)
 
-            # Resolve the key table name
-            ktablename, key, multiple = s3_get_foreign_key(table[fkey])
-            if not ktablename:
-                continue
+            f = table[fkey]
+            if f.type == "json":
+                is_json = True
+                objref = reference.objref
+                if not objref:
+                    objref = S3ObjectReferences(self.data.get(fkey))
+                refkey = reference.element
+                if not refkey:
+                    continue
+            else:
+                is_json = False
+                refkey = objref = None
+                ktablename, _, multiple = s3_get_foreign_key(f)
+                if not ktablename:
+                    continue
+
+            # Get the lookup table
             if entry.tablename:
                 ktablename = entry.tablename
             try:
@@ -2671,7 +2697,9 @@ class S3ImportItem(object):
 
             # Update record data
             if fk:
-                if multiple:
+                if is_json:
+                    objref.resolve(refkey[0], refkey[1], refkey[2], fk)
+                elif multiple:
                     val = self.data.get(fkey, [])
                     if fk not in val:
                         val.append(fk)
@@ -2679,10 +2707,13 @@ class S3ImportItem(object):
                 else:
                     self.data[fkey] = fk
             else:
-                if fkey in self.data and not multiple:
+                if fkey in self.data and not multiple and not is_json:
                     del self.data[fkey]
                 if item:
-                    item.update.append({"item": self, "field": fkey})
+                    update = {"item": self, "field": fkey}
+                    if is_json:
+                        update["refkey"] = refkey
+                    item.update.append(update)
 
     # -------------------------------------------------------------------------
     def _update_reference(self, field, value):
@@ -2696,24 +2727,15 @@ class S3ImportItem(object):
             @param value: the value of the foreign key
         """
 
-        MTIME = current.xml.MTIME
-
         table = self.table
         record_id = self.id
 
         if not value or not table or not record_id or not self.permitted:
             return
 
-        # Prevent that reference update breaks time-delayed
-        # synchronization by implicitly updating "modified_on"
-        if MTIME in table.fields:
-            modified_on = table[MTIME]
-            modified_on_update = modified_on.update
-            modified_on.update = None
-        else:
-            modified_on_update = None
-
         db = current.db
+        update = None
+
         fieldtype = str(table[field].type)
         if fieldtype.startswith("list:reference"):
             query = (table._id == record_id)
@@ -2724,13 +2746,52 @@ class S3ImportItem(object):
                 values = record[field]
                 if value not in values:
                     values.append(value)
-                    db(table._id == record_id).update(**{field:values})
+                    update = {field: values}
         else:
-            db(table._id == record_id).update(**{field:value})
+            update = {field: value}
 
-        # Restore modified_on.update
-        if modified_on_update is not None:
-            modified_on.update = modified_on_update
+        if update:
+            if "modified_on" in table.fields:
+                update["modified_on"] = table.modified_on
+            if "modified_by" in table.fields:
+                update["modified_by"] = table.modified_by
+            db(table._id == record_id).update(**update)
+
+    # -------------------------------------------------------------------------
+    def _update_objref(self, field, refkey, value):
+        """
+            Update object references in a JSON field
+
+            @param fieldname: the name of the JSON field
+            @param refkey: the reference key, a tuple (tablename, uidtype, uid)
+            @param value: the foreign key value
+        """
+
+
+        table = self.table
+        record_id = self.id
+
+        if not value or not table or not record_id or not self.permitted:
+            return
+
+        db = current.db
+        query = (table._id == record_id)
+        record = db(query).select(table._id,
+                                  table[field],
+                                  limitby = (0, 1),
+                                  ).first()
+        if record:
+            obj = record[field]
+
+            tn, uidtype, uid = refkey
+            S3ObjectReferences(obj).resolve(tn, uidtype, uid, value)
+
+            update = {field: obj}
+            if "modified_on" in table.fields:
+                update["modified_on"] = table.modified_on
+            if "modified_by" in table.fields:
+                update["modified_by"] = table.modified_by
+            record.update_record(**update)
 
     # -------------------------------------------------------------------------
     def store(self, item_table=None):
@@ -3231,8 +3292,8 @@ class S3ImportJob():
                 value = data.get(fieldname)
                 field = table[fieldname]
                 if value and field.type == "json":
-                    inst = S3ObjectReferences(value)
-                    for ref in inst.refs:
+                    objref = S3ObjectReferences(value)
+                    for ref in objref.refs:
                         rl = lookahead(None,
                                        tree = tree,
                                        directory = directory,
@@ -3242,6 +3303,8 @@ class S3ImportJob():
                             reference = rl[0]
                             schedule(reference)
                             rappend(Storage(field = fieldname,
+                                            objref = objref,
+                                            element = ref,
                                             entry = reference.entry,
                                             ))
 

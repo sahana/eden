@@ -34,7 +34,6 @@ class ListStringImportTests(unittest.TestCase):
     </resource>
 </s3xml>"""
 
-        from lxml import etree
         self.tree = etree.ElementTree(etree.fromstring(xmlstr))
         current.auth.override = True
 
@@ -81,7 +80,6 @@ class DefaultApproverOverrideTests(unittest.TestCase):
     </resource>
 </s3xml>"""
 
-        from lxml import etree
         self.tree = etree.ElementTree(etree.fromstring(xmlstr))
 
     # -------------------------------------------------------------------------
@@ -153,7 +151,6 @@ class ComponentDisambiguationTests(unittest.TestCase):
     </resource>
 </s3xml>"""
 
-        from lxml import etree
         self.branch_tree = etree.ElementTree(etree.fromstring(xmlstr1))
         self.parent_tree = etree.ElementTree(etree.fromstring(xmlstr2))
 
@@ -243,7 +240,6 @@ class PostParseTests(unittest.TestCase):
     </resource>
 </s3xml>"""
 
-        from lxml import etree
         tree = etree.ElementTree(etree.fromstring(xmlstr))
 
         resource = current.s3db.resource("pr_person")
@@ -306,7 +302,6 @@ class FailedReferenceTests(unittest.TestCase):
     </resource>
 </s3xml>"""
 
-        from lxml import etree
         tree = etree.ElementTree(etree.fromstring(xmlstr))
 
         s3db = current.s3db
@@ -354,7 +349,6 @@ class FailedReferenceTests(unittest.TestCase):
     </resource>
 </s3xml>"""
 
-        from lxml import etree
         tree = etree.ElementTree(etree.fromstring(xmlstr))
 
         s3db = current.s3db
@@ -611,7 +605,6 @@ class MtimeImportTests(unittest.TestCase):
     </resource>
 </s3xml>""" % {"mtime": mtime.isoformat()}
 
-        from lxml import etree
         tree = etree.ElementTree(etree.fromstring(xmlstr))
 
         # Import the data
@@ -1013,6 +1006,47 @@ class ObjectReferencesImportTests(unittest.TestCase):
                 # Verify that the referenced item has been scheduled
                 item_id = reference.entry.item_id
                 assertTrue(item_id in items)
+
+    # -------------------------------------------------------------------------
+    def testReferenceResolution(self):
+        """ Test resolution of JSON object references during import """
+
+        db = current.db
+        s3db = current.s3db
+
+        import uuid
+        muid = uuid.uuid4().urn
+        name = uuid.uuid4().urn
+
+        xmlstr = """
+<s3xml>
+    <resource name="ort_master" uuid="%s">
+        <data field="jsontest">{"$k_referenced_id": {"r": "ort_referenced", "t": "REF1"}}</data>
+    </resource>
+    <resource name="ort_referenced" tuid="REF1">
+        <data field="name">%s</data>
+    </resource>
+</s3xml>""" % (muid, name)
+
+        tree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        resource = s3db.resource("ort_master")
+        resource.import_xml(tree)
+
+        # Get the ID of the referenced record
+        table = s3db.ort_referenced
+        row = db(table.name == name).select(table.id, limitby=(0, 1)).first()
+        record_id = row.id
+
+        # Get the JSON object
+        table = s3db.ort_master
+        row = db(table.uuid == muid).select(table.jsontest, limitby=(0, 1)).first()
+
+        # Inspect the JSON object, verify that the reference is resolved
+        obj = row.jsontest
+        self.assertNotIn("$k_referenced_id", obj)
+        self.assertIn("referenced_id", obj)
+        self.assertEqual(obj["referenced_id"], record_id)
 
 # =============================================================================
 if __name__ == "__main__":
