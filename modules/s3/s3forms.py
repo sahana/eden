@@ -1849,7 +1849,7 @@ class S3SQLSectionBreak(S3SQLFormElement):
             in subclass.
         """
 
-        pass
+        super(S3SQLSectionBreak, self).__init__(None)
 
     # -------------------------------------------------------------------------
     def resolve(self, resource):
@@ -1909,6 +1909,8 @@ class S3SQLInlineInstruction(S3SQLFormElement):
             @param do: What to Do
             @param say: What to Say
         """
+
+        super(S3SQLInlineInstruction, self).__init__(None)
 
         self.do = do
         self.say = say

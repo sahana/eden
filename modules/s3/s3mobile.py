@@ -37,11 +37,12 @@ __all__ = ("S3MobileFormList",
 
 import json
 
-from gluon import *
+from gluon import IS_EMPTY_OR, IS_IN_SET, current
 
 from s3compat import basestring
 from .s3datetime import s3_parse_datetime
-from .s3forms import S3SQLForm, S3SQLCustomForm, S3SQLDummyField, S3SQLField
+from .s3forms import S3SQLCustomForm, S3SQLDummyField, S3SQLField, \
+                     S3SQLForm, S3SQLInlineInstruction, S3SQLSectionBreak
 from .s3rest import S3Method
 from .s3utils import s3_get_foreign_key, s3_str
 from .s3validators import SEPARATORS
@@ -646,7 +647,7 @@ class S3MobileSchema(object):
                 mappend(field)
 
             elif isinstance(element, S3SQLSectionBreak):
-                field = {"type": "break",
+                field = {"type": "section-break",
                          #"name": element.selector,
                          }
                 mappend(field)

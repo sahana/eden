@@ -110,8 +110,10 @@ class S3XLS(S3Codec):
         heading = {}
         for rfield in rfields:
             if rfield.show:
-
-                levels = expand_hierarchy and expand_hierarchy.get(rfield.selector)
+                if expand_hierarchy:
+                    levels = expand_hierarchy.get(rfield.selector)
+                else:
+                    levels = None
                 if levels:
                     num_levels = len(levels)
                     colnames = self.expand_hierarchy(rfield, num_levels, rows)
