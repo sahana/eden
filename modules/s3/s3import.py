@@ -3189,52 +3189,79 @@ class S3ImportJob():
 
             # Handle references
             table = item.table
+            data = item.data
             tree = self.tree
+
+            def schedule(reference):
+                """ Schedule a referenced item for implicit import """
+                entry = reference.entry
+                if entry and entry.element is not None and not entry.item_id:
+                    item_id = add_item(element=entry.element)
+                    if item_id:
+                        entry.item_id = item_id
+
+            # Foreign key fields in table
             if tree is not None:
                 fields = [table[f] for f in table.fields]
                 rfields = [f for f in fields if s3_has_foreign_key(f)]
                 item.references = lookahead(element,
-                                            table=table,
-                                            fields=rfields,
-                                            tree=tree,
-                                            directory=directory)
-
+                                            table = table,
+                                            fields = rfields,
+                                            tree = tree,
+                                            directory = directory,
+                                            )
                 for reference in item.references:
-                    entry = reference.entry
-                    if entry and entry.element is not None:
-                        if not entry.item_id:
-                            item_id = add_item(element=entry.element)
-                            if item_id:
-                                entry.update(item_id=item_id)
+                    schedule(reference)
+
+            references = item.references
+            rappend = references.append
 
             # Parent reference
             if parent is not None:
-                entry = Storage(item_id=parent.item_id,
-                                element=parent.element,
-                                tablename=parent.tablename)
-                item.references.append(Storage(field=joinby,
-                                               entry=entry))
+                entry = Storage(item_id = parent.item_id,
+                                element = parent.element,
+                                tablename = parent.tablename,
+                                )
+                rappend(Storage(field = joinby,
+                                entry = entry,
+                                ))
+
+            # References in JSON field data
+            for fieldname in table.fields:
+                value = data.get(fieldname)
+                field = table[fieldname]
+                if value and field.type == "json":
+                    inst = S3ObjectReferences(value)
+                    for ref in inst.refs:
+                        rl = lookahead(None,
+                                       tree = tree,
+                                       directory = directory,
+                                       lookup = ref,
+                                       )
+                        if rl:
+                            reference = rl[0]
+                            schedule(reference)
+                            rappend(Storage(field = fieldname,
+                                            entry = reference.entry,
+                                            ))
 
             # Replacement reference
-            data = item.data
             deleted = data.get(xml.DELETED, False)
             if deleted:
-                field = xml.REPLACEDBY
-                replaced_by = data.get(field, None)
+                fieldname = xml.REPLACEDBY
+                replaced_by = data.get(fieldname)
                 if replaced_by:
                     rl = lookahead(element,
-                                   table=table,
-                                   tree=tree,
-                                   directory=directory,
-                                   lookup=(table, field, replaced_by))
+                                   tree = tree,
+                                   directory = directory,
+                                   lookup = (table, replaced_by),
+                                   )
                     if rl:
-                        entry = rl[0].entry
-                        if entry.element is not None and not entry.item_id:
-                            item_id = add_item(element=entry.element)
-                            if item_id:
-                                entry.item_id = item_id
-                        item.references.append(Storage(field=field,
-                                                       entry=entry))
+                        reference = rl[0]
+                        schedule(reference)
+                        rappend(Storage(field = fieldname,
+                                        entry = reference.entry,
+                                        ))
 
         return item.item_id
 
@@ -3277,13 +3304,19 @@ class S3ImportJob():
 
         references = [lookup] if lookup else element.findall("reference")
         for reference in references:
-
             if lookup:
-                tablename = element.get(ATTRIBUTE.name, None)
-                ktable, field, uid = reference
-                attr = UID
-                uids = [import_uid(uid)]
-
+                field = None
+                if element is None:
+                    tablename, attr, uid = reference
+                    ktable = s3db.table(tablename)
+                    if ktable is None:
+                        continue
+                    uids = [import_uid(uid)] if attr == "uuid" else [uid]
+                else:
+                    tablename = element.get(ATTRIBUTE.name, None)
+                    ktable, uid = reference
+                    attr = UID
+                    uids = [import_uid(uid)]
             else:
                 field = reference.get(ATTRIBUTE.field, None)
 
@@ -3292,7 +3325,7 @@ class S3ImportJob():
                     continue
 
                 # Find the key table
-                ktablename, key, multiple = s3_get_foreign_key(table[field])
+                ktablename, _, multiple = s3_get_foreign_key(table[field])
                 if not ktablename:
                     continue
                 try:
@@ -3728,6 +3761,146 @@ class S3ImportJob():
                 item.load_parent = None
 
 # =============================================================================
+class S3ObjectReferences(object):
+    """
+        Utility to discover and resolve references in a JSON object;
+        handles both uuid- and tuid-based references
+
+        - traverses the object to find dict items of any of these formats:
+                "$k_<name>": {"r": <tablename>, "u": <uuid>}
+                "$k_<name>": {"resource": <tablename>, "uuid": <uuid>}
+                "$k_<name>": {"r": <tablename>, "t": <tuid>}
+                "$k_<name>": {"resource": <tablename>, "tuid": <tuid>}
+
+        - resolve() replaces them with:
+                "<name>": <db_id>
+
+        @example:
+            # Get a list of all references in obj
+            refs = S3ObjectReferences(obj).refs
+        @example
+            # Resolve a reference in obj
+            S3ObjectReferences(obj).resolve("req_req", "uuid", "REQ1", 57)
+    """
+
+    TABLENAME_KEYS = ("resource", "r")
+    UUID_KEYS = ("uuid", "u")
+    TUID_KEYS = ("tuid", "t")
+
+    def __init__(self, obj):
+        """
+            Constructor
+
+            @param obj: the object to inspect (parsed)
+        """
+
+        self.obj = obj
+
+        self._refs = None
+        self._objs = None
+
+    # -------------------------------------------------------------------------
+    @property
+    def refs(self):
+        """
+            List of references discovered in the object (lazy property)
+
+            @returns: a list of tuples (tablename, uidtype, uid)
+        """
+
+        if self._refs is None:
+            self._refs = []
+            self._objs = {}
+            self._traverse(self.obj)
+        return self._refs
+
+    # -------------------------------------------------------------------------
+    @property
+    def objs(self):
+        """
+            A dict with pointers to the references inside the object
+
+            @returns: a dict {(tablename, uidtype, uid): (obj, key)}
+        """
+
+        if self._objs is None:
+            self._refs = []
+            self._objs = {}
+            self._traverse(self.obj)
+        return self._objs
+
+    # -------------------------------------------------------------------------
+    def _traverse(self, obj):
+        """
+            Traverse a (possibly nested) object and find all references,
+            populates self.refs and self.objs
+
+            @param obj: the object to inspect
+        """
+
+        refs = self._refs
+        objs = self._objs
+
+        if type(obj) is list:
+            for item in obj:
+                self._traverse(item)
+
+        elif type(obj) is dict:
+
+            for key, value in obj.items():
+
+                if key[:3] == "$k_" and type(value) is dict:
+
+                    tablename = uid = uid_type = None
+
+                    for k in self.TABLENAME_KEYS:
+                        tablename = value.get(k)
+                        if tablename:
+                            break
+                    if tablename:
+                        for k in self.UUID_KEYS:
+                            uid = value.get(k)
+                            if uid:
+                                uid_type = "uuid"
+                                break
+                    if tablename and not uid:
+                        for k in self.TUID_KEYS:
+                            uid = value.get(k)
+                            if uid:
+                                uid_type = "tuid"
+                                break
+                    if not tablename or not uid:
+                        self._traverse(value)
+                    else:
+                        ref = (tablename, uid_type, uid)
+                        if ref not in objs:
+                            refs.append(ref)
+                            objs[ref] = [(obj, key)]
+                        else:
+                            objs[ref].append((obj, key))
+                else:
+                    self._traverse(value)
+
+    # -------------------------------------------------------------------------
+    def resolve(self, tablename, uidtype, uid, value):
+        """
+            Resolve a reference in self.obj with the given value; will
+            resolve all occurences of the reference
+
+            @param tablename: the referenced table
+            @param uidtype: the type of uid (uuid or tuid)
+            @param uid: the uuid or tuid
+            @param value: the value to resolve the reference
+        """
+
+        items = self.objs.get((tablename, uidtype, uid))
+        if items:
+            for obj, key in items:
+                if len(key) > 3:
+                    obj[key[3:]] = value
+                obj.pop(key, None)
+
+# =============================================================================
 class S3Duplicate(object):
     """ Standard deduplicator method """
 
@@ -4014,7 +4187,7 @@ class S3BulkImporter(object):
         if task[0] == 1:
             s3db = current.s3db
             response = current.response
-            errorString = "prepopulate error: file %s missing"
+            error_string = "prepopulate error: file %s missing"
             # Store the view
             view = response.view
 
@@ -4058,7 +4231,7 @@ class S3BulkImporter(object):
                     self.errorList.append("Could not access %s: %s" % (filename, e.read()))
                     return
                 except:
-                    self.errorList.append(errorString % filename)
+                    self.errorList.append(error_string % filename)
                     return
                 else:
                     csv = f
@@ -4066,14 +4239,14 @@ class S3BulkImporter(object):
                 try:
                     csv = open(filename, "r")
                 except IOError:
-                    self.errorList.append(errorString % filename)
+                    self.errorList.append(error_string % filename)
                     return
 
             # Check if the stylesheet is accessible
             try:
                 S = open(task[4], "r")
             except IOError:
-                self.errorList.append(errorString % task[4])
+                self.errorList.append(error_string % task[4])
                 return
             else:
                 S.close()
@@ -4202,25 +4375,25 @@ class S3BulkImporter(object):
 
         def parseACL(_acl):
             permissions = _acl.split("|")
-            aclValue = 0
+            acl_value = 0
             for permission in permissions:
                 if permission == "READ":
-                    aclValue = aclValue | acl.READ
+                    acl_value |= acl.READ
                 if permission == "CREATE":
-                    aclValue = aclValue | acl.CREATE
+                    acl_value |= acl.CREATE
                 if permission == "UPDATE":
-                    aclValue = aclValue | acl.UPDATE
+                    acl_value |= acl.UPDATE
                 if permission == "DELETE":
-                    aclValue = aclValue | acl.DELETE
+                    acl_value |= acl.DELETE
                 if permission == "REVIEW":
-                    aclValue = aclValue | acl.REVIEW
+                    acl_value |= acl.REVIEW
                 if permission == "APPROVE":
-                    aclValue = aclValue | acl.APPROVE
+                    acl_value |= acl.APPROVE
                 if permission == "PUBLISH":
-                    aclValue = aclValue | acl.PUBLISH
+                    acl_value |= acl.PUBLISH
                 if permission == "ALL":
-                    aclValue = aclValue | acl.ALL
-            return aclValue
+                    acl_value |= acl.ALL
+            return acl_value
 
         reader = self.csv.DictReader(openFile)
         roles = {}
@@ -4711,11 +4884,11 @@ class S3BulkImporter(object):
         prefix = prefix.strip('" ')
         resourcename = resourcename.strip('" ')
 
-        errorString = "prepopulate error: file %s missing"
+        error_string = "prepopulate error: file %s missing"
         try:
             source = open(filepath, "r")
         except IOError:
-            self.errorList.append(errorString % filepath)
+            self.errorList.append(error_string % filepath)
             return
 
         stylesheet = os.path.join(current.request.folder,
@@ -4726,7 +4899,7 @@ class S3BulkImporter(object):
         try:
             xslt_file = open(stylesheet, "r")
         except IOError:
-            self.errorList.append(errorString % stylesheet)
+            self.errorList.append(error_string % stylesheet)
             return
         else:
             xslt_file.close()

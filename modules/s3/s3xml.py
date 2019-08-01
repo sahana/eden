@@ -1585,7 +1585,8 @@ class S3XML(S3Codec):
                     skip_validation = True
                     decode_value = False
                 else:
-                    decode_value = not is_text
+                    # For string, text and json: use text-node as-is
+                    decode_value = not is_text and field_type != "json"
                     value = xml_decode(child.text)
             else:
                 decode_value = True
