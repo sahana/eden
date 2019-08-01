@@ -2655,7 +2655,7 @@ class S3ImportItem(object):
                 objref = reference.objref
                 if not objref:
                     objref = S3ObjectReferences(self.data.get(fkey))
-                refkey = reference.element
+                refkey = reference.refkey
                 if not refkey:
                     continue
             else:
@@ -3304,7 +3304,7 @@ class S3ImportJob():
                             schedule(reference)
                             rappend(Storage(field = fieldname,
                                             objref = objref,
-                                            element = ref,
+                                            refkey = ref,
                                             entry = reference.entry,
                                             ))
 
