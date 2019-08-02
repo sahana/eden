@@ -15,7 +15,7 @@ $(document).ready(function(){
         ajaxMethod({
             'url': S3.Ap.concat('/dc/target/') + recordID + '/name.json',
             'type': 'POST',
-            'data': {name: name},
+            'data': JSON.stringify({name: name}),
             'dataType': 'json',
             'success': function(/* data */) {
                 // Nothing needed here
