@@ -413,6 +413,7 @@ def config(settings):
         # Custom Methods
         from templates.UCCE.controllers import dc_TargetActivate
         from templates.UCCE.controllers import dc_TargetDeactivate
+        from templates.UCCE.controllers import dc_TargetName
 
         set_method = current.s3db.set_method
         set_method("dc", "target",
@@ -421,6 +422,9 @@ def config(settings):
         set_method("dc", "target",
                    method = "deactivate",
                    action = dc_TargetDeactivate())
+        set_method("dc", "target",
+                   method = "name",
+                   action = dc_TargetName())
 
         current.response.s3.dl_no_header = True
         attr["dl_rowsize"] = 2
@@ -459,16 +463,25 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_dc_template_controller(**attr):
 
+        s3db = current.s3db
+
         target_id =  current.request.get_vars.get("target_id")
         if target_id:
             # Find the Template for this Target
-            ttable = current.s3db.dc_target
+            ttable = s3db.dc_target
             target = current.db(ttable.id == target_id).select(ttable.template_id,
                                                                limitby = (0, 1),
                                                                ).first()
             if target:
                 from gluon import redirect, URL
-                redirect(URL(c="dc", f="template", args=[target.template_id, "question"]))
+                redirect(URL(c="dc", f="template", args=[target.template_id, "editor"]))
+
+        # Custom Methods
+        from templates.UCCE.controllers import dc_TemplateEditor
+
+        s3db.set_method("dc", "template",
+                        method = "editor",
+                        action = dc_TemplateEditor())
 
         attr["rheader"] = ucce_rheader
 

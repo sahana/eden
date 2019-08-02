@@ -202,7 +202,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
             if status == 1:
                 # Draft - can Edit freely
                 edit_url = URL(c="dc", f="template",
-                               args=[template_id, "question"],
+                               args=[template_id, "editor"],
                                )
                 _title = T("Edit") # Only used in popover
                 _class = ""
@@ -556,7 +556,7 @@ class dc_TargetDeactivate(S3Method):
                 # Message
                 current.session.confirmation = current.T("Survey Deactivated")
                 # Redirect
-                redirect(URL(c="dc", f="template", args=[r.record.template_id, "question"]))
+                redirect(URL(c="dc", f="template", args=[r.record.template_id, "editor"]))
 
             elif r.http == "POST" and r.representation == "json":
                 # AJAX method
@@ -575,6 +575,258 @@ class dc_TargetDeactivate(S3Method):
                 # Message
                 current.response.headers["Content-Type"] = "application/json"
                 output = current.xml.json_message(True, 200, current.T("Survey Deactivated"))
+
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
+
+# =============================================================================
+class dc_TargetName(S3Method):
+    """
+        Rename a Survey
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "target":
+            if r.http == "POST" and r.representation == "json":
+                # AJAX method
+                # Action the request
+                table = r.table
+                target_id = r.id
+                if not current.auth.s3_has_permission("update", table, record_id=target_id):
+                    r.unauthorised()
+                # Update Name
+                name = r.post_vars.get("name")
+                if name:
+                    db = current.db
+                    db(table.id == target_id).update(name = name)
+                    ttable = current.s3db.dc_template
+                    db(ttable.id == r.record.template_id).update(name = name)
+
+                # Message
+                current.response.headers["Content-Type"] = "application/json"
+                output = current.xml.json_message(True, 200, current.T("Survey Renamed"))
+
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
+
+# =============================================================================
+class dc_TemplateEditor(S3Method):
+    """
+        Survey Template Editor
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "template":
+            if r.record and \
+               r.interactive:
+
+                T = current.T
+                db = current.db
+                s3db = current.s3db
+
+                record = r.record
+
+                ttable = s3db.dc_target
+                target = db(ttable.template_id == record.id).select(ttable.id,
+                                                                    ttable.status,
+                                                                    limitby = (0, 1)
+                                                                    ).first()
+                try:
+                    target_id = target.id
+                    target_status = target.status
+                except AttributeError:
+                    target_id = None
+                    target_status = None
+
+                if not target_status:
+                    # No Target linked...something odd happening
+                    button = ""
+                elif target_status == 2:
+                    # Active
+                    button = A(T("Deactivate"),
+                               _href=URL(c="dc", f="target",
+                                         args=[target_id, "deactivate.popup"],
+                                         ),
+                               _class="action-btn s3_modal",
+                               _title=T("Deactivate Survey"),
+                               )
+                else:
+                    # Draft / Deactivated
+                    button = A(T("Activate"),
+                               _href=URL(c="dc", f="target",
+                                         args=[target_id, "activate.popup"],
+                                         ),
+                               _class="action-btn s3_modal",
+                               _title=T("Activate Survey"),
+                               )
+
+                ptable = s3db.project_project
+                ltable = s3db.project_project_target
+                query = (ltable.target_id == target_id) & \
+                        (ltable.project_id == ptable.id)
+                project = db(query).select(ptable.name,
+                                           limitby = (0, 1)
+                                           ).first()
+                try:
+                    project_name = project.name
+                except AttributeError:
+                    project_name = ""
+
+                name_widget = INPUT(_value=record.name,
+                                    _type="text",
+                                    _id="survey-name",
+                                    )
+                name_widget["_data-id"] = target_id
+
+                header = DIV(DIV("%s: " % T("Survey name"),
+                                 name_widget,
+                                 _class="medium-6 columns",
+                                 ),
+                             DIV("%s: " % T("Project"),
+                                 project_name,
+                                 _class="medium-3 columns",
+                                 ),
+                             DIV(button,
+                                 _class="medium-3 columns",
+                                 ),
+                             _class="row"
+                             )
+
+                question_types = DIV(DIV(H2(T("Question types")),
+                                         _class="row",
+                                         ),
+                                     DIV(DIV(ICON("edit"),
+                                             _class="medium-2 columns",
+                                             ),
+                                         DIV(T("Data collector instructions"),
+                                             _class="medium-9 columns",
+                                             ),
+                                         DIV(ICON("info-circle"),
+                                             _class="medium-1 columns",
+                                             ),
+                                         _class="row draggable",
+                                         _id="instructions",
+                                         ),
+                                     DIV(DIV(ICON("comment-alt"),
+                                             _class="medium-2 columns",
+                                             ),
+                                         DIV(T("Text box"),
+                                             _class="medium-9 columns",
+                                             ),
+                                         DIV(ICON("info-circle"),
+                                             _class="medium-1 columns",
+                                             ),
+                                         _class="row draggable",
+                                         _id="text",
+                                         ),
+                                     DIV(DIV(ICON("hashtag"),
+                                             _class="medium-2 columns",
+                                             ),
+                                         DIV(T("Number question"),
+                                             _class="medium-9 columns",
+                                             ),
+                                         DIV(ICON("info-circle"),
+                                             _class="medium-1 columns",
+                                             ),
+                                         _class="row draggable",
+                                         _id="number",
+                                         ),
+                                     DIV(DIV(ICON("list"),
+                                             _class="medium-2 columns",
+                                             ),
+                                         DIV(T("Multiple choice question"),
+                                             _class="medium-9 columns",
+                                             ),
+                                         DIV(ICON("info-circle"),
+                                             _class="medium-1 columns",
+                                             ),
+                                         _class="row draggable",
+                                         _id="multichoice",
+                                         ),
+                                     DIV(DIV(ICON("tasks"),
+                                             _class="medium-2 columns",
+                                             ),
+                                         DIV(T("Likert-scale"),
+                                             _class="medium-9 columns",
+                                             ),
+                                         DIV(ICON("info-circle"),
+                                             _class="medium-1 columns",
+                                             ),
+                                         _class="row draggable",
+                                         _id="likert",
+                                         ),
+                                     DIV(DIV(ICON("picture"),
+                                             _class="medium-2 columns",
+                                             ),
+                                         DIV(T("Heatmap"),
+                                             _class="medium-9 columns",
+                                             ),
+                                         DIV(ICON("info-circle"),
+                                             _class="medium-1 columns",
+                                             ),
+                                         _class="row draggable",
+                                         _id="heatmap",
+                                         ),
+                                     DIV(DIV(ICON("minus"),
+                                             _class="medium-2 columns",
+                                             ),
+                                         DIV(T("Section / Page break"),
+                                             _class="medium-9 columns",
+                                             ),
+                                         DIV(ICON("info-circle"),
+                                             _class="medium-1 columns",
+                                             ),
+                                         _class="row draggable",
+                                         _id="section-break",
+                                         ),
+                                     )
+
+                section_break = DIV(DIV(SPAN(T("PAGE 1 (1 ELEMENT)")),
+                                        _class="section-break medium-11 columns",
+                                        ),
+                                    DIV(ICON("down"),
+                                        _class="medium-1 columns",
+                                        ),
+                                    _class="row",
+                                    )
+
+                layout = DIV(SPAN(T("Drag and drop questions here")),
+                             _id="survey-layout",
+                             )
+
+                # Inject JS
+                current.response.s3.scripts.append("/%s/static/themes/UCCE/js/template_editor.js" % r.application)
+
+                S3CustomController._view(THEME, "template_editor.html")
+                output = {"question_types": question_types,
+                          "header": header,
+                          "section_break": section_break,
+                          "layout": layout,
+                          }
 
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)

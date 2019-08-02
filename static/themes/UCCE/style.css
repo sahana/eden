@@ -1,3 +1,54 @@
+/* Template Editor */
+
+#survey-layout {
+  border: 1px solid #bbb;
+  height: 400px;
+  left: 100%;
+  right: 100%;
+  text-align: center;
+  box-shadow: 2px 2px #bbb;
+}
+
+#survey-layout > span {
+  color: #bbb;
+  position: relative;
+  display: inline-block;
+  top: 50%;
+}
+
+.section-break {
+  color: #bbb;
+  display: block;
+  text-align: center;
+  overflow: hidden;
+  white-space: nowrap; 
+}
+
+.section-break > span {
+  position: relative;
+  display: inline-block;
+}
+
+.section-break > span:before,
+.section-break > span:after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 9999px;
+  height: 1px;
+  background: #bbb;
+}
+
+.section-break > span:before {
+  right: 100%;
+  margin-right: 15px;
+}
+
+.section-break > span:after {
+  left: 100%;
+  margin-left: 15px;
+}
+
 /* Switch Backported from Foundation 6 instead of using the Foundation 5 version */
 .switch {
   height: 2rem;
