@@ -846,11 +846,11 @@ def config(settings):
     #     "vol_volunteer_cluster.vol_cluster_position_id" : [],
     #     }
     # Uncomment to make Office codes unique
-    #settings.org.office_code_unique = True
+    settings.org.office_code_unique = True
     # Uncomment to make Facility codes unique
-    #settings.org.facility_code_unique = True
+    settings.org.facility_code_unique = True
     # Uncomment to use Tags for Organisations, Offices & Facilities
-    #settings.org.tags = True
+    settings.org.tags = True
 
     # -------------------------------------------------------------------------
     # Human Resource Management
@@ -1093,13 +1093,13 @@ def config(settings):
     # Uncomment this to use settings suitable for detailed Task management
     settings.project.mode_task = True
     # Uncomment this to use link Projects to Events
-    settings.project.event_projects = True
+    #settings.project.event_projects = True
     # Uncomment this to use Activities for Projects & Tasks
     settings.project.activities = True
     # Uncomment this to use link Activities to Events
-    settings.project.event_activities = True
+    #settings.project.event_activities = True
     # Uncomment this to use Activity Types for Activities & Projects
-    #settings.project.activity_types = True
+    settings.project.activity_types = True
     # Uncomment this to filter dates in Activities
     settings.project.activity_filter_year = True
     # Uncomment this to not use Beneficiaries for Activities
@@ -1114,6 +1114,14 @@ def config(settings):
     settings.project.demographics = True
     # Uncomment this to enable Hazards in 3W projects
     settings.project.hazards = True
+    # Uncomment this to enable locations in project
+    settings.project.location = True
+    # Uncomment this to eneble goals in project
+    settings.project.goals = True
+    # Uncomment this to enable outcomes in projects
+    settings.project.outcomes = True
+    # Uncomment this to enable output in projects
+    settings.project.outputs = True
     # Uncomment this to enable Indicators in projects
     settings.project.indicators = True
     # Uncomment this to enable Milestones in projects
