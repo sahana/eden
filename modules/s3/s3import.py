@@ -501,46 +501,50 @@ class S3Importer(S3Method):
     # -------------------------------------------------------------------------
     def commit(self, source, transform):
         """
-            @todo: docstring?
+            Import a source
+
+            @param source: the source
+            @param transform: the stylesheet path
         """
 
         #current.log.debug("S3Importer.commit(%s, %s)" % (source, transform))
 
         session = current.session
-
-        try:
-            openFile = open(source, "r")
-        except IOError:
-            session.error = self.messages.file_open_error % source
-            redirect(URL(r=self.request, f=self.function))
-
-        # @todo: manage different file formats
-        # @todo: find file format from request.extension
-        extension = source.rsplit(".", 1).pop()
-        if extension not in ("csv, ""xls", "xlsx", "xlsm"):
-            fileFormat = "csv"
-        else:
-            fileFormat = extension
-
-        # Insert data in the table and get the ID
         try:
             user = session.auth.user.id
         except AttributeError:
             user = None
 
-        upload_id = self.upload_table.insert(controller = self.controller,
-                                             function = self.function,
-                                             filename = source,
-                                             user_id = user,
-                                             status = 1)
-        current.db.commit()
+        # @todo: manage different file formats
+        # @todo: find file format from request.extension
+        extension = source.rsplit(".", 1).pop()
+        if extension not in ("csv, ""xls", "xlsx", "xlsm"):
+            file_format = "csv"
+        else:
+            file_format = extension
 
-        # Create the import job
-        result = self._generate_import_job(upload_id,
-                                           openFile,
-                                           fileFormat,
-                                           stylesheet=transform
-                                           )
+        # Insert data in the table and get the ID
+        try:
+            with open(source, "r") as infile:
+                upload_id = self.upload_table.insert(controller = self.controller,
+                                                     function = self.function,
+                                                     filename = source,
+                                                     user_id = user,
+                                                     status = 1,
+                                                     )
+                current.db.commit()
+
+                # Create the import job
+                result = self._generate_import_job(upload_id,
+                                                   infile,
+                                                   file_format,
+                                                   stylesheet = transform,
+                                                   )
+        except IOError:
+            # Source not found or not readable
+            session.error = self.messages.file_open_error % source
+            redirect(URL(r=self.request, f=self.function))
+
         if result is None:
             if self.error != None:
                 if session.error is None:
@@ -909,8 +913,8 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
     # -------------------------------------------------------------------------
     def _generate_import_job(self,
                              upload_id,
-                             openFile,
-                             fileFormat,
+                             infile,
+                             file_format,
                              stylesheet=None,
                              commit_job=False):
         """
@@ -923,44 +927,44 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
         """
 
         #current.log.debug("S3Importer._generate_import_job(%s, %s, %s, %s)" % (upload_id,
-        #                                                                       openFile,
-        #                                                                       fileFormat,
+        #                                                                       infile,
+        #                                                                       file_format,
         #                                                                       stylesheet,
         #                                                                       ))
 
         # ---------------------------------------------------------------------
         # CSV
-        if fileFormat in ("csv", "comma-separated-values"):
+        if file_format in ("csv", "comma-separated-values"):
 
             fmt = "csv"
-            src = openFile
+            src = infile
 
         # ---------------------------------------------------------------------
         # XLS
-        elif fileFormat in ("xls", "xlsx", "xlsm"):
+        elif file_format in ("xls", "xlsx", "xlsm"):
 
             fmt = "xls"
-            src = openFile
+            src = infile
 
         # ---------------------------------------------------------------------
         # XML
         # @todo: implement
-        #elif fileFormat == "xml":
+        #elif file_format == "xml":
 
         # ---------------------------------------------------------------------
         # S3JSON
         # @todo: implement
-        #elif fileFormat == "s3json":
+        #elif file_format == "s3json":
 
         # ---------------------------------------------------------------------
         # PDF
         # @todo: implement
-        #elif fileFormat == "pdf":
+        #elif file_format == "pdf":
 
         # ---------------------------------------------------------------------
         # Unsupported Format
         else:
-            msg = self.messages.unsupported_file_type % fileFormat
+            msg = self.messages.unsupported_file_type % file_format
             self.error = msg
             current.log.debug(msg)
             return None
@@ -3288,25 +3292,35 @@ class S3ImportJob():
                                 ))
 
             # References in JSON field data
-            for fieldname in table.fields:
-                value = data.get(fieldname)
-                field = table[fieldname]
-                if value and field.type == "json":
-                    objref = S3ObjectReferences(value)
-                    for ref in objref.refs:
-                        rl = lookahead(None,
-                                       tree = tree,
-                                       directory = directory,
-                                       lookup = ref,
-                                       )
-                        if rl:
-                            reference = rl[0]
-                            schedule(reference)
-                            rappend(Storage(field = fieldname,
-                                            objref = objref,
-                                            refkey = ref,
-                                            entry = reference.entry,
-                                            ))
+            json_references = s3db.get_config(table, "json_references")
+            if json_references:
+                if json_references is True:
+                    # Discover references in any JSON fields
+                    fields = table.fields
+                else:
+                    # Discover references in fields specified by setting
+                    fields = json_references
+                    if not isinstance(fields, (tuple, list)):
+                        fields = [fields]
+                for fieldname in fields:
+                    value = data.get(fieldname)
+                    field = table[fieldname]
+                    if value and field.type == "json":
+                        objref = S3ObjectReferences(value)
+                        for ref in objref.refs:
+                            rl = lookahead(None,
+                                           tree = tree,
+                                           directory = directory,
+                                           lookup = ref,
+                                           )
+                            if rl:
+                                reference = rl[0]
+                                schedule(reference)
+                                rappend(Storage(field = fieldname,
+                                                objref = objref,
+                                                refkey = ref,
+                                                entry = reference.entry,
+                                                ))
 
             # Replacement reference
             deleted = data.get(xml.DELETED, False)

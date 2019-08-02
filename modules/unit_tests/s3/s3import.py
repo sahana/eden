@@ -946,6 +946,11 @@ class ObjectReferencesImportTests(unittest.TestCase):
                         Field("name"),
                         *s3_meta_fields())
 
+        # Enable feature
+        current.s3db.configure("ort_master",
+                               json_references = "jsontest",
+                               )
+
     @classmethod
     def tearDownClass(cls):
 
@@ -953,6 +958,8 @@ class ObjectReferencesImportTests(unittest.TestCase):
 
         db.ort_referenced.drop()
         db.ort_master.drop()
+
+        current.s3db.clear_config("ort_master")
 
     # -------------------------------------------------------------------------
     def setUp(self):
@@ -1036,7 +1043,10 @@ class ObjectReferencesImportTests(unittest.TestCase):
         # Get the ID of the referenced record
         table = s3db.ort_referenced
         row = db(table.name == name).select(table.id, limitby=(0, 1)).first()
-        record_id = row.id
+        try:
+            record_id = row.id
+        except AttributeError:
+            raise AssertionError("Referenced record not imported!")
 
         # Get the JSON object
         table = s3db.ort_master
