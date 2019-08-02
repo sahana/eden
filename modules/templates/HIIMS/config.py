@@ -6,19 +6,15 @@ from gluon import current
 from gluon.storage import Storage
 
 def config(settings):
-    
-# ----------------------------------------------------------------------------------------
-"""TEMPLATE FOR HUMANITY & INCLUSION"""
-# ----------------------------------------------------------------------------------------
+    """
+        Template settings for Humanity & Inclusion 
+    """
+
     T = current.T
 
-    settings.base.system_name = T("HI Information Management System")
-    settings.base.system_name_short = T("HIIMS")
-
-
-# ----------------------------------------------------------------------------------------
-"""PRE-POPULATE"""
-# ----------------------------------------------------------------------------------------
+    #----------------------------------------------------------------------------------------
+    # Pre-Populate
+    #----------------------------------------------------------------------------------------
     # http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/PrePopulate
     # Configure/disable pre-population of the database.
     # To pre-populate the database On 1st run should specify directory(s) in
@@ -28,35 +24,24 @@ def config(settings):
     # ["default", "default/users"]
     # Unless doing a manual DB migration, where prepopulate = 0
     # In Production, prepopulate = 0 (to save 1x DAL hit every page)
-    """ @To do : Added two codes from SCPHIMS to test, if not working revert to original code below """
-    #settings.base.prepopulate.append("HIIMS")
-    
-    settings.base.prepopulate += ("HIIMS")
-    settings.base.prepopulate_demo += ("HIIMS/Demo")
+    settings.base.prepopulate.append("HIIMS")
 
-   
     # Uncomment this to prefer scalability-optimized strategies globally
     #settings.base.bigtable = True
 
-
-# ----------------------------------------------------------------------------------------
-"""THEME (folder to use for views/layout.html)"""
-# ----------------------------------------------------------------------------------------
-    settings.base.theme = "default"
-    settings.base.theme_base = "default"
-    settings.ui.menu_logo = "/%s/static/themes/HIIMS/img/logo.png"%current.request.application
+    # Theme (folder to use for views/layout.html)
+    #settings.base.theme = "default"
 
     # Enable Guided Tours
     settings.base.guided_tour = True
 
-
-# ----------------------------------------------------------------------------------------
-"""AUTHENTICATION SETTINGS"""
-# ----------------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------------
+    # Authentication settings
+    #------------------------------------------------------------------------------------------
     # These settings should be changed _after_ the 1st (admin) user is
     # registered in order to secure the deployment
     # Should users be allowed to register themselves?
-    settings.security.self_registration = False
+    #settings.security.self_registration = False
     # Do new users need to verify their email address?
     #settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
@@ -148,19 +133,20 @@ def config(settings):
     # Uncomment this to enable the creation of new locations if a user logs in from an unknown location. Warning: This may lead to many useless location entries
     #settings.auth.create_unknown_locations = True
 
-
-# ----------------------------------------------------------------------------------------
-"""L10n SETTINGS"""
-# ----------------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------------
+    # L10n settings
+    #------------------------------------------------------------------------------------------
     # Languages used in the deployment (used for Language Toolbar, GIS Locations, etc)
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
     settings.L10n.languages = OrderedDict([
         ("en", "English"),
         ("fr", "French"),
+        ("de", "German"),
+        ("es", "Spanish"),
         ("tl", "Tagalog"),
     ])
     # Default language for Language Toolbar (& GIS Locations in future)
-    settings.L10n.default_language = "en"
+    #settings.L10n.default_language = "en"
     # Uncomment to Hide the language toolbar
     #settings.L10n.display_toolbar = False
     # Default timezone for users
@@ -194,51 +180,29 @@ def config(settings):
     # Uncomment this to Translate Layer Names
     #settings.L10n.translate_gis_layer = True
     # Uncomment this to Translate Location Names
-    settings.L10n.translate_gis_location = True
+    #settings.L10n.translate_gis_location = True
     # Uncomment this for Alternate Location Names
-    settings.L10n.name_alt_gis_location = True
+    #settings.L10n.name_alt_gis_location = True
     # Uncomment this to Translate Organisation Names/Acronyms
     #settings.L10n.translate_org_organisation = True
     # Uncomment this to Translate Site Names
     #settings.L10n.translate_org_site = True
 
-
-# ----------------------------------------------------------------------------------------
-"""FINANCE SETTINGS"""
-# ----------------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------------
+    # Finance settings
+    #------------------------------------------------------------------------------------------
     settings.fin.currencies = {
         "EUR" : "Euros",
         "GBP" : "Great British Pounds",
         "USD" : "United States Dollars",
         "BDT" : "Bangladeshi Taka",
     }
-    settings.fin.currency_default = "USD"
+    settings.fin.currency_default = "EUR"
+    #settings.fin.currency_writable = False # False currently breaks things
 
-
-# ----------------------------------------------------------------------------------------
-"""SECURITY POLICY"""
-# ----------------------------------------------------------------------------------------
-    # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
-    # 1: Simple (default): Global as Reader, Authenticated as Editor
-    # 2: Editor role required for Update/Delete, unless record owned by session
-    # 3: Apply Controller ACLs
-    # 4: Apply both Controller & Function ACLs
-    # 5: Apply Controller, Function & Table ACLs
-    # 6: Apply Controller, Function, Table ACLs and Entity Realm
-    # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
-    # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
-    #
-    #settings.security.policy = 5 # Organisation-ACLs
-
-    # Ownership-rule for records without owner:
-    # True = not owned by any user (strict ownership, default)
-    # False = owned by any authenticated user
-    #settings.security.strict_ownership = False
-
-
-# ----------------------------------------------------------------------------------------
-"""PDF SETTINGS"""
-# ----------------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------------
+    # PDF settings
+    #------------------------------------------------------------------------------------------
     # Default page size (defaults to A4)
     #settings.base.pdf_size = "Letter"
     # Default page orientation (defaults to "Auto" to auto-adapt for wide tables)
@@ -251,14 +215,13 @@ def config(settings):
     #Uncomment to add a title row to XLS exports
     #settings.base.xls_title_row = True
 
-
-# ----------------------------------------------------------------------------------------
-"""GIS (Map) SETTINGS"""
-# ----------------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------------
+    # GIS (Map) settings
+    #------------------------------------------------------------------------------------------
     # Size of the Embedded Map
     # Change this if-required for your theme
     # NB API can override this in specific modules
-    settings.gis.map_height = 800
+    #settings.gis.map_height = 600
     #settings.gis.map_width = 1000
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
@@ -271,7 +234,7 @@ def config(settings):
     # Show LatLon boxes in the Location Selector
     settings.gis.latlon_selector = True
     # Use Building Names as a separate field in Street Addresses?
-    settings.gis.building_name = False
+    settings.gis.building_name = True
     # Use a non-default fillColor for Clustered points
     #settings.gis.cluster_fill = "8087ff"
     # Disable the label for clustered points
@@ -285,18 +248,18 @@ def config(settings):
     # Display Resources recorded to Admin-Level Locations on the map
     # @ToDo: Move into gis_config?
     # Uncomment to fall back to country LatLon to show resources, if nothing better available
-    settings.gis.display_L0 = True
+    #settings.gis.display_L0 = True
     # Currently unused
     #settings.gis.display_L1 = False
     # Uncomment this to do deduplicate lookups on Imports via PCode (as alternative to Name)
-    settings.gis.lookup_code = "PCode"
+    #settings.gis.lookup_code = "PCode"
     # Set this if there will be multiple areas in which work is being done,
     # and a menu to select among them is wanted.
     #settings.gis.menu = "Maps"
     # Maximum Marker Size
     # (takes effect only on display)
-    settings.gis.marker_max_height = 35
-    settings.gis.marker_max_width = 30
+    #settings.gis.marker_max_height = 35
+    #settings.gis.marker_max_width = 30
     # Duplicate Features so that they show wrapped across the Date Line?
     # Points only for now
     # lon<0 have a duplicate at lon+360
@@ -372,10 +335,9 @@ def config(settings):
     # GeoNames username
     settings.gis.geonames_username = "eden_test"
 
-
-# ----------------------------------------------------------------------------------------
-"""MESSAGING SETTINGS"""
-# ----------------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------------
+    # Messaging Settings
+    #------------------------------------------------------------------------------------------
     # If you wish to use a parser.py in another folder than "default"
     #settings.msg.parser = "mytemplatefolder"
     # Uncomment to turn off enforcement of E.123 international phone number notation
@@ -386,7 +348,26 @@ def config(settings):
     # Use 'soft' deletes
     #settings.security.archive_not_delete = False
 
+    #------------------------------------------------------------------------------------------
     # AAA Settings
+    #------------------------------------------------------------------------------------------
+    # Security Policy
+    # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
+    # 1: Simple (default): Global as Reader, Authenticated as Editor
+    # 2: Editor role required for Update/Delete, unless record owned by session
+    # 3: Apply Controller ACLs
+    # 4: Apply both Controller & Function ACLs
+    # 5: Apply Controller, Function & Table ACLs
+    # 6: Apply Controller, Function, Table ACLs and Entity Realm
+    # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
+    # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
+    #
+    #settings.security.policy = 7 # Organisation-ACLs
+
+    # Ownership-rule for records without owner:
+    # True = not owned by any user (strict ownership, default)
+    # False = owned by any authenticated user
+    #settings.security.strict_ownership = False
 
     # Audit
     # - can be a callable for custom hooks (return True to also perform normal logging, or False otherwise)
@@ -414,9 +395,9 @@ def config(settings):
     #settings.ui.filter_auto_submit = 800
     #settings.ui.report_auto_submit = 800
     # Enable this for a UN-style deployment
-    #settings.ui.cluster = True
+    settings.ui.cluster = True
     # Enable this to use the label 'Camp' instead of 'Shelter'
-    #settings.ui.camp = True
+    settings.ui.camp = True
     # Enable this to have Open links in IFrames open a full page in a new tab
     #settings.ui.iframe_opens_full = True
     # Enable this to change the label for 'Attachments' tabs
@@ -429,11 +410,11 @@ def config(settings):
     # Enable this to change the label for 'Postcode'
     #settings.ui.label_postcode = "ZIP Code"
     # Enable Social Media share buttons
-    #settings.ui.social_buttons = True
+    settings.ui.social_buttons = True
     # Enable this to show pivot table options form by default
     #settings.ui.hide_report_options = False
     # Uncomment to show created_by/modified_by using Names not Emails
-    #settings.ui.auth_user_represent = "name"
+    settings.ui.auth_user_represent = "name"
     # Uncomment to control the dataTables layout: https://datatables.net/reference/option/dom
     # Default:
     #settings.ui.datatables_dom = "fril<'dataTable_table't>pi"
@@ -473,23 +454,22 @@ def config(settings):
     # Configure a time format for organizer events to override locale default
     #settings.ui.organizer_time_format = "H:mm"
 
-# ----------------------------------------------------------------------------------------
-"""Sync"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Sync
+    #------------------------------------------------------------------------------------------
     # Uncomment if this deployment exposes public data sets
     #settings.sync.data_repository = True
 
-
-# ----------------------------------------------------------------------------------------
-"""Asset"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Asset
+    #------------------------------------------------------------------------------------------
     # Uncomment to have a specific asset type for Telephones
-    settings.asset.telephones = True
+    #settings.asset.telephones = True
 
-    
-# ----------------------------------------------------------------------------------------
-"""BENEFICIARY REGISTRY"""
-# ----------------------------------------------------------------------------------------    
+    # -----------------------------------------------------------------------------------------
+    # Beneficiary Registry
+    #------------------------------------------------------------------------------------------
+
     # --- Terminology ---
     # Terminology to use when referring to cases (Beneficiary|Client|Case)
     #settings.br.case_terminology = "Beneficiary"
@@ -500,7 +480,7 @@ def config(settings):
     # Use hierarchical need categories
     settings.br.needs_hierarchical = True
     # Let all orgs use a common set of need categories
-    settings.br.needs_org_specific = False
+    #settings.br.needs_org_specific = False
 
     # --- Basic Case Options ---
     # Show the case organisation even if only one option
@@ -546,7 +526,7 @@ def config(settings):
     # Disable assignment of case activities to staff
     #settings.br.case_activity_manager = False
     # Expose "urgent" priority for case activities (=emergencies)
-    settings.br.case_activity_urgent_option = True
+    #settings.br.case_activity_urgent_option = True
     # Disable need categories in case activities
     #settings.br.case_activity_need = False
     # Use a free-text subject line in case activities
@@ -596,10 +576,9 @@ def config(settings):
     # Disable tracking of effort (=hours spent) for assistance measures
     #settings.br.assistance_track_effort = False
 
-
-# ----------------------------------------------------------------------------------------
-"""CMS """
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # CMS
+    #------------------------------------------------------------------------------------------
     # Uncomment this to hide CMS from module index pages
     #settings.cms.hide_index = True
     # Uncomment to use Bookmarks in Newsfeed
@@ -628,33 +607,31 @@ def config(settings):
     # Uncomment to use person_id instead of created_by in Newsfeed
     #settings.cms.person = "person_id"
 
-
-# ----------------------------------------------------------------------------------------
-"""SHELTERS"""
-#-----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Shelters
+    #------------------------------------------------------------------------------------------
     # Uncomment to use a dynamic population estimation by calculations based on registrations
-    settings.cr.shelter_population_dynamic = True
+    #settings.cr.shelter_population_dynamic = True
     # Uncomment to disable people registration in shelters
     #settings.cr.people_registration = False
     # Uncomment to use Tags for Shelters
     #settings.cr.tags = True
     # Uncomment to generate tasks from shelter inspections (requires project module)
-    settings.cr.shelter_inspection_tasks = True
+    #settings.cr.shelter_inspection_tasks = True
     # Configure active statuses for shelter inspection tasks (subset of project.task_status_opts)
     #settings.cr.shelter_inspection_task_active_statuses = (2, 3, 6)
 
-
-# ----------------------------------------------------------------------------------------
-"""DISASTER VICTIM REGISTRY / CASE MANAGEMENT"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Disaster Victim Registry / Case Management
+    #------------------------------------------------------------------------------------------
 
     # Uncomment to use the term Beneficiary instead of Case
-    settings.dvr.label = "Beneficiary"
+    #settings.dvr.label = "Beneficiary"
 
     # Uncomment this to enable tracking of transfer origin/destination sites
-    settings.dvr.track_transfer_sites = True
+    #settings.dvr.track_transfer_sites = True
     # Uncomment this to enable features to manage transferability of cases
-    settings.dvr.manage_transferability = True
+    #settings.dvr.manage_transferability = True
 
     # Uncomment this to enable household size in cases, set to "auto" for automatic counting
     #settings.dvr.household_size = True
@@ -685,12 +662,12 @@ def config(settings):
     #settings.dvr.case_activity_follow_up = False
 
     # Uncomment this to include case activity docs on beneficiary documents-tab
-    settings.dvr.case_include_activity_docs = True
+    #settings.dvr.case_include_activity_docs = True
     # Uncomment this to include case group docs on beneficiary documents-tab
-    settings.dvr.case_include_group_docs = True
+    #settings.dvr.case_include_group_docs = True
 
     # Uncomment this if Case activities use multiple Needs
-    settings.dvr.case_activity_needs_multiple = True
+    #settings.dvr.case_activity_needs_multiple = True
     # Uncomment this to use service types for needs
     #settings.dvr_needs_use_service_type = True
     # Uncomment this to use hierarchical need types
@@ -724,21 +701,20 @@ def config(settings):
     # Uncomment this to show profile pictures in event registration UI only on demand
     #settings.dvr.event_registration_show_picture = False
 
-
-# ----------------------------------------------------------------------------------------
-"""EVENTS"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Events
+    #------------------------------------------------------------------------------------------
     # Uncomment to use the term Disaster instead of Event
     #settings.event.label = "Disaster"
     # Uncomment to not use Incidents under Events
-    settings.event.incident = False
+    #settings.event.incident = False
     # Uncomment to preserve linked Incidents when an Event is deleted
     # NB Changing this setting requires a DB migration
     #settings.event.cascade_delete_incidents = False
     # Make Event Types Hierarchical
-    settings.event.types_hierarchical = True
+    #settings.event.types_hierarchical = True
     # Make Incident Types Hierarchical
-    settings.event.incident_types_hierarchical = True
+    #settings.event.incident_types_hierarchical = True
     # Uncomment to allow the use of Exercise Events
     #settings.event.exercise = True
     # Show tab for Event Dispatch
@@ -756,23 +732,21 @@ def config(settings):
     # Show tab for Incident Teams
     #settings.event.incident_teams_tab = True
 
-
-# ----------------------------------------------------------------------------------------
-"""MEMBERS"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Members
+    #------------------------------------------------------------------------------------------
     # Hide Membership Types
     #settings.member.membership_types = False
     # Show a CV tab for Members
     #settings.member.cv_tab = True
 
-
-# ----------------------------------------------------------------------------------------
-"""PERSONS"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Persons
+    #------------------------------------------------------------------------------------------
     # Uncomment to allow person imports to match even without email addresses
     #settings.pr.import_update_requires_email = False
     # Uncomment this to enable support for third gender
-    #settings.pr.hide_third_gender = False
+    settings.pr.hide_third_gender = True
     # Uncomment to a fuzzy search for duplicates in the new AddPersonWidget2
     #settings.pr.lookup_duplicates = True
     # Uncomment to hide fields in S3AddPersonWidget[2]
@@ -796,20 +770,19 @@ def config(settings):
     # Uncomment this to allow persons to belong to multiple case groups ("households")
     #settings.pr.multiple_case_groups = True
 
-
-# ----------------------------------------------------------------------------------------
-    """ORGANIZATIONS"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Organisations
+    #------------------------------------------------------------------------------------------
     # Uncomment to use an Autocomplete for Organisation lookup fields
     settings.org.autocomplete = True
     # Enable the Organisation Sector field
-    settings.org.sector = True
+    #settings.org.sector = True
     # But hide it from the rheader
-    settings.org.sector_rheader = False
+    #settings.org.sector_rheader = False
     # Enable the use of Organisation Branches
-    settings.org.branches = True
+    #settings.org.branches = True
     # Show branches as tree rather than as table
-    settings.org.branches_tree_view = True
+    #settings.org.branches_tree_view = True
     # Make Facility Types Hierarchical
     settings.org.facility_types_hierarchical = True
     # Enable the use of Organisation Groups & what their name is
@@ -818,11 +791,11 @@ def config(settings):
     # Organisation Location context
     #settings.org.organisation_location_context = "organisation_location.location_id"
     # Make Organisation Types Hierarchical
-    settings.org.organisation_types_hierarchical = True
+    #settings.org.organisation_types_hierarchical = True
     # Make Organisation Types Multiple
     #settings.org.organisation_types_multiple = True
     # Show Organisation Types in the rheader
-    settings.org.organisation_type_rheader = True
+    #settings.org.organisation_type_rheader = True
     # Enable the use of Organisation Regions
     #settings.org.regions = True
     # Make Organisation Regions Hierarchical
@@ -832,7 +805,7 @@ def config(settings):
     # Uncomment to show a Tab for Organisation Resources
     #settings.org.resources_tab = True
     # Make Services Hierarchical
-    settings.org.services_hierarchical = True
+    #settings.org.services_hierarchical = True
     # Set the length of the auto-generated org/site code the default is 10
     #settings.org.site_code_len = 3
     # Set the label for Sites
@@ -868,12 +841,11 @@ def config(settings):
     # Uncomment to make Facility codes unique
     settings.org.facility_code_unique = True
     # Uncomment to use Tags for Organisations, Offices & Facilities
-    settings.org.tags = True
+    #settings.org.tags = True
 
-
-# ----------------------------------------------------------------------------------------
-"""HUMAN RESOURCE MANAGEMENT"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Human Resource Management
+    #------------------------------------------------------------------------------------------
     # Uncomment to change the label for 'Staff'
     #settings.hrm.staff_label = "Contacts"
     # Uncomment to allow Staff & Volunteers to be registered without an email address
@@ -885,7 +857,7 @@ def config(settings):
     # Uncomment to disable the 'Send Message' action button
     #settings.hrm.compose_button = False
     # Uncomment to allow HR records to be deletable rather than just marking them as obsolete
-    #settings.hrm.deletable = True
+    settings.hrm.deletable = True
     # Uncomment to hide Job Titles
     #settings.hrm.use_job_titles = False
     # Uncomment to allow HRs to have multiple Job Titles
@@ -901,11 +873,11 @@ def config(settings):
     # Uncomment to have Volunteers use their Site Address as fallback if they have no Home Address defined
     settings.hrm.location_vol = ("person_id", "site_id")
     # Uncomment this to allow multiple site contacts per site (e.g. if needing a separate contact per sector)
-    #settings.hrm.site_contact_unique = False
+    settings.hrm.site_contact_unique = False
     # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
-    settings.hrm.skill_types = True
+    #settings.hrm.skill_types = True
     # Uncomment to disable Staff experience
-    settings.hrm.staff_experience = False
+    #settings.hrm.staff_experience = False
     # Uncomment to enable Volunteer 'active' field
     # - can also be made a function which is called to calculate the status based on recorded hours
     # Custom label for Organisations in HR module
@@ -918,9 +890,9 @@ def config(settings):
     # Uncomment to disable Volunteer experience
     #settings.hrm.vol_experience = False
     # Uncomment to show the Organisation name in HR represents
-    #settings.hrm.show_organisation = True
+    settings.hrm.show_organisation = True
     # Uncomment to consolidate tabs into a single CV
-    #settings.hrm.cv_tab = True
+    settings.hrm.cv_tab = True
     # Uncomment to consolidate tabs into Staff Record (set to False to hide the tab)
     #settings.hrm.record_tab = "record"
     # Uncomment to disable the use of Volunteer Awards
@@ -932,7 +904,7 @@ def config(settings):
     # Uncomment to auto-create certificates for courses
     #settings.hrm.create_certificates_from_courses = True
     # Uncomment to enable the use of Staff/Volunteer IDs
-    #settings.hrm.use_code = True
+    settings.hrm.use_code = True
     # Uncomment to disable the use of HR Credentials
     #settings.hrm.use_credentials = False
     # Uncomment to disable the use of HR Description
@@ -944,9 +916,9 @@ def config(settings):
     # Uncomment to disable the use of HR Address Tab
     #settings.hrm.use_address = False
     # Uncomment to disable the use of HR Skills
-    #settings.hrm.use_skills = False
+    settings.hrm.use_skills = False
     # Uncomment to enable tracking of staff salaries
-    #settings.hrm.salary = True
+    settings.hrm.salary = True
     # Uncomment to disable the use of HR Teams
     #settings.hrm.teams = False
     # Uncomment to disable the use of HR Trainings
@@ -960,23 +932,22 @@ def config(settings):
     # Uncomment to use activity types in experience record, specify as {"code":"label", ...}
     #settings.hrm.activity_types = {"rdrt": "RDRT Mission"}
 
-
-# ----------------------------------------------------------------------------------------
-"""INVENTORY MANAGEMENT"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Inventory Management
+    #------------------------------------------------------------------------------------------
     #settings.inv.collapse_tabs = False
     # Uncomment to customise the label for Facilities in Inventory Management
     #settings.inv.facility_label = "Facility"
     # Uncomment if you need a simpler (but less accountable) process for managing stock levels
     #settings.inv.direct_stock_edits = True
     # Uncomment to have Warehouse Types be Organisation-dependent
-    settings.inv.org_dependent_warehouse_types = True
+    #settings.inv.org_dependent_warehouse_types = True
     # Uncomment to call Stock Adjustments, 'Stock Counts'
-    settings.inv.stock_count = True
+    #settings.inv.stock_count = True
     # Use the term 'Order' instead of 'Shipment'
     #settings.inv.shipment_name = "order"
     # Uncomment to validate for Unique Warehouse Codes
-    settings.inv.warehouse_code_unique = True
+    #settings.inv.warehouse_code_unique = True
     # Uncomment to not track pack values
     #settings.inv.track_pack_values = False
     #settings.inv.show_mode_of_transport = True
@@ -1012,10 +983,9 @@ def config(settings):
     #        4: T("Surplus")
     #   }
 
-
-# ----------------------------------------------------------------------------------------
-"""REQUEST MANAGEMENT"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Requests Management
+    #------------------------------------------------------------------------------------------
     # Uncomment to disable Inline Forms in Requests module
     #settings.req.inline_forms = False
     # Label for Inventory Requests
@@ -1099,10 +1069,9 @@ def config(settings):
     #    msg_record_deleted = T("Request for Volunteers Canceled"),
     #    msg_list_empty = T("No Requests for Volunteers"))
 
-
-# ----------------------------------------------------------------------------------------
-"""SUPPLY"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Supply
+    #------------------------------------------------------------------------------------------
     # Name of the Default Item Catalog. Do not edit after deployment
     #settings.supply.catalog_default = "Default"
     # Disable the use of Multiple Item Catalogs
@@ -1110,22 +1079,25 @@ def config(settings):
     # Disable the use of Alternative Items
     #settings.supply.use_alt_name = False
 
-
-# ----------------------------------------------------------------------------------------
-"""PROJECTS"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Projects
+    #------------------------------------------------------------------------------------------
     # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
     settings.project.mode_3w = True
     # Uncomment this to use DRR (Disaster Risk Reduction) extensions
     settings.project.mode_drr = True
+    settings.project.locations = True
+    settings.project.goals = True
+    settings.project.outcomes = True
+    settings.project.outputs = True
     # Uncomment this to use settings suitable for detailed Task management
     settings.project.mode_task = True
     # Uncomment this to use link Projects to Events
-    #settings.project.event_projects = True
+    settings.project.event_projects = True
     # Uncomment this to use Activities for Projects & Tasks
     settings.project.activities = True
     # Uncomment this to use link Activities to Events
-    #settings.project.event_activities = True
+    settings.project.event_activities = True
     # Uncomment this to use Activity Types for Activities & Projects
     settings.project.activity_types = True
     # Uncomment this to filter dates in Activities
@@ -1137,19 +1109,11 @@ def config(settings):
     # Uncomment this to use Codes for projects
     settings.project.codes = True
     # Uncomment this to call project locations 'Communities'
-    #settings.project.community = True
+    settings.project.community = True
     # Uncomment this to enable Demographics in 3W projects
-    settings.project.demographics = True
+    #settings.project.demographics = True
     # Uncomment this to enable Hazards in 3W projects
-    settings.project.hazards = True
-    # Uncomment this to enable locations in project
-    settings.project.locations = True
-    # Uncomment this to eneble goals in project
-    settings.project.goals = True
-    # Uncomment this to enable outcomes in projects
-    settings.project.outcomes = True
-    # Uncomment this to enable output in projects
-    settings.project.outputs = True
+    #settings.project.hazards = True
     # Uncomment this to enable Indicators in projects
     settings.project.indicators = True
     # Uncomment this to enable Milestones in projects
@@ -1159,17 +1123,17 @@ def config(settings):
     # Uncomment this to disable Sectors in projects
     #settings.project.sectors = False
     # Uncomment this to enable Programmes in projects
-    settings.project.programmes = True
+    #settings.project.programmes = True
     # Uncomment this to enable Budgets in Programmes
-    settings.project.programme_budget = True
+    #settings.project.programme_budget = True
     # Uncomment this to use Tags in Tasks
-    settings.project.task_tag = True
+    #settings.project.task_tag = True
     # Uncomment this to enable Themes in 3W projects
     settings.project.themes = True
     # Uncomment this to use Theme Percentages for projects
-    settings.project.theme_percentages = True
+    #settings.project.theme_percentages = True
     # Uncomment this to use multiple Budgets per project
-    settings.project.multiple_budgets = True
+    #settings.project.multiple_budgets = True
     # Uncomment this to use multiple Organisations per project
     settings.project.multiple_organisations = True
     # Uncomment this to customise
@@ -1178,7 +1142,7 @@ def config(settings):
         1: T("Lead Implementer"), # T("Host National Society")
         2: T("Partner"), # T("Partner National Society")
         3: T("Donor"),
-        4: T("Customer"), # T("Beneficiary")?
+        4: T("Beneficiary"),
         5: T("Super"), # T("Beneficiary")?
     }
     settings.project.organisation_lead_role = 1
@@ -1189,17 +1153,15 @@ def config(settings):
     # NB Be very cautious about doing this (see docstring in modules/s3cfg.py)
     #settings.project.task_status_opts =
 
-
-# ----------------------------------------------------------------------------------------
-"""INCIDENTS"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Incidents
+    #------------------------------------------------------------------------------------------
     # Uncomment this to use vehicles when responding to Incident Reports
     #settings.irs.vehicle = True
 
-
-# ----------------------------------------------------------------------------------------
-"""TRANSPORT"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Transport
+    #------------------------------------------------------------------------------------------
     # Uncomment to make Airport codes unique
     #settings.transport.airport_code_unique = True
     # Uncomment to make Seaport codes unique
@@ -1207,10 +1169,9 @@ def config(settings):
     # Uncomment to make Heliport codes unique
     #settings.transport.heliport_code_unique = True
 
-
-# ----------------------------------------------------------------------------------------
-"""FILTER MANAGER"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Filter Manager
+    #------------------------------------------------------------------------------------------
     #settings.search.filter_manager = False
 
     # if you want to have videos appearing in /default/video
@@ -1218,10 +1179,9 @@ def config(settings):
     #                                 title = T("Introduction"),
     #                                 video_id = "HR-FtR2XkBU"),]
 
-
-# ----------------------------------------------------------------------------------------
-"""MOBILE FORMS"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Mobile Forms
+    #------------------------------------------------------------------------------------------
     # Configure mobile forms (example), see modules/s3cfg.py for details
     #settings.mobile.forms = [
     #    ("Beneficiaries", "pr_person", {"c": "dvr", "f": "person"}),
@@ -1229,14 +1189,15 @@ def config(settings):
     # Disable mobile forms for dynamic tables:
     #settings.mobile.dynamic_tables = False
 
-
-# ----------------------------------------------------------------------------------------
-"""X FORMS"""
-# ----------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # XForms
+    #------------------------------------------------------------------------------------------
     # Configure xform resources (example)
     #settings.xforms.resources = [("Request", "req_req")]
 
-    # -------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------
+    # Modules
+    #------------------------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # @ToDo: Have the system automatically enable migrate if a module is enabled
     # Modules menu is defined in modules/eden/menu.py
@@ -1360,12 +1321,12 @@ def config(settings):
             restricted = True,
             module_type = 4
         )),
-        #("proc", Storage(
-        #        name_nice = T("Procurement"),
-        #        #description = "Ordering & Purchasing of Goods & Services",
-        #        restricted = True,
-        #        module_type = 10
-        #    )),
+        ("proc", Storage(
+                name_nice = T("Procurement"),
+                #description = "Ordering & Purchasing of Goods & Services",
+                restricted = True,
+                module_type = 10
+        )),
         ("asset", Storage(
             name_nice = T("Assets"),
             #description = "Recording and Assigning Assets",
@@ -1391,12 +1352,12 @@ def config(settings):
             restricted = True,
             module_type = 2
         )),
-        #("survey", Storage(
-        #    name_nice = T("Surveys"),
-        #    #description = "Create, enter, and manage surveys.",
-        #    restricted = True,
-        #    module_type = 5,
-        #)),
+        ("survey", Storage(
+            name_nice = T("Surveys"),
+            #description = "Create, enter, and manage surveys.",
+            restricted = True,
+            module_type = 5,
+        )),
         ("dc", Storage(
            name_nice = T("Assessments"),
            #description = "Data collection tool",
@@ -1404,17 +1365,17 @@ def config(settings):
            module_type = 5
         )),
         ("cr", Storage(
-            name_nice = T("Camps"),
+            name_nice = T("Shelters"),
             #description = "Tracks the location, capacity and breakdown of victims in Shelters",
             restricted = True,
             module_type = 10
         )),
-        #("hms", Storage(
-        #   name_nice = T("Hospitals"),
-        #    #description = "Helps to monitor status of hospitals",
-        #    restricted = True,
-        #    module_type = 10
-        #)),
+        ("hms", Storage(
+            name_nice = T("Hospitals"),
+            #description = "Helps to monitor status of hospitals",
+            restricted = True,
+            module_type = 10
+        )),
         #("disease", Storage(
         #    name_nice = T("Disease Tracking"),
         #    #description = "Helps to track cases and trace contacts in disease outbreaks",
@@ -1439,16 +1400,16 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
-        ("transport", Storage(
-            name_nice = T("Transport"),
-            restricted = True,
-            module_type = 10,
-        )),
+        #("transport", Storage(
+        #    name_nice = T("Transport"),
+        #    restricted = True,
+        #    module_type = 10,
+        #)),
         ("stats", Storage(
             name_nice = T("Statistics"),
             #description = "Manages statistics",
             restricted = True,
-            module_type = None,
+            module_type = 10,
         )),
         ("member", Storage(
             name_nice = T("Members"),
@@ -1471,7 +1432,7 @@ def config(settings):
         # Deprecated: Replaced by event
         #("irs", Storage(
         #    name_nice = T("Incidents"),
-        #   #description = "Incident Reporting System",
+        #    #description = "Incident Reporting System",
         #    restricted = True,
         #    module_type = 10
         #)),
@@ -1512,24 +1473,24 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10
         #)),
-        ("patient", Storage(
-            name_nice = T("Patient Tracking"),
-            #description = "Tracking of Patients",
-            restricted = True,
-            module_type = 10
-        )),
+        #("patient", Storage(
+        #    name_nice = T("Patient Tracking"),
+        #    #description = "Tracking of Patients",
+        #    restricted = True,
+        #    module_type = 10
+        #)),
         #("po", Storage(
         #    name_nice = T("Population Outreach"),
         #    #description = "Population Outreach",
         #    restricted = True,
         #    module_type = 10
         #)),
-        #("security", Storage(
-        #   name_nice = T("Security"),
-        #   #description = "Security Management System",
-        #   restricted = True,
-        #   module_type = 10,
-        #)),
+        ("security", Storage(
+           name_nice = T("Security"),
+           #description = "Security Management System",
+           restricted = True,
+           module_type = 10,
+        )),
         # These are specialist modules
         #("cap", Storage(
         #    name_nice = T("CAP"),
@@ -1577,12 +1538,12 @@ def config(settings):
         #   restricted = False,
         #   module_type = None,
         #)),
-        #("work", Storage(
-        #   name_nice = T("Jobs"),
-        #   #description = "Simple Volunteer Jobs Management",
-        #   restricted = False,
-        #   module_type = None,
-        #)),
+        ("work", Storage(
+           name_nice = T("Jobs"),
+           #description = "Simple Volunteer Jobs Management",
+           restricted = False,
+           module_type = None,
+        )),
     ])
 
 # END =========================================================================
