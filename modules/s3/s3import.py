@@ -2846,8 +2846,7 @@ class S3ImportItem(object):
                     # This is likely to be a modified_on to avoid updating this field, which skipping does just fine too
                     continue
                 data.update({f: data_})
-            data_str = pickle.dumps(data)
-            record.update(data=data_str)
+            record["data"] = pickle.dumps(data)
 
         ritems = []
         for reference in self.references:
@@ -3694,7 +3693,7 @@ class S3ImportJob():
                             #Field("record_id", "integer"),
                             Field("record_uid"),
                             Field("error", "text"),
-                            Field("data", "text"),
+                            Field("data", "blob"),
                             Field("element", "text"),
                             Field("ritems", "list:string"),
                             Field("citems", "list:string"),
