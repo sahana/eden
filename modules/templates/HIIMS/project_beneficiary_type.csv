@@ -1,11 +1,28 @@
-"Name"
-"Individuals"
-"Families/HH"
-"Men"
-"Women"
-"Boys"
-"Girls"
-"Teachers"
-"Pupils"
-"Government Staff"
-"Stakeholder Staff"
+Name,Description,Total
+Family / HH,,
+Person,,
+Adult,,Person
+Children,,Person
+Men,,Adult
+Women,,Adult
+Boys,,Children
+Girls,,Children
+Boys 0-5,,Boys
+Boys 6-12,,Boys
+Boys 13-18,,Boys
+Girls 0-5,,Girls
+Girls 6-12,,Girls
+Girls 13-18,,Girls
+PWD,,Person
+PWD Adult,,PWD
+PWD Children,,PWD
+PWD Men,,PWD Adult
+PWD Women,,PWD Adult
+PWD Boys,,PWD Children
+PWD Girls,,PWD Children
+PWD Boys 0-5,,PWD Boys
+PWD Boys 6-12,,PWD Boys
+PWD Boys 13-18,,PWD Boys
+PWD Girls 0-5,,PWD Girls
+PWD Girls 6-12,,PWD Girls
+PWD Girls 13-18,,PWD Girls

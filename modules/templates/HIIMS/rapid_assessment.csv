@@ -1,0 +1,368 @@
+Template,Section,Section Position,SubSection,SubSection Position,SubSubSection,SubSubSection Position,Question,Question Position,Type,Options,Required,Code,Totals,Grid,Show Hidden,Tooltip
+Rapid Assessment,1. Assessment team information,1,,,,,a) Organizations participating,1,text,,,,,,,
+Rapid Assessment,2. Geographic information,2,,,,,e) Name/Position of Person interviewed,5,text,,,,,,,
+Rapid Assessment,2. Geographic information,2,,,,,f) Contact Details,6,text,,,,,,,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of Camp / Village (if available, even if estimates)",2,,,Grid,1,Grid,,,G332,,"[['Adults','Children (5-18)','Children <5'],['Male','Female','Total','Grand Total']]",,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of Camp / Village (if available, even if estimates)",2,,,Male,2,number,,,RAMaleAdults,,"['G332',1,1]",,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of Camp / Village (if available, even if estimates)",2,,,Female,3,number,,,RAFemaleAdults,,"['G332',1,2]",,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of Camp / Village (if available, even if estimates)",2,,,Total,4,number,,,RAAdults,"['RAMaleAdults','RAFemaleAdults']","['G332',1,3]",,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of Camp / Village (if available, even if estimates)",2,,,Male,5,number,,,RAMaleChildrenOlder,,"['G332',2,1]",,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of Camp / Village (if available, even if estimates)",2,,,Female,6,number,,,RAFemaleChildrenOlder,,"['G332',2,2]",,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of Camp / Village (if available, even if estimates)",2,,,Male,7,number,,,RAMaleChildrenYounger,,"['G332',3,1]",,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of Camp / Village (if available, even if estimates)",2,,,Female,8,number,,,RAFemaleChildrenYounger,,"['G332',3,2]",,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of Camp / Village (if available, even if estimates)",2,,,Total,9,number,,,RAChildren,"['RAMaleChildrenOlder','RAFemaleChildrenOlder','RAMaleChildrenYounger','RAFemaleChildrenYounger']","['G332',2,3]",,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of Camp / Village (if available, even if estimates)",2,,,Grand Total,10,number,,,,"['RAAdults','RAChildren']","['G332',1,4]",,
+Rapid Assessment,3. Demographic data,3,"b) Post event demographic data of Camp / Village (if available, even if estimates)",2,,,x. Total Households,11,number,,,,,,,
+Rapid Assessment,3. Demographic data,3,c),3,i.,1,Have people been forced or obliged to leave their homes or residences as consequence of this event (Internally Displaced People - IDPs)?,1,boolean,,,,,,"['3321','3331','3332','3333','3334','3341','3342','3343','3344','3345','3346','3347','3348','3349','33410','33411','33412','33413','33414','33415','33416','3351']",
+Rapid Assessment,3. Demographic data,3,c),3,ii.,2,Name of Evacuation centre,1,text,,,3321,,,,
+Rapid Assessment,3. Demographic data,3,c),3,"iii. If yes, number of IDPs staying in Designated Evacuation Centres.",3,Families total,1,number,,,3331,,,,
+Rapid Assessment,3. Demographic data,3,c),3,"iii. If yes, number of IDPs staying in Designated Evacuation Centres.",3,Total population,2,number,,,3332,,,,
+Rapid Assessment,3. Demographic data,3,c),3,"iii. If yes, number of IDPs staying in Designated Evacuation Centres.",3,Adults total,3,number,,,3333,,,,
+Rapid Assessment,3. Demographic data,3,c),3,"iii. If yes, number of IDPs staying in Designated Evacuation Centres.",3,Children total,4,number,,,3334,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,persons with severe disability,1,options,"['Yes','No']",,3341,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,how many,2,number,,,3342,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,female headed households,3,options,"['Yes','No']",,3343,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,how many,4,number,,,3344,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,elderly persons,5,options,"['Yes','No']",,3345,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,how many,6,number,,,3346,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,adolescent/children headed households,7,options,"['Yes','No']",,3347,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,how many,8,number,,,3348,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,pregnant women,9,options,"['Yes','No']",,3349,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,<16 yrs,10,number,,,33410,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,16-19 yrs,11,number,,,33411,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,20 yrs,12,number,,,33412,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,lactating mothers,13,options,"['Yes','No']",,33413,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,how many,14,number,,,33414,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,Other special needs,15,options,"['Yes','No']",,33415,,,,
+Rapid Assessment,3. Demographic data,3,"d) Are there IDPs with the following special needs, and if so, how many?",4,,,specify,16,text,,,33416,,,,
+Rapid Assessment,3. Demographic data,3,e),5,,,Are there people staying outside of the Evacuation Centre who have also been displaced?,1,options,"['Yes','No']",,3351,,,,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Grid,1,Grid,,,G336,,"[['Dead (confirmed)','Missing','Injured'],['Male Adult','Female Adult','Total Adult','Male Children','Female Children','Total Children','Grand Total']]",,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Male Adult,2,number,,,RADeadMaleAdults,,"['G336',1,1]",,Confirmed Deaths only
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Female Adult,3,number,,,RADeadFemaleAdults,,"['G336',1,2]",,Confirmed Deaths only
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Adult,4,number,,,RADeadAdults,"['RADeadMaleAdults','RADeadFemaleAdults']","['G336',1,3]",,Confirmed Deaths only
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Male Children,5,number,,,RADeadMaleChildren,,"['G336',1,4]",,Confirmed Deaths only
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Female Children,6,number,,,RADeadFemaleChildren,,"['G336',1,5]",,Confirmed Deaths only
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Children,7,number,,,RADeadChildren,"['RADeadMaleChildren','RADeadFemaleChildren']","['G336',1,6]",,Confirmed Deaths only
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Grand Total,8,number,,,,"['RADeadAdults','RADeadChildren']","['G336',1,7]",,Confirmed Deaths only
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Male Adult,9,number,,,RAMissingMaleAdults,,"['G336',2,1]",,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Female Adult,10,number,,,RAMissingFemaleAdults,,"['G336',2,2]",,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Adult,11,number,,,RAMissingAdults,"['RAMissingMaleAdults','RAMissingFemaleAdults']","['G336',2,3]",,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Male Children,12,number,,,RAMissingMaleChildren,,"['G336',2,4]",,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Female Children,13,number,,,RAMissingFemaleChildren,,"['G336',2,5]",,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Children,14,number,,,RAMissingChildren,"['RAMissingMaleChildren','RAMissingFemaleChildren']","['G336',2,6]",,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Grand Total,15,number,,,,"['RAMissingAdults','RAMissingChildren']","['G336',2,7]",,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Male Adult,16,number,,,RAInjuredMaleAdults,,"['G336',3,1]",,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Female Adult,17,number,,,RAInjuredFemaleAdults,,"['G336',3,2]",,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Injured Adult,18,number,,,RAInjuredAdults,"['RAInjuredMaleAdults','RAInjuredFemaleAdults']","['G336',3,3]",,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Male Children,19,number,,,RAInjuredMaleChildren,,"['G336',3,4]",,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Female Children,20,number,,,RAInjuredFemaleChildren,,"['G336',3,5]",,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Total Children,21,number,,,RAInjuredChildren,"['RAInjuredMaleChildren','RAInjuredFemaleChildren']","['G336',3,6]",,
+Rapid Assessment,3. Demographic data,3,"f) How many people are dead, missing, or injured due to the disaster event?",6,,,Grand Total,22,number,,,,"['RAInjuredAdults','RAInjuredChildren']","['G336',3,7]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,,,i. Has the community received any assistance?,1,boolean,,,,,,"['G44','4411']",
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Grid,1,Grid,,,G44,,"[['Blankets','Cooking Utensils','Clothes','Food','Hygiene Kit(s)','Tarpaulin','Mosquito Nets','Tents','Water','Water Kit(s)','Voucher /Cash','Others'],['Item','When provided (in days since event)','Qty','Unit','Govt','NNGO','INGO','PHL Red Cross','Church','Private Entities','Other']]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Blankets,2,boolean,,,,,"['G44',1,1]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),3,number,,,,,"['G44',1,2]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,4,number,,,,,"['G44',1,3]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,5,text,,,,,"['G44',1,4]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,6,boolean,,,,,"['G44',1,5]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,7,boolean,,,,,"['G44',1,6]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,8,boolean,,,,,"['G44',1,7]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,9,boolean,,,,,"['G44',1,8]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,10,boolean,,,,,"['G44',1,9]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,11,boolean,,,,,"['G44',1,10]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,12,boolean,,,,,"['G44',1,11]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Cooking Utensils,13,boolean,,,,,"['G44',2,1]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),14,number,,,,,"['G44',2,2]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,15,number,,,,,"['G44',2,3]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,16,text,,,,,"['G44',2,4]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,17,boolean,,,,,"['G44',2,5]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,18,boolean,,,,,"['G44',2,6]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,19,boolean,,,,,"['G44',2,7]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,20,boolean,,,,,"['G44',2,8]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,21,boolean,,,,,"['G44',2,9]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,22,boolean,,,,,"['G44',2,10]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,23,boolean,,,,,"['G44',2,11]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Clothes,24,boolean,,,,,"['G44',3,1]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),25,number,,,,,"['G44',3,2]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,26,number,,,,,"['G44',3,3]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,27,text,,,,,"['G44',3,4]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,28,boolean,,,,,"['G44',3,5]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,29,boolean,,,,,"['G44',3,6]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,30,boolean,,,,,"['G44',3,7]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,31,boolean,,,,,"['G44',3,8]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,32,boolean,,,,,"['G44',3,9]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,33,boolean,,,,,"['G44',3,10]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,34,boolean,,,,,"['G44',3,11]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Food,35,boolean,,,,,"['G44',4,1]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),36,number,,,,,"['G44',4,2]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,37,number,,,,,"['G44',4,3]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,38,text,,,,,"['G44',4,4]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,39,boolean,,,,,"['G44',4,5]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,40,boolean,,,,,"['G44',4,6]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,41,boolean,,,,,"['G44',4,7]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,42,boolean,,,,,"['G44',4,8]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,43,boolean,,,,,"['G44',4,9]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,44,boolean,,,,,"['G44',4,10]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,45,boolean,,,,,"['G44',4,11]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Hygiene Kit(s),46,boolean,,,,,"['G44',5,1]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),47,number,,,,,"['G44',5,2]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,48,number,,,,,"['G44',5,3]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,49,text,,,,,"['G44',5,4]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,50,boolean,,,,,"['G44',5,5]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,51,boolean,,,,,"['G44',5,6]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,52,boolean,,,,,"['G44',5,7]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,53,boolean,,,,,"['G44',5,8]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,54,boolean,,,,,"['G44',5,9]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,55,boolean,,,,,"['G44',5,10]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,56,boolean,,,,,"['G44',5,11]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Tarpaulin,57,boolean,,,,,"['G44',6,1]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),58,number,,,,,"['G44',6,2]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,59,number,,,,,"['G44',6,3]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,60,text,,,,,"['G44',6,4]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,61,boolean,,,,,"['G44',6,5]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,62,boolean,,,,,"['G44',6,6]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,63,boolean,,,,,"['G44',6,7]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,64,boolean,,,,,"['G44',6,8]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,65,boolean,,,,,"['G44',6,9]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,66,boolean,,,,,"['G44',6,10]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,67,boolean,,,,,"['G44',6,11]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Mosquito Nets,68,boolean,,,,,"['G44',7,1]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),69,number,,,,,"['G44',7,2]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,70,number,,,,,"['G44',7,3]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,71,text,,,,,"['G44',7,4]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,72,boolean,,,,,"['G44',7,5]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,73,boolean,,,,,"['G44',7,6]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,74,boolean,,,,,"['G44',7,7]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,75,boolean,,,,,"['G44',7,8]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,76,boolean,,,,,"['G44',7,9]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,77,boolean,,,,,"['G44',7,10]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,78,boolean,,,,,"['G44',7,11]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Tents,79,boolean,,,,,"['G44',8,1]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),80,number,,,,,"['G44',8,2]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,81,number,,,,,"['G44',8,3]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,82,text,,,,,"['G44',8,4]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,83,boolean,,,,,"['G44',8,5]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,84,boolean,,,,,"['G44',8,6]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,85,boolean,,,,,"['G44',8,7]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,86,boolean,,,,,"['G44',8,8]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,87,boolean,,,,,"['G44',8,9]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,88,boolean,,,,,"['G44',8,10]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,89,boolean,,,,,"['G44',8,11]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Water,90,boolean,,,,,"['G44',9,1]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),91,number,,,,,"['G44',9,2]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,92,number,,,,,"['G44',9,3]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,93,text,,,,,"['G44',9,4]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,94,boolean,,,,,"['G44',9,5]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,95,boolean,,,,,"['G44',9,6]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,96,boolean,,,,,"['G44',9,7]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,97,boolean,,,,,"['G44',9,8]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,98,boolean,,,,,"['G44',9,9]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,99,boolean,,,,,"['G44',9,10]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,100,boolean,,,,,"['G44',9,11]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Water Kit(s),101,boolean,,,,,"['G44',10,1]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),102,number,,,,,"['G44',10,2]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,103,number,,,,,"['G44',10,3]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,104,text,,,,,"['G44',10,4]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,105,boolean,,,,,"['G44',10,5]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,106,boolean,,,,,"['G44',10,6]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,107,boolean,,,,,"['G44',10,7]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,108,boolean,,,,,"['G44',10,8]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,109,boolean,,,,,"['G44',10,9]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,110,boolean,,,,,"['G44',10,10]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,111,boolean,,,,,"['G44',10,11]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Voucher /Cash,112,boolean,,,,,"['G44',11,1]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),113,number,,,,,"['G44',11,2]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,114,number,,,,,"['G44',11,3]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,115,text,,,,,"['G44',11,4]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,116,boolean,,,,,"['G44',11,5]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,117,boolean,,,,,"['G44',11,6]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,118,boolean,,,,,"['G44',11,7]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,119,boolean,,,,,"['G44',11,8]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,120,boolean,,,,,"['G44',11,9]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,121,boolean,,,,,"['G44',11,10]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,122,boolean,,,,,"['G44',11,11]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Others,123,boolean,,,,,"['G44',12,1]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,When provided (in days since event),124,number,,,,,"['G44',12,2]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Qty,125,number,,,,,"['G44',12,3]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Unit,126,text,,,,,"['G44',12,4]",,
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Govt,127,boolean,,,,,"['G44',12,5]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,NNGO,128,boolean,,,,,"['G44',12,6]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,INGO,129,boolean,,,,,"['G44',12,7]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,PHL Red Cross,130,boolean,,,,,"['G44',12,8]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Church,131,boolean,,,,,"['G44',12,9]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Private Entities,132,boolean,,,,,"['G44',12,10]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Other,133,boolean,,,,,"['G44',12,11]",,Source
+Rapid Assessment,4. Relief Effort/Assistance,4,a),1,"ii. If yes, Kind of assistance provided",1,Specify Others assistance,134,text,,,4411,,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,b),2,,,i.Is there any group which is not receiving any assistance?,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,4. Relief Effort/Assistance,4,b),2,,,"ii.If yes, what groups (indigenous, elderly, vulnerable, GIDAs, etc)?",2,text,,,,,,,
+Rapid Assessment,"5. Shelter (if number only, will need # total houses pre-event for %)",5,a) Number or Percentage of destroyed houses (requires complete reconstruction and demolished),1,,,#,1,number,,,,,,,
+Rapid Assessment,"5. Shelter (if number only, will need # total houses pre-event for %)",5,a) Number or Percentage of destroyed houses (requires complete reconstruction and demolished),1,,,%,2,number,,,,,,,
+Rapid Assessment,"5. Shelter (if number only, will need # total houses pre-event for %)",5,"b) Number or Percentage of severely damaged houses (Walls, roof and column collapsed, hanging wall, etc.)",2,,,#,1,number,,,,,,,
+Rapid Assessment,"5. Shelter (if number only, will need # total houses pre-event for %)",5,"b) Number or Percentage of severely damaged houses (Walls, roof and column collapsed, hanging wall, etc.)",2,,,%,2,number,,,,,,,
+Rapid Assessment,"5. Shelter (if number only, will need # total houses pre-event for %)",5,c) Number or Percentage of partially damaged houses,3,,,#,1,number,,,,,,,
+Rapid Assessment,"5. Shelter (if number only, will need # total houses pre-event for %)",5,c) Number or Percentage of partially damaged houses,3,,,%,2,number,,,,,,,
+Rapid Assessment,6. Food Security,6,a),1,,,Do people have access to food sources in the area?,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,6. Food Security,6,b) What are the main sources of food in the area since the event?,2,,,Household food stocks,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,6. Food Security,6,b) What are the main sources of food in the area since the event?,2,,,Household garden/farm,2,options,"['Yes','No']",,,,,,
+Rapid Assessment,6. Food Security,6,b) What are the main sources of food in the area since the event?,2,,,Local Market,3,options,"['Yes','No']",,,,,,
+Rapid Assessment,6. Food Security,6,b) What are the main sources of food in the area since the event?,2,,,Humanitarian aid from government,4,options,"['Yes','No']",,,,,,
+Rapid Assessment,6. Food Security,6,b) What are the main sources of food in the area since the event?,2,,,Humanitarian aid from NGOs,5,options,"['Yes','No']",,,,,,
+Rapid Assessment,6. Food Security,6,b) What are the main sources of food in the area since the event?,2,,,Others,6,text,,,,,,,
+Rapid Assessment,6. Food Security,6,c),3,,,How long are the available food stocks expected to last? (personal or government stocks),1,options,"['Less than a week', '1 week', '2 weeks', '1 month or more']",,,,,,
+Rapid Assessment,6. Food Security,6,d),4,,,Do people still have access to the local market?,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,6. Food Security,6,"e) If the market is not functional, what are the reasons why people no longer have access to the local market?",5,,,No money to buy foods,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,6. Food Security,6,"e) If the market is not functional, what are the reasons why people no longer have access to the local market?",5,,,Prices of commodities have increased,2,options,"['Yes','No']",,,,,,
+Rapid Assessment,6. Food Security,6,"e) If the market is not functional, what are the reasons why people no longer have access to the local market?",5,,,No available supplies of commodities,3,options,"['Yes','No']",,,,,,
+Rapid Assessment,6. Food Security,6,"e) If the market is not functional, what are the reasons why people no longer have access to the local market?",5,,,Market was destroyed/physically inaccessible,4,options,"['Yes','No']",,,,,,
+Rapid Assessment,6. Food Security,6,"e) If the market is not functional, what are the reasons why people no longer have access to the local market?",5,,,"Others, specify",5,text,,,,,,,
+Rapid Assessment,7. Water Supply,7,a),1,,,"i. Do all affected households have access to enough clean water for washing, drinking and cooking?",1,options,"['Yes','No']",,,,,,
+Rapid Assessment,7. Water Supply,7,a),1,,,"ii. If not, what proportion does not?",2,options,"['0-24%', '25-49%', '50-74%', '75-100%']",,,,,,
+Rapid Assessment,7. Water Supply,7,b),2,,,i. What is the primary water source (protected or safe),1,options,"['Open Well', 'Bore hole/Hand pump', 'Stream/river', 'Storage/collection container', 'Piped water system', 'Other']",,,,,,
+Rapid Assessment,7. Water Supply,7,b),2,,,"If other, specify",2,text,,,,,,,
+Rapid Assessment,7. Water Supply,7,b),2,,,ii. What condition is this water source?,3,options,"['Working', 'Damaged (Repair required for minimum supply)', 'Contaminated (or at risk of contamination)', 'Destroyed', 'Water Turbid', 'Other']",,,,,,
+Rapid Assessment,7. Water Supply,7,c),3,,,"i. If there is an alternate water source, what is it?",1,options,"['Open Well', 'Bore hole/Hand pump', 'Stream/river', 'Storage/collection container', 'Piped water system', 'Others', 'No alternate water source']",,,,,,
+Rapid Assessment,7. Water Supply,7,c),3,,,ii. What condition is this water source?,3,options,"['Working', 'Damaged (Repair required for minimum supply)', 'Contaminated (or at risk of contamination)', 'Destroyed', 'Water Turbid', 'Other']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,a),1,,,i. Do all affected household have access to functioning latrines?,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,a),1,,,"ii. If not, what proportion does have access to functioning latrines?",2,options,"['0-24%', '25-49%', '50-74%', '75-100%']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,a),1,,,iii. What is the main reason for not having access to functioning latrines?,3,options,"['Many latrines destroyed/damaged', 'Few latrines in community pre-event', 'Other']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,a),1,,,"If other, specify",4,text,,,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,b) What personal hygiene and sanitation supplies are needed?,2,,,Body Soap,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,b) What personal hygiene and sanitation supplies are needed?,2,,,Toothpaste/brush,2,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,b) What personal hygiene and sanitation supplies are needed?,2,,,Sanitary cloth/napkins,2,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,b) What personal hygiene and sanitation supplies are needed?,2,,,Laundry soap,2,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,b) What personal hygiene and sanitation supplies are needed?,2,,,Trash bins,3,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,b) What personal hygiene and sanitation supplies are needed?,2,,,Others,4,text,,,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,For evacuation centres/community shelters only,3,c),1,Approximately how many people are using each latrine,1,options,"['1-10', '11-20', '>20']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,For evacuation centres/community shelters only,3,d),2,Are facilities segregated by gender (women/men)?,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,For evacuation centres/community shelters only,3,e),3,Are the facilities appropriate for children?,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,For evacuation centres/community shelters only,3,f) i. What provisions are available at the evacuation centers? (check if present),4,Water,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,For evacuation centres/community shelters only,3,f) i. What provisions are available at the evacuation centers? (check if present),4,Latrines,2,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,For evacuation centres/community shelters only,3,f) i. What provisions are available at the evacuation centers? (check if present),4,Washing area (sanitation),3,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,For evacuation centres/community shelters only,3,f) i. What provisions are available at the evacuation centers? (check if present),4,Laundry area,4,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,For evacuation centres/community shelters only,3,f) i. What provisions are available at the evacuation centers? (check if present),4,"Secure sleeping area (dry, well ventilated)",5,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,For evacuation centres/community shelters only,3,f) ii. Are the provisions/resources sufficient for the number of people there? (check if yes),5,Water,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,For evacuation centres/community shelters only,3,f) ii. Are the provisions/resources sufficient for the number of people there? (check if yes),5,Latrines,2,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,For evacuation centres/community shelters only,3,f) ii. Are the provisions/resources sufficient for the number of people there? (check if yes),5,Washing area (sanitation),3,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,For evacuation centres/community shelters only,3,f) ii. Are the provisions/resources sufficient for the number of people there? (check if yes),5,Laundry area,4,options,"['Yes','No']",,,,,,
+Rapid Assessment,8. Sanitary Facilities,8,For evacuation centres/community shelters only,3,f) ii. Are the provisions/resources sufficient for the number of people there? (check if yes),5,"Secure sleeping area (dry, well ventilated)",5,options,"['Yes','No']",,,,,,
+Rapid Assessment,9. Health,9,a) What health facilities are there in the area?,1,,,BHS,1,options,"['Open and functioning', 'Damaged but functioning', 'Damaged not functioning', 'Completely destroyed']",,,,,,
+Rapid Assessment,9. Health,9,a) What health facilities are there in the area?,1,,,RHU with doctor,2,options,"['Open and functioning', 'Damaged but functioning', 'Damaged not functioning', 'Completely destroyed']",,,,,,
+Rapid Assessment,9. Health,9,a) What health facilities are there in the area?,1,,,RHU without doctor,3,options,"['Open and functioning', 'Damaged but functioning', 'Damaged not functioning', 'Completely destroyed']",,,,,,
+Rapid Assessment,9. Health,9,a) What health facilities are there in the area?,1,,,Hospital,4,options,"['Open and functioning', 'Damaged but functioning', 'Damaged not functioning', 'Completely destroyed']",,,,,,
+Rapid Assessment,9. Health,9,a) What health facilities are there in the area?,1,,,Other,5,options,"['Open and functioning', 'Damaged but functioning', 'Damaged not functioning', 'Completely destroyed']",,,,,,
+Rapid Assessment,9. Health,9,a) What health facilities are there in the area?,1,,,Add name and location for each,6,text,,,,,,,
+Rapid Assessment,9. Health,9,b) What health assistance is being provided?,2,,,Local health clinic,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,9. Health,9,b) What health assistance is being provided?,2,,,Schedule,2,text,,,,,,,Location/time/date of visits
+Rapid Assessment,9. Health,9,b) What health assistance is being provided?,2,,,Medical mission,3,options,"['Yes','No']",,,,,,
+Rapid Assessment,9. Health,9,b) What health assistance is being provided?,2,,,Schedule,4,text,,,,,,,Location/time/date of visits
+Rapid Assessment,9. Health,9,b) What health assistance is being provided?,2,,,Other,5,options,"['Yes','No']",,,,,,
+Rapid Assessment,9. Health,9,b) What health assistance is being provided?,2,,,Schedule,6,text,,,,,,,Location/time/date of visits
+Rapid Assessment,9. Health,9,b) What health assistance is being provided?,2,,,None,7,options,"['Yes','No']",,,,,,
+Rapid Assessment,9. Health,9,c) Have increased levels of the following conditions been noticed since the event?,3,,,Diarrhea,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,9. Health,9,c) Have increased levels of the following conditions been noticed since the event?,3,,,Vomiting,2,options,"['Yes','No']",,,,,,
+Rapid Assessment,9. Health,9,c) Have increased levels of the following conditions been noticed since the event?,3,,,Cough/cold,3,options,"['Yes','No']",,,,,,
+Rapid Assessment,9. Health,9,c) Have increased levels of the following conditions been noticed since the event?,3,,,Trauma/injury,4,options,"['Yes','No']",,,,,,
+Rapid Assessment,9. Health,9,c) Have increased levels of the following conditions been noticed since the event?,3,,,Skin Infection,5,options,"['Yes','No']",,,,,,
+Rapid Assessment,9. Health,9,c) Have increased levels of the following conditions been noticed since the event?,3,,,Dehydration,6,options,"['Yes','No']",,,,,,
+Rapid Assessment,9. Health,9,c) Have increased levels of the following conditions been noticed since the event?,3,,,Others,7,options,"['Yes','No']",,,,,,
+Rapid Assessment,9. Health,9,c) Have increased levels of the following conditions been noticed since the event?,3,,,specify,8,text,,,,,,,
+Rapid Assessment,9. Health,9,d),4,,,"Is the availability of medical assistance and supplies, relative to the population in need?",1,options,"['Adequate', 'Basic', 'Inadequate']",,,,,,
+Rapid Assessment,9. Health,9,e),5,i),1,Have any local health programmes (led by DoH) been disrupted as a consequence of the disaster event?,1,options,"['Yes','No']",,,,,,"e.g. vaccination, etc"
+Rapid Assessment,9. Health,9,e),5,ii),2,"If so, what?",1,text,,,,,,,
+Rapid Assessment,Nutrition,10,,,,,Have infant milk products (e.g. milk formulas) and/or baby bottles/teats been distributed since the emergency/disaster?,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,Nutrition,10,,,,,"If yes, by whom?",2,text,,,,,,,
+Rapid Assessment,Protection/Child Protection,11,a),1,i.,1,Have there been reported cases of separated/unaccompanied children (including orphans)?,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,Protection/Child Protection,11,a),1,ii. If yes how many?,2,Girls,1,number,,,,,,,
+Rapid Assessment,Protection/Child Protection,11,a),1,ii. If yes how many?,2,Boys,2,number,,,,,,,
+Rapid Assessment,Protection/Child Protection,11,a),1,iii.,3,Is there any referral system to support these children?,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,Protection/Child Protection,11,a),1,iv.,4,"If yes, by whom?",1,text,,,,,,,
+Rapid Assessment,Protection/Child Protection,11,a),1,v.,5,"If no, what activities are being done to help them, if any?",1,text,,,,,,,
+Rapid Assessment,Protection/Child Protection,11,b),2,i.,1,Has there been any information (confirmed and unconfirmed) on cases of Gender-Based Violence against children/youth and women?,1,options,"['Yes','No']",,,,,,"e.g. rape, human trafficking, forced prostitution, intimate partner violence/domestic violence, sexual harassment, sexual abuse, verbal or psychosocial or economic abuse, physical abuse"
+Rapid Assessment,Protection/Child Protection,11,b),2,ii. If yes how many?,2,Girls,1,number,,,,,,,
+Rapid Assessment,Protection/Child Protection,11,b),2,ii. If yes how many?,2,Boys,2,number,,,,,,,
+Rapid Assessment,Protection/Child Protection,11,b),2,ii. If yes how many?,2,Women,3,number,,,,,,,
+Rapid Assessment,Protection/Child Protection,11,b),2,iii.,3,Is there any referral system to support these children and women?,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,Protection/Child Protection,11,b),2,iv.,4,"If yes, by whom?",1,text,,,,,,,
+Rapid Assessment,Protection/Child Protection,11,b),2,v.,5,"If no, what activities are being done to help them, if any?",1,text,,,,,,,
+Rapid Assessment,Protection/Child Protection,11,c),3,i.,1,"Has there been any information (confirmed and unconfirmed) on cases of child abuse, labour or trafficking?",1,options,"['Yes','No']",,,,,,
+Rapid Assessment,Protection/Child Protection,11,c),3,ii. If yes how many?,2,Girls,1,number,,,,,,,
+Rapid Assessment,Protection/Child Protection,11,c),3,ii. If yes how many?,2,Boys,2,number,,,,,,,
+Rapid Assessment,Protection/Child Protection,11,c),3,iii.,3,Is there any referral system to support these children?,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,Protection/Child Protection,11,c),3,iv.,4,"If yes, by whom?",1,text,,,,,,,
+Rapid Assessment,Protection/Child Protection,11,c),3,v.,5,"If no, what activities are being done to help them, if any?",1,text,,,,,,,
+Rapid Assessment,Protection/Child Protection,11,d),4,i.,1,Have some children shown extreme behaviour changes that is worrying parents and caregivers?,1,options,"['Yes','No']",,,,,,"for example not eating, not speaking, not sleeping, wetting the bed"
+Rapid Assessment,Protection/Child Protection,11,d),4,ii.,2,Are these widespread or isolated?,2,options,"['Widespread', 'Isolated']",,,,,,
+Rapid Assessment,Protection/Child Protection,11,d),4,iii.,3,"What kind of support and coping mechanisms are available to help them and their carers and community resource people, if any?",3,text,,,,,,,
+Rapid Assessment,Protection/Child Protection,11,e),5,i.,1,"Have any adults shown extreme behaviour changes that could be disruptive forthe community, especially children?",1,options,"['Yes','No']",,,,,,"for example violent behavior, substance misuse, stealing, hateful speech"
+Rapid Assessment,Protection/Child Protection,11,e),5,ii.,2,Are these widespread or isolated?,2,options,"['Widespread', 'Isolated']",,,,,,
+Rapid Assessment,Protection/Child Protection,11,e),5,iii.,3,"What kind of support and coping mechanisms are available to help them or the community, if any?",3,text,,,,,,,
+Rapid Assessment,10. Emergency Education,12,a) What is the condition of education facilities in the area?,1,,,Day Care Centre,1,options,"['Functional, classes running', 'Damaged, but some classes running', 'Damaged, no classes', 'Totally destroyed']",,,,,,
+Rapid Assessment,10. Emergency Education,12,a) What is the condition of education facilities in the area?,1,,,Basic Education,2,options,"['Functional, classes running', 'Damaged, but some classes running', 'Damaged, no classes', 'Totally destroyed']",,,,,,
+Rapid Assessment,10. Emergency Education,12,a) What is the condition of education facilities in the area?,1,,,Secondary School,3,options,"['Functional, classes running', 'Damaged, but some classes running', 'Damaged, no classes', 'Totally destroyed']",,,,,,
+Rapid Assessment,10. Emergency Education,12,a) What is the condition of education facilities in the area?,1,,,Other,4,options,"['Functional, classes running', 'Damaged, but some classes running', 'Damaged, no classes', 'Totally destroyed']",,,,,,
+Rapid Assessment,10. Emergency Education,12,b) What proportion of children/teaching personnel were affected by the disaster and resulting suspension of classes?,2,,,Pre-school children,1,options,"['0%', '25%', '50%', '75%', '100%']",,,,,,
+Rapid Assessment,10. Emergency Education,12,b) What proportion of children/teaching personnel were affected by the disaster and resulting suspension of classes?,2,,,School­children,2,options,"['0%', '25%', '50%', '75%', '100%']",,,,,,
+Rapid Assessment,10. Emergency Education,12,b) What proportion of children/teaching personnel were affected by the disaster and resulting suspension of classes?,2,,,Day care workers,3,options,"['0%', '25%', '50%', '75%', '100%']",,,,,,
+Rapid Assessment,10. Emergency Education,12,b) What proportion of children/teaching personnel were affected by the disaster and resulting suspension of classes?,2,,,Teachers,4,options,"['0%', '25%', '50%', '75%', '100%']",,,,,,
+Rapid Assessment,10. Emergency Education,12,c),3,,,"If school is closed, when will classes resume?",1,options,"['In less than a week', 'after more than week', 'Awaiting news from DepEd']",,,,,,
+Rapid Assessment,10. Emergency Education,12,d) What are the most urgent educational needs right now in the area,4,,,Identify location for classes,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,10. Emergency Education,12,d) What are the most urgent educational needs right now in the area,4,,,Repair of damaged buildings,2,options,"['Yes','No']",,,,,,
+Rapid Assessment,10. Emergency Education,12,d) What are the most urgent educational needs right now in the area,4,,,Replacing educational materials,3,options,"['Yes','No']",,,,,,
+Rapid Assessment,10. Emergency Education,12,d) What are the most urgent educational needs right now in the area,4,,,Replacing children’s school supplies,4,options,"['Yes','No']",,,,,,
+Rapid Assessment,10. Emergency Education,12,d) What are the most urgent educational needs right now in the area,4,,,Replacing teaching supplies/kits,5,options,"['Yes','No']",,,,,,
+Rapid Assessment,10. Emergency Education,12,d) What are the most urgent educational needs right now in the area,4,,,Integrate affected children to other schools,6,options,"['Yes','No']",,,,,,
+Rapid Assessment,10. Emergency Education,12,d) What are the most urgent educational needs right now in the area,4,,,Water & sanitation at learning sites,7,options,"['Yes','No']",,,,,,
+Rapid Assessment,10. Emergency Education,12,d) What are the most urgent educational needs right now in the area,4,,,Others,8,options,"['Yes','No']",,,,,,
+Rapid Assessment,10. Emergency Education,12,d) What are the most urgent educational needs right now in the area,4,,,specify,9,text,,,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,a),1,,,Have electricity services to the area been disrupted?,1,options,"['Yes', 'No', 'Not applicable as no electricity service before event']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,b),2,i. Is there mobile phone and 3G/HSDPA/EDGE/GPRS signal from the Telecoms company?,1,Smart,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,b),2,i. Is there mobile phone and 3G/HSDPA/EDGE/GPRS signal from the Telecoms company?,1,Smart Bro,2,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,b),2,i. Is there mobile phone and 3G/HSDPA/EDGE/GPRS signal from the Telecoms company?,1,Globe,3,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,b),2,i. Is there mobile phone and 3G/HSDPA/EDGE/GPRS signal from the Telecoms company?,1,Globe Tattoo,4,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,b),2,i. Is there mobile phone and 3G/HSDPA/EDGE/GPRS signal from the Telecoms company?,1,Sun,5,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,b),2,i. Is there mobile phone and 3G/HSDPA/EDGE/GPRS signal from the Telecoms company?,1,Sun Broadband,6,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,b),2,ii.,2,"If the primary mobile phone company signal is not working, when is it expected to be restored?",1,text,,,,,,,time/day/week
+Rapid Assessment,11. Emergency Telecoms,13,b),2,iii.,3,Are people able to recharge their mobile phones in the community?,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,c),3,i.,1,Is the landline telephone working in the area?,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,c),3,ii.,2,"If not, expected time/day/week to be restored?",2,text,,,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,d) What are the main information sources people are using since the disaster event to find out about the response?,4,,,Barangay captain or other officials,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,d) What are the main information sources people are using since the disaster event to find out about the response?,4,,,Municipality officials,2,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,d) What are the main information sources people are using since the disaster event to find out about the response?,4,,,Radio,3,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,d) What are the main information sources people are using since the disaster event to find out about the response?,4,,,Newspaper,4,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,d) What are the main information sources people are using since the disaster event to find out about the response?,4,,,TV,5,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,d) What are the main information sources people are using since the disaster event to find out about the response?,4,,,School,6,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,d) What are the main information sources people are using since the disaster event to find out about the response?,4,,,"Neighbours, community",7,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,d) What are the main information sources people are using since the disaster event to find out about the response?,4,,,Others,8,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,e),5,i.,1,Do people generally trust these news sources?,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,e),5,ii.,2,"If no, what information sources do they trust?",2,text,,,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,f) What are the main information needs for the affected people?,6,,,General situation,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,f) What are the main information needs for the affected people?,6,,,Situation at home,2,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,f) What are the main information needs for the affected people?,6,,,Information on family members,3,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,f) What are the main information needs for the affected people?,6,,,What aid is coming,4,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,f) What are the main information needs for the affected people?,6,,,Weather forecast,5,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,f) What are the main information needs for the affected people?,6,,,Health advice,6,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,f) What are the main information needs for the affected people?,6,,,Security information,7,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,f) What are the main information needs for the affected people?,6,,,Other,8,options,"['Yes','No']",,,,,,
+Rapid Assessment,11. Emergency Telecoms,13,f) What are the main information needs for the affected people?,6,,,specify,9,text,,,,,,,
+Rapid Assessment,12. Access,14,a),1,i. Accessibility by road,1,Motorbike only,1,options,"['Yes','No']",,,,,,
+Rapid Assessment,12. Access,14,a),1,i. Accessibility by road,1,Car/minibus,2,options,"['Yes','No']",,,,,,
+Rapid Assessment,12. Access,14,a),1,i. Accessibility by road,1,4WD only,3,options,"['Yes','No']",,,,,,
+Rapid Assessment,12. Access,14,a),1,i. Accessibility by road,1,6 Wheeler Truck,4,options,"['Yes','No']",,,,,,
+Rapid Assessment,12. Access,14,a),1,i. Accessibility by road,1,10 Wheeler Truck,5,options,"['Yes','No']",,,,,,
+Rapid Assessment,12. Access,14,a),1,i. Accessibility by road,1,No road access,6,options,"['Yes','No']",,,,,,
+Rapid Assessment,12. Access,14,a),1,ii. Accessibility by water,2,Passenger boat (small bangka),1,options,"['Yes','No']",,,,,,
+Rapid Assessment,12. Access,14,a),1,ii. Accessibility by water,2,Cargo boat (big bangka),2,options,"['Yes','No']",,,,,,
+Rapid Assessment,12. Access,14,a),1,ii. Accessibility by water,2,Water access not applicable,3,options,"['Yes','No']",,,,,,
+Rapid Assessment,12. Access,14,b),2,Travel time to affected area from nearest SC office,1,i. Office,1,text,,,,,,,
+Rapid Assessment,12. Access,14,b),2,Travel time to affected area from nearest SC office,1,ii. Distance,2,text,,,,,,,
+Rapid Assessment,12. Access,14,b),2,Travel time to affected area from nearest SC office,1,iii. Time,3,text,,,,,,,
+Rapid Assessment,12. Access,14,b),2,Travel time to affected area from nearest SC office,1,iv. Vehicle type,4,text,,,,,,,
+Rapid Assessment,12. Access,14,b),2,v.,2,Nearest airstrip,1,text,,,,,,,
+Rapid Assessment,12. Access,14,b),2,v.,2,status,2,options,"['Functioning', 'Under repair', 'Out of action']",,,,,,
+Rapid Assessment,12. Access,14,b),2,vi.,3,Nearest seaport,1,text,,,,,,,
+Rapid Assessment,12. Access,14,b),2,vi.,3,status,2,options,"['Functioning', 'Under repair', 'Out of action']",,,,,,
+Rapid Assessment,12. Access,14,c) Best estimate when earliest the transport infrastructure can recover to pre-disaster level,3,,,i. Roads,1,number,,,,,,,days
+Rapid Assessment,12. Access,14,c) Best estimate when earliest the transport infrastructure can recover to pre-disaster level,3,,,ii. Railway,2,number,,,,,,,days
+Rapid Assessment,12. Access,14,c) Best estimate when earliest the transport infrastructure can recover to pre-disaster level,3,,,iii. Air-transporter,3,number,,,,,,,days
+Rapid Assessment,12. Access,14,c) Best estimate when earliest the transport infrastructure can recover to pre-disaster level,3,,,iv. Other,4,text,,,,,,,
+Rapid Assessment,Comments,15,,,,,Any other comments,1,paragraph,,,,,,,
