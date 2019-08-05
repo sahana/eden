@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from gluon import *
-from s3 import ICON, S3CustomController, S3Method
+from s3 import json, ICON, S3CustomController, S3Method
+
+# Compact JSON encoding
+SEPARATORS = (",", ":")
 
 THEME = "UCCE"
 
@@ -406,6 +409,49 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
     return item
 
 # =============================================================================
+class dc_QuestionCreate(S3Method):
+    """
+        Create a Question
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "question":
+            if r.http == "POST" and r.representation == "json":
+                # AJAX method
+                # Action the request
+                table = r.table
+                if not current.auth.s3_has_permission("create", table):
+                    r.unauthorised()
+                # Create record
+                post_vars_get = r.post_vars.get
+                field_type = post_vars_get("type")
+                template_id = post_vars_get("template_id")
+                if field_type and template_id:
+                    question_id = table.insert(template_id = template_id,
+                                               field_type = field_type,
+                                               )
+                    # Results (Empty Message so we don't get it shown to User)
+                    current.response.headers["Content-Type"] = "application/json"
+                    output = current.xml.json_message(True, 200, "",
+                                                      question_id = question_id)
+                else:
+                    r.error(400, current.T("Invalid Parameters"))
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
+
+# =============================================================================
 class dc_TargetActivate(S3Method):
     """
         Activate a Survey
@@ -613,11 +659,11 @@ class dc_TargetName(S3Method):
                     db(table.id == target_id).update(name = name)
                     ttable = current.s3db.dc_template
                     db(ttable.id == r.record.template_id).update(name = name)
-
-                # Message
-                current.response.headers["Content-Type"] = "application/json"
-                output = current.xml.json_message(True, 200, current.T("Survey Renamed"))
-
+                    # Message
+                    current.response.headers["Content-Type"] = "application/json"
+                    output = current.xml.json_message(True, 200, current.T("Survey Renamed"))
+                else:
+                    r.error(400, current.T("Invalid Parameters"))
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
         else:
@@ -649,9 +695,10 @@ class dc_TemplateEditor(S3Method):
                 s3db = current.s3db
 
                 record = r.record
+                record_id = record.id
 
                 ttable = s3db.dc_target
-                target = db(ttable.template_id == record.id).select(ttable.id,
+                target = db(ttable.template_id == record_id).select(ttable.id,
                                                                     ttable.status,
                                                                     limitby = (0, 1)
                                                                     ).first()
@@ -801,30 +848,26 @@ class dc_TemplateEditor(S3Method):
                                              _class="medium-1 columns",
                                              ),
                                          _class="row draggable",
-                                         _id="section-break",
+                                         _id="break",
                                          ),
                                      )
 
-                section_break = DIV(DIV(SPAN(T("PAGE 1 (1 ELEMENT)")),
-                                        _class="section-break medium-11 columns",
-                                        ),
-                                    DIV(ICON("down"),
-                                        _class="medium-1 columns",
-                                        ),
-                                    _class="row",
-                                    )
-
-                layout = DIV(SPAN(T("Drag and drop questions here")),
-                             _id="survey-layout",
-                             )
+                hidden_input = INPUT(_type = "hidden",
+                                     _value = json.dumps(record.layout, separators=SEPARATORS),
+                                     _id = "survey-layout",
+                                     )
+                hidden_input["_data-id"] = record_id
+                layout = DIV(hidden_input)
 
                 # Inject JS
-                current.response.s3.scripts.append("/%s/static/themes/UCCE/js/template_editor.js" % r.application)
+                appname = r.application
+                scripts_append = current.response.s3.scripts.append
+                scripts_append("/%s/static/themes/UCCE/js/s3.ui.template.js" % appname)
+                scripts_append("/%s/static/themes/UCCE/js/template_editor.js" % appname)
 
                 S3CustomController._view(THEME, "template_editor.html")
                 output = {"question_types": question_types,
                           "header": header,
-                          "section_break": section_break,
                           "layout": layout,
                           }
 

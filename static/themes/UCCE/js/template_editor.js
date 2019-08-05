@@ -15,6 +15,7 @@ $(document).ready(function(){
         ajaxMethod({
             'url': S3.Ap.concat('/dc/target/') + recordID + '/name.json',
             'type': 'POST',
+            // $.searchS3 defaults to processData: false
             'data': JSON.stringify({name: name}),
             'dataType': 'json',
             'success': function(/* data */) {
@@ -32,19 +33,12 @@ $(document).ready(function(){
         });
     });
 
-    // Drag'n'Drop
+    // Drag ('n'Drop handled in surveyLayout())
     $('.draggable').draggable({
         revert: true,
-        revertDuration: 200
-    });
-    $('#survey-layout').droppable({
-        drop: function(event, ui) {
-            // @ToDo: Open QuestionEditorWidget with correct options for type
-            var qtype = ui.draggable[0].id;
-        }
+        revertDuration: 250
     });
 
-    var instructions = function(){
-        
-    }
+    // Initialise the Template Editor Widget
+    $('#survey-layout').surveyLayout();
 });

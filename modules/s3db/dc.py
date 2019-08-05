@@ -210,7 +210,7 @@ class DataCollectionTemplateModel(S3Model):
                      Field("code",
                            label = T("Code"),
                            requires = IS_EMPTY_OR(
-                                        # Only really needs to be unique per Template
+                                        # @ToDo: Only really needs to be unique per Template
                                         IS_NOT_IN_DB(db, "dc_question.code")
                                         ),
                            comment = DIV(_class="tooltip",

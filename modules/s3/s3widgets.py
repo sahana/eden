@@ -8474,6 +8474,13 @@ class S3QuestionEditorWidget(FormWidget):
     """
         A Question Editor widget for DC
         Client-side JS in s3.ui.question.js
+
+        Currently unused.
+        - replace with simple DIV + Hidden IINPUT & build UI client-side?
+            . less load on server
+            . DRYer (no need to read/extend settings in 2 places)
+            . faster for user (faster download and hence time before interaction)
+        - for now the replacement is in UCCE as styled to it's Theme
     """
 
     # -------------------------------------------------------------------------

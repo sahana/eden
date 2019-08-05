@@ -356,6 +356,20 @@ def config(settings):
 
     settings.customise_dc_question_resource = customise_dc_question_resource
 
+    # -----------------------------------------------------------------------------
+    def customise_dc_question_controller(**attr):
+
+        # Custom Methods
+        from templates.UCCE.controllers import dc_QuestionCreate
+
+        current.s3db.set_method("dc", "question",
+                                method = "create_json",
+                                action = dc_QuestionCreate())
+
+        return attr
+
+    settings.customise_dc_question_controller = customise_dc_question_controller
+
     # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
 
