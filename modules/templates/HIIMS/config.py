@@ -12,6 +12,9 @@ def config(settings):
 
     T = current.T
 
+    settings.base.system_name = T("Humanity & Inclusion Information Management System")
+    settings.base.system_name_short = T("HI-IMS")
+
     #----------------------------------------------------------------------------------------
     # Pre-Populate
     #----------------------------------------------------------------------------------------
@@ -31,6 +34,7 @@ def config(settings):
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "default"
+    settings.ui.menu_logo = "/%s/static/themes/HIIMS/img/logo.png" % current.request.application
 
     # Enable Guided Tours
     settings.base.guided_tour = True
@@ -221,7 +225,7 @@ def config(settings):
     # Size of the Embedded Map
     # Change this if-required for your theme
     # NB API can override this in specific modules
-    #settings.gis.map_height = 600
+    settings.gis.map_height = 800
     #settings.gis.map_width = 1000
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
@@ -1086,9 +1090,13 @@ def config(settings):
     settings.project.mode_3w = True
     # Uncomment this to use DRR (Disaster Risk Reduction) extensions
     settings.project.mode_drr = True
+    # Uncomment  this to use locations in project
     settings.project.locations = True
+    # Uncomment this to use goals in project
     settings.project.goals = True
+    # Uncomment this to use outcomes in project
     settings.project.outcomes = True
+    # Uncommetn this to use outputs in project
     settings.project.outputs = True
     # Uncomment this to use settings suitable for detailed Task management
     settings.project.mode_task = True
@@ -1113,7 +1121,7 @@ def config(settings):
     # Uncomment this to enable Demographics in 3W projects
     #settings.project.demographics = True
     # Uncomment this to enable Hazards in 3W projects
-    #settings.project.hazards = True
+    settings.project.hazards = True
     # Uncomment this to enable Indicators in projects
     settings.project.indicators = True
     # Uncomment this to enable Milestones in projects
@@ -1121,7 +1129,7 @@ def config(settings):
     # Uncomment this to use Projects for Activities & Tasks
     settings.project.projects = True
     # Uncomment this to disable Sectors in projects
-    #settings.project.sectors = False
+    settings.project.sectors = False
     # Uncomment this to enable Programmes in projects
     #settings.project.programmes = True
     # Uncomment this to enable Budgets in Programmes
@@ -1143,7 +1151,6 @@ def config(settings):
         2: T("Partner"), # T("Partner National Society")
         3: T("Donor"),
         4: T("Beneficiary"),
-        5: T("Super"), # T("Beneficiary")?
     }
     settings.project.organisation_lead_role = 1
     # Uncomment to customise the list of options for the Priority of a Task.
@@ -1158,6 +1165,8 @@ def config(settings):
     #------------------------------------------------------------------------------------------
     # Uncomment this to use vehicles when responding to Incident Reports
     #settings.irs.vehicle = True
+    """@testing function if working"""
+    settings.irs.locations = True
 
     # -----------------------------------------------------------------------------------------
     # Transport
@@ -1290,25 +1299,25 @@ def config(settings):
             restricted = True,
             module_type = 2,
         )),
-        ("cms", Storage(
-            name_nice = T("Content Management"),
-            #description = "Content Management System",
-            restricted = True,
-            module_type = 10,
-        )),
+        #("cms", Storage(
+        #    name_nice = T("Content Management"),
+        #    #description = "Content Management System",
+        #    restricted = True,
+        #    module_type = 10,
+        #)),
         ("doc", Storage(
             name_nice = T("Documents"),
             #description = "A library of digital resources, such as photos, documents and reports",
             restricted = True,
             module_type = 10,
         )),
-        ("msg", Storage(
-            name_nice = T("Messaging"),
-            #description = "Sends & Receives Alerts via Email & SMS",
-            restricted = True,
-            # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
-            module_type = None,
-        )),
+        #("msg", Storage(
+        #    name_nice = T("Messaging"),
+        #    #description = "Sends & Receives Alerts via Email & SMS",
+        #    restricted = True,
+        #    # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
+        #    module_type = None,
+        #)),
         ("supply", Storage(
             name_nice = T("Supply Chain Management"),
             #description = "Used within Inventory Management, Request Management and Asset Management",
@@ -1352,12 +1361,12 @@ def config(settings):
             restricted = True,
             module_type = 2
         )),
-        ("survey", Storage(
-            name_nice = T("Surveys"),
-            #description = "Create, enter, and manage surveys.",
-            restricted = True,
-            module_type = 5,
-        )),
+        #("survey", Storage(
+        #    name_nice = T("Surveys"),
+        #    #description = "Create, enter, and manage surveys.",
+        #    restricted = True,
+        #    module_type = 5,
+        #)),
         ("dc", Storage(
            name_nice = T("Assessments"),
            #description = "Data collection tool",
@@ -1365,17 +1374,17 @@ def config(settings):
            module_type = 5
         )),
         ("cr", Storage(
-            name_nice = T("Shelters"),
+            name_nice = T("Camps"),
             #description = "Tracks the location, capacity and breakdown of victims in Shelters",
             restricted = True,
             module_type = 10
         )),
-        ("hms", Storage(
-            name_nice = T("Hospitals"),
-            #description = "Helps to monitor status of hospitals",
-            restricted = True,
-            module_type = 10
-        )),
+        #("hms", Storage(
+        #    name_nice = T("Hospitals"),
+        #    #description = "Helps to monitor status of hospitals",
+        #   restricted = True,
+        #    module_type = 10
+        #)),
         #("disease", Storage(
         #    name_nice = T("Disease Tracking"),
         #    #description = "Helps to track cases and trace contacts in disease outbreaks",
@@ -1395,7 +1404,7 @@ def config(settings):
             module_type = 10,
         )),
         ("event", Storage(
-            name_nice = T("Events"),
+            name_nice = T("Incidents"),
             #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
             restricted = True,
             module_type = 10,
@@ -1411,12 +1420,12 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
-        ("member", Storage(
-            name_nice = T("Members"),
-            #description = "Membership Management System",
-            restricted = True,
-            module_type = 10,
-        )),
+        #("member", Storage(
+        #    name_nice = T("Members"),
+        #    #description = "Membership Management System",
+        #    restricted = True,
+        #    module_type = 10,
+        #)),
         ("budget", Storage(
             name_nice = T("Budgeting Module"),
             #description = "Allows a Budget to be drawn up",
@@ -1538,12 +1547,12 @@ def config(settings):
         #   restricted = False,
         #   module_type = None,
         #)),
-        ("work", Storage(
-           name_nice = T("Jobs"),
-           #description = "Simple Volunteer Jobs Management",
-           restricted = False,
-           module_type = None,
-        )),
+        #("work", Storage(
+        #   name_nice = T("Jobs"),
+        #   #description = "Simple Volunteer Jobs Management",
+        #   restricted = False,
+        #   module_type = None,
+        #)),
     ])
 
 # END =========================================================================
