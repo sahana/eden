@@ -452,6 +452,51 @@ class dc_QuestionCreate(S3Method):
         return output
 
 # =============================================================================
+class dc_QuestionSave(S3Method):
+    """
+        Save a Question
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "question":
+            if r.http == "POST" and r.representation == "json":
+                # AJAX method
+                # Action the request
+                table = r.table
+                record_id = r.id
+                if not current.auth.s3_has_permission("update", table, record_id=record_id):
+                    r.unauthorised()
+                # Update Question
+                post_vars_get = r.post_vars.get
+                name = post_vars_get("name")
+                if name:
+                    mandatory = post_vars_get("mandatory")
+                    settings = json.loads(post_vars_get("settings"))
+                    current.db(table.id == record_id).update(name = name,
+                                                             require_not_empty = mandatory,
+                                                             settings = settings,
+                                                             )
+                    # Results (Empty Message so we don't get it shown to User)
+                    current.response.headers["Content-Type"] = "application/json"
+                    output = current.xml.json_message(True, 200, "")
+                else:
+                    r.error(400, current.T("Invalid Parameters"))
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
+
+# =============================================================================
 class dc_TargetActivate(S3Method):
     """
         Activate a Survey
@@ -853,10 +898,11 @@ class dc_TemplateEditor(S3Method):
                                      )
 
                 hidden_input = INPUT(_type = "hidden",
-                                     _value = json.dumps(record.layout, separators=SEPARATORS),
                                      _id = "survey-layout",
                                      )
                 hidden_input["_data-id"] = record_id
+                if record.layout is not None:
+                    hidden_input["_value"] = json.dumps(record.layout, separators=SEPARATORS)
                 layout = DIV(hidden_input)
 
                 # Inject JS
@@ -871,6 +917,45 @@ class dc_TemplateEditor(S3Method):
                           "layout": layout,
                           }
 
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
+
+# =============================================================================
+class dc_TemplateSave(S3Method):
+    """
+        Save a Survey
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "template":
+            if r.http == "POST" and r.representation == "json":
+                # AJAX method
+                # Action the request
+                table = r.table
+                record_id = r.id
+                if not current.auth.s3_has_permission("update", table, record_id=record_id):
+                    r.unauthorised()
+                # Update Layout
+                layout = r.post_vars.get("layout")
+                if layout:
+                    current.db(table.id == record_id).update(layout = layout)
+                    # Results (Empty Message so we don't get it shown to User)
+                    current.response.headers["Content-Type"] = "application/json"
+                    output = current.xml.json_message(True, 200, "")
+                else:
+                    r.error(400, current.T("Invalid Parameters"))
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
         else:

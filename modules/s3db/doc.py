@@ -282,7 +282,7 @@ class S3DocumentLibrary(S3Model):
                            represent = doc_image_represent,
                            requires = IS_EMPTY_OR(
                                         IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)),
-                                        # Distingish from prepop
+                                        # Distinguish from prepop
                                         null = "",
                                       ),
                            # upload folder needs to be visible to the download() function as well as the upload
@@ -841,7 +841,7 @@ class S3DataCardModel(S3Model):
                                 length = current.MAX_FILENAME_LENGTH,
                                 represent = doc_image_represent,
                                 requires = IS_EMPTY_OR(IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)),
-                                                       # Distingish from prepop
+                                                       # Distinguish from prepop
                                                        null = "",
                                                        ),
                                 uploadfolder = uploadfolder,

@@ -4,8 +4,10 @@
 (function($, undefined) {
     "use strict";
     var surveyID = 0,
+        images = {}, // Store position -> label for images to pipe (Questions with Images & Heatmap regions)
         pages = {}, // Store page -> position
         pageElements = {}, // Store page -> #elements
+        questions = {}, // Store question # (in form) -> position
         types = {
             'text': 1,
             'number': 2,
@@ -48,7 +50,7 @@
             this.fieldname = fieldname;
 
             this.recordID = el.data('id');
-            this.data = el.val();
+            this.data = null; // Gets populated by _deserialize()
 
             // Use $.searchS3 if available
             if ($.searchS3 !== undefined) {
@@ -84,7 +86,7 @@
                     'data': data,
                     'dataType': 'json',
                     'success': function(data) {
-                        self._addQuestion(position, page, type, data['question_id']);
+                        self._addQuestion(position, page, type, data.question_id);
                     },
                     'error': function(jqXHR, textStatus, errorThrown) {
                         var msg;
@@ -104,32 +106,70 @@
           */
         _addQuestion: function(position, page, type, questionID) {
 
+            // Update Data
             if (type == 'instructions') {
-                var idHtml = '';
+                this.data[position] = {
+                    type: 'instructions',
+                    do: {text: ''},
+                    say: {text: ''},
+               };
             } else {
-                var idHtml = ' data-id="' + questionID + '"';
+                this.data[position] = {
+                    type: 'question',
+                    id: questionID
+                };
+            }
+            // Save Template
+            this.save();
+
+            var idHtml; // declare outside if/else as otherwise JS compiler always processes both branches
+            if (type == 'instructions') {
+                idHtml = '';
+            } else {
+                var questionNumber = Object.keys(questions).length + 1;
+                questions[questionNumber] = position;
+                idHtml = ' data-id="' + questionID + '"';
+                var mandatory = '<div class="row"><input id="mandatory-' + position + '"type="checkbox" class="fleft"><label>Make question mandatory</label></div>';
+                if (type != 'heatmap') {
+                    var imageOptions = ''; // @ToDo: Read <option>s from images dict
+                    var imageHtml = '<div class="row"><label>Add graphic</label><input type="file" accept="image/png, image/jpeg" class="fleft"><label class="fleft">or pipe question image:</label><select class="fleft"><option value="">select question</option>' + imageOptions + '</select><a>Delete</a></div>';
+                }
             }
 
             // Build the Question HTML
             var question = '<div class="thumbnail dl-item" id="question-' + position + '" data-page="' + page + '"' + idHtml + '><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="fa fa-copy"> </i></a><a><i class="fa fa-trash"> </i></a><i class="fa fa-arrows-v"> </i></div></div>';
 
-            //var selector = '#' + fieldname,
-            var editTab;
+            var editTab,
+                formElements;
 
             switch(type) {
 
                 case 'instructions':
-                    editTab = '<div class="media"></div>';
+                    editTab = '<div class="media"><h2>Data collector instructions</h2><label>What to do</label><input id="do-' + position + '" type="text" size=100 placeholder="Type what instructor should do"><label>What to say</label><input id="say-' + position + '" type="text" size=100 placeholder="Type what instructor should say"></div>';
+                    formElements = '#question-' + position + ' input';
+                    break;
                 case 'text':
-                    editTab = '<div class="media"></div>';
+                    editTab = '<div class="media"><h2>Text box</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + position + '" type="text" size=100 placeholder="type question"></div>' + mandatory + imageHtml;
+                    formElements = '#question-' + position + ' input, #question-' + position + ' select';
+                    break;
                 case 'number':
-                    editTab = '<div class="media"></div>';
+                    // @ToDo: Validation of correct input format
+                    var answer = '<div class="row"><h2>Answer</h2><label>Restrict input to:</label><input id="restrict-' + position + '" type="text" placeholder="specific input"></div>';
+                    editTab = '<div class="media"><h2>Number question</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + position + '"type="text" size=100 placeholder="type question"></div>' + mandatory + imageHtml + answer;
+                    formElements = '#question-' + position + ' input, #question-' + position + ' select';
+                    break;
                 case 'multichoice':
-                    editTab = '<div class="media"></div>';
+                    editTab = '<div class="media"><h2>Multiple choice question</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + position + '"type="text" size=100 placeholder="type question"></div>' + mandatory + imageHtml;
+                    formElements = '#question-' + position + ' input, #question-' + position + ' select';
+                    break;
                 case 'likert':
-                    editTab = '<div class="media"></div>';
+                    editTab = '<div class="media"><h2>Likert-scale</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + position + '"type="text" size=100 placeholder="type question"></div>' + mandatory + imageHtml;
+                    formElements = '#question-' + position + ' input, #question-' + position + ' select';
+                    break;
                 case 'heatmap':
-                    editTab = '<div class="media"></div>';
+                    editTab = '<div class="media"><h2>Heatmap</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + position + '"type="text" size=100 placeholder="type question"></div>' + mandatory;
+                    formElements = '#question-' + position + ' input';
+                    break;
             }
 
             question += editTab;
@@ -138,13 +178,29 @@
             // Place before droppable
             $('#survey-droppable-' + position).before(question);
             // Update the position of the droppable
-            var newPosition = position + 1
+            var newPosition = position + 1;
             $('#survey-droppable-' + position).attr('id', 'survey-droppable-' + newPosition);
+
             // Update the elements on the section
             pageElements[page]++;
             var pagePosition = pages[page];
             $('#section-break-' + pagePosition + ' > span').html('PAGE ' + page + ' (' + pageElements[page] + ' ELEMENTS)');
 
+            // Change Handlers
+            var ns = this.eventNamespace,
+                self = this;
+            $(formElements).on('change' + ns, function(/* event */) {
+                if (type == 'instructions') {
+                    // Update Data
+                    self.data[position].do.text = $('#do-' + position).val();
+                    self.data[position].say.text = $('#say-' + position).val();
+                    // Save Template
+                    self.save();
+                } else {
+                    // Save Question
+                    self.saveQuestion(position, type, questionID);
+                }
+            });
         },
 
         /**
@@ -159,11 +215,13 @@
                 // Place before droppable
                 $('#survey-droppable-' + position).before(sectionBreak);
                 // Update the position of the droppable
-                var newPosition = position + 1
+                var newPosition = position + 1;
                 $('#survey-droppable-' + position).attr('id', 'survey-droppable-' + newPosition);
                 // Update the page of the droppable
                 $('#survey-droppable-' + newPosition).data('page', page);
                 // @ToDo: Roll-up previous sections
+                // Update Data
+                this.data[position] = {type: 'break'};
             } else {
                 // 1st section break
                 $(this.element).parent().append(sectionBreak);
@@ -204,18 +262,16 @@
 
         /**
          * Ajax-reload the data and refresh all widget elements
+         * @ToDo: Complete if-required
          */
         reload: function() {
 
-            // Reload data and refresh
-            var self = this;
-
-            // Ajax URL
-            var ajaxURL = this.options.ajaxURL + this.recordID + '.json';
+            var self = this,
+                ajaxURL = this.options.ajaxURL + this.recordID + '.json';
 
             this.ajaxMethod({
                 'url': ajaxURL,
-                'type': 'POST',
+                'type': 'GET',
                 'dataType': 'json',
                 'success': function(data) {
                     self.input.val(JSON.stringify(data));
@@ -247,13 +303,107 @@
 
             // Add an initial droppable
             this.droppable(1, 1);
+            
+            if (this.data) {
+                // @ToDo: Handle opening existing surveys
+            }
 
-            this._serialize();
+            //this._serialize();
             this._bindEvents();
         },
 
         /**
+         * Ajax-update the Question
+         */
+        saveQuestion: function(position, type, questionID) {
+
+            var name = $('#name-' + position).val();
+
+            // name is required
+            if (name) {
+
+                var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/update_json.json';
+
+                var data = {
+                    name: name,
+                    mandatory: $('#mandatory-' + position).prop('checked')
+                };
+                if (type == 'number') {
+                    var rawValue = $('#restrict-' + position).val();
+                    if (rawValue) {
+                        var parts = rawValue.split('-'),
+                            min = parts[0],
+                            max = parts[1];
+                        data.settings = {
+                            requires: {
+                                isIntInRange: {
+                                    min: min,
+                                    max: max
+                                }
+                            }
+                        };
+                    }
+                }
+            }
+
+            this.ajaxMethod({
+                'url': ajaxURL,
+                'type': 'POST',
+                // $.searchS3 defaults to processData: false
+                'data': JSON.stringify(data),
+                'dataType': 'json',
+                'success': function(/* data */) {
+                    // Nothing needed here
+                },
+                'error': function(jqXHR, textStatus, errorThrown) {
+                    var msg;
+                    if (errorThrown == 'UNAUTHORIZED') {
+                        msg = i18n.gis_requires_login;
+                    } else {
+                        msg = jqXHR.responseText;
+                    }
+                    console.log(msg);
+                }
+            });
+
+        },
+
+        /**
+         * Ajax-update the Template
+         */
+        save: function() {
+
+            var ajaxURL = this.options.ajaxURL + this.recordID + '/update_json.json';
+
+            // Encode this.data as JSON and write into real input
+            //this._serialize();
+
+            this.ajaxMethod({
+                'url': ajaxURL,
+                'type': 'POST',
+                // $.searchS3 defaults to processData: false
+                'data': JSON.stringify({layout: this.data}),
+                'dataType': 'json',
+                'success': function(/* data */) {
+                    // Nothing needed here
+                },
+                'error': function(jqXHR, textStatus, errorThrown) {
+                    var msg;
+                    if (errorThrown == 'UNAUTHORIZED') {
+                        msg = i18n.gis_requires_login;
+                    } else {
+                        msg = jqXHR.responseText;
+                    }
+                    console.log(msg);
+                }
+            });
+
+        },
+
+        /**
          * Encode this.data as JSON and write into real input
+         *
+         * (unused)
          *
          * @returns {JSON} the JSON data
          */
@@ -276,26 +426,6 @@
             this.data = JSON.parse(value);
             return this.data;
 
-        },
-
-        /**
-         * Collect Data from all the input fields
-         */
-        _collectData: function(inputObj) {
-
-            var selector = '#' + inputObj.id,
-                value = $(selector).val(),
-                name = inputObj.id.substr(18);
-
-            // For input type - checkbox
-            // true => checkbox checked
-            // false => empty checkbox
-            if ($(selector).is(':checkbox')) {
-                value = $(selector).prop('checked').toString();
-            }
-
-            this.data[name] = value;
-            this._serialize();
         },
 
         /**

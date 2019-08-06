@@ -361,10 +361,15 @@ def config(settings):
 
         # Custom Methods
         from templates.UCCE.controllers import dc_QuestionCreate
+        from templates.UCCE.controllers import dc_QuestionSave
 
-        current.s3db.set_method("dc", "question",
-                                method = "create_json",
-                                action = dc_QuestionCreate())
+        set_method = current.s3db.set_method
+        set_method("dc", "question",
+                   method = "create_json",
+                   action = dc_QuestionCreate())
+        set_method("dc", "question",
+                   method = "update_json",
+                   action = dc_QuestionSave())
 
         return attr
 
@@ -492,10 +497,16 @@ def config(settings):
 
         # Custom Methods
         from templates.UCCE.controllers import dc_TemplateEditor
+        from templates.UCCE.controllers import dc_TemplateSave
 
-        s3db.set_method("dc", "template",
-                        method = "editor",
-                        action = dc_TemplateEditor())
+        set_method = s3db.set_method
+        set_method("dc", "template",
+                   method = "editor",
+                   action = dc_TemplateEditor())
+
+        set_method("dc", "template",
+                   method = "update_json",
+                   action = dc_TemplateSave())
 
         attr["rheader"] = ucce_rheader
 

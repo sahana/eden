@@ -245,6 +245,12 @@ class DataCollectionTemplateModel(S3Model):
                      #                                      ),
                      #                    ),
                      #      ),
+                     # Field used by UCCE:
+                     Field("settings", "json",
+                           label = T("Settings"),
+                           requires = IS_EMPTY_OR(IS_JSONS3()),
+                           ),
+                     # Field used by SCPHIMS:
                      Field("grid", "json",
                            label = T("Grid"),
                            requires = IS_EMPTY_OR(IS_JSONS3()),
@@ -255,6 +261,7 @@ class DataCollectionTemplateModel(S3Model):
                                                              ),
                                          ),
                            ),
+                     # Field used by SCPHIMS:
                      Field("totals", "json",
                            label = T("Totals"),
                            requires = IS_EMPTY_OR(IS_JSONS3()),
@@ -264,6 +271,7 @@ class DataCollectionTemplateModel(S3Model):
                                                            ),
                                          ),
                            ),
+                     # Field used by SCPHIMS:
                      Field("show_hidden", "json",
                            label = T("Show Hidden"),
                            requires = IS_EMPTY_OR(IS_JSONS3()),
@@ -290,7 +298,7 @@ class DataCollectionTemplateModel(S3Model):
                            represent = self.doc_image_represent,
                            requires = IS_EMPTY_OR(
                                         IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)),
-                                        # Distingish from prepop
+                                        # Distinguish from prepop
                                         null = "",
                                       ),
                            # upload folder needs to be visible to the download() function as well as the upload
