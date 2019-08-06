@@ -5,6 +5,12 @@
     "use strict";
     var surveyID = 0,
         images = {}, // Store position -> label for images to pipe (Questions with Images & Heatmap regions)
+        likert_options = {
+            '1': ['Strongly Disagree', 'Disagree', 'Undecided', 'Agree', 'Strongly Agree'],
+            '2': ['Very unsatisfied', 'Unsatisfied', 'Neutral', 'Satisfied', 'Very satisfied'],
+            '3': ['Very dissatisfied', 'Dissatisfied', 'Neutral', 'Satisfied', 'Very satisfied'],
+            '4': ['Pain', 'Neutral', 'No Pain']
+        },
         pages = {}, // Store page -> position
         pageElements = {}, // Store page -> #elements
         questions = {}, // Store question # (in form) -> position
@@ -122,53 +128,59 @@
             // Save Template
             this.save();
 
-            var idHtml; // declare outside if/else as otherwise JS compiler always processes both branches
+            // Build the Question HTML
+            var question,
+                editTab,
+                formElements;
+
             if (type == 'instructions') {
-                idHtml = '';
+                question = '<div class="thumbnail dl-item" id="instruction-' + position + '" data-page="' + page + '"><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="fa fa-copy"> </i></a><a><i class="fa fa-trash"> </i></a><i class="fa fa-arrows-v"> </i></div></div>';
             } else {
+                question = '<div class="thumbnail dl-item" id="question-' + questionID + '" data-page="' + page + '"><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="fa fa-copy"> </i></a><a><i class="fa fa-trash"> </i></a><i class="fa fa-arrows-v"> </i></div></div>';
                 var questionNumber = Object.keys(questions).length + 1;
                 questions[questionNumber] = position;
-                idHtml = ' data-id="' + questionID + '"';
-                var mandatory = '<div class="row"><input id="mandatory-' + position + '"type="checkbox" class="fleft"><label>Make question mandatory</label></div>';
+                var mandatory = '<div class="row"><input id="mandatory-' + questionID + '"type="checkbox" class="fleft"><label>Make question mandatory</label></div>';
                 if (type != 'heatmap') {
                     var imageOptions = ''; // @ToDo: Read <option>s from images dict
                     var imageHtml = '<div class="row"><label>Add graphic</label><input type="file" accept="image/png, image/jpeg" class="fleft"><label class="fleft">or pipe question image:</label><select class="fleft"><option value="">select question</option>' + imageOptions + '</select><a>Delete</a></div>';
                 }
             }
 
-            // Build the Question HTML
-            var question = '<div class="thumbnail dl-item" id="question-' + position + '" data-page="' + page + '"' + idHtml + '><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="fa fa-copy"> </i></a><a><i class="fa fa-trash"> </i></a><i class="fa fa-arrows-v"> </i></div></div>';
-
-            var editTab,
-                formElements;
-
             switch(type) {
 
                 case 'instructions':
                     editTab = '<div class="media"><h2>Data collector instructions</h2><label>What to do</label><input id="do-' + position + '" type="text" size=100 placeholder="Type what instructor should do"><label>What to say</label><input id="say-' + position + '" type="text" size=100 placeholder="Type what instructor should say"></div>';
-                    formElements = '#question-' + position + ' input';
+                    formElements = '#instruction-' + position + ' input';
                     break;
                 case 'text':
-                    editTab = '<div class="media"><h2>Text box</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + position + '" type="text" size=100 placeholder="type question"></div>' + mandatory + imageHtml;
-                    formElements = '#question-' + position + ' input, #question-' + position + ' select';
+                    editTab = '<div class="media"><h2>Text box</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '" type="text" size=100 placeholder="type question"></div>' + mandatory + imageHtml;
+                    formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     break;
                 case 'number':
-                    // @ToDo: Validation of correct input format
-                    var answer = '<div class="row"><h2>Answer</h2><label>Restrict input to:</label><input id="restrict-' + position + '" type="text" placeholder="specific input"></div>';
-                    editTab = '<div class="media"><h2>Number question</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + position + '"type="text" size=100 placeholder="type question"></div>' + mandatory + imageHtml + answer;
-                    formElements = '#question-' + position + ' input, #question-' + position + ' select';
+                    // @ToDo: Validation of correct input format for restrict
+                    var answer = '<div class="row"><h2>Answer</h2><label>Restrict input to:</label><input id="restrict-' + questionID + '" type="text" placeholder="specific input"></div>';
+                    editTab = '<div class="media"><h2>Number question</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question"></div>' + mandatory + imageHtml + answer;
+                    formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     break;
                 case 'multichoice':
-                    editTab = '<div class="media"><h2>Multiple choice question</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + position + '"type="text" size=100 placeholder="type question"></div>' + mandatory + imageHtml;
-                    formElements = '#question-' + position + ' input, #question-' + position + ' select';
+                    var answer = '<div class="row"><h2>Answer</h2><label>Choices</label><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice"><i class="fa fa-minus-circle"> </i><i class="fa fa-plus-circle"> </i></div>' +
+                                 '<div class="row"><input id="other-' + questionID + '" type="checkbox"><label>Add \'other field\'</label></div>' + 
+                                 '<div class="row"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" placeholder="Other (please specify)" disabled></div>' + 
+                                 '<div class="row"><input id="multiple-' + questionID + '" type="checkbox"><label>Allow multiple responses</label></div>' +
+                                 '<div class="row"><label class="fleft">Maximum No. of responses:</label><i class="fa fa-minus-circle"> </i> 1 <i class="fa fa-plus-circle"> </i></div>';
+                    editTab = '<div class="media"><h2>Multiple choice question</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question"></div>' + mandatory + imageHtml + answer;
+                    formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     break;
                 case 'likert':
-                    editTab = '<div class="media"><h2>Likert-scale</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + position + '"type="text" size=100 placeholder="type question"></div>' + mandatory + imageHtml;
-                    formElements = '#question-' + position + ' input, #question-' + position + ' select';
+                    var scaleOptions = '<option value="1">Agreement (Disagree - Agree)</option><option value="2">Satisfaction (Smiley scale)</option><option value="3">Satisfaction (Dissatisfied - Satisfied)</option><option value="4">Pain scale (3 point)</option>';
+                    var answer = '<div class="row"><h2>Answer</h2><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please select a scale</option>' + scaleOptions + '</select></div>';
+                    editTab = '<div class="media"><h2>Likert-scale</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question"></div>' + mandatory + imageHtml + answer;
+                    formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     break;
                 case 'heatmap':
-                    editTab = '<div class="media"><h2>Heatmap</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + position + '"type="text" size=100 placeholder="type question"></div>' + mandatory;
-                    formElements = '#question-' + position + ' input';
+                    var image = '<div class="row"><h2>Image</h2><input type="file" accept="image/png, image/jpeg" class="fleft"><h3>Number of clicks allowed:</h3><i class="fa fa-minus-circle"> </i> 1 <i class="fa fa-plus-circle"> </i><h3>Tap/click regions:</h3><a class="button tiny">Add region</a><input id="region-' + position + '-1" type="text" placeholder="enter label" disabled></div>';
+                    editTab = '<div class="media"><h2>Heatmap</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question"></div>' + mandatory + image;
+                    formElements = '#question-' + questionID + ' input';
                     break;
             }
 
@@ -191,6 +203,8 @@
                 self = this;
             $(formElements).on('change' + ns, function(/* event */) {
                 if (type == 'instructions') {
+                    // Can't trust original position as it may have changed
+                    var current_position = parseInt(this.id.split('-')[1]);
                     // Update Data
                     self.data[position].do.text = $('#do-' + position).val();
                     self.data[position].say.text = $('#say-' + position).val();
@@ -198,7 +212,7 @@
                     self.save();
                 } else {
                     // Save Question
-                    self.saveQuestion(position, type, questionID);
+                    self.saveQuestion(type, questionID);
                 }
             });
         },
@@ -210,7 +224,7 @@
             page++;
             pages[page] = position;
             pageElements[page] = 0;
-            var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-' + position + '"><span>PAGE ' + page + ' (0 ELEMENTS)</span></div><div class="medium-1 columns"><i class="fa fa-caret-down"> </i></div></div>';
+            var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-' + position + '"><span>PAGE ' + page + ' (0 ELEMENTS)</span></div><div class="medium-1 columns"><i class="fa fa-times-circle"> </i><i class="fa fa-chevron-circle-down"> </i></div></div>';
             if (position) {
                 // Place before droppable
                 $('#survey-droppable-' + position).before(sectionBreak);
@@ -315,35 +329,53 @@
         /**
          * Ajax-update the Question
          */
-        saveQuestion: function(position, type, questionID) {
+        saveQuestion: function(type, questionID) {
 
-            var name = $('#name-' + position).val();
+            var name = $('#name-' + questionID).val();
 
-            // name is required
-            if (name) {
+            if (!name) {
+                // name is required to save
+                return;
+            }
 
-                var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/update_json.json';
+            var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/update_json.json';
 
-                var data = {
-                    name: name,
-                    mandatory: $('#mandatory-' + position).prop('checked')
-                };
-                if (type == 'number') {
-                    var rawValue = $('#restrict-' + position).val();
-                    if (rawValue) {
-                        var parts = rawValue.split('-'),
-                            min = parts[0],
-                            max = parts[1];
-                        data.settings = {
-                            requires: {
-                                isIntInRange: {
-                                    min: min,
-                                    max: max
-                                }
+            var data = {
+                name: name,
+                mandatory: $('#mandatory-' + questionID).prop('checked')
+            };
+
+            switch(type) {
+
+            case 'text':
+                // Nothing needed here
+                break;
+            case 'number':
+                var rawValue = $('#restrict-' + questionID).val();
+                if (rawValue) {
+                    var parts = rawValue.split('-'),
+                        min = parts[0],
+                        max = parts[1];
+                    data.settings = {
+                        requires: {
+                            isIntInRange: {
+                                min: min,
+                                max: max
                             }
-                        };
-                    }
+                        }
+                    };
                 }
+                break;
+            case 'multichoice':
+                break;
+            case 'likert':
+                var scale = $('#scale-' + questionID).val();
+                if(scale) {
+                    data.options = likert_options[scale];
+                }
+                break;
+            case 'heatmap':
+                break;
             }
 
             this.ajaxMethod({
@@ -365,7 +397,6 @@
                     console.log(msg);
                 }
             });
-
         },
 
         /**

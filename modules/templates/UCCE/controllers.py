@@ -479,9 +479,11 @@ class dc_QuestionSave(S3Method):
                 name = post_vars_get("name")
                 if name:
                     mandatory = post_vars_get("mandatory")
+                    options = json.loads(post_vars_get("options"))
                     settings = json.loads(post_vars_get("settings"))
                     current.db(table.id == record_id).update(name = name,
                                                              require_not_empty = mandatory,
+                                                             options = options,
                                                              settings = settings,
                                                              )
                     # Results (Empty Message so we don't get it shown to User)
