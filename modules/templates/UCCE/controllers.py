@@ -898,6 +898,9 @@ class dc_TemplateEditor(S3Method):
                                          _id="break",
                                          ),
                                      )
+                upload_btn = A(T("Upload translation"),
+                               _class="button",
+                               )
 
                 hidden_input = INPUT(_type = "hidden",
                                      _id = "survey-layout",
@@ -915,6 +918,7 @@ class dc_TemplateEditor(S3Method):
 
                 S3CustomController._view(THEME, "template_editor.html")
                 output = {"question_types": question_types,
+                          "upload_btn": upload_btn,
                           "header": header,
                           "layout": layout,
                           }
