@@ -35,6 +35,7 @@ from gluon import current
 from gluon.languages import read_dict, write_dict
 from gluon.storage import Storage
 
+from s3compat import StringIO, pickle
 from .s3fields import S3ReusableField
 
 """
@@ -985,19 +986,8 @@ class Strings(object):
                                    "%s.py" % lang_code)
 
         data = read_dict(w2pfilename)
-        #try:
-        #    # Python 2.7
-        #    # - won't even compile
-        #    data = {k: v for k, v in data.iteritems() if k != v}
-        #except:
-        # Python 2.6
-        new_data = {}
-        for k, v in data.iteritems():
-            if k != v:
-                new_data[k] = v
-        data = new_data
 
-        write_dict(w2pfilename, data)
+        write_dict(w2pfilename, {k: v for k, v in data.items() if k != v})
 
     # ---------------------------------------------------------------------
     def export_file(self, langfile, modlist, filelist, filetype, all_template_flag):
@@ -1226,10 +1216,9 @@ class Strings(object):
 
         if option == "m":
             # Merge strings with existing .py file
-            keys = data.keys()
             olddata = read_dict(w2pfilename)
             for s in olddata:
-                if s not in keys:
+                if s not in data:
                     data[s] = olddata[s]
 
         write_dict(w2pfilename, data)
@@ -1242,10 +1231,6 @@ class Strings(object):
             location, original string and translated string as columns
         """
 
-        try:
-            from cStringIO import StringIO    # Faster, where available
-        except:
-            from StringIO import StringIO
         import xlwt
 
         from gluon.contenttype import contenttype
@@ -1387,10 +1372,6 @@ class Pootle(object):
 
         import requests
         import zipfile
-        try:
-            from cStringIO import StringIO    # Faster, where available
-        except:
-            from StringIO import StringIO
         from subprocess import call
         from tempfile import NamedTemporaryFile
 
@@ -1548,11 +1529,6 @@ class TranslateReportStatus(object):
             Create master file of strings and their distribution in modules
         """
 
-        try:
-            import cPickle as pickle
-        except:
-            import pickle
-
         # Instantiate the translateAPI
         api = TranslateAPI()
 
@@ -1619,11 +1595,6 @@ class TranslateReportStatus(object):
             @ToDo: Generate fresh .py files with all relevant strings for this
                     (since we don't store untranslated strings)
         """
-
-        try:
-            import cPickle as pickle
-        except:
-            import pickle
 
         base_dir = current.request.folder
 

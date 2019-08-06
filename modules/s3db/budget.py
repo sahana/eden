@@ -1764,7 +1764,7 @@ class budget_CostItemRepresent(S3Represent):
             fields.insert(0, table[keyname])
 
             # Extract instance rows
-            query = (table[keyname].belongs(types[instance_type].keys()))
+            query = (table[keyname].belongs(set(types[instance_type].keys())))
             rows = db(query).select(*fields)
             self.queries += 1
 

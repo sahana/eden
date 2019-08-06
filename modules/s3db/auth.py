@@ -30,6 +30,7 @@
 __all__ = ("AuthDomainApproverModel",
            "AuthUserOptionsModel",
            "AuthConsentModel",
+           "AuthMasterKeyModel",
            "auth_Consent",
            "auth_user_options_get_osm"
            )
@@ -456,6 +457,52 @@ class AuthConsentModel(S3Model):
         db(query).update(expires_on = today)
 
 # =============================================================================
+class AuthMasterKeyModel(S3Model):
+    """
+        Model to store Master Keys
+        - used for Authentication from Mobile App to e.g. Surveys
+    """
+
+    names = ("auth_masterkey",
+             "auth_masterkey_id",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # Master Keys
+        #
+        tablename = "auth_masterkey"
+        self.define_table(tablename,
+                          Field("name", length=254, unique=True,
+                                #label = T("Master Key"),
+                                requires = IS_LENGTH(254),
+                                ),
+                          # Which 'dummy' user this master key links to:
+                          Field("user_id", current.auth.settings.table_user),
+                          *s3_meta_fields())
+
+        represent = S3Represent(lookup=tablename)
+
+        masterkey_id = S3ReusableField("masterkey_id", "reference %s" % tablename,
+                                       #label = T("Master Key"),
+                                       ondelete = "CASCADE",
+                                       represent = represent,
+                                       requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(current.db, "auth_masterkey.id",
+                                                              represent,
+                                                              )),
+                                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"auth_masterkey_id": masterkey_id,
+                }
+
+# =============================================================================
 class auth_Consent(object):
     """ Helper class to track consent """
 
@@ -641,7 +688,7 @@ class auth_Consent(object):
             error = invalid
         else:
             try:
-                option_ids = set(v[0] for v in parsed.values())
+                option_ids = {v[0] for v in parsed.values()}
             except (TypeError, IndexError):
                 error = invalid
             else:
@@ -748,11 +795,11 @@ class auth_Consent(object):
         ttable = s3db.auth_processing_type
         otable = s3db.auth_consent_option
 
-        option_fields = set(["id", "validity_period"]) | set(hash_fields)
+        option_fields = {"id", "validity_period"} | set(hash_fields)
         fields = [ttable.code] + [otable[fn] for fn in option_fields]
 
         join = ttable.on(ttable.id == otable.type_id)
-        query = (ttable.code.belongs(parsed.keys())) & \
+        query = (ttable.code.belongs(set(parsed.keys()))) & \
                 (otable.obsolete == False) & \
                 (otable.deleted == False)
         rows = db(query).select(join=join, *fields)

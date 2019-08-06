@@ -30,7 +30,6 @@
 import datetime
 import json
 import sys
-import urllib2
 
 try:
     from lxml import etree
@@ -40,9 +39,10 @@ except ImportError:
 
 from gluon import current
 
+from s3compat import HTTPError, URLError, urllib_quote
 from ..s3datetime import s3_encode_iso_datetime
 from ..s3validators import JSONERRORS
-from eden import S3SyncAdapter as S3SyncEdenAdapter
+from .eden import S3SyncAdapter as S3SyncEdenAdapter
 
 # =============================================================================
 class S3SyncAdapter(S3SyncEdenAdapter):
@@ -100,9 +100,8 @@ class S3SyncAdapter(S3SyncEdenAdapter):
             codes = set(dataset.code for dataset in datasets)
 
         # Determine the necessary updates
-        from urllib import quote
         current_tasks = "%s/sync/task.xml?~.dataset_id$code=%s" % \
-                        (base_url, quote(",".join(codes)))
+                        (base_url, urllib_quote(",".join(codes)))
         updates = [{"tablename": "sync_task",
                     "url": current_tasks,
                     "strategy": ("create", "update"),
@@ -238,7 +237,7 @@ class S3SyncAdapter(S3SyncEdenAdapter):
         opener = self._http_opener(url)
         try:
             f = opener.open(url)
-        except urllib2.HTTPError as e:
+        except HTTPError as e:
             # HTTP status (remote error)
             result = log.ERROR
             update["remote"] = True
@@ -269,7 +268,7 @@ class S3SyncAdapter(S3SyncEdenAdapter):
             # Prepend HTTP status code
             error = "[%s] %s" % (e.code, message)
 
-        except urllib2.URLError as e:
+        except URLError as e:
             # URL Error (network error)
             result = log.ERROR
             update["remote"] = True

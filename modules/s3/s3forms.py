@@ -30,6 +30,8 @@
 __all__ = ("S3SQLCustomForm",
            "S3SQLDefaultForm",
            "S3SQLDummyField",
+           "S3SQLInlineInstruction",
+           "S3SQLSectionBreak",
            "S3SQLVirtualField",
            "S3SQLSubFormLayout",
            "S3SQLVerticalSubFormLayout",
@@ -47,6 +49,7 @@ from gluon.sqlhtml import StringWidget
 from gluon.tools import callback
 from gluon.validators import Validator
 
+from s3compat import basestring, unicodeT, xrange
 from s3dal import Field, original_tablename
 from .s3query import FS
 from .s3utils import s3_mark_required, s3_store_last_record_id, s3_str, s3_validate
@@ -265,7 +268,7 @@ class S3SQLForm(object):
                            )
 
         form_rows = iter(form[0])
-        tr = form_rows.next()
+        tr = next(form_rows)
         i = 0
         while tr:
             # @ToDo: We need a better way of working than this!
@@ -300,7 +303,7 @@ class S3SQLForm(object):
                 headings = subheadings.get(f)
                 if not headings:
                     try:
-                        tr = form_rows.next()
+                        tr = next(form_rows)
                     except StopIteration:
                         break
                     else:
@@ -318,9 +321,9 @@ class S3SQLForm(object):
                     tr.attributes.update(_class="%s after_subheading" % tr.attributes["_class"])
                     for _i in range(0, inserted):
                         # Iterate over the rows we just created
-                        tr = form_rows.next()
+                        tr = next(form_rows)
             try:
-                tr = form_rows.next()
+                tr = next(form_rows)
             except StopIteration:
                 break
             else:
@@ -1787,6 +1790,7 @@ class S3SQLDummyField(S3SQLFormElement):
         A Dummy Field
 
         A simple DIV which can then be acted upon with JavaScript
+        - used by dc_question Grids
     """
 
     # -------------------------------------------------------------------------
@@ -1828,6 +1832,131 @@ class S3SQLDummyField(S3SQLFormElement):
 
         return DIV(_class="s3-dummy-field",
                    )
+
+# =============================================================================
+class S3SQLSectionBreak(S3SQLFormElement):
+    """
+        A Section Break
+
+        A simple DIV which can then be acted upon with JavaScript &/or Styled
+        - used by dc_template.layout
+    """
+
+    # -------------------------------------------------------------------------
+    def __init__(self):
+        """
+            Constructor to define the form element, to be extended
+            in subclass.
+        """
+
+        super(S3SQLSectionBreak, self).__init__(None)
+
+    # -------------------------------------------------------------------------
+    def resolve(self, resource):
+        """
+            Method to resolve this form element against the calling resource.
+
+            @param resource: the resource
+            @return: a tuple
+                        (
+                            subtable alias (or None for main table),
+                            original field name,
+                            Field instance for the form renderer
+                        )
+        """
+
+        selector = ""
+
+        field = Field(selector,
+                      default = "",
+                      label = "",
+                      widget = self,
+                      )
+
+        return None, selector, field
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attributes):
+        """
+            Widget renderer for the input field. To be implemented in
+            subclass (if required) and to be set as widget=self for the
+            field returned by the resolve()-method of this form element.
+
+            @param field: the input field
+            @param value: the value to populate the widget
+            @param attributes: attributes for the widget
+            @return: the widget for this form element as HTML helper
+        """
+
+        return DIV(_class="s3-section-break",
+                   )
+
+# =============================================================================
+class S3SQLInlineInstruction(S3SQLFormElement):
+    """
+        Inline Instructions
+
+        A simple DIV which can then be acted upon with JavaScript &/or Styled
+        - used by dc_template.layout
+    """
+
+    # -------------------------------------------------------------------------
+    def __init__(self, do, say, **options):
+        """
+            Constructor to define the form element, to be extended
+            in subclass.
+
+            @param do: What to Do
+            @param say: What to Say
+        """
+
+        super(S3SQLInlineInstruction, self).__init__(None)
+
+        self.do = do
+        self.say = say
+
+    # -------------------------------------------------------------------------
+    def resolve(self, resource):
+        """
+            Method to resolve this form element against the calling resource.
+
+            @param resource: the resource
+            @return: a tuple
+                        (
+                            subtable alias (or None for main table),
+                            original field name,
+                            Field instance for the form renderer
+                        )
+        """
+
+        selector = ""
+
+        field = Field(selector,
+                      default = "",
+                      label = "",
+                      widget = self,
+                      )
+
+        return None, selector, field
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attributes):
+        """
+            Widget renderer for the input field. To be implemented in
+            subclass (if required) and to be set as widget=self for the
+            field returned by the resolve()-method of this form element.
+
+            @param field: the input field
+            @param value: the value to populate the widget
+            @param attributes: attributes for the widget
+            @return: the widget for this form element as HTML helper
+        """
+
+        element = DIV(_class="s3-inline-instructions",
+                      )
+        element["data-do"] = self.do
+        element["data-say"] = self.say
+        return element
 
 # =============================================================================
 class S3SQLSubForm(S3SQLFormElement):
@@ -2985,7 +3114,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
                 if not delete:
                     # Get the values
-                    for f, d in item.iteritems():
+                    for f, d in item.items():
                         if f[0] != "_" and d and isinstance(d, dict):
 
                             field = table[f]
@@ -3307,8 +3436,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     data[idxname] = filename
                 else:
                     value = item[fname]["value"]
-                    if type(value) is unicode:
-                        value = value.encode("utf-8")
+                    if type(value) is unicodeT:
+                        value = s3_str(value)
                     widget = formfield.widget
                     if isinstance(widget, S3Selector):
                         # Use the widget parser to get at the selected ID
@@ -3749,7 +3878,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                 opts = self.get_options()
                 if zero is None:
                     # Remove the empty option
-                    opts = dict((k, v) for k, v in opts.items() if k != "")
+                    opts = {k: v for k, v in opts.items() if k != ""}
                 requires = IS_IN_SET(opts,
                                      multiple=multiple,
                                      zero=zero,
@@ -3759,9 +3888,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             dummy_field.requires = requires
 
         # Helper to extract widget options
-        widget_opts = lambda keys: dict((k, v)
-                                        for k, v in options.items()
-                                        if k in keys)
+        widget_opts = lambda keys: {k: v for k, v in options.items() if k in keys}
 
         # Instantiate the widget
         if widget == "groupedopts" or not widget and "cols" in options:
@@ -3965,8 +4092,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             result = represent.bulk([value])
 
         # Sort them
-        labels = result.values()
-        labels.sort()
+        labels = sorted(result.values())
 
         if self.options.get("render_list"):
             if value is None or value == [None]:

@@ -877,27 +877,27 @@ def alert():
 
             parameter_table = s3db.cap_info_parameter
             if alert.template_id and not \
-               (set([irow.id for irow in irows]) == set([irow_.template_info_id for irow_ in irows_])):
+               ({irow.id for irow in irows} == {irow_.template_info_id for irow_ in irows_}):
 
                 parameter_query_ = (parameter_table.alert_id == alert.template_id) & \
                                    (parameter_table.deleted != True)
 
                 # Clone all cap_info entries from the alert template
                 # If already created dont copy again
-                unwanted_fields = set(("deleted_rb",
-                                       "owned_by_user",
-                                       "approved_by",
-                                       "mci",
-                                       "deleted",
-                                       "modified_on",
-                                       "realm_entity",
-                                       "uuid",
-                                       "created_on",
-                                       "deleted_fk",
-                                       # Don't copy this: make an
-                                       # Ajax call instead
-                                       "template_settings",
-                                       ))
+                unwanted_fields = {"deleted_rb",
+                                   "owned_by_user",
+                                   "approved_by",
+                                   "mci",
+                                   "deleted",
+                                   "modified_on",
+                                   "realm_entity",
+                                   "uuid",
+                                   "created_on",
+                                   "deleted_fk",
+                                   # Don't copy this: make an
+                                   # Ajax call instead
+                                   "template_settings",
+                                   }
                 fields = [itable[f] for f in itable.fields
                           if f not in unwanted_fields]
 
@@ -1272,7 +1272,7 @@ def template():
         return True
     s3.prep = prep
 
-    def postp(r,output):
+    def postp(r, output):
 
         if isinstance(output, dict):
             form = output.get("form")

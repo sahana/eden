@@ -77,7 +77,7 @@ class S3PerformanceTests(unittest.TestCase):
                       for row in db(table.id < i).select(table.id,
                                                          table.first_name,
                                                          table.last_name)]
-                     for i in xrange(n)]
+                     for i in range(n)]
         mlt = timeit.Timer(x).timeit(number = 10) * (100/n)
         info("db.select = %s ms/query (=%s q/sec)" % (mlt, int(1000/mlt)))
 
@@ -247,7 +247,7 @@ class S3PerformanceTests(unittest.TestCase):
         resource = current.s3db.resource("org_organisation")
         x = lambda: resource.import_xml(tree)
         mlt = 0
-        for i in xrange(100):
+        for i in range(100):
             mlt += timeit.Timer(x).timeit(number=1)
             current.db.rollback()
         mlt *= 10

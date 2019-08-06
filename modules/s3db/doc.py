@@ -38,7 +38,9 @@ import os
 
 from gluon import *
 from gluon.storage import Storage
+
 from ..s3 import *
+from s3compat import StringIO
 
 # =============================================================================
 class S3DocumentLibrary(S3Model):
@@ -433,8 +435,7 @@ class S3DocumentLibrary(S3Model):
                 filename = metadata.split(";", 1)[0]
                 f = Storage()
                 f.filename = uuid.uuid4().hex + filename
-                import cStringIO
-                f.file = cStringIO.StringIO(base64.decodestring(encoded_file))
+                f.file = StringIO(base64.decodestring(encoded_file))
                 doc = form_vars.file = f
                 if not form_vars.name:
                     form_vars.name = filename
@@ -577,6 +578,9 @@ def doc_checksum(docstr):
 def doc_document_list_layout(list_id, item_id, resource, rfields, record):
     """
         Default dataList item renderer for Documents, e.g. on the HRM Profile
+
+        NB The CSS classes here refer to static/themes/bootstrap/cards.css & newsfeed.css
+        - so this CSS either needs moving to core or else this needs modifying for default CSS
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item
@@ -748,31 +752,31 @@ class S3CKEditorModel(S3Model):
             Categories: word, excel, powerpoint, flash, pdf, image, video, audio, archive, other.
         """
 
+        ftype = "other"
+
         parts = os.path.splitext(filename)
-        if len(parts) < 2:
-            return "other"
-        else:
+        if len(parts) > 1:
             ext = parts[1][1:].lower()
             if ext in ("png", "jpg", "jpeg", "gif"):
-                return "image"
+                ftype = "image"
             elif ext in ("avi", "mp4", "m4v", "ogv", "wmv", "mpg", "mpeg"):
-                return "video"
+                ftype = "video"
             elif ext in ("mp3", "m4a", "wav", "ogg", "aiff"):
-                return "audio"
+                ftype = "audio"
             elif ext in ("zip", "7z", "tar", "gz", "tgz", "bz2", "rar"):
-                return "archive"
+                ftype = "archive"
             elif ext in ("doc", "docx", "dot", "dotx", "rtf"):
-                return "word"
+                ftype = "word"
             elif ext in ("xls", "xlsx", "xlt", "xltx", "csv"):
-                return "excel"
+                ftype = "excel"
             elif ext in ("ppt", "pptx"):
-                return "powerpoint"
+                ftype = "powerpoint"
             elif ext in ("flv", "swf"):
-                return "flash"
+                ftype = "flash"
             elif ext == "pdf":
-                return "pdf"
-            else:
-                return "other"
+                ftype = "pdf"
+
+        return ftype
 
 # =============================================================================
 class S3DataCardModel(S3Model):
@@ -938,7 +942,7 @@ class S3DataCardModel(S3Model):
             s3db.configure("doc_card_config",
                            insertable = False,
                            )
-        elif this and card_types.keys() == [this]:
+        elif this and list(card_types.keys()) == [this]:
             # All other types are already configured => can't change this
             table.card_type.writable = False
 

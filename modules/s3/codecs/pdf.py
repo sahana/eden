@@ -30,11 +30,6 @@
 
 __all__ = ("S3RL_PDF",)
 
-try:
-    from cStringIO import StringIO    # Faster, where available
-except:
-    from StringIO import StringIO
-
 from copy import deepcopy
 import os
 
@@ -45,6 +40,7 @@ from gluon.storage import Storage
 from gluon.contenttype import contenttype
 from gluon.languages import lazyT
 
+from s3compat import BytesIO, basestring, xrange
 from ..s3codec import S3Codec
 from ..s3utils import s3_strip_markup, s3_unicode, s3_str
 
@@ -468,7 +464,7 @@ class EdenDocTemplate(BaseDocTemplate):
             Set up the standard page templates
         """
 
-        self.output = StringIO()
+        self.output = BytesIO()
 
         if orientation == "Auto":
             # Start with "Portrait", allow later adjustment
@@ -779,7 +775,7 @@ class S3PDFList(object):
         for index, row in enumerate(self.rows):
 
             # Insert a horizontal line between records
-            ruler = Drawing(printable_width,6)
+            ruler = Drawing(printable_width, 6)
             ruler.add(Line(0, 6, printable_width, 6,
                            strokeColor = colors.grey,
                            strokeWidth = 0.5,
@@ -1732,7 +1728,7 @@ class S3html2pdf():
             return S3html2pdf.parse_img(html)
         elif isinstance(html, DIV):
             return self.parse_div(html)
-        elif (isinstance(html, basestring) or isinstance(html, lazyT)):
+        elif isinstance(html, (basestring, lazyT)):
             html = s3_str(html)
             if "<" in html:
                 html = s3_strip_markup(html)

@@ -828,8 +828,6 @@ def config(settings):
     #settings.org.site_inv_req_tabs = False
     # Uncomment to allow Sites to be staffed by Volunteers
     #settings.org.site_volunteers = True
-    # Uncomment to add summary fields for Organisations/Offices for # National/International staff
-    #settings.org.summary = True
     # Enable certain fields just for specific Organisations
     # Requires a call to settings.set_org_dependent_field(field)
     # empty list => disabled for all (including Admin)
@@ -1125,8 +1123,6 @@ def config(settings):
     #settings.project.programmes = True
     # Uncomment this to enable Budgets in Programmes
     #settings.project.programme_budget = True
-    # Uncomment this to use Tags in Tasks
-    #settings.project.task_tag = True
     # Uncomment this to enable Themes in 3W projects
     #settings.project.themes = True
     # Uncomment this to use Theme Percentages for projects
@@ -1243,13 +1239,6 @@ def config(settings):
             #description = "Selective translation of strings based on module.",
             module_type = None,
         )),
-        # Uncomment to enable internal support requests
-        #("support", Storage(
-        #        name_nice = T("Support"),
-        #        #description = "Support Requests",
-        #        restricted = True,
-        #        module_type = None  # This item is handled separately for the menu
-        #    )),
         ("gis", Storage(
             name_nice = T("Map"),
             #description = "Situation Awareness & Geospatial Analysis",

@@ -46,9 +46,10 @@ __all__ = ("S3Task",)
 import datetime
 import json
 
-from gluon import current, HTTP, IS_EMPTY_OR
+from gluon import current, HTTP
 from gluon.storage import Storage
 
+from s3compat import INTEGER_TYPES, basestring
 from .s3datetime import S3DateTime
 from .s3validators import IS_TIME_INTERVAL_WIDGET, IS_UTC_DATETIME
 from .s3widgets import S3CalendarWidget, S3TimeIntervalWidget
@@ -253,7 +254,7 @@ class S3Task(object):
             # Run the task synchronously
             _args = []
             for arg in args:
-                if isinstance(arg, (int, long, float)):
+                if isinstance(arg, INTEGER_TYPES + (float,)):
                     _args.append(str(arg))
                 elif isinstance(arg, basestring):
                     _args.append("%s" % str(json.dumps(arg)))

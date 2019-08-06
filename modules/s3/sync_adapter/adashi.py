@@ -28,7 +28,6 @@
 """
 
 import os
-import sys
 
 from gluon import *
 
@@ -97,8 +96,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         # Add path to file names, filter for .xml files, sort by mtime
         files = [os.path.join(PATH, f)
                  for f in files_list if f[-4:] == ".xml"]
-        files = filter(os.path.isfile, files)
-        files.sort(key=os.path.getmtime)
+        files = sorted(filter(os.path.isfile, files), key=os.path.getmtime)
 
         # Strategy and Policies
         from ..s3import import S3ImportItem
@@ -157,6 +155,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         repository = self.repository
 
         # Log the operation
+        message = "Push to ADASHI currently not supported"
         log = repository.log
         log.write(repository_id = repository.id,
                   resource_name = task.resource_name,
@@ -165,7 +164,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                   action = None,
                   remote = False,
                   result = log.FATAL,
-                  message = "Push to ADASHI currently not supported",
+                  message = message,
                   )
 
         output = current.xml.json_message(False, 400, message)
@@ -366,7 +365,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 }
 
     # -------------------------------------------------------------------------
-    def update_assignments(self, item):
+    @staticmethod
+    def update_assignments(item):
         """
             Deactivate all previous unit assignments (event_team) for
             an incident which are not in this feed update.
@@ -388,7 +388,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
             if not job or not mtime:
                 return
-            get_item = lambda item_id: job.items.get(item_id)
+            get_item = job.items.get
 
             # Get the unit names of all current assignments in the feed
             team_names = set()

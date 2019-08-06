@@ -1423,7 +1423,7 @@ $('#submit_record__row input').click(function(){
     #s3.jquery_ready.append(script)
 
     output = DIV(output,
-                 DIV(H4(T("New Post"),
+                 DIV(H4(T("New Comment"),
                         _id="comment-title"),
                      form,
                      _id="comment-form",

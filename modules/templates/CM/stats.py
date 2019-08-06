@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
-
 from gluon import current, HTTP
 
 from s3 import S3Method, s3_decode_iso_datetime, s3_str
 from s3.codecs.xls import S3XLS
+from s3compat import StringIO
 
 # =============================================================================
 class ResponsePerformanceIndicators(S3Method):

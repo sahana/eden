@@ -8,7 +8,7 @@ from gluon.storage import Storage
 
 from s3 import S3Method
 
-from controllers import deploy_index
+from .controllers import deploy_index
 
 RED_CROSS = "Red Cross / Red Crescent"
 
@@ -2167,7 +2167,7 @@ Thank you"""
         query = (ttable.id.belongs(training_ids)) & \
                 (ttable.person_id == ptable.id)
         trainings = db(query).select(ptable.pe_id)
-        person_pe_ids = set([p.pe_id for p in trainings])
+        person_pe_ids = {p.pe_id for p in trainings}
 
         if not person_pe_ids:
             # No people?
@@ -2835,7 +2835,7 @@ Thank you"""
         """
 
         # Get organisation name and logo
-        from layouts import OM
+        from .layouts import OM
         name, logo = OM().render()
 
         from gluon.html import DIV, H2, H4, P, TABLE, TR, TD
@@ -4610,7 +4610,7 @@ class PrintableShipmentForm(S3Method):
         T = current.T
 
         # Get organisation name and logo
-        from layouts import OM
+        from .layouts import OM
         name, logo = OM().render()
 
         # The title
@@ -4790,7 +4790,7 @@ class PrintableShipmentForm(S3Method):
         T = current.T
 
         # Get organisation name and logo
-        from layouts import OM
+        from .layouts import OM
         name, logo = OM().render()
 
         # The title
@@ -4958,7 +4958,7 @@ class PrintableShipmentForm(S3Method):
         T = current.T
 
         # Get organisation name and logo
-        from layouts import OM
+        from .layouts import OM
         name, logo = OM().render()
 
         # The title

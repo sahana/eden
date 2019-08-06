@@ -14,6 +14,7 @@
          Code.................string..........Project Code (optional)
          Description..........string..........Project short description
          Objectives...........string..........Project objectives
+         KV:XX................string..........project_project_tag Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          Comments.............string..........Project comments
          Programme............string..........Project Programme
          Status...............string..........Project status
@@ -144,6 +145,8 @@
 
         <xsl:variable name="FirstName" select="col[@field='FPFirstName']/text()"/>
         <xsl:variable name="LastName" select="col[@field='FPLastName']/text()"/>
+
+        <xsl:variable name="MasterKey" select="col[@field='MasterKey']/text()"/>
 
         <!-- Projects -->
         <resource name="project_project">
@@ -339,6 +342,21 @@
                 </reference>
             </xsl:if>
 
+            <xsl:if test="$MasterKey!=''">
+                <resource name="project_project_masterkey">
+                    <reference field="masterkey_id" resource="auth_masterkey">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('MasterKey:', $MasterKey)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+
+            <!-- Arbitrary Tags -->
+            <xsl:for-each select="col[starts-with(@field, 'KV')]">
+                <xsl:call-template name="KeyValue"/>
+            </xsl:for-each>
+
         </resource>
 
         <xsl:call-template name="splitList">
@@ -361,6 +379,15 @@
             <xsl:with-param name="list"><xsl:value-of select="$Locations"/></xsl:with-param>
             <xsl:with-param name="arg">location_res</xsl:with-param>
         </xsl:call-template>
+
+        <xsl:if test="$MasterKey!=''">
+            <resource name="auth_masterkey">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('MasterKey:', $MasterKey)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$MasterKey"/></data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 
@@ -551,6 +578,24 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="KeyValue">
+        <xsl:variable name="Key" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+            <!-- @ToDo
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list" select="$Value"/>
+                <xsl:with-param name="arg">tag</xsl:with-param>
+            </xsl:call-template> -->
+            <resource name="project_project_tag">
+                <data field="tag"><xsl:value-of select="$Key"/></data>
+                <data field="value"><xsl:value-of select="$Value"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="FocalPerson">
         <xsl:variable name="FirstName" select="col[@field='FPFirstName']/text()"/>
         <xsl:variable name="LastName" select="col[@field='FPLastName']/text()"/>
@@ -586,7 +631,6 @@
             <!-- Link to Organisation -->
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
-
                     <xsl:value-of select="concat('ProjectOrganisation:', $OrgName)"/>
                 </xsl:attribute>
             </reference>

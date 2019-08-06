@@ -37,9 +37,12 @@ __all__ = ("S3MobileFormList",
 
 import json
 
-from gluon import *
+from gluon import IS_EMPTY_OR, IS_IN_SET, current
+
+from s3compat import basestring
 from .s3datetime import s3_parse_datetime
-from .s3forms import S3SQLForm, S3SQLCustomForm, S3SQLDummyField, S3SQLField
+from .s3forms import S3SQLCustomForm, S3SQLDummyField, S3SQLField, \
+                     S3SQLForm, S3SQLInlineInstruction, S3SQLSectionBreak
 from .s3rest import S3Method
 from .s3utils import s3_get_foreign_key, s3_str
 from .s3validators import SEPARATORS
@@ -220,6 +223,9 @@ class S3MobileSchema(object):
                              "boolean",
                              "reference",
                              "upload",
+                             "json",
+                             "list:string",
+                             "list:integer",
                              )
 
     # -------------------------------------------------------------------------
@@ -408,11 +414,7 @@ class S3MobileSchema(object):
             ktablename = None
 
         # Check that field type is supported
-        if fieldtype in SUPPORTED_FIELD_TYPES or is_foreign_key:
-            supported = True
-        else:
-            supported = False
-        if not supported:
+        if not is_foreign_key and fieldtype not in SUPPORTED_FIELD_TYPES:
             return None
 
         # Create a field description
@@ -484,7 +486,8 @@ class S3MobileSchema(object):
         return required
 
     # -------------------------------------------------------------------------
-    def get_options(self, field, lookup=None):
+    @staticmethod
+    def get_options(field, lookup=None):
         """
             Get the options for a field with IS_IN_SET
 
@@ -513,7 +516,7 @@ class S3MobileSchema(object):
             #    for proper authorization, customise_* and filtering
             return None
 
-        elif fieldtype in ("string", "integer"):
+        elif fieldtype in ("string", "integer", "list:string", "list:integer"):
 
             # Check for IS_IN_SET, and extract the options
             if isinstance(requires, IS_IN_SET):
@@ -632,6 +635,20 @@ class S3MobileSchema(object):
             elif isinstance(element, S3SQLDummyField):
                 field = {"type": "dummy",
                          "name": element.selector,
+                         }
+                mappend(field)
+
+            elif isinstance(element, S3SQLInlineInstruction):
+                field = {"type": "instructions",
+                         "do": element.do,
+                         "say": element.say,
+                         #"name": element.selector,
+                         }
+                mappend(field)
+
+            elif isinstance(element, S3SQLSectionBreak):
+                field = {"type": "section-break",
+                         #"name": element.selector,
                          }
                 mappend(field)
 
@@ -967,7 +984,7 @@ class S3MobileForm(object):
         for tn, record_ids in required_records.items():
             kresource = s3db.resource(tn, id=list(record_ids))
             spec = provided[tn][1]
-            fields = spec["schema"].keys()
+            fields = list(spec["schema"].keys())
             tree = kresource.export_tree(fields = fields,
                                          references = fields,
                                          msince = msince,
@@ -1148,10 +1165,10 @@ class S3MobileForm(object):
             supertables = [supertables]
 
         super_entities = {}
-        for tablename in supertables:
-            table = s3db.table(tablename)
-            if table:
-                super_entities[tablename] = table._id.name
+        for super_tablename in supertables:
+            super_table = s3db.table(super_tablename)
+            if super_table:
+                super_entities[super_tablename] = super_table._id.name
 
         return super_entities
 

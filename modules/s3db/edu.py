@@ -47,7 +47,7 @@ class S3SchoolModel(S3Model):
 
         T = current.T
         db = current.db
-        auth = current.auth
+        #auth = current.auth
 
         messages = current.messages
         NONE = messages["NONE"]
@@ -197,7 +197,7 @@ class S3SchoolModel(S3Model):
                            ),
                      Field("website",
                            label = T("Website"),
-                           represent = lambda url: s3_url_represent(url),
+                           represent = s3_url_represent,
                            requires = IS_EMPTY_OR(IS_URL()),
                            ),
                      Field("obsolete", "boolean",

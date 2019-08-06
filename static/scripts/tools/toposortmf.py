@@ -3,12 +3,14 @@
 # is licensed under a BSD-style license. We only use the section
 # originally by Tim Peters.
 #
+# @status: fixed for Py3
+
 # TODO: The use of this code needs to be okayed by someone.
 #
 
 class RecursionError( OverflowError, ValueError ):
     '''Unable to calculate result because of recursive structure'''
-    
+
 
 def sort(nodes, routes, noRecursion=1):
     '''Passed a list of node IDs and a list of source,dest ID routes
@@ -29,7 +31,7 @@ def sort(nodes, routes, noRecursion=1):
         # some other element!!!
         stage.append( nodes[0])
     taken.extend( stage )
-    nodes = filter ( lambda x, l=stage: x not in l, nodes )
+    nodes = list(filter(lambda x, l=stage: x not in l, nodes))
     while nodes:
         previousStageChildren = []
         nodelen = len(nodes)
@@ -58,7 +60,7 @@ def sort(nodes, routes, noRecursion=1):
                 stage.remove( remove )
         stages.append( stage)
         taken.extend( stage )
-        nodes = filter ( lambda x, l=stage: x not in l, nodes )
+        nodes = list(filter(lambda x, l=stage: x not in l, nodes))
         if nodelen == len(nodes):
             if noRecursion:
                 raise RecursionError( nodes )
@@ -86,7 +88,7 @@ def toposort (nodes, routes, noRecursion=1):
     '''Topological sort from Tim Peters, fairly efficient
     in comparison (it seems).'''
     #first calculate the recursion depth
-    
+
     dependencies = {}
     inversedependencies = {}
     if not nodes:
@@ -96,14 +98,14 @@ def toposort (nodes, routes, noRecursion=1):
     for node in nodes:
         dependencies[ node ] = (0, node)
         inversedependencies[ node ] = []
-    
-    
+
+
     for depended, depends in routes:
         # is it a null rule
         try:
             newdependencylevel, object = dependencies.get ( depends, (0, depends))
         except TypeError:
-            print depends
+            print(depends)
             raise
         dependencies[ depends ] = (newdependencylevel + 1,  depends)
         # "dependency (existence) of depended-on"
@@ -160,7 +162,7 @@ def toposort (nodes, routes, noRecursion=1):
             except KeyError:
                 pass
         # need to recreate the sortinglist
-        sortinglist = dependencies.values()
+        sortinglist = list(dependencies.values())
         if not generation:
             output.remove( generation )
         sortinglist.sort ()
@@ -177,7 +179,7 @@ if __name__ == "__main__":
 
     for x in  toposort( nodes, route):
         for a in x:
-            print a
+            print(a)
 
     raise SystemExit
 
@@ -227,34 +229,34 @@ if __name__ == "__main__":
             (3,1),
         ],
     ]
-    print 'sort, no recursion allowed'
+    print('sort, no recursion allowed')
     for index in range(len(testingValues)):
 ##        print '    %s -- %s'%( index, testingValues[index])
         try:
-            print '        ', sort( nodes, testingValues[index] )
+            print('        %s' % sort( nodes, testingValues[index] ))
         except:
-            print 'exception raised'
-    print 'toposort, no recursion allowed'
+            print('exception raised')
+    print('toposort, no recursion allowed')
     for index in range(len(testingValues)):
 ##        print '    %s -- %s'%( index, testingValues[index])
         try:
-            print '        ', toposort( nodes, testingValues[index] )
+            print('        %s' % toposort( nodes, testingValues[index] ))
         except:
-            print 'exception raised'
-    print 'sort, recursion allowed'
+            print('exception raised')
+    print('sort, recursion allowed')
     for index in range(len(testingValues)):
 ##        print '    %s -- %s'%( index, testingValues[index])
         try:
-            print '        ', sort( nodes, testingValues[index],0 )
+            print('        %s' % sort( nodes, testingValues[index],0 ))
         except:
-            print 'exception raised'
-    print 'toposort, recursion allowed'
+            print('exception raised')
+    print('toposort, recursion allowed')
     for index in range(len(testingValues)):
 ##        print '    %s -- %s'%( index, testingValues[index])
         try:
-            print '        ', toposort( nodes, testingValues[index],0 )
+            print('        %s' % toposort( nodes, testingValues[index],0 ))
         except:
-            print 'exception raised'
-        
-        
-    
+            print('exception raised')
+
+
+

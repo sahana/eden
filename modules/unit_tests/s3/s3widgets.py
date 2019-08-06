@@ -229,7 +229,7 @@ class S3OptionsMatrixWidgetTests(unittest.TestCase):
                                          ),
                                     )
                                  )
-        self.failUnlessEqual(str(self.widget(self.field, [])), str(expected_result))
+        self.assertEqual(str(self.widget(self.field, [])), str(expected_result))
 
     # -------------------------------------------------------------------------
     def test_values(self):

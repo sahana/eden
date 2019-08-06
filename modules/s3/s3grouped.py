@@ -38,8 +38,9 @@ import math
 
 from gluon import current, DIV, H2, INPUT, SPAN, TABLE, TBODY, TD, TFOOT, TH, THEAD, TR
 
+from s3compat import INTEGER_TYPES, basestring
 from .s3rest import S3Method
-from .s3utils import s3_strip_markup, s3_unicode
+from .s3utils import s3_strip_markup, s3_str
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -755,7 +756,7 @@ class S3GroupedItemsTable(object):
 
         if not value:
             value = ""
-        row = {"_group": {"label": s3_unicode(s3_strip_markup(value)),
+        row = {"_group": {"label": s3_str(s3_strip_markup(value)),
                           "span": len(columns),
                           "totals": False,
                           },
@@ -780,11 +781,10 @@ class S3GroupedItemsTable(object):
             value = self.totals_label
         else:
             v = group.get("v")
-            value = "%s %s" % (s3_unicode(s3_strip_markup(v)),
+            value = "%s %s" % (s3_str(s3_strip_markup(v)),
                                self.totals_label,
                                )
         row = {}
-        footer = {}
 
         span = 0
         has_totals = False
@@ -968,7 +968,7 @@ class S3GroupedItemsTable(object):
 
         if not value:
             value = ""
-        header = TD(s3_unicode(s3_strip_markup(value)),
+        header = TD(s3_str(s3_strip_markup(value)),
                     _colspan = len(columns) if columns else None,
                     )
 
@@ -993,7 +993,7 @@ class S3GroupedItemsTable(object):
             value = self.totals_label
         else:
             v = group.get("v")
-            value = "%s %s" % (s3_unicode(s3_strip_markup(v)),
+            value = "%s %s" % (s3_str(s3_strip_markup(v)),
                                self.totals_label,
                                )
 
@@ -1275,11 +1275,11 @@ class S3GroupedItems(object):
         aggregates = self._aggregates
         for aggregate in aggregates.values():
             output = "%s\n%s  %s(%s) = %s" % (output,
-                                               indent,
-                                               aggregate.method,
-                                               aggregate.key,
-                                               aggregate.result,
-                                               )
+                                              indent,
+                                              aggregate.method,
+                                              aggregate.key,
+                                              aggregate.result,
+                                              )
         if aggregates:
             output = "%s\n" % output
 
@@ -1379,7 +1379,7 @@ class S3GroupedItems(object):
                 columns.append(colname)
             output["c"] = columns
 
-            output["l"] = dict((c, str(l)) for c, l in labels.items())
+            output["l"] = {c: str(l) for c, l in labels.items()}
 
         key = self.key
         if key:
@@ -1409,8 +1409,7 @@ class S3GroupedItems(object):
                     value = representations.get(value)
                 elif renderer is not None:
                     value = renderer(value)
-                value = s3_unicode(value).encode("utf-8")
-                gdict["v"] = value
+                gdict["v"] = s3_str(value)
                 add_group(gdict)
 
             if master:
@@ -1438,7 +1437,7 @@ class S3GroupedItems(object):
                     if value is None:
                         value = ""
                     else:
-                        value = s3_unicode(value).encode("utf-8")
+                        value = s3_str(value)
                     oitem[colname] = value
                 add_item(oitem)
 
@@ -1451,9 +1450,9 @@ class S3GroupedItems(object):
         aggregates = self._aggregates
         totals = {}
         for k, a in aggregates.items():
-            method, colname = k
+            method = k[0]
             # @todo: call represent for totals
-            totals[colname] = s3_unicode(a.result).encode("utf-8")
+            totals[colname] = s3_str(a.result)
         output["t"] = totals
 
         # Convert to JSON unless requested otherwise
@@ -1503,8 +1502,7 @@ class S3GroupAggregate(object):
                     result = len(set(values))
                 else:
                     values = [v for v in values
-                              if isinstance(v, (float, int, long))]
-
+                              if isinstance(v, INTEGER_TYPES + (float,))]
                 if method == "sum":
                     try:
                         result = math.fsum(values)

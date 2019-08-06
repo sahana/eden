@@ -115,7 +115,8 @@ class S3ClimateModel(S3Model):
         # not all places are stations with elevations
         # as in the case of "gridded" data
         # a station can only be in one place
-        define_table("climate_place_station_name",
+        tablename = "climate_place_station_name"
+        define_table(tablename,
                      Field("name", "double",
                            notnull=True,
                            required=True,
@@ -123,17 +124,17 @@ class S3ClimateModel(S3Model):
                      )
 
         station_id = S3ReusableField("station_id", "reference %s" % tablename,
-                                     sortby="name",
-                                     requires = IS_ONE_OF(db,
-                                        "climate_place_station_name.id",
-                                        climate_station_represent,
-                                        orderby="climate_place_station_name.name",
-                                        sort=True
-                                        ),
-                                     represent = climate_station_represent,
                                      label = "Station",
-                                     ondelete = "RESTRICT"
-                                    )
+                                     ondelete = "RESTRICT",
+                                     requires = IS_ONE_OF(db,
+                                                    "climate_place_station_name.id",
+                                                    climate_station_represent,
+                                                    orderby = "climate_place_station_name.name",
+                                                    sort = True,
+                                                    ),
+                                     represent = climate_station_represent,
+                                     sortby = "name",
+                                     )
 
         # ---------------------------------------------------------------------
         # station id may not be useful or even meaningful
@@ -600,7 +601,7 @@ def climate_station_parameter_range_from(row):
         return default
 
 # -------------------------------------------------------------------------
-def climate_station_parameter_range_to(self):
+def climate_station_parameter_range_to(row):
 
     default = current.messages["NONE"]
 
@@ -638,9 +639,9 @@ def climate_first_run():
     if settings.get_database_type() != "postgres":
         errors.append("Climate unresolved dependency: PostgreSQL required")
     try:
-       import rpy2
+        import rpy2
     except ImportError:
-       errors.append("""
+        errors.append("""
 R is required by the climate data portal to generate charts
 
 To install R: refer to:
@@ -652,13 +653,13 @@ To install rpy2, refer to:
 http://rpy.sourceforge.net/rpy2/doc-dev/html/overview.html
 """)
     try:
-       from Scientific.IO import NetCDF
+        from Scientific.IO import NetCDF
     except ImportError:
-       errors.append("Climate unresolved dependency: NetCDF required if you want to import readings")
+        errors.append("Climate unresolved dependency: NetCDF required if you want to import readings")
     try:
-       from scipy import stats
+        from scipy import stats
     except ImportError:
-       errors.append("Climate unresolved dependency: SciPy required if you want to generate graphs on the map")
+        errors.append("Climate unresolved dependency: SciPy required if you want to generate graphs on the map")
 
     if errors:
         # Report errors and stop.

@@ -498,7 +498,7 @@ class S3AssetModel(S3Model):
         if auth.permission.format == "html":
             # T isn't JSON serializable
             site_types = auth.org_site_types
-            for key in site_types.keys():
+            for key in list(site_types.keys()):
                 site_types[key] = str(site_types[key])
             site_types = json.dumps(site_types)
             script = '''

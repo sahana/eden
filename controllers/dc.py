@@ -16,7 +16,8 @@ def index():
 
     module_name = settings.modules[module].name_nice
     response.title = module_name
-    return dict(module_name=module_name)
+    return {"module_name": module_name,
+            }
 
 # -----------------------------------------------------------------------------
 def template():
@@ -41,15 +42,6 @@ def template():
                                deletable = False,
                                editable = False,
                                )
-
-            # Sections for this template only
-            f = s3db.dc_question.section_id
-            f.requires = IS_EMPTY_OR(
-                            IS_ONE_OF(db, "dc_section.id",
-                                      f.represent,
-                                      filterby="template_id",
-                                      filter_opts=[r.id],
-                                      ))
 
             # Add JS
             scripts_append = s3.scripts.append

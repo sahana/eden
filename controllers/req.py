@@ -29,7 +29,7 @@ def index_alt():
 def is_affiliated():
     """
         Check if User is affiliated to an Organisation
-        @ToDo: Move this elsewhere
+        @ToDo: Move this elsewhere, like s3aaa or s3db/org
     """
 
     if not auth.is_logged_in():
@@ -732,6 +732,7 @@ $.filterOptionsS3({
                                 r.next = URL(args=[form_vars.id, "req_skill"])
                     else:
                         s3_action_buttons(r, deletable =False)
+                        s3_str = s3base.s3_str
                         # Add delete button for those records which are not completed
                         # @ToDo: Handle icons
                         table = r.table

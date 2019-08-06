@@ -27,10 +27,14 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ("S3Profile",
+           )
+
 from gluon import current, redirect
 from gluon.html import *
 from gluon.storage import Storage
 
+from s3compat import basestring
 from .s3crud import S3CRUD
 from .s3report import S3Report
 from .s3query import FS

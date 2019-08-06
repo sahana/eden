@@ -146,7 +146,7 @@
             <data field="last_name"><xsl:value-of select="$LastName"/></data>
             
             <!-- Contact Information -->
-            <xsl:if test="$Email!='' or $Mobile!=''"
+            <xsl:if test="$Email!='' or $Mobile!=''">
                 <xsl:call-template name="ContactInformation"/>
             </xsl:if>
 

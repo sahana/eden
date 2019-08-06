@@ -12,7 +12,9 @@ from gluon import current
 from lxml import etree
 
 from unit_tests import run_suite
+
 from s3 import S3SyncDataArchive
+from s3compat import PY2
 
 # =============================================================================
 class ExportMergeTests(unittest.TestCase):
@@ -444,8 +446,8 @@ class DataArchiveTests(unittest.TestCase):
         archive = S3SyncDataArchive()
 
         # Add two XML strings to it
-        xmlstr1 = "<example>First Example</example>"
-        xmlstr2 = "<example>Second Example</example>"
+        xmlstr1 = b"<example>First Example</example>"
+        xmlstr2 = b"<example>Second Example</example>"
         archive.add("test1.xml", xmlstr1)
         archive.add("test2.xml", xmlstr2)
 

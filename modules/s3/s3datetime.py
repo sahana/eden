@@ -27,8 +27,6 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @status: fixed for Py3
 """
 
 __all__ = ("ISOFORMAT",
@@ -1696,7 +1694,7 @@ class S3DefaultTZ(datetime.tzinfo):
 
     def __init__(self, offset=None):
 
-        super(S3DefaultTZ, self).__init__(self)
+        super(S3DefaultTZ, self).__init__()
 
         if offset:
             offset_sec = S3DateTime.get_offset_value(offset)

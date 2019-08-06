@@ -23,7 +23,7 @@ class InlineLinkTests(unittest.TestCase):
                                  )
         widget.alias = "default"
 
-        form = Storage(vars = Storage(link_defaultcomponent=[1,2]),
+        form = Storage(vars = Storage(link_defaultcomponent=[1, 2]),
                        errors=Storage(),
                        )
 
@@ -47,7 +47,7 @@ class InlineLinkTests(unittest.TestCase):
                                  )
         widget.alias = "default"
 
-        form = Storage(vars = Storage(link_defaultcomponent=[1,2]),
+        form = Storage(vars = Storage(link_defaultcomponent=[1, 2]),
                        errors=Storage(),
                        )
 

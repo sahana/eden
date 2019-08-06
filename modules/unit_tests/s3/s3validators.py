@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ï»¿# -*- coding: utf-8 -*-
 #
 # Validators Unit Tests
 #
@@ -11,6 +11,7 @@ from gluon import current
 from s3.s3datetime import S3Calendar, S3DefaultTZ
 from s3.s3fields import *
 from s3.s3validators import *
+from s3compat import PY2
 
 from unit_tests import run_suite
 
@@ -30,9 +31,9 @@ class ISLatTest(unittest.TestCase):
     """
         Latitude has to be in decimal degrees between -90 & 90
 
-        We can convert D/M/S or D°M'S" format into decimal degrees:
+        We can convert D/M/S or DÂ°M'S" format into decimal degrees:
 
-          Zero padded, separated by spaces or : or (d, m, s) or (°, ', ") or run
+          Zero padded, separated by spaces or : or (d, m, s) or (Â°, ', ") or run
           together and followed by cardinal direction initial (N,S). Only seconds
           can have decimals places. A decimal point with no trailing digits is invalid.
     """
@@ -60,7 +61,7 @@ class ISLatTest(unittest.TestCase):
         assertEqual(error, None)
         assertEqual(value, 40.3875)
 
-        value, error = validator("81°16'42.348\"N")
+        value, error = validator(u"81Â°16'42.348\"N")
         assertEqual(error, None)
         assertEqual(value, 81.27843)
 
@@ -117,7 +118,7 @@ class ISLatTest(unittest.TestCase):
         value, error = validator(101)
         assertNotEqual(error, None)
 
-        value, error = validator("91°16'42.348\"N")
+        value, error = validator(u"91Â°16'42.348\"N")
         assertNotEqual(error, None)
 
         value, error = validator("90 00 00.001 S")
@@ -133,9 +134,9 @@ class ISLatTest(unittest.TestCase):
 class ISLonTest(unittest.TestCase):
     """
         Longitude has to be in decimal degrees between -180 & 180
-        We can convert D/M/S or D°M'S" format into decimal degrees:
+        We can convert D/M/S or DÂ°M'S" format into decimal degrees:
 
-          Zero padded, separated by spaces or : or (d, m, s) or (°, ', ") or run
+          Zero padded, separated by spaces or : or (d, m, s) or (Â°, ', ") or run
           together and followed by cardinal direction initial (E,W). Only seconds
           can have decimals places. A decimal point with no trailing digits is invalid.
     """
@@ -163,7 +164,7 @@ class ISLonTest(unittest.TestCase):
         assertEqual(error, None)
         assertEqual(value, 99.3875)
 
-        value, error = validator("121°16'42.348\"E")
+        value, error = validator(u"121Â°16'42.348\"E")
         assertEqual(error, None)
         assertEqual(value, 121.27843)
 
@@ -220,7 +221,7 @@ class ISLonTest(unittest.TestCase):
         value, error = validator(201)
         assertNotEqual(error, None)
 
-        value, error = validator("181°16'42.348\"E")
+        value, error = validator(u"181Â°16'42.348\"E")
         assertNotEqual(error, None)
 
         value, error = validator("180 00 00.001 W")
@@ -246,7 +247,7 @@ class ISONEOFLazyRepresentationTests(unittest.TestCase):
         settings.org.branches = True
 
         # Generate some organisation records
-        orgs = [Storage(name="ISONEOF%s" % i, acronym="IOO%s" % i) for i in xrange(5)]
+        orgs = [Storage(name="ISONEOF%s" % i, acronym="IOO%s" % i) for i in range(5)]
 
         table = s3db.org_organisation
         ids = []
@@ -652,10 +653,10 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
         assertEqual(value, datetime.datetime(2011, 11, 18, 21, 0, 0))
 
         # Check that date defaults to 08:00 hours
-        dt = datetime.date(2011, 05, 11)
+        dt = datetime.date(2011, 5, 11)
         value, error = validate(dt)
         assertEqual(error, None)
-        assertEqual(value, datetime.datetime(2011, 05, 10, 22, 0, 0))
+        assertEqual(value, datetime.datetime(2011, 5, 10, 22, 0, 0))
 
     # -------------------------------------------------------------------------
     def testValidationDestructive(self):
@@ -1756,7 +1757,7 @@ class IS_INT_AMOUNT_Tests(unittest.TestCase):
                    (1305, "1,305"),
                    (1234567.89, "1,234,567"),
                    (123456789012, "123,456,789,012"),
-                   (1234567890123456789L, "1,234,567,890,123,456,789"),
+                   (1234567890123456789, "1,234,567,890,123,456,789"),
                    )
 
         for number, expected in samples:
@@ -1768,7 +1769,7 @@ class IS_INT_AMOUNT_Tests(unittest.TestCase):
 
         validate = IS_INT_AMOUNT()
 
-        samples = (("123,456,789,012", 123456789012L),
+        samples = (("123,456,789,012", 123456789012),
                    ("0", 0),
                    ("993667", 993667),
                    )

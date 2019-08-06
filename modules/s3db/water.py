@@ -134,8 +134,6 @@ class S3WaterModel(S3Model):
             msg_record_deleted = T("Zone deleted"),
             msg_list_empty = T("No Zones currently registered"))
 
-        zone_represent = S3Represent(lookup=tablename)
-
         # -----------------------------------------------------------------------------
         # Rivers
         tablename = "water_river"

@@ -36,6 +36,7 @@ from gluon import current, DIV, H4, H5, IMG, TABLE, TD, TH, TR
 from gluon.contenttype import contenttype
 
 from s3 import S3Method, s3_format_fullname
+from s3compat import long
 
 # =============================================================================
 class HRSignatureList(S3Method):

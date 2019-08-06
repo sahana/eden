@@ -31,17 +31,13 @@
 __all__ = ("S3XLS",
            )
 
-try:
-    from cStringIO import StringIO    # Faster, where available
-except:
-    from StringIO import StringIO
-
-from gluon import *
+from gluon import HTTP, current
 from gluon.contenttype import contenttype
 from gluon.storage import Storage
 
+from s3compat import INTEGER_TYPES, BytesIO, xrange
 from ..s3codec import S3Codec
-from ..s3utils import s3_str, s3_strip_markup, s3_unicode
+from ..s3utils import s3_str, s3_strip_markup, s3_unicode, s3_get_foreign_key
 
 # =============================================================================
 class S3XLS(S3Codec):
@@ -91,6 +87,10 @@ class S3XLS(S3Codec):
         if orderby is None:
             orderby = resource.get_config("orderby")
 
+        # Hierarchical FK Expansion:
+        # setting = {field_selector: [LevelLabel, LevelLabel, ...]}
+        expand_hierarchy = resource.get_config("xls_expand_hierarchy")
+
         data = resource.select(list_fields,
                                left = left,
                                limit = None,
@@ -99,6 +99,7 @@ class S3XLS(S3Codec):
                                orderby = orderby,
                                represent = True,
                                show_links = False,
+                               raw_data = True if expand_hierarchy else False,
                                )
 
         rfields = data.rfields
@@ -109,23 +110,36 @@ class S3XLS(S3Codec):
         heading = {}
         for rfield in rfields:
             if rfield.show:
-                lfields.append(rfield.colname)
-                heading[rfield.colname] = rfield.label or \
-                            rfield.field.name.capitalize().replace("_", " ")
-                if rfield.ftype == "virtual":
-                    types.append("string")
+                if expand_hierarchy:
+                    levels = expand_hierarchy.get(rfield.selector)
                 else:
-                    types.append(rfield.ftype)
+                    levels = None
+                if levels:
+                    num_levels = len(levels)
+                    colnames = self.expand_hierarchy(rfield, num_levels, rows)
+                    lfields.extend(colnames)
+                    types.extend(["string"] * num_levels)
+                    T = current.T
+                    for i, colname in enumerate(colnames):
+                        heading[colname] = T(levels[i])
+                else:
+                    lfields.append(rfield.colname)
+                    heading[rfield.colname] = rfield.label or \
+                                rfield.field.name.capitalize().replace("_", " ")
+                    if rfield.ftype == "virtual":
+                        types.append("string")
+                    else:
+                        types.append(rfield.ftype)
 
         return (title, types, lfields, heading, rows)
 
     # -------------------------------------------------------------------------
-    def encode(self, data_source, title=None, as_stream=False, **attr):
+    def encode(self, resource, **attr):
         """
             Export data as a Microsoft Excel spreadsheet
 
-            @param data_source: the source of the data that is to be encoded
-                                as a spreadsheet, can be either of:
+            @param resource: the source of the data that is to be encoded
+                             as a spreadsheet, can be either of:
                                 1) an S3Resource
                                 2) an array of value dicts (dict of
                                    column labels as first item, list of
@@ -136,12 +150,12 @@ class S3XLS(S3Codec):
                                     types: {key: type},
                                     rows: [{key:value}],
                                     }
-            @param title: the title for the output document
-            @param as_stream: return the buffer (StringIO) rather than
-                              its contents (str), useful when the output
-                              is supposed to be stored locally
-            @param attr: keyword parameters
 
+            @param attr: keyword arguments (see below)
+
+            @keyword as_stream: return the buffer (BytesIO) rather than
+                                its contents (str), useful when the output
+                                is supposed to be stored locally
             @keyword title: the main title of the report
             @keyword list_fields: fields to include in list views
             @keyword report_groupby: used to create a grouping of the result:
@@ -184,22 +198,22 @@ class S3XLS(S3Codec):
         use_colour = attr.get("use_colour", False)
         evenodd = attr.get("evenodd", True)
 
-        # Extract the data from the data_source
-        if isinstance(data_source, dict):
-            headers = data_source.get("headers", {})
-            lfields = data_source.get("columns", list_fields)
-            column_types = data_source.get("types")
+        # Extract the data from the resource
+        if isinstance(resource, dict):
+            headers = resource.get("headers", {})
+            lfields = resource.get("columns", list_fields)
+            column_types = resource.get("types")
             types = [column_types[col] for col in lfields]
-            rows = data_source.get("rows")
-        elif isinstance(data_source, (list, tuple)):
-            headers = data_source[0]
-            types = data_source[1]
-            rows = data_source[2:]
+            rows = resource.get("rows")
+        elif isinstance(resource, (list, tuple)):
+            headers = resource[0]
+            types = resource[1]
+            rows = resource[2:]
             lfields = list_fields
         else:
             if not list_fields:
-                list_fields = data_source.list_fields()
-            (title, types, lfields, headers, rows) = self.extract(data_source,
+                list_fields = resource.list_fields()
+            (title, types, lfields, headers, rows) = self.extract(resource,
                                                                   list_fields,
                                                                   )
 
@@ -325,7 +339,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                         sheet.col(col_index).width = 16 * COL_WIDTH_MULTIPLIER
 
         # Initialize counters
-        totalCols = col_index
+        total_cols = col_index
         # Move the rows down if a title row is included
         if title_row:
             row_index = title_row_length
@@ -358,7 +372,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                 if subheading != represent:
                     # Start of new group - write group header
                     subheading = represent
-                    current_sheet.write_merge(row_index, row_index, 0, totalCols,
+                    current_sheet.write_merge(row_index, row_index, 0, total_cols,
                                              subheading,
                                              subheader_style,
                                              )
@@ -390,7 +404,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                         current_sheet.write_merge(row_index,
                                                   row_index,
                                                   0,
-                                                  totalCols - 1,
+                                                  total_cols - 1,
                                                   label,
                                                   style,
                                                   )
@@ -499,11 +513,11 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
             sheet.horz_split_pos = 1
 
         # Write output
-        output = StringIO()
+        output = BytesIO()
         book.save(output)
         output.seek(0)
 
-        if as_stream:
+        if attr.get("as_stream", False):
             return output
 
         # Response headers
@@ -517,6 +531,64 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def expand_hierarchy(rfield, num_levels, rows):
+        """
+            Expand a hierarchical foreign key column into one column
+            per hierarchy level
+
+            @param rfield: the column (S3ResourceField)
+            @param num_levels: the number of levels (from root)
+            @param rows: the Rows from S3ResourceData
+
+            @returns: list of keys (column names) for the inserted columns
+        """
+
+        field = rfield.field
+        if not field or rfield.ftype[:9] != "reference":
+            return []
+
+        # Get the look-up table
+        ktablename = s3_get_foreign_key(field, m2m=False)[0]
+        if not ktablename:
+            return []
+
+        colname = rfield.colname
+        represent = field.represent
+
+        # Get the hierarchy
+        from ..s3hierarchy import S3Hierarchy
+        h = S3Hierarchy(ktablename)
+        if not h.config:
+            return []
+
+        # Collect the values from rows
+        values = set()
+        for row in rows:
+            value = row["_row"][colname]
+            if type(value) is list:
+                value = value[0]
+            values.add(value)
+
+        # Generate the expanded values
+        expanded = h.repr_expand(values,
+                                 levels = num_levels,
+                                 represent = represent,
+                                 )
+
+        # ...and add them into the rows
+        colnames = ["%s__%s" % (colname, l) for l in range(num_levels)]
+        for row in rows:
+            value = row["_row"][colname]
+            if type(value) is list:
+                value = value[0]
+            hcols = expanded.get(value)
+            for level in range(num_levels):
+                row[colnames[level]] = hcols[level] if hcols else None
+
+        return colnames
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def encode_pt(pt, title):
         """
             Encode a S3PivotTable as XLS sheet
@@ -527,7 +599,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
             @returns: the XLS file as stream
         """
 
-        output = StringIO()
+        output = BytesIO()
 
         book = S3PivotTableXLS(pt).encode(title)
         book.save(output)
@@ -777,7 +849,6 @@ class S3PivotTableXLS(object):
                   )
 
             # Current date/time (in local timezone)
-            import datetime
             from ..s3datetime import S3DateTime
             dt = S3DateTime.to_local(current.request.utcnow)
             write(sheet, 1, 0, dt, style = "subheader", numfmt = "datetime")
@@ -1007,11 +1078,9 @@ class S3PivotTableXLS(object):
         styles = self._styles
         if styles is None:
 
-            import xlwt
+            from xlwt import Alignment, XFStyle
 
             # Alignments
-            Alignment = xlwt.Alignment
-
             center = Alignment()
             center.horz = Alignment.HORZ_CENTER
             center.vert = Alignment.VERT_CENTER
@@ -1047,15 +1116,8 @@ class S3PivotTableXLS(object):
             topright.vert = Alignment.VERT_TOP
             topright.wrap = 1
 
-            # Determine XLS datetime format
-            settings = current.deployment_settings
-            dtfmt = S3XLS.dt_format_translate(settings.get_L10n_datetime_format())
-
             # Styles
-            XFStyle = xlwt.XFStyle
-
-            # Points to Twips
-            twips = lambda pt: 20 * pt
+            twips = lambda pt: 20 * pt # Points to Twips
 
             def style(fontsize=10, bold=False, italic=False, align=None):
                 """ XFStyle builder helper """
@@ -1149,7 +1211,7 @@ class S3PivotTableXLS(object):
         elif ftype == "virtual":
             # Probe the first value
             value = pt.cell[0][0][fact.layer]
-            if isinstance(value, (int, long)):
+            if isinstance(value, INTEGER_TYPES):
                 numfmt = "integer"
             elif isinstance(value, float):
                 numfmt = "double"

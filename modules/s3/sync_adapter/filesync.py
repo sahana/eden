@@ -32,12 +32,6 @@ import glob
 import os
 import sys
 
-try:
-    from lxml import etree
-except ImportError:
-    sys.stderr.write("ERROR: lxml module needed for XML handling\n")
-    raise
-
 from gluon import *
 
 from ..s3sync import S3SyncBaseAdapter

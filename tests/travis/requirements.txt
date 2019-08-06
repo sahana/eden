@@ -1,0 +1,49 @@
+# Warning: S3XLS unresolved dependency: xlwt required for XLS export
+xlwt>=0.7.2
+# Warning: S3GIS unresolved dependency: shapely required for GIS support
+Shapely>=1.2.14 #shapely
+# Warning: S3PDF unresolved dependency: Python Imaging required for PDF export
+PIL>=1.1.7 #from PIL import Image
+# Warning: S3GIS unresolved dependency: GDAL required for Shapefile support
+GDAL>=1.9.0 #from osgeo import ogr
+# Warning: S3GIS unresolved dependency: geopy required for Geocoder support
+geopy>=1.18.1 #from geopy import geocoders
+# Warning: S3PDF unresolved dependency: reportlab required for PDF export
+reportlab>=2.5
+pyserial>=2.6
+# Warning: S3Msg unresolved dependency tweepy required for non-Tropo Twitter support
+#tweepy>=1.9
+# Warning: S3XLS unresolved dependency: xlrd required for XLS export
+xlrd>=0.7.1
+# Warning: Vulnerability unresolved dependency: numpy required for Vulnerability module support
+numpy>=1.6.2
+# Warning: S3GIS unresolved dependency: selenium required for Map printing support
+selenium>=2.23.0
+# Warning: S3Doc unresolved dependency: sunburnt required for Full-Text Search support
+sunburnt>=0.6
+# Warning: S3Doc unresolved dependency: pyth required for RTF document support in Full-Text Search
+pyth>=0.5.6
+# Warning: S3Chart unresolved dependency: matplotlib required for charting in Survey module
+matplotlib>=1.1.1
+# Warning: Survey unresolved dependency: PyRTF required if you want to export assessment/survey templates as a Word document
+PyRTF>=0.45
+# Warning: Message Parsing unresolved dependency: TwitterSearch required for fetching results from twitter keyword queries
+TwitterSearch>=1.0
+# Warning: Messaging unresolved dependency: requests required for posting to Facebook
+requests>=2.3.0
+# Warning: Setup unresolved dependency: ansible required for Setup Module
+#ansible>=2.4.2
+# Warning: Setup unresolved dependency: PyYAML required for Setup Module
+#PyYAML>=3.12 #yaml
+# Warning: Setup unresolved dependency: ruamel.yaml required for Setup Module
+#ruamel.yaml>=0.15.35
+# Warning: Setup unresolved dependency: arrow used for some HRM functionality (currently just by IFRC)
+#arrow>=0.10.0
+# Warning: Setup unresolved dependency: boto required for Setup Module
+#boto>=2.32.1
+# Warning: S3 unresolved dependency: pyparsing required for Calendar Support and Advanced URL Queries
+pyparsing>=2.0.1
+# Warning: URL shortener unresolved dependency: pyshorteners required to shorten the url (currently used by SAMBRO)
+#pyshorteners>=0.6.1
+# Warning: S3Doc unresolved dependency: docx-mailmerge required to merge into docx templates (currently used by DRKCM)
+#docx-mailmerge>=0.4.0

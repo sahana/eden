@@ -67,7 +67,7 @@ class S3Monitor(object):
 
         try:
             output = subprocess.check_output("ping -{} 1 {}".format("n" if platform.system().lower == "windows" else "c", host_ip), shell=True)
-        except Exception, e:
+        except Exception as e:
             # Critical: Ping failed
             return 3
         else:

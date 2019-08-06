@@ -650,7 +650,7 @@ def config(settings):
         """ Custom tasks for scheduled site checks """
 
         # Update transferability
-        from controllers import update_transferability
+        from .controllers import update_transferability
         result = update_transferability(site_id=site_id)
 
         # Log the result
@@ -2351,7 +2351,7 @@ def config(settings):
 
         s3db = current.s3db
 
-        from food import DRKRegisterFoodEvent
+        from .food import DRKRegisterFoodEvent
         s3db.set_method("dvr", "case_event",
                         method = "register_food",
                         action = DRKRegisterFoodEvent,
@@ -3672,7 +3672,7 @@ class DRKSiteActivityReport(object):
                   }
         COMPLETED = 4
         attable = s3db.dvr_case_appointment_type
-        query = attable.name.belongs(atypes.keys())
+        query = attable.name.belongs(set(atypes.keys()))
         rows = db(query).select(attable.id,
                                 attable.name,
                                 )
@@ -3765,7 +3765,7 @@ class DRKSiteActivityReport(object):
                 roles[person_id] = represent(role)
 
         # Field method to determine the family role
-        def family_role(row, roles=roles):
+        def family_role(row):
             person_id = row["pr_person.id"]
             return roles.get(person_id, "")
 

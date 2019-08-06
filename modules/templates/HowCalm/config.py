@@ -526,23 +526,84 @@ def config(settings):
         return rheader
 
     # -------------------------------------------------------------------------
-    def hrm_list_fields():
+    def hrm_list_fields(r):
         """
             DRY Helper
         """
 
-        list_fields = [(T("Person Name"), "person_id"),
-                       (T("Organization"), "organisation_id"),
-                       (T("Type"), "job_title_id"),
-                       (T("Languages Spoken"), "person_id$languages_spoken.value"),
-                       (T("Religious Title"), "person_id$religious_title.value"),
-                       (T("Position Title"), "person_id$position_title.value"),
-                       #(T("ECDM"), "person_id$em_comms.value"),
-                       ]
+        s3db = current.s3db
 
-        current.s3db.configure("hrm_human_resource",
-                               list_fields = list_fields,
-                               )
+        if r.representation == "xls":
+            # Filtered components
+            s3db.add_components("org_organisation",
+                                org_organisation_tag = ({"name": "org_id",
+                                                         "joinby": "organisation_id",
+                                                         "filterby": {"tag": "org_id"},
+                                                         "multiple": False,
+                                                         },
+                                                        ),
+                                )
+
+            s3db.add_components("pr_pentity",
+                                pr_contact = (# Office Fax:
+                                              {"name": "fax",
+                                               "joinby": "pe_id",
+                                               "filterby": {
+                                                    "contact_method": "FAX",
+                                                    },
+                                               },
+                                              # Personal Email:
+                                              {"name": "personal_email",
+                                               "joinby": "pe_id",
+                                               "filterby": {
+                                                    "contact_method": "EMAIL",
+                                                    "priority": 2,
+                                                    },
+                                               },
+                                              # Work Email:
+                                              {"name": "work_email",
+                                               "joinby": "pe_id",
+                                               "filterby": {
+                                                    "contact_method": "EMAIL",
+                                                    "priority": 1,
+                                                    },
+                                               },
+                                              )
+                                )
+
+            list_fields = [(T("First Name"), "person_id$first_name"),
+                           (T("Middle Name"), "person_id$middle_name"),
+                           (T("Last Name"), "person_id$last_name"),
+                           (T("Organization"), "organisation_id"),
+                           (T("Organization ID"), "organisation_id$org_id.value"),
+                           (T("Type"), "job_title_id"),
+                           (T("Languages Spoken"), "person_id$competency.skill_id"),
+                           (T("Other Languages"), "person_id$other_languages.value"),
+                           (T("Religious Title"), "person_id$religious_title.value"),
+                           (T("Position Title"), "person_id$position_title.value"),
+                           (T("Pronouns"), "person_id$gender"),
+                           (T("Mailing Address"), "person_id$address.location_id"),
+                           (T("Cell Phone"), "person_id$phone.value"),
+                           (T("Office Phone"), "person_id$work_phone.value"),
+                           (T("Emergency Phone"), "person_id$home_phone.value"),
+                           (T("Office Fax"), "person_id$fax.value"),
+                           (T("Personal Email"), "person_id$personal_email.value"),
+                           (T("Work Email"), "person_id$work_email.value"),
+                           #(T("ECDM"), "person_id$em_comms.value"),
+                           ]
+        else:
+            list_fields = [(T("Person Name"), "person_id"),
+                           (T("Organization"), "organisation_id"),
+                           (T("Type"), "job_title_id"),
+                           (T("Languages Spoken"), "person_id$competency.skill_id"),
+                           (T("Religious Title"), "person_id$religious_title.value"),
+                           (T("Position Title"), "person_id$position_title.value"),
+                           #(T("ECDM"), "person_id$em_comms.value"),
+                           ]
+
+        s3db.configure("hrm_human_resource",
+                       list_fields = list_fields,
+                       )
 
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
@@ -567,7 +628,7 @@ def config(settings):
                                listadd = False,
                                )
 
-        hrm_list_fields()
+        hrm_list_fields(r)
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
@@ -593,7 +654,7 @@ def config(settings):
 
             s3db = current.s3db
 
-            hrm_list_fields()
+            hrm_list_fields(r)
 
             from s3 import S3HierarchyFilter, \
                            S3NotEmptyFilter, \
@@ -1001,8 +1062,6 @@ def config(settings):
 
         crud_form = S3SQLCustomForm(*crud_fields)
 
-        
-
         from s3 import S3OptionsFilter, S3TextFilter #, S3HierarchyFilter, S3LocationFilter
         filter_widgets = [
             S3TextFilter(["name"],
@@ -1035,17 +1094,42 @@ def config(settings):
             #                #hidden = True,
             #                ),
             ]
-            
-        list_fields = [#"organisation_id",
-                       #"name",
-                       (T("Physical Address"), "location_id$addr_street"),
-                       (T("# of Congregations at this Facility"), "congregations.value"),
-                       (T("Building Status"), "status.facility_status"),
-                       (T("Call?"), "em_call.value"),
-                       #(T("OEM RRC"), "oem_ready.value"),
-                       ]
-        if r.function == "facility":
-            list_fields.insert(0, "organisation_id")
+
+        if r.representation == "xls":
+            # Filtered components
+            s3db.add_components("org_organisation",
+                                org_organisation_tag = ({"name": "org_id",
+                                                         "joinby": "organisation_id",
+                                                         "filterby": {"tag": "org_id"},
+                                                         "multiple": False,
+                                                         },
+                                                        ),
+                                )
+            list_fields = ["organisation_id",
+                           (T("Organization ID"), "organisation_id$org_id.value"),
+                           "name",
+                           (T("Facility Type"), "site_facility_type.facility_type_id"),
+                           (T("Borough"), "location_id$L3"),
+                           (T("Street Address"), "location_id$addr_street"),
+                           (T("Zipcode"), "location_id$addr_postcode"),
+                           (T("# of Congregations at this Facility"), "congregations.value"),
+                           (T("Cross Streets"), "cross_streets$value"),
+                           (T("Building Status"), "status.facility_status"),
+                           (T("Call?"), "em_call.value"),
+                           #(T("OEM RRC"), "oem_ready.value"),
+                           "comments",
+                           ]
+        else:
+            list_fields = [#"organisation_id",
+                           #"name",
+                           (T("Physical Address"), "location_id$addr_street"),
+                           (T("# of Congregations at this Facility"), "congregations.value"),
+                           (T("Building Status"), "status.facility_status"),
+                           (T("Call?"), "em_call.value"),
+                           #(T("OEM RRC"), "oem_ready.value"),
+                           ]
+            if r.function == "facility":
+                list_fields.insert(0, "organisation_id")
 
         profile_url = URL(c="org", f="facility",
                           args = ["[id]", "profile"])
@@ -1264,6 +1348,75 @@ def config(settings):
     settings.customise_org_facility_controller = customise_org_facility_controller
 
     # -------------------------------------------------------------------------
+    def org_organisation_duplicate(item):
+        """
+            Import item deduplication
+            - names are not unique so we use Org ID as the unique key if names match
+                (Can't use as completely Unique key as there are multiple Orgs with the same ID at times!)
+            - Note that this does allow duplicates in...we could solve most of
+              these by checking Street Address, but would then need to merge Org IDs...
+        """
+
+        db = current.db
+
+        data = item.data
+
+        # First check for duplicate name
+        name = data.get("name")
+        if not name:
+            # hmm, nothing we can do
+            return
+
+        table = item.table
+        ttable = current.s3db.org_organisation_tag
+        query = (table.name == name)
+        left = ttable.on((ttable.organisation_id == table.id) & \
+                         (ttable.tag == "org_id"))
+        duplicate_names = db(query).select(table.id,
+                                           ttable.value,
+                                           #limitby = (0, 3),
+                                           )
+        if not duplicate_names:
+            # Assume not a duplicate, so allow creation of a new Org
+            return
+
+        if len(duplicate_names) == 1:
+            # Only 1 existing Org with this name, so assume this is a duplicate
+            item.id = duplicate_names.first()["org_organisation.id"]
+            item.method = item.METHOD.UPDATE
+            return
+
+        # Multiple Name matches, so check Org ID
+        org_id = None
+        for citem in item.components:
+            data = citem.data
+            if data:
+                ctablename = citem.tablename
+                if ctablename == "org_organisation_tag":
+                    tag = data.get("tag")
+                    if tag == "org_id":
+                        org_id = data.get("value")
+                        break
+
+        if not org_id:
+            current.log.warning("Multiple existing orgs with this name, but we have no org_id in the source...we have no way of knowing which is the correct match, so creating a duplicate.")
+            return
+
+        # See which Org has the same Org ID
+        for org in duplicate_names:
+            if org["org_organisation_tag.value"] == org_id:
+                # We found it!
+                item.id = org["org_organisation.id"]
+                item.method = item.METHOD.UPDATE
+                return
+
+        current.log.warning("Multiple existing orgs with this name, we have an org_id in the source but this doesn't match any of the existing orgs, so creating a duplicate.")
+        return
+
+    # Allow custom deduplicator to be used in scripts
+    settings.org_organisation_duplicate = org_organisation_duplicate
+
+    # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
 
         from s3 import S3LocationSelector
@@ -1415,16 +1568,31 @@ def config(settings):
         f.default = "N"
 
         religion = components_get("religion")
-        religion.configure(hierarchy_levels = ["Religion",
-                                               "Faith Tradition",
-                                               "Denomination",
-                                               "Judicatory Body",
-                                               ],
+        religion_hierarchy_levels = ["Religion",
+                                     "Faith Tradition",
+                                     "Denomination",
+                                     "Judicatory Body",
+                                     ]
+        religion.configure(hierarchy_levels = religion_hierarchy_levels,
                            )
 
-        s3db.pr_religion_organisation.religion_id.represent = S3Represent(lookup = "pr_religion",
-                                                                          hierarchy = "%s, %s"
-                                                                          )
+        if r.representation == "xls":
+            xls = True
+            # Override hyperlink
+            NONE = current.messages["NONE"]
+            s3db.org_organisation.website.represent = lambda v: v or NONE
+
+            # Expand the religion column into individual columns per hierarchy level
+            s3db.configure("org_organisation",
+                           xls_expand_hierarchy = {
+                               "religion_organisation.religion_id": religion_hierarchy_levels,
+                               },
+                           )
+        else:
+            xls = False
+            s3db.pr_religion_organisation.religion_id.represent = S3Represent(lookup = "pr_religion",
+                                                                              hierarchy = "%s, %s"
+                                                                              )
 
         method = r.method
         if method == "read":
@@ -1523,7 +1691,23 @@ def config(settings):
                             ),
             ]
 
-        if method == "review":
+        if xls:
+            list_fields = ["name",
+                           (T("ID"), "org_id.value"),
+                           # Will be expanded into 4 individual columns
+                           # as per xls_expand_hierarchy setting:
+                           (T("Religion"), "religion_organisation.religion_id"),
+                           (T("Organization Type"), "organisation_organisation_type.organisation_type_id"),
+                           "website",
+                           (T("Facebook"), "facebook.value"),
+                           (T("# C. Board"), "board.value"),
+                           (T("Internet Access"), "internet.value"),
+                           "comments",
+                           (T("Facility Address"), "main_facility.location_id$addr_street"),
+                           (T("Borough"), "main_facility.location_id$L3"),
+                           (T("Zipcode"), "main_facility.location_id$addr_postcode"),
+                           ]
+        elif method == "review":
             from s3 import S3DateTime
             s3db.org_organisation.created_on.represent = \
                 lambda dt: S3DateTime.date_represent(dt, utc=True)
@@ -1546,6 +1730,7 @@ def config(settings):
         s3db.configure("org_organisation",
                        crud_form = crud_form,
                        create_next = profile_url,
+                       deduplicate = org_organisation_duplicate,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        popup_url = profile_url,

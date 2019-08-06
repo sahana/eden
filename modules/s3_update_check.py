@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# @status: fixed for Py3
-
 import os
 import sys
 
@@ -298,6 +296,9 @@ def s3_check_python_lib(global_mandatory, template_mandatory, template_optional,
                 warnings.append(warn)
             else:
                 warnings.append("Unresolved optional dependency: %s required" % dependency)
+        except Exception:
+            # Broken module, warn + pass for now
+            warnings.append("Error when loading optional dependency: %s" % dependency)
 
     for dependency, warn in global_optional.items():
         try:
@@ -310,6 +311,9 @@ def s3_check_python_lib(global_mandatory, template_mandatory, template_optional,
                 warnings.append(warn)
             else:
                 warnings.append("Unresolved optional dependency: %s required" % dependency)
+        except Exception:
+            # Broken module, warn + pass for now
+            warnings.append("Error when loading optional dependency: %s" % dependency)
 
     return errors, warnings
 

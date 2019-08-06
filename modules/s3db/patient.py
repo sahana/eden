@@ -258,10 +258,10 @@ class patient_PatientRepresent(S3Represent):
         left = ptable.on(table.person_id == ptable.id)
 
         db = current.db
-        rows = db(query).select(patient_patient.id,
-                                pr_person.first_name,
-                                pr_person.middle_name,
-                                pr_person.last_name,
+        rows = db(query).select(table.id,
+                                ptable.first_name,
+                                ptable.middle_name,
+                                ptable.last_name,
                                 limitby = (0, count),
                                 left = left)
 

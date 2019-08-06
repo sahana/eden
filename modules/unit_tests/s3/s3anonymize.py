@@ -8,12 +8,8 @@
 import os
 import unittest
 
-try:
-    from cStringIO import StringIO # Faster, where available
-except ImportError:
-    from StringIO import StringIO
-
 from s3.s3anonymize import S3Anonymize
+from s3compat import StringIO
 
 from unit_tests import run_suite
 

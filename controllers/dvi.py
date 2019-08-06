@@ -17,7 +17,7 @@ def s3_menu_postp():
         body = s3db.dvi_body
         query = (body.id == body_id)
         record = db(query).select(body.id, body.pe_label,
-                                  limitby=(0,1)).first()
+                                  limitby=(0, 1)).first()
         if record:
             label = record.pe_label
             response.menu_options[-3][-1].append(

@@ -44,9 +44,9 @@ class S3WorkflowStatusModel(S3Model):
 
     def model(self):
 
-        auth = current.auth
+        #auth = current.auth
         define_table = self.define_table
-        db = current.db
+        #db = current.db
 
         # ---------------------------------------------------------------------
         # Entities which can have a workflow status
@@ -60,7 +60,7 @@ class S3WorkflowStatusModel(S3Model):
                           )
 
         tablename = "workflow_entity"
-        s3db.super_entity(tablename, "workflow_id",
+        self.super_entity(tablename, "workflow_id",
                           we_types,
                           )
 
@@ -77,7 +77,7 @@ class S3WorkflowStatusModel(S3Model):
         #
         tablename = "workflow_status"
         define_table(tablename,
-                     super_link("workflow_id", "workflow_entity"),
+                     self.super_link("workflow_id", "workflow_entity"),
                      Field("name", length=64, notnull=True,
                            requires = [IS_NOT_EMPTY(),
                                        IS_LENGTH(64),
@@ -88,8 +88,7 @@ class S3WorkflowStatusModel(S3Model):
                                        IS_LENGTH(64),
                                        ],
                            ),
-                     *s3_meta_fields(),
-                     )
+                     *s3_meta_fields())
 
         return Storage()
 

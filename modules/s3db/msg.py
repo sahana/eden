@@ -578,6 +578,16 @@ class S3MessageContactModel(S3Model):
         # ---------------------------------------------------------------------
         # Contact Messages: InBox
         #
+        # Should probably use project_task if this kind of functionality is desired:
+        #priority_opts = {1: T("Low"),
+        #                 2: T("Medium"),
+        #                 3: T("High"),
+        #                 }
+
+        #status_opts = {1: T("New"),
+        #               2: T("In-Progress"),
+        #               3: T("Closed"),
+        #               }
 
         tablename = "msg_contact"
         self.define_table(tablename,
@@ -603,6 +613,20 @@ class S3MessageContactModel(S3Model):
                                 label = T("Email"),
                                 requires = IS_EMPTY_OR(IS_EMAIL()),
                                 ),
+                          #Field("priority", "integer",
+                          #      default = 1,
+                          #      label = T("Priority"),
+                          #      represent = S3Represent(options = priority_opts),
+                          #      requires = IS_IN_SET(priority_opts,
+                          #                           zero = None),
+                          #      ),
+                          #Field("status", "integer",
+                          #      default = 3,
+                          #      label = T("Status"),
+                          #      represent = S3Represent(options = status_opts),
+                          #      requires = IS_IN_SET(status_opts,
+                          #                           zero = None),
+                          #      ),
                           Field("inbound", "boolean",
                                 default = True,
                                 label = T("Direction"),

@@ -47,9 +47,15 @@ __all__ = (# PR Base Entities
            "PRLanguageModel",
            "PROccupationModel",
            "PRPersonDetailsModel",
+           "PRPersonLocationModel",
            "PRPersonTagModel",
 
            "PRReligionModel",
+
+           # Group Components
+           "PRGroupCompetencyModel",
+           "PRGroupLocationModel",
+           "PRGroupTagModel",
 
            # S3 Models
            "S3ImageLibraryModel",
@@ -115,8 +121,6 @@ __all__ = (# PR Base Entities
 import json
 import os
 
-from urllib import urlencode
-
 from gluon import current, redirect, URL, \
                   A, DIV, H2, H3, H5, IMG, LABEL, P, SPAN, TABLE, TAG, TH, TR, \
                   IS_LENGTH, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, IS_EMAIL, \
@@ -125,6 +129,7 @@ from gluon.storage import Storage
 from gluon.sqlhtml import RadioWidget
 
 from ..s3 import *
+from s3compat import INTEGER_TYPES, basestring, long, urlencode
 from s3dal import Field, Row
 from s3layouts import S3PopupLink
 
@@ -1067,6 +1072,11 @@ class PRPersonModel(S3Model):
                        # Skills
                        pr_language = "person_id",
                        hrm_certification = "person_id",
+                       hrm_skill = {"link": "hrm_competency",
+                                    "joinby": "person_id",
+                                    "key": "skill_id",
+                                    "actuate": "hide",
+                                    },
                        hrm_competency = "person_id",
                        hrm_credential = "person_id",
                        hrm_training = "person_id",
@@ -1107,15 +1117,16 @@ class PRPersonModel(S3Model):
                        # Education history
                        pr_education = "person_id",
                        # Occupation Types
-                       pr_occupation_type = {
-                           "link": "pr_occupation_type_person",
-                           "joinby": "person_id",
-                           "key": "occupation_type_id",
-                           "actuate": "link",
-                           "autodelete": False,
-                           },
+                       pr_occupation_type = {"link": "pr_occupation_type_person",
+                                             "joinby": "person_id",
+                                             "key": "occupation_type_id",
+                                             "actuate": "link",
+                                             "autodelete": False,
+                                             },
+
                        # Group Memberships
                        pr_group_membership = "person_id",
+
                        # Identity Documents
                        pr_identity = (# All Identity Documents
                                       {"name": "identity",
@@ -1140,10 +1151,27 @@ class PRPersonModel(S3Model):
                        pr_person_details = {"joinby": "person_id",
                                             "multiple": False,
                                             },
+                       # Locations
+                       gis_location = {"link": "pr_person_location",
+                                       "joinby": "person_id",
+                                       "key": "location_id",
+                                       "actuate": "hide",
+                                       },
+                       pr_person_location = "person_id",
+
                        # Tags
                        pr_person_tag = "person_id",
+
                        # Seized Items (owner)
                        security_seized_item = "person_id",
+                       
+                       # Supply Items (Donor)
+                       supply_item = {"link": "supply_person_item",
+                                      "joinby": "person_id",
+                                      "key": "item_id",
+                                      "actuate": "hide",
+                                      },
+                       supply_person_item = "person_id",
                        )
 
         # Beneficiary/Case Management
@@ -1290,14 +1318,14 @@ class PRPersonModel(S3Model):
         db = current.db
         s3db = current.s3db
 
-        form_vars = form.vars
-        person_id = form_vars.id
+        form_vars_get = form.vars.get
+        person_id = form_vars_get("id")
 
         ptable = s3db.pr_person
         ltable = s3db.pr_person_user
         utable = current.auth.settings.table_user
 
-        # Find a user for this person
+        # Check if this person has a User account
         query = (ptable.id == person_id) & \
                 (ltable.pe_id == ptable.pe_id) & \
                 (utable.id == ltable.user_id)
@@ -1306,27 +1334,30 @@ class PRPersonModel(S3Model):
                                 utable.last_name,
                                 limitby=(0, 1)).first()
 
-        # If there is a user and their first or other name have changed
         if user:
+            # Update in case Names have changed
+            first_name = form_vars_get("first_name")
+            middle_name = form_vars_get("middle_name")
+            last_name = form_vars_get("last_name")
             middle_as_last = current.deployment_settings.get_L10n_mandatory_middlename()
             if middle_as_last:
                 # RMSAmericas: Map the Person's middle_name to the User's last_name
-                if form_vars.first_name and \
-                   (user.first_name != form_vars.first_name or \
-                   user.last_name != form_vars.middle_name):
+                if first_name and \
+                   (user.first_name != first_name or \
+                   user.last_name != middle_name):
                     # Update the user record
                     query = (utable.id == user.id)
-                    db(query).update(first_name = form_vars.first_name,
-                                     last_name = form_vars.middle_name,
+                    db(query).update(first_name = first_name,
+                                     last_name = middle_name,
                                      )
             else:
-                if form_vars.first_name and \
-                   (user.first_name != form_vars.first_name or \
-                   user.last_name != form_vars.last_name):
+                if first_name and \
+                   (user.first_name != first_name or \
+                   user.last_name != last_name):
                     # Update the user record
                     query = (utable.id == user.id)
-                    db(query).update(first_name = form_vars.first_name,
-                                     last_name = form_vars.last_name,
+                    db(query).update(first_name = first_name,
+                                     last_name = last_name,
                                      )
 
     # -------------------------------------------------------------------------
@@ -1335,7 +1366,6 @@ class PRPersonModel(S3Model):
         """ Import item deduplication """
 
         db = current.db
-        settings = current.deployment_settings
 
         data = item.data
 
@@ -1353,6 +1383,7 @@ class PRPersonModel(S3Model):
 
             return
 
+        settings = current.deployment_settings
         middle_mandatory = settings.get_L10n_mandatory_middlename()
 
         ptable = db.pr_person
@@ -2512,7 +2543,28 @@ class PRGroupModel(S3Model):
 
         # Components
         self.add_components(tablename,
+                            pr_person = {"link": "pr_group_membership",
+                                         "joinby": "group_id",
+                                         "key": "person_id",
+                                         # This allows native=True to break members out if tab is 'person'
+                                         # - used by CCC
+                                         "actuate": "replace",
+                                         },
                             pr_group_membership = "group_id",
+
+                            # Tags
+                            pr_group_tag = {"name": "tag",
+                                            "joinby": "group_id",
+                                            },
+
+                            # Locations
+                            gis_location = {"link": "pr_group_location",
+                                            "joinby": "group_id",
+                                            "key": "location_id",
+                                            "actuate": "hide",
+                                            "autodelete": False,
+                                            },
+                            pr_group_location = "group_id",
 
                             # Shelter (Camp) Registry
                             cr_shelter_allocation = {"joinby": "group_id",
@@ -2560,6 +2612,15 @@ class PRGroupModel(S3Model):
                                                 "autodelete": False,
                                                 },
                             org_organisation_team = "group_id",
+
+                            # Skills
+                            hrm_skill = {"link": "pr_group_competency",
+                                        "joinby": "group_id",
+                                        "key": "skill_id",
+                                        "actuate": "hide",
+                                        "autodelete": False,
+                                        },
+                            pr_group_competency = "group_id",
 
                             # Posts
                             cms_post = {"link": "cms_post_team",
@@ -2841,7 +2902,7 @@ class PRGroupModel(S3Model):
         """
 
         if hasattr(form, "vars"):
-            record_id = form.vars.id
+            record_id = form.vars.get("id")
         elif isinstance(form, Row) and "id" in form:
             record_id = form.id
         else:
@@ -3032,6 +3093,139 @@ class PRGroupModel(S3Model):
         except AttributeError:
             # => Set to default of None
             return None
+
+# =============================================================================
+class PRGroupCompetencyModel(S3Model):
+    """
+        Group Competency Model
+        - Skills available in a Group
+    """
+
+    names = ("pr_group_competency",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Groups <> Skills Link Table
+        #
+        tablename = "pr_group_competency"
+        self.define_table(tablename,
+                          self.pr_group_id(),
+                          self.hrm_skill_id(),
+                          #self.hrm_competency_id(),
+                          s3_comments(),
+                          *s3_meta_fields()
+                          )
+
+        # CRUD Strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Skill"),
+            title_display = T("Skill"),
+            title_list = T("Skills"),
+            title_update = T("Edit Skill"),
+            title_upload = T("Import Skills"),
+            label_list_button = T("List Skills"),
+            msg_record_created = T("Skill added to Group"),
+            msg_record_modified = T("Skill updated"),
+            msg_record_deleted = T("Skill removed from Group"),
+            msg_list_empty = T("No Skills found for this Group"))
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("group_id",
+                                                            "skill_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class PRGroupLocationModel(S3Model):
+    """
+        Group Location Model
+        - Locations served by a Group
+    """
+
+    names = ("pr_group_location",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Groups <> Locations Link Table
+        #
+        tablename = "pr_group_location"
+        self.define_table(tablename,
+                          self.pr_group_id(),
+                          self.gis_location_id(
+                            #represent = self.gis_LocationRepresent(sep=", "),
+                            requires = IS_LOCATION(),
+                            widget = S3LocationAutocompleteWidget()
+                          ),
+                          s3_comments(),
+                          *s3_meta_fields()
+                          )
+
+        # CRUD Strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Location"),
+            title_display = T("Location"),
+            title_list = T("Locations"),
+            title_update = T("Edit Location"),
+            title_upload = T("Import Location data"),
+            label_list_button = T("List Locations"),
+            msg_record_created = T("Location added to Group"),
+            msg_record_modified = T("Location updated"),
+            msg_record_deleted = T("Location removed from Group"),
+            msg_list_empty = T("No Locations found for this Group"))
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("group_id",
+                                                            "location_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class PRGroupTagModel(S3Model):
+    """
+        Group Tags
+    """
+
+    names = ("pr_group_tag",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        tablename = "pr_group_tag"
+        self.define_table(tablename,
+                          self.pr_group_id(ondelete = "CASCADE"),
+                          Field("tag",
+                                label = T("Key"),
+                                ),
+                          Field("value",
+                                label = T("Value"),
+                                ),
+                          #s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("group_id", "tag"),
+                                                 ignore_case = True,
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
 
 # =============================================================================
 class PRForumModel(S3Model):
@@ -3377,7 +3571,7 @@ class PRForumModel(S3Model):
                       )
             body = "To approve this request, click here: %(url)s"
             translations = {}
-            languages = list(set([a["auth_user.language"] for a in admins]))
+            languages = list({a["auth_user.language"] for a in admins})
             for l in languages:
                 translations[l] = {"s": s3_str(T(subject, language = l)) % dict(forum_name = forum_name),
                                    "b": s3_str(T(body, language = l)) % dict(url = url),
@@ -3677,6 +3871,7 @@ class PRContactModel(S3Model):
         T = current.T
 
         configure = self.configure
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         messages = current.messages
         super_link = self.super_link
@@ -3721,7 +3916,7 @@ class PRContactModel(S3Model):
                      Field("priority", "integer",
                            default = 1,
                            label = T("Priority"),
-                           requires = IS_IN_SET(range(1, 10)),
+                           requires = IS_IN_SET(list(range(1, 10))),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Priority"),
                                                            T("What order to be contacted in."))),
@@ -3749,7 +3944,7 @@ class PRContactModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        current.response.s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             label_create = T("Add Contact Information"),
             title_display = T("Contact Details"),
             title_list = T("Contact Information"),
@@ -3809,6 +4004,19 @@ class PRContactModel(S3Model):
                            ),
                      s3_comments(),
                      *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Emergency Contact"),
+            title_display = T("Emergency Contact Details"),
+            title_list = T("Emergency Contacts"),
+            title_update = T("Edit Emergency Contact"),
+            label_list_button = T("List Emergency Contacts"),
+            label_delete_button = T("Delete Emergency Contact"),
+            msg_record_created = T("Emergency Contact Added"),
+            msg_record_modified = T("Emergency Contact Updated"),
+            msg_record_deleted = T("Emergency Contact Deleted"),
+            msg_list_empty = T("No emergency contacts registered"))
 
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("pe_id",),
@@ -4364,7 +4572,7 @@ class PRPresenceModel(S3Model):
         table = db.pr_presence
         popts = current.s3db.pr_presence_opts
 
-        if isinstance(form, (int, long, str)):
+        if isinstance(form, INTEGER_TYPES + (str,)):
             record_id = form
         elif hasattr(form, "vars"):
             record_id = form.vars.id
@@ -5031,7 +5239,7 @@ class PRDescriptionModel(S3Model):
         ntable = db.pr_note
         ptable = s3db.pr_person
 
-        if isinstance(form, (int, long, str)):
+        if isinstance(form, INTEGER_TYPES + (str,)):
             record_id = form
         elif hasattr(form, "vars"):
             record_id = form.vars.id
@@ -5770,6 +5978,57 @@ class PRPersonDetailsModel(S3Model):
                 }
 
 # =============================================================================
+class PRPersonLocationModel(S3Model):
+    """
+        Person Location Model
+        - Locations served by a Person
+    """
+
+    names = ("pr_person_location",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Persons <> Locations Link Table
+        #
+        tablename = "pr_person_location"
+        self.define_table(tablename,
+                          self.pr_person_id(),
+                          self.gis_location_id(
+                            #represent = self.gis_LocationRepresent(sep=", "),
+                            requires = IS_LOCATION(),
+                            widget = S3LocationAutocompleteWidget()
+                          ),
+                          s3_comments(),
+                          *s3_meta_fields()
+                          )
+
+        # CRUD Strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Location"),
+            title_display = T("Location"),
+            title_list = T("Locations"),
+            title_update = T("Edit Location"),
+            title_upload = T("Import Location data"),
+            label_list_button = T("List Locations"),
+            msg_record_created = T("Location added to Person"),
+            msg_record_modified = T("Location updated"),
+            msg_record_deleted = T("Location removed from Person"),
+            msg_list_empty = T("No Locations found for this Person"))
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("person_id",
+                                                            "location_id",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
 class PRPersonTagModel(S3Model):
     """
         Person Tags
@@ -5907,9 +6166,17 @@ class PRReligionModel(S3Model):
         define_table(tablename,
                      religion_id(ondelete="RESTRICT",
                                  ),
-                     self.org_organisation_id(ondelete="CASCADE",
+                     self.org_organisation_id(empty = False,
+                                              ondelete="CASCADE",
                                               ),
                      *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("religion_id",
+                                                            "organisation_id",
+                                                            ),
+                                                 ),
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -6098,7 +6365,7 @@ class S3SavedFilterModel(S3Model):
             query = query.replace("'", "\"")
             try:
                 json.loads(query)
-            except ValueError, e:
+            except ValueError as e:
                 form.errors.query = "%s: %s" % (current.T("Query invalid"), e)
             form.vars.query = query
 
@@ -6402,11 +6669,11 @@ def pr_get_entities(pe_ids=None,
 
     if represent:
         if group and as_list:
-            return Storage([(t, repr_grp[t].values()) for t in repr_grp])
+            return Storage([(t, list(repr_grp[t].values())) for t in repr_grp])
         elif group:
             return repr_grp
         elif as_list:
-            return repr_flt.values()
+            return list(repr_flt.values())
         else:
             return repr_flt
     else:
@@ -6609,7 +6876,7 @@ class pr_PersonEntityRepresent(S3Represent):
                     continue
                 qfields.insert(0, table[keyname])
 
-                query = (table[keyname].belongs(types[instance_type].keys()))
+                query = (table[keyname].belongs(set(types[instance_type].keys())))
                 rows = db(query).select(*qfields)
             self.queries += 1
 
@@ -6820,8 +7087,6 @@ class pr_PersonRepresentContact(pr_PersonRepresent):
             query = (key == values[0])
         else:
             query = key.belongs(values)
-
-        fields = ["id"]
 
         rows = db(query).select(table.id,
                                 table.pe_id,
@@ -7235,11 +7500,11 @@ def pr_nationality_opts():
     T = current.T
 
     countries = current.gis.get_countries(key_type="code")
-    opts = sorted([(k, T(countries[k])) for k in countries.keys()],
+    opts = sorted(((k, T(countries[k])) for k in countries.keys()),
                   # NB applies server locale's sorting rules, not
                   #    the user's chosen language (not easily doable
                   #    in Python, would require pyICU or similar)
-                  key=lambda x: x[1],
+                  key=lambda x: s3_str(x[1]),
                   )
 
     # Stateless always last
@@ -8130,7 +8395,7 @@ class pr_Template(S3Method):
                 # Extract Data
                 resource = r.resource
                 mailmerge_fields = current.deployment_settings.get_doc_mailmerge_fields()
-                data = resource.select(mailmerge_fields.values(),
+                data = resource.select(list(mailmerge_fields.values()),
                                        represent = True,
                                        show_links = False,
                                        )
@@ -8533,7 +8798,7 @@ def pr_get_pe_id(entity, record_id=None):
                 if isinstance(f, Row) and "pe_id" in f:
                     return f["pe_id"]
             return None
-    elif isinstance(entity, (long, int)) or \
+    elif isinstance(entity, INTEGER_TYPES) or \
          isinstance(entity, basestring) and entity.isdigit():
         return entity
     else:
@@ -9070,15 +9335,15 @@ def pr_descendants(pe_ids, skip=None, root=True):
 
     if nodes:
         descendants = pr_descendants(nodes, skip=skip, root=False)
-        for child, nodes in descendants.iteritems():
-            for parent, children in result.iteritems():
+        for child, nodes in descendants.items():
+            for parent, children in result.items():
                 if child in children:
                     for node in nodes:
                         if node not in children:
                             children.append(node)
     if root:
-        for child, nodes in result.iteritems():
-            for parent, children in result.iteritems():
+        for child, nodes in result.items():
+            for parent, children in result.items():
                 if child in children:
                     for node in nodes:
                         if node not in children and node != parent:
@@ -9105,7 +9370,7 @@ def pr_get_descendants(pe_ids, entity_types=None, skip=None, ids=True):
         return []
     if type(pe_ids) is not set:
         pe_ids = set(pe_ids) \
-                 if isinstance(pe_ids, (list, tuple)) else set([pe_ids])
+                 if isinstance(pe_ids, (list, tuple)) else {pe_ids}
 
     db = current.db
     s3db = current.s3db
@@ -9154,7 +9419,7 @@ def pr_get_descendants(pe_ids, entity_types=None, skip=None, ids=True):
         if entity_types is not None:
             if type(entity_types) is not set:
                 if not isinstance(entity_types, (tuple, list)):
-                    entity_types = set([entity_types])
+                    entity_types = {entity_types}
                 else:
                     entity_types = set(entity_types)
             return [n[0] for n in result if n[1] in entity_types]

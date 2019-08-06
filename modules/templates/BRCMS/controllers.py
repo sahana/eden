@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import json
+from gluon import current
+from gluon.html import A, DIV, H3, P, XML
 
-from os import path
-
-from gluon import current, redirect
-from gluon.html import *
-from gluon.storage import Storage
-
-from s3 import FS, S3CustomController
-from s3theme import formstyle_foundation_inline
+from s3 import S3CustomController
 
 THEME = "BRCMS"
 
@@ -167,7 +161,7 @@ $('#show-login').click(function(e){
             s3.jquery_ready.append(script)
 
             # This user isn't yet logged-in
-            if request.cookies.has_key("registered"):
+            if "registered" in request.cookies:
                 # This browser has logged-in before
                 registered = True
 

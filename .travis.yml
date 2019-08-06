@@ -1,23 +1,25 @@
-dist: trusty
+dist: xenial
 sudo: false
 
 language: python
 
-# currently only testing for python 2.7
 python:
   - "2.7"
+  - "3.5"
 
 # This tests against all the versions of DB supported by Eden
 env:
- - DB=mysql
- - DB=sqlite3
- - DB=postgres-9.4
- - DB=postgres-9.4+postgis
- - DB=postgres-9.6
- - DB=postgres-9.6+postgis
+  - DB=mysql
+  - DB=sqlite3
+  - DB=postgres-9.6
+  - DB=postgres-9.6+postgis
 
 virtualenv:
   system_site_packages: true
+
+services:
+  - mysql
+  - postgresql
 
 # Uncomment below to only test the master branch
 # branches:

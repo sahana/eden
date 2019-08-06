@@ -25,8 +25,6 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @status: fixed for Py3
 """
 
 __all__ = ("S3Model",
@@ -43,7 +41,7 @@ from gluon.tools import callback
 from s3dal import Table, Field, original_tablename
 from .s3navigation import S3ScriptItem
 from .s3resource import S3Resource
-from .s3validators import IS_ONE_OF
+from .s3validators import IS_ONE_OF, IS_JSONS3
 from .s3widgets import s3_comments_widget, s3_richtext_widget
 
 DYNAMIC_PREFIX = "s3dt"
@@ -1910,6 +1908,8 @@ class S3DynamicModel(object):
                 construct = cls._boolean_field
             elif fieldtype in ("integer", "double"):
                 construct = cls._numeric_field
+            elif fieldtype == "json":
+                construct = cls._json_field
             else:
                 construct = cls._generic_field
 
@@ -1963,7 +1963,9 @@ class S3DynamicModel(object):
         fieldname = row.name
         fieldtype = row.field_type
 
-        if row.require_unique:
+        multiple = fieldtype[:5] == "list:"
+
+        if row.require_unique and not multiple:
             from .s3validators import IS_NOT_ONE_OF
             requires = IS_NOT_ONE_OF(current.db, "%s.%s" % (tablename,
                                                             fieldname,
@@ -2017,6 +2019,7 @@ class S3DynamicModel(object):
 
         from .s3utils import s3_str
 
+        multiple = fieldtype[:5] == "list:"
         sort = False
         zero = ""
 
@@ -2047,19 +2050,44 @@ class S3DynamicModel(object):
 
         # Apply default value (if it is a valid option)
         default = row.default_value
-        if default and s3_str(default) in (s3_str(k) for k in options_dict):
-            # No zero-option if we have a default value and
-            # the field must not be empty:
-            zero = None if row.require_not_empty else ""
-        else:
-            default = None
+        if default is not None:
+            if multiple:
+                if default and default[0] == "[":
+                    # Attempt to JSON-parse the default value
+                    import json
+                    from .s3validators import JSONERRORS
+                    try:
+                        default = json.loads(default)
+                    except JSONERRORS:
+                        pass
+                if not isinstance(default, list):
+                    default = [default]
+                zero = None
+            elif s3_str(default) in (s3_str(k) for k in options_dict):
+                # No zero-option if we have a default value and
+                # the field must not be empty:
+                zero = None if row.require_not_empty else ""
+            else:
+                default = None
 
         # Widget?
-        #widget = settings.get("widget")
-        #if widget == "radio":
+        widget = settings.get("widget")
         len_options = len(options)
-        if len_options < 4:
-            widget = lambda field, value: SQLFORM.widgets.radio.widget(field, value, cols=len_options)
+        if multiple:
+            if widget and widget == "groupedopts" or \
+               not widget and len_options < 8:
+                from .s3widgets import S3GroupedOptionsWidget
+                widget = S3GroupedOptionsWidget(cols=4)
+            else:
+                from .s3widgets import S3MultiSelectWidget
+                widget = S3MultiSelectWidget()
+        elif widget and widget == "radio" or \
+             not widget and len_options < 4:
+            widget = lambda field, value: \
+                         SQLFORM.widgets.radio.widget(field,
+                                                      value,
+                                                      cols = len_options,
+                                                      )
         else:
             widget = None
 
@@ -2067,9 +2095,11 @@ class S3DynamicModel(object):
         field = Field(fieldname, fieldtype,
                       default = default,
                       represent = S3Represent(options = options_dict,
+                                              multiple = multiple,
                                               translate = translate,
                                               ),
                       requires = IS_IN_SET(options,
+                                           multiple = multiple,
                                            sort = sort,
                                            zero = zero,
                                            ),
@@ -2313,6 +2343,33 @@ class S3DynamicModel(object):
 
         if widget:
             field.widget = widget
+
+        return field
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _json_field(tablename, row):
+        """
+            Boolean field constructor
+
+            @param tablename: the table name
+            @param row: the s3_field Row
+
+            @return: the Field instance
+        """
+
+        fieldname = row.name
+        fieldtype = row.field_type
+
+        default = row.default_value
+        if default:
+            value, error = IS_JSONS3()(default)
+            default = None if error else value
+
+        field = Field(fieldname, fieldtype,
+                      default = default,
+                      requires = IS_JSONS3(),
+                      )
 
         return field
 

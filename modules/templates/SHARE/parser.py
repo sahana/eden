@@ -33,16 +33,12 @@
 __all__ = ["S3Parser"]
 
 import os
-import urllib2          # Needed for quoting & error handling on fetch
-try:
-    from cStringIO import StringIO    # Faster, where available
-except:
-    from StringIO import StringIO
 
 from gluon import current
 from gluon.tools import fetch
 
 from s3.s3parser import S3Parsing
+from s3compat import HTTPError, StringIO, urllib2, urlopen, urlparse
 
 # =============================================================================
 class S3Parser(object):
@@ -320,7 +316,7 @@ class S3Parser(object):
             stylesheet = os.path.join(current.request.folder, "static", "formats", "cap", "import.xsl")
             try:
                 file = fetch(url)
-            except urllib2.HTTPError, e:
+            except HTTPError as e:
                 import base64
                 rss_table = s3db.msg_rss_channel
                 query = (rss_table.channel_id == record.channel_id)
@@ -340,20 +336,19 @@ class S3Parser(object):
                     request = None
 
                 try:
-                    file = urllib2.urlopen(request).read() if request else fetch(url)
-                except urllib2.HTTPError, e:
+                    file = urlopen(request).read() if request else fetch(url)
+                except HTTPError as e:
                     # Check if there are links to look into
-                    from urlparse import urlparse
                     ltable = s3db.msg_rss_link
                     query_ = (ltable.rss_id == record.id) & (ltable.deleted != True)
                     rows_ = db(query_).select(ltable.type,
                                               ltable.url)
                     url_format = "{uri.scheme}://{uri.netloc}/".format
-                    url_domain = url_format(uri=urlparse(url))
+                    url_domain = url_format(uri=urlparse.urlparse(url))
                     for row_ in rows_:
                         url = row_.url
                         if url and row_.type == "application/cap+xml" and \
-                           url_domain == url_format(uri=urlparse(url)):
+                           url_domain == url_format(uri=urlparse.urlparse(url)):
                             # Same domain, so okey to use same username/pwd combination
                             if e.code == 401 and username and password:
                                 request = urllib2.Request(url)
@@ -361,8 +356,8 @@ class S3Parser(object):
                             else:
                                 request = None
                             try:
-                                file = urllib2.urlopen(request).read() if request else fetch(url)
-                            except urllib2.HTTPError, e:
+                                file = urlopen(request).read() if request else fetch(url)
+                            except HTTPError as e:
                                 current.log.error("Getting content from link failed: %s" % e)
                             else:
                                 # Import via XSLT

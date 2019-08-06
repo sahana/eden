@@ -76,6 +76,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
+from s3compat import basestring
 from s3layouts import S3PopupLink
 
 # =============================================================================
@@ -6175,7 +6176,7 @@ def dvr_case_household_size(group_id):
             (gtable.group_type == 7) & \
             (gtable.deleted != True)
     rows = db(query).select(ptable.id, join=join)
-    person_ids = set([row.id for row in rows])
+    person_ids = {row.id for row in rows}
 
     if person_ids:
         # Get case group members for each of these person_ids
@@ -6204,7 +6205,7 @@ def dvr_case_household_size(group_id):
             member_id = row[MEMBER]
             case_id = row[CASE]
             if case_id not in groups:
-                groups[case_id] = set([member_id])
+                groups[case_id] = {member_id}
             else:
                 groups[case_id].add(member_id)
 
@@ -6867,7 +6868,7 @@ class dvr_DocEntityRepresent(S3Represent):
             itable = s3db[instance_type]
 
             # Look up person and instance data
-            query = itable.doc_id.belongs(doc_entities.keys())
+            query = itable.doc_id.belongs(set(doc_entities.keys()))
             if instance_type == "pr_group":
                 mtable = s3db.pr_group_membership
                 left = [mtable.on((mtable.group_id == itable.id) & \
@@ -7431,7 +7432,7 @@ def dvr_get_household_size(person_id, dob=False, formatted=True):
                 children_u1 = 1
 
     # Household members which have already been counted
-    members = set([person_id])
+    members = {person_id}
     counted = members.add
 
     # Get all case groups this person belongs to

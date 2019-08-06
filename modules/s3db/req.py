@@ -34,11 +34,13 @@ __all__ = ("RequestPriorityStatusModel",
            "RequestRecurringModel",
            "RequestNeedsModel",
            "RequestNeedsActivityModel",
+           "RequestNeedsContactModel",
            "RequestNeedsDemographicsModel",
            "RequestNeedsItemsModel",
            "RequestNeedsSkillsModel",
            "RequestNeedsLineModel",
            "RequestNeedsOrganisationModel",
+           "RequestNeedsPersonModel",
            "RequestNeedsSectorModel",
            "RequestNeedsSiteModel",
            "RequestNeedsTagModel",
@@ -267,7 +269,7 @@ class RequestModel(S3Model):
 
         # Default Request Type
         if len(req_types) == 1:
-            default_type = req_types.keys()[0]
+            default_type = list(req_types.keys())[0]
         else:
             default_type = current.request.get_vars.get("type")
             if default_type:
@@ -2380,7 +2382,15 @@ class RequestNeedsModel(S3Model):
         self.define_table(tablename,
                           self.super_link("doc_id", "doc_entity"),
                           self.gis_location_id(), # Can be hidden, e.g. if using Sites (can then sync this onaccept)
-                          s3_date(default = "now"),
+                          s3_datetime(default = "now",
+                                      widget = "date",
+                                      ),
+                          s3_datetime("end_date",
+                                      label = T("End Date"),
+                                      # Enable in Templates if-required
+                                      readable = False,
+                                      writable = False,
+                                      ),
                           self.req_priority(),
                           s3_comments("name",
                                       label = T("Summary of Needs"),
@@ -2423,6 +2433,9 @@ class RequestNeedsModel(S3Model):
                                                 "key": "organisation_id",
                                                 "multiple": False,
                                                 },
+                            req_need_organisation = {"joinby": "need_id",
+                                                     "multiple": False,
+                                                     },
                             org_sector = {"link": "req_need_sector",
                                           "joinby": "need_id",
                                           "key": "sector_id",
@@ -2437,14 +2450,24 @@ class RequestNeedsModel(S3Model):
                                                 "joinby": "need_id",
                                                 "key": "activity_id",
                                                 },
+                            req_need_contact = {"joinby": "need_id",
+                                                # Can redefine as multiple=True in template if-required
+                                                "multiple": False,
+                                                },
                             req_need_demographic = "need_id",
                             req_need_item = "need_id",
-                            req_need_skill = "need_id",
                             req_need_line = "need_id",
+                            req_need_person = "need_id",
+                            req_need_skill = "need_id",
                             req_need_tag = {"name": "tag",
                                             "joinby": "need_id",
                                             },
                             )
+
+        # Custom Methods
+        self.set_method("req", "need",
+                        method = "assign",
+                        action = self.pr_AssignMethod(component="need_person"))
 
         # NB Only instance of this being used (SHARE) over-rides this to show the req_number
         represent = S3Represent(lookup = tablename,
@@ -2509,6 +2532,45 @@ class RequestNeedsActivityModel(S3Model):
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary=("need_id",
                                                           "activity_id",
+                                                          ),
+                                                 ),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class RequestNeedsContactModel(S3Model):
+    """
+        Simple Requests Management System
+        - optional link to Contacts (People)
+    """
+
+    names = ("req_need_contact",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Needs <=> Persons
+        #
+
+        tablename = "req_need_contact"
+        self.define_table(tablename,
+                          self.req_need_id(empty = False),
+                          self.pr_person_id(empty = False,
+                                            label = T("Contact"),
+                                            ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary=("need_id",
+                                                          "person_id",
                                                           ),
                                                  ),
                        )
@@ -2726,19 +2788,20 @@ class RequestNeedsSkillsModel(S3Model):
     def model(self):
 
         T = current.T
+        crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
         # Needs <=> Skills
         #
         skill_id = self.hrm_skill_id # Load normal model
-        CREATE = current.response.s3.crud_strings["hrm_skill"].label_create
+        CREATE_SKILL = crud_strings["hrm_skill"].label_create
 
         tablename = "req_need_skill"
         self.define_table(tablename,
                           self.req_need_id(empty = False),
                           skill_id(comment = S3PopupLink(c = "hrm",
                                                          f = "skill",
-                                                         label = CREATE,
+                                                         label = CREATE_SKILL,
                                                          tooltip = None,
                                                          vars = {"prefix": "req"},
                                                          ),
@@ -2764,6 +2827,21 @@ class RequestNeedsSkillsModel(S3Model):
                                                           ),
                                                  ),
                        )
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Skill"),
+            title_list = T("Skills"),
+            title_display = T("Skill"),
+            title_update = T("Edit Skill"),
+            #title_upload = T("Import Skills"),
+            label_list_button = T("List Skills"),
+            label_delete_button = T("Delete Skill"),
+            msg_record_created = T("Skill added"),
+            msg_record_modified = T("Skill updated"),
+            msg_record_deleted = T("Skill deleted"),
+            msg_list_empty = T("No Skills currently registered for this Request"),
+            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -2991,6 +3069,73 @@ class RequestNeedsOrganisationModel(S3Model):
                                                           ),
                                                  ),
                        )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class RequestNeedsPersonModel(S3Model):
+    """
+        Simple Requests Management System
+        - optional link to People (used for assignments to Skills)
+        - currently assumes that Need just has a single Skill, so no need to say which skill the person is for
+        - used by CCC
+    """
+
+    names = ("req_need_person",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Needs <=> Persons
+        #
+        status_opts = {1: T("Applied"),
+                       2: T("Approved"),
+                       3: T("Rejected"),
+                       4: T("Invited"),
+                       5: T("Accepted"),
+                       6: T("Declined"),
+                       }
+
+        tablename = "req_need_person"
+        self.define_table(tablename,
+                          self.req_need_id(empty = False),
+                          self.pr_person_id(empty = False),
+                          Field("status", "integer",
+                                default = 4, # Invited
+                                label = T("Status"),
+                                represent = S3Represent(options=status_opts),
+                                requires = IS_EMPTY_OR(
+                                            IS_IN_SET(status_opts)),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary=("need_id",
+                                                          "person_id",
+                                                          ),
+                                                 ),
+                       )
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Person"),
+            title_display = T("Person Details"),
+            title_list = T("People"),
+            title_update = T("Edit Person"),
+            #title_upload = T("Import People"),
+            label_list_button = T("List People"),
+            label_delete_button = T("Remove Person"),
+            msg_record_created = T("Person added"),
+            msg_record_modified = T("Person updated"),
+            msg_record_deleted = T("Person removed"),
+            msg_list_empty = T("No People currently linked to this Need")
+        )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -3474,6 +3619,13 @@ class RequestTaskModel(S3Model):
                           #self.req_req_person_id(),
                           #self.req_req_skill_id(),
                           *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("task_id",
+                                                            "req_id",
+                                                            ),
+                                                 ),
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -4068,9 +4220,14 @@ class CommitPersonModel(S3Model):
             msg_record_deleted = T("Person removed from Commitment"),
             msg_list_empty = T("No People currently committed"))
 
-        # @ToDo: Fix this before enabling
-        #self.configure(tablename,
-        #               onaccept = self.commit_person_onaccept)
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("commit_id",
+                                                            "human_resource_id",
+                                                            ),
+                                                 ),
+                       # @ToDo: Fix this before enabling
+                       #onaccept = self.commit_person_onaccept,
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -5047,10 +5204,10 @@ class req_CheckMethod(S3Method):
                                 else:
                                     status = SPAN(T("YES"), _class="req_status_complete")
                             else:
-                                status = SPAN(T("NO"), _class="req_status_none"),
+                                status = SPAN(T("NO"), _class="req_status_none")
                         else:
                             inv_quantity = T("N/A")
-                            status = SPAN(T("N/A"), _class="req_status_none"),
+                            status = SPAN(T("N/A"), _class="req_status_none")
 
                         items.append(TR(#A(req_item.id),
                                         supply_item_represent(req_item.item_id),
@@ -5219,10 +5376,10 @@ class req_CheckMethod(S3Method):
                             else:
                                 status = SPAN(T("YES"), _class="req_status_complete")
                         else:
-                            status = SPAN(T("NO"), _class="req_status_none"),
+                            status = SPAN(T("NO"), _class="req_status_none")
                     else:
                         org_quantity = T("N/A")
-                        status = SPAN(T("N/A"), _class="req_status_none"),
+                        status = SPAN(T("N/A"), _class="req_status_none")
 
                     items.append(TR(#A(req_item.id),
                                     multi_skill_represent(skills),

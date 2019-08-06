@@ -16,10 +16,7 @@ resourcename = request.function
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
-try:
-    from cStringIO import StringIO    # Faster, where available
-except:
-    from StringIO import StringIO
+from s3compat import StringIO
 
 from gluon.contenttype import contenttype
 import gluon.contrib.pyrtf as pyrtf

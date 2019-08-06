@@ -41,6 +41,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
+from s3compat import basestring, reduce
 from s3layouts import S3PopupLink
 
 # Monitoring upgrades {new_level:previous_levels}
@@ -1560,7 +1561,7 @@ class DiseaseStatsModel(S3Model):
         # NB Currently we're assuming that all Paths have been built correctly
         gtable = db.gis_location
         ifield = gtable.id
-        location_ids = locations.keys()
+        location_ids = set(locations.keys())
         paths = db(ifield.belongs(location_ids)).select(gtable.path)
         paths = [p.path.split("/") for p in paths]
         # Convert list of lists to flattened list & remove duplicates

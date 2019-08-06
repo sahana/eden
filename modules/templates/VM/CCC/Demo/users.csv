@@ -1,5 +1,0 @@
-First Name,Last Name,Email,Password,Role,Organisation,Link
-Reserve,Volunteer,reserve@example.com,eden,"RESERVE/pr_group.name=Reserves",
-Community,Volunteer,community@example.com,eden,VOLUNTEER,Eden Community Organisation,staff
-Org,Admin,orgadmin@example.com,eden,ORG_ADMIN,Eden Community Organisation,staff
-Admin,User,admin@example.com,testing,ADMIN,,staff

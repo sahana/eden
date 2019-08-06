@@ -13,6 +13,8 @@ if not os.path.exists(path):
 def minimize(code, extra_params=""):
     # Cannot keep these files open on Windows since file cannot then be read by Java
     ntf = tempfile.NamedTemporaryFile(delete=False)
+    if not isinstance(code, bytes):
+        code = code.encode("utf-8")
     ntf.write(code)
     ntf.flush()
     ntf.close()
@@ -24,7 +26,7 @@ def minimize(code, extra_params=""):
     if ret:
         # Error!
         raise RuntimeError("Closure Compiler Error")
-    ntf2 = file(ntf2.name, "r")
+    ntf2 = open(ntf2.name, "r")
     data = ntf2.read()
     ntf2.close()
     os.unlink(ntf2.name)

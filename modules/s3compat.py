@@ -39,12 +39,17 @@ if PY2:
         from cStringIO import StringIO  # faster, where available
     except ImportError:
         from StringIO import StringIO
+    BytesIO = StringIO
     import urlparse
     import urllib2
-    from urllib2 import HTTPError, urlopen
+    from urllib2 import HTTPError, URLError, urlopen
     from urllib import urlencode
+    from urllib import quote as urllib_quote
     from HTMLParser import HTMLParser
+    from htmlentitydefs import name2codepoint
+    import Cookie
     reduce = reduce
+    reload = reload
     basestring = basestring
     unichr = unichr
     unicodeT = unicode
@@ -55,16 +60,21 @@ if PY2:
     CLASS_TYPES = (type, ClassType)
     xrange = xrange
     sorted_locale = lambda x: sorted(x, cmp=locale.strcoll)
+    from itertools import izip_longest as zip_longest
 else:
     import pickle
-    from io import StringIO
+    from io import StringIO, BytesIO
     from urllib import parse as urlparse
     from urllib import request as urllib2
-    from urllib.error import HTTPError
+    from urllib.error import HTTPError, URLError
     from urllib.request import urlopen
     from urllib.parse import urlencode
+    from urllib.parse import quote as urllib_quote
     from html.parser import HTMLParser
+    from html.entities import name2codepoint
+    from http import cookies as Cookie
     from functools import reduce
+    from importlib import reload
     basestring = str
     unichr = chr
     unicodeT = str
@@ -75,3 +85,4 @@ else:
     CLASS_TYPES = (type,)
     xrange = range
     sorted_locale = lambda x: sorted(x, key=locale.strxfrm)
+    from itertools import zip_longest

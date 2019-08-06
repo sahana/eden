@@ -1,1 +1,1 @@
-from unit_tests.modules.s3layouts_tests import *
+from .s3layouts_tests import *

@@ -885,10 +885,10 @@ class transport_BorderCrossingRepresent(S3Represent):
                 crossing.countries = [country]
                 output[crossing_id] = crossing
 
-        return output.values()
+        return list(output.values())
 
 # =============================================================================
-def transport_rheader(r, tabs=[]):
+def transport_rheader(r, tabs=None):
     """ Transport module resource headers """
 
     if r.representation != "html":

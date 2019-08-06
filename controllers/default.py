@@ -115,7 +115,7 @@ def index():
                 if hasattr(custom, page):
                     controller = getattr(custom, page)()
                 elif page != "login":
-                    raise(HTTP(404, "Function not found: %s()" % page))
+                    raise HTTP(404, "Function not found: %s()" % page)
                 else:
                     controller = custom.index()
                 output = controller()
@@ -291,7 +291,7 @@ return false}})''' % (T("Please Select a Facility")))
     register_div = None
     if AUTHENTICATED not in roles:
         # This user isn't yet logged-in
-        if request.cookies.has_key("registered"):
+        if "registered" in request.cookies:
             # This browser has logged-in before
             registered = True
 
@@ -1048,7 +1048,7 @@ def apath(path=""):
     opath = up(request.folder)
     # @ToDo: This path manipulation is very OS specific.
     while path[:3] == "../": opath, path=up(opath), path[3:]
-    return os.path.join(opath,path).replace("\\", "/")
+    return os.path.join(opath, path).replace("\\", "/")
 
 def about():
     """
@@ -1372,6 +1372,17 @@ def video():
     return {}
 
 # -----------------------------------------------------------------------------
+def view():
+    """ Custom View """
+
+    view = request.args(0)
+
+    _custom_view(view)
+
+    response.title = view
+    return {}
+
+# -----------------------------------------------------------------------------
 def contact():
     """
         Give the user options to contact the site admins.
@@ -1513,7 +1524,7 @@ def get_settings():
         auth.permission.fail()
 
     elif not settings.get_base_allow_testing():
-        raise(HTTP("405", "Testing not allowed"))
+        raise HTTP("405", "Testing not allowed")
 
     else:
         arg = request.args(0)
@@ -1536,7 +1547,7 @@ def get_settings():
 
             return response.json(return_settings)
 
-        raise(HTTP("400", "Invalid/Missing argument"))
+        raise HTTP("400", "Invalid/Missing argument")
 
 # -----------------------------------------------------------------------------
 def _custom_view(filename):

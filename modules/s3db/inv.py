@@ -49,13 +49,13 @@ __all__ = ("S3WarehouseModel",
            )
 
 import datetime
-import itertools
 
 from gluon import *
 from gluon.sqlhtml import RadioWidget
 from gluon.storage import Storage
 
 from ..s3 import *
+from s3compat import zip_longest
 from s3layouts import S3PopupLink
 
 SHIP_STATUS_IN_PROCESS = 0
@@ -3508,11 +3508,11 @@ $.filterOptionsS3({
             now = request.utcnow
             tl_start = tl_end = now
             events = []
-            if r.name is "send":
+            if r.name == "send":
                 rr = (rows, rows2)
             else:
                 rr = (rows1, rows)
-            for (row_send, row_recv) in itertools.izip_longest(rr[0], rr[0]):
+            for (row_send, row_recv) in zip_longest(rr[0], rr[0]):
                 # send  Dates
                 start = row_send.date  or ""
                 if start:

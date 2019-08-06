@@ -31,7 +31,6 @@ import datetime
 import json
 import sys
 import traceback
-import urllib2
 
 try:
     from lxml import etree
@@ -41,6 +40,7 @@ except ImportError:
 
 from gluon import current
 
+from s3compat import HTTPError, URLError, urllib2, urllib_quote
 from ..s3datetime import s3_encode_iso_datetime
 from ..s3sync import S3SyncBaseAdapter, S3SyncDataArchive
 from ..s3validators import JSONERRORS
@@ -88,7 +88,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         remote = False
         try:
             f = opener.open(url, data)
-        except urllib2.HTTPError as e:
+        except HTTPError as e:
             # Remote error
             result = log.FATAL
             remote = True
@@ -101,7 +101,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             else:
                 message = message_json.get("message", message)
 
-        except urllib2.URLError as e:
+        except URLError as e:
             # URL Error (network error)
             result = log.ERROR
             remote = True
@@ -224,7 +224,6 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             url += "&include_deleted=True"
 
             # Add sync filters to URL
-            from urllib import quote
             filters = current.sync.get_filters(task.id)
             for tablename in filters:
                 prefix = "~" if not tablename or tablename == resource_name \
@@ -232,7 +231,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 for k, v in filters[tablename].items():
                     vlist = v if type(v) is list else [v]
                     for value in vlist:
-                        urlfilter = "[%s]%s=%s" % (prefix, k, quote(value))
+                        urlfilter = "[%s]%s=%s" % (prefix, k, urllib_quote(value))
                         url += "&%s" % urlfilter
 
             debug("...pull from URL %s" % url)
@@ -247,7 +246,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             try:
                 f = opener.open(url)
 
-            except urllib2.HTTPError as e:
+            except HTTPError as e:
                 result = log.ERROR
                 remote = True # Peer error
                 code = e.code
@@ -274,7 +273,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                     pass
                 output = xml.json_message(False, code, message, tree=None)
 
-            except urllib2.URLError as e:
+            except URLError as e:
                 # URL Error (network error)
                 result = log.ERROR
                 remote = True
@@ -473,7 +472,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                                        )
             try:
                 opener.open(url, data)
-            except urllib2.HTTPError as e:
+            except HTTPError as e:
                 result = log.FATAL
                 remote = True # Peer error
                 code = e.code
@@ -487,7 +486,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 else:
                     message = message_json.get("message", message)
                 output = xml.json_message(False, code, message)
-            except urllib2.URLError as e:
+            except URLError as e:
                 # URL Error (network error)
                 result = log.ERROR
                 remote = True
@@ -758,7 +757,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             local_error = False
             try:
                 f = opener.open(url)
-            except urllib2.HTTPError as e:
+            except HTTPError as e:
                 # HTTP status (remote error)
                 message = e.read()
                 try:
@@ -785,7 +784,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 # Prepend HTTP status code
                 error = "[%s] %s" % (e.code, message)
 
-            except urllib2.URLError as e:
+            except URLError as e:
                 # URL Error (network error)
                 error = "Peer repository unavailable (%s)" % e.reason
 

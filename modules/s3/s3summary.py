@@ -31,6 +31,7 @@
 
 from gluon import current, A, DIV, LI, UL
 
+from s3compat import basestring
 from .s3filter import S3FilterForm
 from .s3gis import MAP
 from .s3rest import S3Method

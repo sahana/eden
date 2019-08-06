@@ -6,6 +6,7 @@
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3aaa.py
 #
 import unittest
+import re
 
 from gluon import *
 from gluon.storage import Storage
@@ -13,6 +14,9 @@ from s3.s3aaa import S3EntityRoleManager, S3Permission
 from s3.s3fields import s3_meta_fields
 
 from unit_tests import run_suite
+
+# RE to handle IN-tuples in queries
+QUERY_PATTERN = re.compile(r"(.*)( IN \(([0-9,]*)\))(.*)")
 
 # =============================================================================
 class AuthUtilsTests(unittest.TestCase):
@@ -96,7 +100,7 @@ class AuthUtilsTests(unittest.TestCase):
             auth.s3_impersonate(None)
             try:
                 auth.permission.fail()
-            except HTTP, e:
+            except HTTP as e:
                 assertEqual(e.status, 303)
                 headers = e.headers
                 assertIn("Location", headers)
@@ -112,7 +116,7 @@ class AuthUtilsTests(unittest.TestCase):
             auth.s3_impersonate(None)
             try:
                 auth.permission.fail()
-            except HTTP, e:
+            except HTTP as e:
                 assertEqual(e.status, 401)
                 headers = e.headers
                 assertIn("WWW-Authenticate", headers)
@@ -124,7 +128,7 @@ class AuthUtilsTests(unittest.TestCase):
             auth.s3_impersonate("admin@example.com")
             try:
                 auth.permission.fail()
-            except HTTP, e:
+            except HTTP as e:
                 assertEqual(e.status, 403)
                 headers = e.headers
                 # No Auth challenge with 403
@@ -184,7 +188,8 @@ class SetRolesTests(unittest.TestCase):
             resource = s3db.resource("org_organisation",
                                      uid=["SRTO1", "SRTO2", "SRTO3"])
             rows = resource.select(["pe_id", "uuid"], as_rows=True)
-            orgs = dict((row.uuid, row.pe_id) for row in rows)
+
+            orgs = {row.uuid: row.pe_id for row in rows}
             self.org1 = orgs["SRTO1"]
             self.org2 = orgs["SRTO2"]
             self.org3 = orgs["SRTO3"]
@@ -224,7 +229,7 @@ class SetRolesTests(unittest.TestCase):
         assertTrue = self.assertTrue
 
         auth.s3_impersonate("normaluser@example.com")
-        realms = auth.user.realms.keys()
+        realms = list(auth.user.realms.keys())
         assertEqual(len(realms), 2)
         assertTrue(2 in realms)
         assertTrue(3 in realms)
@@ -247,7 +252,7 @@ class SetRolesTests(unittest.TestCase):
         assertTrue = self.assertTrue
 
         auth.s3_impersonate("normaluser@example.com")
-        realms = auth.user.realms.keys()
+        realms = list(auth.user.realms.keys())
         assertTrue(2 in realms)
         assertTrue(3 in realms)
         assertEqual(len(realms), 2)
@@ -270,7 +275,7 @@ class SetRolesTests(unittest.TestCase):
         assertTrue = self.assertTrue
 
         auth.s3_impersonate("normaluser@example.com")
-        realms = auth.user.realms.keys()
+        realms = list(auth.user.realms.keys())
         assertTrue(2 in realms)
         assertTrue(3 in realms)
         assertEqual(len(realms), 2)
@@ -302,7 +307,7 @@ class SetRolesTests(unittest.TestCase):
             auth.s3_assign_role(user_id, role, for_pe=self.org1)
 
             auth.s3_impersonate("normaluser@example.com")
-            realms = auth.user.realms.keys()
+            realms = list(auth.user.realms.keys())
             assertEqual(len(realms), 3)
             assertTrue(2 in realms)
             assertTrue(3 in realms)
@@ -346,7 +351,7 @@ class SetRolesTests(unittest.TestCase):
             auth.s3_assign_role(user_id, role, for_pe=org1)
 
             auth.s3_impersonate("normaluser@example.com")
-            realms = auth.user.realms.keys()
+            realms = list(auth.user.realms.keys())
             assertTrue(2 in realms)
             assertTrue(3 in realms)
             assertTrue(role in realms)
@@ -405,7 +410,7 @@ class SetRolesTests(unittest.TestCase):
             auth.s3_impersonate("normaluser@example.com")
 
             # Check the realms
-            realms = auth.user.realms.keys()
+            realms = list(auth.user.realms.keys())
             assertTrue(2 in realms)
             assertTrue(3 in realms)
             assertTrue(role in realms)
@@ -418,7 +423,7 @@ class SetRolesTests(unittest.TestCase):
                     assertEqual(auth.user.realms[r], None)
 
             # Check the delegations
-            delegations = auth.user.delegations.keys()
+            delegations = list(auth.user.delegations.keys())
             assertTrue(role in delegations)
             assertEqual(len(delegations), 1)
 
@@ -432,7 +437,7 @@ class SetRolesTests(unittest.TestCase):
             auth.s3_remove_delegation("TESTGROUP", org1, receiver=org3)
 
             # Check the delegations again
-            delegations = auth.user.delegations.keys()
+            delegations = list(auth.user.delegations.keys())
             assertFalse(role in delegations)
             assertEqual(len(delegations), 0)
 
@@ -1305,7 +1310,7 @@ class ACLManagementTests(unittest.TestCase):
             resource.import_xml(xmltree)
 
             resource = s3db.resource("org_organisation",
-                                     uid=["TAAO1","TAAO2","TAAO3"])
+                                     uid=["TAAO1", "TAAO2", "TAAO3"])
             rows = resource.select(["pe_id", "uuid"], as_rows=True)
             orgs = dict((row.uuid, row.pe_id) for row in rows)
             org1 = orgs["TAAO1"]
@@ -1491,7 +1496,7 @@ class HasPermissionTests(unittest.TestCase):
         # Create test entities
         table = s3db.org_organisation
         self.org = []
-        for i in xrange(3):
+        for i in range(3):
             record_id = table.insert(name="PermissionTestOrganisation%s" % i)
             record =  Storage(id=record_id)
             s3db.update_super(table, record)
@@ -2193,7 +2198,7 @@ class AccessibleQueryTests(unittest.TestCase):
         # Create test entities
         table = s3db.org_organisation
         self.org = []
-        for i in xrange(3):
+        for i in range(3):
             record_id = table.insert(name="PermissionTestOrganisation%s" % i)
             record =  Storage(id=record_id)
             s3db.update_super(table, record)
@@ -2431,7 +2436,7 @@ class AccessibleQueryTests(unittest.TestCase):
 
         # Test with TESTREADER
         auth.s3_assign_role(auth.user.id, self.reader, for_pe=self.org[0])
-        roles = set([2,3])
+        roles = {2, 3}
         expected = (((table.realm_entity == self.org[0]) | \
                    (table.realm_entity == None)) | \
                    ((((table.owned_by_user == None) & \
@@ -2440,7 +2445,7 @@ class AccessibleQueryTests(unittest.TestCase):
                    (table.owned_by_group.belongs(roles))))
         query = accessible_query("read", "org_permission_test", c=c, f=f)
         assertEqual(query, expected)
-        query = accessible_query("update",table,  c=c, f=f)
+        query = accessible_query("update", table, c=c, f=f)
         expected = ((((table.owned_by_user == auth.user.id) & \
                    ((table.realm_entity == self.org[0]) | \
                    (table.realm_entity == None))) | \
@@ -2457,7 +2462,7 @@ class AccessibleQueryTests(unittest.TestCase):
 
         # Test with TESTEDITOR
         auth.s3_assign_role(auth.user.id, self.editor, for_pe=self.org[0])
-        roles = set([2,3])
+        roles = {2, 3}
         query = accessible_query("read", table, c=c, f=f)
         expected = (((table.realm_entity == self.org[0]) | \
                    (table.realm_entity == None)) | \
@@ -2491,6 +2496,7 @@ class AccessibleQueryTests(unittest.TestCase):
         table = current.s3db.org_permission_test
 
         assertEqual = self.assertEqual
+        assertSameQuery = self.assertSameQuery
 
         ALL = (table.id > 0)
         NONE = (table.id == 0)
@@ -2524,7 +2530,7 @@ class AccessibleQueryTests(unittest.TestCase):
                                    entity="any",
                                    )
         auth.s3_assign_role(auth.user.id, self.reader, for_pe=self.org[0])
-        roles = set([3,2,self.reader])
+        roles = {3, 2, self.reader}
 
         # Strict ownership: user has access to records within the
         # realms of the role, or which he owns either individually or
@@ -2535,7 +2541,8 @@ class AccessibleQueryTests(unittest.TestCase):
                    (table.realm_entity == None)) | \
                    ((table.owned_by_user == auth.user.id) | \
                    (table.owned_by_group.belongs(roles))))
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         # Loose ownership: user has access to records within the realm
         # of the role, or which he owns either individually or as
@@ -2549,15 +2556,17 @@ class AccessibleQueryTests(unittest.TestCase):
                    ((table.owned_by_user == None) & \
                    (table.owned_by_group == None))) | \
                    (table.owned_by_group.belongs(roles))))
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         # Update permission is limited to owned records
-        query = accessible_query("update",table,  c=c, f=f)
+        query = accessible_query("update", table, c=c, f=f)
         expected = (((table.owned_by_user == auth.user.id) | \
                    ((table.owned_by_user == None) & \
                    (table.owned_by_group == None))) | \
                    (table.owned_by_group.belongs(roles)))
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         # No delete-permission on any record
         query = accessible_query("delete", table, c=c, f=f)
@@ -2576,14 +2585,16 @@ class AccessibleQueryTests(unittest.TestCase):
                    ((table.owned_by_user == None) & \
                    (table.owned_by_group == None))) | \
                    (table.owned_by_group.belongs(roles))))
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
-        query = accessible_query("update",table,  c=c, f=f)
+        query = accessible_query("update", table, c=c, f=f)
         expected = (((table.owned_by_user == auth.user.id) | \
                    ((table.owned_by_user == None) & \
                    (table.owned_by_group == None))) | \
                    (table.owned_by_group.belongs(roles)))
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         query = accessible_query("delete", table, c=c, f=f)
         assertEqual(query, NONE)
@@ -2594,7 +2605,7 @@ class AccessibleQueryTests(unittest.TestCase):
 
         # Test with TESTEDITOR
         auth.s3_assign_role(auth.user.id, self.editor, for_pe=self.org[0])
-        roles = set([3,2])
+        roles = {3, 2}
         query = accessible_query("read", table, c=c, f=f)
         expected = (((table.realm_entity == self.org[0]) | \
                    (table.realm_entity == None)) | \
@@ -2602,10 +2613,12 @@ class AccessibleQueryTests(unittest.TestCase):
                    (table.owned_by_group == None)) & \
                    (table.realm_entity == None)) | \
                    (table.owned_by_group.belongs(roles))))
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         query = accessible_query("update", table, c=c, f=f)
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         query = accessible_query("delete", table, c=c, f=f)
         assertEqual(query, NONE)
@@ -2623,10 +2636,12 @@ class AccessibleQueryTests(unittest.TestCase):
                    (table.realm_entity == None)) | \
                    (table.owned_by_group.belongs(roles))))
         query = accessible_query("read", table, c=c, f=f)
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         query = accessible_query("update", table, c=c, f=f)
-        assertEqual(query, expected)
+        #assertEqual(query, expected)
+        assertSameQuery(query, expected)
 
         query = accessible_query("delete", table, c=c, f=f)
         assertEqual(query, NONE)
@@ -2671,7 +2686,7 @@ class AccessibleQueryTests(unittest.TestCase):
         user = auth.s3_user_pe_id(auth.s3_get_user_id("normaluser@example.com"))
         s3db.pr_add_affiliation(self.org[2], user, role="TestStaff")
         auth.s3_assign_role(auth.user.id, self.editor, for_pe=self.org[2])
-        roles = set([3,2])
+        roles = {3, 2}
 
         # User should only be able to access records of org[2]
         expected = (((table.realm_entity == self.org[2]) | \
@@ -2775,6 +2790,49 @@ class AccessibleQueryTests(unittest.TestCase):
                                  #(runtime, MAX_RUNTIME))
         #auth.s3_withdraw_role(auth.user.id, self.editor, for_pe=[])
 
+    # -------------------------------------------------------------------------
+    @classmethod
+    def assertSameQuery(cls, l, r, msg=None):
+        """
+            Custom assertion that two queries are equal
+
+            @param l: the first query
+            @param r: the second query
+        """
+
+        l, r = repr(l), repr(r)
+        if l == r:
+            return
+
+        equal = cls.compare_queries(l, r)
+        if not equal:
+            if msg is None:
+                msg = "Queries differ: %s != %s" % (l, r)
+            raise AssertionError(msg)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def compare_queries(cls, l, r):
+        """
+            Helper function to compare two queries, handles arbitrary
+            order of ' IN (x,y,z)' tuples.
+
+            @param l: the first query
+            @param r: the second query
+
+            @returns: True if the queries are equal, otherwise False
+        """
+
+        ml = QUERY_PATTERN.match(l)
+        mr = QUERY_PATTERN.match(r)
+        if ml and mr and \
+           ml.group(1) == mr.group(1) and \
+           set(ml.group(3).split(",")) == set(mr.group(3).split(",")):
+            return ml.group(4) == mr.group(4) or \
+                   cls.compare_queries(ml.group(4), mr.group(4))
+
+        return False
+
 # =============================================================================
 class DelegationTests(unittest.TestCase):
     """ Test delegation of roles """
@@ -2829,7 +2887,7 @@ class DelegationTests(unittest.TestCase):
         # Create test entities
         table = s3db.org_organisation
         self.org = []
-        for i in xrange(3):
+        for i in range(3):
             record_id = table.insert(name="PermissionTestOrganisation%s" % i)
             record =  Storage(id=record_id)
             s3db.update_super(table, record)
@@ -2907,7 +2965,7 @@ class DelegationTests(unittest.TestCase):
 
         # Check the delegations
         delegations = auth.user.delegations
-        assertEqual(delegations.keys(), [])
+        assertEqual(list(delegations.keys()), [])
 
         # Delegate the TESTREADER and TESTEDITOR roles for org1 to org2
         s3_delegate_role([READER, EDITOR], org1, receiver=org2)
@@ -2952,11 +3010,11 @@ class DelegationTests(unittest.TestCase):
         delegations = auth.s3_get_delegations(org1)
         assertNotEqual(delegations, None)
         assertTrue(isinstance(delegations, Storage))
-        assertEqual(delegations.keys(), [])
+        assertEqual(list(delegations.keys()), [])
 
         # Check the delegations
         delegations = auth.user.delegations
-        assertEqual(delegations.keys(), [])
+        assertEqual(list(delegations.keys()), [])
 
         # Remove delegation, affiliation and role
         pr_remove_affiliation(org3, user, role="TestStaff")

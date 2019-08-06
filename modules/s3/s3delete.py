@@ -663,7 +663,7 @@ class S3Delete(object):
         db = current.db
         if db._lazy_tables:
             # Must roll out all lazy tables to detect dependencies
-            for tn in db._LAZY_TABLES.keys():
+            for tn in list(db._LAZY_TABLES.keys()):
                 db[tn]
 
         references = self.table._referenced_by

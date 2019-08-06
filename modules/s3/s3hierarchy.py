@@ -33,14 +33,18 @@ __all__ = ("S3Hierarchy", "S3HierarchyCRUD")
 
 import json
 
-from gluon import *
+from gluon import DIV, FORM, LI, UL, current
 from gluon.storage import Storage
 from gluon.tools import callback
+
+from s3compat import long, unicodeT, xrange
 from .s3utils import s3_str
 from .s3rest import S3Method
 from .s3widgets import SEPARATORS
 
 DEFAULT = lambda: None
+
+LABEL = "l"
 
 # =============================================================================
 class S3HierarchyCRUD(S3Method):
@@ -364,9 +368,9 @@ class S3HierarchyCRUD(S3Method):
                 row = current.db(query).select(h.pkey, limitby=(0, 1)).first()
                 if not row:
                     r.error(404, current.ERROR.BAD_RECORD)
-                roots = set([row[h.pkey]])
+                roots = {row[h.pkey]}
             else:
-                roots = set([self.record_id])
+                roots = {self.record_id}
         else:
             roots = h.roots
 
@@ -418,7 +422,8 @@ class S3HierarchyCRUD(S3Method):
         codec = S3Codec.get_codec("xls")
         result = codec.encode(output,
                               title = resource.name,
-                              list_fields=hcolumns+columns)
+                              list_fields = hcolumns+columns,
+                              )
 
         # Reponse headers and file name are set in codec
         return result
@@ -680,7 +685,7 @@ class S3Hierarchy(object):
             return
 
         # Serialize the theset
-        nodes_dict = dict()
+        nodes_dict = {}
         for node_id, node in theset.items():
             nodes_dict[node_id] = {"p": node["p"],
                                    "c": node["c"],
@@ -1399,7 +1404,6 @@ class S3Hierarchy(object):
         """
 
         theset = self.theset
-        LABEL = "l"
 
         if node_ids is None:
             node_ids = self.nodes.keys()
@@ -1446,8 +1450,6 @@ class S3Hierarchy(object):
             @param represent: the node ID representation method
         """
 
-        LABEL = "l"
-
         theset = self.theset
         node = theset.get(node_id)
         if node:
@@ -1457,13 +1459,42 @@ class S3Hierarchy(object):
                 self._represent(node_ids=[node_id], renderer=represent)
             if LABEL in node:
                 label = node[LABEL]
-            if type(label) is unicode:
-                try:
-                    label = label.encode("utf-8")
-                except UnicodeEncodeError:
-                    pass
+            if type(label) is unicodeT:
+                label = s3_str(label)
             return label
         return None
+
+    # -------------------------------------------------------------------------
+    def repr_expand(self, node_ids, levels=None, represent=None):
+        """
+            Helper function to represent a set of nodes as lists
+            of their respective ancestors starting by the root node
+
+            @param node_ids: the node_ids (iterable)
+            @param levels: the number of levels to include (counting from root)
+            @param represent: a representation function for each ancestor
+
+            @returns: a dict {node_id: ["Label", "Label", ...]}
+                      => each label list is padded with "-" to reach the
+                         requested number of levels (TODO make this configurable)
+        """
+
+        paths = {}
+        all_parents = set()
+        for node_id in node_ids:
+            paths[node_id] = path = self.path(node_id)
+            all_parents |= set(path)
+
+        self._represent(all_parents, renderer=represent)
+
+        theset = self.theset
+        result = {}
+        for node_id, path in paths.items():
+            p = (path + [None] * levels)[:levels]
+            l = [theset[parent][LABEL] if parent else "-" for parent in p]
+            result[node_id] = l
+
+        return result
 
     # -------------------------------------------------------------------------
     def _json(self, node_id, represent=None, depth=0, max_depth=None):

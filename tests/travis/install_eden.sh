@@ -26,13 +26,12 @@ echo "=========================="
 # numpy installed by default
 # apt-get install numpy
 apt-get install python-matplotlib python-lxml python-shapely -q
+apt-get install python3-matplotlib python3-lxml python3-shapely -q
 
-python tests/travis/generate_requirements_file.py tests/travis requirements.txt optional_requirements.txt
+python tests/travis/generate_requirements_file.py tests/travis requirements.txt tests/travis/requirements.txt
 pip install -q -r tests/travis/generated_requirements.txt
-
 echo "Packages installed:"
 cat tests/travis/generated_requirements.txt
-
 
 echo "configuring eden"
 echo "=========================="

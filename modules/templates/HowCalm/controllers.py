@@ -96,7 +96,7 @@ class index(S3CustomController):
             #jqappend(script)
 
             # This user isn't yet logged-in
-            if current.request.cookies.has_key("registered"):
+            if "registered" in current.request.cookies:
                 # This browser has logged-in before
                 registered = True
 

@@ -1,3 +1,6 @@
+/*
+ * Client-side JS for S3QuestionEditorWidget
+ */
 (function($, undefined) {
     "use strict";
     var addQuestionID = 0;
@@ -24,15 +27,15 @@
          */
         _init: function() {
 
-            var fieldname = $(this.element).attr('id'),
-                selector = '#' + fieldname;
+            var fieldname = $(this.element).attr('id');
 
             if (!fieldname) {
                 fieldname = 'addQuestion-widget-' + this.id;
             }
-
             this.fieldname = fieldname;
             this.data = null;
+
+            var selector = '#' + fieldname;
 
             this.inputFields = $(selector + '_represent, ' +
                                  selector + '_multiple, ' +

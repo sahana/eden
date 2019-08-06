@@ -1188,11 +1188,11 @@ def stdm_rheader(r):
 
         elif tablename == "gis_location":
 
-            tabs = ((T("Basic Details"), None),
+            tabs = [(T("Basic Details"), None),
                     (T("Local Names"), "name"),
                     (T("Alternate Names"), "name_alt"),
                     (T("Key Value pairs"), "tag"),
-                    )
+                    ]
 
             rheader_fields = [["name"],
                               ]

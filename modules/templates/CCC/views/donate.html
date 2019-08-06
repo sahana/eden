@@ -1,0 +1,78 @@
+{{extend "layout.html"}}
+<div class='row'>
+ <div class='medium-12 columns'>
+  {{=item1}}
+  {{=item2}}
+ </div>
+</div>
+<div class='row'>
+ <div class='large-6 medium-6 small-12 columns'>
+  <div class='panel radius'>
+   <a href='https://reuse-network.org.uk' target='_blank'>
+    <img src='/{{=appname}}/static/themes/CCC/img/reuse.png'/>
+    <span class='service-link'>Reuse Network</span>
+   </a>
+  </div>
+ </div>
+</div>
+<div class='row'>
+ <div class='medium-12 columns'>
+  {{=item3}}
+ </div>
+</div>
+<div class='row'>
+ <div class='large-6 medium-6 small-12 columns'>
+  <div class='panel radius'>
+   <a href='https://www.charityretail.org.uk/find-a-charity-shop/' target='_blank'>
+    <img src='/{{=appname}}/static/themes/CCC/img/CRA.jpg'/>
+   </a>
+  </div>
+ </div>
+</div>
+<div class='row'>
+ <div class='medium-12 columns'>
+  {{=item4}}
+ </div>
+</div>
+<div class='row'>
+ <div class='large-6 medium-6 small-12 columns'>
+  <div class='panel radius'>
+   <a href='https://www.ilovefreegle.org' target='_blank'>
+    <img src='/{{=appname}}/static/themes/CCC/img/freegle.png'/>
+    <span class='service-link'>Freegle</span>
+   </a>
+  </div>
+ </div>
+</div>
+<div class='row'>
+ <div class='large-6 medium-6 small-12 columns'>
+  <div class='panel radius'>
+   <a href='https://www.freecycle.org' target='_blank'>
+    <img src='/{{=appname}}/static/themes/CCC/img/freecycle.jpg'/>
+    <span class='service-link'>Freecycle</span>
+   </a>
+  </div>
+ </div>
+</div>
+<div class='row'>
+ <div class='medium-12 columns'>
+  {{=item5}}
+ </div>
+</div>
+<div class='row'>
+ <div class='large-6 medium-6 small-12 columns'>
+  <div class='panel radius'>
+   {{if auth.s3_logged_in():}}<a href='/{{=appname}}/default/person'>
+   {{else:}}<a href='/{{=appname}}/default/index/register?donor=1'>{{pass}}
+    <img src='/{{=appname}}/static/themes/CCC/img/gift.png'/>
+    <span class='service-link'>REGISTER A DONATION</span>
+   </a>
+  </div>
+ </div>
+</div>
+<div class='row'>
+ <div class='medium-12 columns'>
+  {{=item6}}
+  {{=item7}}
+ </div>
+</div>

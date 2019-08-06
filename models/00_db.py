@@ -46,7 +46,7 @@ try:
              )
 except:
     db_location = db_string.split("@", 1)[1]
-    raise(HTTP(503, "Cannot connect to %s Database: %s" % (db_type, db_location)))
+    raise HTTP(503, "Cannot connect to %s Database: %s" % (db_type, db_location))
 
 current.db = db
 db.set_folder("upload")
@@ -85,6 +85,7 @@ current.ERROR = ERROR
 # Import the S3 Framework
 if update_check_needed:
     # Reload the Field definitions
+    from s3compat import reload
     reload(s3base.s3fields)
 else:
     import s3 as s3base

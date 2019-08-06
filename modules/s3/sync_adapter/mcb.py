@@ -27,11 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import sys
-import urllib, urllib2
-
 from gluon import *
 
+from s3compat import HTTPError, urlencode, urllib2, urlopen
 from ..s3sync import S3SyncBaseAdapter
 
 # =============================================================================
@@ -89,7 +87,6 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                      of the youngest record sent
         """
 
-        xml = current.xml
         repository = self.repository
 
         resource_name = task.resource_name
@@ -198,7 +195,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         if path:
             url = "/".join((url, path.lstrip("/")))
         if args:
-            url = "?".join((url, urllib.urlencode(args)))
+            url = "?".join((url, urlencode(args)))
 
         # Create the request
         req = urllib2.Request(url=url)
@@ -237,10 +234,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         message = None
         try:
             if method == "POST":
-                f = urllib2.urlopen(req, data=request_data)
+                f = urlopen(req, data=request_data)
             else:
-                f = urllib2.urlopen(req)
-        except urllib2.HTTPError as e:
+                f = urlopen(req)
+        except HTTPError as e:
             message = "HTTP %s: %s" % (e.code, e.reason)
             # More details may be in the response body
             error_response = xml.parse(e)

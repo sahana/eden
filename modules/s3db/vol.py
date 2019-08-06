@@ -1125,7 +1125,7 @@ def vol_service_record(r, **attr):
                            TH(T("Training")),
                            TH(T("Hours"))))
         _hours = {}
-        for key in sorted(hours.iterkeys()):
+        for key in sorted(hours.keys()):
             _hours[key] = hours[key]
         total = 0
         for hour in hours:

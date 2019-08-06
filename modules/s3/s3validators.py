@@ -27,8 +27,6 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @status: fixed for Py3
 """
 
 __all__ = ("single_phone_number_pattern",
@@ -455,8 +453,7 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
 
         thousands_sep = current.deployment_settings.get_L10n_thousands_separator()
         if thousands_sep and isinstance(value, basestring):
-            value = s3_unicode(value).replace(thousands_sep, "") \
-                                     .encode("utf-8")
+            value = s3_str(s3_unicode(value).replace(thousands_sep, ""))
 
         return IS_FLOAT_IN_RANGE.__call__(self, value)
 
@@ -2096,6 +2093,9 @@ class IS_DYNAMIC_FIELDTYPE(Validator):
                        "string",
                        "text",
                        "upload",
+                       "json",
+                       "list:integer",
+                       "list:string",
                        )
 
     def __init__(self,

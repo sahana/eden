@@ -87,6 +87,8 @@ def user():
     #                    auth_membership = "user_id",
     #                    )
 
+    s3_str = s3base.s3_str
+
     list_fields = ["first_name",
                    "last_name",
                    "email",
@@ -448,7 +450,7 @@ def organisation():
 # -----------------------------------------------------------------------------
 def user_create_onvalidation (form):
     """ Server-side check that Password confirmation field is valid """
-    if (form.request_vars.has_key("password_two") and \
+    if ("password_two" in form.request_vars and \
         form.request_vars.password != form.request_vars.password_two):
         form.errors.password = T("Password fields don't match")
     return True
@@ -592,7 +594,7 @@ def acl():
     table.group_id.requires = IS_ONE_OF(db, "auth_group.id", "%(role)s")
     table.group_id.represent = lambda opt: opt and db.auth_group[opt].role or opt
 
-    table.controller.requires = IS_EMPTY_OR(IS_IN_SET(settings.modules.keys(),
+    table.controller.requires = IS_EMPTY_OR(IS_IN_SET(set(settings.modules.keys()),
                                                       zero="ANY"))
     table.controller.represent = lambda opt: opt and \
         "%s (%s)" % (opt,
@@ -740,7 +742,7 @@ def portable():
                     files_to_remove[filename] = os.stat(os.path.join(uploadfolder, filename)).st_mtime
         sorted_files = sorted(files_to_remove.items(), key=itemgetter(1))
         for i in range(0, len(sorted_files) - 1): # 1 indicates leave one file
-            os.remove(os.path.join(uploadfolder,sorted_files[i][0]))
+            os.remove(os.path.join(uploadfolder, sorted_files[i][0]))
         web2py_source = sorted_files[len(sorted_files) - 1][0]
         web2py_source_exists = True
         session.flash = T("Web2py executable zip file found - Upload to replace the existing file")
@@ -792,18 +794,21 @@ def portable():
 def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
     """Function to create the portable app based on the parameters"""
 
-    from gluon.admin import apath
-    import shutil,tempfile,os
-    import zipfile
     import contenttype
+    import os
+    import shutil
+    import tempfile
+    import zipfile
+
+    from gluon.admin import apath
 
     cachedir = os.path.join(apath("%s" % appname, r=request), "cache")
     tempdir = tempfile.mkdtemp("", "eden-", cachedir)
     workdir = os.path.join(tempdir, "web2py")
     if copy_uploads:
-        ignore = shutil.ignore_patterns("*.db", "*.log", "*.table", "errors", "sessions", "compiled" , "cache", ".bzr", "*.pyc")
+        ignore = shutil.ignore_patterns("*.db", "*.log", "*.table", "errors", "sessions", "compiled", "cache", ".bzr", "*.pyc")
     else:
-        ignore = shutil.ignore_patterns("*.db", "*.log", "*.table", "errors", "sessions", "compiled" , "uploads", "cache", ".bzr", "*.pyc")
+        ignore = shutil.ignore_patterns("*.db", "*.log", "*.table", "errors", "sessions", "compiled", "uploads", "cache", ".bzr", "*.pyc")
 
     appdir = os.path.join(workdir, "applications", appname)
     shutil.copytree(apath("%s" % appname, r=request),\
@@ -919,7 +924,7 @@ def translate():
             if form.accepts(request.vars, session):
                 modlist = []
                 # If only one module is selected
-                if type(form.request_vars.module_list) == str:
+                if isinstance(form.request_vars.module_list, str):
                     modlist.append(form.request_vars.module_list)
                 # If multiple modules are selected
                 else:
@@ -956,8 +961,7 @@ def translate():
             # @todo: migrate to formstyle, use regular form widgets
             A = TranslateAPI()
             # Retrieve list of active modules
-            activemodlist = settings.modules.keys()
-            modlist = activemodlist
+            modlist = list(settings.modules.keys())
             # Hiding core modules
             hidden_modules = A.core_modules
             for module in hidden_modules:
@@ -966,8 +970,7 @@ def translate():
             modlist.sort()
             modcount = len(modlist)
 
-            langlist = A.get_langcodes()
-            langlist.sort()
+            langlist = sorted(A.get_langcodes())
 
             table = TABLE(_class="translation_module_table")
             table.append(BR())
@@ -1136,8 +1139,7 @@ def translate():
                 # Display the form to view translated percentage
                 from s3.s3translate import TranslateAPI
                 A = TranslateAPI()
-                langlist = A.get_langcodes()
-                langlist.sort()
+                langlist = sorted(A.get_langcodes())
                 # Drop-down for selecting language codes
                 lang_col = TD()
                 lang_dropdown = SELECT(_name="code")

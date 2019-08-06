@@ -27,8 +27,6 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @status: fixed for Py3
 """
 
 __all__ = ("S3Config",)
@@ -3404,7 +3402,7 @@ class S3Config(Storage):
 
     def get_dc_mobile_data(self):
         """
-            Whether Mobile Clients should download Assessments
+            Whether Mobile Clients should download Assessments (Data not just Forms)
             - e.g. when these are created through Targetting
         """
         return self.dc.get("mobile_data", False)
@@ -3414,6 +3412,12 @@ class S3Config(Storage):
             Whether Mobile Clients should create Assessments locally
         """
         return self.dc.get("mobile_inserts", True)
+
+    def get_dc_sections_hierarchical(self):
+        """
+            Whether Assessments have nested Sections
+        """
+        return self.dc.get("sections_hierarchical", False)
 
     # -------------------------------------------------------------------------
     # Deployments
@@ -4864,13 +4868,6 @@ class S3Config(Storage):
         """
         return self.org.get("site_check")
 
-    def get_org_summary(self):
-        """
-            Whether to use Summary fields for Organisation/Office:
-                # National/International staff
-        """
-        return self.org.get("summary", False)
-
     def set_org_dependent_field(self,
                                 tablename=None,
                                 fieldname=None,
@@ -5382,12 +5379,6 @@ class S3Config(Storage):
             The lead role of organisations within projects
         """
         return self.project.get("organisation_lead_role", 1)
-
-    def get_project_task_tag(self):
-        """
-            Use Tags in Tasks
-        """
-        return self.project.get("task_tag", False)
 
     def get_project_task_status_opts(self):
         """

@@ -47,6 +47,7 @@ __all__ = ("S3ProjectModel",
            "S3ProjectHRModel",
            #"S3ProjectIndicatorModel",
            "S3ProjectLocationModel",
+           "S3ProjectMasterKeyModel",
            "S3ProjectOrganisationModel",
            "S3ProjectPlanningModel",
            "S3ProjectProgrammeModel",
@@ -54,6 +55,7 @@ __all__ = ("S3ProjectModel",
            "S3ProjectSectorModel",
            "S3ProjectStatusModel",
            "S3ProjectStrategyModel",
+           "S3ProjectTagModel",
            "S3ProjectThemeModel",
            "S3ProjectDRRModel",
            "S3ProjectDRRPPModel",
@@ -90,6 +92,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
+from s3compat import StringIO, xrange
 from s3layouts import S3PopupLink
 
 # Compact JSON encoding
@@ -602,6 +605,10 @@ class S3ProjectModel(S3Model):
                        project_outcome = "project_id",
                        # Outputs
                        project_output = "project_id",
+                       # Tags
+                       project_project_tag = {"name": "tag",
+                                              "joinby": "project_id",
+                                              },
                        # Tasks
                        project_task = {"link": "project_task_project",
                                        "joinby": "project_id",
@@ -660,11 +667,20 @@ class S3ProjectModel(S3Model):
                        project_programme_project = "project_id",
 
                        # Data Collection Targets
-                       dc_target = {"link": "project_target",
+                       project_project_target = "project_id",
+                       dc_target = {"link": "project_project_target",
                                     "joinby": "project_id",
                                     "key": "target_id",
                                     "actuate": "replace",
                                     },
+                       # Master Keys
+                       project_project_masterkey = "project_id",
+                       auth_masterkey = {"link": "project_project_masterkey",
+                                         "joinby": "project_id",
+                                         "key": "masterkey_id",
+                                         "actuate": "replace",
+                                         "multiple": False,
+                                         },
 
                        # Project Needs (e.g. Funding, Volunteers)
                        req_project_needs = {"joinby": "project_id",
@@ -4036,6 +4052,33 @@ class S3ProjectLocationModel(S3Model):
                 person.update_record(realm_entity = realm_entity)
 
 # =============================================================================
+class S3ProjectMasterKeyModel(S3Model):
+    """
+        Link Projects to Master Keys for Mobile Data Entry
+    """
+
+    names = ("project_project_masterkey",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # Projects <> Master Keys
+        #
+        self.define_table("project_project_masterkey",
+                          self.project_project_id(empty = False),
+                          self.auth_masterkey_id(empty = False),
+                          *s3_meta_fields())
+
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
 class S3ProjectOrganisationModel(S3Model):
     """
         Project Organisation Model
@@ -6089,7 +6132,7 @@ class S3ProjectPlanningModel(S3Model):
             total += form_vars.weighting
 
             # Check if we're on 1.0
-            if total <> 1.0:
+            if total != 1.0:
                 current.response.warning = current.T("Weightings should add up to 1.0")
 
         # Update Statuses
@@ -6191,7 +6234,7 @@ class S3ProjectPlanningModel(S3Model):
             total += form_vars.weighting
 
             # Check if we're on 1.0
-            if total <> 1.0:
+            if total != 1.0:
                 current.response.warning = current.T("Weightings should add up to 1.0")
 
         # Update Statuses
@@ -6296,7 +6339,7 @@ class S3ProjectPlanningModel(S3Model):
                     total += form_vars.weighting
 
                     # Check if we're on 1.0
-                    if total <> 1.0:
+                    if total != 1.0:
                         current.response.warning = current.T("Weightings should add up to 1.0")
 
         # Update Statuses
@@ -6413,7 +6456,7 @@ class S3ProjectPlanningModel(S3Model):
                     total += form_vars.weighting
 
                     # Check if we're on 1.0
-                    if total <> 1.0:
+                    if total != 1.0:
                         current.response.warning = current.T("Weightings should add up to 1.0")
 
         elif settings.get_project_outcomes() and \
@@ -6704,7 +6747,7 @@ class S3ProjectPlanningModel(S3Model):
                     total += form_vars.weighting
 
                     # Check if we're on 1.0
-                    if total <> 1.0:
+                    if total != 1.0:
                         current.response.warning = current.T("Weightings should add up to 1.0")
 
         if current.deployment_settings.get_project_status_from_activities():
@@ -8354,10 +8397,10 @@ class project_SummaryReport(S3Method):
             org_represent = s3db.org_OrganisationRepresent() # show_link=False
             donors = org_represent.bulk([row.organisation_id for row in partners if row.role == 3])
             del donors[None]
-            donors = donors.values()
+            donors = list(donors.values())
             partners = org_represent.bulk([row.organisation_id for row in partners if row.role != 3])
             del partners[None]
-            partners = partners.values()
+            partners = list(partners.values())
         else:
             donors = []
 
@@ -8368,7 +8411,7 @@ class project_SummaryReport(S3Method):
             location_represent = s3db.gis_LocationRepresent() # show_link=False
             locations = location_represent.bulk([row.location_id for row in locations])
             del locations[None]
-            locations = locations.values()
+            locations = list(locations.values())
 
         # @ToDo: deployment_setting to separate per Location?
         btable = s3db.project_beneficiary
@@ -8380,7 +8423,7 @@ class project_SummaryReport(S3Method):
             ben_represent = S3Represent(lookup="stats_parameter",
                                         translate=True,
                                         )
-            benef_types = ben_represent.bulk(list(set([row.parameter_id for row in beneficiaries])))
+            benef_types = ben_represent.bulk(list({row.parameter_id for row in beneficiaries}))
             # Sum per Type
             del benef_types[None]
             benefs = []
@@ -8793,8 +8836,7 @@ class project_IndicatorSummaryReport(S3Method):
         years = set(years)
 
         # Sort
-        dates = [d for d in dates]
-        dates.sort()
+        dates = sorted([d for d in dates])
         years = [y for y in years]
         years.sort()
         goals = OrderedDict(sorted(goals.items(), key=lambda x: x[1]["code"]))
@@ -9285,11 +9327,6 @@ class project_IndicatorSummaryReport(S3Method):
         current_row.write(colspan + 1, status_represent(status), status_style(status))
 
         # Export to File
-        try:
-            from cStringIO import StringIO    # Faster, where available
-        except ImportError:
-            from StringIO import StringIO
-
         output = StringIO()
         try:
             book.save(output)
@@ -10099,6 +10136,49 @@ class S3ProjectStrategyModel(S3Model):
                 }
 
 # =============================================================================
+class S3ProjectTagModel(S3Model):
+    """
+        Project Tags
+    """
+
+    names = ("project_project_tag",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Project Tags
+        # - Key-Value extensions
+        # - can be used to provide conversions to external systems, such as:
+        #   * HXL, FTS
+        # - can be a Triple Store for Semantic Web support
+        # - can be used to add custom fields
+        #
+        tablename = "project_project_tag"
+        self.define_table(tablename,
+                          self.project_project_id(empty = False),
+                          # key is a reserved word in MySQL
+                          Field("tag",
+                                label = T("Key"),
+                                ),
+                          Field("value",
+                                label = T("Value"),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("project_id",
+                                                            "tag",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
 class S3ProjectThemeModel(S3Model):
     """
         Project Theme Model
@@ -10465,7 +10545,7 @@ class S3ProjectDRRPPModel(S3Model):
 
         NONE = current.messages["NONE"]
 
-        local_currencies = current.deployment_settings.get_fin_currencies().keys()
+        local_currencies = list(current.deployment_settings.get_fin_currencies().keys())
         try:
             local_currencies.remove("USD")
         except ValueError:
@@ -10475,6 +10555,10 @@ class S3ProjectDRRPPModel(S3Model):
         project_rfa_opts = self.project_rfa_opts()
         project_pifacc_opts = self.project_pifacc_opts()
         project_jnap_opts = self.project_jnap_opts()
+
+        rfa_selector_opts = [(opt, "RFA %s" % opt) for opt in project_rfa_opts]
+        pifacc_selector_opts = [(opt, "PIFACC %s" % opt) for opt in project_pifacc_opts]
+        jnap_selector_opts = [(opt, "JNAP %s" % opt) for opt in project_jnap_opts]
 
         tablename = "project_drrpp"
         self.define_table(tablename,
@@ -10514,10 +10598,9 @@ class S3ProjectDRRPPModel(S3Model):
                                 represent = lambda opt: \
                                     self.opts_represent(opt, "RFA"),
                                 requires = IS_EMPTY_OR(
-                                            IS_IN_SET(project_rfa_opts.keys(),
-                                                      labels = ["RFA %s" % \
-                                                                rfa for rfa in project_rfa_opts.keys()],
-                                                      multiple = True)),
+                                            IS_IN_SET(rfa_selector_opts,
+                                                      multiple = True,
+                                                      )),
                                 widget = S3GroupedOptionsWidget(help_field = project_rfa_opts,
                                                                 cols = 1,
                                                                 ),
@@ -10530,10 +10613,9 @@ class S3ProjectDRRPPModel(S3Model):
                                 represent = lambda opt: \
                                     self.opts_represent(opt, "PIFACC"),
                                 requires = IS_EMPTY_OR(
-                                            IS_IN_SET(project_pifacc_opts.keys(),
-                                                      labels = ["PIFACC %s" % \
-                                                                pifacc for pifacc in project_pifacc_opts.keys()],
-                                                      multiple = True)),
+                                            IS_IN_SET(pifacc_selector_opts,
+                                                      multiple = True,
+                                                      )),
                                 widget = S3GroupedOptionsWidget(help_field = project_pifacc_opts,
                                                                 cols = 1,
                                                                 ),
@@ -10546,10 +10628,9 @@ class S3ProjectDRRPPModel(S3Model):
                                 represent = lambda opt: \
                                     self.opts_represent(opt, "JNAP"),
                                 requires = IS_EMPTY_OR(
-                                            IS_IN_SET(project_jnap_opts.keys(),
-                                                      labels = ["JNAP %s" % \
-                                                                jnap for jnap in project_jnap_opts.keys()],
-                                                      multiple = True)),
+                                            IS_IN_SET(jnap_selector_opts,
+                                                      multiple = True,
+                                                      )),
                                 widget = S3GroupedOptionsWidget(help_field = project_jnap_opts,
                                                                 cols = 1,
                                                                 ),
@@ -10675,7 +10756,7 @@ class S3ProjectTargetModel(S3Model):
         Project Target Model
     """
 
-    names = ("project_target",)
+    names = ("project_project_target",)
 
     def model(self):
 
@@ -10684,7 +10765,7 @@ class S3ProjectTargetModel(S3Model):
         # ---------------------------------------------------------------------
         # Projects <> DC Targets Link Table
         #
-        tablename = "project_target"
+        tablename = "project_project_target"
         self.define_table(tablename,
                           self.project_project_id(empty = False,
                                                   ondelete = "CASCADE",
@@ -10722,7 +10803,6 @@ class S3ProjectTaskModel(S3Model):
     """
 
     names = ("project_milestone",
-             "project_tag",
              "project_task",
              "project_task_id",
              "project_role",
@@ -10732,7 +10812,6 @@ class S3ProjectTaskModel(S3Model):
              "project_task_project",
              "project_task_activity",
              "project_task_milestone",
-             "project_task_tag",
              "project_task_represent_w_project",
              "project_task_active_statuses",
              "project_task_project_opts",
@@ -10819,48 +10898,6 @@ class S3ProjectTaskModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
-        # Project Tags
-        #
-        tablename = "project_tag"
-        define_table(tablename,
-                     Field("name",
-                           label = T("Tag"),
-                           ),
-                     *s3_meta_fields())
-
-        # CRUD Strings
-        ADD_TAG = T("Create Tag")
-        crud_strings[tablename] = Storage(
-            label_create = ADD_TAG,
-            title_display = T("Tag Details"),
-            title_list = T("Tags"),
-            title_update = T("Edit Tag"),
-            title_upload = T("Import Tags"),
-            label_list_button = T("List Tags"),
-            msg_record_created = T("Tag added"),
-            msg_record_modified = T("Tag updated"),
-            msg_record_deleted = T("Tag deleted"),
-            msg_list_empty = T("No tags currently defined"))
-
-        # Reusable Field
-        represent = S3Represent(lookup=tablename)
-
-        tag_id = S3ReusableField("tag_id", "reference %s" % tablename,
-                                 label = T("Tag"),
-                                 ondelete = "RESTRICT",
-                                 represent = represent,
-                                 requires = IS_EMPTY_OR(
-                                              IS_ONE_OF(db, "project_tag.id",
-                                                        represent)),
-                                 sortby = "name",
-                                 comment = S3PopupLink(c = "project",
-                                                       f = "tag",
-                                                       title = ADD_TAG,
-                                                       tooltip = T("A project tag helps to associate keywords with projects/tasks."),
-                                                       ),
-                                 )
-
-        # ---------------------------------------------------------------------
         # Tasks
         #
         # Tasks can be linked to Activities or directly to Projects
@@ -10921,11 +10958,9 @@ class S3ProjectTaskModel(S3Model):
                      Field("priority", "integer",
                            default = 3,
                            label = T("Priority"),
-                           represent = lambda opt: \
-                                       project_task_priority_opts.get(opt,
-                                                                      UNKNOWN_OPT),
+                           represent = S3Represent(options = project_task_priority_opts),
                            requires = IS_IN_SET(project_task_priority_opts,
-                                                zero=None),
+                                                zero = None),
                            ),
                      # Could be a Person, Team or Organisation
                      super_link("pe_id", "pr_pentity",
@@ -10973,11 +11008,9 @@ class S3ProjectTaskModel(S3Model):
                      Field("status", "integer",
                            default = 2,
                            label = T("Status"),
-                           represent = lambda opt: \
-                                    project_task_status_opts.get(opt,
-                                                                 UNKNOWN_OPT),
+                           represent = S3Represent(options = project_task_status_opts),
                            requires = IS_IN_SET(project_task_status_opts,
-                                                zero=None),
+                                                zero = None),
                            readable = staff,
                            writable = staff,
                            ),
@@ -11069,15 +11102,6 @@ class S3ProjectTaskModel(S3Model):
                            }
                 jquery_ready_append('''$.filterOptionsS3(%s)''' % \
                                     json.dumps(options, separators=SEPARATORS))
-
-        if settings.get_project_task_tag():
-            lappend("task_tag.tag_id")
-            fappend(S3OptionsFilter("task_tag.tag_id",
-                                    ))
-            cappend(S3SQLInlineComponent("task_tag",
-                                         label = T("Tags"),
-                                         fields = [("", "tag_id")],
-                                         ))
 
         # Basic workflow fields
         cextend(("name",
@@ -11307,16 +11331,6 @@ class S3ProjectTaskModel(S3Model):
                        project_task_milestone = "task_id",
                        # Members
                        project_member = "task_id",
-                       # Tags
-                       project_tag = {"link": "project_task_tag",
-                                      "joinby": "task_id",
-                                      "key": "tag_id",
-                                      "actuate": "embed",
-                                      "autocomplete": "name",
-                                      "autodelete": False,
-                                      },
-                       # Format for S3SQLInlineComponent
-                       project_task_tag = "task_id",
                        # Job titles
                        hrm_job_title = {"link": "project_task_job_title",
                                         "joinby": "task_id",
@@ -11398,19 +11412,6 @@ class S3ProjectTaskModel(S3Model):
                      milestone_id(empty = False,
                                   ondelete = "CASCADE",
                                   ),
-                     *s3_meta_fields())
-        # ---------------------------------------------------------------------
-        # Link task <-> tags
-        #
-        # Tasks <> Tags
-        tablename = "project_task_tag"
-        define_table(tablename,
-                     task_id(empty = False,
-                             ondelete = "CASCADE",
-                             ),
-                     tag_id(empty = False,
-                            ondelete = "CASCADE",
-                            ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -13435,7 +13436,7 @@ def project_theme_help_fields(options):
     """
 
     table = current.s3db.project_theme
-    keys = dict(options).keys()
+    keys = set(dict(options).keys())
     rows = current.db(table.id.belongs(keys)).select(table.id,
                                                      table.comments)
     T = current.T
@@ -13455,7 +13456,7 @@ def project_hazard_help_fields(options):
     """
 
     table = current.s3db.project_hazard
-    keys = dict(options).keys()
+    keys = set(dict(options).keys())
     rows = current.db(table.id.belongs(keys)).select(table.id,
                                                      table.comments)
 

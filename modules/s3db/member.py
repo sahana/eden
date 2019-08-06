@@ -594,7 +594,7 @@ class S3MemberProgrammeModel(S3Model):
         return {}
 
 # =============================================================================
-def member_rheader(r, tabs=[]):
+def member_rheader(r, tabs=None):
     """ Resource headers for component views """
 
     if r.representation != "html":

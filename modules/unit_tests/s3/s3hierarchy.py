@@ -599,7 +599,7 @@ class S3HierarchyTests(unittest.TestCase):
 
         for row in output:
             next_level = True
-            for i in xrange(2):
+            for i in range(2):
                 hcol = "_export.%s" % i
                 # All hierarchy columns must be present
                 assertTrue(hcol in row)

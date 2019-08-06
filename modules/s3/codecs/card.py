@@ -32,11 +32,6 @@ __all__ = ("S3PDFCard",
            )
 
 try:
-    from cStringIO import StringIO    # Faster, where available
-except ImportError:
-    from StringIO import StringIO
-
-try:
     from reportlab.lib.pagesizes import A4, LETTER, landscape, portrait
     from reportlab.platypus import BaseDocTemplate, PageTemplate, Flowable, \
                                    Frame, NextPageTemplate, PageBreak
@@ -52,6 +47,7 @@ except ImportError:
 
 from gluon import current, HTTP
 
+from s3compat import StringIO
 from ..s3codec import S3Codec
 from ..s3resource import S3Resource
 from ..s3utils import s3_str

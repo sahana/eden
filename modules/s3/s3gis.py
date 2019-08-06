@@ -27,6 +27,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @status: partially fixed for Py3, needs more work
 """
 
 __all__ = ("GIS",
@@ -41,14 +43,8 @@ import os
 import re
 import sys
 #import logging
-import urllib           # Needed for urlencoding
-import urllib2          # Needed for quoting & error handling on fetch
 
 from collections import OrderedDict
-try:
-    from cStringIO import StringIO    # Faster, where available
-except:
-    from StringIO import StringIO
 
 try:
     from lxml import etree # Needed to follow NetworkLinks
@@ -68,6 +64,7 @@ from gluon.languages import lazyT, regex_translate
 from gluon.settings import global_settings
 from gluon.storage import Storage
 
+from s3compat import Cookie, HTTPError, StringIO, URLError, basestring, urllib_quote
 from s3dal import Rows
 from .s3datetime import s3_format_datetime, s3_parse_datetime
 from .s3fields import s3_all_meta_field_names
@@ -365,27 +362,26 @@ class GIS(object):
             local = True
         if local:
             # Keep Session for local URLs
-            import Cookie
             cookie = Cookie.SimpleCookie()
             cookie[session_id_name] = session_id
             # For sync connections
             current.session._unlock(response)
             try:
                 file = fetch(url, cookie=cookie)
-            except urllib2.URLError:
-                warning = "URLError"
-                return warning
-            except urllib2.HTTPError:
+            except HTTPError:
                 warning = "HTTPError"
+                return warning
+            except URLError:
+                warning = "URLError"
                 return warning
         else:
             try:
                 file = fetch(url)
-            except urllib2.URLError:
-                warning = "URLError"
-                return warning
-            except urllib2.HTTPError:
+            except HTTPError:
                 warning = "HTTPError"
+                return warning
+            except URLError:
+                warning = "URLError"
                 return warning
 
         filenames = []
@@ -964,7 +960,7 @@ class GIS(object):
                                                  "level": parent.level,
                                                  })
             if path:
-                path_list = map(int, path.split("/"))
+                path_list = [int(item) for item in path.split("/")]
                 rows = db(table.id.belongs(path_list)).select(table.level,
                                                               table.name,
                                                               table.lat,
@@ -1092,7 +1088,7 @@ class GIS(object):
                 path = GIS.update_location_tree(feature)
 
             if path:
-                path_list = map(int, path.split("/"))
+                path_list = [int(item) for item in path.split("/")]
                 if len(path_list) == 1:
                     # No parents - path contains only this feature.
                     return None
@@ -1185,7 +1181,7 @@ class GIS(object):
                 # know the levels of the parents from their position in path.
                 # Note ids returned from db are ints, not strings, so be
                 # consistent with that.
-                path_ids = map(int, path.split("/"))
+                path_ids = [int(item) for item in path.split("/")]
                 # This skips the last path element, which is the supplied
                 # location.
                 for (i, _id) in enumerate(path_ids[:-1]):
@@ -1211,7 +1207,7 @@ class GIS(object):
                 # (both for address onvalidation & new LocationSelector)
                 hierarchy_level_keys = self.hierarchy_level_keys
                 for key in hierarchy_level_keys:
-                    if not results.has_key(key):
+                    if key not in results:
                         results[key] = None
 
         return results
@@ -1675,7 +1671,7 @@ class GIS(object):
         if level:
             try:
                 return all_levels[level]
-            except Exception as e:
+            except Exception:
                 return level
         else:
             return all_levels
@@ -1696,7 +1692,7 @@ class GIS(object):
             self.relevant_hierarchy_levels = levels
 
         if not as_dict:
-            return levels.keys()
+            return list(levels.keys())
         else:
             return levels
 
@@ -2968,7 +2964,7 @@ class GIS(object):
             test = '''return S3.gis.maps['%s'].s3.loaded''' % map_id
             try:
                 result = driver.execute_script(test)
-            except WebDriverException as e:
+            except WebDriverException:
                 result = False
             return result
 
@@ -3758,7 +3754,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             current.log.debug("Downloading %s" % url)
             try:
                 file = fetch(url)
-            except urllib2.URLError as exception:
+            except URLError as exception:
                 current.log.error(exception)
                 return
             fp = StringIO(file)
@@ -3835,8 +3831,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         #ttable.insert(location_id = location_id,
                         #              tag = "area",
                         #              value = area)
-                    except db._adapter.driver.OperationalError as e:
-                        current.log.error(sys.exc_info[1])
+                    except db._adapter.driver.OperationalError:
+                        current.log.error(sys.exc_info()[1])
 
             else:
                 current.log.debug("No geometry\n")
@@ -3915,10 +3911,12 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
         ENCODING = "cp1251"
 
         # from http://docs.python.org/library/csv.html#csv-examples
+        # TODO rewrite for Py3
         def latin_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
             for row in csv.reader(unicode_csv_data):
                 yield [unicode(cell, ENCODING) for cell in row]
 
+        # TODO rewrite for Py3
         def latin_dict_reader(data, dialect=csv.excel, **kwargs):
             reader = latin_csv_reader(data, dialect=dialect, **kwargs)
             headers = reader.next()
@@ -3962,7 +3960,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             current.log.debug("Downloading %s" % url)
             try:
                 file = fetch(url)
-            except urllib2.URLError as exception:
+            except URLError as exception:
                 current.log.error(exception)
                 # Revert back to the working directory as before.
                 os.chdir(cwd)
@@ -4003,7 +4001,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
         # Copy all Fields
         #papszFieldTypesToString = []
         inputFieldCount = inputFDefn.GetFieldCount()
-        panMap = [-1 for i in range(inputFieldCount)]
+        panMap = [-1] * inputFieldCount
         outputFDefn = outputLayer.GetLayerDefn()
         nDstFieldCount = 0
         if outputFDefn is not None:
@@ -4015,7 +4013,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             oFieldDefn.SetWidth(inputFieldDefn.GetWidth())
             oFieldDefn.SetPrecision(inputFieldDefn.GetPrecision())
             # The field may have been already created at layer creation
-            iDstField = -1;
+            iDstField = -1
             if outputFDefn is not None:
                 iDstField = outputFDefn.GetFieldIndex(oFieldDefn.GetNameRef())
             if iDstField >= 0:
@@ -4296,7 +4294,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             current.log.debug("Downloading %s" % url)
             try:
                 file = fetch(url)
-            except urllib2.URLError as exception:
+            except URLError as exception:
                 current.log.error(exception)
                 return
             fp = StringIO(file)
@@ -4435,13 +4433,13 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             from gluon.tools import fetch
             try:
                 f = fetch(url)
-            except (urllib2.URLError,):
-                e = sys.exc_info()[1]
-                current.log.error("URL Error", e)
-                return
-            except (urllib2.HTTPError,):
+            except HTTPError:
                 e = sys.exc_info()[1]
                 current.log.error("HTTP Error", e)
+                return
+            except URLError:
+                e = sys.exc_info()[1]
+                current.log.error("URL Error", e)
                 return
 
             # Unzip File
@@ -4614,7 +4612,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
 
         if not wkt:
             if not lon is not None and lat is not None:
-                raise RuntimeError, "Need wkt or lon+lat to parse a location"
+                raise RuntimeError("Need wkt or lon+lat to parse a location")
             wkt = "POINT(%f %f)" % (lon, lat)
             geom_type = GEOM_TYPES["point"]
             bbox = (lon, lat, lon, lat)
@@ -6870,7 +6868,7 @@ class MAP(DIV):
         if wms_browser:
             options["wms_browser_name"] = wms_browser["name"]
             # urlencode the URL
-            options["wms_browser_url"] = urllib.quote(wms_browser["url"])
+            options["wms_browser_url"] = urllib_quote(wms_browser["url"])
 
         # Mouse Position
         # 'normal', 'mgrs' or 'off'
@@ -7281,7 +7279,7 @@ def addFeatureQueries(feature_queries):
     for layer in feature_queries:
         name = str(layer["name"])
         _layer = {"name": name}
-        name_safe = re.sub("\W", "_", name)
+        name_safe = re.sub(r"\W", "_", name)
 
         # Lat/Lon via Join or direct?
         try:
@@ -7407,7 +7405,7 @@ def addFeatureResources(feature_resources):
             _id = str(_id)
         else:
             _id = name
-        _id = re.sub("\W", "_", _id)
+        _id = re.sub(r"\W", "_", _id)
         _layer["id"] = _id
 
         # Are we loading a Catalogue Layer or a simple URL?
@@ -7838,7 +7836,7 @@ class Layer(object):
         def add_attributes_if_not_default(output, **values_and_defaults):
             # could also write values in debug mode, to check if defaults ignored.
             # could also check values are not being overwritten.
-            for key, (value, defaults) in values_and_defaults.iteritems():
+            for key, (value, defaults) in values_and_defaults.items():
                 if value not in defaults:
                     output[key] = value
 
@@ -8183,7 +8181,6 @@ class LayerGeoRSS(Layer):
                                                              url,
                                                              fields)
                 # Keep Session for local URLs
-                import Cookie
                 cookie = Cookie.SimpleCookie()
                 cookie[response.session_id_name] = response.session_id
                 current.session._unlock(response)
@@ -8445,7 +8442,7 @@ class LayerKML(Layer):
 
             name = self.name
             if cacheable:
-                _name = urllib2.quote(name)
+                _name = urllib_quote(name)
                 _name = _name.replace("%", "_")
                 filename = "%s.file.%s.kml" % (cachetable._tablename,
                                                _name)

@@ -30,8 +30,6 @@
 
     NB Widgets are processed upon form submission (before form validation)
        in addition to when generating new forms (so are often processed twice)
-
-    @status: fixed for Py3
 """
 
 __all__ = ("S3ACLWidget",
@@ -77,7 +75,7 @@ __all__ = ("S3ACLWidget",
            "S3TimeIntervalWidget",
            #"S3UploadWidget",
            "S3FixedOptionsWidget",
-           "S3QuestionWidget",
+           "S3QuestionEditorWidget",
            "CheckboxesWidgetS3",
            "s3_comments_widget",
            "s3_richtext_widget",
@@ -8472,11 +8470,17 @@ class S3XMLContents(object):
         return re.sub(r"\{\{(.+?)\}\}", self.link, self.contents)
 
 # =============================================================================
-class S3QuestionWidget(FormWidget):
+class S3QuestionEditorWidget(FormWidget):
     """
-        A Question widget which takes attributes
-        of a typical question as input and converts
-        it into a JSON
+        A Question Editor widget for DC
+        Client-side JS in s3.ui.question.js
+
+        Currently unused.
+        - replace with simple DIV + Hidden IINPUT & build UI client-side?
+            . less load on server
+            . DRYer (no need to read/extend settings in 2 places)
+            . faster for user (faster download and hence time before interaction)
+        - for now the replacement is in UCCE as styled to it's Theme
     """
 
     # -------------------------------------------------------------------------
@@ -8717,7 +8721,7 @@ class S3TagCheckboxWidget(FormWidget):
         NB make sure the field validator accepts the configured on/off values,
            e.g. IS_IN_SET(("Y", "N")) (also for consistency with imports)
 
-        NB when using this with a filtered key-value-component (e.g.
+        NB when using this with a filtered key-value component (e.g.
            pr_person_tag), make the filtered component multiple=False and
            embed *.value as subtable-field (do not use S3SQLInlineComponent)
     """
@@ -8817,6 +8821,7 @@ class ICON(I):
             "certificate": "fa-certificate",
             "comment-alt": "fa-comment-o",
             "commit": "fa-check-square-o",
+            "copy": "fa-copy",
             "delete": "fa-trash",
             "delivery": "fa-thumbs-up",
             "deploy": "fa-plus",
@@ -8841,15 +8846,19 @@ class ICON(I):
             "globe": "fa-globe",
             "goods": "fa-cubes",
             "group": "fa-group",
+            "hashtag": "fa-hashtag",
             "hint": "fa-hand-o-right",
             "home": "fa-home",
             "inactive": "fa-check-empty",
             "incident": "fa-bolt",
+            "info": "fa-info",
+            "info-circle": "fa-info-circle",
             "link": "fa-external-link",
             "list": "fa-list",
             "location": "fa-globe",
             "mail": "fa-envelope-o",
             "map-marker": "fa-map-marker",
+            "minus": "fa-minus",
             "move": "fa-arrows",
             "news": "fa-info",
             "offer": "fa-truck",
@@ -8860,6 +8869,7 @@ class ICON(I):
             "pause": "fa-pause",
             "pencil": "fa-pencil",
             "phone": "fa-phone",
+            "picture": "fa-picture-o",
             "play": "fa-play",
             "plus": "fa-plus",
             "plus-sign": "fa-plus-sign",
@@ -8913,6 +8923,7 @@ class ICON(I):
             "certificate": "fi-burst",
             "comment-alt": "fi-comment",
             "commit": "fi-check",
+            "copy": "fi-page-copy",
             "delete": "fi-trash",
             "deploy": "fi-plus",
             "deployed": "fi-check",
@@ -8934,11 +8945,14 @@ class ICON(I):
             "group": "fi-torsos-all",
             "home": "fi-home",
             "inactive": "fi-x",
+            "info": "fi-info",
+            "info-circle": "fi-info",
             "link": "fi-web",
-            "list": "fi-list",
+            "list": "fi-list-thumbnails",
             "location": "fi-map",
             "mail": "fi-mail",
             "map-marker": "fi-marker",
+            "minus": "fi-minus",
             "offer": "fi-burst",
             "organisation": "fi-torsos-all",
             "org-network": "fi-asterisk",
@@ -8996,6 +9010,7 @@ class ICON(I):
             "certificate": "icon-certificate",
             "comment-alt": "icon-comment-alt",
             "commit": "icon-truck",
+            "copy": "icon-copy",
             "delete": "icon-trash",
             "deploy": "icon-plus",
             "deployed": "icon-ok",
@@ -9018,11 +9033,14 @@ class ICON(I):
             "group": "icon-group",
             "home": "icon-home",
             "inactive": "icon-check-empty",
+            "info": "icon-info",
+            "info-circle": "icon-info-sign",
             "link": "icon-external-link",
             "list": "icon-list",
             "location": "icon-globe",
             "mail": "icon-envelope-alt",
             "map-marker": "icon-map-marker",
+            "minus": "icon-minus",
             "offer": "icon-truck",
             "organisation": "icon-sitemap",
             "org-network": "icon-umbrella",
@@ -9031,6 +9049,7 @@ class ICON(I):
             "pause": "icon-pause",
             "pencil": "icon-pencil",
             "phone": "icon-phone",
+            "picture": "icon-picture",
             "play": "icon-play",
             "plus": "icon-plus",
             "plus-sign": "icon-plus-sign",

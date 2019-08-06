@@ -47,6 +47,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
+from s3compat import basestring, xrange
 from s3layouts import S3PopupLink
 
 # =============================================================================
@@ -1711,8 +1712,7 @@ class stats_SourceRepresent(S3Represent):
             if show_link:
                 link = self.link
                 rows = self.rows
-                labels = dict((k, link(k, v, rows.get(k)))
-                               for k, v in labels.items())
+                labels = {k: link(k, v, rows.get(k)) for k, v in labels.items()}
             for v in values:
                 if v not in labels:
                     labels[v] = self.default

@@ -4,10 +4,11 @@ import datetime
 
 from collections import OrderedDict
 
-from gluon import current, A, DIV,IS_EMPTY_OR, IS_IN_SET, IS_LENGTH, IS_NOT_EMPTY, SPAN, TAG, URL
+from gluon import current, A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_LENGTH, IS_NOT_EMPTY, SPAN, TAG, URL
 from gluon.storage import Storage
 
 from s3 import FS, IS_ONE_OF
+from s3compat import long
 from s3dal import original_tablename
 
 # =============================================================================
@@ -3087,7 +3088,7 @@ def config(settings):
                     return False
 
             if not r.id:
-                from stats import ResponsePerformanceIndicators
+                from .stats import ResponsePerformanceIndicators
                 s3db.set_method("dvr", "response_action",
                                 method = "indicators",
                                 action = ResponsePerformanceIndicators,

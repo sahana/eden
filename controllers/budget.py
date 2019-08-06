@@ -204,8 +204,8 @@ def kit_export_xls():
         session.error = "xlwt module not available within the running Python - this needs installing for XLS output!"
         redirect(URL(c="kit"))
 
-    import cStringIO
-    output = cStringIO.StringIO()
+    from s3compat import StringIO
+    output = StringIO()
 
     book = xlwt.Workbook()
     # List of Kits
@@ -236,7 +236,7 @@ def kit_export_xls():
             cell1 += 1
         # Sheet per Kit detailing constituent Items
         # Replace characters which are illegal in sheetnames
-        sheetname = kit.code.replace("/","_")
+        sheetname = kit.code.replace("/", "_")
         sheet = book.add_sheet(sheetname)
         # Header row for Items sheet
         row0 = sheet.row(0)
@@ -304,8 +304,8 @@ def kit_export_pdf():
         session.warning = T("No data in this table - cannot create PDF!")
         redirect(URL(r=request))
 
-    import cStringIO
-    output = cStringIO.StringIO()
+    from s3compat import StringIO
+    output = StringIO()
 
     #class MySubReport(SubReport):
     #    def __init__(self, db=None, **kwargs):
@@ -473,8 +473,8 @@ def item_export_pdf():
         session.warning = T("No data in this table - cannot create PDF!")
         redirect(URL(f="item"))
 
-    import cStringIO
-    output = cStringIO.StringIO()
+    from s3compat import StringIO
+    output = StringIO()
 
     class MyReport(Report):
         def __init__(self, queryset=None, T=None):

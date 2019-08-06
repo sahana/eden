@@ -8,11 +8,9 @@
 import unittest
 from gluon import *
 from gluon.storage import Storage
+
 from s3.s3rest import S3Request
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
+from s3compat import StringIO
 
 from unit_tests import run_suite
 
@@ -67,7 +65,7 @@ class POSTFilterTests(unittest.TestCase):
         assertNotIn("$search", get_vars)
 
         # Filter queries from POST vars JSON-decoded and added to GET vars:
-        assertEqual(get_vars.get("~.name|~.comments__like"), ["first","second"])
+        assertEqual(get_vars.get("~.name|~.comments__like"), ["first", "second"])
         assertEqual(get_vars.get("~.other_field__lt"), "1")
 
         # Edge-cases (non-str values) properly converted:
@@ -146,7 +144,7 @@ class POSTFilterTests(unittest.TestCase):
         # Filter queries from JSON body added to GET vars (always str, or list of str):
         assertEqual(get_vars.get("service_organisation.service_id__belongs"), "1")
         assertEqual(get_vars.get("~.example__lt"), "1")
-        assertEqual(get_vars.get("~.other__like"), ["1","2"])
+        assertEqual(get_vars.get("~.other__like"), ["1", "2"])
         assertEqual(get_vars.get("~.name__like"), "*Liquiçá*")
 
         # Must retain other GET vars:

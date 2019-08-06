@@ -1102,7 +1102,7 @@ class CholeraTreatmentCapabilityModel(S3Model):
                      Field("problem_types", "list:integer",
                            label = T("Current problems, categories"),
                            represent = lambda optlist: \
-                                       optlist and ", ".join(map(str,optlist)) or T("N/A"),
+                                       optlist and ", ".join(str(o) for o in optlist) or T("N/A"),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(hms_problem_types,
                                                   zero=None,

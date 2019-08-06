@@ -1006,8 +1006,8 @@
 
             // Construct button label and on-hover title
             var label = action.label;
-            if (!this.tableConfig.rowActionsJSON) {
-                label = S3.Utf8.decode(action.label);
+            if (!this.tableConfig.rowActionsJSON && this.tableConfig.utf8) {
+               label = S3.Utf8.decode(action.label);
             }
             var title = action._title || label;
 

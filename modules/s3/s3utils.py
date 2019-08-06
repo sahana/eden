@@ -27,8 +27,6 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @status: fixed for Py3
 """
 
 import collections
@@ -1898,7 +1896,7 @@ class Traceback(object):
         lwords = traceback.split('"')
 
         # Make the short circuit compatible with <= python2.4
-        result = (len(lwords) != 0) and lwords[0] or ""
+        result = lwords[0] if len(lwords) else ""
 
         i = 1
 
@@ -1908,7 +1906,7 @@ class Traceback(object):
             if link == "":
                 result += '"' + lwords[i]
             else:
-                result += link
+                result += s3_str(link)
 
                 if i + 1 < len(lwords):
                     result += lwords[i + 1]
@@ -1965,8 +1963,8 @@ class S3CustomController(object):
         @ToDo: Add Helper Function for dataLists
     """
 
-    @classmethod
-    def _view(cls, template, filename):
+    @staticmethod
+    def _view(template, filename):
         """
             Use a custom view template
 
@@ -2715,6 +2713,7 @@ class S3MarkupStripper(HTMLParser):
     """ Simple markup stripper """
 
     def __init__(self):
+        super(S3MarkupStripper, self).__init__()
         self.reset()
         self.result = []
 

@@ -1,0 +1,5 @@
+{{extend "layout.html"}}
+{{for item in items:}}{{=item}}{{pass}}
+<div class='row' id='buttons'>
+{{try:}}{{=cancel_btn}}{{except:}}{{pass}}{{try:}}{{=action_btn}}{{except:}}{{pass}}
+</div>

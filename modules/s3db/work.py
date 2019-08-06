@@ -496,7 +496,7 @@ class WorkJobModel(S3Model):
         return
 
 # =============================================================================
-def work_rheader(r, tabs=[]):
+def work_rheader(r, tabs=None):
     """ Work module resource headers """
 
     if r.representation != "html":

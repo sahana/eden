@@ -30,6 +30,11 @@
                        S3DataList
 """
 
+__all__ = ("S3DataTable",
+           "S3DataList",
+           "S3DataListLayout",
+           )
+
 import re
 
 from itertools import islice
@@ -38,6 +43,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
+from s3compat import PY2, xrange
 from s3dal import Expression, S3DAL
 from .s3utils import s3_orderby_fields, s3_str, s3_unicode, s3_set_extension
 
@@ -211,11 +217,13 @@ class S3DataTable(object):
             self.id_counter += 1
         self.id = id
 
-        bulkActions = attr.get("dt_bulk_actions", None)
-        bulkCol = attr.get("dt_bulk_col", 0)
+        attr_get = attr.get
+
+        bulkActions = attr_get("dt_bulk_actions", None)
+        bulkCol = attr_get("dt_bulk_col", 0)
         if bulkCol > len(flist):
             bulkCol = len(flist)
-        action_col = attr.get("dt_action_col", 0)
+        action_col = attr_get("dt_action_col", 0)
         if action_col != 0:
             if action_col == -1 or action_col >= len(flist):
                 action_col = len(flist) -1
@@ -230,7 +238,7 @@ class S3DataTable(object):
             if bulkCol <= action_col:
                 action_col += 1
 
-        pagination = attr.get("dt_pagination", "true") == "true"
+        pagination = attr_get("dt_pagination", "true") == "true"
         if pagination:
             real_end = self.end
             self.end = self.start + 1
@@ -403,6 +411,7 @@ class S3DataTable(object):
         if s3.dataTable_group:
             attr.dt_group = s3.dataTable_group
         # Nothing using currently
+        # - and not worth enabling as not used by standard CRUD
         #if s3.dataTable_NoSearch:
         #    attr.dt_searching = not s3.dataTable_NoSearch
         if s3.dataTable_dom:
@@ -469,7 +478,7 @@ class S3DataTable(object):
 
             # Auto-detect KML fields
             if "kml" not in formats and rfields:
-                kml_fields = set(["location_id", "site_id"])
+                kml_fields = {"location_id", "site_id"}
                 if any(rfield.fname in kml_fields for rfield in rfields):
                     formats["kml"] = default_url
 
@@ -690,6 +699,10 @@ class S3DataTable(object):
         # will then be parsed by s3.dataTable.js and the values used.
         config = Storage()
         config.id = id
+
+        # Py2 action-button labels are utf-8 encoded str (unicode in Py3)
+        config.utf8 = True if PY2 else False
+
         attr_get = attr.get
         config.dom = attr_get("dt_dom", settings.get_ui_datatables_dom())
         config.lengthMenu = attr_get("dt_lengthMenu",
@@ -968,7 +981,7 @@ class S3DataTable(object):
 class S3DataList(object):
     """
         Class representing a list of data cards
-        -clien-side implementation in static/scripts/S3/s3.dataLists.js
+        -client-side implementation in static/scripts/S3/s3.dataLists.js
     """
 
     # -------------------------------------------------------------------------

@@ -1,0 +1,174 @@
+/* Template Editor */
+
+.survey-droppable {
+  border: 1px solid #bbb;
+  height: 400px;
+  left: 100%;
+  right: 100%;
+  text-align: center;
+  box-shadow: 2px 2px #bbb;
+}
+
+.survey-droppable > span {
+  color: #bbb;
+  position: relative;
+  display: inline-block;
+  top: 50%;
+}
+
+.section-break {
+  color: #bbb;
+  display: block;
+  text-align: center;
+  overflow: hidden;
+  white-space: nowrap; 
+}
+
+.section-break > span {
+  position: relative;
+  display: inline-block;
+}
+
+.section-break > span:before,
+.section-break > span:after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 9999px;
+  height: 1px;
+  background: #bbb;
+}
+
+.section-break > span:before {
+  right: 100%;
+  margin-right: 15px;
+}
+
+.section-break > span:after {
+  left: 100%;
+  margin-left: 15px;
+}
+
+/* Switch Backported from Foundation 6 instead of using the Foundation 5 version */
+.switch {
+  height: 2rem;
+  position: relative;
+  margin-bottom: 1rem;
+  outline: 0;
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: #fefefe;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none; }
+
+.switch-input {
+  position: absolute;
+  margin-bottom: 0;
+  opacity: 0; }
+
+.switch-paddle {
+  position: relative;
+  display: block;
+  width: 4rem;
+  height: 2rem;
+  border-radius: 0;
+  background: #cacaca;
+  -webkit-transition: all 0.25s ease-out;
+  transition: all 0.25s ease-out;
+  font-weight: inherit;
+  color: inherit;
+  cursor: pointer; }
+  input + .switch-paddle {
+    margin: 0; }
+  .switch-paddle::after {
+    position: absolute;
+    top: 0.25rem;
+    left: 0.25rem;
+    display: block;
+    width: 1.5rem;
+    height: 1.5rem;
+    -webkit-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+    border-radius: 0;
+    background: #fefefe;
+    -webkit-transition: all 0.25s ease-out;
+    transition: all 0.25s ease-out;
+    content: ''; }
+  input:checked ~ .switch-paddle {
+    background: #1779ba; }
+    input:checked ~ .switch-paddle::after {
+      left: 2.25rem; }
+  [data-whatinput='mouse'] input:focus ~ .switch-paddle {
+    outline: 0; }
+
+.switch-active, .switch-inactive {
+  position: absolute;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+      -ms-transform: translateY(-50%);
+          transform: translateY(-50%); }
+
+.switch-active {
+  left: 8%;
+  display: none; }
+  input:checked + label > .switch-active {
+    display: block; }
+
+.switch-inactive {
+  /*right: 15%;*/
+  right: 10%;  }
+  input:checked + label > .switch-inactive {
+    display: none; }
+
+
+.switch.tiny {
+  height: 1.5rem; }
+  .switch.tiny .switch-paddle {
+    width: 3rem;
+    height: 1.5rem;
+    font-size: 0.625rem; }
+  .switch.tiny .switch-paddle::after {
+    top: 0.25rem;
+    left: 0.25rem;
+    width: 1rem;
+    height: 1rem; }
+  .switch.tiny input:checked ~ .switch-paddle::after {
+    left: 1.75rem; }
+
+.switch.small {
+  height: 1.75rem; }
+  .switch.small .switch-paddle {
+    width: 3.5rem;
+    height: 1.75rem;
+    font-size: 0.75rem; }
+  .switch.small .switch-paddle::after {
+    top: 0.25rem;
+    left: 0.25rem;
+    width: 1.25rem;
+    height: 1.25rem; }
+  .switch.small input:checked ~ .switch-paddle::after {
+    left: 2rem; }
+
+.switch.large {
+  height: 2.5rem; }
+  .switch.large .switch-paddle {
+    width: 5rem;
+    height: 2.5rem;
+    font-size: 1rem; }
+  .switch.large .switch-paddle::after {
+    top: 0.25rem;
+    left: 0.25rem;
+    width: 2rem;
+    height: 2rem; }
+  .switch.large input:checked ~ .switch-paddle::after {
+    left: 2.75rem; }
+
+/* https://github.com/zurb/foundation-sites/pull/10632/commits */
+.switch-paddle.rounded {
+    border-radius: 2rem;
+}
+.switch-paddle.rounded:after {
+    border-radius: 2rem;
+}

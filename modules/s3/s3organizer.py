@@ -46,6 +46,7 @@ import uuid
 from gluon import current, DIV, INPUT
 from gluon.storage import Storage
 
+from s3compat import basestring
 from .s3datetime import s3_decode_iso_datetime
 from .s3rest import S3Method
 from .s3utils import s3_str
@@ -228,7 +229,7 @@ class S3Organizer(S3Method):
             resource_config["colors"] = config.get("colors")
 
         # Generate form key
-        formkey = uuid.uuid4().get_hex()
+        formkey = uuid.uuid4().hex
 
         # Store form key in session
         session = current.session

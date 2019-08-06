@@ -110,8 +110,6 @@ def config(settings):
     settings.project.programmes = True
     # Uncomment this to enable Budgets in Programmes
     settings.project.programme_budget = True
-    # Uncomment this to use Tags in Tasks
-    #settings.project.task_tag = True
     # Uncomment this to enable Themes in 3W projects
     settings.project.themes = True
     # Uncomment this to use Theme Percentages for projects

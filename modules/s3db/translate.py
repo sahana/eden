@@ -50,8 +50,7 @@ class S3TranslateModel(S3Model):
         #
         from ..s3.s3translate import TranslateAPI
 
-        langlist = TranslateAPI.get_langcodes()
-        langlist.sort()
+        langlist = sorted(TranslateAPI.get_langcodes())
 
         tablename = "translate_language"
         define_table(tablename,

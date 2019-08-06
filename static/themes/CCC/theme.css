@@ -1924,3 +1924,203 @@ body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   font-weight: bold;
   color: #0082aa;
 }
+
+/* Over-ride widgets.css to remove alternate row styling */
+/* line 4, ../scss/theme/cards.scss */
+.dl-row.odd {
+  background-color: white;
+}
+/* line 6, ../scss/theme/cards.scss */
+.dl-row.odd .dl-item {
+  background-color: white;
+}
+
+/* Cards */
+/* From themes/bootstrap/cards.css: 'Common styling for Updates & Profile pages' */
+/* line 15, ../scss/theme/cards.scss */
+.thumbnail {
+  margin-bottom: 8px;
+  /* From themes/bootstrap/cards/css: 'Show a border around active disasters'
+  &.disaster {
+    border: 3px solid #E67E22;
+    padding-right: 5px;
+    margin: -2px 6px 6px -2px;
+  } */
+}
+/* line 17, ../scss/theme/cards.scss */
+.thumbnail:hover {
+  background-color: #f5f5f5;
+  -webkit-transition: all 0.2s ease-in-out;
+  -moz-transition: all 0.2s ease-in-out;
+  -ms-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+  cursor: auto;
+}
+
+/* line 34, ../scss/theme/cards.scss */
+.card-title2 {
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  padding-left: 10px;
+  margin-left: 10px;
+}
+
+/* line 40, ../scss/theme/cards.scss */
+.media-body a span.date-title {
+  border-left: none;
+  margin-left: 0;
+  padding-left: 1px;
+}
+
+/* line 46, ../scss/theme/cards.scss */
+.date-title {
+  font: 400 10px 'Helvetica Neue',Arial,sans-serif;
+  list-style: none outside none;
+  padding-left: 10px;
+  color: #999;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  margin-left: 10px;
+  padding-top: 10px;
+  padding-bottom: 9px;
+}
+/* line 55, ../scss/theme/cards.scss */
+.date-title.event {
+  font: 600 14px 'Helvetica Neue',Arial,sans-serif;
+  color: #666;
+  border-left: none;
+  margin-left: 0;
+}
+
+/* line 63, ../scss/theme/cards.scss */
+.location-title {
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  text-shadow: 0px 1px 0px white;
+  padding-left: 10px;
+  margin-left: 10px;
+  width: 10px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+/* line 71, ../scss/theme/cards.scss */
+.location-title a {
+  font: 600 12px 'Helvetica Neue',Arial,sans-serif;
+  color: #777;
+  padding: 0;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.7);
+  letter-spacing: 0;
+  word-spacing: -1px;
+}
+/* line 78, ../scss/theme/cards.scss */
+.location-title a:hover {
+  color: #333;
+  text-decoration: none;
+}
+
+/* line 85, ../scss/theme/cards.scss */
+img.media-object {
+  border-radius: 4px;
+  width: 44px;
+  height: 44px;
+  margin-top: 3px;
+  margin-left: 2px;
+  margin-bottom: 2px;
+}
+
+/* line 94, ../scss/theme/cards.scss */
+a h5.media-heading {
+  color: #656665;
+  padding-top: 8px;
+  padding-bottom: 0;
+  margin-bottom: -1px;
+}
+/* line 99, ../scss/theme/cards.scss */
+a h5.media-heading:hover {
+  color: #0187cc;
+}
+
+/* Edit Toolbar */
+/* line 106, ../scss/theme/cards.scss */
+.edit-bar {
+  color: #8a8989;
+  font-size: 14px;
+  position: relative;
+  top: 4px;
+}
+/* line 111, ../scss/theme/cards.scss */
+.edit-bar .icon-bookmark, .edit-bar .icon-bookmark-empty, .edit-bar .icon-edit, .edit-bar .icon-link, .edit-bar .icon-file-alt, .edit-bar .icon-paperclip, .edit-bar .icon-trash, .edit-bar .icon-remove-sign {
+  color: #999;
+  padding-left: 2px;
+}
+/* line 115, ../scss/theme/cards.scss */
+.edit-bar a, .edit-bar .icon-bookmark:hover, .edit-bar .icon-bookmark-empty:hover, .edit-bar .icon-edit:hover, .edit-bar .icon-link:hover, .edit-bar .icon-file-alt:hover, .edit-bar .icon-paperclip:hover {
+  color: #0095fe;
+  text-decoration: none;
+}
+/* line 119, ../scss/theme/cards.scss */
+.edit-bar .icon-trash:hover, .edit-bar .icon-remove-sign:hover {
+  color: #E74C3C;
+  text-decoration: none;
+}
+
+/* From themes/bootstrap/cards.css: 'Used by Updates & Selection but not Profile' */
+/* line 127, ../scss/theme/cards.scss */
+.media {
+  margin-top: 12px;
+  font: 13px/17px 'Helvetica Neue',Arial,Helvetica,Geneva,sans-serif;
+  color: #333;
+  word-spacing: -1px;
+}
+
+@media (max-width: 480px) {
+  /* line 135, ../scss/theme/cards.scss */
+  .location-title {
+    padding-left: 5px;
+    width: 10px;
+  }
+
+  /* line 139, ../scss/theme/cards.scss */
+  img.media-object {
+    width: 34px;
+    height: 34px;
+  }
+
+  /* line 143, ../scss/theme/cards.scss */
+  .date-title {
+    font: 400 9px 'Helvetica Neue',Arial,sans-serif;
+    word-spacing: -1px;
+  }
+
+  /* line 148, ../scss/theme/cards.scss */
+  div.media-body div.media {
+    padding-left: 6px;
+    margin-top: -3px;
+  }
+  /* line 152, ../scss/theme/cards.scss */
+  div.media a.pull-left img.media-object {
+    float: left;
+  }
+}
+/* From themes/bootstrap/newsfeed.css */
+/* line 160, ../scss/theme/cards.scss */
+.card-header {
+  border-bottom: 1px solid #bdbdbb;
+  padding: 5px;
+  margin: -3px -5px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  background: white;
+  background: -moz-linear-gradient(top, white 0%, #f6f6f6 47%, #ededed 100%);
+  background: -webkit-gradient(left top, left bottom, color-stop(0%, white), color-stop(47%, #f6f6f6), color-stop(100%, #ededed));
+  background: -webkit-linear-gradient(top, white 0%, #f6f6f6 47%, #ededed 100%);
+  background: -o-linear-gradient(top, white 0%, #f6f6f6 47%, #ededed 100%);
+  background: -ms-linear-gradient(top, white 0%, #f6f6f6 47%, #ededed 100%);
+  background: linear-gradient(to bottom, white 0%, #f6f6f6 47%, #ededed 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );
+}
+
+/* line 176, ../scss/theme/cards.scss */
+.card-title {
+  font-size: 14px;
+  text-shadow: 0 1px 0 white;
+  letter-spacing: -1px;
+}

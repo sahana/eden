@@ -32,9 +32,8 @@
 __all__ = ("S3Parser",
            )
 
-import urllib2
-
 from gluon import current
+from s3compat import HTTPError, URLError, urlparse
 
 # =============================================================================
 class S3Parser(object):
@@ -318,7 +317,6 @@ class S3Parser(object):
             urls.append(entry.from_address)
 
         # Simple domain formatter for URLs
-        from urlparse import urlparse
         url_format = "{uri.scheme}://{uri.netloc}/".format
 
         # Get domain/username/password for the channel
@@ -331,7 +329,7 @@ class S3Parser(object):
                                    limitby = (0, 1),
                                    ).first()
         if channel:
-            channel_domain = url_format(uri=urlparse(channel.url))
+            channel_domain = url_format(uri=urlparse.urlparse(channel.url))
             username = channel.username
             password = channel.password
         else:
@@ -347,7 +345,7 @@ class S3Parser(object):
             current.log.debug("Fetching CAP-XML from %s" % url)
 
             # If same domain as channel, use channel credentials for auth
-            if channel_domain and url_format(uri=urlparse(url)) == channel_domain:
+            if channel_domain and url_format(uri=urlparse.urlparse(url)) == channel_domain:
                 opener = AlertImporter.opener(url, username=username, password=password)
             else:
                 opener = AlertImporter.opener(url)
@@ -355,10 +353,10 @@ class S3Parser(object):
             # Fetch the link content
             try:
                 content = opener.open(url)
-            except urllib2.HTTPError, e:
+            except HTTPError as e:
                 # HTTP status
                 error = "HTTP %s: %s" % (e.code, e.read())
-            except urllib2.URLError, e:
+            except URLError as e:
                 # URL Error (network error)
                 error = "CAP source unavailable (%s)" % e.reason
             except Exception:
