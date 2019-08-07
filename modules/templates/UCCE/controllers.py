@@ -479,8 +479,12 @@ class dc_QuestionSave(S3Method):
                 name = post_vars_get("name")
                 if name:
                     mandatory = post_vars_get("mandatory")
-                    options = json.loads(post_vars_get("options"))
-                    settings = json.loads(post_vars_get("settings"))
+                    options = post_vars_get("options")
+                    if options:
+                        options = json.loads(options)
+                    settings = post_vars_get("settings")
+                    if settings:
+                        settings = json.loads(settings)
                     current.db(table.id == record_id).update(name = name,
                                                              require_not_empty = mandatory,
                                                              options = options,
@@ -742,13 +746,13 @@ class dc_TemplateEditor(S3Method):
                 s3db = current.s3db
 
                 record = r.record
-                record_id = record.id
+                template_id = record.id
 
                 ttable = s3db.dc_target
-                target = db(ttable.template_id == record_id).select(ttable.id,
-                                                                    ttable.status,
-                                                                    limitby = (0, 1)
-                                                                    ).first()
+                target = db(ttable.template_id == template_id).select(ttable.id,
+                                                                      ttable.status,
+                                                                      limitby = (0, 1)
+                                                                      ).first()
                 try:
                     target_id = target.id
                     target_status = target.status
@@ -898,6 +902,7 @@ class dc_TemplateEditor(S3Method):
                                          _id="break",
                                          ),
                                      )
+
                 upload_btn = A(T("Upload translation"),
                                _class="button",
                                )
@@ -905,9 +910,30 @@ class dc_TemplateEditor(S3Method):
                 hidden_input = INPUT(_type = "hidden",
                                      _id = "survey-layout",
                                      )
-                hidden_input["_data-id"] = record_id
-                if record.layout is not None:
-                    hidden_input["_value"] = json.dumps(record.layout, separators=SEPARATORS)
+                hidden_input["_data-id"] = template_id
+
+                questions = {}
+                qtable = s3db.dc_question
+                qrows = db(qtable.template_id == template_id).select(qtable.id,
+                                                                     qtable.name,
+                                                                     qtable.field_type,
+                                                                     qtable.require_not_empty,
+                                                                     qtable.options,
+                                                                     qtable.settings,
+                                                                     )
+                for question in qrows:
+                    questions[question.id] = {"name": question.name,
+                                              "type": question.field_type,
+                                              "mandatory": question.require_not_empty,
+                                              "options": question.options or {},
+                                              "settings": question.settings or {},
+                                              }
+
+                data = {"layout": record.layout or {},
+                        "questions": questions,
+                        }
+                hidden_input["_value"] = json.dumps(data, separators=SEPARATORS)
+
                 layout = DIV(hidden_input)
 
                 # Inject JS
