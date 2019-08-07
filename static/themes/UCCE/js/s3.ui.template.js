@@ -2,10 +2,10 @@
  * Survey Editor Widget
  */
 (function($, undefined) {
-    "use strict";
+    'use strict';
     var surveyID = 0,
         images = {}, // Store position -> label for images to pipe (Questions with Images & Heatmap regions)
-        likert_options = {
+        likertOptions = {
             '1': ['Strongly Disagree', 'Disagree', 'Undecided', 'Agree', 'Strongly Agree'],
             '2': ['Very unsatisfied', 'Unsatisfied', 'Neutral', 'Satisfied', 'Very satisfied'],
             '3': ['Very dissatisfied', 'Dissatisfied', 'Neutral', 'Satisfied', 'Very satisfied'],
@@ -14,14 +14,14 @@
         pages = {}, // Store page -> position
         pageElements = {}, // Store page -> #elements
         questionNumbers = {}, // Store question # (in form) -> position
-        types_to_int = {
+        typesToInt = {
             'text': 1,
             'number': 2,
             'multichoice': 6,
             'likert': 12,
             'heatmap': 13
         },
-        types_to_text = {
+        typesToText = {
             1: 'text',
             2: 'number',
             6: 'multichoice',
@@ -87,7 +87,7 @@
                 if (questionID) {
                     // We are loading an existing Survey
                     this._addQuestion(position, page, type, null, true);
-                } else{
+                } else {
                     this._addQuestion(position, page, type);
                 }
             } else if (questionID) {
@@ -98,10 +98,10 @@
                 var self = this,
                     ajaxURL = S3.Ap.concat('/dc/question/create_json.json'),
                     // $.searchS3 defaults to processData: false
-                    data = JSON.stringify({type: types_to_int[type],
+                    data = JSON.stringify({type: typesToInt[type],
                                            template_id: this.recordID
                                            });
-                    //data = {type: types_to_int[type],
+                    //data = {type: typesToInt[type],
                     //        template_id: this.recordID
                     //        };
                 this.ajaxMethod({
@@ -156,9 +156,9 @@
             if (type == 'instructions') {
                 question = '<div class="thumbnail dl-item" id="instruction-' + position + '" data-page="' + page + '"><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="fa fa-copy"> </i></a><a><i class="fa fa-trash"> </i></a><i class="fa fa-arrows-v"> </i></div></div>';
             } else {
-                question = '<div class="thumbnail dl-item" id="question-' + questionID + '" data-page="' + page + '"><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="fa fa-copy"> </i></a><a><i class="fa fa-trash"> </i></a><i class="fa fa-arrows-v"> </i></div></div>';
                 var questionNumber = Object.keys(questionNumbers).length + 1;
                 questionNumbers[questionNumber] = position;
+                question = '<div class="thumbnail dl-item" id="question-' + questionID + '" data-page="' + page + '" data-number="' + questionNumber + '"><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="fa fa-copy"> </i></a><a><i class="fa fa-trash"> </i></a><i class="fa fa-arrows-v"> </i></div></div>';
                 var checked = '';
                 if (load) {
                     if (this.data.questions[questionID].mandatory) {
@@ -256,10 +256,10 @@
             $(formElements).on('change' + ns, function(/* event */) {
                 if (type == 'instructions') {
                     // Can't trust original position as it may have changed
-                    var current_position = parseInt(this.id.split('-')[1]);
+                    var currentPosition = parseInt(this.id.split('-')[1]);
                     // Update Data
-                    self.data.layout[position].do.text = $('#do-' + position).val();
-                    self.data.layout[position].say.text = $('#say-' + position).val();
+                    self.data.layout[currentPosition].do.text = $('#do-' + currentPosition).val();
+                    self.data.layout[currentPosition].say.text = $('#say-' + currentPosition).val();
                     // Save Template
                     self.save();
                 } else {
@@ -276,7 +276,14 @@
             page++;
             pages[page] = position;
             pageElements[page] = 0;
-            var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-' + position + '"><span>PAGE ' + page + ' (0 ELEMENTS)</span></div><div class="medium-1 columns"><i class="fa fa-times-circle"> </i><i class="fa fa-chevron-circle-down"> </i></div></div>';
+            var delete_btn;
+            if (position) {
+                delete_btn = '<i class="fa fa-times-circle"> </i>';
+            } else {
+                // 1st section break: not deletable
+                delete_btn = '';
+            }
+            var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-' + position + '" data-page="' + page + '"><span>PAGE ' + page + ' (0 ELEMENTS)</span></div><div class="medium-1 columns">' + delete_btn + '<i class="fa fa-chevron-circle-down"> </i></div></div>';
             if (position) {
                 // Place before droppable
                 $('#survey-droppable-' + position).before(sectionBreak);
@@ -290,6 +297,76 @@
                     // Update Data
                     this.data.layout[position] = {type: 'break'};
                 }
+                // Events
+                var self = this,
+                    ns = this.eventNamespace;
+                $('#section-break-' + position).next().children('.fa-times-circle').on('click' + ns, function(/* event */){
+                    // Delete this section-break
+
+                    // Can't trust original position as it may have changed
+                    var currentPosition = parseInt($(this).parent().prev().attr('id').split('-')[2]);
+                    // Read the current page
+                    var currentPage = $('#section-break-' + currentPosition).data('page');
+
+                    // Update elements on previous section-break
+                    var previousPage = currentPage - 1;
+                    pageElements[previousPage] += pageElements[currentPage];
+                    var previousPagePosition = pages[previousPage];
+                     $('#section-break-' + previousPagePosition + ' > span').html('PAGE ' + previousPage + ' (' + pageElements[previousPage] + ' ELEMENTS)');
+
+                    // Update pages & pageElements
+                    for (var i=currentPage, len=Object.keys(pages).length; i < len; i++) {
+                        pages[i] = pages[i + 1] - 1; // newPosition
+                        delete pages[i + 1];
+                        pageElements[i] = pageElements[i + 1];
+                        delete pageElements[i + 1];
+                    }
+
+                    // Update layout & all subsequent items in it
+                    var item,
+                        oldPosition,
+                        thisPage,
+                        questionNumber,
+                        layout = self.data.layout;
+                    var layoutLength = Object.keys(layout).length;
+                    for (var i=currentPosition, len=layoutLength; i < len; i++) {
+                        oldPosition = i + 1;
+                        //newPosition = i;
+                        item = layout[oldPosition];
+                        // Move item to it's new position in the layout
+                        layout[i] = item;
+                        if (item.type == 'question') {
+                            // Update questionNumbers
+                            questionNumber = $('#question-' + item.id).data('number');
+                            questionNumbers[questionNumber] = i;
+                        } else {
+                            if (item.type == 'break') {
+                                // Read Page
+                                thisPage = $('#section-break-' + oldPosition).data('page') - 1;
+                                // Update Page
+                                $('#section-break-' + oldPosition).data('page', thisPage);
+                                // Update visual elements
+                                $('#section-break-' + oldPosition + ' > span').html('PAGE ' + thisPage + ' (' + pageElements[thisPage] + ' ELEMENTS)');
+                                // Update ID
+                                $('#section-break-' + oldPosition).attr('id', 'section-break-' + i);
+                            } else {
+                                // Instructions
+                                // Update IDs
+                                $('#instruction-' + oldPosition).attr('id', 'instruction-' + i);
+                                $('#do-' + oldPosition).attr('id', 'do-' + i);
+                                $('#say-' + oldPosition).attr('id', 'say-' + i);
+                            }
+                        }
+                        // Remove item from old position in layout (only really needed for final item)
+                        delete layout[oldPosition];
+                    }
+                    // Save Layout
+                    self.save();
+                    // Remove from DOM
+                    $('#section-break-' + currentPosition).parent().remove();
+                    // Update droppable ID
+                    $('#survey-droppable-' + (layoutLength - 1)).attr('id', layoutLength);
+                });
             } else {
                 // 1st section break
                 $(this.element).parent().append(sectionBreak);
@@ -298,6 +375,7 @@
 
         /**
           * Add a new Droppable section into the given position
+          * - only done once
           */
         droppable: function(position, page) {
             var self = this,
@@ -310,12 +388,12 @@
                     // Open QuestionEditorWidget with correct options for type
                     var type = ui.draggable[0].id,
                         // Can't trust original position as it may have changed
-                        current_position = parseInt(this.id.split('-')[2]),
+                        currentPosition = parseInt(this.id.split('-')[2]),
                         page = $(this).data('page');
-                    if (type == "break") {
-                        self.addSectionBreak(current_position, page);
+                    if (type == 'break') {
+                        self.addSectionBreak(currentPosition, page);
                     } else {
-                        self.addQuestion(current_position, page, type);
+                        self.addQuestion(currentPosition, page, type);
                     }
                 }
             });
@@ -343,17 +421,17 @@
                 questionID,
                 questions = this.data.questions;
 
-            for (var position=1, len=Object.keys(layout).length + 1; position < len; position++) {
+            for (var position=1, len=Object.keys(layout).length; position <= len; position++) {
                 item = layout[position];
                 if (item.type == 'break') {
                     this.addSectionBreak(position, page, true);
                     page++;
                 } else if (item.type == 'instructions') {
                     this.addQuestion(position, page, 'instructions', true);
-                } else{
+                } else {
                     // Question
                     questionID = item.id;
-                    this.addQuestion(position, page, types_to_text[questions[questionID].type], questionID);
+                    this.addQuestion(position, page, typesToText[questions[questionID].type], questionID);
                 }
             }
         },
@@ -452,7 +530,7 @@
                 case 'likert':
                     var scale = $('#scale-' + questionID).val();
                     if(scale) {
-                        data.options = likert_options[scale];
+                        data.options = likertOptions[scale];
                     }
                     break;
                 case 'heatmap':
