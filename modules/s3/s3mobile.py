@@ -362,6 +362,9 @@ class S3MobileSchema(object):
             @return: the field description as JSON-serializable dict
         """
 
+        if not field:
+            return None
+
         fieldtype = str(field.type)
         SUPPORTED_FIELD_TYPES = set(self.SUPPORTED_FIELD_TYPES)
 
@@ -620,37 +623,63 @@ class S3MobileSchema(object):
         include = fnames.add
 
         form = self.mobile_form(resource)
-        for element in form.elements:
 
-            if isinstance(element, S3SQLField):
-                rfield = resolve_selector(element.selector)
+        if isinstance(form, list):
+            for element in form:
 
-                fname = rfield.fname
+                selector = None
+                if isinstance(element, dict):
+                    etype = element.get("type")
+                    if etype == "input":
+                        selector = element.get("field")
+                    elif etype:
+                        mappend(element)
+                elif isinstance(element, basestring):
+                    selector = element
+                else:
+                    continue
 
-                if rfield.tname == tablename and fname not in fnames:
-                    fields.append(rfield.field)
-                    mappend(fname)
-                    include(fname)
+                if selector:
+                    rfield = resolve_selector(selector)
+                    fname = rfield.fname
+                    if rfield.field and \
+                       rfield.tname == tablename and fname not in fnames:
+                        fields.append(rfield.field)
+                        mappend(element)
+                        include(fname)
 
-            elif isinstance(element, S3SQLDummyField):
-                field = {"type": "dummy",
-                         "name": element.selector,
-                         }
-                mappend(field)
+        else:
+            for element in form.elements:
+                if isinstance(element, S3SQLField):
+                    rfield = resolve_selector(element.selector)
 
-            elif isinstance(element, S3SQLInlineInstruction):
-                field = {"type": "instructions",
-                         "do": element.do,
-                         "say": element.say,
-                         #"name": element.selector,
-                         }
-                mappend(field)
+                    fname = rfield.fname
 
-            elif isinstance(element, S3SQLSectionBreak):
-                field = {"type": "section-break",
-                         #"name": element.selector,
-                         }
-                mappend(field)
+                    if rfield.field and \
+                       rfield.tname == tablename and fname not in fnames:
+                        fields.append(rfield.field)
+                        mappend(fname)
+                        include(fname)
+
+                elif isinstance(element, S3SQLDummyField):
+                    field = {"type": "dummy",
+                             "name": element.selector,
+                             }
+                    mappend(field)
+
+                elif isinstance(element, S3SQLInlineInstruction):
+                    field = {"type": "instructions",
+                             "do": element.do,
+                             "say": element.say,
+                             #"name": element.selector,
+                             }
+                    mappend(field)
+
+                elif isinstance(element, S3SQLSectionBreak):
+                    field = {"type": "section-break",
+                             #"name": element.selector,
+                             }
+                    mappend(field)
 
         if resource.parent and not resource.linktable:
 
@@ -713,7 +742,7 @@ class S3MobileSchema(object):
 
         # Get the form definition from "mobile_form" table setting
         form = resource.get_config("mobile_form")
-        if not form or not isinstance(form, S3SQLCustomForm):
+        if not form or not isinstance(form, (S3SQLCustomForm, list)):
             # Fallback
             form = resource.get_config("crud_form")
 

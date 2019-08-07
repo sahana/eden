@@ -1867,6 +1867,11 @@ class S3DynamicModel(object):
                     else:
                         config["crud_form"] = crud_form
 
+                # Mobile Form
+                mobile_form = settings.get("mobile_form")
+                if type(mobile_form) is list:
+                    config["mobile_form"] = mobile_form
+
                 # JSON-serializable config options can be configured
                 # without pre-processing
                 for key in SERIALIZABLE_OPTS:
