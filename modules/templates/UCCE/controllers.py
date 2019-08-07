@@ -922,7 +922,7 @@ class dc_TemplateEditor(S3Method):
                                                                      qtable.settings,
                                                                      )
                 for question in qrows:
-                    questions[question.id] = {"name": question.name,
+                    questions[question.id] = {"name": question.name or '',
                                               "type": question.field_type,
                                               "mandatory": question.require_not_empty,
                                               "options": question.options or {},

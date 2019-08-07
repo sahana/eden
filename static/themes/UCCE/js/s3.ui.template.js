@@ -150,13 +150,15 @@
 
             // Build the Question HTML
             var question,
+                questionNumber,
                 editTab,
-                formElements;
+                formElements,
+                trash;
 
             if (type == 'instructions') {
                 question = '<div class="thumbnail dl-item" id="instruction-' + position + '" data-page="' + page + '"><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="fa fa-copy"> </i></a><a><i class="fa fa-trash"> </i></a><i class="fa fa-arrows-v"> </i></div></div>';
             } else {
-                var questionNumber = Object.keys(questionNumbers).length + 1;
+                questionNumber = Object.keys(questionNumbers).length + 1;
                 questionNumbers[questionNumber] = position;
                 question = '<div class="thumbnail dl-item" id="question-' + questionID + '" data-page="' + page + '" data-number="' + questionNumber + '"><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="fa fa-copy"> </i></a><a><i class="fa fa-trash"> </i></a><i class="fa fa-arrows-v"> </i></div></div>';
                 var checked = '';
@@ -183,14 +185,16 @@
                     }
                     editTab = '<div class="media"><h2>Data collector instructions</h2><label>What to do</label><input id="do-' + position + '" type="text" size=100 placeholder="Type what instructor should do" value="' + doText + '"><label>What to say</label><input id="say-' + position + '" type="text" size=100 placeholder="Type what instructor should say" value="' + sayText + '"></div>';
                     formElements = '#instruction-' + position + ' input';
+                    trash = '#instruction-' + position + ' .fa-trash';
                     break;
                 case 'text':
                     var name = '';
                     if (load) {
                         name = this.data.questions[questionID].name;
                     }
-                    editTab = '<div class="media"><h2>Text box</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '" type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml;
+                    editTab = '<div class="media"><h2>Text box</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '" type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml;
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
+                    trash = '#question-' + questionID + ' .fa-trash';
                     break;
                 case 'number':
                     var name = '';
@@ -199,8 +203,9 @@
                     }
                     // @ToDo: Validation of correct input format for restrict
                     var answer = '<div class="row"><h2>Answer</h2><label>Restrict input to:</label><input id="restrict-' + questionID + '" type="text" placeholder="specific input"></div>';
-                    editTab = '<div class="media"><h2>Number question</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
+                    editTab = '<div class="media"><h2>Number question</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
+                    trash = '#question-' + questionID + ' .fa-trash';
                     break;
                 case 'multichoice':
                     var name = '';
@@ -212,8 +217,9 @@
                                  '<div class="row"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" placeholder="Other (please specify)" disabled></div>' + 
                                  '<div class="row"><input id="multiple-' + questionID + '" type="checkbox"><label>Allow multiple responses</label></div>' +
                                  '<div class="row"><label class="fleft">Maximum No. of responses:</label><i class="fa fa-minus-circle"> </i> 1 <i class="fa fa-plus-circle"> </i></div>';
-                    editTab = '<div class="media"><h2>Multiple choice question</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
+                    editTab = '<div class="media"><h2>Multiple choice question</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
+                    trash = '#question-' + questionID + ' .fa-trash';
                     break;
                 case 'likert':
                     var name = '';
@@ -222,8 +228,9 @@
                     }
                     var scaleOptions = '<option value="1">Agreement (Disagree - Agree)</option><option value="2">Satisfaction (Smiley scale)</option><option value="3">Satisfaction (Dissatisfied - Satisfied)</option><option value="4">Pain scale (3 point)</option>';
                     var answer = '<div class="row"><h2>Answer</h2><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please select a scale</option>' + scaleOptions + '</select></div>';
-                    editTab = '<div class="media"><h2>Likert-scale</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
+                    editTab = '<div class="media"><h2>Likert-scale</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
+                    trash = '#question-' + questionID + ' .fa-trash';
                     break;
                 case 'heatmap':
                     var name = '';
@@ -231,8 +238,9 @@
                         name = this.data.questions[questionID].name;
                     }
                     var image = '<div class="row"><h2>Image</h2><input type="file" accept="image/png, image/jpeg" class="fleft"><h3>Number of clicks allowed:</h3><i class="fa fa-minus-circle"> </i> 1 <i class="fa fa-plus-circle"> </i><h3>Tap/click regions:</h3><a class="button tiny">Add region</a><input id="region-' + position + '-1" type="text" placeholder="enter label" disabled></div>';
-                    editTab = '<div class="media"><h2>Heatmap</h2><div class="row"><label class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + image;
+                    editTab = '<div class="media"><h2>Heatmap</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + image;
                     formElements = '#question-' + questionID + ' input';
+                    trash = '#question-' + questionID + ' .fa-trash';
                     break;
             }
 
@@ -250,10 +258,11 @@
             var pagePosition = pages[page];
             $('#section-break-' + pagePosition + ' > span').html('PAGE ' + page + ' (' + pageElements[page] + ' ELEMENTS)');
 
-            // Change Handlers
+            // Event Handlers
             var ns = this.eventNamespace,
                 self = this;
             $(formElements).on('change' + ns, function(/* event */) {
+                // If form elements change, then Save
                 if (type == 'instructions') {
                     // Can't trust original position as it may have changed
                     var currentPosition = parseInt(this.id.split('-')[1]);
@@ -265,6 +274,121 @@
                 } else {
                     // Save Question
                     self.saveQuestion(type, questionID);
+                }
+            });
+            $(trash).on('click' + ns, function(/* event */) {
+                // Delete the Question
+                var currentPage,
+                    currentPosition;
+                if (type == 'instructions') {
+                    // Can't trust original position as it may have changed
+                    currentPosition = parseInt($(this).closest('.dl-item').attr('id').split('-')[1]);
+                    // Read the current page
+                    currentPage = $('#instruction-' + currentPosition).data('page');
+                } else {
+                    // Question
+
+                    // Read the questionNumber (can't trust original as it may have changed)
+                    questionNumber = $('#question-' + questionID).data('number');
+                    // Read the position (can't trust original as it may have changed)
+                    currentPosition = questionNumbers[questionNumber];
+                    // Read the current page
+                    currentPage = $('#question-' + questionID).data('page');
+                }
+
+                // Update this pageElements
+                pageElements[currentPage]--;
+                // Update visual elements
+                $('#section-break-' + pages[currentPage] + ' > span').html('PAGE ' + currentPage + ' (' + pageElements[currentPage] + ' ELEMENTS)');
+
+                // Update subsequent pages
+                for (var i=currentPage + 1, len=Object.keys(pages).length; i <= len; i++) {
+                    pages[i]--; // newPosition
+                }
+
+                // Update layout & all subsequent items in it
+                var item,
+                    oldPosition,
+                    thisQuestionID,
+                    oldQuestionNumber,
+                    newQuestionNumber,
+                    layout = self.data.layout;
+                var layoutLength = Object.keys(layout).length;
+                for (var i=currentPosition; i < layoutLength; i++) {
+                    oldPosition = i + 1;
+                    //newPosition = i;
+                    item = layout[oldPosition];
+                    // Move item to it's new position in the layout
+                    layout[i] = item;
+                    if (item.type == 'question') {
+                        thisQuestionID = item.id;
+                        oldQuestionNumber = $('#question-' + thisQuestionID).data('number');
+                        if (type == 'instructions') {
+                            // Not a Question deleted, so just need to update position
+                            //newQuestionNumber = oldQuestionNumber;
+                            // Update questionNumbers
+                            questionNumbers[oldQuestionNumber] = i;
+                        } else {
+                            // Question deleted so need to update both numbers & positions
+
+                            // Update questionNumber
+                            newQuestionNumber = oldQuestionNumber - 1;
+                            $('#question-' + thisQuestionID).data('number', newQuestionNumber);
+                            // Update visual element
+                            $('#qlabel-' + thisQuestionID).html('Q' + newQuestionNumber);
+                            // Update questionNumbers
+                            questionNumbers[newQuestionNumber] = i;
+                        }
+                    } else {
+                        if (item.type == 'break') {
+                            // Update ID
+                            $('#section-break-' + oldPosition).attr('id', 'section-break-' + i);
+                        } else {
+                            // Instructions
+                            // Update IDs
+                            $('#instruction-' + oldPosition).attr('id', 'instruction-' + i);
+                            $('#do-' + oldPosition).attr('id', 'do-' + i);
+                            $('#say-' + oldPosition).attr('id', 'say-' + i);
+                        }
+                    }
+                }
+                // Remove final item from oldPosition in layout
+                delete layout[layoutLength];
+                if (type != 'instructions') {
+                    // Remove final questionNumber from questionNumbers
+                    delete questionNumbers[oldQuestionNumber];
+                }
+
+                // Save Layout
+                self.save();
+                // Remove from DOM
+                if (type == 'instructions') {
+                    $('#instruction-' + currentPosition).remove();
+                } else {
+                    $('#question-' + questionID).remove();
+                }
+                // Update droppable ID
+                $('#survey-droppable-' + (layoutLength + 1)).attr('id', 'survey-droppable-' + layoutLength);
+                if (type != 'instructions') {
+                    // Delete Question from Server
+                    var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/delete.json';
+                    this.ajaxMethod({
+                        url: ajaxURL,
+                        type: 'POST',
+                        dataType: 'json',
+                        success: function(/* data */) {
+                            // Nothing needed here
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
+                            var msg;
+                            if (errorThrown == 'UNAUTHORIZED') {
+                                msg = i18n.gis_requires_login;
+                            } else {
+                                msg = jqXHR.responseText;
+                            }
+                            console.log(msg);
+                        }
+                    });
                 }
             });
         },
@@ -287,15 +411,16 @@
             if (position) {
                 // Place before droppable
                 $('#survey-droppable-' + position).before(sectionBreak);
-                // Update the position of the droppable
+                // Update the page & position of the droppable
                 var newPosition = position + 1;
-                $('#survey-droppable-' + position).attr('id', 'survey-droppable-' + newPosition);
-                // Update the page of the droppable
-                $('#survey-droppable-' + newPosition).data('page', page);
+                $('#survey-droppable-' + position).data('page', page)
+                                                  .attr('id', 'survey-droppable-' + newPosition);
                 // @ToDo: Roll-up previous sections
                 if (!load) {
                     // Update Data
                     this.data.layout[position] = {type: 'break'};
+                    // Save to Server
+                    this.save();
                 }
                 // Events
                 var self = this,
@@ -303,70 +428,15 @@
                 $('#section-break-' + position).next().children('.fa-times-circle').on('click' + ns, function(/* event */){
                     // Delete this section-break
 
-                    // Can't trust original position as it may have changed
+                    // Read the position (can't trust original as it may have changed)
                     var currentPosition = parseInt($(this).parent().prev().attr('id').split('-')[2]);
-                    // Read the current page
-                    var currentPage = $('#section-break-' + currentPosition).data('page');
 
-                    // Update elements on previous section-break
-                    var previousPage = currentPage - 1;
-                    pageElements[previousPage] += pageElements[currentPage];
-                    var previousPagePosition = pages[previousPage];
-                     $('#section-break-' + previousPagePosition + ' > span').html('PAGE ' + previousPage + ' (' + pageElements[previousPage] + ' ELEMENTS)');
+                    self.deleteSectionBreak(currentPosition);
 
-                    // Update pages & pageElements
-                    for (var i=currentPage, len=Object.keys(pages).length; i < len; i++) {
-                        pages[i] = pages[i + 1] - 1; // newPosition
-                        delete pages[i + 1];
-                        pageElements[i] = pageElements[i + 1];
-                        delete pageElements[i + 1];
-                    }
-
-                    // Update layout & all subsequent items in it
-                    var item,
-                        oldPosition,
-                        thisPage,
-                        questionNumber,
-                        layout = self.data.layout;
-                    var layoutLength = Object.keys(layout).length;
-                    for (var i=currentPosition, len=layoutLength; i < len; i++) {
-                        oldPosition = i + 1;
-                        //newPosition = i;
-                        item = layout[oldPosition];
-                        // Move item to it's new position in the layout
-                        layout[i] = item;
-                        if (item.type == 'question') {
-                            // Update questionNumbers
-                            questionNumber = $('#question-' + item.id).data('number');
-                            questionNumbers[questionNumber] = i;
-                        } else {
-                            if (item.type == 'break') {
-                                // Read Page
-                                thisPage = $('#section-break-' + oldPosition).data('page') - 1;
-                                // Update Page
-                                $('#section-break-' + oldPosition).data('page', thisPage);
-                                // Update visual elements
-                                $('#section-break-' + oldPosition + ' > span').html('PAGE ' + thisPage + ' (' + pageElements[thisPage] + ' ELEMENTS)');
-                                // Update ID
-                                $('#section-break-' + oldPosition).attr('id', 'section-break-' + i);
-                            } else {
-                                // Instructions
-                                // Update IDs
-                                $('#instruction-' + oldPosition).attr('id', 'instruction-' + i);
-                                $('#do-' + oldPosition).attr('id', 'do-' + i);
-                                $('#say-' + oldPosition).attr('id', 'say-' + i);
-                            }
-                        }
-                        // Remove item from old position in layout (only really needed for final item)
-                        delete layout[oldPosition];
-                    }
-                    // Save Layout
-                    self.save();
-                    // Remove from DOM
-                    $('#section-break-' + currentPosition).parent().remove();
-                    // Update droppable ID
-                    $('#survey-droppable-' + (layoutLength - 1)).attr('id', layoutLength);
                 });
+                //$('#section-break-' + position).next().children('.fa-chevron-circle-down').on('click' + ns, function(/* event */){
+                    // @ToDo: Unroll this section & rollup others
+                //});
             } else {
                 // 1st section break
                 $(this.element).parent().append(sectionBreak);
@@ -374,8 +444,83 @@
         },
 
         /**
+          * Add a new Section Break
+          */
+        deleteSectionBreak: function(currentPosition) {
+            // Read the current page
+            var currentPage = $('#section-break-' + currentPosition).data('page');
+
+            var currentPageElements = pageElements[currentPage];
+            if (currentPageElements) {
+                // Update elements on previous section-break
+                var previousPage = currentPage - 1;
+                pageElements[previousPage] += currentPageElements;
+                var previousPagePosition = pages[previousPage];
+                $('#section-break-' + previousPagePosition + ' > span').html('PAGE ' + previousPage + ' (' + pageElements[previousPage] + ' ELEMENTS)');
+            }
+
+            // Update subsequent pages & pageElements
+            var pagesLength = Object.keys(pages).length;
+            for (var i=currentPage; i < pagesLength; i++) {
+                pages[i] = pages[i + 1] - 1; // newPosition
+                pageElements[i] = pageElements[i + 1];
+            }
+            delete pages[pagesLength];
+            delete pageElements[pagesLength];
+
+            // Update layout & all subsequent items in it
+            var layout = this.data.layout,
+                layoutLength = Object.keys(layout).length;
+            if (currentPosition != layoutLength) {
+                var item,
+                    thisPage,
+                    oldPosition,
+                    questionNumber;
+                for (var i=currentPosition; i < layoutLength; i++) {
+                    oldPosition = i + 1;
+                    //newPosition = i;
+                    item = layout[oldPosition];
+                    // Move item to it's new position in the layout
+                    layout[i] = item;
+                    if (item.type == 'question') {
+                        // Update questionNumbers
+                        questionNumber = $('#question-' + item.id).data('number');
+                        questionNumbers[questionNumber] = i;
+                    } else {
+                        if (item.type == 'break') {
+                            // Read Page
+                            thisPage = $('#section-break-' + oldPosition).data('page') - 1;
+                            // Update Page
+                            $('#section-break-' + oldPosition).data('page', thisPage);
+                            // Update visual elements
+                            $('#section-break-' + oldPosition + ' > span').html('PAGE ' + thisPage + ' (' + pageElements[thisPage] + ' ELEMENTS)');
+                            // Update ID
+                            $('#section-break-' + oldPosition).attr('id', 'section-break-' + i);
+                        } else {
+                            // Instructions
+                            // Update IDs
+                            $('#instruction-' + oldPosition).attr('id', 'instruction-' + i);
+                            $('#do-' + oldPosition).attr('id', 'do-' + i);
+                            $('#say-' + oldPosition).attr('id', 'say-' + i);
+                        }
+                    }
+                }
+            }
+            // Remove final item from oldPosition in layout
+            delete layout[layoutLength];
+
+            // Save Layout
+            this.save();
+            // Remove from DOM
+            $('#section-break-' + currentPosition).parent().remove();
+            // Update droppable ID
+            $('#survey-droppable-' + (layoutLength + 1)).data('page', pagesLength - 1)
+                                                        .attr('id', 'survey-droppable-' + layoutLength);
+        },
+
+        /**
           * Add a new Droppable section into the given position
-          * - only done once
+          * - only done once currently
           */
         droppable: function(position, page) {
             var self = this,
@@ -387,13 +532,13 @@
                 drop: function(event, ui) {
                     // Open QuestionEditorWidget with correct options for type
                     var type = ui.draggable[0].id,
-                        // Can't trust original position as it may have changed
+                        // Read the position (can't trust original as it may have changed)
                         currentPosition = parseInt(this.id.split('-')[2]),
-                        page = $(this).data('page');
+                        currentPage = $(this).data('page');
                     if (type == 'break') {
-                        self.addSectionBreak(currentPosition, page);
+                        self.addSectionBreak(currentPosition, currentPage);
                     } else {
-                        self.addQuestion(currentPosition, page, type);
+                        self.addQuestion(currentPosition, currentPage, type);
                     }
                 }
             });
