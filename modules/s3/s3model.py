@@ -2096,6 +2096,11 @@ class S3DynamicModel(object):
         else:
             widget = None
 
+        if multiple and row.require_not_empty and len_options:
+            # Require at least one option selected, otherwise
+            # IS_IN_SET will pass with no options selected:
+            multiple = (1, len_options + 1)
+
         from .s3fields import S3Represent
         field = Field(fieldname, fieldtype,
                       default = default,
