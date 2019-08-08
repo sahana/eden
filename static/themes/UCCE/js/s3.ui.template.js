@@ -152,6 +152,7 @@
             var question,
                 questionNumber,
                 editTab,
+                newChoice,
                 formElements,
                 trash;
 
@@ -202,21 +203,48 @@
                         name = this.data.questions[questionID].name;
                     }
                     // @ToDo: Validation of correct input format for restrict
-                    var answer = '<div class="row"><h2>Answer</h2><label>Restrict input to:</label><input id="restrict-' + questionID + '" type="text" placeholder="specific input"></div>';
+                    var answer = '<div class="row"><h2>Answer</h2><label>Restrict input to:</label><input id="restrict-' + questionID + '" type="text" placeholder="e.g. 10-15,18,20-22"></div>';
                     editTab = '<div class="media"><h2>Number question</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .fa-trash';
                     break;
                 case 'multichoice':
-                    var name = '';
+                    newChoice = '<div class="row"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice"><i class="fa fa-minus-circle"> </i><i class="fa fa-plus-circle"> </i></div>';
+                    // @ToDo: Grey the multiple -+ options if they cannot do anything
+                    var name = '',
+                        choices = newChoice,
+                        other = '',
+                        other_disabled = ' disabled',
+                        other_label = '',
+                        multiple = 1,
+                        multiChecked = '';
                     if (load) {
-                        name = this.data.questions[questionID].name;
+                        var thisQuestion = this.data.questions[questionID]
+                        name = thisQuestion.name;
+                        var options = thisQuestion.options || [],
+                            lenOptions = options.length;
+                        if (lenOptions) {
+                            choices = '';
+                            for (var i=0; i < lenOptions; i++) {
+                                choices += '<div class="row"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice" value="' + options[i] + '"><i class="fa fa-minus-circle"> </i><i class="fa fa-plus-circle"> </i></div>';
+                            }
+                        }
+                        var settings = thisQuestion.settings;
+                        other_label = settings.other || '';
+                        if (other_label) {
+                            other = ' checked';
+                            other_disabled = '';
+                        }
+                        multiple = settings.multiple || 1;
+                        if (multiple > 1) {
+                            multiChecked = ' checked';
+                        }
                     }
-                    var answer = '<div class="row"><h2>Answer</h2><label>Choices</label><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice"><i class="fa fa-minus-circle"> </i><i class="fa fa-plus-circle"> </i></div>' +
-                                 '<div class="row"><input id="other-' + questionID + '" type="checkbox"><label>Add \'other field\'</label></div>' + 
-                                 '<div class="row"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" placeholder="Other (please specify)" disabled></div>' + 
-                                 '<div class="row"><input id="multiple-' + questionID + '" type="checkbox"><label>Allow multiple responses</label></div>' +
-                                 '<div class="row"><label class="fleft">Maximum No. of responses:</label><i class="fa fa-minus-circle"> </i> 1 <i class="fa fa-plus-circle"> </i></div>';
+                    var answer = '<div class="row"><h2>Answer</h2><label>Choices</label></div>' + choices +
+                                 '<div class="row"><input id="other-' + questionID + '" type="checkbox"' + other + '><label>Add \'other field\'</label></div>' + 
+                                 '<div class="row"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" placeholder="Other (please specify)" value="' + other_label + '"' + other_disabled + '></div>' + 
+                                 '<div class="row"><input id="multiple-' + questionID + '" type="checkbox"' + multiChecked + '><label>Allow multiple responses</label></div>' +
+                                 '<div class="row"><label class="fleft">Maximum No. of responses:</label><i class="fa fa-minus-circle"> </i> <span id="multiple-count-' + questionID + '">' + multiple + '</span> <i class="fa fa-plus-circle"> </i></div>';
                     editTab = '<div class="media"><h2>Multiple choice question</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .fa-trash';
@@ -227,7 +255,7 @@
                         name = this.data.questions[questionID].name;
                     }
                     var scaleOptions = '<option value="1">Agreement (Disagree - Agree)</option><option value="2">Satisfaction (Smiley scale)</option><option value="3">Satisfaction (Dissatisfied - Satisfied)</option><option value="4">Pain scale (3 point)</option>';
-                    var answer = '<div class="row"><h2>Answer</h2><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please select a scale</option>' + scaleOptions + '</select></div>';
+                    var answer = '<div class="row"><h2>Answer</h2><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please choose scale</option>' + scaleOptions + '</select></div>';
                     editTab = '<div class="media"><h2>Likert-scale</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .fa-trash';
@@ -261,136 +289,249 @@
             // Event Handlers
             var ns = this.eventNamespace,
                 self = this;
-            $(formElements).on('change' + ns, function(/* event */) {
-                // If form elements change, then Save
-                if (type == 'instructions') {
-                    // Can't trust original position as it may have changed
-                    var currentPosition = parseInt(this.id.split('-')[1]);
-                    // Update Data
-                    self.data.layout[currentPosition].do.text = $('#do-' + currentPosition).val();
-                    self.data.layout[currentPosition].say.text = $('#say-' + currentPosition).val();
-                    // Save Template
-                    self.save();
-                } else {
-                    // Save Question
-                    self.saveQuestion(type, questionID);
-                }
-            });
+
+            var inputEvents = function() {
+                $(formElements).off('change' + ns)
+                               .on('change' + ns, function(/* event */) {
+                    // If form elements change, then Save
+                    if (type == 'instructions') {
+                        // Can't trust original position as it may have changed
+                        var currentPosition = parseInt(this.id.split('-')[1]);
+                        // Update Data
+                        self.data.layout[currentPosition].do.text = $('#do-' + currentPosition).val();
+                        self.data.layout[currentPosition].say.text = $('#say-' + currentPosition).val();
+                        // Save Template
+                        self.save();
+                    } else {
+                        // Save Question
+                        self.saveQuestion(type, questionID);
+                    }
+                });
+            };
+            inputEvents();
+            
+
             $(trash).on('click' + ns, function(/* event */) {
                 // Delete the Question
-                var currentPage,
-                    currentPosition;
-                if (type == 'instructions') {
-                    // Can't trust original position as it may have changed
-                    currentPosition = parseInt($(this).closest('.dl-item').attr('id').split('-')[1]);
-                    // Read the current page
-                    currentPage = $('#instruction-' + currentPosition).data('page');
-                } else {
-                    // Question
+                self.deleteQuestion(type, questionID);
+            });
 
-                    // Read the questionNumber (can't trust original as it may have changed)
-                    questionNumber = $('#question-' + questionID).data('number');
-                    // Read the position (can't trust original as it may have changed)
-                    currentPosition = questionNumbers[questionNumber];
-                    // Read the current page
-                    currentPage = $('#question-' + questionID).data('page');
-                }
+            switch(type) {
 
-                // Update this pageElements
-                pageElements[currentPage]--;
-                // Update visual elements
-                $('#section-break-' + pages[currentPage] + ' > span').html('PAGE ' + currentPage + ' (' + pageElements[currentPage] + ' ELEMENTS)');
-
-                // Update subsequent pages
-                for (var i=currentPage + 1, len=Object.keys(pages).length; i <= len; i++) {
-                    pages[i]--; // newPosition
-                }
-
-                // Update layout & all subsequent items in it
-                var item,
-                    oldPosition,
-                    thisQuestionID,
-                    oldQuestionNumber,
-                    newQuestionNumber,
-                    layout = self.data.layout;
-                var layoutLength = Object.keys(layout).length;
-                for (var i=currentPosition; i < layoutLength; i++) {
-                    oldPosition = i + 1;
-                    //newPosition = i;
-                    item = layout[oldPosition];
-                    // Move item to it's new position in the layout
-                    layout[i] = item;
-                    if (item.type == 'question') {
-                        thisQuestionID = item.id;
-                        oldQuestionNumber = $('#question-' + thisQuestionID).data('number');
-                        if (type == 'instructions') {
-                            // Not a Question deleted, so just need to update position
-                            //newQuestionNumber = oldQuestionNumber;
-                            // Update questionNumbers
-                            questionNumbers[oldQuestionNumber] = i;
-                        } else {
-                            // Question deleted so need to update both numbers & positions
-
-                            // Update questionNumber
-                            newQuestionNumber = oldQuestionNumber - 1;
-                            $('#question-' + thisQuestionID).data('number', newQuestionNumber);
-                            // Update visual element
-                            $('#qlabel-' + thisQuestionID).html('Q' + newQuestionNumber);
-                            // Update questionNumbers
-                            questionNumbers[newQuestionNumber] = i;
-                        }
-                    } else {
-                        if (item.type == 'break') {
-                            // Update ID
-                            $('#section-break-' + oldPosition).attr('id', 'section-break-' + i);
-                        } else {
-                            // Instructions
-                            // Update IDs
-                            $('#instruction-' + oldPosition).attr('id', 'instruction-' + i);
-                            $('#do-' + oldPosition).attr('id', 'do-' + i);
-                            $('#say-' + oldPosition).attr('id', 'say-' + i);
-                        }
-                    }
-                }
-                // Remove final item from oldPosition in layout
-                delete layout[layoutLength];
-                if (type != 'instructions') {
-                    // Remove final questionNumber from questionNumbers
-                    delete questionNumbers[oldQuestionNumber];
-                }
-
-                // Save Layout
-                self.save();
-                // Remove from DOM
-                if (type == 'instructions') {
-                    $('#instruction-' + currentPosition).remove();
-                } else {
-                    $('#question-' + questionID).remove();
-                }
-                // Update droppable ID
-                $('#survey-droppable-' + (layoutLength + 1)).attr('id', 'survey-droppable-' + layoutLength);
-                if (type != 'instructions') {
-                    // Delete Question from Server
-                    var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/delete.json';
-                    this.ajaxMethod({
-                        url: ajaxURL,
-                        type: 'POST',
-                        dataType: 'json',
-                        success: function(/* data */) {
-                            // Nothing needed here
-                        },
-                        error: function(jqXHR, textStatus, errorThrown) {
-                            var msg;
-                            if (errorThrown == 'UNAUTHORIZED') {
-                                msg = i18n.gis_requires_login;
+                case 'instructions':
+                    // Nothing needed here
+                    break;
+                case 'text':
+                    // Nothing needed here
+                    break;
+                case 'number':
+                    // @ToDo: Field Validation for Restriction
+                    
+                    break;
+                case 'multichoice':
+                    // Options
+                    var optionsEvents = function() {
+                        $('.choice-' + questionID).next().off('click' + ns)
+                                                         .on('click' + ns, function() {
+                            if ($('.choice-' + questionID).length > 1) {
+                                // Remove Option
+                                $(this).parent().remove();
+                                self.saveQuestion(type, questionID);
                             } else {
-                                msg = jqXHR.responseText;
+                                // Remove value
+                                $(this).prev().val('');
                             }
-                            console.log(msg);
+                        });
+                        $('.choice-' + questionID).next().next().off('click' + ns)
+                                                                .on('click' + ns, function() {
+                            // Add Option
+                            $(this).parent().after(newChoice);
+                            // Add Events
+                            inputEvents();
+                            optionsEvents();
+                        });
+                    };
+                    optionsEvents();
+                    // Other field
+                    $('#other-' + questionID).on('change' + ns, function(){
+                        if ($(this).prop('checked')) {
+                            $('#other-label-' + questionID).prop('disabled', false);
+                        } else {
+                            $('#other-label-' + questionID).prop('disabled', true);
                         }
                     });
+                    // Multiple
+                    var multipleCheckbox = $('#multiple-' + questionID),
+                        multipleCount = $('#multiple-count-' + questionID);
+                    multipleCheckbox.on('change' + ns, function() {
+                        if (multipleCheckbox.prop('checked')) {
+                            // Doesn't make sense unless value is at least 2
+                            multipleCount.html(2);
+                        } else {
+                            // Reset to 1
+                            multipleCount.html(1);
+                        }
+                        self.saveQuestion(type, questionID);
+                    });
+                    multipleCount.prev().on('click' + ns, function() {
+                        if (multipleCheckbox.prop('checked')) {
+                            var multiple = parseInt(multipleCount.html());
+                            if (multiple > 2) {
+                                multipleCount.html(multiple - 1);
+                                self.saveQuestion(type, questionID);
+                            } else if (multiple == 2) {
+                                multipleCount.html(1);
+                                multipleCheckbox.prop('checked', false);
+                                self.saveQuestion(type, questionID);
+                            }
+                        }
+                    });
+                    multipleCount.next().on('click' + ns, function() {
+                        if (multipleCheckbox.prop('checked')) {
+                            var multiple = parseInt(multipleCount.html());
+                            var optionsCount = $('.choice-' + questionID).length;
+                            if ($('#other-' + questionID).prop('checked')) {
+                                optionsCount++;
+                            }
+                            if (multiple < optionsCount) {
+                                multipleCount.html(multiple + 1);
+                                self.saveQuestion(type, questionID);
+                            }
+                        }
+                    });
+                    break;
+                case 'likert':
+                    // @ToDo: Display options when scale selected
+                    break;
+                case 'heatmap':
+                    break;
+            }
+        },
+
+        /**
+          * Delete a Question
+          */
+        deleteQuestion: function(type, questionID) {
+
+            var currentPage,
+                currentPosition,
+                questionNumber;
+
+            if (type == 'instructions') {
+                // Read the position (can't trust original as it may have changed)
+                currentPosition = parseInt($(this).closest('.dl-item').attr('id').split('-')[1]);
+                // Read the current page
+                currentPage = $('#instruction-' + currentPosition).data('page');
+            } else {
+                // Question
+
+                // Read the questionNumber (can't trust original as it may have changed)
+                questionNumber = $('#question-' + questionID).data('number');
+                // Read the position (can't trust original as it may have changed)
+                currentPosition = questionNumbers[questionNumber];
+                // Read the current page
+                currentPage = $('#question-' + questionID).data('page');
+            }
+
+            // Update this pageElements
+            pageElements[currentPage]--;
+            // Update visual elements
+            $('#section-break-' + pages[currentPage] + ' > span').html('PAGE ' + currentPage + ' (' + pageElements[currentPage] + ' ELEMENTS)');
+
+            // Update subsequent pages
+            for (var i=currentPage + 1, len=Object.keys(pages).length; i <= len; i++) {
+                pages[i]--; // newPosition
+            }
+
+            // Update layout & all subsequent items in it
+            var item,
+                oldPosition,
+                thisQuestionID,
+                oldQuestionNumber,
+                newQuestionNumber,
+                layout = this.data.layout;
+            var layoutLength = Object.keys(layout).length;
+            for (var i=currentPosition; i < layoutLength; i++) {
+                oldPosition = i + 1;
+                //newPosition = i;
+                item = layout[oldPosition];
+                // Move item to it's new position in the layout
+                layout[i] = item;
+                if (item.type == 'question') {
+                    thisQuestionID = item.id;
+                    oldQuestionNumber = $('#question-' + thisQuestionID).data('number');
+                    if (type == 'instructions') {
+                        // Not a Question deleted, so just need to update position
+                        //newQuestionNumber = oldQuestionNumber;
+                        // Update questionNumbers
+                        questionNumbers[oldQuestionNumber] = i;
+                    } else {
+                        // Question deleted so need to update both numbers & positions
+
+                        // Update questionNumber
+                        newQuestionNumber = oldQuestionNumber - 1;
+                        $('#question-' + thisQuestionID).data('number', newQuestionNumber);
+                        // Update visual element
+                        $('#qlabel-' + thisQuestionID).html('Q' + newQuestionNumber);
+                        // Update questionNumbers
+                        questionNumbers[newQuestionNumber] = i;
+                    }
+                } else {
+                    if (item.type == 'break') {
+                        // Update ID
+                        $('#section-break-' + oldPosition).attr('id', 'section-break-' + i);
+                    } else {
+                        // Instructions
+                        // Update IDs
+                        $('#instruction-' + oldPosition).attr('id', 'instruction-' + i);
+                        $('#do-' + oldPosition).attr('id', 'do-' + i);
+                        $('#say-' + oldPosition).attr('id', 'say-' + i);
+                    }
                 }
-            });
+            }
+
+            // Remove final item from oldPosition in layout
+            delete layout[layoutLength];
+
+            if (type != 'instructions') {
+                // Remove final questionNumber from questionNumbers
+                delete questionNumbers[oldQuestionNumber];
+            }
+
+            // Save Layout
+            self.save();
+
+            // Remove from DOM
+            if (type == 'instructions') {
+                $('#instruction-' + currentPosition).remove();
+            } else {
+                $('#question-' + questionID).remove();
+            }
+
+            // Update droppable ID
+            $('#survey-droppable-' + (layoutLength + 1)).attr('id', 'survey-droppable-' + layoutLength);
+
+            if (type != 'instructions') {
+                // Delete Question from Server
+                var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/delete.json';
+                this.ajaxMethod({
+                    url: ajaxURL,
+                    type: 'POST',
+                    dataType: 'json',
+                    success: function(/* data */) {
+                        // Nothing needed here
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        var msg;
+                        if (errorThrown == 'UNAUTHORIZED') {
+                            msg = i18n.gis_requires_login;
+                        } else {
+                            msg = jqXHR.responseText;
+                        }
+                        console.log(msg);
+                    }
+                });
+            }
         },
 
         /**
@@ -658,8 +799,8 @@
                     var rawValue = $('#restrict-' + questionID).val();
                     if (rawValue) {
                         var parts = rawValue.split('-'),
-                            min = parts[0],
-                            max = parts[1];
+                            min = parseInt(parts[0]),
+                            max = parseInt(parts[1]);
                         data.settings = {
                             requires: {
                                 isIntInRange: {
@@ -671,6 +812,23 @@
                     }
                     break;
                 case 'multichoice':
+                    var options = [];
+                    $('.choice-' + questionID).each(function() {
+                        options.push($(this).val());
+                    });
+                    data.options = options;
+                    var settings = {};
+                    if ($('#other-' + questionID).prop('checked')) {
+                        settings['other'] = $('#other-label-' + questionID).val();
+                    } else {
+                        settings['other'] = null;
+                    }
+                    if ($('#multiple-' + questionID).prop('checked')) {
+                        settings['multiple'] = parseInt($('#multiple-count-' + questionID).html());
+                    } else {
+                        settings['multiple'] = 1;
+                    }
+                    data.settings = settings;
                     break;
                 case 'likert':
                     var scale = $('#scale-' + questionID).val();

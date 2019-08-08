@@ -480,11 +480,11 @@ class dc_QuestionSave(S3Method):
                 if name:
                     mandatory = post_vars_get("mandatory")
                     options = post_vars_get("options")
-                    if options:
-                        options = json.loads(options)
+                    #if options:
+                    #    options = json.loads(options)
                     settings = post_vars_get("settings")
-                    if settings:
-                        settings = json.loads(settings)
+                    #if settings:
+                    #    settings = json.loads(settings)
                     current.db(table.id == record_id).update(name = name,
                                                              require_not_empty = mandatory,
                                                              options = options,
@@ -814,6 +814,12 @@ class dc_TemplateEditor(S3Method):
                              _class="row"
                              )
 
+                info_instructions = SPAN(ICON("info-circle"),
+                                         _class="has-tip",
+                                         _title=T("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."),
+                                         )
+                info_instructions["data-tooltip"] = 1
+
                 question_types = DIV(DIV(H2(T("Question types")),
                                          _class="row",
                                          ),
@@ -823,7 +829,7 @@ class dc_TemplateEditor(S3Method):
                                          DIV(T("Data collector instructions"),
                                              _class="medium-9 columns",
                                              ),
-                                         DIV(ICON("info-circle"),
+                                         DIV(info_instructions,
                                              _class="medium-1 columns",
                                              ),
                                          _class="row draggable",
