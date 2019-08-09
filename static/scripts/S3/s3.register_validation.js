@@ -104,15 +104,15 @@ var s3_register_validation = function() {
             if (div_style) {
                 // Bootstrap/Foundation
                 // Place immediately after widget
-                error.appendTo(element.parent())
+                error.appendTo(element.parent());
             } else {
                 // Default/DRRPP
                 // Place in comment
-                error.appendTo(element.parent().next())
+                error.appendTo(element.parent().next());
             }
         },
         submitHandler: function(form) {
-            form.submit()
+            form.submit();
         }
     });
 

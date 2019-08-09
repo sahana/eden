@@ -194,6 +194,7 @@ class DataCollectionTemplateModel(S3Model):
                      #: T("Person"),
                      }
 
+        # Scale defined in settings["scale"]
         likert_opts = {1: T("Agreement (Disagree - Agree)"),
                        2: T("Satisfaction (Smiley scale)"),
                        3: T("Satisfaction (Dissatisfied - Satisfied)"),

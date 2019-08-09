@@ -9,6 +9,7 @@ $(document).ready(function(){
 
     var dl = $('#datalist');
 
+    /* Replaced with confirm_delete
     var ajaxDeleteItem = function(item){
         // Ajax-delete the item
         var $this = $(item),
@@ -19,10 +20,10 @@ $(document).ready(function(){
             'url': S3.Ap.concat('/dc/target/') + recordID + '/delete.json',
             'type': 'POST',
             'dataType': 'json',
-            'success': function(/* data */) {
+            'success': function() {
                 // Refresh the outer Project
                 dl.datalist('ajaxReloadItem', projectID);
-                dl.on('listUpdate', function(/* event */) {
+                dl.on('listUpdate', function() {
                     // Subsequent Page Load
                     bindItemEvents();
                 });
@@ -37,9 +38,10 @@ $(document).ready(function(){
                 console.log(msg);
             }
         });
-    };
+    }; */
 
     var bindItemEvents = function(){
+        /* Replaced with confirm_delete
         // Click-event for dl-survey-delete
         dl.find('.dl-survey-delete')
           .css({cursor: 'pointer'})
@@ -53,7 +55,7 @@ $(document).ready(function(){
                 event.preventDefault();
                 return false;
             }
-        });
+        }); */
         // Change-event for switches
         dl.find('.switch input')
           .off('change.ucce')

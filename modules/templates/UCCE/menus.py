@@ -91,9 +91,10 @@ class S3MainMenu(default.S3MainMenu):
             menu_auth = MM(auth.user.email, c="default", f="user",
                            translate=False, link=False, _id="auth_menu_email",
                            **attr)(
-                            MM("Logout", m="logout", _id="auth_menu_logout"),
+                            MM("Dashboard", c="project", f="project", m="datalist"),
                             MM("User Profile", m="profile"),
                             change_pw,
+                            MM("Logout", m="logout", _id="auth_menu_logout"),
                         )
 
         return menu_auth
@@ -119,6 +120,17 @@ class S3OptionsMenu(default.S3OptionsMenu):
                      #M("Create", m="create"),
                      ),
                    )
+
+    # -------------------------------------------------------------------------
+    def default(self):
+        """ Default Controller """
+
+        request = current.request
+        if request.function == "user" and \
+           request.args(0) == "profile":
+            return self.ucce()
+        else:
+            return None
 
     # -------------------------------------------------------------------------
     def doc(self):

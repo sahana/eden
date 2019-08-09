@@ -72,6 +72,28 @@
                 this.ajaxMethod = $.ajaxS3;
             }
 
+            // extend jQuery Validator plugin
+            $.validator.addMethod(
+                'lessThanMax', 
+                function(value, element) {
+                    var questionID = element.id.split('-')[1],
+                        max = $('#max-' + questionID).val();
+                    
+                    return this.optional(element) || (parseFloat(value) <= max);
+                },
+                'needs to be lower than Maximum'
+            );
+            $.validator.addMethod(
+                'greaterThanMin', 
+                function(value, element) {
+                    var questionID = element.id.split('-')[1],
+                        min = $('#min-' + questionID).val();
+
+                    return this.optional(element) || (parseFloat(value) >= min);
+                },
+                'needs to be higher than Minimum'
+            );
+
             this.refresh();
 
         },
@@ -188,6 +210,7 @@
                     formElements = '#instruction-' + position + ' input';
                     trash = '#instruction-' + position + ' .fa-trash';
                     break;
+
                 case 'text':
                     var name = '';
                     if (load) {
@@ -197,17 +220,28 @@
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .fa-trash';
                     break;
+
                 case 'number':
-                    var name = '';
+                    var name = '',
+                        min = '',
+                        max = '';
                     if (load) {
-                        name = this.data.questions[questionID].name;
+                        var thisQuestion = this.data.questions[questionID]
+                        name = thisQuestion.name;
+                        var settings = thisQuestion.settings || {},
+                            requires = settings.requires || {},
+                            isIntInRange = requires.isIntInRange;
+                        if (isIntInRange) {
+                            min = isIntInRange.min || '';
+                            max = isIntInRange.max || '';
+                        }
                     }
-                    // @ToDo: Validation of correct input format for restrict
-                    var answer = '<div class="row"><h2>Answer</h2><label>Restrict input to:</label><input id="restrict-' + questionID + '" type="text" placeholder="e.g. 10-15,18,20-22"></div>';
+                    var answer = '<div class="row"><h2>Answer</h2><form id="answer-' + questionID + '"><label>Minimum:</label><input id="min-' + questionID + '" name="min" type="number" value="' + min + '"><label>Maximum:</label><input id="max-' + questionID + '" name="max" type="number" value="' + max + '"></form></div>';
                     editTab = '<div class="media"><h2>Number question</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .fa-trash';
                     break;
+
                 case 'multichoice':
                     newChoice = '<div class="row"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice"><i class="fa fa-minus-circle"> </i><i class="fa fa-plus-circle"> </i></div>';
                     // @ToDo: Grey the multiple -+ options if they cannot do anything
@@ -249,17 +283,32 @@
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .fa-trash';
                     break;
+
                 case 'likert':
-                    var name = '';
+                    var name = '',
+                        scales = [
+                            '<option value="1">Agreement (Disagree - Agree)</option>',
+                            '<option value="2">Satisfaction (Smiley scale)</option>',
+                            '<option value="3">Satisfaction (Dissatisfied - Satisfied)</option>',
+                            '<option value="4">Pain scale (3 point)</option>'
+                            ];
                     if (load) {
                         name = this.data.questions[questionID].name;
+                        var settings = this.data.questions[questionID].settings;
+                        if (settings && settings.hasOwnProperty('scale')) {
+                            var scale = settings.scale;
+                            if (scale) {
+                                scales[scale - 1] = scales[scale - 1].replace('">', '" selected>');
+                            }
+                        }
                     }
-                    var scaleOptions = '<option value="1">Agreement (Disagree - Agree)</option><option value="2">Satisfaction (Smiley scale)</option><option value="3">Satisfaction (Dissatisfied - Satisfied)</option><option value="4">Pain scale (3 point)</option>';
+                    var scaleOptions = scales.join();
                     var answer = '<div class="row"><h2>Answer</h2><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please choose scale</option>' + scaleOptions + '</select></div>';
                     editTab = '<div class="media"><h2>Likert-scale</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .fa-trash';
                     break;
+
                 case 'heatmap':
                     var name = '';
                     if (load) {
@@ -321,21 +370,64 @@
                 case 'instructions':
                     // Nothing needed here
                     break;
+
                 case 'text':
                     // Nothing needed here
                     break;
+
                 case 'number':
-                    // @ToDo: Field Validation for Restriction
-                    
+                    // Field Validation for Minimum/Maximum
+                    //  Integers only
+                    //  Max must be above Min
+                    $('#answer-' + questionID).validate({
+                        rules: {
+                            min: {
+                                required: false,
+                                digits: true,
+                                lessThanMax: true
+                            },
+                            max: {
+                                required: false,
+                                digits: true,
+                                greaterThanMin: true
+                            }
+                        },
+                        messages: {
+                            // @ToDo: i18n
+                            min: {
+                                digits: 'Only integers allowed'
+                            },
+                            max: {
+                                digits: 'Only integers allowed'
+                            }
+                        },
+                        errorClass: 'req',
+                        focusCleanup: true
+                    });
                     break;
+
                 case 'multichoice':
-                    // Options
-                    var optionsEvents = function() {
+                    var multipleCheckbox = $('#multiple-' + questionID),
+                        multipleCount = $('#multiple-count-' + questionID),
+                        multichoiceEvents = function() {
+                        // Options
                         $('.choice-' + questionID).next().off('click' + ns)
                                                          .on('click' + ns, function() {
                             if ($('.choice-' + questionID).length > 1) {
                                 // Remove Option
                                 $(this).parent().remove();
+                                // Check if we now have fewer options than multipleCount
+                                var multiple = parseInt(multipleCount.html()),
+                                    optionsCount = $('.choice-' + questionID).length;
+                                if ($('#other-' + questionID).prop('checked')) {
+                                    optionsCount++;
+                                }
+                                if (multiple > optionsCount) {
+                                    multipleCount.html(optionsCount);
+                                    if (optionsCount == 1) {
+                                        multipleCheckbox.prop('checked', false);
+                                    }
+                                }
                                 self.saveQuestion(type, questionID);
                             } else {
                                 // Remove value
@@ -348,61 +440,80 @@
                             $(this).parent().after(newChoice);
                             // Add Events
                             inputEvents();
-                            optionsEvents();
+                            multichoiceEvents();
+                        });
+                        // Other field
+                        $('#other-' + questionID).on('change' + ns, function(){
+                            if ($(this).prop('checked')) {
+                                $('#other-label-' + questionID).prop('disabled', false);
+                            } else {
+                                $('#other-label-' + questionID).prop('disabled', true);
+                                // Check if we now have fewer options than multipleCount
+                                var multiple = parseInt(multipleCount.html()),
+                                    optionsCount = $('.choice-' + questionID).length;
+                                if (multiple > optionsCount) {
+                                    multipleCount.html(optionsCount);
+                                    if (optionsCount == 1) {
+                                        multipleCheckbox.prop('checked', false);
+                                    }
+                                }
+                            }
+                        });
+                        // Multiple
+                        multipleCheckbox.on('change' + ns, function() {
+                            if (multipleCheckbox.prop('checked')) {
+                                // Check if we have more than 1 option
+                                var multiple = parseInt(multipleCount.html()),
+                                    optionsCount = $('.choice-' + questionID).length;
+                                if ($('#other-' + questionID).prop('checked')) {
+                                    optionsCount++;
+                                }
+                                if (optionsCount > 1) {
+                                    // Doesn't make sense unless value is at least 2
+                                    multipleCount.html(2);
+                                } else {
+                                    multipleCheckbox.prop('checked', false);
+                                }
+                            } else {
+                                // Reset to 1
+                                multipleCount.html(1);
+                            }
+                            self.saveQuestion(type, questionID);
+                        });
+                        multipleCount.prev().on('click' + ns, function() {
+                            if (multipleCheckbox.prop('checked')) {
+                                var multiple = parseInt(multipleCount.html());
+                                if (multiple > 2) {
+                                    multipleCount.html(multiple - 1);
+                                    self.saveQuestion(type, questionID);
+                                } else if (multiple == 2) {
+                                    multipleCount.html(1);
+                                    multipleCheckbox.prop('checked', false);
+                                    self.saveQuestion(type, questionID);
+                                }
+                            }
+                        });
+                        multipleCount.next().on('click' + ns, function() {
+                            if (multipleCheckbox.prop('checked')) {
+                                var multiple = parseInt(multipleCount.html()),
+                                    optionsCount = $('.choice-' + questionID).length;
+                                if ($('#other-' + questionID).prop('checked')) {
+                                    optionsCount++;
+                                }
+                                if (multiple < optionsCount) {
+                                    multipleCount.html(multiple + 1);
+                                    self.saveQuestion(type, questionID);
+                                }
+                            }
                         });
                     };
-                    optionsEvents();
-                    // Other field
-                    $('#other-' + questionID).on('change' + ns, function(){
-                        if ($(this).prop('checked')) {
-                            $('#other-label-' + questionID).prop('disabled', false);
-                        } else {
-                            $('#other-label-' + questionID).prop('disabled', true);
-                        }
-                    });
-                    // Multiple
-                    var multipleCheckbox = $('#multiple-' + questionID),
-                        multipleCount = $('#multiple-count-' + questionID);
-                    multipleCheckbox.on('change' + ns, function() {
-                        if (multipleCheckbox.prop('checked')) {
-                            // Doesn't make sense unless value is at least 2
-                            multipleCount.html(2);
-                        } else {
-                            // Reset to 1
-                            multipleCount.html(1);
-                        }
-                        self.saveQuestion(type, questionID);
-                    });
-                    multipleCount.prev().on('click' + ns, function() {
-                        if (multipleCheckbox.prop('checked')) {
-                            var multiple = parseInt(multipleCount.html());
-                            if (multiple > 2) {
-                                multipleCount.html(multiple - 1);
-                                self.saveQuestion(type, questionID);
-                            } else if (multiple == 2) {
-                                multipleCount.html(1);
-                                multipleCheckbox.prop('checked', false);
-                                self.saveQuestion(type, questionID);
-                            }
-                        }
-                    });
-                    multipleCount.next().on('click' + ns, function() {
-                        if (multipleCheckbox.prop('checked')) {
-                            var multiple = parseInt(multipleCount.html());
-                            var optionsCount = $('.choice-' + questionID).length;
-                            if ($('#other-' + questionID).prop('checked')) {
-                                optionsCount++;
-                            }
-                            if (multiple < optionsCount) {
-                                multipleCount.html(multiple + 1);
-                                self.saveQuestion(type, questionID);
-                            }
-                        }
-                    });
+                    multichoiceEvents();
                     break;
+
                 case 'likert':
                     // @ToDo: Display options when scale selected
                     break;
+
                 case 'heatmap':
                     break;
             }
@@ -796,20 +907,32 @@
                     // Nothing needed here
                     break;
                 case 'number':
-                    var rawValue = $('#restrict-' + questionID).val();
-                    if (rawValue) {
-                        var parts = rawValue.split('-'),
-                            min = parseInt(parts[0]),
-                            max = parseInt(parts[1]);
-                        data.settings = {
-                            requires: {
-                                isIntInRange: {
-                                    min: min,
-                                    max: max
-                                }
-                            }
-                        };
+                    var min,
+                        max;
+                    if (!($('#min-' + questionID).hasClass('req'))) {
+                        min = $('#min-' + questionID).val();
+                        if (min) {
+                            min = parseInt(min);
+                        }
+                    } else {
+                        min = null;
                     }
+                    if (!($('#max-' + questionID).hasClass('req'))) {
+                        max = $('#max-' + questionID).val();
+                        if (max) {
+                            max = parseInt(max);
+                        }
+                    } else {
+                        max = null;
+                    }
+                    data.settings = {
+                        requires: {
+                            isIntInRange: {
+                                min: min,
+                                max: max
+                            }
+                        }
+                    };
                     break;
                 case 'multichoice':
                     var options = [];
@@ -832,8 +955,16 @@
                     break;
                 case 'likert':
                     var scale = $('#scale-' + questionID).val();
-                    if(scale) {
+                    if (scale) {
                         data.options = likertOptions[scale];
+                        data.settings = {
+                            scale: scale
+                        };
+                    } else {
+                        data.options = [];
+                        data.settings = {
+                            scale: null
+                        };
                     }
                     break;
                 case 'heatmap':

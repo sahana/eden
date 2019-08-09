@@ -432,6 +432,7 @@ def config(settings):
         # Custom Methods
         from templates.UCCE.controllers import dc_TargetActivate
         from templates.UCCE.controllers import dc_TargetDeactivate
+        from templates.UCCE.controllers import dc_TargetDelete
         from templates.UCCE.controllers import dc_TargetName
 
         set_method = current.s3db.set_method
@@ -441,6 +442,9 @@ def config(settings):
         set_method("dc", "target",
                    method = "deactivate",
                    action = dc_TargetDeactivate())
+        set_method("dc", "target",
+                   method = "delete_confirm",
+                   action = dc_TargetDelete())
         set_method("dc", "target",
                    method = "name",
                    action = dc_TargetName())
@@ -773,8 +777,10 @@ def config(settings):
                                               ],
                                )
                 # Inject JS to handle Switches & deletion of Inner cards
-                # @ToDo: Deletion should probably have a delete_confirm method
-                s3.scripts.append("/%s/static/themes/UCCE/js/projects.js" % r.application)
+                if s3.debug:
+                    s3.scripts.append("/%s/static/themes/UCCE/js/projects.js" % r.application)
+                else:
+                    s3.scripts.append("/%s/static/themes/UCCE/js/projects.min.js" % r.application)
 
             return result
         s3.prep = prep

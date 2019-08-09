@@ -475,6 +475,20 @@ def dojs(dogis = False, warnings = True):
                 outFile.write(minimize(inFile.read()))
         move_to(outputFilename, "../S3")
 
+    if theme == "UCCE":
+        for filename in ("confirm_popup",
+                         "projects",
+                         "s3.ui.template",
+                         "template_editor",
+                         ):
+            info("Compressing %s.js" % filename)
+            inputFilename = os.path.join("..", "..", "themes", "UCCE", "js", "%s.js" % filename)
+            outputFilename = "%s.min.js" % filename
+            with openf(inputFilename, "r") as inFile:
+                with openf(outputFilename, "w") as outFile:
+                    outFile.write(minimize(inFile.read()))
+            move_to(outputFilename, "../../themes/UCCE/js")
+
     # -------------------------------------------------------------------------
     # Optional JS builds
     # - enable at the top when desired
