@@ -49,6 +49,15 @@
   margin-left: 15px;
 }
 
+.preview-empty {
+    background-color: #eee;
+    border-color: #999;
+    border-style: dotted;
+    border-width: 1px;
+    height: 80px;
+    width: 80px;
+}
+
 /* Switch Backported from Foundation 6 instead of using the Foundation 5 version */
 .switch {
   height: 2rem;

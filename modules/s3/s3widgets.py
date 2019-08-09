@@ -3641,7 +3641,9 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
 class S3ImageCropWidget(FormWidget):
     """
         Allows the user to crop an image and uploads it.
-        Cropping & Scaling( if necessary ) done at client-side
+        Cropping & Scaling (if necessary) done client-side
+        - currently using JCrop (https://jcrop.com)
+        - @ToDo: Replace with https://blueimp.github.io/jQuery-File-Upload/ ?
 
         @ToDo: Doesn't currently work with Inline Component Forms
     """
@@ -3714,7 +3716,8 @@ i18n.upload_image='%s' ''' % (T("Please select a valid image!"),
         # Set up the canvas
         # Canvas is used to scale and crop the Image on the client side
         canvas = TAG["canvas"](_class="imagecrop-canvas",
-                               _style="display:none")
+                               _style="display:none",
+                               )
         image_bounds = self.image_bounds
 
         if image_bounds:

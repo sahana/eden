@@ -1,10 +1,15 @@
 /*
  * Survey Editor Widget
  */
-(function($, undefined) {
+(function(factory) {
+  'use strict';
+  // Browser globals (not AMD or Node):
+  factory(window.jQuery, window.loadImage);
+})(function($, loadImage) {
+  'use strict';
     'use strict';
     var surveyID = 0,
-        images = {}, // Store position -> label for images to pipe (Questions with Images & Heatmap regions)
+        images = {}, // Store questionID -> label for images to pipe (Questions with Images & Heatmap regions)
         likertOptions = {
             '1': ['Strongly Disagree', 'Disagree', 'Undecided', 'Agree', 'Strongly Agree'],
             '2': ['Very unsatisfied', 'Unsatisfied', 'Neutral', 'Satisfied', 'Very satisfied'],
@@ -172,6 +177,7 @@
 
             // Build the Question HTML
             var question,
+                thisQuestion,
                 questionNumber,
                 editTab,
                 newChoice,
@@ -181,19 +187,20 @@
             if (type == 'instructions') {
                 question = '<div class="thumbnail dl-item" id="instruction-' + position + '" data-page="' + page + '"><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="fa fa-copy"> </i></a><a><i class="fa fa-trash"> </i></a><i class="fa fa-arrows-v"> </i></div></div>';
             } else {
+                thisQuestion = this.data.questions[questionID];
                 questionNumber = Object.keys(questionNumbers).length + 1;
                 questionNumbers[questionNumber] = position;
                 question = '<div class="thumbnail dl-item" id="question-' + questionID + '" data-page="' + page + '" data-number="' + questionNumber + '"><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="fa fa-copy"> </i></a><a><i class="fa fa-trash"> </i></a><i class="fa fa-arrows-v"> </i></div></div>';
                 var checked = '';
                 if (load) {
-                    if (this.data.questions[questionID].mandatory) {
+                    if (thisQuestion.mandatory) {
                         checked = ' checked';
                     }
                 }
                 var mandatory = '<div class="row"><input id="mandatory-' + questionID + '" type="checkbox" ' + checked + ' class="fleft"><label>Make question mandatory</label></div>';
                 if (type != 'heatmap') {
                     var imageOptions = ''; // @ToDo: Read <option>s from images dict
-                    var imageHtml = '<div class="row"><label>Add graphic</label><input type="file" accept="image/png, image/jpeg" class="fleft"><label class="fleft">or pipe question image:</label><select class="fleft"><option value="">select question</option>' + imageOptions + '</select><a>Delete</a></div>';
+                    var imageHtml = '<div class="row"><label>Add graphic</label><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><label class="fleft">or pipe question image:</label><select class="fleft"><option value="">select question</option>' + imageOptions + '</select><a id="image-delete-' + questionID + '">Delete</a></div>';
                 }
             }
 
@@ -214,7 +221,7 @@
                 case 'text':
                     var name = '';
                     if (load) {
-                        name = this.data.questions[questionID].name;
+                        name = thisQuestion.name;
                     }
                     editTab = '<div class="media"><h2>Text box</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '" type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml;
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
@@ -226,7 +233,6 @@
                         min = '',
                         max = '';
                     if (load) {
-                        var thisQuestion = this.data.questions[questionID]
                         name = thisQuestion.name;
                         var settings = thisQuestion.settings || {},
                             requires = settings.requires || {},
@@ -253,7 +259,6 @@
                         multiple = 1,
                         multiChecked = '';
                     if (load) {
-                        var thisQuestion = this.data.questions[questionID]
                         name = thisQuestion.name;
                         var options = thisQuestion.options || [],
                             lenOptions = options.length;
@@ -293,8 +298,8 @@
                             '<option value="4">Pain scale (3 point)</option>'
                             ];
                     if (load) {
-                        name = this.data.questions[questionID].name;
-                        var settings = this.data.questions[questionID].settings;
+                        name = thisQuestion.name;
+                        var settings = thisQuestion.settings;
                         if (settings && settings.hasOwnProperty('scale')) {
                             var scale = settings.scale;
                             if (scale) {
@@ -312,10 +317,10 @@
                 case 'heatmap':
                     var name = '';
                     if (load) {
-                        name = this.data.questions[questionID].name;
+                        name = thisQuestion.name;
                     }
-                    var image = '<div class="row"><h2>Image</h2><input type="file" accept="image/png, image/jpeg" class="fleft"><h3>Number of clicks allowed:</h3><i class="fa fa-minus-circle"> </i> 1 <i class="fa fa-plus-circle"> </i><h3>Tap/click regions:</h3><a class="button tiny">Add region</a><input id="region-' + position + '-1" type="text" placeholder="enter label" disabled></div>';
-                    editTab = '<div class="media"><h2>Heatmap</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + image;
+                    var imageRow = '<div class="row"><h2>Image</h2><input type="file" accept="image/png, image/jpeg" class="fleft"><h3>Number of clicks allowed:</h3><i class="fa fa-minus-circle"> </i> 1 <i class="fa fa-plus-circle"> </i><h3>Tap/click regions:</h3><a class="button tiny">Add region</a><input id="region-' + position + '-1" type="text" placeholder="enter label" disabled></div>';
+                    editTab = '<div class="media"><h2>Heatmap</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageRow;
                     formElements = '#question-' + questionID + ' input';
                     trash = '#question-' + questionID + ' .fa-trash';
                     break;
@@ -359,7 +364,85 @@
             };
             inputEvents();
             
+            if (type != 'instructions') {
+                if (load) {
+                    var file = thisQuestion.file;
+                    if (file) {
+                        loadImage(S3.Ap.concat('/default/download/' + file), function(img) {
+                            var options = {
+                                canvas: true,
+                                maxHeight: 80,
+                                maxWidth: 80
+                            },
+                            preview = loadImage.scale(img, options);
+                            // Place Preview on the page
+                            $('#preview-' + questionID).removeClass('preview-empty')
+                                                       .empty()
+                                                       .append(preview);
+                            return img;
+                        }, {}); // Empty Options
+                    }
+                }
+                $('#image-delete-' + questionID).on('click' + ns, function() {
+                    // Remove Image from Server
+                    var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/image_delete.json';
+                    self.ajaxMethod({
+                        url: ajaxURL,
+                        type: 'POST',
+                        dataType: 'json',
+                        success: function(/* data */) {
+                            // Remove Image from Preview
+                            $('#preview-' + questionID).empty()
+                                                       .addClass('preview-empty');
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
+                            var msg;
+                            if (errorThrown == 'UNAUTHORIZED') {
+                                msg = i18n.gis_requires_login;
+                            } else {
+                                msg = jqXHR.responseText;
+                            }
+                            console.log(msg);
+                        }
+                    });
+                });
+                $('#image-' + questionID).fileupload({
+                    dataType: 'json',
+                    dropZone: $('#preview-' + questionID + ', #image-' + questionID),
+                    maxNumberOfFiles: 1,
+                    url: S3.Ap.concat('/dc/question/') + questionID + '/image_upload.json',
+                    add: function(e, data) {
+                        if (e.isDefaultPrevented()) {
+                            return false;
+                        }
 
+                        if (data.autoUpload || (data.autoUpload !== false && $(this).fileupload('option', 'autoUpload'))) {
+                            data.process().done(function() {
+                                data.submit();
+
+                                // Create Preview Image
+                                var file = data.files[0];
+                                // @ToDo: Check file.size &/or file.type are valid?
+                                loadImage(file, function(img) {
+                                    var options = {
+                                        canvas: true,
+                                        maxHeight: 80,
+                                        maxWidth: 80
+                                    },
+                                    preview = loadImage.scale(img, options);
+                                    // Place Preview on the page
+                                    $('#preview-' + questionID).removeClass('preview-empty')
+                                                               .empty()
+                                                               .append(preview);
+                                    return img;
+                                }, {}); // Empty Options
+                                
+                            });
+                        }
+                    }
+                });
+            }
+            
             $(trash).on('click' + ns, function(/* event */) {
                 // Delete the Question
                 self.deleteQuestion(type, questionID);
@@ -610,7 +693,7 @@
             }
 
             // Save Layout
-            self.save();
+            this.save();
 
             // Remove from DOM
             if (type == 'instructions') {
@@ -1090,4 +1173,4 @@
         }
 
     });
-})(jQuery);
+});

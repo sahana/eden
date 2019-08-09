@@ -361,12 +361,20 @@ def config(settings):
 
         # Custom Methods
         from templates.UCCE.controllers import dc_QuestionCreate
+        from templates.UCCE.controllers import dc_QuestionImageDelete
+        from templates.UCCE.controllers import dc_QuestionImageUpload
         from templates.UCCE.controllers import dc_QuestionSave
 
         set_method = current.s3db.set_method
         set_method("dc", "question",
                    method = "create_json",
                    action = dc_QuestionCreate())
+        set_method("dc", "question",
+                   method = "image_delete",
+                   action = dc_QuestionImageDelete())
+        set_method("dc", "question",
+                   method = "image_upload",
+                   action = dc_QuestionImageUpload())
         set_method("dc", "question",
                    method = "update_json",
                    action = dc_QuestionSave())

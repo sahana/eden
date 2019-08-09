@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import os
+
 from gluon import *
 from s3 import json, ICON, S3CustomController, S3Method
 
@@ -318,7 +320,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                     DIV(target.name),
                     responses,
                     DIV(edit_btn, copy_btn, delete_btn),
-                    DIV(upload_btn, report_btn),
+                    DIV(export_btn, report_btn),
                     switch,
                     _class="thumbnail medium-2 columns",
                     ))
@@ -447,6 +449,90 @@ class dc_QuestionCreate(S3Method):
                     current.response.headers["Content-Type"] = "application/json"
                     output = current.xml.json_message(True, 200, "",
                                                       question_id = question_id)
+                else:
+                    r.error(400, current.T("Invalid Parameters"))
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
+
+# =============================================================================
+class dc_QuestionImageDelete(S3Method):
+    """
+        Delete an Image for a Question
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "question":
+            if r.http == "POST" and r.representation == "json":
+                # AJAX method
+                # Action the request
+                table = r.table
+                record_id = r.id
+                if not current.auth.s3_has_permission("update", table, record_id=record_id):
+                    r.unauthorised()
+                # Delete from filesystem
+                os.remove(os.path.join(table.file.uploadfolder, r.record.file))
+
+                # Update record
+                current.db(table.id == record_id).update(file = None)
+
+                # Results (Empty Message so we don't get it shown to User)
+                current.response.headers["Content-Type"] = "application/json"
+                output = current.xml.json_message(True, 200, "")
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
+
+# =============================================================================
+class dc_QuestionImageUpload(S3Method):
+    """
+        Upload an Image for a Question
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "question":
+            if r.http == "POST" and r.representation == "json":
+                # AJAX method
+                # Action the request
+                table = r.table
+                record_id = r.id
+                if not current.auth.s3_has_permission("update", table, record_id=record_id):
+                    r.unauthorised()
+                field_storage = r.post_vars.get("file")
+                if field_storage not in ("", None):
+                    field = table.file
+                    # Store in filesystem
+                    newfilename = field.store(field_storage.file,
+                                              field_storage.filename,
+                                              field.uploadfolder)
+                    # Update record
+                    current.db(table.id == record_id).update(file = newfilename)
+
+                    # Results (Empty Message so we don't get it shown to User)
+                    current.response.headers["Content-Type"] = "application/json"
+                    output = current.xml.json_message(True, 200, "")
                 else:
                     r.error(400, current.T("Invalid Parameters"))
             else:
@@ -1036,6 +1122,7 @@ class dc_TemplateEditor(S3Method):
                                                                      qtable.require_not_empty,
                                                                      qtable.options,
                                                                      qtable.settings,
+                                                                     qtable.file,
                                                                      )
                 for question in qrows:
                     questions[question.id] = {"name": question.name or '',
@@ -1043,6 +1130,7 @@ class dc_TemplateEditor(S3Method):
                                               "mandatory": question.require_not_empty,
                                               "options": question.options or {},
                                               "settings": question.settings or {},
+                                              "file": question.file,
                                               }
 
                 data = {"layout": record.layout or {},
@@ -1057,10 +1145,23 @@ class dc_TemplateEditor(S3Method):
                 appname = r.application
                 scripts_append = s3.scripts.append
                 if s3.debug:
+                    scripts_append("/%s/static/scripts/load-image.js" % appname)
+                    #scripts_append("/%s/static/scripts/load-image-exif.js" % appname)
+                    #scripts_append("/%s/static/scripts/load-image-meta.js" % appname)
+                    scripts_append("/%s/static/scripts/load-image-scale.js" % appname)
+                    scripts_append("/%s/static/scripts/canvas-to-blob.js" % appname)
+                    # The Iframe Transport is required for browsers without support for XHR file uploads
+                    scripts_append("/%s/static/scripts/jquery.iframe-transport.js" % appname)
+                    scripts_append("/%s/static/scripts/jquery.fileupload.js" % appname)
                     scripts_append("/%s/static/scripts/jquery.validate.js" % appname)
                     scripts_append("/%s/static/themes/UCCE/js/s3.ui.template.js" % appname)
                     scripts_append("/%s/static/themes/UCCE/js/template_editor.js" % appname)
                 else:
+                    scripts_append("/%s/static/scripts/load-image.all.min.js" % appname)
+                    scripts_append("/%s/static/scripts/canvas-to-blob.min.js" % appname)
+                    # The Iframe Transport is required for browsers without support for XHR file uploads
+                    scripts_append("/%s/static/scripts/jquery.iframe-transport.js" % appname)
+                    scripts_append("/%s/static/scripts/jquery.fileupload.min.js" % appname)
                     scripts_append("/%s/static/scripts/jquery.validate.min.js" % appname)
                     scripts_append("/%s/static/themes/UCCE/js/s3.ui.template.min.js" % appname)
                     scripts_append("/%s/static/themes/UCCE/js/template_editor.min.js" % appname)

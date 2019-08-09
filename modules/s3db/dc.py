@@ -306,7 +306,7 @@ class DataCollectionTemplateModel(S3Model):
                            uploadfolder = os.path.join(current.request.folder,
                                                        "uploads",
                                                        "images"),
-                           widget = S3ImageCropWidget((600, 600)),
+                           widget = S3ImageCropWidget((120, 120)),
                            ),
                      s3_comments(label = T("Tooltip"),
                                  represent = s3_text_represent,

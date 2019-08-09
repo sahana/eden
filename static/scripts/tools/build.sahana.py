@@ -494,7 +494,9 @@ def dojs(dogis = False, warnings = True):
     # - enable at the top when desired
     #
     if JS_FULL:
-        for filename in ("spectrum",
+        for filename in ("jquery.fileupload", # Used by UCCE
+                         "jquery.iframe-transport", # Used by jquery.fileupload
+                         "spectrum",
                          "tag-it",
                          ):
             info("Compressing %s.js" % filename)
