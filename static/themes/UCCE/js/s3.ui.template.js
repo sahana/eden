@@ -30,7 +30,7 @@
             1: 'text',
             2: 'number',
             6: 'multichoice',
-            7: 'likert',
+            12: 'likert',
             13: 'heatmap'
         };
 
@@ -180,6 +180,8 @@
                 thisQuestion,
                 questionNumber,
                 editTab,
+                mandatory,
+                imageHtml,
                 newChoice,
                 formElements,
                 trash;
@@ -197,10 +199,10 @@
                         checked = ' checked';
                     }
                 }
-                var mandatory = '<div class="row"><input id="mandatory-' + questionID + '" type="checkbox" ' + checked + ' class="fleft"><label>Make question mandatory</label></div>';
+                mandatory = '<div class="row"><input id="mandatory-' + questionID + '" type="checkbox" ' + checked + ' class="fleft"><label>Make question mandatory</label></div>';
                 if (type != 'heatmap') {
                     var imageOptions = ''; // @ToDo: Read <option>s from images dict
-                    var imageHtml = '<div class="row"><label>Add graphic</label><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><label class="fleft">or pipe question image:</label><select class="fleft"><option value="">select question</option>' + imageOptions + '</select><a id="image-delete-' + questionID + '">Delete</a></div>';
+                    imageHtml = '<div class="row"><label>Add graphic</label><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><label class="fleft">or pipe question image:</label><select class="fleft"><option value="">select question</option>' + imageOptions + '</select><a id="image-delete-' + questionID + '">Delete</a></div>';
                 }
             }
 
@@ -291,6 +293,7 @@
 
                 case 'likert':
                     var name = '',
+                        displayOptions = '',
                         scales = [
                             '<option value="1">Agreement (Disagree - Agree)</option>',
                             '<option value="2">Satisfaction (Smiley scale)</option>',
@@ -304,11 +307,17 @@
                             var scale = settings.scale;
                             if (scale) {
                                 scales[scale - 1] = scales[scale - 1].replace('">', '" selected>');
+                                var options = likertOptions[scale];
+                                displayOptions += '<ul>';
+                                for (var i=0, len = options.length; i < len; i++) {
+                                    displayOptions += '<li>' + options[i] + '</li>';
+                                }
+                                displayOptions += '</ul>';
                             }
                         }
                     }
                     var scaleOptions = scales.join();
-                    var answer = '<div class="row"><h2>Answer</h2><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please choose scale</option>' + scaleOptions + '</select></div>';
+                    var answer = '<div class="row"><h2>Answer</h2><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please choose scale</option>' + scaleOptions + '</select></div><div class="row">' + displayOptions + '</div>';
                     editTab = '<div class="media"><h2>Likert-scale</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .fa-trash';
@@ -366,6 +375,7 @@
             
             if (type != 'instructions') {
                 if (load) {
+                    // Image to Load?
                     var file = thisQuestion.file;
                     if (file) {
                         loadImage(S3.Ap.concat('/default/download/' + file), function(img) {
@@ -406,6 +416,7 @@
                         }
                     });
                 });
+                // Image Upload
                 $('#image-' + questionID).fileupload({
                     dataType: 'json',
                     dropZone: $('#preview-' + questionID + ', #image-' + questionID),
@@ -594,7 +605,24 @@
                     break;
 
                 case 'likert':
-                    // @ToDo: Display options when scale selected
+                    // Display options when scale selected
+                    $('#scale-' + questionID).on('change' + ns, function() {
+                        var $this = $(this),
+                            scale = $this.val();
+                        if (scale) {
+                            var options = likertOptions[scale],
+                                scaleOptions = '';
+                            for (var i=0, len = options.length; i < len; i++) {
+                                scaleOptions += '<li>' + options[i] + '</li>';
+                            }
+                            var scaleDisplay = '<ul>' + scaleOptions + '</ul>';
+                            $this.parent().next().empty()
+                                                 .append(scaleDisplay);
+                        } else {
+                            // Remove old display
+                            $this.parent().next().empty();
+                        }
+                    });
                     break;
 
                 case 'heatmap':
