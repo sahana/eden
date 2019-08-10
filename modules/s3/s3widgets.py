@@ -8856,6 +8856,7 @@ class ICON(I):
             "incident": "fa-bolt",
             "info": "fa-info",
             "info-circle": "fa-info-circle",
+            #"instructions": "fa-edit", # UCCE
             "link": "fa-external-link",
             "list": "fa-list",
             "location": "fa-globe",
@@ -8880,10 +8881,12 @@ class ICON(I):
             "project": "fa-dashboard",
             "radio": "fa-microphone",
             "remove": "fa-remove",
+            #"reports": "fi-bar-chart", # UCCE
             "request": "fa-flag",
             "responsibility": "fa-briefcase",
             "return": "fa-arrow-left",
             "rss": "fa-rss",
+            #"section-break": "fa-minus", # UCCE
             "sent": "fa-check",
             "settings": "fa-wrench",
             "share": "fa-share-alt",
@@ -8950,6 +8953,7 @@ class ICON(I):
             "inactive": "fi-x",
             "info": "fi-info",
             "info-circle": "fi-info",
+            #"instructions": "fi-page-edit", # UCCE
             "link": "fi-web",
             "list": "fi-list-thumbnails",
             "location": "fi-map",
@@ -8970,10 +8974,12 @@ class ICON(I):
             "print": "fi-print",
             "radio": "fi-microphone",
             "remove": "fi-x",
+            #"reports": "fi-graph-bar", # UCCE
             "request": "fi-flag",
             "responsibility": "fi-sheriff-badge",
             "return": "fi-arrow-left",
             "rss": "fi-rss",
+            #"section-break": "fi-minus", # UCCE
             "sent": "fi-check",
             "settings": "fi-wrench",
             "share": "fi-share",
@@ -9038,6 +9044,7 @@ class ICON(I):
             "inactive": "icon-check-empty",
             "info": "icon-info",
             "info-circle": "icon-info-sign",
+            #"instructions": "icon-edit", # UCCE
             "link": "icon-external-link",
             "list": "icon-list",
             "location": "icon-globe",
@@ -9059,10 +9066,12 @@ class ICON(I):
             "print": "icon-print",
             "radio": "icon-microphone",
             "remove": "icon-remove",
+            #"reports": "icon-bar-chart", # UCCE
             "request": "icon-flag",
             "responsibility": "icon-briefcase",
             "return": "icon-arrow-left",
             "rss": "icon-rss",
+            #"section-break": "icon-minus", # UCCE
             "sent": "icon-ok",
             "settings": "icon-wrench",
             "share": "icon-share",

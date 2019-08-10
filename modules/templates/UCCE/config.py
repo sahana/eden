@@ -162,6 +162,28 @@ def config(settings):
 
     settings.ui.filter_clear = False
     settings.search.filter_manager = False
+    settings.ui.custom_icons = {
+        "_base": "ucce",
+        #"attachment": "ucce-", # Will fallback
+        "bar-chart": "ucce-reports",
+        "comment-alt": "ucce-textbox",
+        "copy": "ucce-survey-duplicate",
+        "delete": "ucce-survey-delete",
+        "edit": "ucce-survey-edit",
+        "file-text-alt": "ucce-guides",
+        "folder-alt": "ucce-projects",
+        "hashtag": "ucce-number-question",
+        "info-circle": "ucce-info",
+        "instructions": "ucce-instructions",
+        "list": "ucce-mcq",
+        "minus": "ucce-minus",
+        "picture": "ucce-heatmap",
+        "plus": "ucce-plus",
+        "reports": "ucce-reports",
+        "section-break": "ucce-section-break",
+        "tasks": "ucce-likert-scale",
+        "upload": "ucce-survey-export",
+    }
 
     # -------------------------------------------------------------------------
     def ucce_rheader(r):

@@ -64,7 +64,7 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
     record_id = record["doc_document.id"]
     title = raw["doc_document.name"]
     filename = raw["doc_document.file"] or ""
-    url = raw["doc_document.url"] or ""
+    #url = raw["doc_document.url"] or ""
     comments = raw["doc_document.comments"] or ""
     #category = record["doc_document.series_id"]
 
@@ -85,15 +85,15 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
                  " ",
                  _class="card_1_line",
                  )
-    elif url:
-        body = P(ICON("link"),
-                 " ",
-                 SPAN(A(url,
-                        _href=url,
-                        )),
-                 " ",
-                 _class="card_1_line",
-                 )
+    #elif url:
+    #    body = P(ICON("link"),
+    #             " ",
+    #             SPAN(A(url,
+    #                    _href=url,
+    #                    )),
+    #             " ",
+    #             _class="card_1_line",
+    #             )
     else:
         # Shouldn't happen!
         body = P(_class="card_1_line")
@@ -133,7 +133,7 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
                   )
 
     # Render the item
-    item = DIV(DIV(ICON("icon"),
+    item = DIV(DIV(#ICON(icon),
                    SPAN(" %s" % title,
                         _class="card-title"),
                    toolbar,
@@ -392,7 +392,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                   _class="edit-bar fright",
                   )
 
-    item = DIV(DIV(ICON("icon"),
+    item = DIV(DIV(#ICON(icon),
                    SPAN(" %s" % title,
                         _class="card-title"),
                    toolbar,
@@ -1019,7 +1019,7 @@ class dc_TemplateEditor(S3Method):
                 question_types = DIV(DIV(H2(T("Question types")),
                                          _class="row",
                                          ),
-                                     DIV(DIV(ICON("edit"),
+                                     DIV(DIV(ICON("instructions"),
                                              _class="medium-2 columns",
                                              ),
                                          DIV(T("Data collector instructions"),
@@ -1091,7 +1091,7 @@ class dc_TemplateEditor(S3Method):
                                          _class="row draggable",
                                          _id="heatmap",
                                          ),
-                                     DIV(DIV(ICON("minus"),
+                                     DIV(DIV(ICON("section-break"),
                                              _class="medium-2 columns",
                                              ),
                                          DIV(T("Section / Page break"),

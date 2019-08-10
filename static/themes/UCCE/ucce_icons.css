@@ -1,0 +1,118 @@
+@font-face {
+    font-family: "ucce-icons";
+    src: url(UCCEIcons.ttf);
+}
+.ucce {
+  font-family: "ucce-icons";
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  display: inline-block;
+  text-decoration: inherit;
+  font-size: inherit;
+}
+.ucce-up:before {
+  content: "\f100";
+}
+.ucce-down:before {
+  content: "\f101";
+}
+.ucce-up-alt:before {
+  content: "\f102";
+}
+.ucce-down-alt:before {
+  content: "\f103";
+}
+.ucce-prev:before {
+  content: "\f104";
+}
+.ucce-next:before {
+  content: "\f105";
+}
+.ucce-correct:before {
+  content: "\f106";
+}
+.ucce-delete:before {
+  content: "\f107";
+}
+.ucce-delete-page:before {
+  content: "\f108";
+}
+.ucce-duplicate:before {
+  content: "\f109";
+}
+.ucce-edit:before {
+  content: "\f10a";
+}
+.ucce-error:before {
+  content: "\f10b";
+}
+.ucce-minus:before {
+  content: "\f10c";
+}
+.ucce-plus:before {
+  content: "\f10d";
+}
+.ucce-invisible:before {
+  content: "\f10e";
+}
+.ucce-visible:before {
+  content: "\f10f";
+}
+.ucce-search:before {
+  content: "\f110";
+}
+.ucce-guides:before {
+  content: "\f111";
+}
+.ucce-projects:before {
+  content: "\f112";
+}
+.ucce-reports:before {
+  content: "\f113";
+}
+.ucce-instructions:before {
+  content: "\f114";
+}
+.ucce-heatmap:before {
+  content: "\f115";
+}
+.ucce-info:before {
+  content: "\f116";
+}
+.ucce-likert-scale:before {
+  content: "\f117";
+}
+.ucce-mcq:before {
+  content: "\f118";
+}
+.ucce-number-question:before {
+  content: "\f119";
+}
+.ucce-section-break:before {
+  content: "\f11a";
+}
+.ucce-textbox:before {
+  content: "\f11b";
+}
+.ucce-survey-delete:before {
+  content: "\f11c";
+}
+.ucce-survey-duplicate:before {
+  content: "\f11d";
+}
+.ucce-survey-edit:before {
+  content: "\f11e";
+}
+.ucce-survey-export:before {
+  content: "\f11f";
+}
+.ucce-survey-create:before {
+  content: "\f120";
+}
+.ucce-survey-report:before {
+  content: "\f121";
+}

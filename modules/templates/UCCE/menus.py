@@ -111,7 +111,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M()(M("Projects", c="project", f="project", m="datalist", icon="folder-alt")(
                      #M("Create", m="create"),
                        ),
-                   M("Reports", c="dc", f="target", m="datalist", icon="bar-chart")(
+                   M("Reports", c="dc", f="target", m="datalist", icon="reports")(
                      #restrict=[ADMIN])(
                      #M("Create", m="create"),
                      ),

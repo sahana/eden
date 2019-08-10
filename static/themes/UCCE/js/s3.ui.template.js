@@ -9,7 +9,10 @@
   'use strict';
     'use strict';
     var surveyID = 0,
-        images = {}, // Store questionID -> label for images to pipe (Questions with Images & Heatmap regions)
+        imageOptions = [], // Store {label: label,
+                           //        id: questionID,
+                           //        region: regionID
+                           //        } for images that can be piped (Questions with Images & Heatmap regions)
         likertOptions = {
             '1': ['Strongly Disagree', 'Disagree', 'Undecided', 'Agree', 'Strongly Agree'],
             '2': ['Very unsatisfied', 'Unsatisfied', 'Neutral', 'Satisfied', 'Very satisfied'],
@@ -157,15 +160,30 @@
           */
         _addQuestion: function(position, page, type, questionID, load) {
 
-            if (!load) {
-                // Update Data
+            var questionNumber;
+
+            if (load) {
+                // Read QuestionNumber created during loadSurvey
+                for (var i=1, len=Object.keys(questionNumbers).length; i < len; i++) {
+                    if (position == questionNumbers[i]) {
+                        questionNumber = i;
+                        break;
+                    }
+                }
+            } else {
                 if (type == 'instructions') {
+                    // Update Data
                     this.data.layout[position] = {
                         type: 'instructions',
                         do: {text: ''},
                         say: {text: ''},
                    };
                 } else {
+                    // Add QuestionNumber
+                    questionNumber = Object.keys(questionNumbers).length + 1;
+                    questionNumbers[questionNumber] = position;
+
+                    // Update Data
                     this.data.layout[position] = {
                         type: 'question',
                         id: questionID
@@ -178,7 +196,6 @@
             // Build the Question HTML
             var question,
                 thisQuestion,
-                questionNumber,
                 editTab,
                 mandatory,
                 imageHtml,
@@ -187,12 +204,10 @@
                 trash;
 
             if (type == 'instructions') {
-                question = '<div class="thumbnail dl-item" id="instruction-' + position + '" data-page="' + page + '"><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="fa fa-copy"> </i></a><a><i class="fa fa-trash"> </i></a><i class="fa fa-arrows-v"> </i></div></div>';
+                question = '<div class="thumbnail dl-item" id="instruction-' + position + '" data-page="' + page + '"><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="ucce	ucce-duplicate"> </i></a><a><i class="ucce ucce-delete"> </i></a><i class="ucce ucce-up"> </i><i class="ucce ucce-down"> </i></div></div>';
             } else {
                 thisQuestion = this.data.questions[questionID];
-                questionNumber = Object.keys(questionNumbers).length + 1;
-                questionNumbers[questionNumber] = position;
-                question = '<div class="thumbnail dl-item" id="question-' + questionID + '" data-page="' + page + '" data-number="' + questionNumber + '"><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="fa fa-copy"> </i></a><a><i class="fa fa-trash"> </i></a><i class="fa fa-arrows-v"> </i></div></div>';
+                question = '<div class="thumbnail dl-item" id="question-' + questionID + '" data-page="' + page + '" data-number="' + questionNumber + '"><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="ucce	ucce-duplicate"> </i></a><a><i class="ucce ucce-delete"> </i></a><i class="ucce ucce-up"> </i><i class="ucce ucce-down"> </i></div></div>';
                 var checked = '';
                 if (load) {
                     if (thisQuestion.mandatory) {
@@ -201,8 +216,22 @@
                 }
                 mandatory = '<div class="row"><input id="mandatory-' + questionID + '" type="checkbox" ' + checked + ' class="fleft"><label>Make question mandatory</label></div>';
                 if (type != 'heatmap') {
-                    var imageOptions = ''; // @ToDo: Read <option>s from images dict
-                    imageHtml = '<div class="row"><label>Add graphic</label><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><label class="fleft">or pipe question image:</label><select class="fleft"><option value="">select question</option>' + imageOptions + '</select><a id="image-delete-' + questionID + '">Delete</a></div>';
+                    // Upload or Pipe Image
+                    var img,
+                        pipeImage,
+                        optionsHtml = '';
+                    if (load) {
+                        pipeImage = thisQuestion.settings.pipeImage;
+                    }
+                    // @ToDo: This list should be refreshed whenever the dropdown is opened since the options may have changed since originally rendered
+                    for (img in imageOptions) {
+                        if (pipeImage && pipeImage.id == img.id && pipeImage.region == img.region) {
+                            optionsHtml += '<option selected>' + img.label + '</option>';
+                        } else {
+                            optionsHtml += '<option>' + img.label + '</option>';
+                        }
+                    }
+                    imageHtml = '<div class="row"><label>Add graphic</label><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><label class="fleft">or pipe question image:</label><select class="fleft"><option value="">select question</option>' + optionsHtml + '</select><a id="image-delete-' + questionID + '">Delete</a></div>';
                 }
             }
 
@@ -217,7 +246,7 @@
                     }
                     editTab = '<div class="media"><h2>Data collector instructions</h2><label>What to do</label><input id="do-' + position + '" type="text" size=100 placeholder="Type what instructor should do" value="' + doText + '"><label>What to say</label><input id="say-' + position + '" type="text" size=100 placeholder="Type what instructor should say" value="' + sayText + '"></div>';
                     formElements = '#instruction-' + position + ' input';
-                    trash = '#instruction-' + position + ' .fa-trash';
+                    trash = '#instruction-' + position + ' .ucce-delete';
                     break;
 
                 case 'text':
@@ -227,7 +256,7 @@
                     }
                     editTab = '<div class="media"><h2>Text box</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '" type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml;
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
-                    trash = '#question-' + questionID + ' .fa-trash';
+                    trash = '#question-' + questionID + ' .ucce-delete';
                     break;
 
                 case 'number':
@@ -247,11 +276,11 @@
                     var answer = '<div class="row"><h2>Answer</h2><form id="answer-' + questionID + '"><label>Minimum:</label><input id="min-' + questionID + '" name="min" type="number" value="' + min + '"><label>Maximum:</label><input id="max-' + questionID + '" name="max" type="number" value="' + max + '"></form></div>';
                     editTab = '<div class="media"><h2>Number question</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
-                    trash = '#question-' + questionID + ' .fa-trash';
+                    trash = '#question-' + questionID + ' .ucce-delete';
                     break;
 
                 case 'multichoice':
-                    newChoice = '<div class="row"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice"><i class="fa fa-minus-circle"> </i><i class="fa fa-plus-circle"> </i></div>';
+                    newChoice = '<div class="row"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice"><i class="ucce ucce-minus"> </i><i class="ucce ucce-plus"> </i></div>';
                     // @ToDo: Grey the multiple -+ options if they cannot do anything
                     var name = '',
                         choices = newChoice,
@@ -267,7 +296,7 @@
                         if (lenOptions) {
                             choices = '';
                             for (var i=0; i < lenOptions; i++) {
-                                choices += '<div class="row"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice" value="' + options[i] + '"><i class="fa fa-minus-circle"> </i><i class="fa fa-plus-circle"> </i></div>';
+                                choices += '<div class="row"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice" value="' + options[i] + '"><i class="ucce ucce-minus"> </i><i class="ucce ucce-plus"> </i></div>';
                             }
                         }
                         var settings = thisQuestion.settings;
@@ -285,10 +314,10 @@
                                  '<div class="row"><input id="other-' + questionID + '" type="checkbox"' + other + '><label>Add \'other field\'</label></div>' + 
                                  '<div class="row"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" placeholder="Other (please specify)" value="' + other_label + '"' + other_disabled + '></div>' + 
                                  '<div class="row"><input id="multiple-' + questionID + '" type="checkbox"' + multiChecked + '><label>Allow multiple responses</label></div>' +
-                                 '<div class="row"><label class="fleft">Maximum No. of responses:</label><i class="fa fa-minus-circle"> </i> <span id="multiple-count-' + questionID + '">' + multiple + '</span> <i class="fa fa-plus-circle"> </i></div>';
+                                 '<div class="row"><label class="fleft">Maximum No. of responses:</label><i class="ucce ucce-minus"> </i> <span id="multiple-count-' + questionID + '">' + multiple + '</span> <i class="ucce ucce-plus"> </i></div>';
                     editTab = '<div class="media"><h2>Multiple choice question</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
-                    trash = '#question-' + questionID + ' .fa-trash';
+                    trash = '#question-' + questionID + ' .ucce-delete';
                     break;
 
                 case 'likert':
@@ -320,7 +349,7 @@
                     var answer = '<div class="row"><h2>Answer</h2><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please choose scale</option>' + scaleOptions + '</select></div><div class="row">' + displayOptions + '</div>';
                     editTab = '<div class="media"><h2>Likert-scale</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
-                    trash = '#question-' + questionID + ' .fa-trash';
+                    trash = '#question-' + questionID + ' .ucce-delete';
                     break;
 
                 case 'heatmap':
@@ -328,10 +357,10 @@
                     if (load) {
                         name = thisQuestion.name;
                     }
-                    var imageRow = '<div class="row"><h2>Image</h2><input type="file" accept="image/png, image/jpeg" class="fleft"><h3>Number of clicks allowed:</h3><i class="fa fa-minus-circle"> </i> 1 <i class="fa fa-plus-circle"> </i><h3>Tap/click regions:</h3><a class="button tiny">Add region</a><input id="region-' + position + '-1" type="text" placeholder="enter label" disabled></div>';
+                    var imageRow = '<div class="row"><h2>Image</h2><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><h3>Number of clicks allowed:</h3><i class="ucce ucce-minus"> </i> 1 <i class="ucce ucce-plus"> </i><h3>Tap/click regions:</h3><a class="button tiny">Add region</a><input id="region-' + position + '-1" type="text" placeholder="enter label" disabled></div>';
                     editTab = '<div class="media"><h2>Heatmap</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageRow;
                     formElements = '#question-' + questionID + ' input';
-                    trash = '#question-' + questionID + ' .fa-trash';
+                    trash = '#question-' + questionID + ' .ucce-delete';
                     break;
             }
 
@@ -394,27 +423,7 @@
                     }
                 }
                 $('#image-delete-' + questionID).on('click' + ns, function() {
-                    // Remove Image from Server
-                    var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/image_delete.json';
-                    self.ajaxMethod({
-                        url: ajaxURL,
-                        type: 'POST',
-                        dataType: 'json',
-                        success: function(/* data */) {
-                            // Remove Image from Preview
-                            $('#preview-' + questionID).empty()
-                                                       .addClass('preview-empty');
-                        },
-                        error: function(jqXHR, textStatus, errorThrown) {
-                            var msg;
-                            if (errorThrown == 'UNAUTHORIZED') {
-                                msg = i18n.gis_requires_login;
-                            } else {
-                                msg = jqXHR.responseText;
-                            }
-                            console.log(msg);
-                        }
-                    });
+                    self.deleteImage(questionID);
                 });
                 // Image Upload
                 $('#image-' + questionID).fileupload({
@@ -445,12 +454,54 @@
                                     $('#preview-' + questionID).removeClass('preview-empty')
                                                                .empty()
                                                                .append(preview);
+
+                                    var type = thisQuestion.type;
+                                    if (type != 13) {
+                                        // Ensure that we aren't trying to Pipe at the same time
+                                        if (thisQuestion.settings.hasOwnProperty(pipeImage)) {
+                                            $('#pipe-' + questionID).val('')
+                                                                    .trigger('change');
+                                        }
+
+                                        // Check if we should add to ImageOptions
+                                        var img,
+                                            found = false;
+                                        for (img in imageOptions) {
+                                            if (img.id == questionID){
+                                                found = true;
+                                            }
+                                        }
+                                        if (!found) {
+                                            // Read the questionNumber (can't trust original as it may have changed)
+                                            var questionNumber = $('#question-' + questionID).data('number');
+                                            var label = 'Q' + questionNumber + ' ' + typesToText[type];
+                                            // Add to imageOptions
+                                            imageOptions.push({
+                                                label: label,
+                                                id: questionID
+                                            });
+                                        }
+                                    }
+
                                     return img;
+
                                 }, {}); // Empty Options
                                 
                             });
                         }
                     }
+                });
+                // Image Pipe
+                $('#pipe-' + questionID).on('change'+ ns, function() {
+                    var value = $(this).val();
+                    if (val) {
+                        thisQuestion.settings.pipeImage = imageOptions[value];
+                        // Remove any Image
+                        self.deleteImage(questionID);
+                    } else {
+                        delete thisQuestion.settings.pipeImage;
+                    }
+                    self.saveQuestion(type, questionID);
                 });
             }
             
@@ -757,6 +808,43 @@
         },
 
         /**
+          * Delete an Image
+          */
+        deleteImage: function(questionID) {
+            // Remove Image from Server
+            var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/image_delete.json';
+            this.ajaxMethod({
+                url: ajaxURL,
+                type: 'POST',
+                dataType: 'json',
+                success: function(/* data */) {
+                    // Remove Image from Preview
+                    $('#preview-' + questionID).empty()
+                                               .addClass('preview-empty');
+                    // Remove entry from imageOptions
+                    var img,
+                        oldOptions = imageOptions;
+                    imageOptions = [];
+                    for (var i=0, len=oldOptions.length; i < len; i++) {
+                        img = oldOptions[i];
+                        if (img.id != questionID) {
+                            imageOptions.push(img);
+                        }
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    var msg;
+                    if (errorThrown == 'UNAUTHORIZED') {
+                        msg = i18n.gis_requires_login;
+                    } else {
+                        msg = jqXHR.responseText;
+                    }
+                    console.log(msg);
+                }
+            });
+        },
+
+        /**
           * Add a new Section Break
           */
         addSectionBreak: function(position, page, load) {
@@ -765,12 +853,12 @@
             pageElements[page] = 0;
             var delete_btn;
             if (position) {
-                delete_btn = '<i class="fa fa-times-circle"> </i>';
+                delete_btn = '<i class="ucce ucce-delete-page"> </i>';
             } else {
                 // 1st section break: not deletable
                 delete_btn = '';
             }
-            var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-' + position + '" data-page="' + page + '"><span>PAGE ' + page + ' (0 ELEMENTS)</span></div><div class="medium-1 columns">' + delete_btn + '<i class="fa fa-chevron-circle-down"> </i></div></div>';
+            var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-' + position + '" data-page="' + page + '"><span>PAGE ' + page + ' (0 ELEMENTS)</span></div><div class="medium-1 columns">' + delete_btn + '<i class="ucce ucce-down-alt"> </i></div></div>';
             if (position) {
                 // Place before droppable
                 $('#survey-droppable-' + position).before(sectionBreak);
@@ -788,7 +876,7 @@
                 // Events
                 var self = this,
                     ns = this.eventNamespace;
-                $('#section-break-' + position).next().children('.fa-times-circle').on('click' + ns, function(/* event */){
+                $('#section-break-' + position).next().children('.ucce-delete-page').on('click' + ns, function(/* event */){
                     // Delete this section-break
 
                     // Read the position (can't trust original as it may have changed)
@@ -797,7 +885,7 @@
                     self.deleteSectionBreak(currentPosition);
 
                 });
-                //$('#section-break-' + position).next().children('.fa-chevron-circle-down').on('click' + ns, function(/* event */){
+                //$('#section-break-' + position).next().children('.ucce-down-alt').on('click' + ns, function(/* event */){
                     // @ToDo: Unroll this section & rollup others
                 //});
             } else {
@@ -924,12 +1012,58 @@
                 return;
             }
 
-            var item,
+            var file,
+                item,
                 page = 1,
                 questionID,
-                questions = this.data.questions;
+                questionNumber = 0,
+                thisQuestion,
+                base_label,
+                label,
+                questions = this.data.questions,
+                layoutLength = Object.keys(layout).length;
 
-            for (var position=1, len=Object.keys(layout).length; position <= len; position++) {
+            // Loop through layout to build the list of Images
+            // - this requires the Question Numbers too
+            for (var position=1; position <= layoutLength; position++) {
+                item = layout[position];
+                if (item.type == 'break') {
+                    // Skip
+                } else if (item.type == 'instructions') {
+                    // Skip
+                } else {
+                    // Question
+                    questionNumber++
+                    questionNumbers[questionNumber] = position;
+
+                    questionID = item.id,
+                    thisQuestion = questions[questionID];
+                    if (thisQuestion.file) {
+                        if (thisQuestion.type == 13) {
+                            // Heatmap
+                            base_label = 'Q' + questionNumber + ' Heatmap; ';
+                            var regions = thisQuestion.settings.regions;
+                            for (var i=0, len=regions.length; i < len; i++) {
+                                label = base_label + '\'' + regions[i].label + '\'';
+                                imageOptions.push({
+                                    label: label,
+                                    id: questionID,
+                                    region: i
+                                });
+                            }
+                        } else {
+                            label = 'Q' + questionNumber + ' ' + typesToText[thisQuestion.type];
+                            imageOptions.push({
+                                label: label,
+                                id: questionID
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Then loop through layout to add items to page
+            for (var position=1; position <= layoutLength; position++) {
                 item = layout[position];
                 if (item.type == 'break') {
                     this.addSectionBreak(position, page, true);
@@ -945,41 +1079,10 @@
         },
 
         /**
-         * Ajax-reload the data and refresh all widget elements
-         * @ToDo: Complete if-required
-         */
-        reload: function() {
-
-            var self = this,
-                ajaxURL = S3.Ap.concat('/dc/template/') + this.recordID + '.json';
-
-            this.ajaxMethod({
-                url: ajaxURL,
-                type: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    self.input.val(JSON.stringify(data));
-                    self.data = data;
-                    self.refresh();
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    var msg;
-                    if (errorThrown == 'UNAUTHORIZED') {
-                        msg = i18n.gis_requires_login;
-                    } else {
-                        msg = jqXHR.responseText;
-                    }
-                    console.log(msg);
-                }
-            });
-
-        },
-
-        /**
          * Redraw widget contents
          */
         refresh: function() {
-            this._unbindEvents();
+            //this._unbindEvents();
             this._deserialize();
 
             // Add an initial section break
@@ -1007,10 +1110,16 @@
             }
 
             var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/update_json.json',
+                settings = {},
                 data = {
                     name: name,
                     mandatory: $('#mandatory-' + questionID).prop('checked')
                 };
+
+            var pipeImage = this.data[questionID].settings.pipeImage;
+            if (pipeImage) {
+                settings.pipeImage = pipeImage;
+            }
 
             switch(type) {
 
@@ -1036,12 +1145,10 @@
                     } else {
                         max = null;
                     }
-                    data.settings = {
-                        requires: {
-                            isIntInRange: {
-                                min: min,
-                                max: max
-                            }
+                    settings.requires = {
+                        isIntInRange: {
+                            min: min,
+                            max: max
                         }
                     };
                     break;
@@ -1051,37 +1158,33 @@
                         options.push($(this).val());
                     });
                     data.options = options;
-                    var settings = {};
                     if ($('#other-' + questionID).prop('checked')) {
-                        settings['other'] = $('#other-label-' + questionID).val();
+                        settings.other = $('#other-label-' + questionID).val();
                     } else {
-                        settings['other'] = null;
+                        settings.other = null;
                     }
                     if ($('#multiple-' + questionID).prop('checked')) {
-                        settings['multiple'] = parseInt($('#multiple-count-' + questionID).html());
+                        settings.multiple = parseInt($('#multiple-count-' + questionID).html());
                     } else {
-                        settings['multiple'] = 1;
+                        settings.multiple = 1;
                     }
-                    data.settings = settings;
                     break;
                 case 'likert':
                     var scale = $('#scale-' + questionID).val();
                     if (scale) {
                         data.options = likertOptions[scale];
-                        data.settings = {
-                            scale: scale
-                        };
+                        settings.scale = scale;
                     } else {
                         data.options = [];
-                        data.settings = {
-                            scale: null
-                        };
+                        settings.scale = null;
                     }
                     break;
                 case 'heatmap':
                     break;
 
             }
+
+            data.settings = settings;
 
             this.ajaxMethod({
                 url: ajaxURL,
@@ -1145,14 +1248,14 @@
          * (unused)
          *
          * @returns {JSON} the JSON data
-         */
+         *
         _serialize: function() {
 
             var json = JSON.stringify(this.data);
             $(this.element).val(json);
             return json;
 
-        },
+        },*/
 
         /**
          * Parse the JSON from real input into this.data
@@ -1165,40 +1268,39 @@
             this.data = JSON.parse(value);
             return this.data;
 
-        },
+        }
 
         /**
          * Bind event handlers (after refresh)
          *
          * (unused)
-         */
+         *
         _bindEvents: function() {
 
             var self = this,
                 ns = this.eventNamespace;
 
-            /* Bind change event for all the input fields
             var selector = '#' + this.fieldname;
 
             this.inputFields.bind('change' + ns, function() {
                 self._collectData(this);
-            }); */
+            });
 
-        },
+        }, */
 
         /**
          * Unbind events (before refresh)
-         */
+         *
         _unbindEvents: function() {
 
             var ns = this.eventNamespace,
                 el = $(this.element);
 
-            /* this.inputFields.unbind(ns); */
+            //this.inputFields.unbind(ns);
             el.unbind(ns);
 
             return true;
-        }
+        }*/
 
     });
 });
