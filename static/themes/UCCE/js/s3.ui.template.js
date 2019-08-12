@@ -191,7 +191,7 @@
                     };
                 }
                 // Save Template
-                this.save();
+                this.saveLayout();
             }
 
             // Build the Question HTML
@@ -254,8 +254,13 @@
                         sayText = '',
                         sayTextL10n = '';
                     if (load) {
-                        doText = this.data.layout[position].do.text;
-                        sayText = this.data.layout[position].say.text;
+                        var thisLayout = this.data.layout[position];
+                        doText = thisLayout.do.text;
+                        sayText = thisLayout.say.text;
+                        if (l10n && thisLayout.do.l10n) {
+                            doTextL10n = thisLayout.do.l10n[l10n];
+                            sayTextL10n = thisLayout.say.l10n[l10n];
+                        }
                     }
                     editTab = '<div class="media content active" id="edit-' + position + '"><h2>Data collector instructions</h2><label>What to do</label><input id="do-' + position + '" type="text" size=100 placeholder="Type what instructor should do" value="' + doText + '"><label>What to say</label><input id="say-' + position + '" type="text" size=100 placeholder="Type what instructor should say" value="' + sayText + '"></div>';
                     translationTab = '<div class="media content" id="translation-' + position + '"><h2>Data collector instructions</h2><label>What to do</label><input id="do-l10n-' + position + '" type="text" size=100 placeholder="Type translation of what instructor should do" value="' + doTextL10n + '"><label>What to say</label><input id="say-l10n-' + position + '" type="text" size=100 placeholder="Type translation of what instructor should say" value="' + sayTextL10n + '"></div>';
@@ -413,12 +418,24 @@
                     // If form elements change, then Save
                     if (type == 'instructions') {
                         // Can't trust original position as it may have changed
-                        var currentPosition = parseInt(this.id.split('-')[1]);
+                        var parts = this.id.split('-'),
+                            currentPosition = parseInt(parts[parts.length - 1]);
                         // Update Data
-                        self.data.layout[currentPosition].do.text = $('#do-' + currentPosition).val();
-                        self.data.layout[currentPosition].say.text = $('#say-' + currentPosition).val();
+                        var thisLayout = self.data.layout[currentPosition];
+                        thisLayout.do.text = $('#do-' + currentPosition).val();
+                        thisLayout.say.text = $('#say-' + currentPosition).val();
+                        if (l10n) {
+                            if (!thisLayout.do.hasOwnProperty('10n')) {
+                                thisLayout.do.l10n = {};
+                            }
+                            thisLayout.do.l10n[l10n] = $('#do-l10n-' + currentPosition).val();
+                            if (!thisLayout.say.hasOwnProperty('10n')) {
+                                thisLayout.say.l10n = {};
+                            }
+                            thisLayout.say.l10n[l10n] = $('#say-l10n-' + currentPosition).val();
+                        }
                         // Save Template
-                        self.save();
+                        self.saveLayout();
                     } else {
                         // Save Question
                         self.saveQuestion(type, questionID);
@@ -736,6 +753,15 @@
                 case 'heatmap':
                     break;
             }
+
+            // Run Foundation JS on new Item
+            //- needed for Tabs
+            if (type == 'instructions') {
+                $('#instruction-' + position).foundation();
+            } else {
+                $('#question-' + questionID).foundation();
+            }
+
         },
 
         /**
@@ -816,6 +842,8 @@
                         $('#instruction-' + oldPosition).attr('id', 'instruction-' + i);
                         $('#do-' + oldPosition).attr('id', 'do-' + i);
                         $('#say-' + oldPosition).attr('id', 'say-' + i);
+                        $('#do-l10n-' + oldPosition).attr('id', 'do-l10n-' + i);
+                        $('#say-l10n-' + oldPosition).attr('id', 'say-l10n-' + i);
                     }
                 }
             }
@@ -829,7 +857,7 @@
             }
 
             // Save Layout
-            this.save();
+            this.saveLayout();
 
             // Remove from DOM
             if (type == 'instructions') {
@@ -986,7 +1014,7 @@
                     // Update Data
                     this.data.layout[position] = {type: 'break'};
                     // Save to Server
-                    this.save();
+                    this.saveLayout();
                 }
                 // Events
                 var self = this,
@@ -1076,7 +1104,7 @@
             delete layout[layoutLength];
 
             // Save Layout
-            this.save();
+            this.saveLayout();
             // Remove from DOM
             $('#section-break-' + currentPosition).parent().remove();
             // Update droppable ID
@@ -1327,9 +1355,9 @@
         },
 
         /**
-         * Ajax-update the Template
+         * Ajax-update the Template's Layout
          */
-        save: function() {
+        saveLayout: function() {
 
             var ajaxURL = S3.Ap.concat('/dc/template/') + this.recordID + '/update_json.json';
 
