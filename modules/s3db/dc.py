@@ -386,7 +386,7 @@ class DataCollectionTemplateModel(S3Model):
                            label = T("Translated Question"),
                            ),
                      Field("options_l10n", "json",
-                           label = T("Translated Options"),
+                           label = T("Translated Options"), # Regions for Heatmap Questions
                            represent = lambda opts: ", ".join(json.loads(opts)),
                            requires = IS_EMPTY_OR(IS_JSONS3()),
                            ),

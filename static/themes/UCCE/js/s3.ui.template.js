@@ -6,7 +6,6 @@
   // Browser globals (not AMD or Node):
   factory(window.jQuery, window.loadImage);
 })(function($, loadImage) {
-  'use strict';
     'use strict';
     var surveyID = 0,
         imageOptions = [], // Store {label: label, (just held locally)
@@ -189,6 +188,10 @@
                         type: 'question',
                         id: questionID
                     };
+                    this.data.questions[questionID] = {
+                        type: typesToInt[type],
+                        settings: {}
+                    };
                 }
                 // Save Template
                 this.saveLayout();
@@ -220,8 +223,8 @@
             } else {
                 idHtml = 'question-' + questionID;
                 dataHtml = ' data-number="' + questionNumber + '"';
-                thisQuestion = this.data.questions[questionID];
                 var checked = '';
+                thisQuestion = this.data.questions[questionID];
                 if (load) {
                     if (thisQuestion.mandatory) {
                         checked = ' checked';
@@ -273,6 +276,9 @@
                         nameL10n = '';
                     if (load) {
                         name = thisQuestion.name;
+                        if (l10n) {
+                            nameL10n = thisQuestion.name_l10n || '';
+                        }
                     }
                     editTab = '<div class="media content active" id="edit-' + position + '"><h2>Text box</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '" type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + '</div>';
                     translationTab = '<div class="media content" id="translation-' + position + '"><h2>Text box</h2><div class="row"><label id="qlabel-l10n-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>';
@@ -282,10 +288,14 @@
 
                 case 'number':
                     var name = '',
+                        nameL10n = '',
                         min = '',
                         max = '';
                     if (load) {
                         name = thisQuestion.name;
+                        if (l10n) {
+                            nameL10n = thisQuestion.name_l10n || '';
+                        }
                         var settings = thisQuestion.settings || {},
                             requires = settings.requires || {},
                             isIntInRange = requires.isIntInRange;
@@ -295,8 +305,8 @@
                         }
                     }
                     editTab = '<div class="media content active" id="edit-' + position + '"><h2>Number question</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml +
-                              '<div class="row"><h2>Answer</h2><form id="answer-' + questionID + '"><label>Minimum:</label><input id="min-' + questionID + '" name="min" type="number" value="' + min + '"><label>Maximum:</label><input id="max-' + questionID + '" name="max" type="number" value="' + max + '"></form></div>';
-                    translationTab = '<div class="media content" id="translation-' + position + '"></div';
+                              '<div class="row"><h2>Answer</h2><form id="answer-' + questionID + '"><label>Minimum:</label><input id="min-' + questionID + '" name="min" type="number" value="' + min + '"><label>Maximum:</label><input id="max-' + questionID + '" name="max" type="number" value="' + max + '"></form></div></div>';
+                    translationTab = '<div class="media content" id="translation-' + position + '"><h2>Number question</h2><div class="row"><label id="qlabel-l10n-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-l10n-' + questionID + '"type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .ucce-delete';
                     break;
@@ -305,6 +315,7 @@
                     newChoice = '<div class="row"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice"><i class="ucce ucce-minus"> </i><i class="ucce ucce-plus"> </i></div>';
                     // @ToDo: Grey the multiple -+ options if they cannot do anything
                     var name = '',
+                        nameL10n = '',
                         choices = newChoice,
                         other = '',
                         other_disabled = ' disabled',
@@ -313,6 +324,9 @@
                         multiChecked = '';
                     if (load) {
                         name = thisQuestion.name;
+                        if (l10n) {
+                            nameL10n = thisQuestion.name_l10n || '';
+                        }
                         var options = thisQuestion.options || [],
                             lenOptions = options.length;
                         if (lenOptions) {
@@ -337,15 +351,16 @@
                               '<div class="row"><input id="other-' + questionID + '" type="checkbox"' + other + '><label>Add \'other field\'</label></div>' + 
                               '<div class="row"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" placeholder="Other (please specify)" value="' + other_label + '"' + other_disabled + '></div>' + 
                               '<div class="row"><input id="multiple-' + questionID + '" type="checkbox"' + multiChecked + '><label>Allow multiple responses</label></div>' +
-                              '<div class="row"><label class="fleft">Maximum No. of responses:</label><i class="ucce ucce-minus"> </i> <span id="multiple-count-' + questionID + '">' + multiple + '</span> <i class="ucce ucce-plus"> </i></div>';
+                              '<div class="row"><label class="fleft">Maximum No. of responses:</label><i class="ucce ucce-minus"> </i> <span id="multiple-count-' + questionID + '">' + multiple + '</span> <i class="ucce ucce-plus"> </i></div></div>';
                     
-                    translationTab = '<div class="media content" id="translation-' + position + '"></div';
+                    translationTab = '<div class="media content" id="translation-' + position + '"><h2>Multiple choice question</h2><div class="row"><label id="qlabel-l10n-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-l10n-' + questionID + '"type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .ucce-delete';
                     break;
 
                 case 'likert':
                     var name = '',
+                        nameL10n = '',
                         displayOptions = '',
                         scales = [
                             '<option value="1">Agreement (Disagree - Agree)</option>',
@@ -355,6 +370,9 @@
                             ];
                     if (load) {
                         name = thisQuestion.name;
+                        if (l10n) {
+                            nameL10n = thisQuestion.name_l10n || '';
+                        }
                         var settings = thisQuestion.settings;
                         if (settings && settings.hasOwnProperty('scale')) {
                             var scale = settings.scale;
@@ -371,20 +389,25 @@
                     }
                     var scaleOptions = scales.join();
                     editTab = '<div class="media content active" id="edit-' + position + '"><h2>Likert-scale</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml +
-                              '<div class="row"><h2>Answer</h2><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please choose scale</option>' + scaleOptions + '</select></div><div class="row">' + displayOptions + '</div>';
-                    translationTab = '<div class="media content" id="translation-' + position + '"></div';
+                              '<div class="row"><h2>Answer</h2><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please choose scale</option>' + scaleOptions + '</select></div><div class="row">' + displayOptions + '</div></div>';
+                    translationTab = '<div class="media content" id="translation-' + position + '"><h2>Likert-scale</h2><div class="row"><label id="qlabel-l10n-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-l10n-' + questionID + '"type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .ucce-delete';
                     break;
 
                 case 'heatmap':
-                    var name = '';
+                    var name = '',
+                        nameL10n = '',
+                        optionsL10n = '';
                     if (load) {
                         name = thisQuestion.name;
+                        if (l10n) {
+                            nameL10n = thisQuestion.name_l10n || '';
+                        }
                     }
-                    var imageRow = '<div class="row"><h2>Image</h2><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><h3>Number of clicks allowed:</h3><i class="ucce ucce-minus"> </i> 1 <i class="ucce ucce-plus"> </i><h3>Tap/click regions:</h3><a class="button tiny">Add region</a><input id="region-' + position + '-1" type="text" placeholder="enter label" disabled></div>';
-                    editTab = '<div class="media content active" id="edit-' + position + '"><h2>Heatmap</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageRow;
-                    translationTab = '<div class="media content" id="translation-' + position + '"></div';
+                    editTab = '<div class="media content active" id="edit-' + position + '"><h2>Heatmap</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory +
+                              '<div class="row"><h2>Image</h2><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><h3>Number of clicks allowed:</h3><i class="ucce ucce-minus"> </i> 1 <i class="ucce ucce-plus"> </i><h3>Tap/click regions:</h3><a class="button tiny">Add region</a><input id="region-' + position + '-1" type="text" placeholder="enter label" disabled></div></div>';
+                    translationTab = '<div class="media content" id="translation-' + position + '"><h2>Heatmap</h2><div class="row"><label id="qlabel-l10n-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-l10n-' + questionID + '"type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div';
                     formElements = '#question-' + questionID + ' input';
                     trash = '#question-' + questionID + ' .ucce-delete';
                     break;
@@ -767,7 +790,7 @@
         /**
           * Delete a Question
           */
-        deleteQuestion: function(type, questionID, that) {
+        deleteQuestion: function(type, questionID, deleteBtn) {
 
             var currentPage,
                 currentPosition,
@@ -775,7 +798,7 @@
 
             if (type == 'instructions') {
                 // Read the position (can't trust original as it may have changed)
-                currentPosition = parseInt($(that).closest('.dl-item').attr('id').split('-')[1]);
+                currentPosition = parseInt($(deleteBtn).closest('.dl-item').attr('id').split('-')[1]);
                 // Read the current page
                 currentPage = $('#instruction-' + currentPosition).data('page');
             } else {
@@ -801,10 +824,13 @@
 
             // Update layout & all subsequent items in it
             var item,
+                $item,
                 oldPosition,
                 thisQuestionID,
                 oldQuestionNumber,
                 newQuestionNumber,
+                oldHref,
+                newHref,
                 layout = this.data.layout;
             var layoutLength = Object.keys(layout).length;
             for (var i=currentPosition; i < layoutLength; i++) {
@@ -813,38 +839,53 @@
                 item = layout[oldPosition];
                 // Move item to it's new position in the layout
                 layout[i] = item;
-                if (item.type == 'question') {
-                    thisQuestionID = item.id;
-                    oldQuestionNumber = $('#question-' + thisQuestionID).data('number');
-                    if (type == 'instructions') {
-                        // Not a Question deleted, so just need to update position
-                        //newQuestionNumber = oldQuestionNumber;
-                        // Update questionNumbers
-                        questionNumbers[oldQuestionNumber] = i;
-                    } else {
-                        // Question deleted so need to update both numbers & positions
-
-                        // Update questionNumber
-                        newQuestionNumber = oldQuestionNumber - 1;
-                        $('#question-' + thisQuestionID).data('number', newQuestionNumber);
-                        // Update visual element
-                        $('#qlabel-' + thisQuestionID).html('Q' + newQuestionNumber);
-                        // Update questionNumbers
-                        questionNumbers[newQuestionNumber] = i;
-                    }
+                if (item.type == 'break') {
+                    // Update ID
+                    $('#section-break-' + oldPosition).attr('id', 'section-break-' + i);
                 } else {
-                    if (item.type == 'break') {
-                        // Update ID
-                        $('#section-break-' + oldPosition).attr('id', 'section-break-' + i);
+                    if (item.type == 'question') {
+                        thisQuestionID = item.id;
+                        $item = $('#question-' + thisQuestionID);
+                        oldQuestionNumber = $item.data('number');
+                        if (type == 'instructions') {
+                            // Not a Question deleted, so just need to update position
+                            //newQuestionNumber = oldQuestionNumber;
+                            // Update questionNumbers
+                            questionNumbers[oldQuestionNumber] = i;
+                        } else {
+                            // Question deleted so need to update both numbers & positions
+
+                            // Update questionNumber
+                            newQuestionNumber = oldQuestionNumber - 1;
+                            $item.data('number', newQuestionNumber);
+                            // Update visual elements
+                            $('#qlabel-' + thisQuestionID).html('Q' + newQuestionNumber);
+                            $('#qlabel-l10n-' + thisQuestionID).html('Q' + newQuestionNumber);
+                            // Update questionNumbers
+                            questionNumbers[newQuestionNumber] = i;
+                        }
                     } else {
                         // Instructions
                         // Update IDs
                         $('#instruction-' + oldPosition).attr('id', 'instruction-' + i);
+                        $item = $('#instruction-' + i);
                         $('#do-' + oldPosition).attr('id', 'do-' + i);
                         $('#say-' + oldPosition).attr('id', 'say-' + i);
                         $('#do-l10n-' + oldPosition).attr('id', 'do-l10n-' + i);
                         $('#say-l10n-' + oldPosition).attr('id', 'say-l10n-' + i);
                     }
+                    // Update Tab contents
+                    $('#edit-' + oldPosition).attr('id', 'edit-' + i);
+                    $('#logic-' + oldPosition).attr('id', 'logic-' + i);
+                    $('#translation-' + oldPosition).attr('id', 'translation-' + i);
+                    // Update links to Tabs
+                    $item.find('li.tab-title > a').each(function() {
+                        var $this = $(this);
+                        oldHref = $this.attr('href');
+                        newHref = oldHref.split('-')[0];
+                        newHref = newHref.substring(1, newHref.length);
+                        $this.attr('href', '#' + newHref + '-' + i);
+                    });
                 }
             }
 
@@ -1069,34 +1110,53 @@
                 var item,
                     thisPage,
                     oldPosition,
-                    questionNumber;
+                    oldHref,
+                    newHref,
+                    questionNumber,
+                    $item;
                 for (var i=currentPosition; i < layoutLength; i++) {
                     oldPosition = i + 1;
                     //newPosition = i;
                     item = layout[oldPosition];
                     // Move item to it's new position in the layout
                     layout[i] = item;
-                    if (item.type == 'question') {
-                        // Update questionNumbers
-                        questionNumber = $('#question-' + item.id).data('number');
-                        questionNumbers[questionNumber] = i;
+                    if (item.type == 'break') {
+                        // Read Page
+                        thisPage = $('#section-break-' + oldPosition).data('page') - 1;
+                        // Update Page
+                        $('#section-break-' + oldPosition).data('page', thisPage);
+                        // Update visual elements
+                        $('#section-break-' + oldPosition + ' > span').html('PAGE ' + thisPage + ' (' + pageElements[thisPage] + ' ELEMENTS)');
+                        // Update ID
+                        $('#section-break-' + oldPosition).attr('id', 'section-break-' + i);
                     } else {
-                        if (item.type == 'break') {
-                            // Read Page
-                            thisPage = $('#section-break-' + oldPosition).data('page') - 1;
-                            // Update Page
-                            $('#section-break-' + oldPosition).data('page', thisPage);
-                            // Update visual elements
-                            $('#section-break-' + oldPosition + ' > span').html('PAGE ' + thisPage + ' (' + pageElements[thisPage] + ' ELEMENTS)');
-                            // Update ID
-                            $('#section-break-' + oldPosition).attr('id', 'section-break-' + i);
+                        if (item.type == 'question') {
+                            // Update questionNumbers
+                            $item = $('#question-' + item.id);
+                            questionNumber = $item.data('number');
+                            questionNumbers[questionNumber] = i;
                         } else {
                             // Instructions
                             // Update IDs
                             $('#instruction-' + oldPosition).attr('id', 'instruction-' + i);
+                            $item = $('#instruction-' + i);
                             $('#do-' + oldPosition).attr('id', 'do-' + i);
                             $('#say-' + oldPosition).attr('id', 'say-' + i);
+                            $('#do-l10n-' + oldPosition).attr('id', 'do-' + i);
+                            $('#say-l10n-' + oldPosition).attr('id', 'say-' + i);
                         }
+                        // Update Tab contents
+                        $('#edit-' + oldPosition).attr('id', 'edit-' + i);
+                        $('#logic-' + oldPosition).attr('id', 'logic-' + i);
+                        $('#translation-' + oldPosition).attr('id', 'translation-' + i);
+                        // Update links to Tabs
+                        $item.find('li.tab-title > a').each(function() {
+                            var $this = $(this);
+                            oldHref = $this.attr('href');
+                            newHref = oldHref.split('-')[0];
+                            newHref = newHref.substring(1, newHref.length);
+                            $this.attr('href', '#' + newHref + '-' + i);
+                        });
                     }
                 }
             }

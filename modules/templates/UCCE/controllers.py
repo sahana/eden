@@ -1175,14 +1175,30 @@ class dc_TemplateEditor(S3Method):
                                                                          qtable.settings,
                                                                          qtable.file,
                                                                          )
+                    if l10n:
+                        l10table = s3db.dc_question_l10n
+                        question_ids = [question.id for question in qrows]
+                        query = (l10table.question_id.belongs(question_ids)) & \
+                                (l10table.language == l10n)
+                        trows = db(query).select(l10table.question_id,
+                                                 l10table.name_l10n,
+                                                 l10table.options_l10n,
+                                                 )
+                        questions_l10n = trows.as_dict(key="question_id")
                     for question in qrows:
-                        questions[question.id] = {"name": question.name or '',
-                                                  "type": question.field_type,
-                                                  "mandatory": question.require_not_empty,
-                                                  "options": question.options or {},
-                                                  "settings": question.settings or {},
-                                                  "file": question.file,
-                                                  }
+                        question_id = question.id
+                        this_question = {"name": question.name or '',
+                                         "type": question.field_type,
+                                         "mandatory": question.require_not_empty,
+                                         "options": question.options or {},
+                                         "settings": question.settings or {},
+                                         "file": question.file,
+                                         }
+                        if l10n:
+                            if question_id in questions_l10n:
+                                this_question["name_l10n"] = questions_l10n[question_id].get("name_l10n")
+                                this_question["options_l10n"] = questions_l10n[question_id].get("options_l10n")
+                        questions[question_id] = this_question
 
                     data = {"layout": record.layout or {},
                             "questions": questions,
