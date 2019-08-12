@@ -9,9 +9,9 @@
   'use strict';
     'use strict';
     var surveyID = 0,
-        imageOptions = [], // Store {label: label,
-                           //        id: questionID,
-                           //        region: regionID
+        imageOptions = [], // Store {label: label, (just held locally)
+                           //        id: questionID, {Also on server in settings.pipeImage)
+                           //        region: regionID {Also on server in settings.pipeImage)
                            //        } for images that can be piped (Questions with Images & Heatmap regions)
         likertOptions = {
             '1': ['Strongly Disagree', 'Disagree', 'Undecided', 'Agree', 'Strongly Agree'],
@@ -224,14 +224,17 @@
                         pipeImage = thisQuestion.settings.pipeImage;
                     }
                     // @ToDo: This list should be refreshed whenever the dropdown is opened since the options may have changed since originally rendered
-                    for (img in imageOptions) {
-                        if (pipeImage && pipeImage.id == img.id && pipeImage.region == img.region) {
-                            optionsHtml += '<option selected>' + img.label + '</option>';
-                        } else {
-                            optionsHtml += '<option>' + img.label + '</option>';
+                    for (var i=0, len=imageOptions.length; i < len; i++) {
+                        img = imageOptions[i];
+                        if (img.id != questionID) {
+                            if (pipeImage && pipeImage.id == img.id && pipeImage.region == img.region) {
+                                optionsHtml += '<option selected>' + img.label + '</option>';
+                            } else {
+                                optionsHtml += '<option>' + img.label + '</option>';
+                            }
                         }
                     }
-                    imageHtml = '<div class="row"><label>Add graphic</label><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><label class="fleft">or pipe question image:</label><select class="fleft"><option value="">select question</option>' + optionsHtml + '</select><a id="image-delete-' + questionID + '">Delete</a></div>';
+                    imageHtml = '<div class="row"><label>Add graphic</label><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><label class="fleft">or pipe question image:</label><select id="pipe-' + questionID + '" class="fleft"><option value="">select question</option>' + optionsHtml + '</select><a id="image-delete-' + questionID + '">Delete</a></div>';
                 }
             }
 
@@ -399,6 +402,31 @@
                         self.saveQuestion(type, questionID);
                     }
                 });
+                
+                if ((type != 'instructions') && (type != 'heatmap')) {
+                    // Image Pipe
+                    $('#pipe-' + questionID).on('change'+ ns, function() {
+                        var value = $(this).val();
+                        if (value) {
+                            var img;
+                            for (var i=0, len=imageOptions.length; i < len; i++) {
+                                img = imageOptions[i];
+                                if (img.label == value) {
+                                thisQuestion.settings.pipeImage = {
+                                    id: img.id,
+                                    region: img.region
+                                };
+                                    break;
+                                }
+                            }
+                            // Remove any Image
+                            self.deleteImage(questionID);
+                        } else {
+                            delete thisQuestion.settings.pipeImage;
+                        }
+                        self.saveQuestion(type, questionID);
+                    });
+                }
             };
             inputEvents();
             
@@ -490,18 +518,6 @@
                             });
                         }
                     }
-                });
-                // Image Pipe
-                $('#pipe-' + questionID).on('change'+ ns, function() {
-                    var value = $(this).val();
-                    if (val) {
-                        thisQuestion.settings.pipeImage = imageOptions[value];
-                        // Remove any Image
-                        self.deleteImage(questionID);
-                    } else {
-                        delete thisQuestion.settings.pipeImage;
-                    }
-                    self.saveQuestion(type, questionID);
                 });
             }
             
@@ -811,37 +827,40 @@
           * Delete an Image
           */
         deleteImage: function(questionID) {
-            // Remove Image from Server
-            var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/image_delete.json';
-            this.ajaxMethod({
-                url: ajaxURL,
-                type: 'POST',
-                dataType: 'json',
-                success: function(/* data */) {
-                    // Remove Image from Preview
-                    $('#preview-' + questionID).empty()
-                                               .addClass('preview-empty');
-                    // Remove entry from imageOptions
-                    var img,
-                        oldOptions = imageOptions;
-                    imageOptions = [];
-                    for (var i=0, len=oldOptions.length; i < len; i++) {
-                        img = oldOptions[i];
-                        if (img.id != questionID) {
-                            imageOptions.push(img);
+            var preview = $('#preview-' + questionID);
+            if (!preview.hasClass('preview-empty')) {
+                // Remove Image from Server
+                var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/image_delete.json';
+                this.ajaxMethod({
+                    url: ajaxURL,
+                    type: 'POST',
+                    dataType: 'json',
+                    success: function(/* data */) {
+                        // Remove Image from Preview
+                        preview.empty()
+                               .addClass('preview-empty');
+                        // Remove entry from imageOptions
+                        var img,
+                            oldOptions = imageOptions;
+                        imageOptions = [];
+                        for (var i=0, len=oldOptions.length; i < len; i++) {
+                            img = oldOptions[i];
+                            if (img.id != questionID) {
+                                imageOptions.push(img);
+                            }
                         }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        var msg;
+                        if (errorThrown == 'UNAUTHORIZED') {
+                            msg = i18n.gis_requires_login;
+                        } else {
+                            msg = jqXHR.responseText;
+                        }
+                        console.log(msg);
                     }
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    var msg;
-                    if (errorThrown == 'UNAUTHORIZED') {
-                        msg = i18n.gis_requires_login;
-                    } else {
-                        msg = jqXHR.responseText;
-                    }
-                    console.log(msg);
-                }
-            });
+                });
+            }
         },
 
         /**
@@ -1018,6 +1037,7 @@
                 questionID,
                 questionNumber = 0,
                 thisQuestion,
+                regions,
                 base_label,
                 label,
                 questions = this.data.questions,
@@ -1042,7 +1062,7 @@
                         if (thisQuestion.type == 13) {
                             // Heatmap
                             base_label = 'Q' + questionNumber + ' Heatmap; ';
-                            var regions = thisQuestion.settings.regions;
+                            regions = thisQuestion.settings.regions;
                             for (var i=0, len=regions.length; i < len; i++) {
                                 label = base_label + '\'' + regions[i].label + '\'';
                                 imageOptions.push({
@@ -1116,7 +1136,7 @@
                     mandatory: $('#mandatory-' + questionID).prop('checked')
                 };
 
-            var pipeImage = this.data[questionID].settings.pipeImage;
+            var pipeImage = this.data.questions[questionID].settings.pipeImage;
             if (pipeImage) {
                 settings.pipeImage = pipeImage;
             }

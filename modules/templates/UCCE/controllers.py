@@ -481,11 +481,14 @@ class dc_QuestionImageDelete(S3Method):
                 record_id = r.id
                 if not current.auth.s3_has_permission("update", table, record_id=record_id):
                     r.unauthorised()
-                # Delete from filesystem
-                os.remove(os.path.join(table.file.uploadfolder, r.record.file))
 
-                # Update record
-                current.db(table.id == record_id).update(file = None)
+                filename = r.record.file
+                if filename:
+                    # Delete from filesystem
+                    os.remove(os.path.join(table.file.uploadfolder, filename))
+
+                    # Update record
+                    current.db(table.id == record_id).update(file = None)
 
                 # Results (Empty Message so we don't get it shown to User)
                 current.response.headers["Content-Type"] = "application/json"
