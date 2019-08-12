@@ -164,7 +164,7 @@
 
             if (load) {
                 // Read QuestionNumber created during loadSurvey
-                for (var i=1, len=Object.keys(questionNumbers).length; i < len; i++) {
+                for (var i=1, len=Object.keys(questionNumbers).length; i <= len; i++) {
                     if (position == questionNumbers[i]) {
                         questionNumber = i;
                         break;
@@ -217,24 +217,8 @@
                 mandatory = '<div class="row"><input id="mandatory-' + questionID + '" type="checkbox" ' + checked + ' class="fleft"><label>Make question mandatory</label></div>';
                 if (type != 'heatmap') {
                     // Upload or Pipe Image
-                    var img,
-                        pipeImage,
-                        optionsHtml = '';
-                    if (load) {
-                        pipeImage = thisQuestion.settings.pipeImage;
-                    }
-                    // @ToDo: This list should be refreshed whenever the dropdown is opened since the options may have changed since originally rendered
-                    for (var i=0, len=imageOptions.length; i < len; i++) {
-                        img = imageOptions[i];
-                        if (img.id != questionID) {
-                            if (pipeImage && pipeImage.id == img.id && pipeImage.region == img.region) {
-                                optionsHtml += '<option selected>' + img.label + '</option>';
-                            } else {
-                                optionsHtml += '<option>' + img.label + '</option>';
-                            }
-                        }
-                    }
-                    imageHtml = '<div class="row"><label>Add graphic</label><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><label class="fleft">or pipe question image:</label><select id="pipe-' + questionID + '" class="fleft"><option value="">select question</option>' + optionsHtml + '</select><a id="image-delete-' + questionID + '">Delete</a></div>';
+                    var optionsHtml = this.pipeOptionsHtml(questionID, load);
+                    imageHtml = '<div class="row"><label>Add graphic</label><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><label class="fleft">or pipe question image:</label><select id="pipe-' + questionID + '" class="fleft">' + optionsHtml + '</select><a id="image-delete-' + questionID + '">Delete</a></div>';
                 }
             }
 
@@ -412,10 +396,10 @@
                             for (var i=0, len=imageOptions.length; i < len; i++) {
                                 img = imageOptions[i];
                                 if (img.label == value) {
-                                thisQuestion.settings.pipeImage = {
-                                    id: img.id,
-                                    region: img.region
-                                };
+                                    thisQuestion.settings.pipeImage = {
+                                        id: img.id,
+                                        region: img.region
+                                    };
                                     break;
                                 }
                             }
@@ -486,12 +470,13 @@
                                     var type = thisQuestion.type;
                                     if (type != 13) {
                                         // Ensure that we aren't trying to Pipe at the same time
-                                        if (thisQuestion.settings.hasOwnProperty(pipeImage)) {
+                                        if (thisQuestion.settings.hasOwnProperty('pipeImage')) {
                                             $('#pipe-' + questionID).val('')
                                                                     .trigger('change');
                                         }
 
                                         // Check if we should add to ImageOptions
+                                        // (not done for Heatmaps, except for regions)
                                         var img,
                                             found = false;
                                         for (img in imageOptions) {
@@ -508,6 +493,24 @@
                                                 label: label,
                                                 id: questionID
                                             });
+                                        }
+
+                                        // Update the Pipe Options HTML for each question
+                                        var item,
+                                            thatQuestionID,
+                                            thatQuestion,
+                                            questions = self.data.questions,
+                                            layout = self.data.layout;
+                                        for (var position=1; position <= Object.keys(layout).length; position++) {
+                                            item = layout[position];
+                                            if (item.type == 'question') {
+                                                thatQuestionID = item.id;
+                                                thatQuestion = questions[thatQuestionID];
+                                                if (thatQuestion.type != 13) {
+                                                    $('#pipe-' + thatQuestionID).empty()
+                                                                                .append(self.pipeOptionsHtml(thatQuestionID));
+                                                }
+                                            }
                                         }
                                     }
 
@@ -824,10 +827,36 @@
         },
 
         /**
+          * Produce the Options HTML for the Pipe dropdown
+          */
+        pipeOptionsHtml: function(questionID, load) {
+        
+            var img,
+                pipeImage,
+                thisQuestion = this.data.questions[questionID],
+                optionsHtml = '<option value="">select question</option>';
+            if (thisQuestion && thisQuestion.settings && thisQuestion.settings.pipeImage) {
+                pipeImage = thisQuestion.settings.pipeImage;
+            }
+            for (var i=0, len=imageOptions.length; i < len; i++) {
+                img = imageOptions[i];
+                if (img.id != questionID) {
+                    if (pipeImage && pipeImage.id == img.id && pipeImage.region == img.region) {
+                        optionsHtml += '<option selected>' + img.label + '</option>';
+                    } else {
+                        optionsHtml += '<option>' + img.label + '</option>';
+                    }
+                }
+            }
+            return optionsHtml;
+        },
+
+        /**
           * Delete an Image
           */
         deleteImage: function(questionID) {
-            var preview = $('#preview-' + questionID);
+            var self = this,
+                preview = $('#preview-' + questionID);
             if (!preview.hasClass('preview-empty')) {
                 // Remove Image from Server
                 var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/image_delete.json';
@@ -847,6 +876,23 @@
                             img = oldOptions[i];
                             if (img.id != questionID) {
                                 imageOptions.push(img);
+                            }
+                        }
+                        // Update the Pipe Options HTML for each question
+                        var item,
+                            thisQuestionID,
+                            thisQuestion,
+                            questions = self.data.questions,
+                            layout = self.data.layout;
+                        for (var position=1; position <= Object.keys(layout).length; position++) {
+                            item = layout[position];
+                            if (item.type == 'question') {
+                                thisQuestionID = item.id;
+                                thisQuestion = questions[thisQuestionID];
+                                if (thisQuestion.type != 13) {
+                                    $('#pipe-' + thisQuestionID).empty()
+                                                                .append(self.pipeOptionsHtml(thisQuestionID));
+                                }
                             }
                         }
                     },
