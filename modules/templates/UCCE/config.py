@@ -56,6 +56,19 @@ def config(settings):
 
     settings.security.policy = 6 # Controller, Function, Table ACLs and Entity Realm
 
+    # L10n settings
+    # Languages used in the deployment (used for Language Toolbar, GIS Locations, etc)
+    # http://www.loc.gov/standards/iso639-2/php/code_list.php
+    settings.L10n.languages = OrderedDict([
+        ("en-gb", "English"),
+        #("so", "Somali"),
+    ])
+    # Default language for Language Toolbar (& GIS Locations in future)
+    settings.L10n.default_language = "en-gb"
+
+    l10n_options = {"so": "Somali",
+                    }
+
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
@@ -276,73 +289,6 @@ def config(settings):
         return rheader
 
     # -------------------------------------------------------------------------
-    def dc_target_create_onaccept(form):
-        """
-            Create a Template with the same name as the Target
-                Copy the masterkey to the s3_table
-            Link the Target to this new Template
-        """
-
-        form_vars_get = form.vars.get
-        template_id = form_vars_get("template_id")
-        if template_id:
-            # We already have a template, e.g. prepop
-            return
-
-        db = current.db
-        s3db = current.s3db
-        target_id = form_vars_get("id")
-        name = form_vars_get("name")
-
-        template = {"name": name}
-        tetable = s3db.dc_template
-        template_id = tetable.insert(**template)
-        template["id"] = template_id
-        onaccept = s3db.get_config("dc_template", "create_onaccept")
-        onaccept(Storage(vars = template))
-
-        tatable = s3db.dc_target
-        db(tatable.id == target_id).update(template_id = template_id)
-
-        ltable = s3db.project_project_target
-        pmtable = s3db.project_project_masterkey
-        query = (ltable.target_id == target_id) & \
-                (ltable.project_id == pmtable.project_id)
-        link = db(query).select(pmtable.masterkey_id,
-                                limitby = (0, 1)
-                                ).first()
-        query = (tatable.id == target_id) & \
-                (tetable.id == tatable.template_id)
-        template = db(query).select(tetable.table_id,
-                                    limitby = (0, 1)
-                                    ).first()
-
-        db(s3db.s3_table.id == template.table_id).update(masterkey_id = link.masterkey_id)
-
-    # -------------------------------------------------------------------------
-    def dc_target_ondelete(form):
-        """
-            Delete the associated Template
-        """
-
-        db = current.db
-        s3db = current.s3db
-
-        target_id = form.id
-
-        table = s3db.dc_target
-        record = db(table.id == target_id).select(table.deleted_fk,
-                                                  limitby = (0, 1),
-                                                  ).first()
-        if record:
-            import json
-            deleted_fks = json.loads(record.deleted_fk)
-            template_id = deleted_fks.get("template_id")
-            resource = s3db.resource("dc_template",
-                                     filter=(s3db.dc_template.id == template_id))
-            resource.delete()
-
-    # -------------------------------------------------------------------------
     def customise_dc_question_resource(r, tablename):
 
         from gluon import IS_IN_SET
@@ -406,10 +352,92 @@ def config(settings):
     settings.customise_dc_question_controller = customise_dc_question_controller
 
     # -------------------------------------------------------------------------
+    def dc_target_postprocess(form):
+        """
+            Create a Template with the same name as the Target
+                Copy the masterkey to the s3_table
+            Link the Target to this new Template
+        """
+
+        form_vars_get = form.vars.get
+        template_id = form_vars_get("template_id")
+        if template_id:
+            # We already have a template, e.g. prepop
+            return
+
+        db = current.db
+        s3db = current.s3db
+        target_id = form_vars_get("id")
+        name = form_vars_get("name")
+
+        # Create Template
+        template = {"name": name}
+        tetable = s3db.dc_template
+        template_id = tetable.insert(**template)
+        template["id"] = template_id
+        onaccept = s3db.get_config("dc_template", "create_onaccept")
+        onaccept(Storage(vars = template))
+
+        ltable = s3db.dc_target_l10n
+        l10n = db(ltable.target_id == target_id).select(ltable.language,
+                                                        limitby = (0, 1)
+                                                        ).first()
+        if l10n:
+            # Create Template_l10n
+            template = {"template_id": template_id,
+                        "language": l10n.language,
+                        }
+            ltable = s3db.dc_template_l10n
+            ltable.insert(**template)
+
+        # Link Target to Template
+        tatable = s3db.dc_target
+        db(tatable.id == target_id).update(template_id = template_id)
+
+        # Link Dynamic Table to Masterkey
+        ltable = s3db.project_project_target
+        pmtable = s3db.project_project_masterkey
+        query = (ltable.target_id == target_id) & \
+                (ltable.project_id == pmtable.project_id)
+        link = db(query).select(pmtable.masterkey_id,
+                                limitby = (0, 1)
+                                ).first()
+        if link:
+            query = (tatable.id == target_id) & \
+                    (tetable.id == tatable.template_id)
+            template = db(query).select(tetable.table_id,
+                                        limitby = (0, 1)
+                                        ).first()
+            db(s3db.s3_table.id == template.table_id).update(masterkey_id = link.masterkey_id)
+
+    # -------------------------------------------------------------------------
+    def dc_target_ondelete(form):
+        """
+            Delete the associated Template
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        target_id = form.id
+
+        table = s3db.dc_target
+        record = db(table.id == target_id).select(table.deleted_fk,
+                                                  limitby = (0, 1),
+                                                  ).first()
+        if record:
+            import json
+            deleted_fks = json.loads(record.deleted_fk)
+            template_id = deleted_fks.get("template_id")
+            resource = s3db.resource("dc_template",
+                                     filter=(s3db.dc_template.id == template_id))
+            resource.delete()
+
+    # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
 
-        from gluon import URL
-        from s3 import S3SQLCustomForm, S3TextFilter
+        from gluon import IS_EMPTY_OR, URL
+        from s3 import IS_ISO639_2_LANGUAGE_CODE, S3SQLCustomForm, S3TextFilter
 
         from templates.UCCE.controllers import dc_target_list_layout
 
@@ -432,11 +460,25 @@ def config(settings):
         # Lift mandatory link to template so that we can create the template onaccept
         #s3db.dc_target.template_id.requires
 
+        s3db.dc_target_l10n.language.requires = IS_EMPTY_OR(IS_ISO639_2_LANGUAGE_CODE(select = l10n_options,
+                                                                                      sort = True,
+                                                                                      translate = False,
+                                                                                      zero = "",
+                                                                                      ))
+
+        # Custom Component
+        s3db.add_components("dc_target",
+                            dc_target_l10n = {"joinby": "target_id",
+                                              "multiple": False,
+                                              },
+                            )
 
         s3db.configure("dc_target",
                        create_next = URL(c="dc", f="template", vars={"target_id": "[id]"}),
-                       create_onaccept = dc_target_create_onaccept,
-                       crud_form = S3SQLCustomForm((T("Survey name"), "name")),
+                       crud_form = S3SQLCustomForm((T("Survey name"), "name"),
+                                                   (T("Translation"), "target_l10n.language"),
+                                                   postprocess = dc_target_postprocess,
+                                                   ),
                        listadd = False,
                        list_fields = ["name",
                                       "status",
@@ -463,6 +505,7 @@ def config(settings):
         from templates.UCCE.controllers import dc_TargetActivate
         from templates.UCCE.controllers import dc_TargetDeactivate
         from templates.UCCE.controllers import dc_TargetDelete
+        from templates.UCCE.controllers import dc_TargetEdit
         from templates.UCCE.controllers import dc_TargetName
 
         set_method = current.s3db.set_method
@@ -475,6 +518,9 @@ def config(settings):
         set_method("dc", "target",
                    method = "delete_confirm",
                    action = dc_TargetDelete())
+        set_method("dc", "target",
+                   method = "edit_confirm",
+                   action = dc_TargetEdit())
         set_method("dc", "target",
                    method = "name",
                    action = dc_TargetName())
@@ -490,6 +536,8 @@ def config(settings):
     def dc_template_update_onaccept(form):
         """
             Ensure that the Survey using this Template has the same name as the Template
+
+            @ToDo: Language? (Depends on UI)
         """
 
         s3db = current.s3db
@@ -506,6 +554,13 @@ def config(settings):
         current.response.s3.crud_strings[tablename].title_display = T("Editor")
 
         s3db = current.s3db
+
+        # Custom Component
+        #s3db.add_components("dc_template",
+        #                    dc_template_l10n = {"joinby": "template_id",
+        #                                        "multiple": False,
+        #                                        },
+        #                    )
 
         s3db.configure("dc_template",
                        update_onaccept = dc_template_update_onaccept
@@ -716,12 +771,25 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_project_project_resource(r, tablename):
 
-        from gluon import URL
-        from s3 import S3SQLCustomForm, S3TextFilter
+        from gluon import IS_EMPTY_OR, URL
+        from s3 import IS_ISO639_2_LANGUAGE_CODE, S3SQLCustomForm, S3TextFilter
 
         from templates.UCCE.controllers import project_project_list_layout
 
         s3db = current.s3db
+
+        s3db.project_l10n.language.requires = IS_EMPTY_OR(IS_ISO639_2_LANGUAGE_CODE(select = l10n_options,
+                                                                                    sort = True,
+                                                                                    translate = False,
+                                                                                    zero = "",
+                                                                                    ))
+
+        # Custom Component
+        s3db.add_components("project_project",
+                            project_l10n = {"joinby": "project_id",
+                                            "multiple": False,
+                                            },
+                            )
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("New project"),
@@ -753,6 +821,7 @@ def config(settings):
                        create_onaccept = project_project_onaccept,
                        crud_form = S3SQLCustomForm((T("Organization"), "organisation_id"),
                                                    (T("New project name"), "name"),
+                                                   (T("Default Translation"), "l10n.language"),
                                                    ),
                        # Ignored here as set in Prep in default controller
                        #list_fields = ["name",
@@ -798,7 +867,14 @@ def config(settings):
             else:
                 result = True
 
-            if r.method == "datalist":
+            if r.component_name == "target":
+                ltable = s3db.project_l10n
+                l10n = current.db(ltable.project_id == r.id).select(ltable.language,
+                                                                    limitby = (0,1)
+                                                                    ).first()
+                if l10n:
+                    s3db.dc_target_l10n.language.default = l10n.language
+            elif r.method == "datalist":
                 # Over-ride list_fields set in default prep
                 s3db.configure("project_project",
                                list_fields = ["name",

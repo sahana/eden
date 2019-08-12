@@ -1390,9 +1390,10 @@ def s3_language(name="language", **attr):
     else:
         zero = None
     list_from_settings = attr.pop("list_from_settings", True)
-    select = attr.pop("select", None) # None = Full list
+    select = attr.pop("select", 0) # None = Full list
     translate = attr.pop("translate", True)
-    if select or not list_from_settings:
+    if (select != 0) or \
+       not list_from_settings:
         requires = IS_ISO639_2_LANGUAGE_CODE(select = select,
                                              sort = True,
                                              translate = translate,

@@ -214,7 +214,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
             else:
                 # Activated/Deactivated - need to change status before can edit
                 edit_url = URL(c="dc", f="target",
-                               args=[target_id, "deactivate.popup"],
+                               args=[target_id, "edit_confirm.popup"],
                                )
                 _title = T("Edit survey") # Used in popup as well as popover
                 _class = "s3_modal"
@@ -695,6 +695,43 @@ class dc_TargetDeactivate(S3Method):
         """
 
         if r.name == "target":
+            if r.http == "POST" and r.representation == "json":
+                # AJAX method
+                # Action the request
+                table = r.table
+                target_id = r.id
+                if not current.auth.s3_has_permission("update", table, record_id=target_id):
+                    r.unauthorised()
+                s3db = current.s3db
+                # Update Status
+                current.db(table.id == target_id).update(status = 3)
+                # Message
+                current.response.headers["Content-Type"] = "application/json"
+                output = current.xml.json_message(True, 200, current.T("Survey Deactivated"))
+
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
+
+# =============================================================================
+class dc_TargetEdit(S3Method):
+    """
+        Edit a Survey
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "target":
             if r.representation == "popup":
                 # Display interactive popup to confirm
                 T = current.T
@@ -727,7 +764,7 @@ class dc_TargetDeactivate(S3Method):
                                )
                 action_btn = A(T("Edit survey"),
                                _href=URL(c="dc", f="target",
-                                         args=[r.id, "deactivate"]),
+                                         args=[r.id, "edit_confirm"]),
                                _class="button round disabled",
                                _target="_top",
                                )
@@ -751,7 +788,7 @@ class dc_TargetDeactivate(S3Method):
                 resource = s3db.resource("dc_response", filter=(rtable.target_id == target_id))
                 resource.delete()
                 # Update Status
-                current.db(table.id == target_id).update(status = 3)
+                current.db(table.id == target_id).update(status = 1)
                 # Message
                 current.session.confirmation = current.T("Survey Deactivated")
                 # Redirect
@@ -770,7 +807,7 @@ class dc_TargetDeactivate(S3Method):
                 resource = s3db.resource("dc_response", filter=(rtable.target_id == target_id))
                 resource.delete()
                 # Update Status
-                current.db(table.id == target_id).update(status = 3)
+                current.db(table.id == target_id).update(status = 1)
                 # Message
                 current.response.headers["Content-Type"] = "application/json"
                 output = current.xml.json_message(True, 200, current.T("Survey Deactivated"))
@@ -962,17 +999,8 @@ class dc_TemplateEditor(S3Method):
                 if not target_status:
                     # No Target linked...something odd happening
                     button = ""
-                elif target_status == 2:
-                    # Active
-                    button = A(T("Deactivate"),
-                               _href=URL(c="dc", f="target",
-                                         args=[target_id, "deactivate.popup"],
-                                         ),
-                               _class="action-btn s3_modal",
-                               _title=T("Deactivate Survey"),
-                               )
-                else:
-                    # Draft / Deactivated
+                if target_status == 1:
+                    # Draft
                     button = A(T("Activate"),
                                _href=URL(c="dc", f="target",
                                          args=[target_id, "activate.popup"],
@@ -980,6 +1008,25 @@ class dc_TemplateEditor(S3Method):
                                _class="action-btn s3_modal",
                                _title=T("Activate Survey"),
                                )
+                elif target_status in (2, 3):
+                    # Active / Deactivated
+                    button = A(T("Edit"),
+                               _href=URL(c="dc", f="target",
+                                         args=[target_id, "edit_confirm.popup"],
+                                         ),
+                               _class="action-btn s3_modal",
+                               _title=T("Edit Survey"),
+                               )
+                else:
+                    # Unknown Status...something odd happening
+                    button = ""
+
+                ltable = s3db.dc_template_l10n
+                l10n = db(ltable.template_id == template_id).select(ltable.language,
+                                                                    limitby = (0, 1)
+                                                                    ).first()
+                if l10n:
+                    l10n = l10n.language
 
                 ptable = s3db.project_project
                 ltable = s3db.project_project_target
@@ -1112,36 +1159,42 @@ class dc_TemplateEditor(S3Method):
                                _class="button",
                                )
 
-                hidden_input = INPUT(_type = "hidden",
-                                     _id = "survey-layout",
-                                     )
-                hidden_input["_data-id"] = template_id
+                if target_status == 1:
+                    hidden_input = INPUT(_type = "hidden",
+                                         _id = "survey-layout",
+                                         )
+                    hidden_input["_data-id"] = template_id
 
-                questions = {}
-                qtable = s3db.dc_question
-                qrows = db(qtable.template_id == template_id).select(qtable.id,
-                                                                     qtable.name,
-                                                                     qtable.field_type,
-                                                                     qtable.require_not_empty,
-                                                                     qtable.options,
-                                                                     qtable.settings,
-                                                                     qtable.file,
-                                                                     )
-                for question in qrows:
-                    questions[question.id] = {"name": question.name or '',
-                                              "type": question.field_type,
-                                              "mandatory": question.require_not_empty,
-                                              "options": question.options or {},
-                                              "settings": question.settings or {},
-                                              "file": question.file,
-                                              }
+                    questions = {}
+                    qtable = s3db.dc_question
+                    qrows = db(qtable.template_id == template_id).select(qtable.id,
+                                                                         qtable.name,
+                                                                         qtable.field_type,
+                                                                         qtable.require_not_empty,
+                                                                         qtable.options,
+                                                                         qtable.settings,
+                                                                         qtable.file,
+                                                                         )
+                    for question in qrows:
+                        questions[question.id] = {"name": question.name or '',
+                                                  "type": question.field_type,
+                                                  "mandatory": question.require_not_empty,
+                                                  "options": question.options or {},
+                                                  "settings": question.settings or {},
+                                                  "file": question.file,
+                                                  }
 
-                data = {"layout": record.layout or {},
-                        "questions": questions,
-                        }
-                hidden_input["_value"] = json.dumps(data, separators=SEPARATORS)
+                    data = {"layout": record.layout or {},
+                            "questions": questions,
+                            }
+                    if l10n:
+                        data["l10n"] = l10n
+                    hidden_input["_value"] = json.dumps(data, separators=SEPARATORS)
 
-                layout = DIV(hidden_input)
+                    layout = DIV(hidden_input)
+                else:
+                    # Cannot Edit Template unless in Draft Status
+                    layout = DIV()
 
                 # Inject JS
                 s3 = current.response.s3

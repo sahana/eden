@@ -164,6 +164,7 @@ def config(settings):
         ("ru", "Russian"),
         ("tet", "Tetum"),
         #("si", "Sinhala"), # Sri Lanka
+        #("so", "Somali"),
         #("ta", "Tamil"), # India, Sri Lanka
         ("th", "Thai"),
         ("tl", "Tagalog"), # Philippines

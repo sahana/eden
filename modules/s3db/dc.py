@@ -53,6 +53,7 @@ class DataCollectionTemplateModel(S3Model):
 
     names = ("dc_template",
              "dc_template_id",
+             "dc_template_l10n",
              "dc_question",
              "dc_question_l10n",
              )
@@ -171,7 +172,17 @@ class DataCollectionTemplateModel(S3Model):
         add_components(tablename,
                        dc_question = "template_id",
                        dc_instruction = "template_id",
+                       dc_template_l10n = "template_id",
                        )
+
+        # =====================================================================
+        # Template Translations
+        #
+        tablename = "dc_template_l10n"
+        define_table(tablename,
+                     template_id(),
+                     s3_language(empty = False),
+                     *s3_meta_fields())
 
         # =====================================================================
         # Questions
@@ -724,6 +735,7 @@ class DataCollectionModel(S3Model):
 
     names = ("dc_target",
              "dc_target_id",
+             "dc_target_l10n",
              "dc_response",
              "dc_response_id",
              "dc_answer_form",
@@ -794,6 +806,8 @@ class DataCollectionModel(S3Model):
 
                        dc_response = "target_id",
 
+                       dc_target_l10n = "target_id",
+
                        event_event = {"link": "event_target",
                                       "joinby": "target_id",
                                       "key": "event_id",
@@ -845,6 +859,16 @@ class DataCollectionModel(S3Model):
                                     readable = False,
                                     writable = False,
                                     )
+
+        # =====================================================================
+        # Target Translations
+        #
+        tablename = "dc_target_l10n"
+        define_table(tablename,
+                     target_id(),
+                     s3_language(empty = False),
+                     *s3_meta_fields())
+
 
         # =====================================================================
         # Answers / Responses

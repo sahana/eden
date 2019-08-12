@@ -160,7 +160,8 @@
           */
         _addQuestion: function(position, page, type, questionID, load) {
 
-            var questionNumber;
+            var l10n = this.data.l10n,
+                questionNumber;
 
             if (load) {
                 // Read QuestionNumber created during loadSurvey
@@ -194,20 +195,32 @@
             }
 
             // Build the Question HTML
-            var question,
-                thisQuestion,
+            var idHtml,
+                dataHtml,
                 editTab,
-                mandatory,
+                formElements,
                 imageHtml,
                 newChoice,
-                formElements,
+                optionsHtml,
+                logicTab,
+                mandatory,
+                question,
+                thisQuestion,
+                translationTab,
+                translationTitle = '',
                 trash;
 
+            if (l10n) {
+                translationTitle = '<li class="tab-title"><a href="#translation-' + position + '">Translation</a></li>';
+            }
+
             if (type == 'instructions') {
-                question = '<div class="thumbnail dl-item" id="instruction-' + position + '" data-page="' + page + '"><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="ucce	ucce-duplicate"> </i></a><a><i class="ucce ucce-delete"> </i></a><i class="ucce ucce-up"> </i><i class="ucce ucce-down"> </i></div></div>';
+                idHtml = 'instruction-' + position;
+                dataHtml = '';
             } else {
+                idHtml = 'question-' + questionID;
+                dataHtml = ' data-number="' + questionNumber + '"';
                 thisQuestion = this.data.questions[questionID];
-                question = '<div class="thumbnail dl-item" id="question-' + questionID + '" data-page="' + page + '" data-number="' + questionNumber + '"><div class="card-header"><div class="fleft">Edit</div> <div class="fleft">Display Logic</div> <div class="fleft">Translation</div> <div class="edit-bar fright"><a><i class="ucce	ucce-duplicate"> </i></a><a><i class="ucce ucce-delete"> </i></a><i class="ucce ucce-up"> </i><i class="ucce ucce-down"> </i></div></div>';
                 var checked = '';
                 if (load) {
                     if (thisQuestion.mandatory) {
@@ -217,31 +230,47 @@
                 mandatory = '<div class="row"><input id="mandatory-' + questionID + '" type="checkbox" ' + checked + ' class="fleft"><label>Make question mandatory</label></div>';
                 if (type != 'heatmap') {
                     // Upload or Pipe Image
-                    var optionsHtml = this.pipeOptionsHtml(questionID, load);
-                    imageHtml = '<div class="row"><label>Add graphic</label><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><label class="fleft">or pipe question image:</label><select id="pipe-' + questionID + '" class="fleft">' + optionsHtml + '</select><a id="image-delete-' + questionID + '">Delete</a></div>';
+                    optionsHtml = this.pipeOptionsHtml(questionID, load);
+                    imageHtml = '<div class="row"><label>Add image</label><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr">' + 
+                                '<label class="fleft">or pipe question image:</label><select id="pipe-' + questionID + '" class="fleft">' + optionsHtml + '</select>' +
+                                '<a id="image-delete-' + questionID + '">Delete</a></div>';
                 }
             }
+
+            question = '<div class="thumbnail dl-item" id="' + idHtml + '" data-page="' + page + '"' + dataHtml + '>' + 
+                       '<div class="card-header"><ul class="tabs fleft" data-tab><li class="tab-title active"><a href="#edit-' + position + '">Edit</a></li><li class="tab-title"><a href="#logic-' + position + '">Display Logic</a></li> ' + translationTitle + '</ul>' +
+                       '<div class="edit-bar fright"><a><i class="ucce ucce-duplicate"> </i></a><a><i class="ucce ucce-delete"> </i></a><i class="ucce ucce-up"> </i><i class="ucce ucce-down"> </i></div>' + 
+                       '</div>' + 
+                       '<div class="tabs-content">';
+
+            optionsHtml = this.logicOptionsHtml(questionID, load);
+            logicTab = '<div class="media content" id="logic-' + position + '"><h2>Only display question if...</h2><select id="logic-select-' + questionID + '" class="fleft">' + optionsHtml + '</select><label>response is</label></div>';
 
             switch(type) {
 
                 case 'instructions':
                     var doText = '',
-                        sayText = '';
+                        doTextL10n = '',
+                        sayText = '',
+                        sayTextL10n = '';
                     if (load) {
                         doText = this.data.layout[position].do.text;
                         sayText = this.data.layout[position].say.text;
                     }
-                    editTab = '<div class="media"><h2>Data collector instructions</h2><label>What to do</label><input id="do-' + position + '" type="text" size=100 placeholder="Type what instructor should do" value="' + doText + '"><label>What to say</label><input id="say-' + position + '" type="text" size=100 placeholder="Type what instructor should say" value="' + sayText + '"></div>';
+                    editTab = '<div class="media content active" id="edit-' + position + '"><h2>Data collector instructions</h2><label>What to do</label><input id="do-' + position + '" type="text" size=100 placeholder="Type what instructor should do" value="' + doText + '"><label>What to say</label><input id="say-' + position + '" type="text" size=100 placeholder="Type what instructor should say" value="' + sayText + '"></div>';
+                    translationTab = '<div class="media content" id="translation-' + position + '"><h2>Data collector instructions</h2><label>What to do</label><input id="do-l10n-' + position + '" type="text" size=100 placeholder="Type translation of what instructor should do" value="' + doTextL10n + '"><label>What to say</label><input id="say-l10n-' + position + '" type="text" size=100 placeholder="Type translation of what instructor should say" value="' + sayTextL10n + '"></div>';
                     formElements = '#instruction-' + position + ' input';
                     trash = '#instruction-' + position + ' .ucce-delete';
                     break;
 
                 case 'text':
-                    var name = '';
+                    var name = '',
+                        nameL10n = '';
                     if (load) {
                         name = thisQuestion.name;
                     }
-                    editTab = '<div class="media"><h2>Text box</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '" type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml;
+                    editTab = '<div class="media content active" id="edit-' + position + '"><h2>Text box</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '" type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + '</div>';
+                    translationTab = '<div class="media content" id="translation-' + position + '"><h2>Text box</h2><div class="row"><label id="qlabel-l10n-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .ucce-delete';
                     break;
@@ -260,8 +289,9 @@
                             max = isIntInRange.max || '';
                         }
                     }
-                    var answer = '<div class="row"><h2>Answer</h2><form id="answer-' + questionID + '"><label>Minimum:</label><input id="min-' + questionID + '" name="min" type="number" value="' + min + '"><label>Maximum:</label><input id="max-' + questionID + '" name="max" type="number" value="' + max + '"></form></div>';
-                    editTab = '<div class="media"><h2>Number question</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
+                    editTab = '<div class="media content active" id="edit-' + position + '"><h2>Number question</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml +
+                              '<div class="row"><h2>Answer</h2><form id="answer-' + questionID + '"><label>Minimum:</label><input id="min-' + questionID + '" name="min" type="number" value="' + min + '"><label>Maximum:</label><input id="max-' + questionID + '" name="max" type="number" value="' + max + '"></form></div>';
+                    translationTab = '<div class="media content" id="translation-' + position + '"></div';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .ucce-delete';
                     break;
@@ -297,12 +327,14 @@
                             multiChecked = ' checked';
                         }
                     }
-                    var answer = '<div class="row"><h2>Answer</h2><label>Choices</label></div>' + choices +
-                                 '<div class="row"><input id="other-' + questionID + '" type="checkbox"' + other + '><label>Add \'other field\'</label></div>' + 
-                                 '<div class="row"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" placeholder="Other (please specify)" value="' + other_label + '"' + other_disabled + '></div>' + 
-                                 '<div class="row"><input id="multiple-' + questionID + '" type="checkbox"' + multiChecked + '><label>Allow multiple responses</label></div>' +
-                                 '<div class="row"><label class="fleft">Maximum No. of responses:</label><i class="ucce ucce-minus"> </i> <span id="multiple-count-' + questionID + '">' + multiple + '</span> <i class="ucce ucce-plus"> </i></div>';
-                    editTab = '<div class="media"><h2>Multiple choice question</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
+                    editTab = '<div class="media content active" id="edit-' + position + '"><h2>Multiple choice question</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml +
+                              '<div class="row"><h2>Answer</h2><label>Choices</label></div>' + choices +
+                              '<div class="row"><input id="other-' + questionID + '" type="checkbox"' + other + '><label>Add \'other field\'</label></div>' + 
+                              '<div class="row"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" placeholder="Other (please specify)" value="' + other_label + '"' + other_disabled + '></div>' + 
+                              '<div class="row"><input id="multiple-' + questionID + '" type="checkbox"' + multiChecked + '><label>Allow multiple responses</label></div>' +
+                              '<div class="row"><label class="fleft">Maximum No. of responses:</label><i class="ucce ucce-minus"> </i> <span id="multiple-count-' + questionID + '">' + multiple + '</span> <i class="ucce ucce-plus"> </i></div>';
+                    
+                    translationTab = '<div class="media content" id="translation-' + position + '"></div';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .ucce-delete';
                     break;
@@ -333,8 +365,9 @@
                         }
                     }
                     var scaleOptions = scales.join();
-                    var answer = '<div class="row"><h2>Answer</h2><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please choose scale</option>' + scaleOptions + '</select></div><div class="row">' + displayOptions + '</div>';
-                    editTab = '<div class="media"><h2>Likert-scale</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + answer;
+                    editTab = '<div class="media content active" id="edit-' + position + '"><h2>Likert-scale</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml +
+                              '<div class="row"><h2>Answer</h2><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please choose scale</option>' + scaleOptions + '</select></div><div class="row">' + displayOptions + '</div>';
+                    translationTab = '<div class="media content" id="translation-' + position + '"></div';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .ucce-delete';
                     break;
@@ -345,14 +378,19 @@
                         name = thisQuestion.name;
                     }
                     var imageRow = '<div class="row"><h2>Image</h2><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><h3>Number of clicks allowed:</h3><i class="ucce ucce-minus"> </i> 1 <i class="ucce ucce-plus"> </i><h3>Tap/click regions:</h3><a class="button tiny">Add region</a><input id="region-' + position + '-1" type="text" placeholder="enter label" disabled></div>';
-                    editTab = '<div class="media"><h2>Heatmap</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageRow;
+                    editTab = '<div class="media content active" id="edit-' + position + '"><h2>Heatmap</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageRow;
+                    translationTab = '<div class="media content" id="translation-' + position + '"></div';
                     formElements = '#question-' + questionID + ' input';
                     trash = '#question-' + questionID + ' .ucce-delete';
                     break;
             }
 
             question += editTab;
-            question += '</div>';
+            question += logicTab;
+            if (l10n) {
+                question += translationTab;
+            }
+            question += '</div></div>';
 
             // Place before droppable
             $('#survey-droppable-' + position).before(question);
@@ -526,7 +564,7 @@
             
             $(trash).on('click' + ns, function(/* event */) {
                 // Delete the Question
-                self.deleteQuestion(type, questionID);
+                self.deleteQuestion(type, questionID, this);
             });
 
             switch(type) {
@@ -703,7 +741,7 @@
         /**
           * Delete a Question
           */
-        deleteQuestion: function(type, questionID) {
+        deleteQuestion: function(type, questionID, that) {
 
             var currentPage,
                 currentPosition,
@@ -711,7 +749,7 @@
 
             if (type == 'instructions') {
                 // Read the position (can't trust original as it may have changed)
-                currentPosition = parseInt($(this).closest('.dl-item').attr('id').split('-')[1]);
+                currentPosition = parseInt($(that).closest('.dl-item').attr('id').split('-')[1]);
                 // Read the current page
                 currentPage = $('#instruction-' + currentPosition).data('page');
             } else {
@@ -850,6 +888,18 @@
             }
             return optionsHtml;
         },
+
+        /**
+          * Produce the Options HTML for the Logic Questions dropdown
+          */
+        logicOptionsHtml: function(questionID, load) {
+
+            var optionsHtml = '<option value="">select question</option>';
+            // @ToDo: Complete this: Build list of all Questions which are multichoice, likert or number
+
+            return optionsHtml;
+        },
+
 
         /**
           * Delete an Image
@@ -1107,15 +1157,17 @@
                     if (thisQuestion.file) {
                         if (thisQuestion.type == 13) {
                             // Heatmap
-                            base_label = 'Q' + questionNumber + ' Heatmap; ';
                             regions = thisQuestion.settings.regions;
-                            for (var i=0, len=regions.length; i < len; i++) {
-                                label = base_label + '\'' + regions[i].label + '\'';
-                                imageOptions.push({
-                                    label: label,
-                                    id: questionID,
-                                    region: i
-                                });
+                            if (regions) {
+                                base_label = 'Q' + questionNumber + ' Heatmap; ';
+                                for (var i=0, len=regions.length; i < len; i++) {
+                                    label = base_label + '\'' + regions[i].label + '\'';
+                                    imageOptions.push({
+                                        label: label,
+                                        id: questionID,
+                                        region: i
+                                    });
+                                }
                             }
                         } else {
                             label = 'Q' + questionNumber + ' ' + typesToText[thisQuestion.type];
@@ -1288,7 +1340,7 @@
                 url: ajaxURL,
                 type: 'POST',
                 // $.searchS3 defaults to processData: false
-                //data: {layout: this.data},
+                //data: {layout: this.data.layout},
                 data: JSON.stringify({layout: this.data.layout}),
                 //processData: false,
                 dataType: 'json',

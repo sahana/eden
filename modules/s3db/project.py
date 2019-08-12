@@ -46,6 +46,7 @@ __all__ = ("S3ProjectModel",
            "S3ProjectHazardModel",
            "S3ProjectHRModel",
            #"S3ProjectIndicatorModel",
+           "S3ProjectL10nModel",
            "S3ProjectLocationModel",
            "S3ProjectMasterKeyModel",
            "S3ProjectOrganisationModel",
@@ -634,6 +635,8 @@ class S3ProjectModel(S3Model):
                                              "key": "human_resource_id",
                                              "actuate": "hide",
                                              },
+                       # Languages
+                       project_l10n = "project_id",
                        # Locations
                        project_location = "project_id",
                        # Sectors
@@ -3617,6 +3620,32 @@ class S3ProjectIndicatorModel(S3Model):
                   report_options = report_options,
                   super_entity = "stats_data",
                   )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3ProjectL10nModel(S3Model):
+    """
+        Project L10n Model
+
+        This model holds the languages used by a project
+    """
+
+    names = ("project_l10n",)
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # Project Languages
+        #
+        tablename = "project_l10n"
+        self.define_table(tablename,
+                          self.project_project_id(empty = False),
+                          s3_language(empty = False),
+                          *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return {}
