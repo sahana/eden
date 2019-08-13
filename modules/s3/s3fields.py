@@ -1378,39 +1378,68 @@ def s3_currency(name="currency", **attr):
 def s3_language(name="language", **attr):
     """
         Return a standard Language field
+
+        @param name: the Field name
+        @param attr: Field parameters, as well as keywords:
+            @keyword empty: allow the field to remain empty:
+                            None: accept empty, don't show empty-option (default)
+                            True: accept empty, show empty-option
+                            False: reject empty, don't show empty-option
+                            (keyword ignored if a "requires" is passed)
+            @keyword translate: translate the language names into
+                                current UI language (not recommended for
+                                selector to choose that UI language)
+
+            @keyword select: which languages to show in the selector:
+                             - a dict of {lang_code: lang_name}
+                             - None to expose all languages
+                             - False (or omit) to use L10n_languages setting (default)
+
+            @keyword list_from_settings: for backwards-compatibility:
+                                         - True = use the L10n_languages setting to
+                                                  determine the selectable languages
+                                         - False = show all known languages
+                                         - default True
+                                         - ignored if "select" keyword is specified
+
+            NB "select" keyword is the preferred way to specify which languages
+               to expose in the selector (consistency with IS_ISO639_2_LANGUAGE_CODE),
+               therefore overrides "list_from_settings"
     """
 
     if "label" not in attr:
         attr["label"] = current.T("Language")
     if "default" not in attr:
         attr["default"] = current.deployment_settings.get_L10n_default_language()
+
     empty = attr.pop("empty", None)
-    if empty:
-        zero = ""
-    else:
-        zero = None
-    list_from_settings = attr.pop("list_from_settings", True)
-    select = attr.pop("select", 0) # None = Full list
+    zero = "" if empty else None
+
     translate = attr.pop("translate", True)
-    if (select != 0) or \
-       not list_from_settings:
-        requires = IS_ISO639_2_LANGUAGE_CODE(select = select,
+
+    list_from_settings = attr.pop("list_from_settings", True)
+    if "select" in attr or not list_from_settings :
+        # If select is present => always pass as-is
+        # Otherwise, if list_from_settings=False => default select=None (all languages)
+        requires = IS_ISO639_2_LANGUAGE_CODE(select = attr.pop("select", None),
                                              sort = True,
                                              translate = translate,
                                              zero = zero,
                                              )
     else:
-        # Use deployment_settings to show a limited list
+        # Use L10n_languages deployment setting
         requires = IS_ISO639_2_LANGUAGE_CODE(sort = True,
                                              translate = translate,
                                              zero = zero,
                                              )
+
     if "requires" not in attr:
+        # Value required only if empty is explicitly False
         if empty is False:
             attr["requires"] = requires
         else:
-            # Default
             attr["requires"] = IS_EMPTY_OR(requires)
+
     if "represent" not in attr:
         attr["represent"] = requires.represent
 
