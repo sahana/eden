@@ -1394,17 +1394,6 @@ def s3_language(name="language", **attr):
                              - a dict of {lang_code: lang_name}
                              - None to expose all languages
                              - False (or omit) to use L10n_languages setting (default)
-
-            @keyword list_from_settings: for backwards-compatibility:
-                                         - True = use the L10n_languages setting to
-                                                  determine the selectable languages
-                                         - False = show all known languages
-                                         - default True
-                                         - ignored if "select" keyword is specified
-
-            NB "select" keyword is the preferred way to specify which languages
-               to expose in the selector (consistency with IS_ISO639_2_LANGUAGE_CODE),
-               therefore overrides "list_from_settings"
     """
 
     if "label" not in attr:
@@ -1417,11 +1406,9 @@ def s3_language(name="language", **attr):
 
     translate = attr.pop("translate", True)
 
-    list_from_settings = attr.pop("list_from_settings", True)
-    if "select" in attr or not list_from_settings :
-        # If select is present => always pass as-is
-        # Otherwise, if list_from_settings=False => default select=None (all languages)
-        requires = IS_ISO639_2_LANGUAGE_CODE(select = attr.pop("select", None),
+    if "select" in attr:
+        # If select is present => pass as-is
+        requires = IS_ISO639_2_LANGUAGE_CODE(select = attr.pop("select"),
                                              sort = True,
                                              translate = translate,
                                              zero = zero,

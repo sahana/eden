@@ -2123,7 +2123,7 @@ class BRLanguageModel(S3Model):
                           self.pr_person_id(empty = False,
                                             ondelete = "CASCADE",
                                             ),
-                          s3_language(list_from_settings = False),
+                          s3_language(select = None),
                           Field("quality",
                                 default = "N",
                                 label = T("Quality/Mode"),

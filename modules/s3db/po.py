@@ -704,7 +704,7 @@ class OutreachHouseholdModel(S3Model):
         define_table(tablename,
                      household_id(),
                      s3_language(label = T("Main Language"),
-                                 list_from_settings = False,
+                                 select = None,
                                  ),
                      Field("community", "text",
                            label = T("Community Connections"),
