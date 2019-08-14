@@ -139,7 +139,8 @@ class S3MasterKey(object):
             token ID and token string: "ID:TOKEN".
         """
 
-        if current.request.env.http_requestmasterkeyauth == "true":
+        if not current.response.s3.masterkey_auth_failed and \
+           current.request.env.http_requestmasterkeyauth == "true":
 
             header = ("%s:%s" % cls.__token()).encode("utf-8")
 
