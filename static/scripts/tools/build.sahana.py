@@ -344,11 +344,8 @@ def set_minimize(warnings):
 
     return minimize
 
-def do_js(do_gis = False, warnings = True):
+def do_js(minimize, do_gis = False, warnings = True):
     """ Minifies the JavaScript """
-
-    # Determine which JS compressor to use
-    minimize = set_minimize(warnings)
 
     # -------------------------------------------------------------------------
     # Build S3.min.js
@@ -686,10 +683,7 @@ def do_js(do_gis = False, warnings = True):
         info("Moving new gxp2 JS files")
         move_to(outputFilenameGxp2, "../gis")
 
-def do_template(warnings):
-
-    # Determine which JS compressor to use
-    minimize = set_minimize(warnings)
+def do_template(minimize, warnings):
 
     if theme == "UCCE":
         for filename in ("confirm_popup",
@@ -710,23 +704,26 @@ def do_template(warnings):
 #
 def main(argv):
 
-    # Rebuild GIS JS?
-    do_gis = "DOGIS" in argv
-
-    # Suppress closure warnings?
-    warnings = "NOWARN" not in argv
-
-    if "template" in argv:
-        # Build Template only
-        do_css()
-        do_template(warnings=warnings)
-    elif "CSS" in argv or "css" in argv:
+    if "CSS" in argv or "css" in argv:
         # Build CSS only
         do_css()
     else:
-        # Do All
-        do_js(do_gis=do_gis, warnings=warnings)
-        do_template(warnings=warnings)
+        # Suppress closure warnings?
+        warnings = "NOWARN" not in argv
+
+        # Determine which JS compressor to use
+        minimize = set_minimize(warnings)
+
+        if "template" in argv:
+            # Build Template only
+            pass
+        else:
+            # Do All
+            # Rebuild GIS JS?
+            do_gis = "DOGIS" in argv
+            do_js(minimize=minimize, do_gis=do_gis, warnings=warnings)
+
+        do_template(minimize=minimize, warnings=warnings)
         do_css()
 
     info("Done.")
