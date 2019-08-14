@@ -302,7 +302,7 @@
                               '</div>';
                     translationTab = '<div class="media content" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Text box</h2></div></div>' +
-                                      '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div class="translate-from"></div></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
                                      '</div>';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
@@ -337,7 +337,7 @@
                               '</div>';
                     translationTab = '<div class="media content" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Number question</h2></div></div>' +
-                                      '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div class="translate-from"></div></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
                                      '</div>';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
@@ -345,14 +345,16 @@
                     break;
 
                 case 'multichoice':
-                    newChoice = '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice"><i class="ucce ucce-minus"> </i><i class="ucce ucce-plus"> </i></div></div>';
+                    newChoice = '<div id="choice-row-' + questionID + '-0" class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice"><i class="ucce ucce-minus"> </i><i class="ucce ucce-plus"> </i></div></div>';
                     // @ToDo: Grey the multiple -+ options if they cannot do anything
                     var name = '',
                         nameL10n = '',
                         choices = newChoice,
+                        choicesL10n = '',
                         other = '',
-                        other_disabled = ' disabled',
+                        otherDisabled = ' disabled',
                         otherLabel = '',
+                        otherL10n = '',
                         multiple = 1,
                         multiChecked = '';
                     if (load) {
@@ -361,19 +363,28 @@
                             nameL10n = thisQuestion.name_l10n || '';
                         }
                         var options = thisQuestion.options || [],
+                            optionsL10n = thisQuestion.options_l10n || [],
                             lenOptions = options.length;
                         if (lenOptions) {
                             choices = '';
+                            var thisOptionL10n;
                             for (var i=0; i < lenOptions; i++) {
-                                choices += '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice" value="' + options[i] + '"><i class="ucce ucce-minus"> </i><i class="ucce ucce-plus"> </i></div></div>';
+                                choices += '<div id="choice-row-' + questionID + '-' + i + '" class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice" value="' + options[i] + '"><i class="ucce ucce-minus"> </i><i class="ucce ucce-plus"> </i></div></div>';
+                                thisOptionL10n = optionsL10n[i] || '';
+                                choicesL10n += '<div id="choice-l10n-row-' + questionID + '-' + i + '" class="row"><div class="columns medium-1"></div><div class="columns medium-11"><div class="row"><div class="columns medium-6"><div id="choice-from-' + questionID + '-' + i + '" class="translate-from">' + options[i] + '</div></div><div class="columns medium-6"><input class="choice-l10n-' + questionID + '" type="text" placeholder="Type translation..." value="' + thisOptionL10n + '"></div></div></div></div>';
                             }
                         }
-                        var settings = thisQuestion.settings;
+                        var settings = thisQuestion.settings,
+                            otherL10n = '',
+                            otherL10nHide = ' hide';
                         otherLabel = settings.other || '';
                         if (otherLabel) {
                             other = ' checked';
-                            other_disabled = '';
+                            otherDisabled = '';
+                            otherL10n = settings.otherL10n || '';
+                            otherL10nHide = '';
                         }
+                        choicesL10n += '<div id="other-l10n-row-' + questionID + '" class="row' + otherL10nHide + '"><div class="columns medium-1"></div><div class="columns medium-11"><div class="row"><div class="columns medium-6"><div id="other-l10n-from-' + questionID + '" class="translate-from">' + otherLabel + '</div></div><div class="columns medium-6"><input id="other-l10n-' + questionID + '" type="text" placeholder="Type translation..." value="' + otherL10n + '"></div></div></div></div>';
                         multiple = settings.multiple || 1;
                         if (multiple > 1) {
                             multiChecked = ' checked';
@@ -387,17 +398,18 @@
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>Choices</label></div></div>' +
                                choices +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="other-' + questionID + '" type="checkbox"' + other + '><label>Add \'other field\'</label></div></div>' + 
-                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" placeholder="Other (please specify)" value="' + otherLabel + '"' + other_disabled + '></div></div>' + 
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" placeholder="Other (please specify)" value="' + otherLabel + '"' + otherDisabled + '></div></div>' + 
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="multiple-' + questionID + '" type="checkbox"' + multiChecked + '><label>Allow multiple responses</label></div></div>' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label class="fleft">Maximum No. of responses:</label><i class="ucce ucce-minus"> </i> <span id="multiple-count-' + questionID + '">' + multiple + '</span> <i class="ucce ucce-plus"> </i></div></div>' +
                               '</div>';
                     
                     translationTab = '<div class="media content" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Multiple choice question</h2></div></div>' +
-                                      '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div class="translate-from"></div></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Answer</h2></div></div>' +
                                       '<div class="row" id="choices-l10n-row-' + questionID + '"><div class="columns medium-1"></div><div class="columns medium-11"><label>Choices</label></div></div>' +
+                                      choicesL10n + 
                                      '</div>';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .ucce-delete';
@@ -443,7 +455,7 @@
                               '</div>';
                     translationTab = '<div class="media content" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Likert-scale</h2></div></div>' +
-                                      '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div class="translate-from"></div></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
                                      '</div>';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
@@ -473,7 +485,7 @@
                               '</div>';
                     translationTab = '<div class="media content" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Heatmap</h2></div></div>' +
-                                      '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div class="translate-from"></div></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
                                      '</div>';
                     formElements = '#question-' + questionID + ' input';
@@ -723,10 +735,25 @@
                                                          .on('click' + ns, function() {
                             if ($('.choice-' + questionID).length > 1) {
                                 // Remove Option
-                                $(this).parent().remove();
-                                // Check if we now have fewer options than multipleCount
-                                var multiple = parseInt(multipleCount.html()),
+                                var currentRow = $(this).closest('.row'),
+                                    index = parseInt(currentRow.attr('id').split('-')[3]);
+                                currentRow.remove();
+                                // & from l10n
+                                $('#choice-l10n-row-' + questionID + '-' + index).remove();
+
+                                // Update IDs for all subsequent rows
+                                var newIndex,
                                     optionsCount = $('.choice-' + questionID).length;
+
+                                for (var i = index + 1; i <= optionsCount; i++) {
+                                    newIndex = i - 1;
+                                    $('#choice-row-' + questionID + '-' + i).attr('id', 'choice-row-' + questionID + '-' + newIndex);
+                                    $('#choice-l10n-row-' + questionID + '-' + i).attr('id', 'choice-l10n-row-' + questionID + '-' + newIndex);
+                                    $('#choice-from-' + questionID + '-' + i).attr('id', 'choice-from-' + questionID + '-' + newIndex);
+                                }
+
+                                // Check if we now have fewer options than multipleCount
+                                var multiple = parseInt(multipleCount.html());
                                 if ($('#other-' + questionID).prop('checked')) {
                                     optionsCount++;
                                 }
@@ -738,14 +765,29 @@
                                 }
                                 self.saveQuestion(type, questionID);
                             } else {
-                                // Remove value
+                                // Just remove value - since we always need at least 1 option available
                                 $(this).prev().val('');
                             }
                         });
                         $('.choice-' + questionID).next().next().off('click' + ns)
                                                                 .on('click' + ns, function() {
-                            // Add Option after current row
-                            $(this).parent().parent().after(newChoice);
+                            // Pepare to add a new Option
+                            // Update IDs for all subsequent rows
+                            var currentRow = $(this).closest('.row'),
+                                index = parseInt(currentRow.attr('id').split('-')[3]),
+                                newIndex,
+                                optionsCount = $('.choice-' + questionID).length;
+                            for (var i = optionsCount - 1; i > index; i--) {
+                                newIndex = i + 1;
+                                $('#choice-row-' + questionID + '-' + i).attr('id', 'choice-row-' + questionID + '-' + newIndex);
+                                $('#choice-l10n-row-' + questionID + '-' + i).attr('id', 'choice-l10n-row-' + questionID + '-' + newIndex);
+                                $('#choice-from-' + questionID + '-' + i).attr('id', 'choice-from-' + questionID + '-' + newIndex);
+                            }
+                            // Add new Option after current row
+                            newIndex = index + 1;
+                            currentRow.after(newChoice.replace('-0', '-' + newIndex));
+                            // & in l10n
+                            $('#choice-l10n-row-' + questionID + '-' + index).after('<div id="choice-l10n-row-' + questionID + '-' + newIndex + '" class="row"><div class="columns medium-1"></div><div class="columns medium-11"><div class="row"><div class="columns medium-6"><div id="choice-from-' + questionID + '-' + newIndex + '" class="translate-from"></div></div><div class="columns medium-6"><input class="choice-l10n-' + questionID + '" type="text" placeholder="Type translation..."></div></div></div></div>');
                             // Add Events
                             inputEvents();
                             multichoiceEvents();
@@ -754,8 +796,11 @@
                         $('#other-' + questionID).on('change' + ns, function(){
                             if ($(this).prop('checked')) {
                                 $('#other-label-' + questionID).prop('disabled', false);
+                                $('#other-l10n-row-' + questionID).removeClass('hide')
+                                                                  .show();
                             } else {
                                 $('#other-label-' + questionID).prop('disabled', true);
+                                $('#other-l10n-row-' + questionID).hide();
                                 // Check if we now have fewer options than multipleCount
                                 var multiple = parseInt(multipleCount.html()),
                                     optionsCount = $('.choice-' + questionID).length;
@@ -1590,7 +1635,7 @@
                             } else {
                                 var questionID = parts[1],
                                     thisQuestion = self.data.questions[questionID];
-                                $('#name-l10n-' + questionID).parent().parent().prev().children('.medium-11').first().children('.translate-from').html($('#name-' + questionID).val());
+                                $('#name-l10n-from-' + questionID).html($('#name-' + questionID).val());
 
                                 type = typesToText[thisQuestion.type];
                                 switch(type) {
@@ -1602,27 +1647,19 @@
                                         // Nothing needed here
                                         break;
                                     case 'multichoice':
-                                        // @ToDo: Translate Options
-                                        var choices = '',
-                                            options = thisQuestion.options || [],
-                                            lenOptions = options.length;
-                                        for (var i=0; i < lenOptions; i++) {
-                                            choices += '<div class="row"><div class="columns medium-1"></div><div class="columns medium-5"><div class="translate-from">' + options[i] + '</div></div><div class="columns medium-1"></div><div class="columns medium-5"><input class="choice-l10n-' + questionID + '" type="text" placeholder="Type translation..." value="' + options[i] + '"></div></div>';
-                                        }
-                                        var settings = thisQuestion.settings,
-                                            otherLabel = settings.other || '',
-                                            otherL10n = settings.otherL10n || '';
-                                        if (otherLabel) {
-                                            choices += '<div class="row"><div class="columns medium-1"></div><div class="columns medium-5"><div class="translate-from">' + otherLabel + '</div></div><div class="columns medium-1"></div><div class="columns medium-5"><input class="other-l10n-' + questionID + '" type="text" placeholder="Type translation..." value="' + otherL10n + '"></div></div>';
-                                        }
-                                        $('#choices-l10n-row-' + questionID).after(choices);
+                                        // Options
+                                        $('.choice-' + questionID).each(function(index) {
+                                            $('#choice-from-' + questionID + '-' + index).html($(this).val());
+                                        });
+                                        // Other option
+                                        $('#other-l10n-from-' + questionID).html($('#other-label-' + questionID).val());
                                         break;
                                     case 'likert':
                                         // Nothing needed here
                                         // - if we assume that Scale Options are translated centrally
                                         break;
                                     case 'heatmap':
-                                        // @ToDo: Translate Regions
+                                        // @ToDo: Regions sync
                                         
                                         break;
 
