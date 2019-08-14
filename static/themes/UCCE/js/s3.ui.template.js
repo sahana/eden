@@ -437,7 +437,7 @@
                                mandatory + imageHtml +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Answer</h2></div></div>' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please choose scale</option>' + scaleOptions + '</select></div></div>' +
-                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11">' + displayOptions + '</div></div>' +
+                               '<div class="row"><div class="columns medium-1"></div><div id="display-' + questionID + '" class="columns medium-11">' + displayOptions + '</div></div>' +
                               '</div>';
                     translationTab = '<div class="media content" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Likert-scale</h2></div></div>' +
@@ -742,8 +742,8 @@
                         });
                         $('.choice-' + questionID).next().next().off('click' + ns)
                                                                 .on('click' + ns, function() {
-                            // Add Option
-                            $(this).parent().after(newChoice);
+                            // Add Option after current row
+                            $(this).parent().parent().after(newChoice);
                             // Add Events
                             inputEvents();
                             multichoiceEvents();
@@ -819,8 +819,7 @@
                 case 'likert':
                     // Display options when scale selected
                     $('#scale-' + questionID).on('change' + ns, function() {
-                        var $this = $(this),
-                            scale = $this.val();
+                        var scale = $(this).val();
                         if (scale) {
                             var options = likertOptions[scale],
                                 scaleOptions = '';
@@ -828,11 +827,11 @@
                                 scaleOptions += '<li>' + options[i] + '</li>';
                             }
                             var scaleDisplay = '<ul>' + scaleOptions + '</ul>';
-                            $this.parent().next().empty()
-                                                 .append(scaleDisplay);
+                            $('#display-' + questionID).empty()
+                                                       .append(scaleDisplay);
                         } else {
                             // Remove old display
-                            $this.parent().next().empty();
+                            $('#display-' + questionID).empty();
                         }
                     });
                     break;

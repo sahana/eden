@@ -147,7 +147,7 @@ def compressCSS(inputFilename, outputFilename):
     with openf(outputFilename, "w") as outFile:
         outFile.write(cleanline(output))
 
-def docss():
+def do_css():
     """ Compresses the  CSS files """
 
     # -------------------------------------------------------------------------
@@ -290,7 +290,7 @@ def docss():
 #
 def minify_from_cfg(minimize, name, source_dir, cfg_name, out_filename, extra_params=None):
     """
-        Merge+minify JS files from a JS config file (DRY helper for dojs)
+        Merge+minify JS files from a JS config file (DRY helper for do_js)
     """
 
     info("Compressing %s" % name)
@@ -314,12 +314,8 @@ def minify_from_cfg(minimize, name, source_dir, cfg_name, out_filename, extra_pa
     # Replace target file
     move_to(out_filename, "%s/S3" % source_dir)
 
-def dojs(dogis = False, warnings = True):
-    """ Minifies the JavaScript """
-
-    # -------------------------------------------------------------------------
-    # Determine which JS compressor to use
-    #
+def set_minimize(warnings):
+    """ Determine which JS compressor to use """
 
     # Do we have local version of the Closure Compiler available?
     use_compressor = "jsmin" # Fallback
@@ -344,7 +340,15 @@ def dojs(dogis = False, warnings = True):
     elif use_compressor == "closure_ws":
         minimize = closure_ws.minimize
     elif use_compressor == "jsmin":
-        minimize = jsmin.jsmin
+        minimize = smin.jsmin
+
+    return minimize
+
+def do_js(do_gis = False, warnings = True):
+    """ Minifies the JavaScript """
+
+    # Determine which JS compressor to use
+    minimize = set_minimize(warnings)
 
     # -------------------------------------------------------------------------
     # Build S3.min.js
@@ -475,19 +479,6 @@ def dojs(dogis = False, warnings = True):
                 outFile.write(minimize(inFile.read()))
         move_to(outputFilename, "../S3")
 
-    if theme == "UCCE":
-        for filename in ("confirm_popup",
-                         "projects",
-                         "s3.ui.template",
-                         ):
-            info("Compressing %s.js" % filename)
-            inputFilename = os.path.join("..", "..", "themes", "UCCE", "js", "%s.js" % filename)
-            outputFilename = "%s.min.js" % filename
-            with openf(inputFilename, "r") as inFile:
-                with openf(outputFilename, "w") as outFile:
-                    outFile.write(minimize(inFile.read()))
-            move_to(outputFilename, "../../themes/UCCE/js")
-
     # -------------------------------------------------------------------------
     # Optional JS builds
     # - enable at the top when desired
@@ -547,7 +538,7 @@ def dojs(dogis = False, warnings = True):
     # GIS
     # - enable with command line option DOGIS
     #
-    if dogis:
+    if do_gis:
         sourceDirectoryOpenLayers = "../gis/openlayers/lib"
         sourceDirectoryMGRS = "../gis"
         sourceDirectoryGeoExt = "../gis/GeoExt/lib"
@@ -695,23 +686,48 @@ def dojs(dogis = False, warnings = True):
         info("Moving new gxp2 JS files")
         move_to(outputFilenameGxp2, "../gis")
 
+def do_template(warnings):
+
+    # Determine which JS compressor to use
+    minimize = set_minimize(warnings)
+
+    if theme == "UCCE":
+        for filename in ("confirm_popup",
+                         "projects",
+                         "s3.ui.template",
+                         ):
+            info("Compressing %s.js" % filename)
+            inputFilename = os.path.join("..", "..", "themes", "UCCE", "js", "%s.js" % filename)
+            outputFilename = "%s.min.js" % filename
+            with openf(inputFilename, "r") as inFile:
+                with openf(outputFilename, "w") as outFile:
+                    outFile.write(minimize(inFile.read()))
+            move_to(outputFilename, "../../themes/UCCE/js")
+    
+
 # =============================================================================
 # Main script
 #
 def main(argv):
 
     # Rebuild GIS JS?
-    dogis = "DOGIS" in argv
+    do_gis = "DOGIS" in argv
 
     # Suppress closure warnings?
     warnings = "NOWARN" not in argv
 
-    if "CSS" in argv or "css" in argv:
+    if "template" in argv:
+        # Build Template only
+        do_css()
+        do_template(warnings=warnings)
+    elif "CSS" in argv or "css" in argv:
         # Build CSS only
-        docss()
+        do_css()
     else:
-        dojs(dogis=dogis, warnings=warnings)
-        docss()
+        # Do All
+        do_js(do_gis=do_gis, warnings=warnings)
+        do_template(warnings=warnings)
+        do_css()
 
     info("Done.")
 
