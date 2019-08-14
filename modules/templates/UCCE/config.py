@@ -68,6 +68,8 @@ def config(settings):
 
     l10n_options = {"so": "Somali",
                     }
+    # Pass to controllers.py (not a real deployment_setting)
+    settings.L10n.survey_languages = l10n_options
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -507,6 +509,7 @@ def config(settings):
         from templates.UCCE.controllers import dc_TargetDelete
         from templates.UCCE.controllers import dc_TargetEdit
         from templates.UCCE.controllers import dc_TargetName
+        from templates.UCCE.controllers import dc_TargetL10n
 
         set_method = current.s3db.set_method
         set_method("dc", "target",
@@ -524,6 +527,9 @@ def config(settings):
         set_method("dc", "target",
                    method = "name",
                    action = dc_TargetName())
+        set_method("dc", "target",
+                   method = "l10n",
+                   action = dc_TargetL10n())
 
         current.response.s3.dl_no_header = True
         attr["dl_rowsize"] = 2

@@ -479,7 +479,6 @@ def dojs(dogis = False, warnings = True):
         for filename in ("confirm_popup",
                          "projects",
                          "s3.ui.template",
-                         "template_editor",
                          ):
             info("Compressing %s.js" % filename)
             inputFilename = os.path.join("..", "..", "themes", "UCCE", "js", "%s.js" % filename)

@@ -58,6 +58,14 @@
     width: 80px;
 }
 
+#content h2.fleft {
+    padding-left: 0;
+}
+
+.translate-from {
+    background-color: #ddd;
+}
+
 /* Switch Backported from Foundation 6 instead of using the Foundation 5 version */
 .switch {
   height: 2rem;

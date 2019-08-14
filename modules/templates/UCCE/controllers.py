@@ -437,6 +437,7 @@ class dc_QuestionCreate(S3Method):
                 table = r.table
                 if not current.auth.s3_has_permission("create", table):
                     r.unauthorised()
+
                 # Create record
                 post_vars_get = r.post_vars.get
                 field_type = post_vars_get("type")
@@ -445,6 +446,7 @@ class dc_QuestionCreate(S3Method):
                     question_id = table.insert(template_id = template_id,
                                                field_type = field_type,
                                                )
+
                     # Results (Empty Message so we don't get it shown to User)
                     current.response.headers["Content-Type"] = "application/json"
                     output = current.xml.json_message(True, 200, "",
@@ -525,11 +527,13 @@ class dc_QuestionImageUpload(S3Method):
                     r.unauthorised()
                 field_storage = r.post_vars.get("file")
                 if field_storage not in ("", None):
-                    field = table.file
+
                     # Store in filesystem
+                    field = table.file
                     newfilename = field.store(field_storage.file,
                                               field_storage.filename,
                                               field.uploadfolder)
+
                     # Update record
                     current.db(table.id == record_id).update(file = newfilename)
 
@@ -568,10 +572,12 @@ class dc_QuestionSave(S3Method):
                 record_id = r.id
                 if not current.auth.s3_has_permission("update", table, record_id=record_id):
                     r.unauthorised()
+
                 # Update Question
                 post_vars_get = r.post_vars.get
                 name = post_vars_get("name")
                 if name:
+                    db = current.db
                     mandatory = post_vars_get("mandatory")
                     options = post_vars_get("options")
                     #if options:
@@ -579,11 +585,38 @@ class dc_QuestionSave(S3Method):
                     settings = post_vars_get("settings")
                     #if settings:
                     #    settings = json.loads(settings)
-                    current.db(table.id == record_id).update(name = name,
-                                                             require_not_empty = mandatory,
-                                                             options = options,
-                                                             settings = settings,
-                                                             )
+                    db(table.id == record_id).update(name = name,
+                                                     require_not_empty = mandatory,
+                                                     options = options,
+                                                     settings = settings,
+                                                     )
+
+                    # Translation
+                    name_l10n = post_vars_get("name_l10n")
+                    if name_l10n:
+                        s3db = current.s3db
+                        ltable = s3db.dc_template_l10n
+                        l10n = db(ltable.template_id == r.record.template_id).select(ltable.language,
+                                                                                     limitby = (0, 1)
+                                                                                     ).first()
+                        if l10n:
+                            l10n = l10n.language
+                            ltable = s3db.dc_question_l10n
+                            exists = db(ltable.question_id == record_id).select(ltable.id,
+                                                                                limitby = (0, 1)
+                                                                                ).first()
+                            vars = {"name_l10n": name_l10n,
+                                    "language": l10n,
+                                    }
+                            options_l10n = post_vars_get("options_l10n")
+                            if options_l10n:
+                                vars["options_l10n"] = options_l10n
+                            if exists:
+                                exists.update_record(**vars)
+                            else:
+                                vars["question_id"] = record_id
+                                ltable.insert(**vars)
+
                     # Results (Empty Message so we don't get it shown to User)
                     current.response.headers["Content-Type"] = "application/json"
                     output = current.xml.json_message(True, 200, "")
@@ -651,10 +684,13 @@ class dc_TargetActivate(S3Method):
                 target_id = r.id
                 if not current.auth.s3_has_permission("update", table, record_id=target_id):
                     r.unauthorised()
+
                 # Update Status
                 current.db(table.id == target_id).update(status = 2)
+
                 # Message
                 current.session.confirmation = current.T("Survey Activated")
+
                 # Redirect
                 redirect(URL(c="project", f="project", args="datalist"))
 
@@ -665,6 +701,7 @@ class dc_TargetActivate(S3Method):
                 target_id = r.id
                 if not current.auth.s3_has_permission("update", table, record_id=target_id):
                     r.unauthorised()
+
                 # Update Status
                 current.db(table.id == target_id).update(status = 2)
 
@@ -703,8 +740,10 @@ class dc_TargetDeactivate(S3Method):
                 if not current.auth.s3_has_permission("update", table, record_id=target_id):
                     r.unauthorised()
                 s3db = current.s3db
+
                 # Update Status
                 current.db(table.id == target_id).update(status = 3)
+
                 # Message
                 current.response.headers["Content-Type"] = "application/json"
                 output = current.xml.json_message(True, 200, current.T("Survey Deactivated"))
@@ -783,14 +822,18 @@ class dc_TargetEdit(S3Method):
                 if not current.auth.s3_has_permission("update", table, record_id=target_id):
                     r.unauthorised()
                 s3db = current.s3db
+
                 # Delete Responses
                 rtable = s3db.dc_response
                 resource = s3db.resource("dc_response", filter=(rtable.target_id == target_id))
                 resource.delete()
+
                 # Update Status
                 current.db(table.id == target_id).update(status = 1)
+
                 # Message
                 current.session.confirmation = current.T("Survey Deactivated")
+
                 # Redirect
                 redirect(URL(c="dc", f="template", args=[r.record.template_id, "editor"]))
 
@@ -802,12 +845,15 @@ class dc_TargetEdit(S3Method):
                 if not current.auth.s3_has_permission("update", table, record_id=target_id):
                     r.unauthorised()
                 s3db = current.s3db
+
                 # Delete Responses
                 rtable = s3db.dc_response
                 resource = s3db.resource("dc_response", filter=(rtable.target_id == target_id))
                 resource.delete()
+
                 # Update Status
                 current.db(table.id == target_id).update(status = 1)
+
                 # Message
                 current.response.headers["Content-Type"] = "application/json"
                 output = current.xml.json_message(True, 200, current.T("Survey Deactivated"))
@@ -883,23 +929,28 @@ class dc_TargetDelete(S3Method):
                     r.unauthorised()
                 db = current.db
                 s3db = current.s3db
+
                 # Delete Responses
                 rtable = s3db.dc_response
                 resource = s3db.resource("dc_response", filter=(rtable.target_id == target_id))
                 resource.delete()
+
                 # Lookup Template
                 query = (table.id == target_id)
                 target = db(query).select(table.template_id,
                                           limitby = (0,1)
                                           ).first()
                 template_id = target.template_id
+
                 # Delete Target
                 resource = s3db.resource("dc_target", filter=(query))
                 resource.delete()
+
                 # Delete Template
                 tetable = s3db.dc_template
                 resource = s3db.resource("dc_template", filter=(tetable.id == template_id))
                 resource.delete()
+
                 # Message
                 current.session.confirmation = current.T("Survey deleted")
                 # Redirect
@@ -943,12 +994,98 @@ class dc_TargetName(S3Method):
                 name = r.post_vars.get("name")
                 if name:
                     db = current.db
+
+                    # Update Target
                     db(table.id == target_id).update(name = name)
+
+                    # Update Template
                     ttable = current.s3db.dc_template
                     db(ttable.id == r.record.template_id).update(name = name)
+
                     # Message
                     current.response.headers["Content-Type"] = "application/json"
                     output = current.xml.json_message(True, 200, current.T("Survey Renamed"))
+                else:
+                    r.error(400, current.T("Invalid Parameters"))
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
+
+# =============================================================================
+class dc_TargetL10n(S3Method):
+    """
+        Change the language of a Survey
+
+        NB Currently each Survey is only ever translated into a single language
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "target":
+            if r.http == "POST" and r.representation == "json":
+                # AJAX method
+                # Action the request
+                table = r.table
+                target_id = r.id
+                if not current.auth.s3_has_permission("update", table, record_id=target_id):
+                    r.unauthorised()
+                # Update Language
+                l10n = r.post_vars.get("l10n")
+                if l10n is not None:
+                    db = current.db
+                    s3db = current.s3db
+
+                    # Update Target
+                    ltable = s3db.dc_target_l10n
+                    exists = db(ltable.target_id == target_id).select(ltable.id,
+                                                                      ltable.language,
+                                                                      limitby = (0, 1)
+                                                                      ).first()
+                    if exists:
+                        if exists.language != l10n:
+                            exists.update_record(language = l10n)
+                    else:
+                        ltable.insert(target_id = target_id,
+                                      language = l10n,
+                                      )
+
+                    # Update Template
+                    template_id = r.record.template_id
+                    ltable = s3db.dc_template_l10n
+                    exists = db(ltable.template_id == template_id).select(ltable.id,
+                                                                          ltable.language,
+                                                                          limitby = (0, 1)
+                                                                          ).first()
+                    if exists:
+                        if exists.language != l10n:
+                            exists.update_record(language = l10n)
+                    else:
+                        ltable.insert(template_id = template_id,
+                                      language = l10n,
+                                      )
+                    
+
+                    if l10n:
+                        # Update Questions
+                        qtable = s3db.dc_question
+                        questions = db(qtable.template_id == template_id).select(qtable.id)
+                        question_ids = [q.id for q in questions]
+                        qltable = s3db.dc_question_l10n
+                        db(qltable.question_id.belongs(question_ids)).update(language = l10n)
+
+                    # Results (Empty Message so we don't get it shown to User)
+                    current.response.headers["Content-Type"] = "application/json"
+                    output = current.xml.json_message(True, 200, "")
                 else:
                     r.error(400, current.T("Invalid Parameters"))
             else:
@@ -1005,7 +1142,7 @@ class dc_TemplateEditor(S3Method):
                                _href=URL(c="dc", f="target",
                                          args=[target_id, "activate.popup"],
                                          ),
-                               _class="action-btn s3_modal",
+                               _class="button round alert tiny s3_modal",
                                _title=T("Activate Survey"),
                                )
                 elif target_status in (2, 3):
@@ -1014,19 +1151,12 @@ class dc_TemplateEditor(S3Method):
                                _href=URL(c="dc", f="target",
                                          args=[target_id, "edit_confirm.popup"],
                                          ),
-                               _class="action-btn s3_modal",
+                               _class="button round alert tiny s3_modal",
                                _title=T("Edit Survey"),
                                )
                 else:
                     # Unknown Status...something odd happening
                     button = ""
-
-                ltable = s3db.dc_template_l10n
-                l10n = db(ltable.template_id == template_id).select(ltable.language,
-                                                                    limitby = (0, 1)
-                                                                    ).first()
-                if l10n:
-                    l10n = l10n.language
 
                 ptable = s3db.project_project
                 ltable = s3db.project_project_target
@@ -1066,98 +1196,133 @@ class dc_TemplateEditor(S3Method):
                                          )
                 info_instructions["data-tooltip"] = 1
 
-                question_types = DIV(DIV(H2(T("Question types")),
-                                         _class="row",
-                                         ),
-                                     DIV(DIV(ICON("instructions"),
-                                             _class="medium-2 columns",
-                                             ),
-                                         DIV(T("Data collector instructions"),
-                                             _class="medium-9 columns",
-                                             ),
-                                         DIV(info_instructions,
-                                             _class="medium-1 columns",
-                                             ),
-                                         _class="row draggable",
-                                         _id="instructions",
-                                         ),
-                                     DIV(DIV(ICON("comment-alt"),
-                                             _class="medium-2 columns",
-                                             ),
-                                         DIV(T("Text box"),
-                                             _class="medium-9 columns",
-                                             ),
-                                         DIV(ICON("info-circle"),
-                                             _class="medium-1 columns",
-                                             ),
-                                         _class="row draggable",
-                                         _id="text",
-                                         ),
-                                     DIV(DIV(ICON("hashtag"),
-                                             _class="medium-2 columns",
-                                             ),
-                                         DIV(T("Number question"),
-                                             _class="medium-9 columns",
-                                             ),
-                                         DIV(ICON("info-circle"),
-                                             _class="medium-1 columns",
-                                             ),
-                                         _class="row draggable",
-                                         _id="number",
-                                         ),
-                                     DIV(DIV(ICON("list"),
-                                             _class="medium-2 columns",
-                                             ),
-                                         DIV(T("Multiple choice question"),
-                                             _class="medium-9 columns",
-                                             ),
-                                         DIV(ICON("info-circle"),
-                                             _class="medium-1 columns",
-                                             ),
-                                         _class="row draggable",
-                                         _id="multichoice",
-                                         ),
-                                     DIV(DIV(ICON("tasks"),
-                                             _class="medium-2 columns",
-                                             ),
-                                         DIV(T("Likert-scale"),
-                                             _class="medium-9 columns",
-                                             ),
-                                         DIV(ICON("info-circle"),
-                                             _class="medium-1 columns",
-                                             ),
-                                         _class="row draggable",
-                                         _id="likert",
-                                         ),
-                                     DIV(DIV(ICON("picture"),
-                                             _class="medium-2 columns",
-                                             ),
-                                         DIV(T("Heatmap"),
-                                             _class="medium-9 columns",
-                                             ),
-                                         DIV(ICON("info-circle"),
-                                             _class="medium-1 columns",
-                                             ),
-                                         _class="row draggable",
-                                         _id="heatmap",
-                                         ),
-                                     DIV(DIV(ICON("section-break"),
-                                             _class="medium-2 columns",
-                                             ),
-                                         DIV(T("Section / Page break"),
-                                             _class="medium-9 columns",
-                                             ),
-                                         DIV(ICON("info-circle"),
-                                             _class="medium-1 columns",
-                                             ),
-                                         _class="row draggable",
-                                         _id="break",
-                                         ),
-                                     )
+                ltable = s3db.dc_template_l10n
+                l10n = db(ltable.template_id == template_id).select(ltable.language,
+                                                                    limitby = (0, 1)
+                                                                    ).first()
+                if l10n:
+                    l10n = l10n.language
 
-                upload_btn = A(T("Upload translation"),
-                               _class="button",
-                               )
+                languages_dropdown = SELECT(OPTION(T("Choose language"),
+                                                   _value="",
+                                                   ),
+                                            _id="survey-l10n",
+                                            _class="fright",
+                                            )
+                l10n_options = current.deployment_settings.L10n.get("survey_languages", {})
+                for lang in l10n_options:
+                    if lang == l10n:
+                        languages_dropdown.append(OPTION(l10n_options[lang],
+                                                         _selected=True,
+                                                         _value=lang,
+                                                         ))
+                    else:
+                        languages_dropdown.append(OPTION(l10n_options[lang],
+                                                         _value=lang,
+                                                         ))
+
+                toolbar = DIV(DIV(H2(T("Question types")),
+                                  _class="row",
+                                  ),
+                              DIV(DIV(ICON("instructions"),
+                                      _class="medium-2 columns",
+                                      ),
+                                  DIV(T("Data collector instructions"),
+                                      _class="medium-9 columns",
+                                      ),
+                                  DIV(info_instructions,
+                                      _class="medium-1 columns",
+                                      ),
+                                  _class="row draggable",
+                                  _id="instructions",
+                                  ),
+                              DIV(DIV(ICON("comment-alt"),
+                                      _class="medium-2 columns",
+                                      ),
+                                  DIV(T("Text box"),
+                                      _class="medium-9 columns",
+                                      ),
+                                  DIV(ICON("info-circle"),
+                                      _class="medium-1 columns",
+                                      ),
+                                  _class="row draggable",
+                                  _id="text",
+                                  ),
+                              DIV(DIV(ICON("hashtag"),
+                                      _class="medium-2 columns",
+                                      ),
+                                  DIV(T("Number question"),
+                                      _class="medium-9 columns",
+                                      ),
+                                  DIV(ICON("info-circle"),
+                                      _class="medium-1 columns",
+                                      ),
+                                  _class="row draggable",
+                                  _id="number",
+                                  ),
+                              DIV(DIV(ICON("list"),
+                                      _class="medium-2 columns",
+                                      ),
+                                  DIV(T("Multiple choice question"),
+                                      _class="medium-9 columns",
+                                      ),
+                                  DIV(ICON("info-circle"),
+                                      _class="medium-1 columns",
+                                      ),
+                                  _class="row draggable",
+                                  _id="multichoice",
+                                  ),
+                              DIV(DIV(ICON("tasks"),
+                                      _class="medium-2 columns",
+                                      ),
+                                  DIV(T("Likert-scale"),
+                                      _class="medium-9 columns",
+                                      ),
+                                  DIV(ICON("info-circle"),
+                                      _class="medium-1 columns",
+                                      ),
+                                  _class="row draggable",
+                                  _id="likert",
+                                  ),
+                              DIV(DIV(ICON("picture"),
+                                      _class="medium-2 columns",
+                                      ),
+                                  DIV(T("Heatmap"),
+                                      _class="medium-9 columns",
+                                      ),
+                                  DIV(ICON("info-circle"),
+                                      _class="medium-1 columns",
+                                      ),
+                                  _class="row draggable",
+                                  _id="heatmap",
+                                  ),
+                              DIV(DIV(ICON("section-break"),
+                                      _class="medium-2 columns",
+                                      ),
+                                  DIV(T("Section / Page break"),
+                                      _class="medium-9 columns",
+                                      ),
+                                  DIV(ICON("info-circle"),
+                                      _class="medium-1 columns",
+                                      ),
+                                  _class="row draggable",
+                                  _id="break",
+                                  ),
+                              DIV(H2(T("Translation options")),
+                                  _class="row",
+                                  ),
+                              DIV(LABEL("%s:" % T("Translated to"),
+                                        _class = "fleft",
+                                        ),
+                                  languages_dropdown,
+                                  _class="row",
+                                  ),
+                              DIV(A(T("Upload translation"),
+                                    _class="button tiny fright",
+                                    ),
+                                  _class="row",
+                                  ),
+                              )
 
                 if target_status == 1:
                     hidden_input = INPUT(_type = "hidden",
@@ -1227,7 +1392,6 @@ class dc_TemplateEditor(S3Method):
                     scripts_append("/%s/static/scripts/jquery.fileupload.js" % appname)
                     scripts_append("/%s/static/scripts/jquery.validate.js" % appname)
                     scripts_append("/%s/static/themes/UCCE/js/s3.ui.template.js" % appname)
-                    scripts_append("/%s/static/themes/UCCE/js/template_editor.js" % appname)
                 else:
                     scripts_append("/%s/static/scripts/load-image.all.min.js" % appname)
                     scripts_append("/%s/static/scripts/canvas-to-blob.min.js" % appname)
@@ -1236,12 +1400,13 @@ class dc_TemplateEditor(S3Method):
                     scripts_append("/%s/static/scripts/jquery.fileupload.min.js" % appname)
                     scripts_append("/%s/static/scripts/jquery.validate.min.js" % appname)
                     scripts_append("/%s/static/themes/UCCE/js/s3.ui.template.min.js" % appname)
-                    scripts_append("/%s/static/themes/UCCE/js/template_editor.min.js" % appname)
+                # Initialise the Template Editor Widget
+                script = '''$('#survey-layout').surveyLayout()'''
+                s3.jquery_ready.append(script)
 
                 S3CustomController._view(THEME, "template_editor.html")
-                output = {"question_types": question_types,
-                          "upload_btn": upload_btn,
-                          "header": header,
+                output = {"header": header,
+                          "toolbar": toolbar,
                           "layout": layout,
                           }
 
@@ -1277,7 +1442,7 @@ class dc_TemplateSave(S3Method):
                     r.unauthorised()
                 # Update Layout
                 layout = r.post_vars.get("layout")
-                if layout:
+                if layout is not None:
                     current.db(table.id == record_id).update(layout = layout)
                     # Results (Empty Message so we don't get it shown to User)
                     current.response.headers["Content-Type"] = "application/json"

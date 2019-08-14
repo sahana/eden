@@ -5549,22 +5549,22 @@ table tr td {
 .tabs dd > a,
 .tabs .tab-title > a {
   display: block;
-  background-color: #EFEFEF;
-  color: #222222;
+  background-color: #023859;
+  color: #FFFFFF;
   font-family: Nunito;
   font-size: 1rem;
-  padding: 1rem 2rem;
+  padding: 0.875rem 1.75rem;
 }
 /* line 50, ../../foundation/scss/components/_tabs.scss */
 .tabs dd > a:hover,
 .tabs .tab-title > a:hover {
-  background-color: #e1e1e1;
+  background-color: #023554;
 }
 /* line 55, ../../foundation/scss/components/_tabs.scss */
 .tabs dd.active > a,
 .tabs .tab-title.active > a {
-  background-color: #FFFFFF;
-  color: #222222;
+  background-color: #C3CDD0;
+  color: #FFFFFF;
 }
 /* line 64, ../../foundation/scss/components/_tabs.scss */
 .tabs.radius dd:first-child a,

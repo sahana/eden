@@ -72,7 +72,7 @@
             this.data = null; // Gets populated by _deserialize()
 
             // Use $.searchS3 if available
-            // Not interchangeable as processData defaults differently with each
+            // NB Not really interchangeable as processData defaults differently with each
             if ($.searchS3 !== undefined) {
                 this.ajaxMethod = $.searchS3;
             } else {
@@ -85,8 +85,12 @@
                 function(value, element) {
                     var questionID = element.id.split('-')[1],
                         max = $('#max-' + questionID).val();
-                    
-                    return this.optional(element) || (parseFloat(value) <= max);
+
+                    if (max == '') {
+                        return this.optional(element) || true;
+                    } else {
+                        return this.optional(element) || (parseFloat(value) <= max);
+                    }
                 },
                 'needs to be lower than Maximum'
             );
@@ -96,7 +100,11 @@
                     var questionID = element.id.split('-')[1],
                         min = $('#min-' + questionID).val();
 
-                    return this.optional(element) || (parseFloat(value) >= min);
+                    if (min == '') {
+                        return this.optional(element) || true;
+                    } else {
+                        return this.optional(element) || (parseFloat(value) >= min);
+                    }
                 },
                 'needs to be higher than Minimum'
             );
@@ -209,13 +217,14 @@
                 mandatory,
                 question,
                 thisQuestion,
+                translationHidden = '',
                 translationTab,
-                translationTitle = '',
                 trash;
 
-            if (l10n) {
-                translationTitle = '<li class="tab-title"><a href="#translation-' + position + '">Translation</a></li>';
+            if (!l10n) {
+                translationHidden = ' hide';
             }
+            var translationTitle = '<li class="tab-title l10n' + translationHidden + '"><a href="#translation-' + position + '">Translation</a></li>';
 
             if (type == 'instructions') {
                 idHtml = 'instruction-' + position;
@@ -230,24 +239,24 @@
                         checked = ' checked';
                     }
                 }
-                mandatory = '<div class="row"><input id="mandatory-' + questionID + '" type="checkbox" ' + checked + ' class="fleft"><label>Make question mandatory</label></div>';
+                mandatory = '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="mandatory-' + questionID + '" type="checkbox" ' + checked + ' class="fleft"><label>Make question mandatory</label></div></div>';
                 if (type != 'heatmap') {
                     // Upload or Pipe Image
                     optionsHtml = this.pipeOptionsHtml(questionID, load);
-                    imageHtml = '<div class="row"><label>Add image</label><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr">' + 
+                    imageHtml = '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>Add image</label><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr">' + 
                                 '<label class="fleft">or pipe question image:</label><select id="pipe-' + questionID + '" class="fleft">' + optionsHtml + '</select>' +
-                                '<a id="image-delete-' + questionID + '">Delete</a></div>';
+                                '<a id="image-delete-' + questionID + '">Delete</a></div></div>';
                 }
             }
 
             question = '<div class="thumbnail dl-item" id="' + idHtml + '" data-page="' + page + '"' + dataHtml + '>' + 
-                       '<div class="card-header"><ul class="tabs fleft" data-tab><li class="tab-title active"><a href="#edit-' + position + '">Edit</a></li><li class="tab-title"><a href="#logic-' + position + '">Display Logic</a></li> ' + translationTitle + '</ul>' +
+                       '<div class="card-header"><ul class="tabs fleft" data-tab><li class="tab-title active"><a href="#edit-' + position + '">Edit</a></li><li class="tab-title"><a href="#logic-' + position + '">Display logic</a></li> ' + translationTitle + '</ul>' +
                        '<div class="edit-bar fright"><a><i class="ucce ucce-duplicate"> </i></a><a><i class="ucce ucce-delete"> </i></a><i class="ucce ucce-up"> </i><i class="ucce ucce-down"> </i></div>' + 
                        '</div>' + 
                        '<div class="tabs-content">';
 
             optionsHtml = this.logicOptionsHtml(questionID, load);
-            logicTab = '<div class="media content" id="logic-' + position + '"><h2>Only display question if...</h2><select id="logic-select-' + questionID + '" class="fleft">' + optionsHtml + '</select><label>response is</label></div>';
+            logicTab = '<div class="media content" id="logic-' + position + '"><div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Only display question if...</h2></div></div><div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><select id="logic-select-' + questionID + '" class="fleft">' + optionsHtml + '</select><label>response is</label></div></div></div>';
 
             switch(type) {
 
@@ -265,8 +274,14 @@
                             sayTextL10n = thisLayout.say.l10n[l10n];
                         }
                     }
-                    editTab = '<div class="media content active" id="edit-' + position + '"><h2>Data collector instructions</h2><label>What to do</label><input id="do-' + position + '" type="text" size=100 placeholder="Type what instructor should do" value="' + doText + '"><label>What to say</label><input id="say-' + position + '" type="text" size=100 placeholder="Type what instructor should say" value="' + sayText + '"></div>';
-                    translationTab = '<div class="media content" id="translation-' + position + '"><h2>Data collector instructions</h2><label>What to do</label><input id="do-l10n-' + position + '" type="text" size=100 placeholder="Type translation of what instructor should do" value="' + doTextL10n + '"><label>What to say</label><input id="say-l10n-' + position + '" type="text" size=100 placeholder="Type translation of what instructor should say" value="' + sayTextL10n + '"></div>';
+                    editTab = '<div class="media content active" id="edit-' + position + '">' +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Data collector instructions</h2></div></div>' +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>What instructor should do</label><input id="do-' + position + '" type="text" size=100 placeholder="Type what instructor should do" value="' + doText + '"><label>What instructor should say</label><input id="say-' + position + '" type="text" size=100 placeholder="Type what instructor should say" value="' + sayText + '"></div></div>' +
+                              '</div>';
+                    translationTab = '<div class="media content" id="translation-' + position + '">' +
+                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Data collector instructions</h2></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>What instructor should do</label><div class="translate-from"></div><input id="do-l10n-' + position + '" type="text" size=100 placeholder="Type translation..." value="' + doTextL10n + '"><label>What instructor should say</label><div class="translate-from"></div><input id="say-l10n-' + position + '" type="text" size=100 placeholder="Type translation..." value="' + sayTextL10n + '"></div></div>' + 
+                                     '</div>';
                     formElements = '#instruction-' + position + ' input';
                     trash = '#instruction-' + position + ' .ucce-delete';
                     break;
@@ -280,8 +295,16 @@
                             nameL10n = thisQuestion.name_l10n || '';
                         }
                     }
-                    editTab = '<div class="media content active" id="edit-' + position + '"><h2>Text box</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '" type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml + '</div>';
-                    translationTab = '<div class="media content" id="translation-' + position + '"><h2>Text box</h2><div class="row"><label id="qlabel-l10n-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>';
+                    editTab = '<div class="media content active" id="edit-' + position + '">' +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Text box</h2></div></div>' + 
+                               '<div class="row"><div class="columns medium-1"><label id="qlabel-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><input id="name-' + questionID + '" type="text" size=100 placeholder="type question" value="' + name + '"></div></div>' +
+                               mandatory + imageHtml +
+                              '</div>';
+                    translationTab = '<div class="media content" id="translation-' + position + '">' +
+                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Text box</h2></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div class="translate-from"></div></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
+                                     '</div>';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .ucce-delete';
                     break;
@@ -304,15 +327,25 @@
                             max = isIntInRange.max || '';
                         }
                     }
-                    editTab = '<div class="media content active" id="edit-' + position + '"><h2>Number question</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml +
-                              '<div class="row"><h2>Answer</h2><form id="answer-' + questionID + '"><label>Minimum:</label><input id="min-' + questionID + '" name="min" type="number" value="' + min + '"><label>Maximum:</label><input id="max-' + questionID + '" name="max" type="number" value="' + max + '"></form></div></div>';
-                    translationTab = '<div class="media content" id="translation-' + position + '"><h2>Number question</h2><div class="row"><label id="qlabel-l10n-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-l10n-' + questionID + '"type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div';
+                    editTab = '<div class="media content active" id="edit-' + position + '">' + 
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Number question</h2></div></div>' +
+                               '<div class="row"><div class="columns medium-1"><label id="qlabel-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div></div>' +
+                               mandatory + imageHtml +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Answer</h2></div></div>' +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>Restrict input to:</label></div></div>' +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><form id="answer-' + questionID + '"><label class="fleft">Minimum:</label><input id="min-' + questionID + '" name="min" type="number" value="' + min + '" class="fleft"><label class="fleft">Maximum:</label><input id="max-' + questionID + '" name="max" type="number" value="' + max + '" class="fleft"></form></div></div>' +
+                              '</div>';
+                    translationTab = '<div class="media content" id="translation-' + position + '">' +
+                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Number question</h2></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div class="translate-from"></div></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
+                                     '</div>';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .ucce-delete';
                     break;
 
                 case 'multichoice':
-                    newChoice = '<div class="row"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice"><i class="ucce ucce-minus"> </i><i class="ucce ucce-plus"> </i></div>';
+                    newChoice = '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice"><i class="ucce ucce-minus"> </i><i class="ucce ucce-plus"> </i></div></div>';
                     // @ToDo: Grey the multiple -+ options if they cannot do anything
                     var name = '',
                         nameL10n = '',
@@ -332,7 +365,7 @@
                         if (lenOptions) {
                             choices = '';
                             for (var i=0; i < lenOptions; i++) {
-                                choices += '<div class="row"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice" value="' + options[i] + '"><i class="ucce ucce-minus"> </i><i class="ucce ucce-plus"> </i></div>';
+                                choices += '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice" value="' + options[i] + '"><i class="ucce ucce-minus"> </i><i class="ucce ucce-plus"> </i></div></div>';
                             }
                         }
                         var settings = thisQuestion.settings;
@@ -346,14 +379,24 @@
                             multiChecked = ' checked';
                         }
                     }
-                    editTab = '<div class="media content active" id="edit-' + position + '"><h2>Multiple choice question</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml +
-                              '<div class="row"><h2>Answer</h2><label>Choices</label></div>' + choices +
-                              '<div class="row"><input id="other-' + questionID + '" type="checkbox"' + other + '><label>Add \'other field\'</label></div>' + 
-                              '<div class="row"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" placeholder="Other (please specify)" value="' + other_label + '"' + other_disabled + '></div>' + 
-                              '<div class="row"><input id="multiple-' + questionID + '" type="checkbox"' + multiChecked + '><label>Allow multiple responses</label></div>' +
-                              '<div class="row"><label class="fleft">Maximum No. of responses:</label><i class="ucce ucce-minus"> </i> <span id="multiple-count-' + questionID + '">' + multiple + '</span> <i class="ucce ucce-plus"> </i></div></div>';
+                    editTab = '<div class="media content active" id="edit-' + position + '">' +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Multiple choice question</h2></div></div>' +
+                               '<div class="row"><div class="columns medium-1"><label id="qlabel-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div></div>' +
+                               mandatory + imageHtml +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Answer</h2></div></div>' +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>Choices</label></div></div>' +
+                               choices +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="other-' + questionID + '" type="checkbox"' + other + '><label>Add \'other field\'</label></div></div>' + 
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" placeholder="Other (please specify)" value="' + other_label + '"' + other_disabled + '></div></div>' + 
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="multiple-' + questionID + '" type="checkbox"' + multiChecked + '><label>Allow multiple responses</label></div></div>' +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label class="fleft">Maximum No. of responses:</label><i class="ucce ucce-minus"> </i> <span id="multiple-count-' + questionID + '">' + multiple + '</span> <i class="ucce ucce-plus"> </i></div></div>' +
+                              '</div>';
                     
-                    translationTab = '<div class="media content" id="translation-' + position + '"><h2>Multiple choice question</h2><div class="row"><label id="qlabel-l10n-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-l10n-' + questionID + '"type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div';
+                    translationTab = '<div class="media content" id="translation-' + position + '">' +
+                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Multiple choice question</h2></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div class="translate-from"></div></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
+                                     '</div>';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .ucce-delete';
                     break;
@@ -388,9 +431,19 @@
                         }
                     }
                     var scaleOptions = scales.join();
-                    editTab = '<div class="media content active" id="edit-' + position + '"><h2>Likert-scale</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory + imageHtml +
-                              '<div class="row"><h2>Answer</h2><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please choose scale</option>' + scaleOptions + '</select></div><div class="row">' + displayOptions + '</div></div>';
-                    translationTab = '<div class="media content" id="translation-' + position + '"><h2>Likert-scale</h2><div class="row"><label id="qlabel-l10n-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-l10n-' + questionID + '"type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div';
+                    editTab = '<div class="media content active" id="edit-' + position + '">' +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Likert-scale</h2></div></div>' +
+                               '<div class="row"><div class="columns medium-1"><label id="qlabel-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div></div>' +
+                               mandatory + imageHtml +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Answer</h2></div></div>' +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please choose scale</option>' + scaleOptions + '</select></div></div>' +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11">' + displayOptions + '</div></div>' +
+                              '</div>';
+                    translationTab = '<div class="media content" id="translation-' + position + '">' +
+                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Likert-scale</h2></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div class="translate-from"></div></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
+                                     '</div>';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .ucce-delete';
                     break;
@@ -405,9 +458,22 @@
                             nameL10n = thisQuestion.name_l10n || '';
                         }
                     }
-                    editTab = '<div class="media content active" id="edit-' + position + '"><h2>Heatmap</h2><div class="row"><label id="qlabel-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div>' + mandatory +
-                              '<div class="row"><h2>Image</h2><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><h3>Number of clicks allowed:</h3><i class="ucce ucce-minus"> </i> 1 <i class="ucce ucce-plus"> </i><h3>Tap/click regions:</h3><a class="button tiny">Add region</a><input id="region-' + position + '-1" type="text" placeholder="enter label" disabled></div></div>';
-                    translationTab = '<div class="media content" id="translation-' + position + '"><h2>Heatmap</h2><div class="row"><label id="qlabel-l10n-' + questionID + '" class="fleft">Q' + questionNumber + '</label><input id="name-l10n-' + questionID + '"type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div';
+                    editTab = '<div class="media content active" id="edit-' + position + '">' +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Heatmap</h2></div></div>' +
+                               '<div class="row"><div class="columns medium-1"><label id="qlabel-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div></div>' +
+                               mandatory +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Image</h2></div></div>' +
+                               '<div class="row">' +
+                                '<div class="columns medium-1"></div>' + 
+                                '<div class="columns medium-6"><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><span id="preview-' + questionID + '" class="preview-empty fleft"></span></div>' +
+                                '<div class="columns medium-5"><h3>Number of clicks allowed:</h3><i class="ucce ucce-minus"> </i> 1 <i class="ucce ucce-plus"> </i><h3>Tap/click regions:</h3><a class="button tiny">Add region</a><input id="region-' + position + '-1" type="text" placeholder="enter label" disabled></div>' +
+                               '</div>' +
+                              '</div>';
+                    translationTab = '<div class="media content" id="translation-' + position + '">' +
+                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Heatmap</h2></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div class="translate-from"></div></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
+                                     '</div>';
                     formElements = '#question-' + questionID + ' input';
                     trash = '#question-' + questionID + ' .ucce-delete';
                     break;
@@ -415,9 +481,7 @@
 
             question += editTab;
             question += logicTab;
-            if (l10n) {
-                question += translationTab;
-            }
+            question += translationTab;
             question += '</div></div>';
 
             // Place before droppable
@@ -778,11 +842,11 @@
             }
 
             // Run Foundation JS on new Item
-            //- needed for Tabs
+            //- needed for Tabs to work at all & allows us to add callback
             if (type == 'instructions') {
-                $('#instruction-' + position).foundation();
+                $('#instruction-' + position).foundation('tab', 'reflow');
             } else {
-                $('#question-' + questionID).foundation();
+                $('#question-' + questionID).foundation('tab', 'reflow');
             }
 
         },
@@ -1288,7 +1352,7 @@
          * Redraw widget contents
          */
         refresh: function() {
-            //this._unbindEvents();
+            this._unbindEvents();
             this._deserialize();
 
             // Add an initial section break
@@ -1300,7 +1364,7 @@
             this.loadSurvey();
 
             //this._serialize();
-            //this._bindEvents();
+            this._bindEvents();
         },
 
         /**
@@ -1316,11 +1380,19 @@
             }
 
             var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/update_json.json',
+                l10n = this.data.l10n,
                 settings = {},
                 data = {
                     name: name,
                     mandatory: $('#mandatory-' + questionID).prop('checked')
                 };
+
+            if (l10n) {
+                var name_l10n = $('#name-l10n-' + questionID).val();
+                if (name_l10n) {
+                    data.name_l10n = name_l10n;
+                }
+            }
 
             var pipeImage = this.data.questions[questionID].settings.pipeImage;
             if (pipeImage) {
@@ -1374,6 +1446,7 @@
                     } else {
                         settings.multiple = 1;
                     }
+                    // @ToDo: Translated Options
                     break;
                 case 'likert':
                     var scale = $('#scale-' + questionID).val();
@@ -1386,6 +1459,9 @@
                     }
                     break;
                 case 'heatmap':
+                    // @ToDo: numClicks
+                    // @ToDo: Regions
+                    // @ToDo: Translated Regions
                     break;
 
             }
@@ -1474,39 +1550,148 @@
             this.data = JSON.parse(value);
             return this.data;
 
-        }
+        },
 
         /**
          * Bind event handlers (after refresh)
          *
-         * (unused)
-         *
+         */
         _bindEvents: function() {
 
             var self = this,
-                ns = this.eventNamespace;
+                ns = this.eventNamespace,
+                surveyName = $('#survey-name');
 
-            var selector = '#' + this.fieldname;
+            // Foundation Tabs
+            $(document).foundation({
+                tab: {
+                    callback : function (tab) {
+                        if (tab.text() == 'Translation') {
+                            // Copy original language to 'translate-from' div
+                            var currentPosition = tab.children().first().attr('href').split('-')[1],
+                                parts = tab.closest('.dl-item').attr('id').split('-'),
+                                type = parts[0];
+                            if (type == 'instruction') {
+                                $('#do-l10n-' + currentPosition).prev().html($('#do-' + currentPosition).val());
+                                $('#say-l10n-' + currentPosition).prev().html($('#say-' + currentPosition).val());
+                            } else {
+                                var questionID = parts[1];
+                                $('#name-l10n-' + questionID).parent().parent().prev().children('.medium-11').first().children('.translate-from').html($('#name-' + questionID).val());
 
-            this.inputFields.bind('change' + ns, function() {
-                self._collectData(this);
+                                type = typesToText[self.data.questions[questionID].type];
+                                switch(type) {
+
+                                    case 'text':
+                                        // Nothing needed here
+                                        break;
+                                    case 'number':
+                                        // Nothing needed here
+                                        break;
+                                    case 'multichoice':
+                                        // @ToDo: Translate Options
+                                        
+                                        break;
+                                    case 'likert':
+                                        // Nothing needed here
+                                        // - if we assume that Scale Options are translated centrally
+                                        break;
+                                    case 'heatmap':
+                                        // @ToDo: Translate Regions
+                                        
+                                        break;
+
+                                }
+                            }
+                        }
+                    }
+                }
             });
 
-        }, */
+            // Edit Survey Name
+            surveyName.on('change' + ns, function(/* event */) {
+                var name = surveyName.val(),
+                    recordID = surveyName.data('id');
+                self.ajaxMethod({
+                    'url': S3.Ap.concat('/dc/target/') + recordID + '/name.json',
+                    'type': 'POST',
+                    // $.searchS3 defaults to processData: false
+                    'data': JSON.stringify({name: name}),
+                    'dataType': 'json',
+                    'success': function(/* data */) {
+                        // Nothing needed here
+                    },
+                    'error': function(request, status, error) {
+                        var msg;
+                        if (error == 'UNAUTHORIZED') {
+                            msg = i18n.gis_requires_login;
+                        } else {
+                            msg = request.responseText;
+                        }
+                        console.log(msg);
+                    }
+                });
+            });
+
+            // Edit Survey Language
+            $('#survey-l10n').on('change' + ns, function(/* event */) {
+                var l10n = $(this).val(),
+                    recordID = surveyName.data('id');
+                self.ajaxMethod({
+                    'url': S3.Ap.concat('/dc/target/') + recordID + '/l10n.json',
+                    'type': 'POST',
+                    // $.searchS3 defaults to processData: false
+                    'data': JSON.stringify({l10n: l10n}),
+                    'dataType': 'json',
+                    'success': function(/* data */) {
+                        // Update data
+                        self.data.l10n = l10n;
+                        if (l10n) {
+                            // Show Translation Tabs
+                            $('li.l10n').removeClass('hide')
+                                        .show();
+                            // Re-apply events
+                            $(document).foundation('tab', 'reflow');
+                        } else{
+                            // Hide Translation Tabs
+                            $('li.l10n').hide();
+                        }
+                    },
+                    'error': function(request, status, error) {
+                        var msg;
+                        if (error == 'UNAUTHORIZED') {
+                            msg = i18n.gis_requires_login;
+                        } else {
+                            msg = request.responseText;
+                        }
+                        console.log(msg);
+                    }
+                });
+            });
+
+            // Drag ('n'Drop handled in droppable())
+            $('.draggable').draggable({
+                revert: true,
+                revertDuration: 250
+            });
+
+        },
 
         /**
          * Unbind events (before refresh)
-         *
+         */
         _unbindEvents: function() {
 
-            var ns = this.eventNamespace,
-                el = $(this.element);
+            var ns = this.eventNamespace;
 
-            //this.inputFields.unbind(ns);
-            el.unbind(ns);
+            $('#survey-name').unbind(ns);
+            $('#survey-l10n').unbind(ns);
+            var draggable_el = $('.draggable');
+            if (draggable_el.draggable('instance') != undefined) {
+                draggable_el.draggable('destroy');
+            }
 
             return true;
-        }*/
+        }
 
     });
 });
