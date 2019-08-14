@@ -1511,6 +1511,19 @@ def table():
         raise HTTP(400, "No resource specified")
 
 # -----------------------------------------------------------------------------
+def masterkey():
+    """ Master Key Verification and Context Query """
+
+    # Challenge the client to login with master key
+    if not auth.s3_logged_in():
+        auth.permission.fail()
+
+    # If successfully logged-in, provide context information for
+    # the master key (e.g. project UUID + title, master key UUID)
+    from s3.s3masterkey import S3MasterKey
+    return S3MasterKey.context()
+
+# -----------------------------------------------------------------------------
 def get_settings():
     """
        Function to lookup the value of a deployment_setting

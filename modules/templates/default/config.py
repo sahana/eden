@@ -120,6 +120,8 @@ def config(settings):
     #settings.auth.office365_domains = ["microsoft.com"]
     # Uncomment this to allow users to Login using OpenID
     #settings.auth.openid = True
+    # Uncomment this to allow users to login using master key
+    #settings.auth.masterkey = True
     # Uncomment this to block password changes since managed externally (OpenID / SMTP / LDAP)
     #settings.auth.password_changes = False
     # Uncomment this to disable password retrieval (e.g. if impractical or unsafe)

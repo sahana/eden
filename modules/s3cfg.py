@@ -628,6 +628,22 @@ class S3Config(Storage):
         else:
             return None
 
+    def get_auth_masterkey(self):
+        """
+            Allow authentication with master key (= a single key instead of
+            username+password)
+        """
+        return self.auth.get("masterkey", False)
+
+    def get_auth_masterkey_app_key(self):
+        """
+            App key for clients using master key authentication
+            - a string (recommended length 32 chars, random pattern)
+            - specific for the deployment (i.e. not template)
+            - should be configured in 000_config.py (alongside hmac_key)
+        """
+        return self.auth.get("masterkey_app_key")
+
     def get_security_self_registration(self):
         """
             Whether Users can register themselves

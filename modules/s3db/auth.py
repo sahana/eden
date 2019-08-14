@@ -465,24 +465,26 @@ class AuthMasterKeyModel(S3Model):
 
     names = ("auth_masterkey",
              "auth_masterkey_id",
+             "auth_masterkey_token",
              )
 
     def model(self):
 
         #T = current.T
+        define_table = self.define_table
 
         # ---------------------------------------------------------------------
         # Master Keys
         #
         tablename = "auth_masterkey"
-        self.define_table(tablename,
-                          Field("name", length=254, unique=True,
-                                #label = T("Master Key"),
-                                requires = IS_LENGTH(254),
-                                ),
-                          # Which 'dummy' user this master key links to:
-                          Field("user_id", current.auth.settings.table_user),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     Field("name", length=254, unique=True,
+                           #label = T("Master Key"),
+                           requires = IS_LENGTH(254),
+                           ),
+                     # Which 'dummy' user this master key links to:
+                     Field("user_id", current.auth.settings.table_user),
+                     *s3_meta_fields())
 
         represent = S3Represent(lookup=tablename)
 
@@ -495,6 +497,15 @@ class AuthMasterKeyModel(S3Model):
                                                               represent,
                                                               )),
                                        )
+
+        # ---------------------------------------------------------------------
+        # Single-use tokens for master key authentication
+        #
+        tablename = "auth_masterkey_token"
+        define_table(tablename,
+                     Field("token", length=64, unique=True),
+                     s3_datetime("expires_on"),
+                     )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
