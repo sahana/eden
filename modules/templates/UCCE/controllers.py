@@ -605,17 +605,17 @@ class dc_QuestionSave(S3Method):
                             exists = db(ltable.question_id == record_id).select(ltable.id,
                                                                                 limitby = (0, 1)
                                                                                 ).first()
-                            vars = {"name_l10n": name_l10n,
-                                    "language": l10n,
-                                    }
+                            new_vars = {"name_l10n": name_l10n,
+                                        "language": l10n,
+                                        }
                             options_l10n = post_vars_get("options_l10n")
                             if options_l10n:
-                                vars["options_l10n"] = options_l10n
+                                new_vars["options_l10n"] = options_l10n
                             if exists:
-                                exists.update_record(**vars)
+                                exists.update_record(**new_vars)
                             else:
-                                vars["question_id"] = record_id
-                                ltable.insert(**vars)
+                                new_vars["question_id"] = record_id
+                                ltable.insert(**new_vars)
 
                     # Results (Empty Message so we don't get it shown to User)
                     current.response.headers["Content-Type"] = "application/json"

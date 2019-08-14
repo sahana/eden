@@ -352,7 +352,7 @@
                         choices = newChoice,
                         other = '',
                         other_disabled = ' disabled',
-                        other_label = '',
+                        otherLabel = '',
                         multiple = 1,
                         multiChecked = '';
                     if (load) {
@@ -369,8 +369,8 @@
                             }
                         }
                         var settings = thisQuestion.settings;
-                        other_label = settings.other || '';
-                        if (other_label) {
+                        otherLabel = settings.other || '';
+                        if (otherLabel) {
                             other = ' checked';
                             other_disabled = '';
                         }
@@ -387,7 +387,7 @@
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>Choices</label></div></div>' +
                                choices +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="other-' + questionID + '" type="checkbox"' + other + '><label>Add \'other field\'</label></div></div>' + 
-                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" placeholder="Other (please specify)" value="' + other_label + '"' + other_disabled + '></div></div>' + 
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" placeholder="Other (please specify)" value="' + otherLabel + '"' + other_disabled + '></div></div>' + 
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="multiple-' + questionID + '" type="checkbox"' + multiChecked + '><label>Allow multiple responses</label></div></div>' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label class="fleft">Maximum No. of responses:</label><i class="ucce ucce-minus"> </i> <span id="multiple-count-' + questionID + '">' + multiple + '</span> <i class="ucce ucce-plus"> </i></div></div>' +
                               '</div>';
@@ -396,6 +396,8 @@
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Multiple choice question</h2></div></div>' +
                                       '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Answer</h2></div></div>' +
+                                      '<div class="row" id="choices-l10n-row-' + questionID + '"><div class="columns medium-1"></div><div class="columns medium-11"><label>Choices</label></div></div>' +
                                      '</div>';
                     formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                     trash = '#question-' + questionID + ' .ucce-delete';
@@ -1435,17 +1437,29 @@
                         options.push($(this).val());
                     });
                     data.options = options;
+                    if (l10n) {
+                        var options_l10n = [];
+                        $('.choice-l10n-' + questionID).each(function() {
+                            options_l10n.push($(this).val());
+                        });
+                        data.options_l10n = options_l10n;
+                    }
                     if ($('#other-' + questionID).prop('checked')) {
                         settings.other = $('#other-label-' + questionID).val();
+                        if (l10n) {
+                            settings.otherL10n = $('#other-l10n-' + questionID).val();
+                        }
                     } else {
                         settings.other = null;
+                        if (l10n) {
+                            settings.otherL10n = null;
+                        }
                     }
                     if ($('#multiple-' + questionID).prop('checked')) {
                         settings.multiple = parseInt($('#multiple-count-' + questionID).html());
                     } else {
                         settings.multiple = 1;
                     }
-                    // @ToDo: Translated Options
                     break;
                 case 'likert':
                     var scale = $('#scale-' + questionID).val();
@@ -1574,10 +1588,11 @@
                                 $('#do-l10n-' + currentPosition).prev().html($('#do-' + currentPosition).val());
                                 $('#say-l10n-' + currentPosition).prev().html($('#say-' + currentPosition).val());
                             } else {
-                                var questionID = parts[1];
+                                var questionID = parts[1],
+                                    thisQuestion = self.data.questions[questionID];
                                 $('#name-l10n-' + questionID).parent().parent().prev().children('.medium-11').first().children('.translate-from').html($('#name-' + questionID).val());
 
-                                type = typesToText[self.data.questions[questionID].type];
+                                type = typesToText[thisQuestion.type];
                                 switch(type) {
 
                                     case 'text':
@@ -1588,7 +1603,19 @@
                                         break;
                                     case 'multichoice':
                                         // @ToDo: Translate Options
-                                        
+                                        var choices = '',
+                                            options = thisQuestion.options || [],
+                                            lenOptions = options.length;
+                                        for (var i=0; i < lenOptions; i++) {
+                                            choices += '<div class="row"><div class="columns medium-1"></div><div class="columns medium-5"><div class="translate-from">' + options[i] + '</div></div><div class="columns medium-1"></div><div class="columns medium-5"><input class="choice-l10n-' + questionID + '" type="text" placeholder="Type translation..." value="' + options[i] + '"></div></div>';
+                                        }
+                                        var settings = thisQuestion.settings,
+                                            otherLabel = settings.other || '',
+                                            otherL10n = settings.otherL10n || '';
+                                        if (otherLabel) {
+                                            choices += '<div class="row"><div class="columns medium-1"></div><div class="columns medium-5"><div class="translate-from">' + otherLabel + '</div></div><div class="columns medium-1"></div><div class="columns medium-5"><input class="other-l10n-' + questionID + '" type="text" placeholder="Type translation..." value="' + otherL10n + '"></div></div>';
+                                        }
+                                        $('#choices-l10n-row-' + questionID).after(choices);
                                         break;
                                     case 'likert':
                                         // Nothing needed here
