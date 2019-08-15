@@ -87,6 +87,9 @@ settings.base.debug = False
 # - should happen automatically if installing using supported scripts
 settings.auth.hmac_key = "akeytochange"
 
+# If using Masterkey Authentication, then set this to a deployment-specific 32 char string:
+#settings.auth.masterkey_app_key = "randomstringrandomstringrandomstring"
+
 # Minimum Password Length
 #settings.auth.password_min_length = 8
 

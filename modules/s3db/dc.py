@@ -120,6 +120,9 @@ class DataCollectionTemplateModel(S3Model):
                      #              'l10n': {'fr': "Mettez-vous à l'aise",
                      #                       },
                      #              },
+                     #      'displayLogic': {'id': questionID,
+                     #                       'option': option or region,
+                     #                       }
                      #      },
                      #  3: {'type': 'question',
                      #      'code': 'MyT4',   # Used for prepop

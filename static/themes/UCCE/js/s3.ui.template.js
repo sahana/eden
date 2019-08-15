@@ -229,9 +229,13 @@
             if (type == 'instructions') {
                 idHtml = 'instruction-' + position;
                 dataHtml = '';
+                formElements = '#instruction-' + position + ' input, #instruction-' + position + ' select';
+                trash = '#instruction-' + position + ' .ucce-delete';
             } else {
                 idHtml = 'question-' + questionID;
                 dataHtml = ' data-number="' + questionNumber + '"';
+                formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
+                trash = '#question-' + questionID + ' .ucce-delete';
                 var checked = '';
                 thisQuestion = this.data.questions[questionID];
                 if (load) {
@@ -242,7 +246,7 @@
                 mandatory = '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="mandatory-' + questionID + '" type="checkbox" ' + checked + ' class="fleft"><label>Make question mandatory</label></div></div>';
                 if (type != 'heatmap') {
                     // Upload or Pipe Image
-                    optionsHtml = this.pipeOptionsHtml(questionID, load);
+                    optionsHtml = this.pipeOptionsHtml(questionID);
                     imageHtml = '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>Add image</label><span id="preview-' + questionID + '" class="preview-empty fleft"></span><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr">' + 
                                 '<label class="fleft">or pipe question image:</label><select id="pipe-' + questionID + '" class="fleft">' + optionsHtml + '</select>' +
                                 '<a id="image-delete-' + questionID + '">Delete</a></div></div>';
@@ -255,8 +259,10 @@
                        '</div>' + 
                        '<div class="tabs-content">';
 
-            optionsHtml = this.logicOptionsHtml(questionID, load);
-            logicTab = '<div class="media content" id="logic-' + position + '"><div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Only display question if...</h2></div></div><div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><select id="logic-select-' + questionID + '" class="fleft">' + optionsHtml + '</select><label>response is</label></div></div></div>';
+            // We need to reload this when Logic tab selected anyway, so don't bother loading now
+            //optionsHtml = this.logicOptionsHtml(questionID, position);
+            optionsHtml = '';
+            logicTab = '<div class="media content" id="logic-' + position + '"><div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Only display question if...</h2></div></div><div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><select id="logic-select-' + position + '" class="fleft">' + optionsHtml + '</select><label class="fleft">response is</label></div></div></div>';
 
             switch(type) {
 
@@ -282,8 +288,6 @@
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Data collector instructions</h2></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>What instructor should do</label><div class="translate-from"></div><input id="do-l10n-' + position + '" type="text" size=100 placeholder="Type translation..." value="' + doTextL10n + '"><label>What instructor should say</label><div class="translate-from"></div><input id="say-l10n-' + position + '" type="text" size=100 placeholder="Type translation..." value="' + sayTextL10n + '"></div></div>' + 
                                      '</div>';
-                    formElements = '#instruction-' + position + ' input';
-                    trash = '#instruction-' + position + ' .ucce-delete';
                     break;
 
                 case 'text':
@@ -305,8 +309,6 @@
                                       '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
                                      '</div>';
-                    formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
-                    trash = '#question-' + questionID + ' .ucce-delete';
                     break;
 
                 case 'number':
@@ -340,8 +342,6 @@
                                       '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
                                      '</div>';
-                    formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
-                    trash = '#question-' + questionID + ' .ucce-delete';
                     break;
 
                 case 'multichoice':
@@ -411,8 +411,6 @@
                                       '<div class="row" id="choices-l10n-row-' + questionID + '"><div class="columns medium-1"></div><div class="columns medium-11"><label>Choices</label></div></div>' +
                                       choicesL10n + 
                                      '</div>';
-                    formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
-                    trash = '#question-' + questionID + ' .ucce-delete';
                     break;
 
                 case 'likert':
@@ -458,8 +456,6 @@
                                       '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
                                      '</div>';
-                    formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
-                    trash = '#question-' + questionID + ' .ucce-delete';
                     break;
 
                 case 'heatmap':
@@ -488,8 +484,6 @@
                                       '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
                                      '</div>';
-                    formElements = '#question-' + questionID + ' input';
-                    trash = '#question-' + questionID + ' .ucce-delete';
                     break;
             }
 
@@ -516,30 +510,45 @@
             var inputEvents = function() {
                 $(formElements).off('change' + ns)
                                .on('change' + ns, function(/* event */) {
-                    // If form elements change, then Save
-                    if (type == 'instructions') {
+                    var parts = this.id.split('-');
+                    if (parts[0] == 'logic') {
+                        // Display Logic 1st select
                         // Can't trust original position as it may have changed
-                        var parts = this.id.split('-'),
+                        var $this = $(this),
+                            value = $this.val(),
                             currentPosition = parseInt(parts[parts.length - 1]);
-                        // Update Data
-                        var thisLayout = self.data.layout[currentPosition];
-                        thisLayout.do.text = $('#do-' + currentPosition).val();
-                        thisLayout.say.text = $('#say-' + currentPosition).val();
-                        if (l10n) {
-                            if (!thisLayout.do.hasOwnProperty('10n')) {
-                                thisLayout.do.l10n = {};
-                            }
-                            thisLayout.do.l10n[l10n] = $('#do-l10n-' + currentPosition).val();
-                            if (!thisLayout.say.hasOwnProperty('10n')) {
-                                thisLayout.say.l10n = {};
-                            }
-                            thisLayout.say.l10n[l10n] = $('#say-l10n-' + currentPosition).val();
+                        // Clear any previous 2nd select
+                        $('#sub-logic-select-' + currentPosition).remove();
+                        if (value) {
+                            // Show 2nd select
+                            var subOptionSelect = self.logicSubOptionsHtml(questionID, currentPosition, value);
+                            $this.next().after(subOptionSelect);
                         }
-                        // Save Template
-                        self.saveLayout();
                     } else {
-                        // Save Question
-                        self.saveQuestion(type, questionID);
+                        // If form elements change, then Save
+                        if (type == 'instructions') {
+                            // Update Data
+                            // Can't trust original position as it may have changed
+                            var currentPosition = parseInt(parts[parts.length - 1]),
+                                thisLayout = self.data.layout[currentPosition];
+                            thisLayout.do.text = $('#do-' + currentPosition).val();
+                            thisLayout.say.text = $('#say-' + currentPosition).val();
+                            if (l10n) {
+                                if (!thisLayout.do.hasOwnProperty('10n')) {
+                                    thisLayout.do.l10n = {};
+                                }
+                                thisLayout.do.l10n[l10n] = $('#do-l10n-' + currentPosition).val();
+                                if (!thisLayout.say.hasOwnProperty('10n')) {
+                                    thisLayout.say.l10n = {};
+                                }
+                                thisLayout.say.l10n[l10n] = $('#say-l10n-' + currentPosition).val();
+                            }
+                            // Save Template
+                            self.saveLayout();
+                        } else {
+                            // Save Question
+                            self.saveQuestion(type, questionID);
+                        }
                     }
                 });
                 
@@ -1046,7 +1055,7 @@
         /**
           * Produce the Options HTML for the Pipe dropdown
           */
-        pipeOptionsHtml: function(questionID, load) {
+        pipeOptionsHtml: function(questionID) {
         
             var img,
                 pipeImage,
@@ -1071,12 +1080,97 @@
         /**
           * Produce the Options HTML for the Logic Questions dropdown
           */
-        logicOptionsHtml: function(questionID, load) {
+        logicOptionsHtml: function(questionID, currentPosition) {
 
             var optionsHtml = '<option value="">select question</option>';
-            // @ToDo: Complete this: Build list of all Questions which are multichoice, likert or number
+
+            // Loop through Questions: Build list of all which are multichoice, likert, heatmap or number
+            var questions = this.data.questions,
+                layout = this.data.layout,
+                label,
+                position,
+                qtype,
+                thisQuestion,
+                thisQuestionID,
+                truncate = function(str) {
+                    if (str.length > 53) {
+                        return str.substring(0, 50) + '...';
+                    } else {
+                        return str;
+                    }
+                };
+
+            if (questionID) {
+                // Lookup which option, if-any, is selected
+            } else {
+                // Instructions
+                // Lookup which option, if-any, is selected
+            }
+
+            for (var i=1, len=Object.keys(questionNumbers).length; i <= len; i++) {
+                position = questionNumbers[i];
+                thisQuestionID = layout[position].id;
+                if (thisQuestionID == questionID) {
+                    // Don't include this Question
+                } else {
+                    thisQuestion = questions[thisQuestionID];
+                    qtype = typesToText[thisQuestion.type];
+                    if ((qtype == 'number') || (qtype == 'multichoice') || (qtype == 'likert') || (qtype == 'heatmap')) {
+                        // @ToDo: Add ' selected' to an option if selected
+                        label = 'Q' + i + ': ' + truncate(thisQuestion.name);
+                        optionsHtml += '<option value="' + thisQuestionID + '">' + label + '</option>';
+                    }
+                }
+            }
 
             return optionsHtml;
+        },
+
+        /**
+          * Produce the Options HTML for the Logic Options dropdown
+          */
+        logicSubOptionsHtml: function(questionID, currentPosition, logicQuestionID) {
+
+            var label,
+                questions = this.data.questions,
+                logicQuestion = questions[logicQuestionID],
+                type = typesToText[logicQuestion.type];
+            if (type == 'heatmap') {
+                label = 'region';
+            } else if (type == 'number') {
+                // @ToDo: Pending Design
+                return '';
+            } else {
+                // Multichoice
+                label = 'option';
+            }
+            var option,
+                options = logicQuestion.options,
+                subOptionSelect = '<select id="sub-logic-select-' + currentPosition + '"><option value="">select ' + label + '</option>';
+
+            if (questionID) {
+                // Lookup which option, if-any, is selected
+            } else {
+                // Instructions
+                // Lookup which option, if-any, is selected
+            }
+
+             for (var i=0, len=options.length; i < len; i++) {
+                option = options[i];
+                // @ToDo: Add ' selected' to an option if selected
+                subOptionSelect += '<option value="' + option + '">' + option + '</option>';
+            }
+
+            if (type= 'number') {
+                var otherLabel = logicQuestion.settings.other;
+                if (otherLabel) {
+                    subOptionSelect += '<option value="_other">' + otherLabel + '</option>';
+                }
+            }
+
+            subOptionSelect += '</select>';
+
+            return subOptionSelect;
         },
 
 
@@ -1624,7 +1718,19 @@
             $(document).foundation({
                 tab: {
                     callback : function (tab) {
-                        if (tab.text() == 'Translation') {
+                        var tabText = tab.text();
+                        if (tabText == 'Display logic') {
+                            // Update list of Questions to select from
+                            var currentPosition = tab.children().first().attr('href').split('-')[1],
+                                parts = tab.closest('.dl-item').attr('id').split('-'),
+                                type = parts[0];
+                            if (type == 'instruction') {
+                                $('#logic-select-' + currentPosition).html(self.logicOptionsHtml(null, currentPosition));
+                            } else {
+                                var questionID = parts[1];
+                                $('#logic-select-' + currentPosition).html(self.logicOptionsHtml(questionID, currentPosition));
+                            }
+                        } else if (tabText == 'Translation') {
                             // Copy original language to 'translate-from' div
                             var currentPosition = tab.children().first().attr('href').split('-')[1],
                                 parts = tab.closest('.dl-item').attr('id').split('-'),
