@@ -122,11 +122,14 @@ class DataCollectionTemplateModel(S3Model):
                      #              },
                      #      'displayLogic': {'id': questionID,
                      #                       'option': option or region,
-                     #                       }
+                     #                       },
                      #      },
                      #  3: {'type': 'question',
                      #      'code': 'MyT4',   # Used for prepop
                      #      'id': 4,          # Used live
+                     #      'displayLogic': {'id': questionID,
+                     #                       'option': option or region,
+                     #                       },
                      #      },
                      #  4: {'type': 'break',
                      #      },

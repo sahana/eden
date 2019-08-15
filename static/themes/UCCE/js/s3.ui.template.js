@@ -514,16 +514,8 @@
                     if (parts[0] == 'logic') {
                         // Display Logic 1st select
                         // Can't trust original position as it may have changed
-                        var $this = $(this),
-                            value = $this.val(),
-                            currentPosition = parseInt(parts[parts.length - 1]);
-                        // Clear any previous 2nd select
-                        $('#sub-logic-select-' + currentPosition).remove();
-                        if (value) {
-                            // Show 2nd select
-                            var subOptionSelect = self.logicSubOptionsHtml(questionID, currentPosition, value);
-                            $this.next().after(subOptionSelect);
-                        }
+                        var currentPosition = parseInt(parts[parts.length - 1]);
+                        self.logicSelect($(this), currentPosition);
                     } else {
                         // If form elements change, then Save
                         if (type == 'instructions') {
@@ -1090,6 +1082,9 @@
                 label,
                 position,
                 qtype,
+                displayLogic = layout[currentPosition].displayLogic,
+                displayLogicID,
+                selected,
                 thisQuestion,
                 thisQuestionID,
                 truncate = function(str) {
@@ -1100,11 +1095,8 @@
                     }
                 };
 
-            if (questionID) {
-                // Lookup which option, if-any, is selected
-            } else {
-                // Instructions
-                // Lookup which option, if-any, is selected
+            if (displayLogic) {
+                displayLogicID = displayLogic.id;
             }
 
             for (var i=1, len=Object.keys(questionNumbers).length; i <= len; i++) {
@@ -1116,9 +1108,13 @@
                     thisQuestion = questions[thisQuestionID];
                     qtype = typesToText[thisQuestion.type];
                     if ((qtype == 'number') || (qtype == 'multichoice') || (qtype == 'likert') || (qtype == 'heatmap')) {
-                        // @ToDo: Add ' selected' to an option if selected
                         label = 'Q' + i + ': ' + truncate(thisQuestion.name);
-                        optionsHtml += '<option value="' + thisQuestionID + '">' + label + '</option>';
+                        if (thisQuestionID == displayLogicID) {
+                            selected = ' selected';
+                        } else {
+                            selected = '';
+                        }
+                        optionsHtml += '<option value="' + thisQuestionID + '"' + selected + '>' + label + '</option>';
                     }
                 }
             }
@@ -1129,12 +1125,12 @@
         /**
           * Produce the Options HTML for the Logic Options dropdown
           */
-        logicSubOptionsHtml: function(questionID, currentPosition, logicQuestionID) {
+        logicSubOptionsHtml: function(currentPosition, logicQuestionID) {
 
             var label,
-                questions = this.data.questions,
-                logicQuestion = questions[logicQuestionID],
+                logicQuestion = this.data.questions[logicQuestionID],
                 type = typesToText[logicQuestion.type];
+
             if (type == 'heatmap') {
                 label = 'region';
             } else if (type == 'number') {
@@ -1144,27 +1140,36 @@
                 // Multichoice
                 label = 'option';
             }
-            var option,
+            var displayLogic = this.data.layout[currentPosition].displayLogic,
+                displayLogicOption,
+                option,
                 options = logicQuestion.options,
+                selected,
                 subOptionSelect = '<select id="sub-logic-select-' + currentPosition + '"><option value="">select ' + label + '</option>';
 
-            if (questionID) {
-                // Lookup which option, if-any, is selected
-            } else {
-                // Instructions
-                // Lookup which option, if-any, is selected
+            if (displayLogic) {
+                displayLogicOption = displayLogic.option;
             }
 
-             for (var i=0, len=options.length; i < len; i++) {
+            for (var i=0, len=options.length; i < len; i++) {
                 option = options[i];
-                // @ToDo: Add ' selected' to an option if selected
-                subOptionSelect += '<option value="' + option + '">' + option + '</option>';
+                if (option == displayLogicOption) {
+                    selected = ' selected';
+                } else {
+                    selected = '';
+                }
+                subOptionSelect += '<option value="' + option + '"' + selected + '>' + option + '</option>';
             }
 
-            if (type= 'number') {
+            if (type == 'multichoice') {
                 var otherLabel = logicQuestion.settings.other;
                 if (otherLabel) {
-                    subOptionSelect += '<option value="_other">' + otherLabel + '</option>';
+                    if (displayLogicOption == '_other') {
+                        selected = ' selected';
+                    } else {
+                        selected = '';
+                    }
+                    subOptionSelect += '<option value="_other"' + selected + '>' + otherLabel + '</option>';
                 }
             }
 
@@ -1173,6 +1178,39 @@
             return subOptionSelect;
         },
 
+        /**
+          * Display Logic Selector changed
+          */
+        logicSelect: function(logicSelect, currentPosition) {
+
+            var ns = this.eventNamespace,
+                self = this,
+                value = logicSelect.val();
+
+            // Clear any previous 2nd select
+            $('#sub-logic-select-' + currentPosition).remove();
+
+            if (value) {
+                // Show 2nd select
+                var subOptionSelect = self.logicSubOptionsHtml(currentPosition, value);
+                logicSelect.next().after(subOptionSelect);
+                // Add Event
+                $('#sub-logic-select-' + currentPosition).on('change' + ns, function(/* event */) {
+                    // Update Data
+                    self.data.layout[currentPosition].displayLogic = {
+                        id: value,
+                        option: $(this).val()
+                    };
+                    // Save Layout
+                    self.saveLayout();
+                });
+            } else {
+                // Update Data
+                delete self.data.layout[currentPosition].displayLogic;
+                // Save Layout
+                self.saveLayout();
+            }
+        },
 
         /**
           * Delete an Image
@@ -1722,14 +1760,16 @@
                         if (tabText == 'Display logic') {
                             // Update list of Questions to select from
                             var currentPosition = tab.children().first().attr('href').split('-')[1],
+                                logicSelect = $('#logic-select-' + currentPosition),
                                 parts = tab.closest('.dl-item').attr('id').split('-'),
                                 type = parts[0];
                             if (type == 'instruction') {
-                                $('#logic-select-' + currentPosition).html(self.logicOptionsHtml(null, currentPosition));
+                                logicSelect.html(self.logicOptionsHtml(null, currentPosition));
                             } else {
                                 var questionID = parts[1];
-                                $('#logic-select-' + currentPosition).html(self.logicOptionsHtml(questionID, currentPosition));
+                                logicSelect.html(self.logicOptionsHtml(questionID, currentPosition));
                             }
+                            self.logicSelect(logicSelect, currentPosition);
                         } else if (tabText == 'Translation') {
                             // Copy original language to 'translate-from' div
                             var currentPosition = tab.children().first().attr('href').split('-')[1],
