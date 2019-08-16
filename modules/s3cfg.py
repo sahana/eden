@@ -644,6 +644,17 @@ class S3Config(Storage):
         """
         return self.auth.get("masterkey_app_key")
 
+    def get_auth_masterkey_context(self):
+        """
+            Getter for master key context information
+            - a JSON-serializable dict with context data, or
+            - a function that takes a master key (Row) and returns such a dict
+
+            NB the getter should not expose the master key itself
+               in the context dict!
+        """
+        return self.auth.get("masterkey_context")
+
     def get_security_self_registration(self):
         """
             Whether Users can register themselves
