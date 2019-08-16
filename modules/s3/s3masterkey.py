@@ -35,6 +35,7 @@ __all__ = ("S3MasterKey",
 import base64
 import datetime
 import uuid
+import json
 
 from gluon import CRYPT, current
 
@@ -255,9 +256,50 @@ class S3MasterKey(object):
     # -------------------------------------------------------------------------
     @classmethod
     def context(cls):
-        """ TODO docstring """
+        """
+            Get context for the master key the current user is logged-in
+            with (auth.user.masterkey_id)
 
-        # TODO implement
-        return {}
+            @returns: JSON (as string); for verification: if the user is
+                      logged-in with a valid master key, the JSON object
+                      will always contain a non-null masterkey_uuid attribute
+        """
+
+        auth = current.auth
+        if auth.user:
+            masterkey_id = auth.user.get("masterkey_id")
+        else:
+            masterkey_id = None
+
+        if not masterkey_id:
+            return {}
+
+        # Get the master key UUID
+        table = current.s3db.auth_masterkey
+        row = current.db(table.id == masterkey_id).select(table.id,
+                                                          table.uuid,
+                                                          table.name,
+                                                          limitby = (0, 1),
+                                                          ).first()
+        if row:
+            context = current.deployment_settings.get_auth_masterkey_context()
+            if callable(context):
+                try:
+                    context = context(row)
+                except Exception as e:
+                    current.log.error("Master Key Context Getter failed: %s" % e)
+                    context = None
+            if isinstance(context, dict):
+                context["masterkey_uuid"] = row.uuid
+            else:
+                context = {"masterkey_uuid": row.uuid}
+        else:
+            context = {}
+
+        response = current.response
+        if response:
+            response.headers["Content-Type"] = "application/json"
+
+        return json.dumps(context)
 
 # END =========================================================================
