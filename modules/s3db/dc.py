@@ -120,15 +120,18 @@ class DataCollectionTemplateModel(S3Model):
                      #              'l10n': {'fr': "Mettez-vous à l'aise",
                      #                       },
                      #              },
-                     #      'displayLogic': {'id': questionID,
+                     #      'displayLogic': {'id': questionID, (Multichoice, Likert or Heatmap)
                      #                       'option': option or region,
                      #                       },
                      #      },
                      #  3: {'type': 'question',
                      #      'code': 'MyT4',   # Used for prepop
                      #      'id': 4,          # Used live
-                     #      'displayLogic': {'id': questionID,
-                     #                       'option': option or region,
+                     #      'displayLogic': {'id': questionID, (Numeric)
+                     #                       'eq': 4,
+                     #                       or 1 or both of these:
+                     #                       'gt': 6,
+                     #                       'lt': 14,
                      #                       },
                      #      },
                      #  4: {'type': 'break',

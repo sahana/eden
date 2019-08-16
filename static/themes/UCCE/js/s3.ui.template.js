@@ -34,6 +34,13 @@
             6: 'multichoice',
             12: 'likert',
             13: 'heatmap'
+        },
+        truncate = function(str) {
+            if (str.length > 53) {
+                return str.substring(0, 50) + '...';
+            } else {
+                return str;
+            }
         };
 
     $.widget('s3.surveyLayout', {
@@ -198,7 +205,8 @@
                     };
                     this.data.questions[questionID] = {
                         type: typesToInt[type],
-                        settings: {}
+                        settings: {},
+                        options: []
                     };
                 }
                 // Save Template
@@ -261,8 +269,16 @@
 
             // We need to reload this when Logic tab selected anyway, so don't bother loading now
             //optionsHtml = this.logicOptionsHtml(questionID, position);
-            optionsHtml = '';
-            logicTab = '<div class="media content" id="logic-' + position + '"><div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Only display question if...</h2></div></div><div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><select id="logic-select-' + position + '" class="fleft">' + optionsHtml + '</select><label class="fleft">response is</label></div></div></div>';
+            logicTab = '<div class="media content" id="logic-' + position + '">' + 
+                        '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Only display question if...</h2></div></div>' +
+                        '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><select id="logic-select-' + position + '"></select></div></div>' +
+                        '<div class="row" id="logic-response-row-' + position + '">' +
+                         '<div class="columns medium-1"></div>' +
+                         '<div class="columns medium-11">' +
+                          '<div class="row"><div class="columns medium-2"><label class="fleft">response is</label></div><div class="columns medium-10" id="logic-response-' + position + '"></div></div>' +
+                         '</div>' +
+                        '</div>' +
+                       '</div>';
 
             switch(type) {
 
@@ -364,14 +380,22 @@
                         }
                         var options = thisQuestion.options || [],
                             optionsL10n = thisQuestion.options_l10n || [],
-                            lenOptions = options.length;
+                            lenOptions = options.length,
+                            choiceL10nRow;
                         if (lenOptions) {
                             choices = '';
                             var thisOptionL10n;
                             for (var i=0; i < lenOptions; i++) {
                                 choices += '<div id="choice-row-' + questionID + '-' + i + '" class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice" value="' + options[i] + '"><i class="ucce ucce-minus"> </i><i class="ucce ucce-plus"> </i></div></div>';
                                 thisOptionL10n = optionsL10n[i] || '';
-                                choicesL10n += '<div id="choice-l10n-row-' + questionID + '-' + i + '" class="row"><div class="columns medium-1"></div><div class="columns medium-11"><div class="row"><div class="columns medium-6"><div id="choice-from-' + questionID + '-' + i + '" class="translate-from">' + options[i] + '</div></div><div class="columns medium-6"><input class="choice-l10n-' + questionID + '" type="text" placeholder="Type translation..." value="' + thisOptionL10n + '"></div></div></div></div>';
+                                choiceL10nRow = '<div id="choice-l10n-row-' + questionID + '-' + i + '" class="row">' +
+                                                 '<div class="columns medium-1"></div>' +
+                                                 '<div class="columns medium-11">' +
+                                                  '<div class="row">' + 
+                                                   '<div class="columns medium-6"><div id="choice-from-' + questionID + '-' + i + '" class="translate-from">' + options[i] + '</div></div>' +
+                                                   '<div class="columns medium-6"><input class="choice-l10n-' + questionID + '" type="text" placeholder="Type translation..." value="' + thisOptionL10n + '"></div>' +
+                                                '</div></div></div>';
+                                choicesL10n += choiceL10nRow;
                             }
                         }
                         var settings = thisQuestion.settings,
@@ -384,7 +408,14 @@
                             otherL10n = settings.otherL10n || '';
                             otherL10nHide = '';
                         }
-                        choicesL10n += '<div id="other-l10n-row-' + questionID + '" class="row' + otherL10nHide + '"><div class="columns medium-1"></div><div class="columns medium-11"><div class="row"><div class="columns medium-6"><div id="other-l10n-from-' + questionID + '" class="translate-from">' + otherLabel + '</div></div><div class="columns medium-6"><input id="other-l10n-' + questionID + '" type="text" placeholder="Type translation..." value="' + otherL10n + '"></div></div></div></div>';
+                        choiceL10nRow = '<div id="other-l10n-row-' + questionID + '" class="row' + otherL10nHide + '">' +
+                                         '<div class="columns medium-1"></div>' +
+                                         '<div class="columns medium-11">' +
+                                          '<div class="row">' +
+                                           '<div class="columns medium-6"><div id="other-l10n-from-' + questionID + '" class="translate-from">' + otherLabel + '</div></div>' +
+                                           '<div class="columns medium-6"><input id="other-l10n-' + questionID + '" type="text" placeholder="Type translation..." value="' + otherL10n + '"></div>' +
+                                        '</div></div></div>';
+                        choicesL10n += choiceL10nRow;
                         multiple = settings.multiple || 1;
                         if (multiple > 1) {
                             multiChecked = ' checked';
@@ -461,24 +492,32 @@
                 case 'heatmap':
                     var name = '',
                         nameL10n = '',
+                        numClicks = 1,
                         optionsL10n = '';
                     if (load) {
                         name = thisQuestion.name;
                         if (l10n) {
                             nameL10n = thisQuestion.name_l10n || '';
                         }
+                        numClicks = thisQuestion.settings.numClicks || 1
                     }
                     editTab = '<div class="media content active" id="edit-' + position + '">' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Heatmap</h2></div></div>' +
                                '<div class="row"><div class="columns medium-1"><label id="qlabel-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div></div>' +
                                mandatory +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Image</h2></div></div>' +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"></div></div>' +
                                '<div class="row">' +
                                 '<div class="columns medium-1"></div>' + 
-                                '<div class="columns medium-6"><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"><span id="preview-' + questionID + '" class="preview-empty fleft"></span></div>' +
-                                '<div class="columns medium-5"><h3>Number of clicks allowed:</h3><i class="ucce ucce-minus"> </i> 1 <i class="ucce ucce-plus"> </i><h3>Tap/click regions:</h3><a class="button tiny">Add region</a><input id="region-' + position + '-1" type="text" placeholder="enter label" disabled></div>' +
-                               '</div>' +
-                              '</div>';
+                                '<div class="columns medium-11">' +
+                                 '<div class="row">' + 
+                                  '<div class="columns medium-6"><span id="preview-' + questionID + '" class="preview-empty fleft"></span></div>' +
+                                  '<div class="columns medium-6">' + 
+                                   '<div class="row"><h3>Number of clicks allowed:</h3></div>' +
+                                   '<div class="row" id="clicks-row-' + questionID + '"><i class="ucce ucce-minus"> </i><span> ' + numClicks + ' </span><i class="ucce ucce-plus"> </i></div>' +
+                                   '<div class="row"><h3>Tap/click regions:</h3></div>' +
+                                   '<div class="row"><a class="button tiny">Add region</a><input id="region-' + position + '-1" type="text" placeholder="enter label" disabled></div>' +
+                              '</div></div></div></div></div>';
                     translationTab = '<div class="media content" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Heatmap</h2></div></div>' +
                                       '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
@@ -512,10 +551,11 @@
                                .on('change' + ns, function(/* event */) {
                     var parts = this.id.split('-');
                     if (parts[0] == 'logic') {
-                        // Display Logic 1st select
+                        // Display Logic 1st select has been selected
                         // Can't trust original position as it may have changed
                         var currentPosition = parseInt(parts[parts.length - 1]);
-                        self.logicSelect($(this), currentPosition);
+                        // Show 2nd Logic select
+                        self.logicSelected($(this), currentPosition);
                     } else {
                         // If form elements change, then Save
                         if (type == 'instructions') {
@@ -732,8 +772,9 @@
                         multipleCount = $('#multiple-count-' + questionID),
                         multichoiceEvents = function() {
                         // Options
-                        $('.choice-' + questionID).next().off('click' + ns)
-                                                         .on('click' + ns, function() {
+                        var deleteOption = $('.choice-' + questionID).next();
+                        deleteOption.off('click' + ns)
+                                    .on('click' + ns, function() {
                             if ($('.choice-' + questionID).length > 1) {
                                 // Remove Option
                                 var currentRow = $(this).closest('.row'),
@@ -770,8 +811,8 @@
                                 $(this).prev().val('');
                             }
                         });
-                        $('.choice-' + questionID).next().next().off('click' + ns)
-                                                                .on('click' + ns, function() {
+                        deleteOption.next().off('click' + ns)
+                                           .on('click' + ns, function() {
                             // Pepare to add a new Option
                             // Update IDs for all subsequent rows
                             var currentRow = $(this).closest('.row'),
@@ -788,7 +829,14 @@
                             newIndex = index + 1;
                             currentRow.after(newChoice.replace('-0', '-' + newIndex));
                             // & in l10n
-                            $('#choice-l10n-row-' + questionID + '-' + index).after('<div id="choice-l10n-row-' + questionID + '-' + newIndex + '" class="row"><div class="columns medium-1"></div><div class="columns medium-11"><div class="row"><div class="columns medium-6"><div id="choice-from-' + questionID + '-' + newIndex + '" class="translate-from"></div></div><div class="columns medium-6"><input class="choice-l10n-' + questionID + '" type="text" placeholder="Type translation..."></div></div></div></div>');
+                            var choiceL10nRow = '<div id="choice-l10n-row-' + questionID + '-' + newIndex + '" class="row">' +
+                                                 '<div class="columns medium-1"></div>' +
+                                                 '<div class="columns medium-11">' + 
+                                                  '<div class="row">' + 
+                                                   '<div class="columns medium-6"><div id="choice-from-' + questionID + '-' + newIndex + '" class="translate-from"></div></div>' +
+                                                   '<div class="columns medium-6"><input class="choice-l10n-' + questionID + '" type="text" placeholder="Type translation..."></div>' +
+                                                 '</div></div></div>';
+                            $('#choice-l10n-row-' + questionID + '-' + index).after(choiceL10nRow);
                             // Add Events
                             inputEvents();
                             multichoiceEvents();
@@ -885,6 +933,40 @@
                     break;
 
                 case 'heatmap':
+                        // numClicks
+                        var minusClick = $('#clicks-row-' + questionID).children().first();
+                        minusClick.off('click' + ns)
+                                  .on('click' + ns, function() {
+
+                            var $this = $(this),
+                                value = parseInt($this.next().html());
+
+                            if (value > 1) {
+                                // Decrement value
+                                value--;
+                                // Update Data
+                                self.data.questions[questionID].settings.numClicks = value;
+                                // Save Question
+                                self.saveQuestion(type, questionID);
+                                // Update visual element
+                                $this.next().html(' ' + value + ' ');
+                            }
+                        });
+                        minusClick.next().next().off('click' + ns)
+                                                .on('click' + ns, function() {
+
+                            var $prev = $(this).prev(),
+                                value = parseInt($prev.html());
+
+                            // Increment value
+                            value++;
+                            // Update Data
+                            self.data.questions[questionID].settings.numClicks = value;
+                            // Save Question
+                            self.saveQuestion(type, questionID);
+                            // Update visual element
+                            $prev.html(' ' + value + ' ');
+                        });
                     break;
             }
 
@@ -938,7 +1020,7 @@
                 $item,
                 oldPosition,
                 thisQuestionID,
-                oldQuestionNumber,
+                oldQuestionNumber = questionNumber,
                 newQuestionNumber,
                 oldHref,
                 newHref,
@@ -1086,14 +1168,7 @@
                 displayLogicID,
                 selected,
                 thisQuestion,
-                thisQuestionID,
-                truncate = function(str) {
-                    if (str.length > 53) {
-                        return str.substring(0, 50) + '...';
-                    } else {
-                        return str;
-                    }
-                };
+                thisQuestionID;
 
             if (displayLogic) {
                 displayLogicID = displayLogic.id;
@@ -1108,7 +1183,7 @@
                     thisQuestion = questions[thisQuestionID];
                     qtype = typesToText[thisQuestion.type];
                     if ((qtype == 'number') || (qtype == 'multichoice') || (qtype == 'likert') || (qtype == 'heatmap')) {
-                        label = 'Q' + i + ': ' + truncate(thisQuestion.name);
+                        label = 'Q' + i + ': ' + truncate(thisQuestion.name || '');
                         if (thisQuestionID == displayLogicID) {
                             selected = ' selected';
                         } else {
@@ -1123,26 +1198,277 @@
         },
 
         /**
-          * Produce the Options HTML for the Logic Options dropdown
+          * Produce the Sub Options Form for the Display Logic tabs
           */
-        logicSubOptionsHtml: function(currentPosition, logicQuestionID) {
+        logicSubOptions: function(currentPosition, logicQuestionID) {
 
-            var label,
+            var ns = this.eventNamespace,
+                self = this,
+                displayLogic = this.data.layout[currentPosition].displayLogic,
+                label,
                 logicQuestion = this.data.questions[logicQuestionID],
                 type = typesToText[logicQuestion.type];
 
-            if (type == 'heatmap') {
+            if (type == 'number') {
+                // Display 2 sets of operator / term
+                var displayLogicEquals = '',
+                    displayLogicGreaterThan,
+                    displayLogicLessThan,
+                    value = '';
+                if (displayLogic) {
+                    displayLogicEquals = displayLogic.eq || '';
+                    displayLogicGreaterThan = displayLogic.gt;
+                    displayLogicLessThan = displayLogic.lt;
+                    if (displayLogicEquals) {
+                        value = displayLogicEquals;
+                    } else if (displayLogicLessThan) {
+                        value = displayLogicLessThan;
+                    } else if (displayLogicGreaterThan) {
+                        value = displayLogicGreaterThan;
+                    }
+                }
+                var row1 = '<select id="logic-operator-1-' + currentPosition + '">';
+                if (!displayLogic || displayLogicEquals) {
+                    row1 += '<option value="eq" selected>equal to ( = )</option>';
+                } else {
+                    row1 += '<option value="eq">equal to ( = )</option>';
+                }
+                if (displayLogicLessThan) {
+                    row1 += '<option value="lt" selected>less than ( &lt; )</option>';
+                    row1 += '<option value="gt">more than ( &gt; )</option>';
+                } else {
+                    row1 += '<option value="lt">less than ( &lt; )</option>';
+                    if (displayLogicGreaterThan) {
+                        row1 += '<option value="gt" selected>more than ( &gt; )</option>';
+                    } else {
+                        row1 += '<option value="gt">more than ( &gt; )</option>';
+                    }
+                }
+                row1 += '</select><input id="logic-term-1-' + currentPosition + '" type="number" placeholder="type number" value="' + value + '">';
+                $('#logic-response-' + currentPosition).html(row1);
+
+                var hide;
+                if (!displayLogicEquals && (displayLogicLessThan || displayLogicGreaterThan)) {
+                    hide = '';
+                    if (displayLogicLessThan && displayLogicGreaterThan) {
+                        value = displayLogicGreaterThan;
+                    } else {
+                        value = '';
+                    }
+                } else {
+                    value = '';
+                    hide = ' hide';
+                }
+                var optionsHtml;
+                if (!displayLogicLessThan && displayLogicGreaterThan) {
+                    optionsHtml = '<option value="lt" selected>less than ( &lt; )</option><option value="gt">more than ( &gt; )</option>';
+                } else {
+                    optionsHtml = '<option value="lt">less than ( &lt; )</option><option value="gt" selected>more than ( &gt; )</option>';
+                }
+                var row2 = '<div class="row' + hide + '">' +
+                            '<div class="columns medium-1"></div>' +
+                            '<div class="columns medium-11">' +
+                             '<div class="row"><div class="columns medium-2"><label class="fleft">AND</label></div><div class="columns medium-10"><select id="logic-operator-2-' + currentPosition + '">' + optionsHtml + '</select><input id="logic-term-2-' + currentPosition + '" type="number" placeholder="type number" value="' + value + '"></div></div>' +
+                            '</div>' +
+                           '</div>';
+                var logicResponseRow = $('#logic-response-row-' + currentPosition);
+                logicResponseRow.after(row2);
+                
+                // Add Events
+                // @ToDo: Add validation that gt/lt cannot be impossible combination
+                // @ToDo: Add validation that gt/lt cannot be outside min/max?
+                // - listen to operator dropdowns
+                var operator,
+                    logicOperator1 = $('#logic-operator-1-' + currentPosition),
+                    logicOperator2 = $('#logic-operator-2-' + currentPosition);
+                var logicTerm1 = $('#logic-term-1-' + currentPosition),
+                    logicTerm2 = $('#logic-term-2-' + currentPosition);
+                logicOperator1.on('change' + ns, function(/* event */) {
+                    operator = $(this).val();
+                    value = logicTerm1.val();
+                    displayLogic = {
+                        id: logicQuestionID
+                    };
+                    if (operator == 'eq') {
+                        // Hide row 2
+                        logicResponseRow.next().hide();
+                        // Update Data
+                        if (value) {
+                            displayLogic.eq = value;
+                        }
+                    } else if (operator == 'gt') {
+                        // Show row 2
+                        logicResponseRow.next().removeClass('hide')
+                                               .show();
+                        // Set other as lt selected
+                        logicOperator2.val('lt');
+                        // Update Data
+                        if (value) {
+                            displayLogic.gt = value;
+                        }
+                        value = logicTerm2.val();
+                        if (value) {
+                            displayLogic.lt = value;
+                        }
+                    } else if (operator == 'lt') {
+                        // Show row 2
+                        logicResponseRow.next().removeClass('hide')
+                                               .show();
+                        // Set other as gt selected
+                        logicOperator2.val('gt');
+                        // Update Data
+                        if (value) {
+                            displayLogic.lt = value;
+                        }
+                        value = logicTerm2.val();
+                        if (value) {
+                            displayLogic.gt = value;
+                        }
+                    }
+                    self.data.layout[currentPosition].displayLogic = displayLogic;
+                    self.saveLayout();
+                });
+                logicOperator2.on('change' + ns, function(/* event */) {
+                    operator = $(this).val();
+                    value = logicTerm2.val();
+                    displayLogic = {
+                        id: logicQuestionID
+                    };
+                    if (operator == 'gt') {
+                        // Set other as lt selected
+                        logicOperator1.val('lt');
+                        // Update Data
+                        if (value) {
+                            displayLogic.gt = value;
+                        }
+                        value = logicTerm1.val();
+                        if (value) {
+                            displayLogic.lt = value;
+                        }
+                    } else if (operator == 'lt') {
+                        // Set other as gt selected
+                        logicOperator1.val('gt');
+                        // Update Data
+                        if (value) {
+                            displayLogic.lt = value;
+                        }
+                        value = logicTerm1.val();
+                        if (value) {
+                            displayLogic.gt = value;
+                        }
+                    }
+                    self.data.layout[currentPosition].displayLogic = displayLogic;
+                    self.saveLayout();
+                });
+
+                // - listen to terms
+                logicTerm1.on('change' + ns, function(/* event */) {
+                    value = $(this).val();
+                    if (value) {
+                        // Update Data
+                        displayLogic = {
+                            id: logicQuestionID
+                        };
+                        operator = logicOperator1.val();
+                        if (operator == 'eq') {
+                            displayLogic.eq = value;
+                        } else {
+                            if (operator == 'gt') {
+                                displayLogic.gt = value;
+                            } else {
+                                displayLogic.lt = value;
+                            }
+                            value = logicTerm2.val();
+                            if (value) {
+                                operator = logicOperator2.val();
+                                if (operator == 'gt') {
+                                    displayLogic.gt = value;
+                                } else {
+                                    displayLogic.lt = value;
+                                }
+                            }
+                        }
+                        self.data.layout[currentPosition].displayLogic = displayLogic;
+                    } else {
+                        value = logicTerm2.val();
+                        if (value) {
+                            // Update Data
+                            displayLogic = {
+                                id: logicQuestionID
+                            };
+                            operator = logicOperator1.val();
+                            if (operator == 'gt') {
+                                displayLogic.gt = value;
+                            } else {
+                                displayLogic.lt = value;
+                            }
+                            self.data.layout[currentPosition].displayLogic = displayLogic;
+                        } else {
+                            delete self.data.layout[currentPosition].displayLogic;
+                        }
+                    }
+                    // Save Layout
+                    self.saveLayout();
+                });
+                logicTerm2.on('change' + ns, function(/* event */) {
+                    value = $(this).val();
+                    if (value) {
+                        // Update Data
+                        displayLogic = {
+                            id: logicQuestionID
+                        };
+                        operator = logicOperator2.val();
+                        if (operator == 'gt') {
+                            displayLogic.gt = value;
+                        } else {
+                            displayLogic.lt = value;
+                        }
+                        value = logicTerm1.val();
+                        if (value) {
+                            operator = logicOperator1.val();
+                            if (operator == 'gt') {
+                                displayLogic.gt = value;
+                            } else {
+                                displayLogic.lt = value;
+                            }
+                        }
+                        self.data.layout[currentPosition].displayLogic = displayLogic;
+                    } else {
+                        value = logicTerm1.val();
+                        if (value) {
+                            // Update Data
+                            displayLogic = {
+                                id: logicQuestionID
+                            };
+                            operator = logicOperator1.val();
+                            if (operator == 'eq') {
+                                displayLogic.eq = value;
+                            } else if (operator == 'gt') {
+                                displayLogic.gt = value;
+                            } else {
+                                displayLogic.lt = value;
+                            }
+                            self.data.layout[currentPosition].displayLogic = displayLogic;
+                        } else {
+                            delete self.data.layout[currentPosition].displayLogic;
+                        }
+                    }
+                    // Save Layout
+                    self.saveLayout();
+                });
+
+                return;
+
+            } else if (type == 'heatmap') {
                 label = 'region';
-            } else if (type == 'number') {
-                // @ToDo: Pending Design
-                return '';
             } else {
-                // Multichoice
+                // Multichoice or Likert
                 label = 'option';
             }
-            var displayLogic = this.data.layout[currentPosition].displayLogic,
-                displayLogicOption,
-                option,
+
+            // Display a dropdown of Options for the selected Question
+
+            var displayLogicOption,
                 options = logicQuestion.options,
                 selected,
                 subOptionSelect = '<select id="sub-logic-select-' + currentPosition + '"><option value="">select ' + label + '</option>';
@@ -1175,40 +1501,42 @@
 
             subOptionSelect += '</select>';
 
-            return subOptionSelect;
+            $('#logic-response-' + currentPosition).html(subOptionSelect);
+
+            // Add Events
+            // - listen to dropdown of options
+            $('#sub-logic-select-' + currentPosition).on('change' + ns, function(/* event */) {
+                // Update Data
+                self.data.layout[currentPosition].displayLogic = {
+                    id: logicQuestionID,
+                    option: $(this).val()
+                };
+                // Save Layout
+                self.saveLayout();
+            });
         },
 
         /**
           * Display Logic Selector changed
           */
-        logicSelect: function(logicSelect, currentPosition) {
+        logicSelected: function(logicSelect, currentPosition) {
 
-            var ns = this.eventNamespace,
-                self = this,
-                value = logicSelect.val();
+            var value = logicSelect.val();
 
             // Clear any previous 2nd select
-            $('#sub-logic-select-' + currentPosition).remove();
+            $('#logic-response-' + currentPosition).empty();
+
+            // Clear any previous additional row (for Number Conditions)
+            $('#logic-response-row-' + currentPosition).next().remove();
 
             if (value) {
                 // Show 2nd select
-                var subOptionSelect = self.logicSubOptionsHtml(currentPosition, value);
-                logicSelect.next().after(subOptionSelect);
-                // Add Event
-                $('#sub-logic-select-' + currentPosition).on('change' + ns, function(/* event */) {
-                    // Update Data
-                    self.data.layout[currentPosition].displayLogic = {
-                        id: value,
-                        option: $(this).val()
-                    };
-                    // Save Layout
-                    self.saveLayout();
-                });
+                this.logicSubOptions(currentPosition, value);
             } else {
                 // Update Data
-                delete self.data.layout[currentPosition].displayLogic;
+                delete this.data.layout[currentPosition].displayLogic;
                 // Save Layout
-                self.saveLayout();
+                this.saveLayout();
             }
         },
 
@@ -1558,21 +1886,27 @@
             }
 
             var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/update_json.json',
-                l10n = this.data.l10n,
-                settings = {},
+                mandatory = $('#mandatory-' + questionID).prop('checked'),
                 data = {
                     name: name,
-                    mandatory: $('#mandatory-' + questionID).prop('checked')
-                };
+                    mandatory: mandatory
+                },
+                l10n = this.data.l10n,
+                settings = {},
+                thisQuestion = this.data.questions[questionID];
+
+            thisQuestion.name = name;
+            thisQuestion.mandatory = mandatory;
 
             if (l10n) {
                 var name_l10n = $('#name-l10n-' + questionID).val();
                 if (name_l10n) {
                     data.name_l10n = name_l10n;
+                    thisQuestion.name_l10n = name_l10n;
                 }
             }
 
-            var pipeImage = this.data.questions[questionID].settings.pipeImage;
+            var pipeImage = thisQuestion.settings.pipeImage;
             if (pipeImage) {
                 settings.pipeImage = pipeImage;
             }
@@ -1614,6 +1948,7 @@
                         options.push($(this).val());
                     });
                     data.options = options;
+                    thisQuestion.options = options;
                     if (l10n) {
                         var options_l10n = [];
                         $('.choice-l10n-' + questionID).each(function() {
@@ -1639,17 +1974,24 @@
                     }
                     break;
                 case 'likert':
-                    var scale = $('#scale-' + questionID).val();
+                    var options,
+                        scale = $('#scale-' + questionID).val();
                     if (scale) {
-                        data.options = likertOptions[scale];
+                        options = likertOptions[scale];
                         settings.scale = scale;
                     } else {
-                        data.options = [];
+                        options = [];
                         settings.scale = null;
                     }
+                    data.options = options;
+                    thisQuestion.options = options;
                     break;
                 case 'heatmap':
-                    // @ToDo: numClicks
+                    // numClicks
+                    var numClicks = thisQuestion.settings.numClicks;
+                    if (numClicks) {
+                        settings.numClicks = numClicks;
+                    }
                     // @ToDo: Regions
                     // @ToDo: Translated Regions
                     break;
@@ -1657,6 +1999,7 @@
             }
 
             data.settings = settings;
+            thisQuestion.settings = settings;
 
             this.ajaxMethod({
                 url: ajaxURL,
@@ -1769,7 +2112,7 @@
                                 var questionID = parts[1];
                                 logicSelect.html(self.logicOptionsHtml(questionID, currentPosition));
                             }
-                            self.logicSelect(logicSelect, currentPosition);
+                            self.logicSelected(logicSelect, currentPosition);
                         } else if (tabText == 'Translation') {
                             // Copy original language to 'translate-from' div
                             var currentPosition = tab.children().first().attr('href').split('-')[1],
