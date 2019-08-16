@@ -593,7 +593,8 @@ class dc_QuestionSave(S3Method):
 
                     # Translation
                     name_l10n = post_vars_get("name_l10n")
-                    if name_l10n:
+                    options_l10n = post_vars_get("options_l10n")
+                    if name_l10n or options_l10n:
                         s3db = current.s3db
                         ltable = s3db.dc_template_l10n
                         l10n = db(ltable.template_id == r.record.template_id).select(ltable.language,
@@ -608,7 +609,6 @@ class dc_QuestionSave(S3Method):
                             new_vars = {"name_l10n": name_l10n,
                                         "language": l10n,
                                         }
-                            options_l10n = post_vars_get("options_l10n")
                             if options_l10n:
                                 new_vars["options_l10n"] = options_l10n
                             if exists:

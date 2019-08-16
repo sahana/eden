@@ -490,14 +490,38 @@
                     break;
 
                 case 'heatmap':
+                    newChoice = '<div id="choice-row-' + questionID + '-0" class="row"><a class="button tiny secondary choice-define-' + questionID + '">Add region 1</a><input class="choice-' + questionID + '" type="text" placeholder="enter label" disabled><i class="ucce ucce-minus"> </i></div>';
                     var name = '',
                         nameL10n = '',
                         numClicks = 1,
+                        choices = newChoice,
+                        choicesL10n = '',
                         optionsL10n = '';
                     if (load) {
                         name = thisQuestion.name;
                         if (l10n) {
                             nameL10n = thisQuestion.name_l10n || '';
+                        }
+                        var options = thisQuestion.options || [],
+                            optionsL10n = thisQuestion.options_l10n || [],
+                            lenOptions = options.length,
+                            choiceL10nRow;
+                        if (lenOptions) {
+                            choices = '';
+                            var thisOptionL10n;
+                            for (var i=0; i < lenOptions; i++) {
+                                choices += '<div id="choice-row-' + questionID + '-' + i + '" class="row"><a class="button tiny">Add region ' + (i + 1) + '</a><input class="choice-' + questionID + '" type="text" placeholder="enter label" value="' + options[i] + '"><i class="ucce ucce-minus"> </i></div>';
+                                thisOptionL10n = optionsL10n[i] || '';
+                                choiceL10nRow = '<div id="choice-l10n-row-' + questionID + '-' + i + '" class="row">' +
+                                                 '<div class="columns medium-1"></div>' +
+                                                 '<div class="columns medium-11">' +
+                                                  '<div class="row">' + 
+                                                   '<div class="columns medium-6"><div id="choice-from-' + questionID + '-' + i + '" class="translate-from">' + options[i] + '</div></div>' +
+                                                   '<div class="columns medium-6"><input class="choice-l10n-' + questionID + '" type="text" placeholder="Type translation..." value="' + thisOptionL10n + '"></div>' +
+                                                '</div></div></div>';
+                                choicesL10n += choiceL10nRow;
+                            }
+                            choices += newChoice.replace('-0', '-' + lenOptions).replace('region 1', 'region ' + (lenOptions + 1));
                         }
                         numClicks = thisQuestion.settings.numClicks || 1
                     }
@@ -516,12 +540,15 @@
                                    '<div class="row"><h3>Number of clicks allowed:</h3></div>' +
                                    '<div class="row" id="clicks-row-' + questionID + '"><i class="ucce ucce-minus"> </i><span> ' + numClicks + ' </span><i class="ucce ucce-plus"> </i></div>' +
                                    '<div class="row"><h3>Tap/click regions:</h3></div>' +
-                                   '<div class="row"><a class="button tiny">Add region</a><input id="region-' + position + '-1" type="text" placeholder="enter label" disabled></div>' +
+                                   choices +
                               '</div></div></div></div></div>';
                     translationTab = '<div class="media content" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Heatmap</h2></div></div>' +
                                       '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
+                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Answer</h2></div></div>' +
+                                      '<div class="row" id="choices-l10n-row-' + questionID + '"><div class="columns medium-1"></div><div class="columns medium-11"><label>Regions</label></div></div>' +
+                                      choicesL10n + 
                                      '</div>';
                     break;
             }
@@ -933,41 +960,110 @@
                     break;
 
                 case 'heatmap':
-                        // numClicks
-                        var minusClick = $('#clicks-row-' + questionID).children().first();
-                        minusClick.off('click' + ns)
-                                  .on('click' + ns, function() {
+                    var multichoiceEvents = function() {
+                        // Options
+                        var deleteOption = $('.choice-' + questionID).next();
+                        deleteOption.off('click' + ns)
+                                    .on('click' + ns, function() {
+                            if ($('.choice-' + questionID).length > 1) {
+                                // Remove Option
+                                var currentRow = $(this).closest('.row'),
+                                    index = parseInt(currentRow.attr('id').split('-')[3]);
+                                currentRow.remove();
+                                // & from l10n
+                                $('#choice-l10n-row-' + questionID + '-' + index).remove();
 
-                            var $this = $(this),
-                                value = parseInt($this.next().html());
+                                // Update IDs for all subsequent rows
+                                var newIndex,
+                                    optionsCount = $('.choice-' + questionID).length;
 
-                            if (value > 1) {
-                                // Decrement value
-                                value--;
-                                // Update Data
-                                self.data.questions[questionID].settings.numClicks = value;
-                                // Save Question
+                                for (var i = index + 1; i <= optionsCount; i++) {
+                                    newIndex = i - 1;
+                                    $('#choice-row-' + questionID + '-' + i).attr('id', 'choice-row-' + questionID + '-' + newIndex);
+                                    $('#choice-row-' + questionID + '-' + newIndex + ' > .button').html('Add region ' + (newIndex + 1));
+                                    $('#choice-l10n-row-' + questionID + '-' + i).attr('id', 'choice-l10n-row-' + questionID + '-' + newIndex);
+                                    $('#choice-from-' + questionID + '-' + i).attr('id', 'choice-from-' + questionID + '-' + newIndex);
+                                }
                                 self.saveQuestion(type, questionID);
-                                // Update visual element
-                                $this.next().html(' ' + value + ' ');
+                            } else {
+                                // Just remove value - since we always need at least 1 option available
+                                var input = $(this).prev();
+                                input.val('')
+                                     .prop('disabled', true);
+                                input.prev().addClass('secondary');
                             }
                         });
-                        minusClick.next().next().off('click' + ns)
-                                                .on('click' + ns, function() {
+                        $('.choice-define-' + questionID).off('click' + ns)
+                                                         .on('click' + ns, function() {
+                            var $this = $(this),
+                                currentRow = $this.closest('.row'),
+                                index = parseInt(currentRow.attr('id').split('-')[3]),
+                                regions = self.data.questions[questionID].settings.regions;
 
-                            var $prev = $(this).prev(),
-                                value = parseInt($prev.html());
+                            if ($this.hasClass('secondary')) {
+                                // Add new Option after current row
+                                var newIndex = index + 1;
+                                currentRow.after(newChoice.replace('-0', '-' + newIndex));
+                                $('#choice-row-' + questionID + '-' + newIndex + ' > .button').html('Add region ' + (newIndex + 1));
 
-                            // Increment value
-                            value++;
+                                // & in l10n
+                                var choiceL10nRow = '<div id="choice-l10n-row-' + questionID + '-' + index + '" class="row">' +
+                                                     '<div class="columns medium-1"></div>' +
+                                                     '<div class="columns medium-11">' + 
+                                                      '<div class="row">' + 
+                                                       '<div class="columns medium-6"><div id="choice-from-' + questionID + '-' + index + '" class="translate-from"></div></div>' +
+                                                       '<div class="columns medium-6"><input class="choice-l10n-' + questionID + '" type="text" placeholder="Type translation..."></div>' +
+                                                     '</div></div></div>';
+                                if (index == 0) {
+                                    $('#choices-l10n-row-' + questionID).after(choiceL10nRow);
+                                } else {
+                                    $('#choice-l10n-row-' + questionID + '-' + (index - 1)).after(choiceL10nRow);
+                                }
+                                // Add Events
+                                inputEvents();
+                                multichoiceEvents();
+                            }
+                            $this.removeClass('secondary');
+                            $this.next().prop('disabled', false);
+                        });
+                    };
+                    multichoiceEvents();
+
+                    // numClicks
+                    var minusClick = $('#clicks-row-' + questionID).children().first();
+                    minusClick.off('click' + ns)
+                              .on('click' + ns, function() {
+
+                        var $this = $(this),
+                            value = parseInt($this.next().html());
+
+                        if (value > 1) {
+                            // Decrement value
+                            value--;
                             // Update Data
                             self.data.questions[questionID].settings.numClicks = value;
                             // Save Question
                             self.saveQuestion(type, questionID);
                             // Update visual element
-                            $prev.html(' ' + value + ' ');
-                        });
-                    break;
+                            $this.next().html(' ' + value + ' ');
+                        }
+                    });
+                    minusClick.next().next().off('click' + ns)
+                                            .on('click' + ns, function() {
+
+                        var $prev = $(this).prev(),
+                            value = parseInt($prev.html());
+
+                        // Increment value
+                        value++;
+                        // Update Data
+                        self.data.questions[questionID].settings.numClicks = value;
+                        // Save Question
+                        self.saveQuestion(type, questionID);
+                        // Update visual element
+                        $prev.html(' ' + value + ' ');
+                    });
+                break;
             }
 
             // Run Foundation JS on new Item
@@ -1791,7 +1887,7 @@
                 questionID,
                 questionNumber = 0,
                 thisQuestion,
-                regions,
+                thisRegions,
                 base_label,
                 label,
                 questions = this.data.questions,
@@ -1815,7 +1911,7 @@
                     if (thisQuestion.file) {
                         if (thisQuestion.type == 13) {
                             // Heatmap
-                            regions = thisQuestion.settings.regions;
+                            var regions = thisQuestion.settings.regions;
                             if (regions) {
                                 base_label = 'Q' + questionNumber + ' Heatmap; ';
                                 for (var i=0, len=regions.length; i < len; i++) {
@@ -1987,6 +2083,21 @@
                     thisQuestion.options = options;
                     break;
                 case 'heatmap':
+                    var options = [];
+                    $('.choice-' + questionID).each(function() {
+                        options.push($(this).val());
+                    });
+                    // Remove final option as this is the placeholder to add next one
+                    options.pop();
+                    data.options = options;
+                    thisQuestion.options = options;
+                    if (l10n) {
+                        var options_l10n = [];
+                        $('.choice-l10n-' + questionID).each(function() {
+                            options_l10n.push($(this).val());
+                        });
+                        data.options_l10n = options_l10n;
+                    }
                     // numClicks
                     var numClicks = thisQuestion.settings.numClicks;
                     if (numClicks) {
@@ -2148,8 +2259,10 @@
                                         // - if we assume that Scale Options are translated centrally
                                         break;
                                     case 'heatmap':
-                                        // @ToDo: Regions sync
-                                        
+                                        // Options
+                                        $('.choice-' + questionID).each(function(index) {
+                                            $('#choice-from-' + questionID + '-' + index).html($(this).val());
+                                        });
                                         break;
 
                                 }
