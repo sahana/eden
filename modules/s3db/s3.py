@@ -229,7 +229,7 @@ class S3DynamicTablesModel(S3Model):
                                                            ),
                                          ),
                            ),
-                     # Allow Authentication via Masterkey
+                     # Link this table to a certain master key
                      self.auth_masterkey_id(),
                      #s3_comments(),
                      *s3_meta_fields(),

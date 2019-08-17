@@ -4630,6 +4630,12 @@ class S3Config(Storage):
         """
         return self.mobile.get("dynamic_tables", True)
 
+    def get_mobile_masterkey_filter(self):
+        """
+            Filter mobile forms by master key
+        """
+        return self.mobile.get("masterkey_filter", False)
+
     # -------------------------------------------------------------------------
     # Organisations
     #

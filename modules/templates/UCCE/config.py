@@ -40,6 +40,9 @@ def config(settings):
     # Allow master key login
     settings.auth.masterkey = True
 
+    # Filter mobile forms by master key
+    settings.mobile.masterkey_filter = True
+
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
 

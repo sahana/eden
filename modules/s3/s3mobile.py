@@ -61,9 +61,12 @@ class S3MobileFormList(object):
         Form List Generator
     """
 
-    def __init__(self):
+    def __init__(self, masterkey_id=None):
         """
             Constructor
+
+            @param masterkey_id: auth_masterkey record ID to filter the form
+                                 list by
         """
 
         T = current.T
@@ -164,6 +167,8 @@ class S3MobileFormList(object):
             ttable = s3db.s3_table
             query = (ttable.mobile_form == True) & \
                     (ttable.deleted != True)
+            if masterkey_id is not None:
+                query = (ttable.masterkey_id == masterkey_id) & query
             rows = current.db(query).select(ttable.name,
                                             ttable.title,
                                             ttable.mobile_data,
