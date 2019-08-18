@@ -414,7 +414,7 @@ def config(settings):
                                 limitby = (0, 1)
                                 ).first()
         if link:
-            new_vars[masterkey_id] = link.masterkey_id
+            new_vars["masterkey_id"] = link.masterkey_id
 
         # Update Dynamic Table
         query = (tatable.id == target_id) & \
