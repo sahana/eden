@@ -1,17 +1,13 @@
 /*
  * Survey Editor Widget
  */
-// @ToDo: Load in debug/production mode as-appropriate
-//import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, VectorLayer, VectorSource } from './ol5.js';
 import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, VectorLayer, VectorSource } from './ol5.min.js';
 
 (function(factory) {
     'use strict';
     // Use window. for Browser globals (not AMD or Node):
     factory(window.jQuery, window.loadImage, Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, VectorLayer, VectorSource);
-    //factory(window.jQuery, window.loadImage);
 })(function($, loadImage, Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, VectorLayer, VectorSource) {
-//})(function($, loadImage) {
     'use strict';
     var surveyID = 0,
         imageOptions = [], // Store {label: label, (just held locally)
@@ -688,10 +684,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                             data.process().done(function() {
                                 data.submit();
 
-                                if (type == 'heatmap') {
-                                    // @ToDo: How to read file from the AJAX response?
-                                    self.heatMap(questionID, file);
-                                } else {
+                                if (type != 'heatmap') {
                                     // Create Preview Image
                                     var file = data.files[0];
 
@@ -758,6 +751,12 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                                 }
                                 
                             });
+                        }
+                    },
+                    done: function (e, data) {
+                        if (type != 'heatmap') {
+                            // @ToDo: How to read file from the AJAX response?
+                            self.heatMap(questionID, data.file);
                         }
                     }
                 });

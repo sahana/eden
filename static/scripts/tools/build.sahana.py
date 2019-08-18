@@ -175,7 +175,7 @@ def do_css():
             path = path[5:]
 
             filename = path.split("/")[-1].split(".")[0]
-            sourcePath = os.path.join("..", "..", "..", "modules", "templates", theme_styles, "scss")
+            sourcePath = os.path.join("..", "..", "themes", theme_styles, "scss")
             sourceFilename = os.path.join(sourcePath, "%s.scss" % filename)
 
             with openf(sourceFilename, "r") as sourceFile:
@@ -340,7 +340,7 @@ def set_minimize(warnings):
     elif use_compressor == "closure_ws":
         minimize = closure_ws.minimize
     elif use_compressor == "jsmin":
-        minimize = smin.jsmin
+        minimize = jsmin.jsmin
 
     return minimize
 
@@ -688,7 +688,8 @@ def do_template(minimize, warnings):
     if theme == "UCCE":
         for filename in ("confirm_popup",
                          "projects",
-                         "s3.ui.template",
+                         # Need to use Terser for this as Closure doesn't like ES6 modules
+                         #"s3.ui.template",
                          ):
             info("Compressing %s.js" % filename)
             inputFilename = os.path.join("..", "..", "themes", "UCCE", "js", "%s.js" % filename)
@@ -697,7 +698,20 @@ def do_template(minimize, warnings):
                 with openf(outputFilename, "w") as outFile:
                     outFile.write(minimize(inFile.read()))
             move_to(outputFilename, "../../themes/UCCE/js")
-    
+
+        cwd = os.getcwd()
+        # Assume ol5-rollup at same level as eden
+        rollup_dir = os.path.join("..", "..", "..", "..", "ol5-rollup")
+        os.chdir(rollup_dir)
+        os.system("npm run-script build")
+        os.system("terser ol5.js -c --source-map -o ol5.min.js")
+        theme_dir = os.path.join("..", request.application, "static", "themes", "UCCE", "JS")
+        move_to("ol5.min.js", theme_dir)
+        move_to("ol5.min.js.map", theme_dir)
+        os.chdir(theme_dir)
+        os.system("terser s3.ui.template.js -c  -o s3.ui.template.min.js")
+        # Restore CWD
+        os.chdir(cwd)
 
 # =============================================================================
 # Main script

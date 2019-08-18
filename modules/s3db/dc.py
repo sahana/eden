@@ -594,21 +594,35 @@ class DataCollectionTemplateModel(S3Model):
                                                        qtable.comments,
                                                        qtable.field_type,
                                                        qtable.options,
+                                                       qtable.settings,
                                                        qtable.require_not_empty,
                                                        limitby=(0, 1)
                                                        ).first()
 
         field_type = question.field_type
         field_settings = {}
+
+        question_settings = question.settings
+        pipe_image = question_settings.get("pipeImage")
+        if pipe_image:
+            field_settings["pipeImage"] = pipe_image
+
         options = None
         if field_type == 1:
+            # Text
             field_type = "string"
         elif field_type == 2:
+            # Number
             field_type = "integer"
+            requires = question_settings.get("requires")
+            if requires:
+                field_settings["requires"] = requires
         elif field_type == 4:
+            # Boolean
             field_type = "boolean"
             field_settings["mobile"] = {"widget": "checkbox"}
         elif field_type == 5:
+            # Yes/No/Don't Know
             T = current.T
             options = [T("Yes"),
                        T("No"),
@@ -616,28 +630,44 @@ class DataCollectionTemplateModel(S3Model):
                        ]
             field_type = "string"
         elif field_type == 6:
+            # Options
             options = question.options
-            field_type = "string"
+            multiple = question_settings.get("multiple")
+            if multiple > 1:
+                field_type = "list:string"
+                field_settings["multiple"] = multiple
+            else:
+                field_type = "string"
         elif field_type == 7:
+            # "Date"
             field_type = "date"
         elif field_type == 8:
+            # Datetime
             field_type = "datetime"
         elif field_type == 9:
             # Grid: Pseudo-question, no dynamic field
             return
         elif field_type == 10:
+            # Large Text
             field_type = "text"
             field_settings["widget"] = "comments"
         elif field_type == 11:
+            # Rich Text
             field_type = "text"
             field_settings["widget"] = "richtext"
         elif field_type == 12:
+            # Likert
             field_type = "text"
             options = question.options
-            field_settings["widget"] = "likert" #@ToDo
+            field_settings["scale"] = question_settings.get("scale")
+            #field_settings["widget"] = "likert" # @ToDo: Allow displaying images for options, l10n also done centrally not vua dc_question_l10n
         elif field_type == 13:
-            field_type = "image"
-            field_settings["widget"] = "image" #@ToDo
+            # Heatmap
+            field_type = "text"
+            num_clicks = question_settings.get("numClicks")
+            if num_clicks:
+                field_settings["numClicks"] =  num_clicks
+            #field_settings["widget"] = "heatmap" # @ToDo
         else:
             current.log.debug(field_type)
             raise NotImplementedError
