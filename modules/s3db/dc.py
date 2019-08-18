@@ -471,7 +471,7 @@ class DataCollectionTemplateModel(S3Model):
         table_settings = {}
         if master == "dc_response":
             settings = current.deployment_settings
-            mobile_form = True # For SCPHIMS at least
+            mobile_form = True # For SCPHIMS at least, for UCCE this should happen only based on dc_target.status (currently handled in-template)
             mobile_data = settings.get_dc_mobile_data()
             if not settings.get_dc_mobile_inserts():
                 table_settings["insertable"] = False
@@ -617,6 +617,7 @@ class DataCollectionTemplateModel(S3Model):
             field_type = "integer"
             requires = question_settings.get("requires")
             if requires:
+                # "isIntInRange": {"min": min, "max": max}
                 mobile_settings["requires"] = requires
         elif field_type == 4:
             # Boolean
@@ -636,7 +637,7 @@ class DataCollectionTemplateModel(S3Model):
             multiple = question_settings.get("multiple")
             if multiple > 1:
                 field_type = "list:string"
-                mobile_settings["requires"] = {"maxSelected":  multiple}
+                mobile_settings["requires"] = {"selectedOpts": {"max": multiple}}
             else:
                 field_type = "string"
             other = question_settings.get("other")
@@ -693,7 +694,7 @@ class DataCollectionTemplateModel(S3Model):
             field_settings["mobile"]["widget"] = {"type": "heatmap"}
             num_clicks = question_settings.get("numClicks")
             if num_clicks:
-                field_settings["mobile"]["requires"] = {"maxSelected": numClicks}
+                field_settings["mobile"]["requires"] = {"selectedOpts": {"max": numClicks}}
         else:
             current.log.debug(field_type)
             raise NotImplementedError

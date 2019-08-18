@@ -402,6 +402,9 @@ def config(settings):
         tatable = s3db.dc_target
         db(tatable.id == target_id).update(template_id = template_id)
 
+        # Disable mobile_form in Dynamic Table
+        new_vars = {"mobile_form": False}
+
         # Link Dynamic Table to Masterkey
         ltable = s3db.project_project_target
         pmtable = s3db.project_project_masterkey
@@ -411,12 +414,15 @@ def config(settings):
                                 limitby = (0, 1)
                                 ).first()
         if link:
-            query = (tatable.id == target_id) & \
-                    (tetable.id == tatable.template_id)
-            template = db(query).select(tetable.table_id,
-                                        limitby = (0, 1)
-                                        ).first()
-            db(s3db.s3_table.id == template.table_id).update(masterkey_id = link.masterkey_id)
+            new_vars[masterkey_id = link.masterkey_id]
+
+        # Update Dynamic Table
+        query = (tatable.id == target_id) & \
+                (tetable.id == tatable.template_id)
+        template = db(query).select(tetable.table_id,
+                                    limitby = (0, 1)
+                                    ).first()
+        db(s3db.s3_table.id == template.table_id).update(**new_vars)
 
     # -------------------------------------------------------------------------
     def dc_target_ondelete(form):

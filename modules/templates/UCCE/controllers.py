@@ -700,8 +700,20 @@ class dc_TargetActivate(S3Method):
                 if not current.auth.s3_has_permission("update", table, record_id=target_id):
                     r.unauthorised()
 
+                db = current.db
+                s3db = current.s3db
+
                 # Update Status
-                current.db(table.id == target_id).update(status = 2)
+                db(table.id == target_id).update(status = 2)
+
+                # Lookup the Dynamic Table
+                tetable = s3db.dc_template
+                template = db(tetable.id == r.record.template_id).select(tetable.table_id,
+                                                                         limitby = (0, 1)
+                                                                         ).first()
+                if template:
+                    # Update Dynamic Table
+                    db(s3db.s3_table.id == template.table_id).update(mobile_form = True)
 
                 # Message
                 current.session.confirmation = current.T("Survey Activated")
@@ -717,8 +729,20 @@ class dc_TargetActivate(S3Method):
                 if not current.auth.s3_has_permission("update", table, record_id=target_id):
                     r.unauthorised()
 
+                db = current.db
+                s3db = current.s3db
+
                 # Update Status
-                current.db(table.id == target_id).update(status = 2)
+                db(table.id == target_id).update(status = 2)
+
+                # Lookup the Dynamic Table
+                tetable = s3db.dc_template
+                template = db(tetable.id == r.record.template_id).select(tetable.table_id,
+                                                                         limitby = (0, 1)
+                                                                         ).first()
+                if template:
+                    # Update Dynamic Table
+                    db(s3db.s3_table.id == template.table_id).update(mobile_form = True)
 
                 # Message
                 current.response.headers["Content-Type"] = "application/json"
@@ -754,10 +778,21 @@ class dc_TargetDeactivate(S3Method):
                 target_id = r.id
                 if not current.auth.s3_has_permission("update", table, record_id=target_id):
                     r.unauthorised()
+
+                db = current.db
                 s3db = current.s3db
 
                 # Update Status
-                current.db(table.id == target_id).update(status = 3)
+                db(table.id == target_id).update(status = 3)
+
+                # Lookup the Dynamic Table
+                tetable = s3db.dc_template
+                template = db(tetable.id == r.record.template_id).select(tetable.table_id,
+                                                                         limitby = (0, 1)
+                                                                         ).first()
+                if template:
+                    # Update Dynamic Table
+                    db(s3db.s3_table.id == template.table_id).update(mobile_form = False)
 
                 # Message
                 current.response.headers["Content-Type"] = "application/json"
@@ -836,6 +871,8 @@ class dc_TargetEdit(S3Method):
                 target_id = r.id
                 if not current.auth.s3_has_permission("update", table, record_id=target_id):
                     r.unauthorised()
+
+                db = current.db
                 s3db = current.s3db
 
                 # Delete Responses
@@ -844,7 +881,16 @@ class dc_TargetEdit(S3Method):
                 resource.delete()
 
                 # Update Status
-                current.db(table.id == target_id).update(status = 1)
+                db(table.id == target_id).update(status = 1)
+
+                # Lookup the Dynamic Table
+                tetable = s3db.dc_template
+                template = db(tetable.id == r.record.template_id).select(tetable.table_id,
+                                                                         limitby = (0, 1)
+                                                                         ).first()
+                if template:
+                    # Update Dynamic Table
+                    db(s3db.s3_table.id == template.table_id).update(mobile_form = False)
 
                 # Message
                 current.session.confirmation = current.T("Survey Deactivated")
@@ -859,6 +905,8 @@ class dc_TargetEdit(S3Method):
                 target_id = r.id
                 if not current.auth.s3_has_permission("update", table, record_id=target_id):
                     r.unauthorised()
+
+                db = current.db
                 s3db = current.s3db
 
                 # Delete Responses
@@ -867,7 +915,16 @@ class dc_TargetEdit(S3Method):
                 resource.delete()
 
                 # Update Status
-                current.db(table.id == target_id).update(status = 1)
+                db(table.id == target_id).update(status = 1)
+
+                # Lookup the Dynamic Table
+                tetable = s3db.dc_template
+                template = db(tetable.id == r.record.template_id).select(tetable.table_id,
+                                                                         limitby = (0, 1)
+                                                                         ).first()
+                if template:
+                    # Update Dynamic Table
+                    db(s3db.s3_table.id == template.table_id).update(mobile_form = False)
 
                 # Message
                 current.response.headers["Content-Type"] = "application/json"
