@@ -121,7 +121,7 @@ class DataCollectionTemplateModel(S3Model):
                      #                       },
                      #              },
                      #      'displayLogic': {'id': questionID, (Multichoice, Likert or Heatmap)
-                     #                       'option': option or region,
+                     #                       'eq': option or region,
                      #                       },
                      #      },
                      #  3: {'type': 'question',
@@ -1071,6 +1071,9 @@ class DataCollectionModel(S3Model):
             Mobile Client:
                 Create the crud_form
                 (autototals, grids, hides & subheadings are in the table.settings)
+
+            SCPHIMS calls this in customise_default_table_controller()
+            UCCE doesn't need Web UI Answers, so writes to s3_table.settings["mobile_form"] when survey is activated instead
         """
 
         T = current.T
@@ -1191,7 +1194,8 @@ class DataCollectionModel(S3Model):
 
         for posn in layout:
             item = layout[posn]
-            if item["type"] == "question":
+            item_type = item["type"]
+            if item_type == "question":
                 question = questions[item["id"]]
                 fname = question["name"]
                 if fname:
@@ -1201,7 +1205,7 @@ class DataCollectionModel(S3Model):
                     # Grid Pseudo-Question
                     fname = question["code"]
                     cappend(S3SQLDummyField(fname))
-            elif item["type"] == "subheading":
+            elif item_type == "subheading":
                 text = None
                 if translate:
                     l10n = item.get("l10n")
@@ -1210,7 +1214,7 @@ class DataCollectionModel(S3Model):
                 if text is None:
                     text = item["text"]
                 subheadings[fname] = text
-            elif item["type"] == "instructions":
+            elif item_type == "instructions":
                 do = None
                 say = None
                 do_item = item.get("do")
@@ -1227,7 +1231,7 @@ class DataCollectionModel(S3Model):
                 if say is None:
                     say = say_item.get("text")
                 cappend(S3SQLInlineInstruction(do=item["do"], say=item["say"]))
-            elif item["type"] == "break":
+            elif item_type == "break":
                 cappend(S3SQLSectionBreak())
 
         # Auto-Totals

@@ -1641,22 +1641,23 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
             // Display a dropdown of Options for the selected Question
 
             var displayLogicOption,
+                opt,
                 options = logicQuestion.options,
                 selected,
                 subOptionSelect = '<select id="sub-logic-select-' + currentPosition + '"><option value="">select ' + label + '</option>';
 
             if (displayLogic) {
-                displayLogicOption = displayLogic.option;
+                displayLogicOption = displayLogic.eq;
             }
 
             for (var i=0, len=options.length; i < len; i++) {
-                option = options[i];
-                if (option == displayLogicOption) {
+                opt = options[i];
+                if (opt == displayLogicOption) {
                     selected = ' selected';
                 } else {
                     selected = '';
                 }
-                subOptionSelect += '<option value="' + option + '"' + selected + '>' + option + '</option>';
+                subOptionSelect += '<option value="' + opt + '"' + selected + '>' + opt + '</option>';
             }
 
             if (type == 'multichoice') {
@@ -1681,7 +1682,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                 // Update Data
                 self.data.layout[currentPosition].displayLogic = {
                     id: logicQuestionID,
-                    option: $(this).val()
+                    eq: $(this).val()
                 };
                 // Save Layout
                 self.saveLayout();

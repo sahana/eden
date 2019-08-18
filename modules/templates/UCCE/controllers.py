@@ -694,26 +694,8 @@ class dc_TargetActivate(S3Method):
 
             elif r.interactive:
                 # Popup has confirmed the action
-                # Action the Request
-                table = r.table
-                target_id = r.id
-                if not current.auth.s3_has_permission("update", table, record_id=target_id):
-                    r.unauthorised()
-
-                db = current.db
-                s3db = current.s3db
-
-                # Update Status
-                db(table.id == target_id).update(status = 2)
-
-                # Lookup the Dynamic Table
-                tetable = s3db.dc_template
-                template = db(tetable.id == r.record.template_id).select(tetable.table_id,
-                                                                         limitby = (0, 1)
-                                                                         ).first()
-                if template:
-                    # Update Dynamic Table
-                    db(s3db.s3_table.id == template.table_id).update(mobile_form = True)
+                # Action the request
+                self.update(r)
 
                 # Message
                 current.session.confirmation = current.T("Survey Activated")
@@ -724,25 +706,7 @@ class dc_TargetActivate(S3Method):
             elif r.http == "POST" and r.representation == "json":
                 # AJAX method
                 # Action the request
-                table = r.table
-                target_id = r.id
-                if not current.auth.s3_has_permission("update", table, record_id=target_id):
-                    r.unauthorised()
-
-                db = current.db
-                s3db = current.s3db
-
-                # Update Status
-                db(table.id == target_id).update(status = 2)
-
-                # Lookup the Dynamic Table
-                tetable = s3db.dc_template
-                template = db(tetable.id == r.record.template_id).select(tetable.table_id,
-                                                                         limitby = (0, 1)
-                                                                         ).first()
-                if template:
-                    # Update Dynamic Table
-                    db(s3db.s3_table.id == template.table_id).update(mobile_form = True)
+                self.update(r)
 
                 # Message
                 current.response.headers["Content-Type"] = "application/json"
@@ -754,6 +718,118 @@ class dc_TargetActivate(S3Method):
             r.error(404, current.ERROR.BAD_RESOURCE)
 
         return output
+
+    # -------------------------------------------------------------------------
+    def update(r):
+        """
+            DRY Helper to check permissions and update the Data in the Database
+        """
+
+        table = r.table
+        target_id = r.id
+        if not current.auth.s3_has_permission("update", table, record_id=target_id):
+            r.unauthorised()
+
+        # Update the Data in the Database
+        db = current.db
+        s3db = current.s3db
+
+        # Update Status
+        db(table.id == target_id).update(status = 2)
+
+        # Lookup the Dynamic Table
+        tetable = s3db.dc_template
+        template = db(tetable.id == r.record.template_id).select(tetable.table_id,
+                                                                 tetable.layout,
+                                                                 limitby = (0, 1)
+                                                                 ).first()
+        if not template:
+            current.log.error("Error Activating Target %s: Cannot find Template!" % target_id)
+            return
+
+        # Convert dc_template.layout to s3_table.settings["mobile_form"]
+        layout = template.layout
+        mobile_form = []
+        mappend = mobile_form.append
+
+        # Read Questions
+        qtable = db.dc_question
+        ftable = db.s3_field
+        query = (qtable.template_id == template_id) & \
+                (qtable.deleted == False)
+        left = [ftable.on(ftable.id == qtable.field_id),
+                ]
+        rows = db(query).select(ftable.name,
+                                ftable.label,
+                                qtable.id,
+                                left = left
+                                )
+        questions = {}
+        for row in rows:
+            _row = row["s3_field"]
+            questions[row["dc_question.id"]] = {"name": _row.name,
+                                                "label": _row.label,
+                                                }
+
+        for posn in layout:
+            item = layout[posn]
+            item_type = item["type"]
+            if item_type == "question":
+                question = questions[item["id"]]
+                fname = question["name"]
+                if fname:
+                    displayLogic = item.get("displayLogic")
+                    item = {"name": fname,
+                            "label": question["label"],
+                            }
+                    if displayLogic:
+                        operator = None
+                        value = None
+                        eq = displayLogic.get("eq")
+                        if eq:
+                            operator = "eq"
+                            value = eq
+                        else:
+                            # @ToDo: Handle both gt & lt
+                            gt = displayLogic.get("gt")
+                            if gt:
+                                operator = "gt"
+                                value = gt
+                            lt = displayLogic.get("lt")
+                            if lt:
+                                operator = "lt"
+                                value = lt
+                        if operator and value is not None:
+                            item["displayLogic"] = [question["name"], operator, value]
+                    mappend(item)
+            elif item_type == "instructions":
+                displayLogic = item.get("displayLogic")
+                if displayLogic:
+                    operator = None
+                    value = None
+                    eq = displayLogic.get("eq")
+                    if eq:
+                        operator = "eq"
+                        value = eq
+                    else:
+                        # @ToDo: Handle both gt & lt
+                        gt = displayLogic.get("gt")
+                        if gt:
+                            operator = "gt"
+                            value = gt
+                        lt = displayLogic.get("lt")
+                        if lt:
+                            operator = "lt"
+                            value = lt
+                    if operator and value is not None:
+                        item["displayLogic"] = [question["name"], operator, value]
+                mappend(item)
+            elif item_type == "break":
+                mappend({"type": "section-break"})
+
+        # Update Dynamic Table
+        db(s3db.s3_table.id == template.table_id).update(settings = {"mobile_form": mobile_form},
+                                                         mobile_form = True)
 
 # =============================================================================
 class dc_TargetDeactivate(S3Method):
@@ -867,30 +943,7 @@ class dc_TargetEdit(S3Method):
             elif r.interactive:
                 # Popup has confirmed the action
                 # Action the Request
-                table = r.table
-                target_id = r.id
-                if not current.auth.s3_has_permission("update", table, record_id=target_id):
-                    r.unauthorised()
-
-                db = current.db
-                s3db = current.s3db
-
-                # Delete Responses
-                rtable = s3db.dc_response
-                resource = s3db.resource("dc_response", filter=(rtable.target_id == target_id))
-                resource.delete()
-
-                # Update Status
-                db(table.id == target_id).update(status = 1)
-
-                # Lookup the Dynamic Table
-                tetable = s3db.dc_template
-                template = db(tetable.id == r.record.template_id).select(tetable.table_id,
-                                                                         limitby = (0, 1)
-                                                                         ).first()
-                if template:
-                    # Update Dynamic Table
-                    db(s3db.s3_table.id == template.table_id).update(mobile_form = False)
+                self.update(r)
 
                 # Message
                 current.session.confirmation = current.T("Survey Deactivated")
@@ -901,30 +954,7 @@ class dc_TargetEdit(S3Method):
             elif r.http == "POST" and r.representation == "json":
                 # AJAX method
                 # Action the request
-                table = r.table
-                target_id = r.id
-                if not current.auth.s3_has_permission("update", table, record_id=target_id):
-                    r.unauthorised()
-
-                db = current.db
-                s3db = current.s3db
-
-                # Delete Responses
-                rtable = s3db.dc_response
-                resource = s3db.resource("dc_response", filter=(rtable.target_id == target_id))
-                resource.delete()
-
-                # Update Status
-                db(table.id == target_id).update(status = 1)
-
-                # Lookup the Dynamic Table
-                tetable = s3db.dc_template
-                template = db(tetable.id == r.record.template_id).select(tetable.table_id,
-                                                                         limitby = (0, 1)
-                                                                         ).first()
-                if template:
-                    # Update Dynamic Table
-                    db(s3db.s3_table.id == template.table_id).update(mobile_form = False)
+                self.update(r)
 
                 # Message
                 current.response.headers["Content-Type"] = "application/json"
@@ -936,6 +966,38 @@ class dc_TargetEdit(S3Method):
             r.error(404, current.ERROR.BAD_RESOURCE)
 
         return output
+
+    # -------------------------------------------------------------------------
+    def update(r):
+        """
+            DRY Helper to check permissions and update the Data in the Database
+        """
+
+        table = r.table
+        target_id = r.id
+        if not current.auth.s3_has_permission("update", table, record_id=target_id):
+            r.unauthorised()
+
+        # Update the Data in the Database
+        db = current.db
+        s3db = current.s3db
+
+        # Delete Responses
+        rtable = s3db.dc_response
+        resource = s3db.resource("dc_response", filter=(rtable.target_id == target_id))
+        resource.delete()
+
+        # Update Status
+        db(table.id == target_id).update(status = 1)
+
+        # Lookup the Dynamic Table
+        tetable = s3db.dc_template
+        template = db(tetable.id == r.record.template_id).select(tetable.table_id,
+                                                                 limitby = (0, 1)
+                                                                 ).first()
+        if template:
+            # Update Dynamic Table
+            db(s3db.s3_table.id == template.table_id).update(mobile_form = False)
 
 # =============================================================================
 class dc_TargetDelete(S3Method):
