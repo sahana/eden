@@ -781,7 +781,8 @@ class dc_TargetActivate(S3Method):
                 fname = question["name"]
                 if fname:
                     displayLogic = item.get("displayLogic")
-                    item = {"name": fname,
+                    item = {"type": "input",
+                            "field": fname,
                             "label": question["label"],
                             }
                     if displayLogic:
