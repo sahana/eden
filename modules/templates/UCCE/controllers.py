@@ -720,6 +720,7 @@ class dc_TargetActivate(S3Method):
         return output
 
     # -------------------------------------------------------------------------
+    @staticmethod
     def update(r):
         """
             DRY Helper to check permissions and update the Data in the Database
@@ -802,6 +803,7 @@ class dc_TargetActivate(S3Method):
                         if operator and value is not None:
                             item["displayLogic"] = [question["name"], operator, value]
                     mappend(item)
+
             elif item_type == "instructions":
                 displayLogic = item.get("displayLogic")
                 if displayLogic:
@@ -824,6 +826,7 @@ class dc_TargetActivate(S3Method):
                     if operator and value is not None:
                         item["displayLogic"] = [question["name"], operator, value]
                 mappend(item)
+
             elif item_type == "break":
                 mappend({"type": "section-break"})
 
@@ -968,6 +971,7 @@ class dc_TargetEdit(S3Method):
         return output
 
     # -------------------------------------------------------------------------
+    @staticmethod
     def update(r):
         """
             DRY Helper to check permissions and update the Data in the Database
