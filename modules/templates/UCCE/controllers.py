@@ -781,54 +781,40 @@ class dc_TargetActivate(S3Method):
                 fname = question["name"]
                 if fname:
                     displayLogic = item.get("displayLogic")
-                    item = {"type": "input",
-                            "field": fname,
-                            # Read from model
-                            #"label": question["label"],
-                            }
                     if displayLogic:
-                        operator = None
-                        value = None
-                        eq = displayLogic.get("eq")
-                        if eq:
-                            operator = "eq"
-                            value = eq
-                        else:
-                            # @ToDo: Handle both gt & lt
-                            gt = displayLogic.get("gt")
-                            if gt:
-                                operator = "gt"
-                                value = gt
-                            lt = displayLogic.get("lt")
-                            if lt:
-                                operator = "lt"
-                                value = lt
-                        if operator and value is not None:
-                            item["displayLogic"] = [question["name"], operator, value]
+                        # Convert Question ID to fieldname
+                        dq = questions.get(displayLogic["id"])
+                        if dq:
+                            dfname = dq["name"]
+                            displayLogic["field"] = fname
+                            delete displayLogic["id"]
+                            item = {"type": "input",
+                                    "field": fname,
+                                    "displayLogic": displayLogic,
+                                    # Read from model
+                                    #"label": question["label"],
+                                    }
+                    else:
+                        item = fname
                     mappend(item)
 
             elif item_type == "instructions":
+                new_item = {}
+                do = item.get("do")
+                say = item.get("say")
+                new_item["do"] = do.get("text")
+                new_item["say"] = say.get("text")
+                # @ToDo: l10n
                 displayLogic = item.get("displayLogic")
                 if displayLogic:
-                    operator = None
-                    value = None
-                    eq = displayLogic.get("eq")
-                    if eq:
-                        operator = "eq"
-                        value = eq
-                    else:
-                        # @ToDo: Handle both gt & lt
-                        gt = displayLogic.get("gt")
-                        if gt:
-                            operator = "gt"
-                            value = gt
-                        lt = displayLogic.get("lt")
-                        if lt:
-                            operator = "lt"
-                            value = lt
-                    if operator and value is not None:
-                        item["displayLogic"] = [question["name"], operator, value]
-                mappend(item)
+                    # Convert Question ID to fieldname
+                    dq = questions.get(displayLogic["id"])
+                    if dq:
+                        dfname = dq["name"]
+                        displayLogic["field"] = fname
+                        new_item["displayLogic"] = displayLogic
+                        
+                mappend(new_item)
 
             elif item_type == "break":
                 mappend({"type": "section-break"})

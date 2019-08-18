@@ -622,6 +622,94 @@ def config(settings):
     settings.customise_dc_template_controller = customise_dc_template_controller
 
     # -------------------------------------------------------------------------
+    def default_table_onaccept(form):
+        """
+            Set the response_id
+        """
+
+        form_vars = form.vars
+
+        record_id = form_vars.get("id")
+        if not record_id:
+            current.log.error("Submitting to dynamic table...cannot find record_id")
+            return
+
+        # Read the Table
+        table_id = form_vars.get("table_id")
+        if not table_id:
+            # @ToDo: Read the record...although we don't know the tablename?
+            current.log.error("Submitting to dynamic table...cannot find table_id")
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        # Find the Template
+        tetable = s3db.dc_template
+        template = db(tetable.table_id == table_id).select(tetable.id,
+                                                           limitby = (0, 1)
+                                                           ).first()
+        try:
+            template_id = template.id
+        except AttributeError:
+            current.log.error("Submitting to dynamic table...cannot find template_id")
+            return
+
+        # Find the Target
+        ttable = s3db.dc_target
+        target = db(ttable.template_id == template_id).select(ttable.id,
+                                                              limitby = (0, 1)
+                                                              ).first()
+        try:
+            target_id = target.id
+        except AttributeError:
+            current.log.error("Submitting to dynamic table...cannot find target_id")
+            return
+
+        # Create a Response
+        response_id = s3db.dc_response.insert(target_id = target_id,
+                                              template_id = template_id,
+                                              # @ToDo?
+                                              #language = language,
+                                              )
+
+        # Find the tablename
+        dtable = s3db.s3_table
+        table = db(dtable.id == table_id).select(dtable.name,
+                                                 limitby = (0, 1)
+                                                 ).first()
+        try:
+            tablename = table.name
+        except AttributeError:
+            current.log.error("Submitting to dynamic table...cannot find tablename")
+            return
+
+        dttable = s3db.table.get(tablename)
+        db(dttable.id == record_id)update(response_id = response_id)
+
+    # -------------------------------------------------------------------------
+    def customise_default_table_controller(**attr):
+
+        s3 = current.response.s3
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                if not standard_prep(r):
+                    return False
+
+            tablename = "s3dt_%s" % r.args[0]
+            current.s3db.configure(tablename,
+                                   onaccept = default_table_onaccept)
+
+            return True
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_default_table_controller = customise_default_table_controller
+
+    # -------------------------------------------------------------------------
     def customise_doc_document_resource(r, tablename):
 
         from gluon import URL

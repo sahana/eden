@@ -629,7 +629,7 @@ class S3DynamicTablesModel(S3Model):
                     ktablename = ktablename.split(".", 1)[0]
                 master = ktablename
 
-        row.update_record(master=master)
+        row.update_record(master = master)
 
 # =============================================================================
 def s3_table_rheader(r, tabs=None):
