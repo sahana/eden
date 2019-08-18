@@ -600,12 +600,13 @@ class DataCollectionTemplateModel(S3Model):
                                                        ).first()
 
         field_type = question.field_type
-        field_settings = {}
+        field_settings = {"mobile": {}}
+        mobile_settings = field_settings["mobile"]
 
         question_settings = question.settings or {}
         pipe_image = question_settings.get("pipeImage")
         if pipe_image:
-            field_settings["pipeImage"] = pipe_image
+            mobile_settings["pipeImage"] = pipe_image
 
         options = None
         if field_type == 1:
@@ -616,11 +617,11 @@ class DataCollectionTemplateModel(S3Model):
             field_type = "integer"
             requires = question_settings.get("requires")
             if requires:
-                field_settings["requires"] = requires
+                mobile_settings["requires"] = requires
         elif field_type == 4:
             # Boolean
             field_type = "boolean"
-            field_settings["mobile"] = {"widget": "checkbox"}
+            mobile_settings["widget"] = {"type": "checkbox"}
         elif field_type == 5:
             # Yes/No/Don't Know
             T = current.T
@@ -635,9 +636,13 @@ class DataCollectionTemplateModel(S3Model):
             multiple = question_settings.get("multiple")
             if multiple > 1:
                 field_type = "list:string"
-                field_settings["multiple"] = multiple
+                mobile_settings["requires"] = {"selectedOptions": [0, multiple]}
             else:
                 field_type = "string"
+            other = question_settings.get("other")
+            if other:
+                #@ ToDo
+                pass
         elif field_type == 7:
             # "Date"
             field_type = "date"
@@ -659,15 +664,17 @@ class DataCollectionTemplateModel(S3Model):
             # Likert
             field_type = "text"
             options = question.options
-            field_settings["scale"] = question_settings.get("scale")
-            #field_settings["widget"] = "likert" # @ToDo: Allow displaying images for options, l10n also done centrally not vua dc_question_l10n
+            # @ToDo: Allow displaying images for options, l10n also done centrally not vua dc_question_l10n
+            mobile_settings["widget"] = {"type": "likert",
+                                         "scale": question_settings.get("scale"),
+                                         }
         elif field_type == 13:
             # Heatmap
-            field_type = "text"
+            field_type = "json" # Store list of Lat/Lons
+            field_settings["mobile"]["widget"] = {"type": "heatmap"}
             num_clicks = question_settings.get("numClicks")
             if num_clicks:
-                field_settings["numClicks"] =  num_clicks
-            #field_settings["widget"] = "heatmap" # @ToDo
+                field_settings["mobile"]["requires"] = {"numClicks": [0, numClicks]}
         else:
             current.log.debug(field_type)
             raise NotImplementedError
