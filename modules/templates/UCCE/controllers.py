@@ -762,7 +762,7 @@ class dc_TargetActivate(S3Method):
         left = [ftable.on(ftable.id == qtable.field_id),
                 ]
         rows = db(query).select(ftable.name,
-                                ftable.label,
+                                #ftable.label,
                                 qtable.id,
                                 left = left
                                 )
@@ -770,7 +770,7 @@ class dc_TargetActivate(S3Method):
         for row in rows:
             _row = row["s3_field"]
             questions[row["dc_question.id"]] = {"name": _row.name,
-                                                "label": _row.label,
+                                                #"label": _row.label,
                                                 }
 
         for posn in layout:
@@ -783,7 +783,8 @@ class dc_TargetActivate(S3Method):
                     displayLogic = item.get("displayLogic")
                     item = {"type": "input",
                             "field": fname,
-                            "label": question["label"],
+                            # Read from model
+                            #"label": question["label"],
                             }
                     if displayLogic:
                         operator = None
