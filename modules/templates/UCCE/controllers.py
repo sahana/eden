@@ -739,11 +739,12 @@ class dc_TargetActivate(S3Method):
         db(table.id == target_id).update(status = 2)
 
         # Lookup the Dynamic Table
+        template_id = r.record.template_id
         tetable = s3db.dc_template
-        template = db(tetable.id == r.record.template_id).select(tetable.table_id,
-                                                                 tetable.layout,
-                                                                 limitby = (0, 1)
-                                                                 ).first()
+        template = db(tetable.id == template_id).select(tetable.table_id,
+                                                        tetable.layout,
+                                                        limitby = (0, 1)
+                                                        ).first()
         if not template:
             current.log.error("Error Activating Target %s: Cannot find Template!" % target_id)
             return
