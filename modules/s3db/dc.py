@@ -636,13 +636,32 @@ class DataCollectionTemplateModel(S3Model):
             multiple = question_settings.get("multiple")
             if multiple > 1:
                 field_type = "list:string"
-                mobile_settings["requires"] = {"selectedOptions": [0, multiple]}
+                mobile_settings["requires"] = {"maxSelected":  multiple}
             else:
                 field_type = "string"
             other = question_settings.get("other")
             if other:
-                #@ ToDo
-                pass
+                other_id = question_settings.get("other_id")
+                if other_id:
+                    # Update the Dynamic Field
+                    db(current.s3db.s3_field.id == other_id).update(label = question.name)
+                    # @ToDo: Call onaccept if this starts doing anything other than just setting 'master'
+                else:
+                    # Create the Dynamic Field
+                    # Lookup the table_id
+                    ttable = db.dc_template
+                    template = db(ttable.id == question.template_id).select(ttable.table_id,
+                                                                            limitby=(0, 1)
+                                                                            ).first()
+                    from uuid import uuid1
+                    name = "f%s" % str(uuid1()).replace("-", "_")
+                    field_id = current.s3db.s3_field.insert(table_id = template.table_id,
+                                                            label = other,
+                                                            name = name,
+                                                            field_type = "text",
+                                                            )
+                    # @ToDo: Call onaccept if this starts doing anything other than just setting 'master'
+                    # @ToDo: Call set_record_owner() once we start restricting these
         elif field_type == 7:
             # "Date"
             field_type = "date"
@@ -674,7 +693,7 @@ class DataCollectionTemplateModel(S3Model):
             field_settings["mobile"]["widget"] = {"type": "heatmap"}
             num_clicks = question_settings.get("numClicks")
             if num_clicks:
-                field_settings["mobile"]["requires"] = {"numClicks": [0, numClicks]}
+                field_settings["mobile"]["requires"] = {"maxSelected": numClicks}
         else:
             current.log.debug(field_type)
             raise NotImplementedError

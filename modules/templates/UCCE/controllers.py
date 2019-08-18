@@ -592,6 +592,12 @@ class dc_QuestionSave(S3Method):
                     settings = post_vars_get("settings")
                     #if settings:
                     #    settings = json.loads(settings)
+                    old_settings = r.record.settings or {}
+                    other_id = old_settings.get("other_id")
+                    if other_id:
+                        # Preserve the reference to the other Field
+                        # - Editor JS is unaware of this attribute
+                        settings["other_id"] = other_id
                     db(table.id == record_id).update(name = name,
                                                      require_not_empty = mandatory,
                                                      options = options,
