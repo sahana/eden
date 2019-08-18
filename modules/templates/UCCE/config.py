@@ -616,6 +616,62 @@ def config(settings):
     settings.customise_dc_template_controller = customise_dc_template_controller
 
     # -------------------------------------------------------------------------
+    def customise_default_table_controller(**attr):
+
+        s3 = current.response.s3
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                if not standard_prep(r):
+                    return False
+
+            if r.method == "mform":
+                # Mobile client downloading Forms
+
+                s3db = current.s3db
+
+                # Configure Answer form
+                # i.e. convert dc_template.layout into mobile_form
+                s3db.dc_answer_form(r, r.tablename)
+                
+                # Represent the record as the representation of the response_id
+                # NB If we expected multiple records then we should make this an S3Represent, but in this case we wouldn't expect more then 3-4
+                def response_represent(id, show_link=False):
+                    db = current.db
+                    table = db.dc_response
+                    respnse = db(table).select(table.location_id,
+                                               limitby = (0, 1)
+                                               ).first()
+                    try:
+                        location_id = respnse.location_id
+                    except:
+                        return id
+                    else:
+                        represent = table.location_id.represent(location_id,
+                                                                show_link = show_link,
+                                                                )
+                        return represent
+
+                #r.table.response_id.represent = response_represent
+
+                # Configure dc_response as mere lookup-list
+                s3db.configure("dc_response",
+                               mobile_form = lambda record_id: \
+                                             response_represent(record_id,
+                                                                show_link = False,
+                                                                ),
+                               )
+                pass
+
+            return True
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_default_table_controller = customise_default_table_controller
+
+    # -------------------------------------------------------------------------
     def customise_doc_document_resource(r, tablename):
 
         from gluon import URL

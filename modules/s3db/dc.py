@@ -1195,6 +1195,7 @@ class DataCollectionModel(S3Model):
                 fname = question["name"]
                 if fname:
                     cappend((question["label"], fname))
+                    # @ToDo: If type is options and 'other' field then add this, with suitable displayLogic
                 else:
                     # Grid Pseudo-Question
                     fname = question["code"]
