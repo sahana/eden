@@ -685,7 +685,7 @@ def config(settings):
             return
 
         dttable = s3db.table.get(tablename)
-        db(dttable.id == record_id)update(response_id = response_id)
+        db(dttable.id == record_id).update(response_id = response_id)
 
     # -------------------------------------------------------------------------
     def customise_default_table_controller(**attr):
