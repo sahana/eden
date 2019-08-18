@@ -685,9 +685,9 @@ class DataCollectionTemplateModel(S3Model):
             field_type = "text"
             options = question.options
             # @ToDo: Allow displaying images for options, l10n also done centrally not vua dc_question_l10n
-            mobile_settings["widget"] = {"type": "likert",
-                                         "scale": question_settings.get("scale"),
-                                         }
+            #mobile_settings["widget"] = {"type": "likert",
+            #                             "scale": question_settings.get("scale"),
+            #                             }
         elif field_type == 13:
             # Heatmap
             field_type = "json" # Store list of Lat/Lons
