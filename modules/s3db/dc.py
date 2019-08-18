@@ -602,7 +602,7 @@ class DataCollectionTemplateModel(S3Model):
         field_type = question.field_type
         field_settings = {}
 
-        question_settings = question.settings
+        question_settings = question.settings or {}
         pipe_image = question_settings.get("pipeImage")
         if pipe_image:
             field_settings["pipeImage"] = pipe_image

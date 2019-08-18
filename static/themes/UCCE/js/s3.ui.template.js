@@ -754,9 +754,8 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                         }
                     },
                     done: function (e, data) {
-                        if (type != 'heatmap') {
-                            // @ToDo: How to read file from the AJAX response?
-                            self.heatMap(questionID, data.file);
+                        if (type == 'heatmap') {
+                            self.heatMap(questionID, data.result.file);
                         }
                     }
                 });
