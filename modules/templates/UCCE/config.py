@@ -698,9 +698,7 @@ def config(settings):
                 if not standard_prep(r):
                     return False
 
-            tablename = "s3dt_%s" % r.args[0]
-            current.s3db.configure(tablename,
-                                   onaccept = default_table_onaccept)
+            r.resource.configure(onaccept = default_table_onaccept)
 
             return True
         s3.prep = custom_prep
