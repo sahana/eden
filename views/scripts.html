@@ -1,7 +1,9 @@
 {{# Include dynamically added Scripts at the end of the body}}
 {{include "chat.html"}}
 {{for script in s3.scripts:}}{{=SCRIPT(_src=script)}}
-{{pass}}{{ga_id = settings.get_google_analytics_tracking_id()}}{{if ga_id:}}<script async src="https://www.googletagmanager.com/gtag/js?id={{=ga_id}}"></script>
+{{pass}}
+{{for script in s3.scripts_modules:}}{{=SCRIPT(_type="module", _src=script)}}{{pass}}
+{{ga_id = settings.get_google_analytics_tracking_id()}}{{if ga_id:}}<script async src="https://www.googletagmanager.com/gtag/js?id={{=ga_id}}"></script>
 <script type="text/javascript">//<![CDATA[
 window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date);gtag("config","{{=ga_id}}");
 {{else:}}

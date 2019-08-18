@@ -1019,7 +1019,7 @@ def s3_include_debug_js():
     configFilename = "%s/tools/sahana.js.cfg"  % scripts_dir
     files = mergejsmf.getFiles(configDictCore, configFilename)[1]
 
-    script_template = '<script src="/%s/static/scripts/%%s" type="text/javascript"></script>' % \
+    script_template = '<script src="/%s/static/scripts/%%s"></script>' % \
                       request.application
 
     scripts = "\n".join(script_template % scriptname for scriptname in files)

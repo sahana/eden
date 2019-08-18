@@ -3,6 +3,8 @@
 import os
 
 from gluon import *
+from gluon.storage import Storage
+
 from s3 import json, ICON, S3CustomController, S3Method
 
 # Compact JSON encoding
@@ -443,9 +445,13 @@ class dc_QuestionCreate(S3Method):
                 field_type = post_vars_get("type")
                 template_id = post_vars_get("template_id")
                 if field_type and template_id:
-                    question_id = table.insert(template_id = template_id,
-                                               field_type = field_type,
-                                               )
+                    new_vars = Storage(template_id = template_id,
+                                       field_type = field_type,
+                                       )
+                    question_id = table.insert(**new_vars)
+                    new_vars.id = question_id
+                    onaccept = current.s3db.get_config("dc_question", "onaccept")
+                    onaccept(Storage(vars = new_vars))
 
                     # Results (Empty Message so we don't get it shown to User)
                     current.response.headers["Content-Type"] = "application/json"
@@ -539,7 +545,8 @@ class dc_QuestionImageUpload(S3Method):
 
                     # Results (Empty Message so we don't get it shown to User)
                     current.response.headers["Content-Type"] = "application/json"
-                    output = current.xml.json_message(True, 200, "")
+                    output = current.xml.json_message(True, 200, "",
+                                                      file = newfilename)
                 else:
                     r.error(400, current.T("Invalid Parameters"))
             else:
@@ -590,6 +597,8 @@ class dc_QuestionSave(S3Method):
                                                      options = options,
                                                      settings = settings,
                                                      )
+                    onaccept = current.s3db.get_config("dc_question", "onaccept")
+                    onaccept(Storage(vars = Storage(id = record_id)))
 
                     # Translation
                     name_l10n = post_vars_get("name_l10n")
@@ -1391,7 +1400,7 @@ class dc_TemplateEditor(S3Method):
                     scripts_append("/%s/static/scripts/jquery.iframe-transport.js" % appname)
                     scripts_append("/%s/static/scripts/jquery.fileupload.js" % appname)
                     scripts_append("/%s/static/scripts/jquery.validate.js" % appname)
-                    scripts_append("/%s/static/themes/UCCE/js/s3.ui.template.js" % appname)
+                    s3.scripts_modules.append("/%s/static/themes/UCCE/js/s3.ui.template.js" % appname)
                 else:
                     scripts_append("/%s/static/scripts/load-image.all.min.js" % appname)
                     scripts_append("/%s/static/scripts/canvas-to-blob.min.js" % appname)
@@ -1399,7 +1408,7 @@ class dc_TemplateEditor(S3Method):
                     scripts_append("/%s/static/scripts/jquery.iframe-transport.js" % appname)
                     scripts_append("/%s/static/scripts/jquery.fileupload.min.js" % appname)
                     scripts_append("/%s/static/scripts/jquery.validate.min.js" % appname)
-                    scripts_append("/%s/static/themes/UCCE/js/s3.ui.template.min.js" % appname)
+                    s3.scripts_modules.append("/%s/static/themes/UCCE/js/s3.ui.template.min.js" % appname)
                 # Initialise the Template Editor Widget
                 script = '''$('#survey-layout').surveyLayout()'''
                 s3.jquery_ready.append(script)

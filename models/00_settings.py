@@ -88,6 +88,7 @@ s3.stylesheets = []
 s3.external_stylesheets = []
 # To get included at the end of <BODY>
 s3.scripts = []
+s3.scripts_modules = []
 s3.js_global = []
 s3.jquery_ready = []
 

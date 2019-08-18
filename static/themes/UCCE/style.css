@@ -66,6 +66,12 @@
     background-color: #ddd;
 }
 
+.heatmap,
+.heatmap > .preview-empty {
+    height: 250px;
+    width: 350px;
+}
+
 /* Switch Backported from Foundation 6 instead of using the Foundation 5 version */
 .switch {
   height: 2rem;

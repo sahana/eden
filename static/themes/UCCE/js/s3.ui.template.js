@@ -1,11 +1,17 @@
 /*
  * Survey Editor Widget
  */
+// @ToDo: Load in debug/production mode as-appropriate
+//import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, VectorLayer, VectorSource } from './ol5.js';
+import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, VectorLayer, VectorSource } from './ol5.min.js';
+
 (function(factory) {
-  'use strict';
-  // Browser globals (not AMD or Node):
-  factory(window.jQuery, window.loadImage);
-})(function($, loadImage) {
+    'use strict';
+    // Use window. for Browser globals (not AMD or Node):
+    factory(window.jQuery, window.loadImage, Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, VectorLayer, VectorSource);
+    //factory(window.jQuery, window.loadImage);
+})(function($, loadImage, Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, VectorLayer, VectorSource) {
+//})(function($, loadImage) {
     'use strict';
     var surveyID = 0,
         imageOptions = [], // Store {label: label, (just held locally)
@@ -525,6 +531,7 @@
                         }
                         numClicks = thisQuestion.settings.numClicks || 1
                     }
+                    //<span id="preview-' + questionID + '" class="preview-empty fleft"></span>
                     editTab = '<div class="media content active" id="edit-' + position + '">' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Heatmap</h2></div></div>' +
                                '<div class="row"><div class="columns medium-1"><label id="qlabel-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div></div>' +
@@ -535,7 +542,7 @@
                                 '<div class="columns medium-1"></div>' + 
                                 '<div class="columns medium-11">' +
                                  '<div class="row">' + 
-                                  '<div class="columns medium-6"><span id="preview-' + questionID + '" class="preview-empty fleft"></span></div>' +
+                                  '<div class="columns medium-6 heatmap" id="map-' + questionID + '"><span id="preview-' + questionID + '" class="preview-empty fleft"></span></div>' +
                                   '<div class="columns medium-6">' + 
                                    '<div class="row"><h3>Number of clicks allowed:</h3></div>' +
                                    '<div class="row" id="clicks-row-' + questionID + '"><i class="ucce ucce-minus"> </i><span> ' + numClicks + ' </span><i class="ucce ucce-plus"> </i></div>' +
@@ -629,6 +636,7 @@
                             }
                             // Remove any Image
                             self.deleteImage(questionID);
+                            // @ToDo: Show Preview of selected Image
                         } else {
                             delete thisQuestion.settings.pipeImage;
                         }
@@ -643,19 +651,23 @@
                     // Image to Load?
                     var file = thisQuestion.file;
                     if (file) {
-                        loadImage(S3.Ap.concat('/default/download/' + file), function(img) {
-                            var options = {
-                                canvas: true,
-                                maxHeight: 80,
-                                maxWidth: 80
-                            },
-                            preview = loadImage.scale(img, options);
-                            // Place Preview on the page
-                            $('#preview-' + questionID).removeClass('preview-empty')
-                                                       .empty()
-                                                       .append(preview);
-                            return img;
-                        }, {}); // Empty Options
+                        if (type == 'heatmap') {
+                            self.heatMap(questionID, file);
+                        } else {
+                            loadImage(S3.Ap.concat('/default/download/' + file), function(img) {
+                                var options = {
+                                    canvas: true,
+                                    maxHeight: 80,
+                                    maxWidth: 80
+                                },
+                                preview = loadImage.scale(img, options);
+                                // Place Preview on the page
+                                $('#preview-' + questionID).removeClass('preview-empty')
+                                                           .empty()
+                                                           .append(preview);
+                                return img;
+                            }, {}); // Empty Options
+                        }
                     }
                 }
                 $('#image-delete-' + questionID).on('click' + ns, function() {
@@ -676,23 +688,26 @@
                             data.process().done(function() {
                                 data.submit();
 
-                                // Create Preview Image
-                                var file = data.files[0];
-                                // @ToDo: Check file.size &/or file.type are valid?
-                                loadImage(file, function(img) {
-                                    var options = {
-                                        canvas: true,
-                                        maxHeight: 80,
-                                        maxWidth: 80
-                                    },
-                                    preview = loadImage.scale(img, options);
-                                    // Place Preview on the page
-                                    $('#preview-' + questionID).removeClass('preview-empty')
-                                                               .empty()
-                                                               .append(preview);
+                                if (type == 'heatmap') {
+                                    // @ToDo: How to read file from the AJAX response?
+                                    self.heatMap(questionID, file);
+                                } else {
+                                    // Create Preview Image
+                                    var file = data.files[0];
 
-                                    var type = thisQuestion.type;
-                                    if (type != 13) {
+                                   // @ToDo: Check file.size &/or file.type are valid?
+                                    loadImage(file, function(img) {
+                                        var options = {
+                                            canvas: true,
+                                            maxHeight: 80,
+                                            maxWidth: 80
+                                        },
+                                        preview = loadImage.scale(img, options);
+                                        // Place Preview on the page
+                                        $('#preview-' + questionID).removeClass('preview-empty')
+                                                                   .empty()
+                                                                   .append(preview);
+
                                         // Ensure that we aren't trying to Pipe at the same time
                                         if (thisQuestion.settings.hasOwnProperty('pipeImage')) {
                                             $('#pipe-' + questionID).val('')
@@ -711,7 +726,7 @@
                                         if (!found) {
                                             // Read the questionNumber (can't trust original as it may have changed)
                                             var questionNumber = $('#question-' + questionID).data('number');
-                                            var label = 'Q' + questionNumber + ' ' + typesToText[type];
+                                            var label = 'Q' + questionNumber + ' ' + type;
                                             // Add to imageOptions
                                             imageOptions.push({
                                                 label: label,
@@ -736,11 +751,11 @@
                                                 }
                                             }
                                         }
-                                    }
 
-                                    return img;
+                                        return img;
 
-                                }, {}); // Empty Options
+                                    }, {}); // Empty Options
+                                }
                                 
                             });
                         }
@@ -1220,6 +1235,69 @@
                     }
                 });
             }
+        },
+
+        /**
+          * Turn an Image into a (Heat)Map
+          */
+        heatMap: function(questionID, file) {
+
+            var url = S3.Ap.concat('/default/download/' + file);
+
+            // Add image to DOM to get the height/width
+            $('<img>').attr('src', url).load(function() {
+                var width = this.width,
+                    height = this.height;
+
+                // Remove preview
+                $('#map-' + questionID).empty();
+
+                // Map views always need a projection.  Here we just want to map image
+                // coordinates directly to map coordinates, so we create a projection that uses
+                // the image extent in pixels.
+                var extent = [0, 0, width, height];
+                var projection = new Projection({
+                    code: 'preview-image',
+                    units: 'pixels',
+                    extent: extent
+                });
+
+                var raster = new ImageLayer({
+                    source: new Static({
+                        url: url,
+                        projection: projection,
+                        imageExtent: extent
+                    })
+                });
+
+                var source = new VectorSource({wrapX: false});
+
+                var vector = new VectorLayer({
+                    source: source
+                });
+
+                var map = new Map({
+                    controls: [],
+                    interactions: [],
+                    layers: [
+                      raster,
+                      vector
+                    ],
+                    target: 'map-' + questionID,
+                    view: new View({
+                        projection: projection,
+                        center: getCenter(extent),
+                        zoom: 1,
+                        maxZoom: 1
+                    })
+                });
+                var draw = new Draw({
+                    source: source,
+                    type: 'Polygon'
+                });
+                map.addInteraction(draw);
+                
+            });
         },
 
         /**
@@ -2103,10 +2181,7 @@
                     if (numClicks) {
                         settings.numClicks = numClicks;
                     }
-                    // @ToDo: Regions
-                    // @ToDo: Translated Regions
                     break;
-
             }
 
             data.settings = settings;

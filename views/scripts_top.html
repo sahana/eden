@@ -1,6 +1,6 @@
 {{if s3.debug:}}{{# Running in Debug mode, so we want each script to download separately & to use the uncompressed versions }}
-<script type="text/javascript" src="/{{=appname}}/static/scripts/ba-debug.min.js"></script>
-<script type="text/javascript">//<![CDATA[
+<script src="/{{=appname}}/static/scripts/ba-debug.min.js"></script>
+<script>//<![CDATA[
 function s3_debug(message, value) {
     if (undefined == value) {
         debug.debug('s3_debug: ' + message);
@@ -11,27 +11,27 @@ function s3_debug(message, value) {
 //]]></script>
 {{if s3.cdn:}}
  {{# For Sites Hosted on the Public Internet, using Google's version of jQuery should provide better performance }}
- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.js" type="text/javascript"></script>
- <script src="//code.jquery.com/jquery-migrate-1.2.1.js" type="text/javascript"></script>
+ <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.js"></script>
+ <script src="//code.jquery.com/jquery-migrate-1.2.1.js"></script>
  {{else:}}
- <script src="/{{=appname}}/static/scripts/jquery-1.11.3.js" type="text/javascript"></script>
- <script src="/{{=appname}}/static/scripts/jquery-migrate-1.2.1.js" type="text/javascript"></script>
+ <script src="/{{=appname}}/static/scripts/jquery-1.11.3.js"></script>
+ <script src="/{{=appname}}/static/scripts/jquery-migrate-1.2.1.js"></script>
 {{pass}}
 {{=s3base.s3_include_debug_js()}}
 {{else:}}{{# Running in Production mode, so we want fewer compressed scripts to download}}
-<script type="text/javascript">function s3_debug(){}</script>
+<script>function s3_debug(){}</script>
 {{if s3.cdn:}}{{# For Sites Hosted on the Public Internet, using a CDN should provide better performance}}
- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js" type="text/javascript"></script>
- <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js" type="text/javascript"></script>
+ <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+ <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
 {{else:}}
- <script src="/{{=appname}}/static/scripts/jquery-1.11.3.min.js" type="text/javascript"></script>
- <script src="/{{=appname}}/static/scripts/jquery-migrate-1.2.1.min.js" type="text/javascript"></script>
+ <script src="/{{=appname}}/static/scripts/jquery-1.11.3.min.js"></script>
+ <script src="/{{=appname}}/static/scripts/jquery-migrate-1.2.1.min.js"></script>
 {{pass}}
 {{# Built by /static/scripts/tools/build.sahana.py }}
-<script src="/{{=appname}}/static/scripts/S3/S3.min.js" type="text/javascript"></script>
+<script src="/{{=appname}}/static/scripts/S3/S3.min.js"></script>
 {{pass}}
 {{# Scripts which need pre-processing by server must be called in-line }}
-<script type="text/javascript">//<![CDATA[
+<script>//<![CDATA[
 {{# Translation Strings }}
 {{include "l10n.js"}}
 {{# Global variables }}
