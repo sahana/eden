@@ -787,7 +787,7 @@ class dc_TargetActivate(S3Method):
                         if dq:
                             dfname = dq["name"]
                             displayLogic["field"] = fname
-                            delete displayLogic["id"]
+                            displayLogic.pop("id")
                             item = {"type": "input",
                                     "field": fname,
                                     "displayLogic": displayLogic,
@@ -812,6 +812,7 @@ class dc_TargetActivate(S3Method):
                     if dq:
                         dfname = dq["name"]
                         displayLogic["field"] = fname
+                        displayLogic.pop("id")
                         new_item["displayLogic"] = displayLogic
                         
                 mappend(new_item)
