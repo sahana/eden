@@ -671,7 +671,7 @@ class DataCollectionTemplateModel(S3Model):
                     field_id = current.s3db.s3_field.insert(table_id = template.table_id,
                                                             label = other,
                                                             name = name,
-                                                            field_type = "text",
+                                                            field_type = "string",
                                                             )
                     # @ToDo: Call onaccept if this starts doing anything other than just setting 'master'
                     # @ToDo: Call set_record_owner() once we start restricting these
