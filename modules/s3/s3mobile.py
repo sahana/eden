@@ -524,7 +524,7 @@ class S3MobileSchema(object):
             #    for proper authorization, customise_* and filtering
             return None
 
-        elif fieldtype in ("string", "integer", "text", "list:string", "list:integer"):
+        elif fieldtype in ("string", "integer", "list:string", "list:integer"):
 
             # Check for IS_IN_SET, and extract the options
             if isinstance(requires, IS_IN_SET):

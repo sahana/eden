@@ -468,13 +468,17 @@ class DataCollectionTemplateModel(S3Model):
             title = record.name
             master = record.master
 
+        settings = current.deployment_settings
+        if settings.get_dc_mobile_inserts():
+            insertable = True
+        else:
+            insertable = False
+
         table_settings = {}
         if master == "dc_response":
-            settings = current.deployment_settings
             mobile_form = True # For SCPHIMS at least, for UCCE this should happen only based on dc_target.status (currently handled in-template)
             mobile_data = settings.get_dc_mobile_data()
-            if not settings.get_dc_mobile_inserts():
-                table_settings["insertable"] = False
+            table_settings["insertable"] = insertable
             # Configure table.response_id.represent
             table_settings["card"] = {"title": "{{record.response_id}}",
                                       }
@@ -492,10 +496,18 @@ class DataCollectionTemplateModel(S3Model):
                                         )
 
         # Add a Field to link Answers together
+        if insertable:
+            # We calculate the response_id onaccept: UCCE
+            #  1 Template = 1 Target so can calculate target_id from table_id
+            require_not_empty = False
+        else:
+            # We provide the response_id to the client: SCPHIMS
+            #  1 Template > Targets so cannot calculate target_id from table_id
+            require_not_empty = True
         db.s3_field.insert(table_id = table_id,
                            name = "%s_id" % master.split("_", 1)[1],
                            field_type = "reference %s" % master,
-                           require_not_empty = True,
+                           require_not_empty = require_not_empty,
                            component_key = True,
                            component_alias = "answer",
                            component_tab = True,
@@ -682,7 +694,7 @@ class DataCollectionTemplateModel(S3Model):
             field_settings["widget"] = "richtext"
         elif field_type == 12:
             # Likert
-            field_type = "text"
+            field_type = "string"
             options = question.options
             # @ToDo: Allow displaying images for options, l10n also done centrally not vua dc_question_l10n
             #mobile_settings["widget"] = {"type": "likert",
