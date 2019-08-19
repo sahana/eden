@@ -644,6 +644,16 @@ class S3Config(Storage):
         """
         return self.auth.get("masterkey_app_key")
 
+    def get_auth_masterkey_token_ttl(self):
+        """
+            The time-to-live for master key auth tokens in seconds
+            - tokens must survive two request cycles incl. prep, so
+              TTL shouldn't be too short with slow network/server
+            - should be short enough to prevent unused tokens from
+              lingering
+        """
+        return self.auth.get("masterkey_token_ttl", 600)
+
     def get_auth_masterkey_context(self):
         """
             Getter for master key context information

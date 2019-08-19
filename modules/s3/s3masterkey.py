@@ -107,7 +107,8 @@ class S3MasterKey(object):
 
         # Generate new token
         token = uuid.uuid4().hex
-        expires_on = datetime.datetime.utcnow() + datetime.timedelta(seconds=120)
+        token_ttl = current.deployment_settings.get_auth_masterkey_token_ttl()
+        expires_on = datetime.datetime.utcnow() + datetime.timedelta(seconds=token_ttl)
 
         # Store in token table
         table = current.s3db.auth_masterkey_token
