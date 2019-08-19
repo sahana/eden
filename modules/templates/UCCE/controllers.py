@@ -799,7 +799,7 @@ class dc_TargetActivate(S3Method):
                     mappend(item)
 
             elif item_type == "instructions":
-                new_item = {}
+                new_item = {"type": "instructions"}
                 do = item.get("do")
                 say = item.get("say")
                 new_item["do"] = do.get("text")
