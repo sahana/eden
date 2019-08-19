@@ -68,8 +68,8 @@ settings.base.debug = False
 # Uncomment this to prevent automated test runs from remote
 # settings.base.allow_testing = False
 
-# Configure the log level ("DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"), None = turn off logging
-#settings.log.level = "WARNING"
+# Configure the log level ("DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"), None = turn off logging (default)
+#settings.log.level = "ERROR" # DEBUG set automatically when base.debug is True
 # Uncomment to prevent writing log messages to the console (sys.stderr)
 #settings.log.console = False
 # Configure a log file (file name)
