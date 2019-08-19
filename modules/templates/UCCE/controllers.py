@@ -774,7 +774,7 @@ class dc_TargetActivate(S3Method):
                                                 }
 
         for posn in range(1, len(layout)):
-            item = layout[posn]
+            item = layout[str(posn)]
             item_type = item["type"]
             if item_type == "question":
                 question = questions[item["id"]]
