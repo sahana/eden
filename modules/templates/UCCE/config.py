@@ -622,7 +622,7 @@ def config(settings):
     settings.customise_dc_template_controller = customise_dc_template_controller
 
     # -------------------------------------------------------------------------
-    def default_table_onaccept(form):
+    def default_table_onaccept(form, tablename):
         """
             Set the response_id
         """
@@ -634,15 +634,18 @@ def config(settings):
             current.log.error("Submitting to dynamic table...cannot find record_id")
             return
 
-        # Read the Table
-        table_id = form_vars.get("table_id")
-        if not table_id:
-            # @ToDo: Read the record...although we don't know the tablename?
-            current.log.error("Submitting to dynamic table...cannot find table_id")
-            return
-
         db = current.db
         s3db = current.s3db
+
+        # Read the Table
+        dtable = s3db.table(tablename)
+        record = db(dtable.id == record_id).select(dtable.id,
+                                                   dtable.table_id,
+                                                   limitby = (0, 1)
+                                                   ).first()
+        if not record:
+            current.log.error("Submitting to dynamic table...cannot find table_id")
+            return
 
         # Find the Template
         tetable = s3db.dc_template
@@ -674,18 +677,17 @@ def config(settings):
                                               )
 
         # Find the tablename
-        dtable = s3db.s3_table
-        table = db(dtable.id == table_id).select(dtable.name,
-                                                 limitby = (0, 1)
-                                                 ).first()
+        table = s3db.s3_table
+        table = db(table.id == table_id).select(table.name,
+                                                limitby = (0, 1)
+                                                ).first()
         try:
             tablename = table.name
         except AttributeError:
             current.log.error("Submitting to dynamic table...cannot find tablename")
             return
 
-        dttable = s3db.table.get(tablename)
-        db(dttable.id == record_id).update(response_id = response_id)
+        record.update_record(response_id = response_id)
 
     # -------------------------------------------------------------------------
     def customise_default_table_controller(**attr):
@@ -698,7 +700,8 @@ def config(settings):
                 if not standard_prep(r):
                     return False
 
-            r.resource.configure(onaccept = default_table_onaccept)
+            tablename = r.tablename
+            r.resource.configure(onaccept = lambda form, tablename: default_table_onaccept(form, tablename))
 
             return True
         s3.prep = custom_prep
