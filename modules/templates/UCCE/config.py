@@ -701,7 +701,8 @@ def config(settings):
                     return False
 
             tablename = r.tablename
-            r.resource.configure(onaccept = lambda form: default_table_onaccept(form, tablename))
+            # Not working since table_id isn't a field in the Dynamic Table
+            #r.resource.configure(onaccept = lambda form: default_table_onaccept(form, tablename))
 
             return True
         s3.prep = custom_prep

@@ -2701,8 +2701,13 @@ class S3CRUD(S3Method):
         if deletable and has_permission("delete", table):
             icon = "delete"
             if not delete_url:
-                delete_url = iframe_safe(URL(args = args + ["delete"],
-                                             vars = get_vars))
+                if r.function[:6] == "table/":
+                    # Dynamic Table
+                    delete_url = iframe_safe(URL(args = [r.function[6:]] + args + ["delete"],
+                                                 vars = get_vars))
+                else:
+                    delete_url = iframe_safe(URL(args = args + ["delete"],
+                                                 vars = get_vars))
             if ownership_required("delete", table):
                 # Check which records can be deleted
                 query = auth.s3_accessible_query("delete", table)
