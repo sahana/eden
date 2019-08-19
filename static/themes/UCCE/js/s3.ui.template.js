@@ -20,8 +20,9 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
             '3': ['Always', 'Often', 'Occasionally', 'Rarely', 'Never'],
             '4': ['Extremely safe', 'Very safe', 'Moderately safe', 'Slightly safe', 'Not safe at all'],
             '5': ['Very satisfied', 'Somewhat satisfied', 'Neither satisfied nor dissatisfied', 'Somewhat dissatisfied', 'Very dissatisfied'],
-            '6': ['Very Sad', 'Sad', 'Neutral', 'Happy', 'Very happy'],
-            '7': ['Sad', 'Neutral', 'Happy']
+            // Note that for these 2, images will be seen by the users, not the text:
+            '6': ['Very happy', 'Happy', 'Neutral', 'Sad', 'Very sad'],
+            '7': ['Happy', 'Neutral', 'Sad']
         },
         pages = {}, // Store page -> position
         pageElements = {}, // Store page -> #elements

@@ -194,6 +194,7 @@ def define_map(height = None,
 
             # Prepare JSON data structure
             pois = []
+            s3_unicode = s3base.s3_unicode
             for res in poi_resources:
                 poi = {"c": res["c"],
                        "f": res["f"],
