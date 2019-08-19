@@ -215,10 +215,13 @@ class DataCollectionTemplateModel(S3Model):
                      }
 
         # Scale defined in settings["scale"]
-        likert_opts = {1: T("Agreement (Disagree - Agree)"),
-                       2: T("Satisfaction (Smiley scale)"),
-                       3: T("Satisfaction (Dissatisfied - Satisfied)"),
-                       4: T("Pain scale (3 point)"),
+        likert_opts = {1: T("Appropriateness (Very appropriate - Very inappropriate)"),
+                       2: T("Confidence (Extremely confident - Not confident at all)"),
+                       3: T("Frequency (Always - Never)"),
+                       4: T("Safety (Extremely safe - Not safe at all)"),
+                       5: T("Satisfaction (Satisfied - Dissatisfied)"),
+                       6: T("Smiley scale (5 point)"),
+                       7: T("Smiley scale (3 point)"),
                        }
 
         tablename = "dc_question"

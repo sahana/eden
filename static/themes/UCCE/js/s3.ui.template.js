@@ -15,10 +15,13 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                            //        region: regionID {Also on server in settings.pipeImage)
                            //        } for images that can be piped (Questions with Images & Heatmap regions)
         likertOptions = {
-            '1': ['Strongly Disagree', 'Disagree', 'Undecided', 'Agree', 'Strongly Agree'],
-            '2': ['Very unsatisfied', 'Unsatisfied', 'Neutral', 'Satisfied', 'Very satisfied'],
-            '3': ['Very dissatisfied', 'Dissatisfied', 'Neutral', 'Satisfied', 'Very satisfied'],
-            '4': ['Pain', 'Neutral', 'No Pain']
+            '1': ['Very appropriate', 'Somewhat appropriate', 'Neither appropriate nor inappropriate', 'Somewhat inappropriate', 'Very inappropriate'],
+            '2': ['Extremely confident', 'Very confident', 'Moderately confident', 'Slightly confident', 'Not confident at all'],
+            '3': ['Always', 'Often', 'Occasionally', 'Rarely', 'Never'],
+            '4': ['Extremely safe', 'Very safe', 'Moderately safe', 'Slightly safe', 'Not safe at all'],
+            '5': ['Very satisfied', 'Somewhat satisfied', 'Neither satisfied nor dissatisfied', 'Somewhat dissatisfied', 'Very dissatisfied'],
+            '6': ['Very Sad', 'Sad', 'Neutral', 'Happy', 'Very happy'],
+            '7': ['Sad', 'Neutral', 'Happy']
         },
         pages = {}, // Store page -> position
         pageElements = {}, // Store page -> #elements
@@ -451,10 +454,13 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                         nameL10n = '',
                         displayOptions = '',
                         scales = [
-                            '<option value="1">Agreement (Disagree - Agree)</option>',
-                            '<option value="2">Satisfaction (Smiley scale)</option>',
-                            '<option value="3">Satisfaction (Dissatisfied - Satisfied)</option>',
-                            '<option value="4">Pain scale (3 point)</option>'
+                            '<option value="1">Appropriateness (Very appropriate - Very inappropriate)</option>',
+                            '<option value="2">Confidence (Extremely confident - Not confident at all)</option>',
+                            '<option value="3">Frequency (Always - Never)</option>',
+                            '<option value="4">Safety (Extremely safe - Not safe at all)</option>',
+                            '<option value="5">Satisfaction (Satisfied - Dissatisfied)</option>',
+                            '<option value="6">Smiley scale (5 point)</option>',
+                            '<option value="7">Smiley scale (3 point)</option>'
                             ];
                     if (load) {
                         name = thisQuestion.name;
