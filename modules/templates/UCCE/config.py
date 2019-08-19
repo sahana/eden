@@ -701,7 +701,7 @@ def config(settings):
                     return False
 
             tablename = r.tablename
-            r.resource.configure(onaccept = lambda form, tablename: default_table_onaccept(form, tablename))
+            r.resource.configure(onaccept = lambda form: default_table_onaccept(form, tablename))
 
             return True
         s3.prep = custom_prep
