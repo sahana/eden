@@ -1,2 +1,2 @@
-First Name,Last Name,Email,Password,Role,Organisation,Link,MasterKey
-Mobile,User,mobile_user@example.com,eden,MOBILE_USER/0,,,
+First Name,Last Name,Email,Password,Role,Organisation,Link,MasterKey,Notes
+Mobile,User,mobile_user@example.com,eden,MOBILE_USER/0,,,,"Needs to be all entities as doesn't have an entity of it's own"
