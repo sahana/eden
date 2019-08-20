@@ -709,7 +709,7 @@ class DataCollectionTemplateModel(S3Model):
             field_settings["mobile"]["widget"] = {"type": "heatmap"}
             num_clicks = question_settings.get("numClicks")
             if num_clicks:
-                field_settings["mobile"]["requires"] = {"selectedOpts": {"max": numClicks}}
+                field_settings["mobile"]["requires"] = {"selectedOpts": {"max": num_clicks}}
         else:
             current.log.debug(field_type)
             raise NotImplementedError
@@ -1484,7 +1484,7 @@ class dc_TargetReport(S3Method):
         for posn in layout:
             item = layout[posn]
             if item["type"] != "question":
-                # Ignore 
+                # Ignore
                 continue
             question_id = item["id"]
             row = questions_dict[question_id]
