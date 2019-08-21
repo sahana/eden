@@ -10046,7 +10046,7 @@ class S3ProjectStatusModel(S3Model):
             msg_record_created = T("Status added"),
             msg_record_modified = T("Status updated"),
             msg_record_deleted = T("Status deleted"),
-            msg_list_empty = T("No Statuses currently registered"))
+            msg_list_empty = T("No Statuses currently defined"))
 
         # Reusable Field
         represent = S3Represent(lookup=tablename, translate=True)

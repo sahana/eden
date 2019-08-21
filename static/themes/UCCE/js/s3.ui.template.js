@@ -230,6 +230,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                 logicTab,
                 mandatory,
                 question,
+                settings,
                 thisQuestion,
                 translationHidden = '',
                 translationTab,
@@ -252,8 +253,9 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                 trash = '#question-' + questionID + ' .ucce-delete';
                 var checked = '';
                 thisQuestion = this.data.questions[questionID];
+                settings = thisQuestion.settings || {};
                 if (load) {
-                    if (thisQuestion.mandatory) {
+                    if (settings.requires && settings.requires.isNotEmpty) {
                         checked = ' checked';
                     }
                 }
@@ -343,8 +345,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                         if (l10n) {
                             nameL10n = thisQuestion.name_l10n || '';
                         }
-                        var settings = thisQuestion.settings || {},
-                            requires = settings.requires || {},
+                        var requires = settings.requires || {},
                             isIntInRange = requires.isIntInRange;
                         if (isIntInRange) {
                             min = isIntInRange.min || '';
@@ -545,8 +546,8 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                                 '<div class="columns medium-1"></div>' + 
                                 '<div class="columns medium-11">' +
                                  '<div class="row">' + 
-                                  '<div class="columns medium-6 heatmap" id="map-' + questionID + '"><span id="preview-' + questionID + '" class="preview-empty fleft"></span></div>' +
-                                  '<div class="columns medium-6">' + 
+                                  '<div class="columns medium-7 heatmap" id="map-' + questionID + '"><span id="preview-' + questionID + '" class="preview-empty fleft"></span></div>' +
+                                  '<div class="columns medium-5">' + 
                                    '<div class="row"><h3>Number of clicks allowed:</h3></div>' +
                                    '<div class="row" id="clicks-row-' + questionID + '"><i class="ucce ucce-minus"> </i><span> ' + numClicks + ' </span><i class="ucce ucce-plus"> </i></div>' +
                                    '<div class="row"><h3>Tap/click regions:</h3></div>' +
@@ -1292,8 +1293,8 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                     view: new View({
                         projection: projection,
                         center: getCenter(extent),
-                        zoom: 1,
-                        maxZoom: 1
+                        zoom: 0,
+                        maxZoom: 0
                     })
                 });
                 var draw = new Draw({
@@ -1338,6 +1339,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
             var optionsHtml = '<option value="">select question</option>';
 
             // Loop through Questions: Build list of all which are multichoice, likert, heatmap or number
+            // - only include questions earlier in the Layout
             var questions = this.data.questions,
                 layout = this.data.layout,
                 label,
@@ -1353,23 +1355,19 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                 displayLogicID = displayLogic.id;
             }
 
-            for (var i=1, len=Object.keys(questionNumbers).length; i <= len; i++) {
+            for (var i=1; i < currentPosition; i++) {
                 position = questionNumbers[i];
                 thisQuestionID = layout[position].id;
-                if (thisQuestionID == questionID) {
-                    // Don't include this Question
-                } else {
-                    thisQuestion = questions[thisQuestionID];
-                    qtype = typesToText[thisQuestion.type];
-                    if ((qtype == 'number') || (qtype == 'multichoice') || (qtype == 'likert') || (qtype == 'heatmap')) {
-                        label = 'Q' + i + ': ' + truncate(thisQuestion.name || '');
-                        if (thisQuestionID == displayLogicID) {
-                            selected = ' selected';
-                        } else {
-                            selected = '';
-                        }
-                        optionsHtml += '<option value="' + thisQuestionID + '"' + selected + '>' + label + '</option>';
+                thisQuestion = questions[thisQuestionID];
+                qtype = typesToText[thisQuestion.type];
+                if ((qtype == 'number') || (qtype == 'multichoice') || (qtype == 'likert') || (qtype == 'heatmap')) {
+                    label = 'Q' + i + ': ' + truncate(thisQuestion.name || '');
+                    if (thisQuestionID == displayLogicID) {
+                        selected = ' selected';
+                    } else {
+                        selected = '';
                     }
+                    optionsHtml += '<option value="' + thisQuestionID + '"' + selected + '>' + label + '</option>';
                 }
             }
 
@@ -2068,15 +2066,20 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
             var ajaxURL = S3.Ap.concat('/dc/question/') + questionID + '/update_json.json',
                 mandatory = $('#mandatory-' + questionID).prop('checked'),
                 data = {
-                    name: name,
-                    mandatory: mandatory
+                    name: name
                 },
                 l10n = this.data.l10n,
                 settings = {},
                 thisQuestion = this.data.questions[questionID];
 
+            if (mandatory) {
+                settings.requires = {
+                    // No parameters needed
+                    isNotEmpty: {}
+                };
+            }
+
             thisQuestion.name = name;
-            thisQuestion.mandatory = mandatory;
 
             if (l10n) {
                 var name_l10n = $('#name-l10n-' + questionID).val();
@@ -2104,23 +2107,25 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                         if (min) {
                             min = parseInt(min);
                         }
-                    } else {
-                        min = null;
                     }
                     if (!($('#max-' + questionID).hasClass('req'))) {
                         max = $('#max-' + questionID).val();
                         if (max) {
                             max = parseInt(max);
                         }
-                    } else {
-                        max = null;
                     }
-                    settings.requires = {
-                        isIntInRange: {
-                            min: min,
-                            max: max
+                    if (min || max) {
+                        settings.requires = {
+                            isIntInRange: {
+                                min: min,
+                                max: max
+                            }
+                        };
+                        if (mandatory) {
+                            // No parameters needed
+                            settings.requires.isNotEmpty = {};
                         }
-                    };
+                    }
                     break;
                 case 'multichoice':
                     var options = [];

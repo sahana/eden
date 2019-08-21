@@ -68,8 +68,8 @@
 
 .heatmap,
 .heatmap > .preview-empty {
-    height: 250px;
-    width: 350px;
+    height: 480px;
+    width: 480px;
 }
 
 /* Switch Backported from Foundation 6 instead of using the Foundation 5 version */

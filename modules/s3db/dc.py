@@ -608,6 +608,7 @@ class DataCollectionTemplateModel(S3Model):
                                                        qtable.name,
                                                        qtable.comments,
                                                        qtable.field_type,
+                                                       qtable.file,
                                                        qtable.options,
                                                        qtable.settings,
                                                        qtable.require_not_empty,
@@ -619,9 +620,26 @@ class DataCollectionTemplateModel(S3Model):
         mobile_settings = field_settings["mobile"]
 
         question_settings = question.settings or {}
-        pipe_image = question_settings.get("pipeImage")
-        if pipe_image:
-            mobile_settings["pipeImage"] = pipe_image
+        image = question.file
+        if image:
+            mobile_settings["image"] = {"url": URL(c="default", f="download", args=file),
+                                        }
+        else:
+            pipe_image = question_settings.get("pipeImage")
+            if pipe_image:
+                # If this is not a Heatmap region then just use the std image construction
+                if pipe_image["region"]
+                    # Heatmap
+                    # @ToDo: Convert Question ID to fieldname
+                    mobile_settings["pipeImage"] = pipe_image
+                else:
+                    # Nothing special needed client-side
+                    piped_question = db(qtable.id == pipe_image["id"]).select(qtable.file,
+                                                                              limitby=(0, 1)
+                                                                              ).first()
+                    if piped_question:
+                        mobile_settings["image"] = {"url": URL(c="default", f="download", args=piped_question.file),
+                                                    }
 
         options = None
         if field_type == 1:

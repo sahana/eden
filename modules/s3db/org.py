@@ -2384,7 +2384,7 @@ class S3OrganisationSectorModel(S3Model):
                            label = T("Lead Organization?"),
                            represent = s3_yes_no_represent,
                            comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Lead Organisation?"),
+                                         _title="%s|%s" % (T("Lead Organization?"),
                                                            T("If the organization is a lead for this sector."))),
                            ),
                      *s3_meta_fields()

@@ -599,7 +599,8 @@ class dc_QuestionSave(S3Method):
                         # - Editor JS is unaware of this attribute
                         settings["other_id"] = other_id
                     db(table.id == record_id).update(name = name,
-                                                     require_not_empty = mandatory,
+                                                     # Always use isNotEmpty validator now, so only applies if field is visible
+                                                     #require_not_empty = mandatory,
                                                      options = options,
                                                      settings = settings,
                                                      )
@@ -1463,7 +1464,7 @@ class dc_TemplateEditor(S3Method):
                     qrows = db(qtable.template_id == template_id).select(qtable.id,
                                                                          qtable.name,
                                                                          qtable.field_type,
-                                                                         qtable.require_not_empty,
+                                                                         #qtable.require_not_empty,
                                                                          qtable.options,
                                                                          qtable.settings,
                                                                          qtable.file,
@@ -1482,7 +1483,8 @@ class dc_TemplateEditor(S3Method):
                         question_id = question.id
                         this_question = {"name": question.name or '',
                                          "type": question.field_type,
-                                         "mandatory": question.require_not_empty,
+                                         # Always use isNotEmpty validator now, so only applies if field is visible
+                                         #"mandatory": question.require_not_empty,
                                          "options": question.options or {},
                                          "settings": question.settings or {},
                                          "file": question.file,
