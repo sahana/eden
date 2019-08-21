@@ -55,6 +55,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
          * Options
          */
         options: {
+            readOnly: false
         },
 
         /**
@@ -71,7 +72,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
         /**
          * Initialize the widget
          */
-        _init: function() {
+        _init: function(options) {
 
             var el = $(this.element),
                 fieldname = el.attr('id');
@@ -181,7 +182,8 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
         _addQuestion: function(position, page, type, questionID, load) {
 
             var l10n = this.data.l10n,
-                questionNumber;
+                questionNumber,
+                readOnly = this.options.readOnly;
 
             if (load) {
                 // Read QuestionNumber created during loadSurvey
@@ -569,11 +571,16 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
             question += translationTab;
             question += '</div></div>';
 
-            // Place before droppable
-            $('#survey-droppable-' + position).before(question);
-            // Update the position of the droppable
-            var newPosition = position + 1;
-            $('#survey-droppable-' + position).attr('id', 'survey-droppable-' + newPosition);
+            if (readOnly) { 
+                // Place after other elements
+                $(this.element).parent().append(question);
+            } else {
+                // Place before droppable
+                $('#survey-droppable-' + position).before(question);
+                // Update the position of the droppable
+                var newPosition = position + 1;
+                $('#survey-droppable-' + position).attr('id', 'survey-droppable-' + newPosition);
+            }
 
             // Update the elements on the section
             pageElements[page]++;
@@ -622,7 +629,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                     }
                 });
                 
-                if ((type != 'instructions') && (type != 'heatmap')) {
+                if (!readOnly && (type != 'instructions') && (type != 'heatmap')) {
                     // Image Pipe
                     $('#pipe-' + questionID).on('change'+ ns, function() {
                         var value = $(this).val();
@@ -674,105 +681,109 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                         }
                     }
                 }
-                $('#image-delete-' + questionID).on('click' + ns, function() {
-                    self.deleteImage(questionID);
-                });
-                // Image Upload
-                $('#image-' + questionID).fileupload({
-                    dataType: 'json',
-                    dropZone: $('#preview-' + questionID + ', #image-' + questionID),
-                    maxNumberOfFiles: 1,
-                    url: S3.Ap.concat('/dc/question/') + questionID + '/image_upload.json',
-                    add: function(e, data) {
-                        if (e.isDefaultPrevented()) {
-                            return false;
-                        }
+                if (!readOnly) {
+                    $('#image-delete-' + questionID).on('click' + ns, function() {
+                        self.deleteImage(questionID);
+                    });
+                    // Image Upload
+                    $('#image-' + questionID).fileupload({
+                        dataType: 'json',
+                        dropZone: $('#preview-' + questionID + ', #image-' + questionID),
+                        maxNumberOfFiles: 1,
+                        url: S3.Ap.concat('/dc/question/') + questionID + '/image_upload.json',
+                        add: function(e, data) {
+                            if (e.isDefaultPrevented()) {
+                                return false;
+                            }
 
-                        if (data.autoUpload || (data.autoUpload !== false && $(this).fileupload('option', 'autoUpload'))) {
-                            data.process().done(function() {
-                                data.submit();
+                            if (data.autoUpload || (data.autoUpload !== false && $(this).fileupload('option', 'autoUpload'))) {
+                                data.process().done(function() {
+                                    data.submit();
 
-                                if (type != 'heatmap') {
-                                    // Create Preview Image
-                                    var file = data.files[0];
+                                    if (type != 'heatmap') {
+                                        // Create Preview Image
+                                        var file = data.files[0];
 
-                                   // @ToDo: Check file.size &/or file.type are valid?
-                                    loadImage(file, function(img) {
-                                        var options = {
-                                            canvas: true,
-                                            maxHeight: 80,
-                                            maxWidth: 80
-                                        },
-                                        preview = loadImage.scale(img, options);
-                                        // Place Preview on the page
-                                        $('#preview-' + questionID).removeClass('preview-empty')
-                                                                   .empty()
-                                                                   .append(preview);
+                                       // @ToDo: Check file.size &/or file.type are valid?
+                                        loadImage(file, function(img) {
+                                            var options = {
+                                                canvas: true,
+                                                maxHeight: 80,
+                                                maxWidth: 80
+                                            },
+                                            preview = loadImage.scale(img, options);
+                                            // Place Preview on the page
+                                            $('#preview-' + questionID).removeClass('preview-empty')
+                                                                       .empty()
+                                                                       .append(preview);
 
-                                        // Ensure that we aren't trying to Pipe at the same time
-                                        if (thisQuestion.settings.hasOwnProperty('pipeImage')) {
-                                            $('#pipe-' + questionID).val('')
-                                                                    .trigger('change');
-                                        }
-
-                                        // Check if we should add to ImageOptions
-                                        // (not done for Heatmaps, except for regions)
-                                        var img,
-                                            found = false;
-                                        for (img in imageOptions) {
-                                            if (img.id == questionID){
-                                                found = true;
+                                            // Ensure that we aren't trying to Pipe at the same time
+                                            if (thisQuestion.settings.hasOwnProperty('pipeImage')) {
+                                                $('#pipe-' + questionID).val('')
+                                                                        .trigger('change');
                                             }
-                                        }
-                                        if (!found) {
-                                            // Read the questionNumber (can't trust original as it may have changed)
-                                            var questionNumber = $('#question-' + questionID).data('number');
-                                            var label = 'Q' + questionNumber + ' ' + type;
-                                            // Add to imageOptions
-                                            imageOptions.push({
-                                                label: label,
-                                                id: questionID
-                                            });
-                                        }
 
-                                        // Update the Pipe Options HTML for each question
-                                        var item,
-                                            thatQuestionID,
-                                            thatQuestion,
-                                            questions = self.data.questions,
-                                            layout = self.data.layout;
-                                        for (var position=1; position <= Object.keys(layout).length; position++) {
-                                            item = layout[position];
-                                            if (item.type == 'question') {
-                                                thatQuestionID = item.id;
-                                                thatQuestion = questions[thatQuestionID];
-                                                if (thatQuestion.type != 13) {
-                                                    $('#pipe-' + thatQuestionID).empty()
-                                                                                .append(self.pipeOptionsHtml(thatQuestionID));
+                                            // Check if we should add to ImageOptions
+                                            // (not done for Heatmaps, except for regions)
+                                            var img,
+                                                found = false;
+                                            for (img in imageOptions) {
+                                                if (img.id == questionID){
+                                                    found = true;
                                                 }
                                             }
-                                        }
+                                            if (!found) {
+                                                // Read the questionNumber (can't trust original as it may have changed)
+                                                var questionNumber = $('#question-' + questionID).data('number');
+                                                var label = 'Q' + questionNumber + ' ' + type;
+                                                // Add to imageOptions
+                                                imageOptions.push({
+                                                    label: label,
+                                                    id: questionID
+                                                });
+                                            }
 
-                                        return img;
+                                            // Update the Pipe Options HTML for each question
+                                            var item,
+                                                thatQuestionID,
+                                                thatQuestion,
+                                                questions = self.data.questions,
+                                                layout = self.data.layout;
+                                            for (var position=1; position <= Object.keys(layout).length; position++) {
+                                                item = layout[position];
+                                                if (item.type == 'question') {
+                                                    thatQuestionID = item.id;
+                                                    thatQuestion = questions[thatQuestionID];
+                                                    if (thatQuestion.type != 13) {
+                                                        $('#pipe-' + thatQuestionID).empty()
+                                                                                    .append(self.pipeOptionsHtml(thatQuestionID));
+                                                    }
+                                                }
+                                            }
 
-                                    }, {}); // Empty Options
-                                }
-                                
-                            });
+                                            return img;
+
+                                        }, {}); // Empty Options
+                                    }
+                                    
+                                });
+                            }
+                        },
+                        done: function (e, data) {
+                            if (type == 'heatmap') {
+                                self.heatMap(questionID, data.result.file);
+                            }
                         }
-                    },
-                    done: function (e, data) {
-                        if (type == 'heatmap') {
-                            self.heatMap(questionID, data.result.file);
-                        }
-                    }
-                });
+                    });
+                }
             }
             
-            $(trash).on('click' + ns, function(/* event */) {
-                // Delete the Question
-                self.deleteQuestion(type, questionID, this);
-            });
+            if (!readOnly) {
+                $(trash).on('click' + ns, function(/* event */) {
+                    // Delete the Question
+                    self.deleteQuestion(type, questionID, this);
+                });
+            }
 
             switch(type) {
 
@@ -1780,18 +1791,24 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
           * Add a new Section Break
           */
         addSectionBreak: function(position, page, load) {
+
             page++;
             pages[page] = position;
             pageElements[page] = 0;
-            var delete_btn;
-            if (position) {
+
+            var delete_btn,
+                readOnly = this.options.readOnly;
+
+            if (!readOnly && position) {
                 delete_btn = '<i class="ucce ucce-delete-page"> </i>';
             } else {
-                // 1st section break: not deletable
+                // 1st section break, or readOnly: not deletable
                 delete_btn = '';
             }
+
             var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-' + position + '" data-page="' + page + '"><span>PAGE ' + page + ' (0 ELEMENTS)</span></div><div class="medium-1 columns">' + delete_btn + '<i class="ucce ucce-down-alt"> </i></div></div>';
-            if (position) {
+
+            if (!readOnly && position) {
                 // Place before droppable
                 $('#survey-droppable-' + position).before(sectionBreak);
                 // Update the page & position of the droppable
@@ -1821,8 +1838,9 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                     // @ToDo: Unroll this section & rollup others
                 //});
             } else {
-                // 1st section break
+                // 1st section break or readOnly
                 $(this.element).parent().append(sectionBreak);
+                // @ToDo: If !position, then Roll-up previous sections
             }
         },
 
@@ -2042,8 +2060,10 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
             // Add an initial section break
             this.addSectionBreak(0, 0);
 
-            // Add droppable
-            this.droppable(1, 1);
+            if (!this.options.readOnly) {
+                // Add droppable
+                this.droppable(1, 1);
+            }
 
             this.loadSurvey();
 
@@ -2055,6 +2075,10 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
          * Ajax-update the Question
          */
         saveQuestion: function(type, questionID) {
+
+            if (this.options.readOnly) {
+                return;
+            }
 
             var name = $('#name-' + questionID).val();
 
@@ -2225,6 +2249,10 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
          */
         saveLayout: function() {
 
+            if (this.options.readOnly) {
+                return;
+            }
+
             var ajaxURL = S3.Ap.concat('/dc/template/') + this.recordID + '/update_json.json';
 
             // Encode this.data as JSON and write into real input
@@ -2358,72 +2386,75 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                 }
             });
 
-            // Edit Survey Name
-            surveyName.on('change' + ns, function(/* event */) {
-                var name = surveyName.val(),
-                    recordID = surveyName.data('id');
-                self.ajaxMethod({
-                    'url': S3.Ap.concat('/dc/target/') + recordID + '/name.json',
-                    'type': 'POST',
-                    // $.searchS3 defaults to processData: false
-                    'data': JSON.stringify({name: name}),
-                    'dataType': 'json',
-                    'success': function(/* data */) {
-                        // Nothing needed here
-                    },
-                    'error': function(request, status, error) {
-                        var msg;
-                        if (error == 'UNAUTHORIZED') {
-                            msg = i18n.gis_requires_login;
-                        } else {
-                            msg = request.responseText;
-                        }
-                        console.log(msg);
-                    }
-                });
-            });
+            if (!this.options.readOnly) {
 
-            // Edit Survey Language
-            $('#survey-l10n').on('change' + ns, function(/* event */) {
-                var l10n = $(this).val(),
-                    recordID = surveyName.data('id');
-                self.ajaxMethod({
-                    'url': S3.Ap.concat('/dc/target/') + recordID + '/l10n.json',
-                    'type': 'POST',
-                    // $.searchS3 defaults to processData: false
-                    'data': JSON.stringify({l10n: l10n}),
-                    'dataType': 'json',
-                    'success': function(/* data */) {
-                        // Update data
-                        self.data.l10n = l10n;
-                        if (l10n) {
-                            // Show Translation Tabs
-                            $('li.l10n').removeClass('hide')
-                                        .show();
-                            // Re-apply events
-                            $(document).foundation('tab', 'reflow');
-                        } else{
-                            // Hide Translation Tabs
-                            $('li.l10n').hide();
+                // Edit Survey Name
+                surveyName.on('change' + ns, function(/* event */) {
+                    var name = surveyName.val(),
+                        recordID = surveyName.data('id');
+                    self.ajaxMethod({
+                        'url': S3.Ap.concat('/dc/target/') + recordID + '/name.json',
+                        'type': 'POST',
+                        // $.searchS3 defaults to processData: false
+                        'data': JSON.stringify({name: name}),
+                        'dataType': 'json',
+                        'success': function(/* data */) {
+                            // Nothing needed here
+                        },
+                        'error': function(request, status, error) {
+                            var msg;
+                            if (error == 'UNAUTHORIZED') {
+                                msg = i18n.gis_requires_login;
+                            } else {
+                                msg = request.responseText;
+                            }
+                            console.log(msg);
                         }
-                    },
-                    'error': function(request, status, error) {
-                        var msg;
-                        if (error == 'UNAUTHORIZED') {
-                            msg = i18n.gis_requires_login;
-                        } else {
-                            msg = request.responseText;
-                        }
-                        console.log(msg);
-                    }
+                    });
                 });
-            });
 
-            // Drag ('n'Drop handled in droppable())
-            $('.draggable').draggable({
-                revert: true,
-                revertDuration: 250
-            });
+                // Edit Survey Language
+                $('#survey-l10n').on('change' + ns, function(/* event */) {
+                    var l10n = $(this).val(),
+                        recordID = surveyName.data('id');
+                    self.ajaxMethod({
+                        'url': S3.Ap.concat('/dc/target/') + recordID + '/l10n.json',
+                        'type': 'POST',
+                        // $.searchS3 defaults to processData: false
+                        'data': JSON.stringify({l10n: l10n}),
+                        'dataType': 'json',
+                        'success': function(/* data */) {
+                            // Update data
+                            self.data.l10n = l10n;
+                            if (l10n) {
+                                // Show Translation Tabs
+                                $('li.l10n').removeClass('hide')
+                                            .show();
+                                // Re-apply events
+                                $(document).foundation('tab', 'reflow');
+                            } else{
+                                // Hide Translation Tabs
+                                $('li.l10n').hide();
+                            }
+                        },
+                        'error': function(request, status, error) {
+                            var msg;
+                            if (error == 'UNAUTHORIZED') {
+                                msg = i18n.gis_requires_login;
+                            } else {
+                                msg = request.responseText;
+                            }
+                            console.log(msg);
+                        }
+                    });
+                });
+
+                // Drag ('n'Drop handled in droppable())
+                $('.draggable').draggable({
+                    revert: true,
+                    revertDuration: 250
+                });
+            }
 
         },
 

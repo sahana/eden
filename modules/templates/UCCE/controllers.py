@@ -265,6 +265,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
             # Draft
             responses = DIV("Draft")
             export_btn = ""
+            preview_btn = ""
             report_btn = ""
             switch = ""
         else:
@@ -279,6 +280,15 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                      ),
                            _title=T("Export"),
                            )
+            preview_btn = A(ICON("eye"),
+                            SPAN("preview",
+                                 _class = "show-for-sr",
+                                 ),
+                            _href=URL(c="dc", f="template",
+                                      args=[template_id, "editor"],
+                                      ),
+                            _title=T("Preview"),
+                            )
             report_btn = A(ICON("bar-chart"),
                            SPAN("report",
                                 _class = "show-for-sr",
@@ -321,7 +331,9 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
         bappend(DIV(DIV(_class="card-inner-header"),
                     DIV(target.name),
                     responses,
-                    DIV(edit_btn, copy_btn, delete_btn),
+                    # Copy button disabled until implemented
+                    #DIV(edit_btn, preview_btn, copy_btn, delete_btn),
+                    DIV(edit_btn, preview_btn, delete_btn),
                     DIV(export_btn, report_btn),
                     switch,
                     _class="thumbnail medium-2 columns",
@@ -389,7 +401,8 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
         copy_btn = ""
 
     toolbar = DIV(edit_btn,
-                  copy_btn,
+                  # Copy button disabled until implemented
+                  #copy_btn,
                   delete_btn,
                   _class="edit-bar fright",
                   )
@@ -1262,10 +1275,11 @@ class dc_TemplateEditor(S3Method):
                     target_id = None
                     target_status = None
 
+                read_only = True
                 if not target_status:
                     # No Target linked...something odd happening
                     button = ""
-                if target_status == 1:
+                elif target_status == 1:
                     # Draft
                     button = A(T("Activate"),
                                _href=URL(c="dc", f="target",
@@ -1274,6 +1288,7 @@ class dc_TemplateEditor(S3Method):
                                _class="button round alert tiny s3_modal",
                                _title=T("Activate Survey"),
                                )
+                    read_only = False
                 elif target_status in (2, 3):
                     # Active / Deactivated
                     button = A(T("Edit"),
@@ -1453,62 +1468,59 @@ class dc_TemplateEditor(S3Method):
                                   ),
                               )
 
-                if target_status == 1:
-                    hidden_input = INPUT(_type = "hidden",
-                                         _id = "survey-layout",
-                                         )
-                    hidden_input["_data-id"] = template_id
+                hidden_input = INPUT(_type = "hidden",
+                                     _id = "survey-layout",
+                                     )
+                hidden_input["_data-id"] = template_id
 
-                    questions = {}
-                    qtable = s3db.dc_question
-                    qrows = db(qtable.template_id == template_id).select(qtable.id,
-                                                                         qtable.name,
-                                                                         qtable.field_type,
-                                                                         #qtable.require_not_empty,
-                                                                         qtable.options,
-                                                                         qtable.settings,
-                                                                         qtable.file,
-                                                                         )
+                questions = {}
+                qtable = s3db.dc_question
+                qrows = db(qtable.template_id == template_id).select(qtable.id,
+                                                                     qtable.name,
+                                                                     qtable.field_type,
+                                                                     #qtable.require_not_empty,
+                                                                     qtable.options,
+                                                                     qtable.settings,
+                                                                     qtable.file,
+                                                                     )
+                if l10n:
+                    l10table = s3db.dc_question_l10n
+                    question_ids = [question.id for question in qrows]
+                    query = (l10table.question_id.belongs(question_ids)) & \
+                            (l10table.language == l10n)
+                    trows = db(query).select(l10table.question_id,
+                                             l10table.name_l10n,
+                                             l10table.options_l10n,
+                                             )
+                    questions_l10n = trows.as_dict(key="question_id")
+                for question in qrows:
+                    question_id = question.id
+                    this_question = {"name": question.name or '',
+                                     "type": question.field_type,
+                                     # Always use isNotEmpty validator now, so only applies if field is visible
+                                     #"mandatory": question.require_not_empty,
+                                     "options": question.options or {},
+                                     "settings": question.settings or {},
+                                     "file": question.file,
+                                     }
                     if l10n:
-                        l10table = s3db.dc_question_l10n
-                        question_ids = [question.id for question in qrows]
-                        query = (l10table.question_id.belongs(question_ids)) & \
-                                (l10table.language == l10n)
-                        trows = db(query).select(l10table.question_id,
-                                                 l10table.name_l10n,
-                                                 l10table.options_l10n,
-                                                 )
-                        questions_l10n = trows.as_dict(key="question_id")
-                    for question in qrows:
-                        question_id = question.id
-                        this_question = {"name": question.name or '',
-                                         "type": question.field_type,
-                                         # Always use isNotEmpty validator now, so only applies if field is visible
-                                         #"mandatory": question.require_not_empty,
-                                         "options": question.options or {},
-                                         "settings": question.settings or {},
-                                         "file": question.file,
-                                         }
-                        if l10n:
-                            if question_id in questions_l10n:
-                                this_question["name_l10n"] = questions_l10n[question_id].get("name_l10n")
-                                this_question["options_l10n"] = questions_l10n[question_id].get("options_l10n")
-                        questions[question_id] = this_question
+                        if question_id in questions_l10n:
+                            this_question["name_l10n"] = questions_l10n[question_id].get("name_l10n")
+                            this_question["options_l10n"] = questions_l10n[question_id].get("options_l10n")
+                    questions[question_id] = this_question
 
-                    data = {"layout": record.layout or {},
-                            "questions": questions,
-                            }
-                    if l10n:
-                        data["l10n"] = l10n
-                    hidden_input["_value"] = json.dumps(data, separators=SEPARATORS)
+                data = {"layout": record.layout or {},
+                        "questions": questions,
+                        }
+                if l10n:
+                    data["l10n"] = l10n
+                hidden_input["_value"] = json.dumps(data, separators=SEPARATORS)
 
-                    layout = DIV(hidden_input)
-                else:
-                    # Cannot Edit Template unless in Draft Status
-                    layout = DIV()
+                layout = DIV(hidden_input)
 
                 # Inject JS
-                s3 = current.response.s3
+                response = current.response
+                s3 = response.s3
                 appname = r.application
                 scripts_append = s3.scripts.append
                 if s3.debug:
@@ -1530,14 +1542,21 @@ class dc_TemplateEditor(S3Method):
                     scripts_append("/%s/static/scripts/jquery.fileupload.min.js" % appname)
                     scripts_append("/%s/static/scripts/jquery.validate.min.js" % appname)
                     s3.scripts_modules.append("/%s/static/themes/UCCE/js/s3.ui.template.min.js" % appname)
+
                 # Initialise the Template Editor Widget
-                script = '''$('#survey-layout').surveyLayout()'''
+                if read_only:
+                    script = '''$('#survey-layout').surveyLayout({readOnly: true})'''
+                    response.title = title = T("Preview")
+                else:
+                    script = '''$('#survey-layout').surveyLayout()'''
+                    response.title = title = T("Editor")
                 s3.jquery_ready.append(script)
 
                 S3CustomController._view(THEME, "template_editor.html")
                 output = {"header": header,
-                          "toolbar": toolbar,
                           "layout": layout,
+                          "title": title,
+                          "toolbar": toolbar,
                           }
 
             else:

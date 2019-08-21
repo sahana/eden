@@ -627,8 +627,7 @@ class DataCollectionTemplateModel(S3Model):
         else:
             pipe_image = question_settings.get("pipeImage")
             if pipe_image:
-                # If this is not a Heatmap region then just use the std image construction
-                if pipe_image["region"]
+                if pipe_image["region"]:
                     # Heatmap
                     # @ToDo: Convert Question ID to fieldname
                     mobile_settings["pipeImage"] = pipe_image
