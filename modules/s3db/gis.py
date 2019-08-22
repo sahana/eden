@@ -57,7 +57,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import StringIO, basestring
+from s3compat import BytesIO, basestring
 from s3layouts import S3PopupLink
 
 # Compact JSON encoding
@@ -2354,7 +2354,7 @@ class S3GISConfigModel(S3Model):
             filename = metadata.split(";")[0]
             f = Storage()
             f.filename = uuid.uuid4().hex + filename
-            f.file = StringIO(base64.decodestring(encoded_file))
+            f.file = BytesIO(base64.b64decode(encoded_file))
             form_vars.image = image = f
 
         elif isinstance(image, str):

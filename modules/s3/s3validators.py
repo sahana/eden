@@ -71,7 +71,7 @@ from gluon import current, IS_FLOAT_IN_RANGE, IS_INT_IN_RANGE, IS_IN_SET, \
 from gluon.storage import Storage
 from gluon.validators import Validator
 
-from s3compat import STRING_TYPES, StringIO, basestring, reduce, unichr
+from s3compat import BytesIO, STRING_TYPES, basestring, reduce, unichr
 from .s3datetime import S3DateTime
 from .s3utils import s3_orderby_fields, s3_str, s3_unicode
 
@@ -1268,8 +1268,7 @@ class IS_PROCESSED_IMAGE(Validator):
 
             f = Storage()
             f.filename = uuid.uuid4().hex + filename
-
-            f.file = StringIO(base64.decodestring(cropped_image))
+            f.file = BytesIO(base64.b64decode(cropped_image))
 
             return (f, None)
 

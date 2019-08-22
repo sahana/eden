@@ -40,7 +40,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import StringIO
+from s3compat import BytesIO
 
 # =============================================================================
 class S3DocumentLibrary(S3Model):
@@ -435,7 +435,7 @@ class S3DocumentLibrary(S3Model):
                 filename = metadata.split(";", 1)[0]
                 f = Storage()
                 f.filename = uuid.uuid4().hex + filename
-                f.file = StringIO(base64.decodestring(encoded_file))
+                f.file = BytesIO(base64.b64decode(encoded_file))
                 doc = form_vars.file = f
                 if not form_vars.name:
                     form_vars.name = filename
