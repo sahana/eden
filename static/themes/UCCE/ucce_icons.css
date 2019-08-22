@@ -116,3 +116,6 @@
 .ucce-survey-report:before {
   content: "\f121";
 }
+.ucce-survey-preview:before {
+  content: "\f122";
+}

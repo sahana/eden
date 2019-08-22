@@ -332,9 +332,9 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                     DIV(target.name),
                     responses,
                     # Copy button disabled until implemented
-                    #DIV(edit_btn, preview_btn, copy_btn, delete_btn),
-                    DIV(edit_btn, preview_btn, delete_btn),
-                    DIV(export_btn, report_btn),
+                    #DIV(edit_btn, copy_btn, delete_btn),
+                    DIV(edit_btn, delete_btn),
+                    DIV(preview_btn, export_btn, report_btn),
                     switch,
                     _class="thumbnail medium-2 columns",
                     ))

@@ -191,6 +191,7 @@ def config(settings):
         "copy": "ucce-survey-duplicate",
         "delete": "ucce-survey-delete",
         "edit": "ucce-survey-edit",
+        "eye": "ucce-survey-preview",
         "file-text-alt": "ucce-guides",
         "folder-alt": "ucce-projects",
         "hashtag": "ucce-number-question",
