@@ -22,7 +22,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
             '5': ['Very satisfied', 'Somewhat satisfied', 'Neither satisfied nor dissatisfied', 'Somewhat dissatisfied', 'Very dissatisfied'],
             // Note that for these 2, images will be seen by the users, not the text:
             '6': ['Very happy', 'Happy', 'Neutral', 'Sad', 'Very sad'],
-            '7': ['Happy', 'Neutral', 'Sad']
+            '7': ['Neutral', 'Sad', 'Very sad']
         },
         pages = {}, // Store page -> position
         pageElements = {}, // Store page -> #elements
@@ -473,6 +473,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                 case 'likert':
                     var name = '',
                         nameL10n = '',
+                        choicesL10n = '',
                         displayOptions = '',
                         scales = [
                             '<option value="1">Appropriateness (Very appropriate - Very inappropriate)</option>',
@@ -493,12 +494,9 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                             var scale = settings.scale;
                             if (scale) {
                                 scales[scale - 1] = scales[scale - 1].replace('">', '" selected>');
-                                var options = likertOptions[scale];
-                                displayOptions += '<ul>';
-                                for (var i=0, len = options.length; i < len; i++) {
-                                    displayOptions += '<li>' + options[i] + '</li>';
-                                }
-                                displayOptions += '</ul>';
+                                var result = this.likertOptionsHtml(questionID, scale);
+                                choicesL10n = result.choicesL10n;
+                                displayOptions = result.displayOptions;
                             }
                         }
                     }
@@ -515,6 +513,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Likert-scale</h2></div></div>' +
                                       '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
+                                      choicesL10n +
                                      '</div>';
                     break;
 
@@ -991,19 +990,25 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                 case 'likert':
                     // Display options when scale selected
                     $('#scale-' + questionID).on('change' + ns, function() {
+                        // Remove old display
+                        $('#display-' + questionID).empty();
+                        var choicesRow = $('#choices-l10n-row-' + questionID);
+                        if (choicesRow.length) {
+                            choicesRow.prev().remove();
+                            for (var i=0; i < 5; i++) {
+                                choicesRow.next().remove();
+                            }
+                            choicesRow.remove();
+                        }
                         var scale = $(this).val();
                         if (scale) {
-                            var options = likertOptions[scale],
-                                scaleOptions = '';
-                            for (var i=0, len = options.length; i < len; i++) {
-                                scaleOptions += '<li>' + options[i] + '</li>';
-                            }
-                            var scaleDisplay = '<ul>' + scaleOptions + '</ul>';
-                            $('#display-' + questionID).empty()
-                                                       .append(scaleDisplay);
-                        } else {
-                            // Remove old display
-                            $('#display-' + questionID).empty();
+                            var result = self.likertOptionsHtml(questionID, scale),
+                                choicesL10n = result.choicesL10n,
+                                displayOptions = result.displayOptions;
+                            $('#display-' + questionID).append(displayOptions);
+                            // Can't trust original position as it may have changed
+                            var currentPosition = parseInt($(this).closest('.media').attr('id').split('-')[1]);
+                            $('#translation-' + currentPosition).append(choicesL10n);
                         }
                     });
                     break;
@@ -1332,6 +1337,52 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                 map.addInteraction(draw);
                 
             });
+        },
+
+        /**
+          * provide the HTML for Likert Options Display & L10n
+          */
+        likertOptionsHtml: function(questionID, scale) {
+
+            var choicesL10n = '',
+                displayOptions = '',
+                nameL10n = '',
+                optionsL10nHidden = ' hide';
+
+            if (scale == 6) {
+                // 5-point smiley
+            } else if (scale == 7) {
+                // 3-point smiley
+            } else {
+                var choiceL10nRow,
+                    options = likertOptions[scale],
+                    optionsLength = options.length,
+                    optionsL10n = this.data.questions[questionID].options_l10n || [],
+                    thisOptionL10n;
+                displayOptions = '<ul>';
+                optionsL10nHidden = '';
+                for (var i=0; i < optionsLength; i++) {
+                    displayOptions += '<li>' + options[i] + '</li>';
+                    thisOptionL10n = optionsL10n[i] || '';
+                    choiceL10nRow = '<div id="choice-l10n-row-' + questionID + '-' + i + '" class="row">' +
+                                     '<div class="columns medium-1"></div>' +
+                                     '<div class="columns medium-11">' +
+                                      '<div class="row">' + 
+                                       '<div class="columns medium-6"><div id="choice-from-' + questionID + '-' + i + '" class="translate-from">' + options[i] + '</div></div>' +
+                                       '<div class="columns medium-6"><input class="choice-l10n-' + questionID + '" type="text" placeholder="Type translation..." value="' + thisOptionL10n + '"></div>' +
+                                    '</div></div></div>';
+                    choicesL10n += choiceL10nRow;
+                }
+                displayOptions += '</ul>';
+            }
+
+            var choicesL10nHtml = '<div class="row' + optionsL10nHidden + '"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Answer</h2></div></div>' +
+                                  '<div class="row' + optionsL10nHidden + '" id="choices-l10n-row-' + questionID + '"><div class="columns medium-1"></div><div class="columns medium-11"><label>Choices</label></div></div>' +
+                                  choicesL10n;
+            return {
+                choicesL10n: choicesL10nHtml,
+                displayOptions: displayOptions
+            }
         },
 
         /**
@@ -2211,6 +2262,13 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                     }
                     data.options = options;
                     thisQuestion.options = options;
+                    if (l10n) {
+                        var options_l10n = [];
+                        $('.choice-l10n-' + questionID).each(function() {
+                            options_l10n.push($(this).val());
+                        });
+                        data.options_l10n = options_l10n;
+                    }
                     break;
                 case 'heatmap':
                     var options = [];
