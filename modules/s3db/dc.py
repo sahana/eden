@@ -627,7 +627,7 @@ class DataCollectionTemplateModel(S3Model):
         else:
             pipe_image = question_settings.get("pipeImage")
             if pipe_image:
-                if pipe_image["region"]:
+                if pipe_image.get("region"):
                     # Heatmap
                     # @ToDo: Convert Question ID to fieldname
                     mobile_settings["pipeImage"] = pipe_image
@@ -716,7 +716,8 @@ class DataCollectionTemplateModel(S3Model):
             # Likert
             field_type = "string"
             options = question.options
-            # @ToDo: Allow displaying images for options, l10n also done centrally not vua dc_question_l10n
+            # @ToDo: Allow displaying images for options
+            # UCCE uses options_l10n just like for multichoice, but in general, could have l10n done centrally instead
             #mobile_settings["widget"] = {"type": "likert",
             #                             "scale": question_settings.get("scale"),
             #                             }

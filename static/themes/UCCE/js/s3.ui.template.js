@@ -10,6 +10,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
 })(function($, loadImage, Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, VectorLayer, VectorSource) {
     'use strict';
     var surveyID = 0,
+        imageFiles = {},   // Store {id: questionID, file: filename}
         imageOptions = [], // Store {label: label, (just held locally)
                            //        id: questionID, {Also on server in settings.pipeImage)
                            //        region: regionID {Also on server in settings.pipeImage)
@@ -650,12 +651,14 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                     $('#pipe-' + questionID).on('change'+ ns, function() {
                         var value = $(this).val();
                         if (value) {
-                            var img;
+                            var img,
+                                imageQuestionID;
                             for (var i=0, len=imageOptions.length; i < len; i++) {
                                 img = imageOptions[i];
                                 if (img.label == value) {
+                                    imageQuestionID = img.id;
                                     thisQuestion.settings.pipeImage = {
-                                        id: img.id,
+                                        id: imageQuestionID,
                                         region: img.region
                                     };
                                     break;
@@ -663,15 +666,37 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                             }
                             // Remove any Image
                             self.deleteImage(questionID);
-                            // @ToDo: Show Preview of selected Image
+                            // Show Preview of selected Image
+                            loadImage(S3.Ap.concat('/default/download/' + imageFiles[imageQuestionID]), function(img) {
+                                var options = {
+                                    canvas: true,
+                                    maxHeight: 80,
+                                    maxWidth: 80
+                                },
+                                preview = loadImage.scale(img, options);
+                                // Place Preview on the page
+                                $('#preview-' + questionID).removeClass('preview-empty')
+                                                           .empty()
+                                                           .append(preview);
+
+                                return img;
+
+                            }, {}); // Empty Options
+                            
                         } else {
                             delete thisQuestion.settings.pipeImage;
+                            $('#preview-' + questionID).addClass('preview-empty')
+                                                       .empty()
                         }
                         self.saveQuestion(type, questionID);
                     });
                 }
             };
             inputEvents();
+            if (load && thisQuestion.settings.pipeImage) {
+                // If there is an existing pipeImage, then load preview now
+                $('#pipe-' + questionID).trigger('change');
+            }
             
             if (type != 'instructions') {
                 if (load) {
@@ -681,6 +706,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                         if (type == 'heatmap') {
                             self.heatMap(questionID, file);
                         } else {
+                            imageFiles[questionID] = file;
                             loadImage(S3.Ap.concat('/default/download/' + file), function(img) {
                                 var options = {
                                     canvas: true,
@@ -720,7 +746,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                                         // Create Preview Image
                                         var file = data.files[0];
 
-                                       // @ToDo: Check file.size &/or file.type are valid?
+                                        // @ToDo: Check file.size &/or file.type are valid?
                                         loadImage(file, function(img) {
                                             var options = {
                                                 canvas: true,
@@ -788,6 +814,8 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                         done: function (e, data) {
                             if (type == 'heatmap') {
                                 self.heatMap(questionID, data.result.file);
+                            } else {
+                                imageFiles[questionID] = data.result.file;
                             }
                         }
                     });
@@ -1153,6 +1181,9 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                 currentPosition = questionNumbers[questionNumber];
                 // Read the current page
                 currentPage = $('#question-' + questionID).data('page');
+
+                // Clean up imageFiles
+                delete imageFiles[questionID];
             }
 
             // Update this pageElements
@@ -1340,19 +1371,21 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
         },
 
         /**
-          * provide the HTML for Likert Options Display & L10n
+          * Provide the HTML for Likert Options Display & L10n
           */
         likertOptionsHtml: function(questionID, scale) {
 
             var choicesL10n = '',
-                displayOptions = '',
+                displayOptions,
                 nameL10n = '',
                 optionsL10nHidden = ' hide';
 
             if (scale == 6) {
                 // 5-point smiley
+                displayOptions = '<ul><li><i class=ucce ucce-smiley1"> </i></li><li><i class=ucce ucce-smiley2"> </i></li><li><i class=ucce ucce-smiley3"> </i></li><li><i class=ucce ucce-smiley4"> </i></li><li><i class=ucce ucce-smiley5"> </i></li></ul>';
             } else if (scale == 7) {
                 // 3-point smiley
+                displayOptions = '<ul><li><i class=ucce ucce-smiley3"> </i></li><li><i class=ucce ucce-smiley4"> </i></li><li><i class=ucce ucce-3smiley3"> </i></li></ul>';
             } else {
                 var choiceL10nRow,
                     options = likertOptions[scale],
@@ -1824,6 +1857,8 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                                 imageOptions.push(img);
                             }
                         }
+                        // Clean up imageFiles
+                        delete imageFiles[questionID];
                         // Update the Pipe Options HTML for each question
                         var item,
                             thisQuestionID,
@@ -1838,6 +1873,13 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                                 if (thisQuestion.type != 13) {
                                     $('#pipe-' + thisQuestionID).empty()
                                                                 .append(self.pipeOptionsHtml(thisQuestionID));
+                                    if (thisQuestion.settings.pipeImage && thisQuestion.settings.pipeImage.id == questionID) {
+                                        // Remove the stale pipeImage
+                                        delete thisQuestion.settings.pipeImage
+                                        // & it's preview
+                                        $('#preview-' + thisQuestionID).addClass('preview-empty')
+                                                                       .empty()
+                                    }
                                 }
                             }
                         }
