@@ -228,6 +228,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                 formElements,
                 imageHtml,
                 newChoice,
+                newChoiceL10n,
                 optionsHtml,
                 logicTab,
                 mandatory,
@@ -370,12 +371,22 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                     break;
 
                 case 'multichoice':
-                    newChoice = '<div id="choice-row-' + questionID + '-0" class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice"><i class="ucce ucce-minus"> </i><i class="ucce ucce-plus"> </i></div></div>';
+                    newChoice = '<div id="choice-row-' + questionID + '-0" class="row">' +
+                                 '<div class="columns medium-1"></div><div class="columns medium-11"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice"><i class="ucce ucce-minus"> </i><i class="ucce ucce-plus"> </i></div>' +
+                                '</div>';
+                    newChoiceL10n = '<div id="choice-l10n-row-' + questionID + '-0" class="row">' +
+                                     '<div class="columns medium-1"></div>' +
+                                     '<div class="columns medium-11">' + 
+                                      '<div class="row">' + 
+                                       '<div class="columns medium-6"><div id="choice-from-' + questionID + '-0" class="translate-from"></div></div>' +
+                                       '<div class="columns medium-6"><input class="choice-l10n-' + questionID + '" type="text" placeholder="Type translation..."></div>' +
+                                    '</div></div></div>';
+
                     // @ToDo: Grey the multiple -+ options if they cannot do anything
                     var name = '',
                         nameL10n = '',
-                        choices = newChoice,
-                        choicesL10n = '',
+                        choices,
+                        choicesL10n,
                         other = '',
                         otherDisabled = ' disabled',
                         otherLabel = '',
@@ -392,7 +403,9 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                             lenOptions = options.length,
                             choiceL10nRow;
                         if (lenOptions) {
+                            // Add a row per choice
                             choices = '';
+                            choicesL10n = '';
                             var thisOptionL10n;
                             for (var i=0; i < lenOptions; i++) {
                                 choices += '<div id="choice-row-' + questionID + '-' + i + '" class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input class="choice-' + questionID + '" type="text" placeholder="Enter an answer choice" value="' + options[i] + '"><i class="ucce ucce-minus"> </i><i class="ucce ucce-plus"> </i></div></div>';
@@ -406,6 +419,10 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                                                 '</div></div></div>';
                                 choicesL10n += choiceL10nRow;
                             }
+                        } else {
+                            // Add an empty row to hold the first choice
+                            choices = newChoice;
+                            choicesL10n = newChoiceL10n;
                         }
                         var settings = thisQuestion.settings,
                             otherL10n = '',
@@ -828,8 +845,38 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
 
                 case 'multichoice':
                     var multipleCheckbox = $('#multiple-' + questionID),
-                        multipleCount = $('#multiple-count-' + questionID),
-                        multichoiceEvents = function() {
+                        multipleCount = $('#multiple-count-' + questionID);
+                    // non-Form element events don't need to be re-instantiated when choices added/removed
+                    multipleCount.prev().off('click' + ns)
+                                        .on('click' + ns, function() {
+                        if (multipleCheckbox.prop('checked')) {
+                            var multiple = parseInt(multipleCount.html());
+                            if (multiple > 2) {
+                                multipleCount.html(multiple - 1);
+                                self.saveQuestion(type, questionID);
+                            } else if (multiple == 2) {
+                                multipleCount.html(1);
+                                multipleCheckbox.prop('checked', false);
+                                self.saveQuestion(type, questionID);
+                            }
+                        }
+                    });
+                    multipleCount.next().off('click' + ns)
+                                        .on('click' + ns, function() {
+                        if (multipleCheckbox.prop('checked')) {
+                            var multiple = parseInt(multipleCount.html()),
+                                optionsCount = $('.choice-' + questionID).length;
+                            if ($('#other-' + questionID).prop('checked')) {
+                                optionsCount++;
+                            }
+                            if (multiple < optionsCount) {
+                                multipleCount.html(multiple + 1);
+                                self.saveQuestion(type, questionID);
+                            }
+                        }
+                    });
+                    var multichoiceEvents = function() {
+                        // New elements need to be instantiated when choices added/removed
                         // Options
                         var deleteOption = $('.choice-' + questionID).next();
                         deleteOption.off('click' + ns)
@@ -888,20 +935,15 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                             newIndex = index + 1;
                             currentRow.after(newChoice.replace('-0', '-' + newIndex));
                             // & in l10n
-                            var choiceL10nRow = '<div id="choice-l10n-row-' + questionID + '-' + newIndex + '" class="row">' +
-                                                 '<div class="columns medium-1"></div>' +
-                                                 '<div class="columns medium-11">' + 
-                                                  '<div class="row">' + 
-                                                   '<div class="columns medium-6"><div id="choice-from-' + questionID + '-' + newIndex + '" class="translate-from"></div></div>' +
-                                                   '<div class="columns medium-6"><input class="choice-l10n-' + questionID + '" type="text" placeholder="Type translation..."></div>' +
-                                                 '</div></div></div>';
-                            $('#choice-l10n-row-' + questionID + '-' + index).after(choiceL10nRow);
+                            $('#choice-l10n-row-' + questionID + '-' + index).after(newChoiceL10n.replace(/-0/g, '-' + newIndex));
                             // Add Events
                             inputEvents();
                             multichoiceEvents();
                         });
+                        // Form element events need to be re-instantiated when choices added/removed
                         // Other field
-                        $('#other-' + questionID).on('change' + ns, function(){
+                        $('#other-' + questionID).off('change' + ns)
+                                                 .on('change' + ns, function() {
                             if ($(this).prop('checked')) {
                                 $('#other-label-' + questionID).prop('disabled', false);
                                 $('#other-l10n-row-' + questionID).removeClass('hide')
@@ -921,7 +963,8 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                             }
                         });
                         // Multiple
-                        multipleCheckbox.on('change' + ns, function() {
+                        multipleCheckbox.off('change' + ns)
+                                        .on('change' + ns, function() {
                             if (multipleCheckbox.prop('checked')) {
                                 // Check if we have more than 1 option
                                 var multiple = parseInt(multipleCount.html()),
@@ -940,32 +983,6 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                                 multipleCount.html(1);
                             }
                             self.saveQuestion(type, questionID);
-                        });
-                        multipleCount.prev().on('click' + ns, function() {
-                            if (multipleCheckbox.prop('checked')) {
-                                var multiple = parseInt(multipleCount.html());
-                                if (multiple > 2) {
-                                    multipleCount.html(multiple - 1);
-                                    self.saveQuestion(type, questionID);
-                                } else if (multiple == 2) {
-                                    multipleCount.html(1);
-                                    multipleCheckbox.prop('checked', false);
-                                    self.saveQuestion(type, questionID);
-                                }
-                            }
-                        });
-                        multipleCount.next().on('click' + ns, function() {
-                            if (multipleCheckbox.prop('checked')) {
-                                var multiple = parseInt(multipleCount.html()),
-                                    optionsCount = $('.choice-' + questionID).length;
-                                if ($('#other-' + questionID).prop('checked')) {
-                                    optionsCount++;
-                                }
-                                if (multiple < optionsCount) {
-                                    multipleCount.html(multiple + 1);
-                                    self.saveQuestion(type, questionID);
-                                }
-                            }
                         });
                     };
                     multichoiceEvents();
