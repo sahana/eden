@@ -725,6 +725,9 @@ class DataCollectionTemplateModel(S3Model):
             # Heatmap
             field_type = "json" # Store list of Lat/Lons
             field_settings["mobile"]["widget"] = {"type": "heatmap"}
+            regions = question_settings.get("regions")
+            if regions:
+                field_settings["mobile"]["regions"] = regions
             num_clicks = question_settings.get("numClicks")
             if num_clicks:
                 field_settings["mobile"]["requires"] = {"selectedOpts": {"max": num_clicks}}

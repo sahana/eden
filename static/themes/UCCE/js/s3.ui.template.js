@@ -10,6 +10,8 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
 })(function($, loadImage, Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, VectorLayer, VectorSource) {
     'use strict';
     var surveyID = 0,
+        draw,   // Draw control on Map
+        map,    // Map
         imageFiles = {},   // Store {id: questionID, file: filename}
         imageOptions = [], // Store {label: label, (just held locally)
                            //        id: questionID, {Also on server in settings.pipeImage)
@@ -519,7 +521,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                     break;
 
                 case 'heatmap':
-                    newChoice = '<div id="choice-row-' + questionID + '-0" class="row"><a class="button tiny secondary choice-define-' + questionID + '">Add region 1</a><input class="choice-' + questionID + '" type="text" placeholder="enter label" disabled><i class="ucce ucce-minus"> </i></div>';
+                    newChoice = '<div id="choice-row-' + questionID + '-0" class="row"><a class="button tiny secondary choice-define-' + questionID + '">Add region 1</a><input type="hidden" id="choice-json-' + questionID + '-0"><input class="choice-' + questionID + '" type="text" placeholder="enter label" disabled><i class="ucce ucce-minus"> </i></div>';
                     var name = '',
                         nameL10n = '',
                         numClicks = 1,
@@ -537,9 +539,10 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                             choiceL10nRow;
                         if (lenOptions) {
                             choices = '';
-                            var thisOptionL10n;
+                            var regions = thisQuestion.settings.regions;
+                                thisOptionL10n;
                             for (var i=0; i < lenOptions; i++) {
-                                choices += '<div id="choice-row-' + questionID + '-' + i + '" class="row"><a class="button tiny">Add region ' + (i + 1) + '</a><input class="choice-' + questionID + '" type="text" placeholder="enter label" value="' + options[i] + '"><i class="ucce ucce-minus"> </i></div>';
+                                choices += '<div id="choice-row-' + questionID + '-' + i + '" class="row"><a class="button tiny choice-define-' + questionID + '">Add region ' + (i + 1) + '</a><input type="hidden" id="choice-json-' + questionID + '-' + i + '" value=\'' + regions[i] + '\'><input class="choice-' + questionID + '" type="text" placeholder="enter label" value="' + options[i] + '"><i class="ucce ucce-minus"> </i></div>';
                                 thisOptionL10n = optionsL10n[i] || '';
                                 choiceL10nRow = '<div id="choice-l10n-row-' + questionID + '-' + i + '" class="row">' +
                                                  '<div class="columns medium-1"></div>' +
@@ -562,16 +565,13 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Image</h2></div></div>' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"></div></div>' +
                                '<div class="row">' +
-                                '<div class="columns medium-1"></div>' + 
-                                '<div class="columns medium-11">' +
-                                 '<div class="row">' + 
-                                  '<div class="columns medium-7 heatmap" id="map-' + questionID + '"><span id="preview-' + questionID + '" class="preview-empty fleft"></span></div>' +
-                                  '<div class="columns medium-5">' + 
-                                   '<div class="row"><h3>Number of clicks allowed:</h3></div>' +
-                                   '<div class="row" id="clicks-row-' + questionID + '"><i class="ucce ucce-minus"> </i><span> ' + numClicks + ' </span><i class="ucce ucce-plus"> </i></div>' +
-                                   '<div class="row"><h3>Tap/click regions:</h3></div>' +
-                                   choices +
-                              '</div></div></div></div></div>';
+                                '<div class="columns medium-7 heatmap" id="map-' + questionID + '"><span id="preview-' + questionID + '" class="preview-empty fleft"></span></div>' +
+                                '<div class="columns medium-5">' + 
+                                 '<div class="row"><h3>Number of clicks allowed:</h3></div>' +
+                                 '<div class="row" id="clicks-row-' + questionID + '"><i class="ucce ucce-minus"> </i><span> ' + numClicks + ' </span><i class="ucce ucce-plus"> </i></div>' +
+                                 '<div class="row"><h3>Tap/click regions:</h3></div>' +
+                                 choices +
+                              '</div></div></div>';
                     translationTab = '<div class="media content" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Heatmap</h2></div></div>' +
                                       '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
@@ -704,7 +704,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                     var file = thisQuestion.file;
                     if (file) {
                         if (type == 'heatmap') {
-                            self.heatMap(questionID, file);
+                            self.heatMap(questionID, file, load);
                         } else {
                             imageFiles[questionID] = file;
                             loadImage(S3.Ap.concat('/default/download/' + file), function(img) {
@@ -908,6 +908,8 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                         var deleteOption = $('.choice-' + questionID).next();
                         deleteOption.off('click' + ns)
                                     .on('click' + ns, function() {
+                            var optionInput = $(this).prev(),
+                                value = optionInput.val();
                             if ($('.choice-' + questionID).length > 1) {
                                 // Remove Option
                                 var currentRow = $(this).closest('.row'),
@@ -941,7 +943,19 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                                 self.saveQuestion(type, questionID);
                             } else {
                                 // Just remove value - since we always need at least 1 option available
-                                $(this).prev().val('');
+                                optionInput.val('');
+                            }
+                            if (value) {
+                                // Remove any outdated displayLogic
+                                var layout = self.data.layout;
+                                for (var i=currentPosition + 1, len=Object.keys(layout).length; i <= len; i++) {
+                                    item = layout[i];
+                                    if (item.displayLogic && item.displayLogic.id == questionID && item.displayLogic.eq == value) {
+                                        delete item.displayLogic;
+                                        $('#logic-select-' + i).val('')
+                                                               .trigger('change');
+                                    }
+                                }
                             }
                         });
                         deleteOption.next().off('click' + ns)
@@ -1048,7 +1062,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                         deleteOption.off('click' + ns)
                                     .on('click' + ns, function() {
                             if ($('.choice-' + questionID).length > 1) {
-                                // Remove Option
+                                // Remove Region
                                 var currentRow = $(this).closest('.row'),
                                     index = parseInt(currentRow.attr('id').split('-')[3]);
                                 currentRow.remove();
@@ -1068,24 +1082,53 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                                 }
                                 self.saveQuestion(type, questionID);
                             } else {
-                                // Just remove value - since we always need at least 1 option available
+                                // Just remove value - since we always need at least 1 region available
                                 var input = $(this).prev();
                                 input.val('')
                                      .prop('disabled', true);
                                 input.prev().addClass('secondary');
                             }
+                            // Remove any outdated displayLogic
+                            var currentPosition = parseInt($(this).closest('.media').attr('id').split('-')[1]),
+                                layout = self.data.layout,
+                                layoutLength = Object.keys(layout).length;
+                            for (var i=currentPosition + 1; i <= layoutLength; i++) {
+                                item = layout[i];
+                                if (item.displayLogic && item.displayLogic.id == questionID && item.displayLogic.eq == index) {
+                                    delete item.displayLogic;
+                                    $('#logic-select-' + i).val('')
+                                                           .trigger('change');
+                                }
+                            }
+                            // Remove any outdated pipeImage
+                            var questions = self.data.questions,
+                                thisQuestionID,
+                                thisQuestionSettings;
+                            for (var i=1; i <= layoutLength; i++) {
+                                item = layout[i];
+                                if (item.type == 'question') {
+                                    thisQuestionID = item.id;
+                                    thisQuestionSettings = questions[thisQuestionID].settings;
+                                    if (thisQuestionSettings.pipeImage && thisQuestionSettings.pipeImage.id == questionID && thisQuestionSettings.pipeImage.region == index) {
+                                        delete thisQuestionSettings.pipeImage;
+                                        $('#pipe-' + thisQuestionID).val('')
+                                                                    .trigger('change');
+                                    }
+                                }
+                            }
                         });
                         $('.choice-define-' + questionID).off('click' + ns)
                                                          .on('click' + ns, function() {
+                            // Prepare to Define a Region
                             var $this = $(this),
                                 currentRow = $this.closest('.row'),
                                 index = parseInt(currentRow.attr('id').split('-')[3]),
                                 regions = self.data.questions[questionID].settings.regions;
 
                             if ($this.hasClass('secondary')) {
-                                // Add new Option after current row
+                                // Add new Region after current row
                                 var newIndex = index + 1;
-                                currentRow.after(newChoice.replace('-0', '-' + newIndex));
+                                currentRow.after(newChoice.replace(/-0/g, '-' + newIndex));
                                 $('#choice-row-' + questionID + '-' + newIndex + ' > .button').html('Add region ' + (newIndex + 1));
 
                                 // & in l10n
@@ -1104,9 +1147,14 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                                 // Add Events
                                 inputEvents();
                                 multichoiceEvents();
+                                $this.removeClass('secondary');
+                                $this.next().next().prop('disabled', false);
                             }
-                            $this.removeClass('secondary');
-                            $this.next().prop('disabled', false);
+                            // Define Region
+                            // @ToDo: Show existing Region Polygon in a different Colour
+                            draw.set('questionID', questionID, true);
+                            draw.set('region', index, true);
+                            map.addInteraction(draw);
                         });
                     };
                     multichoiceEvents();
@@ -1205,7 +1253,8 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                 newQuestionNumber,
                 oldHref,
                 newHref,
-                layout = this.data.layout;
+                layout = this.data.layout,
+                questions = this.data.questions;
             var layoutLength = Object.keys(layout).length;
             for (var i=currentPosition; i < layoutLength; i++) {
                 oldPosition = i + 1;
@@ -1223,7 +1272,7 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                         oldQuestionNumber = $item.data('number');
                         if (type == 'instructions') {
                             // Not a Question deleted, so just need to update position
-                            //newQuestionNumber = oldQuestionNumber;
+
                             // Update questionNumbers
                             questionNumbers[oldQuestionNumber] = i;
                         } else {
@@ -1235,11 +1284,13 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                             // Update visual elements
                             $('#qlabel-' + thisQuestionID).html('Q' + newQuestionNumber);
                             $('#qlabel-l10n-' + thisQuestionID).html('Q' + newQuestionNumber);
+
                             // Update questionNumbers
                             questionNumbers[newQuestionNumber] = i;
                         }
                     } else {
                         // Instructions
+
                         // Update IDs
                         $('#instruction-' + oldPosition).attr('id', 'instruction-' + i);
                         $item = $('#instruction-' + i);
@@ -1248,10 +1299,18 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                         $('#do-l10n-' + oldPosition).attr('id', 'do-l10n-' + i);
                         $('#say-l10n-' + oldPosition).attr('id', 'say-l10n-' + i);
                     }
+
                     // Update Tab contents
                     $('#edit-' + oldPosition).attr('id', 'edit-' + i);
                     $('#logic-' + oldPosition).attr('id', 'logic-' + i);
+                    $('#logic-select-' + oldPosition).attr('id', 'logic-select-' + i);
+                    $('#sub-logic-select-' + oldPosition).attr('id', 'sub-logic-select-' + i);
+                    $('#logic-operator-1-' + oldPosition).attr('id', 'logic-operator-1-' + i);
+                    $('#logic-operator-2-' + oldPosition).attr('id', 'logic-operator-2-' + i);
+                    $('#logic-term-1-' + oldPosition).attr('id', 'logic-term-1-' + i);
+                    $('#logic-term-2-' + oldPosition).attr('id', 'logic-term-2-' + i);
                     $('#translation-' + oldPosition).attr('id', 'translation-' + i);
+
                     // Update links to Tabs
                     $item.find('li.tab-title > a').each(function() {
                         var $this = $(this);
@@ -1260,6 +1319,28 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                         newHref = newHref.substring(1, newHref.length);
                         $this.attr('href', '#' + newHref + '-' + i);
                     });
+
+                    // Remove any outdated displayLogic
+                    if (item.displayLogic && item.displayLogic.id == questionID) {
+                        delete item.displayLogic;
+                        $('#logic-select-' + i).val('')
+                                               .trigger('change');
+                    }
+                }
+            }
+
+            // Remove any outdated pipeImage
+            var thisQuestionSettings;
+            for (var i=1; i < layoutLength; i++) {
+                item = layout[i];
+                if (item.type == 'question') {
+                    thisQuestionID = item.id;
+                    thisQuestionSettings = questions[thisQuestionID].settings;
+                    if (thisQuestionSettings.pipeImage && thisQuestionSettings.pipeImage.id == questionID) {
+                        delete thisQuestionSettings.pipeImage;
+                        $('#pipe-' + thisQuestionID).val('')
+                                                    .trigger('change');
+                    }
                 }
             }
 
@@ -1310,9 +1391,10 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
         /**
           * Turn an Image into a (Heat)Map
           */
-        heatMap: function(questionID, file) {
+        heatMap: function(questionID, file, load) {
 
-            var url = S3.Ap.concat('/default/download/' + file);
+            var self = this,
+                url = S3.Ap.concat('/default/download/' + file);
 
             // Add image to DOM to get the height/width
             $('<img>').attr('src', url).load(function() {
@@ -1346,7 +1428,8 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                     source: source
                 });
 
-                var map = new Map({
+                // Deliberately module scope
+                map = new Map({
                     controls: [],
                     interactions: [],
                     layers: [
@@ -1361,12 +1444,65 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                         maxZoom: 0
                     })
                 });
-                var draw = new Draw({
+
+                const format = new GeoJSON({featureProjection: projection});
+
+                // Deliberately module scope
+                draw = new Draw({
                     source: source,
                     type: 'Polygon'
                 });
-                map.addInteraction(draw);
+
+                draw.on('drawstart', function(event) {
+
+                    // We only want a single Polygon per Region
+                    var region = draw.get('region'),
+                        callback = function(feature) {
+                            if (feature.get('region') == region) {
+                                source.removeFeature(feature);
+                                // Stop Iterating
+                                return true;
+                            }
+                            // Continue Iterating
+                            return false;
+                        };
                 
+                    source.forEachFeature(callback);
+                });
+
+                draw.on('drawend', function(event) {
+
+                    var feature = event.feature,
+                        questionID = draw.get('questionID'),
+                        region = draw.get('region');
+
+                    // Tag the feature to link it to the input
+                    feature.set('region', region);
+
+                    // Store the GeoJSON
+                    var geojson = format.writeFeatureObject(feature, {decimals: 0});
+                    $('#choice-json-' + questionID + '-' + region).val(JSON.stringify(geojson));
+                    self.saveQuestion('heatmap', questionID);
+
+                    // We only want a single Polygon per Region
+                    map.removeInteraction(draw);
+                });
+
+                if (load) {
+                    // Show existing features
+                    var feature,
+                        geojson,
+                        region,
+                        regions = self.data.questions[questionID].settings.regions;
+                    for (var i=0, len=regions.length; i < len; i++) {
+                        region = regions[i];
+                        if (region) {
+                            geojson = JSON.parse(region);
+                            feature = format.readFeatureFromObject(geojson);
+                            source.addFeature(feature);
+                        }
+                    }
+                }
             });
         },
 
@@ -2121,11 +2257,12 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                     if (thisQuestion.file) {
                         if (thisQuestion.type == 13) {
                             // Heatmap
-                            var regions = thisQuestion.settings.regions;
+                            var options = thisQuestion.options,
+                                regions = thisQuestion.settings.regions;
                             if (regions) {
                                 base_label = 'Q' + questionNumber + ' Heatmap; ';
                                 for (var i=0, len=regions.length; i < len; i++) {
-                                    label = base_label + '\'' + regions[i].label + '\'';
+                                    label = base_label + '\'' + options[i] + '\'';
                                     imageOptions.push({
                                         label: label,
                                         id: questionID,
@@ -2313,7 +2450,8 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                     }
                     break;
                 case 'heatmap':
-                    var options = [];
+                    var options = [],
+                        regions = [];
                     $('.choice-' + questionID).each(function() {
                         options.push($(this).val());
                     });
@@ -2328,6 +2466,11 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                         });
                         data.options_l10n = options_l10n;
                     }
+                    // Regions (GeoJSON)
+                    for (var i=0, len=options.length; i < len; i++) {
+                        regions.push($('#choice-json-'+ questionID + '-' + i).val());
+                    }
+                    settings.regions = regions;
                     // numClicks
                     var numClicks = thisQuestion.settings.numClicks;
                     if (numClicks) {
