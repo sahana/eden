@@ -1,17 +1,18 @@
 /*
  * Survey Editor Widget
  */
-import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, VectorLayer, VectorSource } from './ol5.min.js';
+import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Static, Stroke, Style, VectorLayer, VectorSource } from './ol5.min.js';
 
 (function(factory) {
     'use strict';
     // Use window. for Browser globals (not AMD or Node):
-    factory(window.jQuery, window.loadImage, Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, VectorLayer, VectorSource);
-})(function($, loadImage, Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, VectorLayer, VectorSource) {
+    factory(window.jQuery, window.loadImage, Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Static, Stroke, Style, VectorLayer, VectorSource);
+})(function($, loadImage, Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Static, Stroke, Style, VectorLayer, VectorSource) {
     'use strict';
     var surveyID = 0,
         draw,   // Draw control on Map
         map,    // Map
+        source, // VectorSource on Map
         imageFiles = {},   // Store {id: questionID, file: filename}
         imageOptions = [], // Store {label: label, (just held locally)
                            //        id: questionID, {Also on server in settings.pipeImage)
@@ -1150,8 +1151,27 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                                 $this.removeClass('secondary');
                                 $this.next().next().prop('disabled', false);
                             }
+                            // Show existing Region Polygon in a different Colour
+                            var callback = function(feature) {
+                                if (feature.get('region') == index) {
+                                    var style = new Style({
+                                        fill: new Fill({
+                                          color: '#ffc0cb' // pink
+                                        }),
+                                        stroke: new Stroke({
+                                          color: 'red'
+                                        })
+                                    });
+                                    feature.setStyle(style);
+                                } else {
+                                    // Ensure has default Style
+                                    feature.setStyle(null);
+                                }
+                                // Continue Iterating
+                                return false;
+                            };
+                            source.forEachFeature(callback); 
                             // Define Region
-                            // @ToDo: Show existing Region Polygon in a different Colour
                             draw.set('questionID', questionID, true);
                             draw.set('region', index, true);
                             map.addInteraction(draw);
@@ -1422,7 +1442,8 @@ import { Map, View, Draw, GeoJSON, getCenter, ImageLayer, Projection, Static, Ve
                     })
                 });
 
-                var source = new VectorSource({wrapX: false});
+                // Deliberately module scope
+                source = new VectorSource({wrapX: false});
 
                 var vector = new VectorLayer({
                     source: source
