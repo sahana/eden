@@ -187,6 +187,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
             var l10n = this.data.l10n,
                 questionNumber,
+                layout = this.data.layout,
+                questions = this.data.questions,
                 readOnly = this.options.readOnly;
 
             if (load) {
@@ -198,31 +200,18 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     }
                 }
             } else {
-                if (type == 'instructions') {
-                    // Update Data
-                    this.data.layout[position] = {
-                        type: 'instructions',
-                        do: {text: ''},
-                        say: {text: ''},
-                   };
-                } else {
+                if (type != 'instructions') {
                     // Add QuestionNumber
                     questionNumber = Object.keys(questionNumbers).length + 1;
                     questionNumbers[questionNumber] = position;
 
                     // Update Data
-                    this.data.layout[position] = {
-                        type: 'question',
-                        id: questionID
-                    };
-                    this.data.questions[questionID] = {
+                    questions[questionID] = {
                         type: typesToInt[type],
                         settings: {},
                         options: []
                     };
                 }
-                // Save Template
-                this.saveLayout();
             }
 
             // Build the Question HTML
@@ -249,17 +238,17 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             var translationTitle = '<li class="tab-title l10n' + translationHidden + '"><a href="#translation-' + position + '">Translation</a></li>';
 
             if (type == 'instructions') {
-                idHtml = 'instruction-' + position;
+                idHtml = 'instructions-' + position;
                 dataHtml = '';
-                formElements = '#instruction-' + position + ' input, #instruction-' + position + ' select';
-                trash = '#instruction-' + position + ' .ucce-delete';
+                formElements = '#instructions-' + position + ' input, #instructions-' + position + ' select';
+                trash = '#instructions-' + position + ' .ucce-delete';
             } else {
                 idHtml = 'question-' + questionID;
                 dataHtml = ' data-number="' + questionNumber + '"';
                 formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                 trash = '#question-' + questionID + ' .ucce-delete';
                 var checked = '';
-                thisQuestion = this.data.questions[questionID];
+                thisQuestion = questions[questionID];
                 settings = thisQuestion.settings || {};
                 if (load) {
                     if (settings.requires && settings.requires.isNotEmpty) {
@@ -303,7 +292,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         sayText = '',
                         sayTextL10n = '';
                     if (load) {
-                        var thisLayout = this.data.layout[position];
+                        var thisLayout = layout[position];
                         doText = thisLayout.do.text;
                         sayText = thisLayout.say.text;
                         if (l10n && thisLayout.do.l10n) {
@@ -589,18 +578,45 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             question += translationTab;
             question += '</div></div>';
 
+            if (!load) {
+                // Update the elements on the section
+                // Add to Layout
+                // Save Layout
+                var item;
+                if (type == 'instructions') {
+                    item = {
+                        type: 'instructions',
+                        do: {text: ''},
+                        say: {text: ''}
+                    };
+                } else{
+                    item = {
+                        type: 'question',
+                        id: questionID
+                    };
+                }
+                this.rePosition(item, null, position);
+            }
+
             if (readOnly) { 
                 // Place after other elements
                 $(this.element).parent().append(question);
-            } else {
+            } else if (load || position == Object.keys(layout).length) {
                 // Place before droppable
                 $('#survey-droppable').before(question);
+            } else {
+                // Place after previous element
+                var previousPosition = position - 1,
+                    previousItem = layout[previousPosition];
+                if (previousItem.type == 'break') {
+                    $('#section-break-' + previousPosition).parent().after(question);
+                } else if (previousItem.type == 'instructions') {
+                    $('#instructions-' + previousPosition).after(question);
+                } else {
+                    // Question
+                    $('#question-' + previousItem.id).after(question);
+                }
             }
-
-            // Update the elements on the section
-            pageElements[page]++;
-            var pagePosition = pages[page];
-            $('#section-break-' + pagePosition + ' > span').html('PAGE ' + page + ' (' + pageElements[page] + ' ELEMENTS)');
 
             // Event Handlers
             var ns = this.eventNamespace,
@@ -622,7 +638,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             // Update Data
                             // Can't trust original position as it may have changed
                             var currentPosition = parseInt(parts[parts.length - 1]),
-                                thisLayout = self.data.layout[currentPosition];
+                                thisLayout = layout[currentPosition];
                             thisLayout.do.text = $('#do-' + currentPosition).val();
                             thisLayout.say.text = $('#say-' + currentPosition).val();
                             if (l10n) {
@@ -785,9 +801,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                             // Update the Pipe Options HTML for each question
                                             var item,
                                                 thatQuestionID,
-                                                thatQuestion,
-                                                questions = self.data.questions,
-                                                layout = self.data.layout;
+                                                thatQuestion;
                                             for (var position=1; position <= Object.keys(layout).length; position++) {
                                                 item = layout[position];
                                                 if (item.type == 'question') {
@@ -944,7 +958,6 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             }
                             if (value) {
                                 // Remove any outdated displayLogic
-                                var layout = self.data.layout;
                                 for (var i=currentPosition + 1, len=Object.keys(layout).length; i <= len; i++) {
                                     item = layout[i];
                                     if (item.displayLogic && item.displayLogic.id == questionID && item.displayLogic.eq == value) {
@@ -1087,7 +1100,6 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             }
                             // Remove any outdated displayLogic
                             var currentPosition = parseInt($(this).closest('.media').attr('id').split('-')[1]),
-                                layout = self.data.layout,
                                 layoutLength = Object.keys(layout).length;
                             for (var i=currentPosition + 1; i <= layoutLength; i++) {
                                 item = layout[i];
@@ -1098,8 +1110,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 }
                             }
                             // Remove any outdated pipeImage
-                            var questions = self.data.questions,
-                                thisQuestionID,
+                            var thisQuestionID,
                                 thisQuestionSettings;
                             for (var i=1; i <= layoutLength; i++) {
                                 item = layout[i];
@@ -1120,7 +1131,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             var $this = $(this),
                                 currentRow = $this.closest('.row'),
                                 index = parseInt(currentRow.attr('id').split('-')[3]),
-                                regions = self.data.questions[questionID].settings.regions;
+                                regions = questions[questionID].settings.regions;
 
                             if ($this.hasClass('secondary')) {
                                 // Add new Region after current row
@@ -1187,7 +1198,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             // Decrement value
                             value--;
                             // Update Data
-                            self.data.questions[questionID].settings.numClicks = value;
+                            questions[questionID].settings.numClicks = value;
                             // Save Question
                             self.saveQuestion(type, questionID);
                             // Update visual element
@@ -1203,7 +1214,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         // Increment value
                         value++;
                         // Update Data
-                        self.data.questions[questionID].settings.numClicks = value;
+                        questions[questionID].settings.numClicks = value;
                         // Save Question
                         self.saveQuestion(type, questionID);
                         // Update visual element
@@ -1215,7 +1226,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             // Run Foundation JS on new Item
             //- needed for Tabs to work at all & allows us to add callback
             if (type == 'instructions') {
-                $('#instruction-' + position).foundation('tab', 'reflow');
+                $('#instructions-' + position).foundation('tab', 'reflow');
             } else {
                 $('#question-' + questionID).foundation('tab', 'reflow');
             }
@@ -1247,7 +1258,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             // Remove any outdated pipeImage
             var item,
                 thisQuestionID,
-                thisQuestionSettings;
+                thisQuestionSettings,
+                questions = this.data.questions;
             for (var i=1, len=Object.keys(layout).length; i < len; i++) {
                 item = layout[i];
                 if (item.type == 'question') {
@@ -1263,7 +1275,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
             // Remove from DOM
             if (type == 'instructions') {
-                $('#instruction-' + currentPosition).remove();
+                $('#instructions-' + currentPosition).remove();
             } else {
                 $('#question-' + questionID).remove();
             }
@@ -1940,38 +1952,77 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
         /**
           * Add a new Section Break
           */
-        addSectionBreak: function(position, page, load) {
+        addSectionBreak: function(newPosition, page, load) {
 
-            page++;
-            pages[page] = position;
-            pageElements[page] = 0;
-
-            var delete_btn,
-                readOnly = this.options.readOnly;
-
-            if (!readOnly && position) {
-                delete_btn = '<i class="ucce ucce-delete-page"> </i>';
-            } else {
-                // 1st section break (position 0), or readOnly: not deletable
-                delete_btn = '';
+            if (newPosition == 0) {
+                // 1st section break
+                pages[1] = newPosition;
+                var layout = this.data.layout,
+                    layoutLength = Object.keys(layout).length,
+                    thisElements = 0;
+                if (layoutLength) {
+                    // We're loading, so find how many elements on this page
+                    var item;
+                    for (var position=1; position <= layoutLength; position++) {
+                        item = layout[position];
+                        if (item.type == 'break') {
+                            // Stop iteration
+                            break;
+                        } else {
+                            thisElements++;
+                        }
+                    }
+                } else {
+                    // Empty Survey
+                    //thisElements = 0;
+                }
+                pageElements[1] = thisElements;
+                var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-0" data-page="1"><span>PAGE 1 (' + thisElements + ' ELEMENTS)</span></div><div class="medium-1 columns"><i class="ucce ucce-down-alt"> </i></div></div>';
+                $(this.element).parent().append(sectionBreak);
+                return;
             }
 
-            var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-' + position + '" data-page="' + page + '"><span>PAGE ' + page + ' (0 ELEMENTS)</span></div><div class="medium-1 columns">' + delete_btn + '<i class="ucce ucce-down-alt"> </i></div></div>';
+            this.rePosition({type: 'break'}, null, newPosition);
 
-            if (!readOnly && position) {
-                // Place before droppable
-                $('#survey-droppable').before(sectionBreak);
-                // @ToDo: Roll-up previous sections
-                if (!load) {
-                    // Update Data
-                    this.data.layout[position] = {type: 'break'};
-                    // Save to Server
-                    this.saveLayout();
+            page++;
+
+            var delete_btn,
+                thisElements = pageElements[page],
+                readOnly = this.options.readOnly;
+
+            if (readOnly) {
+                delete_btn = '';
+            } else {
+                delete_btn = '<i class="ucce ucce-delete-page"> </i>';
+            }
+
+            var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-' + newPosition + '" data-page="' + page + '"><span>PAGE ' + page + ' (' + thisElements + ' ELEMENTS)</span></div><div class="medium-1 columns">' + delete_btn + '<i class="ucce ucce-down-alt"> </i></div></div>';
+
+            if (readOnly) { 
+                // Place after other elements
+                $(this.element).parent().append(sectionBreak);
+            } else {
+                var layout = this.data.layout;
+                if (load || newPosition == Object.keys(layout).length) {
+                    // Place before droppable
+                    $('#survey-droppable').before(sectionBreak);
+                } else {
+                    // Place after previous element
+                    var previousPosition = newPosition - 1,
+                        previousItem = layout[previousPosition];
+                    if (previousItem.type == 'break') {
+                        $('#section-break-' + previousPosition).parent().after(sectionBreak);
+                    } else if (previousItem.type == 'instructions') {
+                        $('#instructions-' + previousPosition).after(sectionBreak);
+                    } else {
+                        // Question
+                        $('#question-' + previousItem.id).after(sectionBreak);
+                    }
                 }
                 // Events
                 var self = this,
                     ns = this.eventNamespace;
-                $('#section-break-' + position).next().children('.ucce-delete-page').on('click' + ns, function(/* event */){
+                $('#section-break-' + newPosition).next().children('.ucce-delete-page').on('click' + ns, function(/* event */){
                     // Delete this section-break
 
                     // Read the position (can't trust original as it may have changed)
@@ -1980,14 +2031,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     self.deleteSectionBreak(currentPosition);
 
                 });
-                //$('#section-break-' + position).next().children('.ucce-down-alt').on('click' + ns, function(/* event */){
+                //$('#section-break-' + newPosition).next().children('.ucce-down-alt').on('click' + ns, function(/* event */){
                     // @ToDo: Unroll this section & rollup others
                 //});
-            } else {
-                // 1st section break or readOnly
-                $(this.element).parent().append(sectionBreak);
-                // @ToDo: If !position, then Roll-up previous sections
             }
+            // @ToDo: Roll-up previous sections
         },
 
         /**
@@ -2026,7 +2074,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
             if (currentPosition) {
                 if (itemType == 'instructions') {
-                    currentPage = $('#instruction-' + currentPosition).data('page');
+                    currentPage = $('#instructions-' + currentPosition).data('page');
                 } else if (itemType == 'question') {
                     var oldQuestionID = item.id,
                         oldElement = $('#question-' + oldQuestionID);
@@ -2047,7 +2095,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         previousItem = layout[previousPosition],
                         previousType = previousItem.type;
                     if (previousType == 'instructions') {
-                        newPage = $('#instruction-' + previousPosition).data('page');
+                        newPage = $('#instructions-' + previousPosition).data('page');
                     } else if (previousType == 'question') {
                         var previousQuestionID = previousItem.id,
                             previousElement = $('#question-' + previousQuestionID);
@@ -2073,10 +2121,55 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             } else if (newPosition) {
                 // Create
                 if (itemType == 'break') {
-                    pages[newPage] = newPosition;
-                    pageElements[newPage] = 0; // @ToDo: Not always True!
+                    if (newPage > pagesLength) {
+                        // New Section Break at the end of the Survey
+                        pages[newPage] = newPosition;
+
+                        // We could be loading, so find how many elements on this page
+                        var thisItem,
+                            thisElements = 0;
+                        for (var position = newPosition + 1; position <= layoutLength; position++) {
+                            thisItem = layout[position];
+                            if (thisItem.type == 'break') {
+                                // Stop iteration
+                                break;
+                            } else {
+                                thisElements++;
+                            }
+                        }
+                        pageElements[newPage] = thisElements;
+
+                    } else {
+                        // Not the final page, so:
+                        // Update pages/pageElements in it & all subsequent pages
+                    }
+                    if (newPosition <= layoutLength) {
+                        // Not added at the end of the Survey
+                        // @ToDo: Update Subsequent Layout items
+                    }
+                    // Insert into correct position in the layout
+                    layout[newPosition] = item;
                 } else {
-                    // @ToDo: copy from addQuestion
+                    // Question/Instructions
+                    if (newPage == pagesLength) {
+                        // New Question on the last Page (e.g. end of Survey)
+
+                        // Update the elements on the section
+                        pageElements[newPage]++;
+                        var pagePosition = pages[newPage];
+                        $('#section-break-' + pagePosition + ' > span').html('PAGE ' + newPage + ' (' + pageElements[newPage] + ' ELEMENTS)');
+
+                    } else {
+                        // Not the final page, so:
+                        // Update pages/pageElements in it & all subsequent pages
+                        // @ToDo
+                    }
+                    if (newPosition <= layoutLength) {
+                        // Not added at the end of the Survey
+                        // @ToDo: Update Subsequent Layout items & Question Numbers
+                    }
+                    // Insert into correct position in the layout
+                    layout[newPosition] = item;
                 }
             } else {
                 // Delete
@@ -2173,8 +2266,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 // Instructions
 
                                 // Update IDs
-                                $('#instruction-' + oldPosition).attr('id', 'instruction-' + i);
-                                $thisItem = $('#instruction-' + i);
+                                $('#instructions-' + oldPosition).attr('id', 'instructions-' + i);
+                                $thisItem = $('#instructions-' + i);
                                 $('#do-' + oldPosition).attr('id', 'do-' + i);
                                 $('#say-' + oldPosition).attr('id', 'say-' + i);
                                 $('#do-l10n-' + oldPosition).attr('id', 'do-' + i);
