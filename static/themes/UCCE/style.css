@@ -4,7 +4,7 @@
   float: none;
 }
 
-.survey-droppable {
+#survey-droppable {
   border: 1px solid #bbb;
   height: 400px;
   left: 100%;
@@ -13,7 +13,7 @@
   box-shadow: 2px 2px #bbb;
 }
 
-.survey-droppable > span {
+#survey-droppable > span {
   color: #bbb;
   position: relative;
   display: inline-block;

@@ -594,10 +594,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 $(this.element).parent().append(question);
             } else {
                 // Place before droppable
-                $('#survey-droppable-' + position).before(question);
-                // Update the position of the droppable
-                var newPosition = position + 1;
-                $('#survey-droppable-' + position).attr('id', 'survey-droppable-' + newPosition);
+                $('#survey-droppable').before(question);
             }
 
             // Update the elements on the section
@@ -1963,11 +1960,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
             if (!readOnly && position) {
                 // Place before droppable
-                $('#survey-droppable-' + position).before(sectionBreak);
-                // Update the page & position of the droppable
-                var newPosition = position + 1;
-                $('#survey-droppable-' + position).data('page', page)
-                                                  .attr('id', 'survey-droppable-' + newPosition);
+                $('#survey-droppable').before(sectionBreak);
                 // @ToDo: Roll-up previous sections
                 if (!load) {
                     // Update Data
@@ -1998,7 +1991,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
         },
 
         /**
-          * Add a new Section Break
+          * Delete a Section Break
           */
         deleteSectionBreak: function(currentPosition) {
 
@@ -2079,7 +2072,12 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 }
             } else if (newPosition) {
                 // Create
-                // @ToDo
+                if (itemType == 'break') {
+                    pages[newPage] = newPosition;
+                    pageElements[newPage] = 0; // @ToDo: Not always True!
+                } else {
+                    // @ToDo: copy from addQuestion
+                }
             } else {
                 // Delete
                 if (itemType == 'break') {
@@ -2216,10 +2214,6 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 // Remove final item from layout (we've already copied it to the previous position)
                 delete layout[layoutLength];
 
-                // Update droppable ID
-                $('#survey-droppable-' + (layoutLength + 1)).data('page', pagesLength - 1)
-                                                            .attr('id', 'survey-droppable-' + layoutLength);
-
                 if (itemType == 'question') {
                     // Remove final questionNumber from questionNumbers
                     delete questionNumbers[oldQuestionNumber];
@@ -2231,22 +2225,22 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
         },
 
         /**
-          * Add a new Droppable section into the given position
-          * - only done once currently
+          * Add a new Droppable section at the end of the Survey
+          * - only done once
           */
-        droppable: function(position, page) {
+        droppable: function() {
             var self = this,
-                droppable = '<div class="survey-droppable" id="survey-droppable-' + position + '" data-page="' + page + '"><span>Drag and drop questions here</span></div>';
+                layout = this.data.layout,
+                droppable = '<div id="survey-droppable"><span>Drag and drop questions here</span></div>';
             $(this.element).parent().append(droppable);
 
             // (Drag)'n'Drop
-            $('#survey-droppable-' + position).droppable({
+            $('#survey-droppable').droppable({
                 drop: function(event, ui) {
                     // Open QuestionEditorWidget with correct options for type
                     var type = ui.draggable[0].id,
-                        // Read the position (can't trust original as it may have changed)
-                        currentPosition = parseInt(this.id.split('-')[2]),
-                        currentPage = $(this).data('page');
+                        currentPosition = Object.keys(layout).length + 1,
+                        currentPage = Object.keys(pages).length;
                     if (type == 'break') {
                         self.addSectionBreak(currentPosition, currentPage);
                     } else {
@@ -2355,7 +2349,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
             if (!this.options.readOnly) {
                 // Add droppable
-                this.droppable(1, 1);
+                this.droppable();
             }
 
             this.loadSurvey();
