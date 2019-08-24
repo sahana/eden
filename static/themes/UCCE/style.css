@@ -1,5 +1,9 @@
 /* Template Editor */
 
+.survey-item {
+  float: none;
+}
+
 .survey-droppable {
   border: 1px solid #bbb;
   height: 400px;
@@ -50,26 +54,26 @@
 }
 
 .preview-empty {
-    background-color: #eee;
-    border-color: #999;
-    border-style: dotted;
-    border-width: 1px;
-    height: 80px;
-    width: 80px;
+  background-color: #eee;
+  border-color: #999;
+  border-style: dotted;
+  border-width: 1px;
+  height: 80px;
+  width: 80px;
 }
 
 #content h2.fleft {
-    padding-left: 0;
+  padding-left: 0;
 }
 
 .translate-from {
-    background-color: #ddd;
+  background-color: #ddd;
 }
 
 .heatmap,
 .heatmap > .preview-empty {
-    height: 480px;
-    width: 480px;
+  height: 480px;
+  width: 480px;
 }
 
 /* Switch Backported from Foundation 6 instead of using the Foundation 5 version */

@@ -276,7 +276,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 }
             }
 
-            question = '<div class="thumbnail dl-item" id="' + idHtml + '" data-page="' + page + '"' + dataHtml + '>' + 
+            question = '<div class="thumbnail dl-item survey-item" id="' + idHtml + '" data-page="' + page + '"' + dataHtml + '>' + 
                        '<div class="card-header"><ul class="tabs fleft" data-tab><li class="tab-title active"><a href="#edit-' + position + '">Edit</a></li><li class="tab-title"><a href="#logic-' + position + '">Display logic</a></li> ' + translationTitle + '</ul>' +
                        '<div class="edit-bar fright"><a><i class="ucce ucce-duplicate"> </i></a><a><i class="ucce ucce-delete"> </i></a><i class="ucce ucce-up"> </i><i class="ucce ucce-down"> </i></div>' + 
                        '</div>' + 
@@ -694,11 +694,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 }
             };
             inputEvents();
-            if (load && thisQuestion.settings.pipeImage) {
-                // If there is an existing pipeImage, then load preview now
-                $('#pipe-' + questionID).trigger('change');
-            }
-            
+
             if (type != 'instructions') {
                 if (load) {
                     // Image to Load?
@@ -722,6 +718,9 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 return img;
                             }, {}); // Empty Options
                         }
+                    } else if (thisQuestion.settings.pipeImage) {
+                        // If there is an existing pipeImage, then load preview now
+                        $('#pipe-' + questionID).trigger('change');
                     }
                 }
                 if (!readOnly) {
@@ -1231,127 +1230,28 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
           */
         deleteQuestion: function(type, questionID, deleteBtn) {
 
-            var currentPage,
-                currentPosition,
-                questionNumber;
+            var currentPosition,
+                layout = this.data.layout;
 
             if (type == 'instructions') {
                 // Read the position (can't trust original as it may have changed)
-                currentPosition = parseInt($(deleteBtn).closest('.dl-item').attr('id').split('-')[1]);
-                // Read the current page
-                currentPage = $('#instruction-' + currentPosition).data('page');
+                currentPosition = parseInt($(deleteBtn).closest('.survey-item').attr('id').split('-')[1]);
             } else {
                 // Question
 
                 // Read the questionNumber (can't trust original as it may have changed)
-                questionNumber = $('#question-' + questionID).data('number');
+                var questionNumber = $('#question-' + questionID).data('number');
                 // Read the position (can't trust original as it may have changed)
                 currentPosition = questionNumbers[questionNumber];
-                // Read the current page
-                currentPage = $('#question-' + questionID).data('page');
-
-                // Clean up imageFiles
-                delete imageFiles[questionID];
             }
 
-            // Update this pageElements
-            pageElements[currentPage]--;
-            // Update visual elements
-            $('#section-break-' + pages[currentPage] + ' > span').html('PAGE ' + currentPage + ' (' + pageElements[currentPage] + ' ELEMENTS)');
-
-            // Update subsequent pages
-            for (var i=currentPage + 1, len=Object.keys(pages).length; i <= len; i++) {
-                pages[i]--; // newPosition
-            }
-
-            // Update layout & all subsequent items in it
-            var item,
-                $item,
-                oldPosition,
-                thisQuestionID,
-                oldQuestionNumber = questionNumber,
-                newQuestionNumber,
-                oldHref,
-                newHref,
-                layout = this.data.layout,
-                questions = this.data.questions;
-            var layoutLength = Object.keys(layout).length;
-            for (var i=currentPosition; i < layoutLength; i++) {
-                oldPosition = i + 1;
-                //newPosition = i;
-                item = layout[oldPosition];
-                // Move item to it's new position in the layout
-                layout[i] = item;
-                if (item.type == 'break') {
-                    // Update ID
-                    $('#section-break-' + oldPosition).attr('id', 'section-break-' + i);
-                } else {
-                    if (item.type == 'question') {
-                        thisQuestionID = item.id;
-                        $item = $('#question-' + thisQuestionID);
-                        oldQuestionNumber = $item.data('number');
-                        if (type == 'instructions') {
-                            // Not a Question deleted, so just need to update position
-
-                            // Update questionNumbers
-                            questionNumbers[oldQuestionNumber] = i;
-                        } else {
-                            // Question deleted so need to update both numbers & positions
-
-                            // Update questionNumber
-                            newQuestionNumber = oldQuestionNumber - 1;
-                            $item.data('number', newQuestionNumber);
-                            // Update visual elements
-                            $('#qlabel-' + thisQuestionID).html('Q' + newQuestionNumber);
-                            $('#qlabel-l10n-' + thisQuestionID).html('Q' + newQuestionNumber);
-
-                            // Update questionNumbers
-                            questionNumbers[newQuestionNumber] = i;
-                        }
-                    } else {
-                        // Instructions
-
-                        // Update IDs
-                        $('#instruction-' + oldPosition).attr('id', 'instruction-' + i);
-                        $item = $('#instruction-' + i);
-                        $('#do-' + oldPosition).attr('id', 'do-' + i);
-                        $('#say-' + oldPosition).attr('id', 'say-' + i);
-                        $('#do-l10n-' + oldPosition).attr('id', 'do-l10n-' + i);
-                        $('#say-l10n-' + oldPosition).attr('id', 'say-l10n-' + i);
-                    }
-
-                    // Update Tab contents
-                    $('#edit-' + oldPosition).attr('id', 'edit-' + i);
-                    $('#logic-' + oldPosition).attr('id', 'logic-' + i);
-                    $('#logic-select-' + oldPosition).attr('id', 'logic-select-' + i);
-                    $('#sub-logic-select-' + oldPosition).attr('id', 'sub-logic-select-' + i);
-                    $('#logic-operator-1-' + oldPosition).attr('id', 'logic-operator-1-' + i);
-                    $('#logic-operator-2-' + oldPosition).attr('id', 'logic-operator-2-' + i);
-                    $('#logic-term-1-' + oldPosition).attr('id', 'logic-term-1-' + i);
-                    $('#logic-term-2-' + oldPosition).attr('id', 'logic-term-2-' + i);
-                    $('#translation-' + oldPosition).attr('id', 'translation-' + i);
-
-                    // Update links to Tabs
-                    $item.find('li.tab-title > a').each(function() {
-                        var $this = $(this);
-                        oldHref = $this.attr('href');
-                        newHref = oldHref.split('-')[0];
-                        newHref = newHref.substring(1, newHref.length);
-                        $this.attr('href', '#' + newHref + '-' + i);
-                    });
-
-                    // Remove any outdated displayLogic
-                    if (item.displayLogic && item.displayLogic.id == questionID) {
-                        delete item.displayLogic;
-                        $('#logic-select-' + i).val('')
-                                               .trigger('change');
-                    }
-                }
-            }
+            this.rePosition(layout[currentPosition], currentPosition, null)
 
             // Remove any outdated pipeImage
-            var thisQuestionSettings;
-            for (var i=1; i < layoutLength; i++) {
+            var item,
+                thisQuestionID,
+                thisQuestionSettings;
+            for (var i=1, len=Object.keys(layout).length; i < len; i++) {
                 item = layout[i];
                 if (item.type == 'question') {
                     thisQuestionID = item.id;
@@ -1364,26 +1264,12 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 }
             }
 
-            // Remove final item from oldPosition in layout
-            delete layout[layoutLength];
-
-            if (type != 'instructions') {
-                // Remove final questionNumber from questionNumbers
-                delete questionNumbers[oldQuestionNumber];
-            }
-
-            // Save Layout
-            this.saveLayout();
-
             // Remove from DOM
             if (type == 'instructions') {
                 $('#instruction-' + currentPosition).remove();
             } else {
                 $('#question-' + questionID).remove();
             }
-
-            // Update droppable ID
-            $('#survey-droppable-' + (layoutLength + 1)).attr('id', 'survey-droppable-' + layoutLength);
 
             if (type != 'instructions') {
                 // Delete Question from Server
@@ -2069,7 +1955,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             if (!readOnly && position) {
                 delete_btn = '<i class="ucce ucce-delete-page"> </i>';
             } else {
-                // 1st section break, or readOnly: not deletable
+                // 1st section break (position 0), or readOnly: not deletable
                 delete_btn = '';
             }
 
@@ -2115,94 +2001,233 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
           * Add a new Section Break
           */
         deleteSectionBreak: function(currentPosition) {
-            // Read the current page
-            var currentPage = $('#section-break-' + currentPosition).data('page');
-
-            var currentPageElements = pageElements[currentPage];
-            if (currentPageElements) {
-                // Update elements on previous section-break
-                var previousPage = currentPage - 1;
-                pageElements[previousPage] += currentPageElements;
-                var previousPagePosition = pages[previousPage];
-                $('#section-break-' + previousPagePosition + ' > span').html('PAGE ' + previousPage + ' (' + pageElements[previousPage] + ' ELEMENTS)');
-            }
-
-            // Update subsequent pages & pageElements
-            var pagesLength = Object.keys(pages).length;
-            for (var i=currentPage; i < pagesLength; i++) {
-                pages[i] = pages[i + 1] - 1; // newPosition
-                pageElements[i] = pageElements[i + 1];
-            }
-            delete pages[pagesLength];
-            delete pageElements[pagesLength];
 
             // Update layout & all subsequent items in it
-            var layout = this.data.layout,
-                layoutLength = Object.keys(layout).length;
-            if (currentPosition != layoutLength) {
-                var item,
-                    thisPage,
-                    oldPosition,
-                    oldHref,
-                    newHref,
-                    questionNumber,
-                    $item;
-                for (var i=currentPosition; i < layoutLength; i++) {
-                    oldPosition = i + 1;
-                    //newPosition = i;
-                    item = layout[oldPosition];
-                    // Move item to it's new position in the layout
-                    layout[i] = item;
-                    if (item.type == 'break') {
-                        // Read Page
-                        thisPage = $('#section-break-' + oldPosition).data('page') - 1;
-                        // Update Page
-                        $('#section-break-' + oldPosition).data('page', thisPage);
-                        // Update visual elements
-                        $('#section-break-' + oldPosition + ' > span').html('PAGE ' + thisPage + ' (' + pageElements[thisPage] + ' ELEMENTS)');
-                        // Update ID
-                        $('#section-break-' + oldPosition).attr('id', 'section-break-' + i);
-                    } else {
-                        if (item.type == 'question') {
-                            // Update questionNumbers
-                            $item = $('#question-' + item.id);
-                            questionNumber = $item.data('number');
-                            questionNumbers[questionNumber] = i;
-                        } else {
-                            // Instructions
-                            // Update IDs
-                            $('#instruction-' + oldPosition).attr('id', 'instruction-' + i);
-                            $item = $('#instruction-' + i);
-                            $('#do-' + oldPosition).attr('id', 'do-' + i);
-                            $('#say-' + oldPosition).attr('id', 'say-' + i);
-                            $('#do-l10n-' + oldPosition).attr('id', 'do-' + i);
-                            $('#say-l10n-' + oldPosition).attr('id', 'say-' + i);
-                        }
-                        // Update Tab contents
-                        $('#edit-' + oldPosition).attr('id', 'edit-' + i);
-                        $('#logic-' + oldPosition).attr('id', 'logic-' + i);
-                        $('#translation-' + oldPosition).attr('id', 'translation-' + i);
-                        // Update links to Tabs
-                        $item.find('li.tab-title > a').each(function() {
-                            var $this = $(this);
-                            oldHref = $this.attr('href');
-                            newHref = oldHref.split('-')[0];
-                            newHref = newHref.substring(1, newHref.length);
-                            $this.attr('href', '#' + newHref + '-' + i);
-                        });
-                    }
+            this.rePosition({type: 'break'}, currentPosition, null);
+
+            // Remove from DOM
+            $('#section-break-' + currentPosition).parent().remove();
+        },
+
+        /**
+          * Reposition elements in the layout
+          * - Move - both currentPosition & newPosition not-null
+          * - Add - currentPosition is null
+          * - Delete - newPosition is null
+          */
+        rePosition: function(item, currentPosition, newPosition) {
+
+            var itemType = item.type,
+                questionID,
+                layout = this.data.layout,
+                layoutLength = Object.keys(layout).length,
+                pagesLength = Object.keys(pages).length,
+                currentPage,
+                newPage,
+                oldQuestionNumber,
+                newQuestionNumber;
+
+            if (itemType == 'question') {
+                questionID = item.id;
+            }
+
+            if (currentPosition) {
+                if (itemType == 'instructions') {
+                    currentPage = $('#instruction-' + currentPosition).data('page');
+                } else if (itemType == 'question') {
+                    var oldQuestionID = item.id,
+                        oldElement = $('#question-' + oldQuestionID);
+                    currentPage = oldElement.data('page');
+                    oldQuestionNumber = oldElement.data('number');
+                } else if (itemType == 'break') {
+                    currentPage = $('#section-break-' + currentPosition).data('page');
                 }
             }
-            // Remove final item from oldPosition in layout
-            delete layout[layoutLength];
+
+            if (newPosition) {
+                if (newPosition == 1) {
+                    // 1st item, so no previousItem
+                    newPage = 1;
+                    newQuestionNumber = 1;
+                } else {
+                    var previousPosition = newPosition - 1,
+                        previousItem = layout[previousPosition],
+                        previousType = previousItem.type;
+                    if (previousType == 'instructions') {
+                        newPage = $('#instruction-' + previousPosition).data('page');
+                    } else if (previousType == 'question') {
+                        var previousQuestionID = previousItem.id,
+                            previousElement = $('#question-' + previousQuestionID);
+                        newPage = previousElement.data('page');
+                        var previousQuestionNumber = previousElement.data('number');
+                        newQuestionNumber = previousQuestionNumber + 1
+                    } else if (previousType == 'break') {
+                        newPage = $('#section-break-' + previousPosition).data('page');
+                    }
+                }
+                if (itemType == 'break') {
+                    newPage++;
+                }
+            }
+
+            // Update Layout
+            if (newPosition & currentPosition) {
+                // Move
+                // @ToDo
+                if (currentPage != newPage) {
+                    // Fix the Pages
+                }
+            } else if (newPosition) {
+                // Create
+                // @ToDo
+            } else {
+                // Delete
+                if (itemType == 'break') {
+                    // Fix the Pages
+                    var currentPageElements = pageElements[currentPage];
+                    if (currentPageElements) {
+                        // Update elements on previous section-break
+                        var previousPage = currentPage - 1;
+                        pageElements[previousPage] += currentPageElements;
+                        var previousPagePosition = pages[previousPage];
+                        $('#section-break-' + previousPagePosition + ' > span').html('PAGE ' + previousPage + ' (' + pageElements[previousPage] + ' ELEMENTS)');
+                    }
+
+                    // Update subsequent pages & pageElements
+                    for (var i=currentPage; i < pagesLength; i++) {
+                        pages[i] = pages[i + 1] - 1; // newPosition
+                        pageElements[i] = pageElements[i + 1];
+                    }
+                    delete pages[pagesLength];
+                    delete pageElements[pagesLength];
+
+                } else {
+                    // Question/Instructions
+
+                    if (itemType == 'question') {
+                        // Clean up imageFiles
+                        delete imageFiles[questionID];
+                    }
+
+                    // Update this pageElements
+                    pageElements[currentPage]--;
+                    // Update visual elements
+                    $('#section-break-' + pages[currentPage] + ' > span').html('PAGE ' + currentPage + ' (' + pageElements[currentPage] + ' ELEMENTS)');
+
+                    // Update subsequent pages
+                    for (var i=currentPage + 1; i <= pagesLength; i++) {
+                        pages[i]--; // newPosition
+                    }
+                }
+                
+                if (currentPosition != layoutLength) {
+                    // Not the final item in the layout, so:
+                    // Update Layout & all subsequent items in it
+                    var thisItem,
+                        $thisItem,
+                        thisPage,
+                        oldPosition,
+                        oldHref,
+                        newHref,
+                        thisQuestionID,
+                        thisQuestionNumber;
+                    for (var i=currentPosition; i < layoutLength; i++) {
+                        oldPosition = i + 1;
+                        //newPosition = i;
+                        thisItem = layout[oldPosition];
+                        // Move item to it's new position in the layout
+                        layout[i] = thisItem;
+                        if (thisItem.type == 'break') {
+                            if (itemType == 'break') {
+                                // Read Page
+                                thisPage = $('#section-break-' + oldPosition).data('page') - 1;
+                                // Update Page
+                                $('#section-break-' + oldPosition).data('page', thisPage);
+                                // Update visual elements
+                                $('#section-break-' + oldPosition + ' > span').html('PAGE ' + thisPage + ' (' + pageElements[thisPage] + ' ELEMENTS)');
+                            }
+                            // Update ID
+                            $('#section-break-' + oldPosition).attr('id', 'section-break-' + i);
+                        } else {
+                            if (thisItem.type == 'question') {
+                                // Update questionNumbers
+                                thisQuestionID = thisItem.id;
+                                $thisItem = $('#question-' + thisQuestionID);
+                                thisQuestionNumber = $thisItem.data('number');
+                                if (itemType == 'question') {
+                                    // Question deleted so need to update both numbers & positions
+
+                                    // Update questionNumber
+                                    newQuestionNumber = thisQuestionNumber - 1;
+                                    $thisItem.data('number', newQuestionNumber);
+                                    // Update visual elements
+                                    $('#qlabel-' + thisQuestionID).html('Q' + newQuestionNumber);
+                                    $('#qlabel-l10n-' + thisQuestionID).html('Q' + newQuestionNumber);
+
+                                    // Update questionNumbers
+                                    questionNumbers[newQuestionNumber] = i;
+
+                                } else {
+                                    // Not a Question deleted, so just need to update position
+                                    questionNumbers[thisQuestionNumber] = i;
+                                }
+                            } else {
+                                // Instructions
+
+                                // Update IDs
+                                $('#instruction-' + oldPosition).attr('id', 'instruction-' + i);
+                                $thisItem = $('#instruction-' + i);
+                                $('#do-' + oldPosition).attr('id', 'do-' + i);
+                                $('#say-' + oldPosition).attr('id', 'say-' + i);
+                                $('#do-l10n-' + oldPosition).attr('id', 'do-' + i);
+                                $('#say-l10n-' + oldPosition).attr('id', 'say-' + i);
+                            }
+
+                            // Update Tab contents
+                            $('#edit-' + oldPosition).attr('id', 'edit-' + i);
+                            $('#logic-' + oldPosition).attr('id', 'logic-' + i);
+                            $('#logic-select-' + oldPosition).attr('id', 'logic-select-' + i);
+                            $('#sub-logic-select-' + oldPosition).attr('id', 'sub-logic-select-' + i);
+                            $('#logic-operator-1-' + oldPosition).attr('id', 'logic-operator-1-' + i);
+                            $('#logic-operator-2-' + oldPosition).attr('id', 'logic-operator-2-' + i);
+                            $('#logic-term-1-' + oldPosition).attr('id', 'logic-term-1-' + i);
+                            $('#logic-term-2-' + oldPosition).attr('id', 'logic-term-2-' + i);
+                            $('#translation-' + oldPosition).attr('id', 'translation-' + i);
+
+                            // Update links to Tabs
+                            $thisItem.find('li.tab-title > a').each(function() {
+                                var $this = $(this);
+                                oldHref = $this.attr('href');
+                                newHref = oldHref.split('-')[0];
+                                newHref = newHref.substring(1, newHref.length);
+                                $this.attr('href', '#' + newHref + '-' + i);
+                            });
+
+                            // Remove any outdated displayLogic
+                            if (questionID && thisItem.displayLogic && thisItem.displayLogic.id == questionID) {
+                                delete thisItem.displayLogic;
+                                $('#logic-select-' + i).val('')
+                                                       .trigger('change');
+                            }
+                        }
+                    }
+                }
+
+                // Remove final item from layout (we've already copied it to the previous position)
+                delete layout[layoutLength];
+
+                // Update droppable ID
+                $('#survey-droppable-' + (layoutLength + 1)).data('page', pagesLength - 1)
+                                                            .attr('id', 'survey-droppable-' + layoutLength);
+
+                if (itemType == 'question') {
+                    // Remove final questionNumber from questionNumbers
+                    delete questionNumbers[oldQuestionNumber];
+                }
+            }
 
             // Save Layout
             this.saveLayout();
-            // Remove from DOM
-            $('#section-break-' + currentPosition).parent().remove();
-            // Update droppable ID
-            $('#survey-droppable-' + (layoutLength + 1)).data('page', pagesLength - 1)
-                                                        .attr('id', 'survey-droppable-' + layoutLength);
         },
 
         /**
@@ -2610,7 +2635,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             // Update list of Questions to select from
                             var currentPosition = tab.children().first().attr('href').split('-')[1],
                                 logicSelect = $('#logic-select-' + currentPosition),
-                                parts = tab.closest('.dl-item').attr('id').split('-'),
+                                parts = tab.closest('.survey-item').attr('id').split('-'),
                                 type = parts[0];
                             if (type == 'instruction') {
                                 logicSelect.html(self.logicOptionsHtml(null, currentPosition));
@@ -2622,7 +2647,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         } else if (tabText == 'Translation') {
                             // Copy original language to 'translate-from' div
                             var currentPosition = tab.children().first().attr('href').split('-')[1],
-                                parts = tab.closest('.dl-item').attr('id').split('-'),
+                                parts = tab.closest('.survey-item').attr('id').split('-'),
                                 type = parts[0];
                             if (type == 'instruction') {
                                 $('#do-l10n-' + currentPosition).prev().html($('#do-' + currentPosition).val());
