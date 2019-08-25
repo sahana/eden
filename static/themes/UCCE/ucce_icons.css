@@ -119,3 +119,39 @@
 .ucce-survey-preview:before {
   content: "\f122";
 }
+.ucce-smiley-1:before {
+  content: "\f129";
+}
+.ucce-smiley-2:before {
+  content: "\f12A";
+}
+.ucce-smiley-3:before {
+  content: "\f12B";
+}
+.ucce-smiley-4:before {
+  content: "\f12C";
+}
+.ucce-smiley-5:before {
+  content: "\f12D";
+}
+.ucce-smiley-6:before {
+  content: "\f12E";
+}
+.ucce-smiley-1-reverse:before {
+  content: "\f128";
+}
+.ucce-smiley-2-reverse:before {
+  content: "\f127";
+}
+.ucce-smiley-3-reverse:before {
+  content: "\f126";
+}
+.ucce-smiley-4-reverse:before {
+  content: "\f125";
+}
+.ucce-smiley-5-reverse:before {
+  content: "\f124";
+}
+.ucce-smiley-6-reverse:before {
+  content: "\f123";
+}
