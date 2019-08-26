@@ -473,6 +473,10 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         if (multiple > 1) {
                             multiChecked = ' checked';
                         }
+                    } else {
+                        // Add an empty row to hold the first choice
+                        choices = newChoice;
+                        choicesL10n = newChoiceL10n;
                     }
                     editTab = '<div class="media content active" id="edit-' + position + '">' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Multiple choice question</h2></div></div>' +
