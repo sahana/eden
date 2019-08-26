@@ -702,6 +702,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 thisLayout = layout[currentPosition];
                             thisLayout.do.text = $('#do-' + currentPosition).val();
                             thisLayout.say.text = $('#say-' + currentPosition).val();
+                            // Can't trust original l10n
+                            var l10n = self.data.l10n;
                             if (l10n) {
                                 if (!thisLayout.do.hasOwnProperty('10n')) {
                                     thisLayout.do.l10n = {};
@@ -3191,7 +3193,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 logicSelect = $('#logic-select-' + currentPosition),
                                 parts = tab.closest('.survey-item').attr('id').split('-'),
                                 type = parts[0];
-                            if (type == 'instruction') {
+                            if (type == 'instructions') {
                                 logicSelect.html(self.logicOptionsHtml(null, currentPosition));
                             } else {
                                 var questionID = parts[1];
@@ -3203,7 +3205,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             var currentPosition = tab.children().first().attr('href').split('-')[1],
                                 parts = tab.closest('.survey-item').attr('id').split('-'),
                                 type = parts[0];
-                            if (type == 'instruction') {
+                            if (type == 'instructions') {
                                 $('#do-l10n-' + currentPosition).prev().html($('#do-' + currentPosition).val());
                                 $('#say-l10n-' + currentPosition).prev().html($('#say-' + currentPosition).val());
                             } else {

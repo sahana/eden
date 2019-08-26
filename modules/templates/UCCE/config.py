@@ -608,12 +608,17 @@ def config(settings):
 
         # Custom Methods
         from templates.UCCE.controllers import dc_TemplateEditor
+        from templates.UCCE.controllers import dc_TemplateExportL10n
         from templates.UCCE.controllers import dc_TemplateSave
 
         set_method = s3db.set_method
         set_method("dc", "template",
                    method = "editor",
                    action = dc_TemplateEditor())
+
+        set_method("dc", "template",
+                   method = "export_l10n",
+                   action = dc_TemplateExportL10n())
 
         set_method("dc", "template",
                    method = "update_json",

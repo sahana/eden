@@ -39,6 +39,7 @@ from gluon import *
 from gluon.languages import read_dict, write_dict
 
 from ..s3 import *
+from s3compat import xrange
 from s3layouts import S3PopupLink
 
 # Compact JSON encoding
@@ -820,7 +821,7 @@ class DataCollectionTemplateModel(S3Model):
             translations = {}
 
         # Add ours
-        for i in range(len_options):
+        for i in xrange(len_options):
             original = s3_str(options[i])
             translated = s3_str(options_l10n[i])
             if original != translated:
@@ -1197,7 +1198,7 @@ class DataCollectionModel(S3Model):
                         raise ValueError("Code required for Grid Questions")
                     rows = [s3_str(T(v)) for v in grid[0]]
                     cols = [s3_str(T(v)) for v in grid[1]]
-                    fields = [[0 for x in range(len(rows))] for y in range(len(cols))]
+                    fields = [[0 for x in xrange(len(rows))] for y in xrange(len(cols))]
                     grids[code] = {"r": rows,
                                    "c": cols,
                                    "f": fields,

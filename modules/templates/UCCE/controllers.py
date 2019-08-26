@@ -6,6 +6,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3 import json, ICON, S3CustomController, S3Method
+from s3compat import StringIO, xrange
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -275,8 +276,8 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                            SPAN("export",
                                 _class = "show-for-sr",
                                 ),
-                           _href=URL(c="dc", f="target",
-                                     args=[target_id, "export"],
+                           _href=URL(c="dc", f="template",
+                                     args=[template_id, "export_l10n.xls"],
                                      ),
                            _title=T("Export"),
                            )
@@ -787,7 +788,7 @@ class dc_TargetActivate(S3Method):
                                                 #"label": _row.label,
                                                 }
 
-        for posn in range(1, len(layout) + 1):
+        for posn in xrange(1, len(layout) + 1):
             item = layout[str(posn)]
             item_type = item["type"]
             if item_type == "question":
@@ -1564,6 +1565,221 @@ class dc_TemplateEditor(S3Method):
                           "toolbar": toolbar,
                           }
 
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
+
+# =============================================================================
+class dc_TemplateExportL10n(S3Method):
+    """
+        Export the Strings from a Survey to be localised
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "template":
+            if r.representation == "xls":
+                # XLS export
+
+                #table = r.table
+                template_id = r.id
+                #if not current.auth.s3_has_permission("read", table, record_id=template_id):
+                #    r.unauthorised()
+
+                from s3.codecs.xls import S3XLS
+
+                try:
+                    import xlwt
+                except ImportError:
+                    r.error(503, S3XLS.ERROR.XLWT_ERROR)
+
+                record = r.record
+                layout = record.layout
+
+                if not layout:
+                    current.session.warning = current.T("No Layout yet defined")
+                    redirect("/%s/dc/template/%s/editor" % (r.application, r.id))
+
+                # Extract Data
+                db = current.db
+                s3db = current.s3db
+
+                tltable = s3db.dc_template_l10n
+                l10n = db(tltable.template_id == template_id).select(tltable.language,
+                                                                     limitby = (0, 1)
+                                                                     ).first()
+                if l10n:
+                    l10n = l10n.language
+
+                instructions = {}
+                questions = []
+                qappend = questions.append
+                question_ids = []
+                qiappend = question_ids.append
+
+                for position in layout:
+                    item = layout[position]
+                    item_type = item["type"]
+                    if item_type == "instructions":
+                        do = item["do"]
+                        do_l10n = None
+                        say = item["say"]
+                        say_l10n = None
+                        if l10n:
+                            do_l10n = do.get("l10n")
+                            if do_l10n:
+                                do_l10n = do_l10n.get(l10n)
+                            say_l10n = say.get("l10n")
+                            if say_l10n:
+                                say_l10n = say_l10n.get(l10n)
+                        if not do_l10n:
+                            do_l10n = ""
+                        if not say_l10n:
+                            say_l10n = ""
+                        position = int(position)
+                        instructions[position] = {"position": position,
+                                                  "do": do["text"],
+                                                  "say": say["text"],
+                                                  "do_l10n": do_l10n,
+                                                  "say_l10n": say_l10n,
+                                                  }
+                    elif item_type == "questions":
+                        qiappend(question["id"])
+                        qappend(question)
+
+                sorted_instructions = []
+                sappend = sorted_instructions.append
+                for position in sorted(instructions.keys()):
+                    sappend(instructions[position])
+
+                qtable = s3db.dc_question
+                fields = [qtable.id,
+                          qtable.name,
+                          qtable.options,
+                          ]
+                if l10n:
+                    qltable = s3db.dc_question_l10n
+                    left = qltable.on(qltable.question_id == qtable.id)
+                else:
+                    left = None
+                questions = db(qtable.id.belongs(question_ids)).select(left = left,
+                                                                       *fields
+                                                                       )
+                max_options = 0
+                for q in questions:
+                    if l10n:
+                        options = q["dc_question.options"]
+                    else:
+                        options = q.options
+                    options_length = len(options)
+                    if options_length > max_options:
+                        max_options = options_length
+
+                # Create the workbook
+                book = xlwt.Workbook(encoding="utf-8")
+
+                COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
+
+                # Add sheet
+                sheet = book.add_sheet("Instructions")
+
+                labels = ["Template",
+                          "Position",
+                          "Do",
+                          "Translated Do",
+                          "Say",
+                          "Translated Say",
+                          ]
+
+                # Set column Widths
+                col_index = 0
+                column_widths = []
+                for label in labels:
+                    width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
+                    width = min(width, 65535) # USHRT_MAX
+                    column_widths.append(width)
+                    sheet.col(col_index).width = width
+                    col_index += 1
+
+                # 1st row => Column Titles
+                current_row = sheet.row(0)
+                write = current_row.write
+                for i in xrange(6):
+                    write(i, labels[i])
+
+                # Data rows
+                for i in xrange(len(sorted_instructions)):
+                    instructions = sorted_instructions[i]
+                    current_row = sheet.row(i + 1)
+                    write = current_row.write
+                    write(0, template_id)
+                    write(1, instructions["position"])
+                    write(2, instructions["do"])
+                    write(3, instructions["do_l10n"])
+                    write(4, instructions["say"])
+                    write(5, instructions["say_l10n"])
+
+
+                # Add sheet
+                sheet = book.add_sheet("Questions")
+
+                labels = ["Template",
+                          "Question ID",
+                          "Question",
+                          "Translated Question",
+                          ]
+                for i in xrange(1, max_options + 1):
+                    labels += ["Option %s" % i,
+                               "Translated Option %s" % i,
+                               ]
+
+                # Set column Widths
+                col_index = 0
+                column_widths = []
+                for label in labels:
+                    width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
+                    width = min(width, 65535) # USHRT_MAX
+                    column_widths.append(width)
+                    sheet.col(col_index).width = width
+                    col_index += 1
+
+                # 1st row => Column Titles
+                current_row = sheet.row(0)
+                write = current_row.write
+                for i in xrange(len(labels)):
+                    write(i, labels[i])
+
+                # Export to File
+                output = StringIO()
+                try:
+                    book.save(output)
+                except:
+                    import sys
+                    error = sys.exc_info()[1]
+                    current.log.error(error)
+                output.seek(0)
+
+                # Response headers
+                title = record.name
+                filename = "%s.xls" % title.encode("utf8")
+                response = current.response
+                from gluon.contenttype import contenttype
+                response.headers["Content-Type"] = contenttype(".xls")
+                disposition = "attachment; filename=\"%s\"" % filename
+                response.headers["Content-disposition"] = disposition
+
+                return output.read()
+                
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
         else:
