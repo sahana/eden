@@ -185,7 +185,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
           */
         _addQuestion: function(position, page, type, questionID, load) {
 
-            var l10n = this.data.l10n,
+            var item,
+                l10n = this.data.l10n,
                 questionNumber,
                 layout = this.data.layout,
                 questions = this.data.questions,
@@ -202,19 +203,18 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             } else {
                 if (type != 'instructions') {
                     // Determine QuestionNumber
-                    var questionNumbersLength = Object.keys(questionNumbers);
+                    var questionNumbersLength = Object.keys(questionNumbers).length;
                     if (questionNumbersLength) {
-                        var layoutLength = layout.length;
-                        if (position > layoutLength) {
+                        if (position > Object.keys(layout).length) {
                             // Final item
                             questionNumber = questionNumbersLength + 1;
                         } else {
                             // Locate the previous Question in the layout
-                            var item;
+                            var thisItem;
                             for (var p=position - 1; p > 0; p--) {
-                                item = layout[p];
-                                if (item.type == 'question') {
-                                    var previousQuestionID = item.id,
+                                thisItem = layout[p];
+                                if (thisItem.type == 'question') {
+                                    var previousQuestionID = thisItem.id,
                                         previousQuestionNumber = $('#question-' + previousQuestionID).data('number');
                                     questionNumber = previousQuestionNumber + 1;
                                     break;
@@ -251,6 +251,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 optionsHtml,
                 logicTab,
                 mandatory,
+                moveUp,
+                moveDown,
                 question,
                 settings,
                 thisQuestion,
@@ -269,12 +271,16 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 formElements = '#instructions-' + position + ' input, #instructions-' + position + ' select';
                 itemSelector = '#instructions-' + position;
                 trash = '#instructions-' + position + ' .ucce-delete';
+                moveUp = '#instructions-' + position + ' .ucce-up';
+                moveDown = '#instructions-' + position + ' .ucce-down';
             } else {
                 idHtml = 'question-' + questionID;
                 dataHtml = ' data-number="' + questionNumber + '"';
                 formElements = '#question-' + questionID + ' input, #question-' + questionID + ' select';
                 itemSelector = '#question-' + questionID;
                 trash = '#question-' + questionID + ' .ucce-delete';
+                moveUp = '#question-' + questionID + ' .ucce-up';
+                moveDown = '#question-' + questionID + ' .ucce-down';
                 var checked = '';
                 thisQuestion = questions[questionID];
                 settings = thisQuestion.settings || {};
@@ -606,23 +612,23 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             question += translationTab;
             question += '</div></div>';
 
+            if (type == 'instructions') {
+                item = {
+                    type: 'instructions',
+                    do: {text: ''},
+                    say: {text: ''}
+                };
+            } else{
+                item = {
+                    type: 'question',
+                    id: questionID
+                };
+            }
+
             if (!load) {
                 // Update the elements on the section
                 // Add to Layout
                 // Save Layout
-                var item;
-                if (type == 'instructions') {
-                    item = {
-                        type: 'instructions',
-                        do: {text: ''},
-                        say: {text: ''}
-                    };
-                } else{
-                    item = {
-                        type: 'question',
-                        id: questionID
-                    };
-                }
                 this.rePosition(item, null, position);
             }
 
@@ -854,13 +860,13 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                             }
 
                                             // Update the Pipe Options HTML for each question
-                                            var item,
+                                            var thatItem,
                                                 thatQuestionID,
                                                 thatQuestion;
                                             for (var position=1; position <= Object.keys(layout).length; position++) {
-                                                item = layout[position];
-                                                if (item.type == 'question') {
-                                                    thatQuestionID = item.id;
+                                                thatItem = layout[position];
+                                                if (thatItem.type == 'question') {
+                                                    thatQuestionID = thatItem.id;
                                                     thatQuestion = questions[thatQuestionID];
                                                     if (thatQuestion.type != 13) {
                                                         $('#pipe-' + thatQuestionID).empty()
@@ -892,6 +898,66 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 $(trash).on('click' + ns, function(/* event */) {
                     // Delete the Question
                     self.deleteQuestion(type, questionID, this);
+                });
+                $(moveUp).on('click' + ns, function(/* event */) {
+                    var currentPosition;
+                    if (type == 'instructions') {
+                        currentPosition = parseInt($(this).closest('.survey-item').attr('id').split('-')[1]);
+                    } else {
+                        // Question
+                        var currentQuestionNumber = $(this).closest('.survey-item').data('number');
+                        currentPosition = questionNumbers[currentQuestionNumber];
+                    }
+                    if (currentPosition > 1) {
+                        var newPosition = currentPosition - 1;
+                        // Update DOM
+                        var movingItem;
+                        if (type == 'instructions') {
+                            movingItem = $('#instructions-' + currentPosition).detach();
+                        } else {
+                            movingItem = $('#question-' + questionID).detach();
+                        }
+                        if (layout[newPosition].type == 'question') {
+                            $('#question-' + layout[newPosition].id).before(movingItem);
+                        } else if (layout[newPosition].type == 'instructions') {
+                            $('#instructions-' + newPosition).before(movingItem);
+                        } else {
+                            // Moving after Section Break
+                            $('#section-break-' + newPosition).parent().before(movingItem);
+                        }
+                        // Update Layout & IDs
+                        self.rePosition(item, currentPosition, newPosition);
+                    }
+                });
+                $(moveDown).on('click' + ns, function(/* event */) {
+                    var currentPosition;
+                    if (type == 'instructions') {
+                        currentPosition = parseInt($(this).closest('.survey-item').attr('id').split('-')[1]);
+                    } else {
+                        // Question
+                        var currentQuestionNumber = $(this).closest('.survey-item').data('number');
+                        currentPosition = questionNumbers[currentQuestionNumber];
+                    }
+                    if (currentPosition < Object.keys(layout).length) {
+                        var newPosition = currentPosition + 1;
+                        // Update DOM
+                        var movingItem;
+                        if (type == 'instructions') {
+                            movingItem = $('#instructions-' + currentPosition).detach();
+                        } else {
+                            movingItem = $('#question-' + questionID).detach();
+                        }
+                        if (layout[newPosition].type == 'question') {
+                            $('#question-' + layout[newPosition].id).after(movingItem);
+                        } else if (layout[newPosition].type == 'instructions') {
+                            $('#instructions-' + newPosition).after(movingItem);
+                        } else {
+                            // Moving after Section Break
+                            $('#section-break-' + newPosition).parent().after(movingItem);
+                        }
+                        // Update Layout & IDs
+                        self.rePosition(item, currentPosition, newPosition);
+                    }
                 });
             }
 
@@ -1013,10 +1079,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             }
                             if (value) {
                                 // Remove any outdated displayLogic
+                                var thisItem;
                                 for (var i=currentPosition + 1, len=Object.keys(layout).length; i <= len; i++) {
-                                    item = layout[i];
-                                    if (item.displayLogic && item.displayLogic.id == questionID && item.displayLogic.eq == value) {
-                                        delete item.displayLogic;
+                                    thisItem = layout[i];
+                                    if (thisItem.displayLogic && thisItem.displayLogic.id == questionID && thisItem.displayLogic.eq == value) {
+                                        delete thisItem.displayLogic;
                                         $('#logic-select-' + i).val('')
                                                                .trigger('change');
                                     }
@@ -1155,11 +1222,12 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             }
                             // Remove any outdated displayLogic
                             var currentPosition = parseInt($(this).closest('.media').attr('id').split('-')[1]),
+                                thisItem,
                                 layoutLength = Object.keys(layout).length;
                             for (var i=currentPosition + 1; i <= layoutLength; i++) {
-                                item = layout[i];
-                                if (item.displayLogic && item.displayLogic.id == questionID && item.displayLogic.eq == index) {
-                                    delete item.displayLogic;
+                                thisItem = layout[i];
+                                if (thisItem.displayLogic && thisItem.displayLogic.id == questionID && thisItem.displayLogic.eq == index) {
+                                    delete thisItem.displayLogic;
                                     $('#logic-select-' + i).val('')
                                                            .trigger('change');
                                 }
@@ -1168,9 +1236,9 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             var thisQuestionID,
                                 thisQuestionSettings;
                             for (var i=1; i <= layoutLength; i++) {
-                                item = layout[i];
-                                if (item.type == 'question') {
-                                    thisQuestionID = item.id;
+                                thisItem = layout[i];
+                                if (thisItem.type == 'question') {
+                                    thisQuestionID = thisItem.id;
                                     thisQuestionSettings = questions[thisQuestionID].settings;
                                     if (thisQuestionSettings.pipeImage && thisQuestionSettings.pipeImage.id == questionID && thisQuestionSettings.pipeImage.region == index) {
                                         delete thisQuestionSettings.pipeImage;
@@ -2161,9 +2229,17 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     newPage = 1;
                     newQuestionNumber = 1;
                 } else {
-                    var previousPosition = newPosition - 1,
-                        previousItem = layout[previousPosition],
+                    var previousPosition;
+                    
+                    if (currentPosition == newPosition - 1) {
+                        // moveDown (by 1)
+                        previousPosition = newPosition;
+                    } else {
+                        previousPosition = newPosition - 1;
+                    }
+                    var previousItem = layout[previousPosition],
                         previousType = previousItem.type;
+
                     if (previousType == 'instructions') {
                         newPage = $('#instructions-' + previousPosition).data('page');
                     } else if (previousType == 'question') {
@@ -2175,37 +2251,40 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     } else if (previousType == 'break') {
                         newPage = $('#section-break-' + previousPosition).data('page');
                     }
-                    var questionNumbersLength = Object.keys(questionNumbers);
-                    if (questionNumbersLength) {
-                        if (newPosition > layoutLength) {
-                            // Final item
-                            if (currentPosition) {
-                                // Move, so this becomes final
-                                newQuestionNumber = questionNumbersLength;
+
+                    if (itemType == 'question') {
+                        var questionNumbersLength = Object.keys(questionNumbers).length;
+                        if (questionNumbersLength) {
+                            if (newPosition > layoutLength) {
+                                // Final item
+                                if (currentPosition) {
+                                    // Move, so this becomes final
+                                    newQuestionNumber = questionNumbersLength;
+                                } else {
+                                    // Create, so this is appended to final
+                                    newQuestionNumber = questionNumbersLength + 1;
+                                }
                             } else {
-                                // Create, so this is appended to final
-                                newQuestionNumber = questionNumbersLength + 1;
-                            }
-                        } else {
-                            // Locate the previous Question in the layout
-                            var thisItem;
-                            for (var p=newPosition - 1; p > 0; p--) {
-                                thisItem = layout[p];
-                                if (thisItem.type == 'question') {
-                                    var previousQuestionID = thisItem.id,
-                                        previousQuestionNumber = $('#question-' + previousQuestionID).data('number');
-                                    newQuestionNumber = previousQuestionNumber + 1;
-                                    break;
+                                // Locate the previous Question in the layout
+                                var thisItem;
+                                for (var p=newPosition - 1; p > 0; p--) {
+                                    thisItem = layout[p];
+                                    if (thisItem.type == 'question') {
+                                        var previousQuestionID = thisItem.id,
+                                            previousQuestionNumber = $('#question-' + previousQuestionID).data('number');
+                                        newQuestionNumber = previousQuestionNumber + 1;
+                                        break;
+                                    }
+                                }
+                                if (!newQuestionNumber) {
+                                    // Existing Questions must only be later in the layout
+                                    newQuestionNumber = 1;
                                 }
                             }
-                            if (!newQuestionNumber) {
-                                // Existing Questions must only be later in the layout
-                                newQuestionNumber = 1;
-                            }
+                        } else {
+                            // First Question
+                            newQuestionNumber = 1;
                         }
-                    } else {
-                        // First Question
-                        newQuestionNumber = 1;
                     }
                 }
                 if (itemType == 'break') {
@@ -2214,11 +2293,199 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             }
 
             // Update Layout
-            if (newPosition & currentPosition) {
+            if (currentPosition && newPosition) {
                 // Move
-                // @ToDo
-                if (currentPage != newPage) {
-                    // Fix the Pages
+                if (currentPosition == newPosition - 1 || currentPosition == newPosition + 1) {
+                    // moveDown (by 1) or moveUp (by 1)
+                    var swapItem = layout[newPosition],
+                        swapItemType = swapItem.type;
+
+                    if (swapItemType == 'break') {
+
+                        var currentItem = layout[currentPosition],
+                            $currentItem,
+                            oldHref,
+                            newHref;
+
+                        // Swap items in layout
+                        layout[currentPosition] = swapItem;
+                        layout[newPosition] = currentItem;
+
+                        if (oldQuestionNumber) {
+                            $currentItem = $('#question-' + questionID);
+                        } else {
+                            $currentItem = $('#instructions-' + currentPosition);
+                        }
+
+                        // Update Pages
+                        $currentItem.data('page', newPage);
+
+                        $('#section-break-' + newPosition).attr('id', 'section-break-' + currentPosition);
+                        if (currentPosition == newPosition - 1) {
+                            // moveDown
+                            pages[newPage] = currentPosition;
+                        } else {
+                            // moveUp
+                            pages[currentPage] = currentPosition;
+                        }
+                        pageElements[currentPage] --;
+                        pageElements[newPage] ++;
+                        // Update visual elements
+                        $('#section-break-' + pages[currentPage] + ' > span').html('PAGE ' + currentPage + ' (' + pageElements[currentPage] + ' ELEMENTS)');
+                        $('#section-break-' + pages[newPage] + ' > span').html('PAGE ' + newPage + ' (' + pageElements[newPage] + ' ELEMENTS)');
+
+                        // Update IDs
+                        if (itemType == 'instructions') {
+                            $('#instructions-' + currentPosition).attr('id', 'instructions-' + newPosition);
+                            $('#do-' + currentPosition).attr('id', 'do-' + newPosition);
+                            $('#say-' + currentPosition).attr('id', 'say-' + newPosition);
+                            $('#do-l10n-' + currentPosition).attr('id', 'do-' + newPosition);
+                            $('#say-l10n-' + currentPosition).attr('id', 'say-' + newPosition);
+                        } else {
+                            // questionNumber unchanged but position has
+                            questionNumbers[oldQuestionNumber] = newPosition;
+                        }
+                        // Update Tab contents
+                        $('#edit-' + currentPosition).attr('id', 'edit-' + newPosition);
+                        $('#logic-' + currentPosition).attr('id', 'logic-' + newPosition);
+                        $('#logic-select-' + currentPosition).attr('id', 'logic-select-' + newPosition);
+                        $('#sub-logic-select-' + currentPosition).attr('id', 'sub-logic-select-' + newPosition);
+                        $('#logic-operator-1-' + currentPosition).attr('id', 'logic-operator-1-' + newPosition);
+                        $('#logic-operator-2-' + currentPosition).attr('id', 'logic-operator-2-' + newPosition);
+                        $('#logic-term-1-' + currentPosition).attr('id', 'logic-term-1-' + newPosition);
+                        $('#logic-term-2-' + currentPosition).attr('id', 'logic-term-2-' + newPosition);
+                        $('#translation-' + currentPosition).attr('id', 'translation-' + newPosition);
+                        // Update links to Tabs
+                        $currentItem.find('li.tab-title > a').each(function() {
+                            var $this = $(this);
+                            oldHref = $this.attr('href');
+                            newHref = oldHref.split('-')[0];
+                            newHref = newHref.substring(1, newHref.length);
+                            $this.attr('href', '#' + newHref + '-' + newPosition);
+                        });
+
+                    } else {
+                        // Simple swap of items (no need to touch pages)
+                        var currentItem = layout[currentPosition];
+                        layout[currentPosition] = swapItem;
+                        layout[newPosition] = currentItem;
+
+                        var $currentItem,
+                            $swapItem,
+                            oldHref,
+                            newHref,
+                            swapQuestionID = swapItem.id;
+
+                        if (oldQuestionNumber) {
+                            $currentItem = $('#question-' + questionID);
+                        } else {
+                            $currentItem = $('#instructions-' + currentPosition);
+                        }
+
+                        if (swapItemType == 'question') {
+                            $swapItem = $('#question-' + swapQuestionID);
+                        } else {
+                            $swapItem = $('#instructions-' + newPosition);
+                        }
+
+                        if (oldQuestionNumber && swapItemType == 'question') {
+                            // Swap Question Numbers (no need to update questionNumbers as that remains the same)
+
+                            $currentItem.data('number', newQuestionNumber);
+                            // Update visual elements
+                            $('#qlabel-' + questionID).html('Q' + newQuestionNumber);
+                            $('#qlabel-l10n-' + questionID).html('Q' + newQuestionNumber);
+
+                            $swapItem.data('number', oldQuestionNumber);
+                            // Update visual elements
+                            $('#qlabel-' + swapQuestionID).html('Q' + oldQuestionNumber);
+                            $('#qlabel-l10n-' + swapQuestionID).html('Q' + oldQuestionNumber);
+                        } else {
+                            if (oldQuestionNumber) {
+                                // questionNumber unchanged but position has
+                                questionNumbers[oldQuestionNumber] = newPosition;
+                            } else if (swapItemType == 'question') {
+                                // questionNumber unchanged but position has
+                                var swapQuestionNumber = $swapItem.data('number');
+                                questionNumbers[swapQuestionNumber] = currentPosition;
+                            }
+                        }
+
+                        // Update swapItem IDs to an interim value
+                        if (swapItemType == 'instructions') {
+                            $('#instructions-' + newPosition).attr('id', 'instructions-' + 'interim');
+                            $('#do-' + newPosition).attr('id', 'do-' + 'interim');
+                            $('#say-' + newPosition).attr('id', 'say-' + 'interim');
+                            $('#do-l10n-' + newPosition).attr('id', 'do-' + 'interim');
+                            $('#say-l10n-' + newPosition).attr('id', 'say-' + 'interim');
+                        }
+                        // Update Tab contents
+                        $('#edit-' + newPosition).attr('id', 'edit-' + 'interim');
+                        $('#logic-' + newPosition).attr('id', 'logic-' + 'interim');
+                        $('#logic-select-' + newPosition).attr('id', 'logic-select-' + 'interim');
+                        $('#sub-logic-select-' + newPosition).attr('id', 'sub-logic-select-' + 'interim');
+                        $('#logic-operator-1-' + newPosition).attr('id', 'logic-operator-1-' + 'interim');
+                        $('#logic-operator-2-' + newPosition).attr('id', 'logic-operator-2-' + 'interim');
+                        $('#logic-term-1-' + newPosition).attr('id', 'logic-term-1-' + 'interim');
+                        $('#logic-term-2-' + newPosition).attr('id', 'logic-term-2-' + 'interim');
+                        $('#translation-' + newPosition).attr('id', 'translation-' + 'interim');
+
+                        // Update currentItem IDs to swapItem values
+                        if (itemType == 'instructions') {
+                            $('#instructions-' + currentPosition).attr('id', 'instructions-' + newPosition);
+                            $('#do-' + currentPosition).attr('id', 'do-' + newPosition);
+                            $('#say-' + currentPosition).attr('id', 'say-' + newPosition);
+                            $('#do-l10n-' + currentPosition).attr('id', 'do-' + newPosition);
+                            $('#say-l10n-' + currentPosition).attr('id', 'say-' + newPosition);
+                        }
+                        // Update Tab contents
+                        $('#edit-' + currentPosition).attr('id', 'edit-' + newPosition);
+                        $('#logic-' + currentPosition).attr('id', 'logic-' + newPosition);
+                        $('#logic-select-' + currentPosition).attr('id', 'logic-select-' + newPosition);
+                        $('#sub-logic-select-' + currentPosition).attr('id', 'sub-logic-select-' + newPosition);
+                        $('#logic-operator-1-' + currentPosition).attr('id', 'logic-operator-1-' + newPosition);
+                        $('#logic-operator-2-' + currentPosition).attr('id', 'logic-operator-2-' + newPosition);
+                        $('#logic-term-1-' + currentPosition).attr('id', 'logic-term-1-' + newPosition);
+                        $('#logic-term-2-' + currentPosition).attr('id', 'logic-term-2-' + newPosition);
+                        $('#translation-' + currentPosition).attr('id', 'translation-' + newPosition);
+                        // Update links to Tabs
+                        $currentItem.find('li.tab-title > a').each(function() {
+                            var $this = $(this);
+                            oldHref = $this.attr('href');
+                            newHref = oldHref.split('-')[0];
+                            newHref = newHref.substring(1, newHref.length);
+                            $this.attr('href', '#' + newHref + '-' + newPosition);
+                        });
+
+                        // Update swapItem IDs to currentItem values
+                        if (swapItemType == 'instructions') {
+                            $('#instructions-' + 'interim').attr('id', 'instructions-' + currentPosition);
+                            $('#do-' + 'interim').attr('id', 'do-' + currentPosition);
+                            $('#say-' + 'interim').attr('id', 'say-' + currentPosition);
+                            $('#do-l10n-' + 'interim').attr('id', 'do-' + currentPosition);
+                            $('#say-l10n-' + 'interim').attr('id', 'say-' + currentPosition);
+                        }
+                        // Update Tab contents
+                        $('#edit-' + 'interim').attr('id', 'edit-' + currentPosition);
+                        $('#logic-' + 'interim').attr('id', 'logic-' + currentPosition);
+                        $('#logic-select-' + 'interim').attr('id', 'logic-select-' + currentPosition);
+                        $('#sub-logic-select-' + 'interim').attr('id', 'sub-logic-select-' + currentPosition);
+                        $('#logic-operator-1-' + 'interim').attr('id', 'logic-operator-1-' + currentPosition);
+                        $('#logic-operator-2-' + 'interim').attr('id', 'logic-operator-2-' + currentPosition);
+                        $('#logic-term-1-' + 'interim').attr('id', 'logic-term-1-' + currentPosition);
+                        $('#logic-term-2-' + 'interim').attr('id', 'logic-term-2-' + currentPosition);
+                        $('#translation-' + 'interim').attr('id', 'translation-' + currentPosition);
+                        // Update links to Tabs
+                        $swapItem.find('li.tab-title > a').each(function() {
+                            var $this = $(this);
+                            oldHref = $this.attr('href');
+                            newHref = oldHref.split('-')[0];
+                            newHref = newHref.substring(1, newHref.length);
+                            $this.attr('href', '#' + newHref + '-' + currentPosition);
+                        });
+                    }
+                } else {
+                    // @ToDo (beyond requirements for UCCE)
                 }
             } else if (newPosition) {
                 // Create
