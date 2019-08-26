@@ -295,7 +295,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
             question = '<div class="thumbnail dl-item survey-item" id="' + idHtml + '" data-page="' + page + '"' + dataHtml + '>' + 
                        '<div class="card-header"><ul class="tabs fleft" data-tab><li class="tab-title active"><a href="#edit-' + position + '">Edit</a></li><li class="tab-title"><a href="#logic-' + position + '">Display logic</a></li> ' + translationTitle + '</ul>' +
-                       '<div class="edit-bar fright"><a><i class="ucce ucce-duplicate"> </i></a><a><i class="ucce ucce-delete"> </i></a><i class="ucce ucce-up"> </i><i class="ucce ucce-down"> </i></div>' + 
+                       '<div class="edit-bar fright"><a><i class="ucce ucce-duplicate"> </i></a><a><i class="ucce ucce-delete"> </i></a><div class="fright"><div class="move-up"><i class="ucce ucce-up"> </i></div><div class="move-down"><i class="ucce ucce-down"> </i></div></div></div>' + 
                        '</div>' + 
                        '<div class="tabs-content">';
 

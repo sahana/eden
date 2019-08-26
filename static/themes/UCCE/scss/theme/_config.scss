@@ -8,8 +8,11 @@
 // Side menu border and background colors
 //$side_bar_bgcolor: #d7d8d9;
 //$side_bar_bgcolor_active: #e0e1e2;
+$side_bar_bgcolor: $prussian-blue;
+$side_bar_bgcolor_active: $coral;
 //$side_bar_border_color: #c0c1c2;
 //$side_bar_divider_color: $side_bar_border_color;
+$side_bar_divider_color: transparent;
 
 // ============================================================================
 // RHEADERS
@@ -32,6 +35,8 @@
 // Action buttons defaults
 //$action_btn_bgcolor: $button-bg-color;
 //$action_btn_bgcolor_hover: $button-bg-hover;
+//$action_btn_bgcolor: $coral;
+//$action_btn_bgcolor_hover: $persian-green;
 //$action_btn_fgcolor: white;
 //$action_btn_fgcolor_hover: white;
 

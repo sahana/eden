@@ -18,7 +18,7 @@ $(document).ready(function(){
     checkboxes.off('.ucce')
               .on('change.ucce', function() {
         if (checkboxes.not(':checked').length == 0) {
-            $('.button.disabled').removeClass('disabled').addClass('alert');
+            $('.button.disabled').removeClass('disabled');
         }
     });
 });

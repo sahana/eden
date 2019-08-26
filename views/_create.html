@@ -1,7 +1,7 @@
 <div class='row'>
  <div class='small-12 columns'>
   {{try:}}{{=H2(title)}}{{except:}}{{pass}}
-  {{try:}}{{=s3db.ocr_buttons(r)}}{{except:}}{{pass}}
+  {{#try:=s3db.ocr_buttons(r)except:pass}}
  </div>
 </div>
 <div id='rheader' class='row'>

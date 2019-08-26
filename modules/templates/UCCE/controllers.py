@@ -221,7 +221,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                 _title = T("Edit survey") # Used in popup as well as popover
                 _class = "s3_modal"
 
-            edit_btn = A(ICON("edit"),
+            edit_btn = A(ICON("survey-edit"),
                          SPAN("edit",
                               _class = "show-for-sr",
                               ),
@@ -233,7 +233,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
             edit_btn = ""
 
         if permit("delete", ttable, record_id=target_id):
-            delete_btn = A(ICON("delete"),
+            delete_btn = A(ICON("survey-delete"),
                            SPAN("delete",
                                 _class = "show-for-sr",
                                 ),
@@ -249,7 +249,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
         else:
             delete_btn = ""
         if permit("create", ttable):
-            copy_btn = A(ICON("copy"),
+            copy_btn = A(ICON("survey-copy"),
                          SPAN("copy",
                               _class = "show-for-sr",
                              ),
@@ -421,8 +421,8 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                    _class="media",
                    ),
                DIV(SPAN("Master key: %s" % master_key,
-                        _class="card-title"),
-                   _class="card-header",
+                        ),
+                   _class="card-footer",
                    ),
                _class="thumbnail",
                _id=item_id,
@@ -696,7 +696,7 @@ class dc_TargetActivate(S3Method):
                 action_btn = A(T("Activate survey"),
                                _href=URL(c="dc", f="target",
                                          args=[r.id, "activate"]),
-                               _class="button alert round",
+                               _class="button round",
                                _target="_top",
                                )
 
@@ -764,7 +764,7 @@ class dc_TargetActivate(S3Method):
             return
 
         # Convert dc_template.layout to s3_table.settings["mobile_form"]
-        layout = template.layout
+        layout = template.layout or []
         mobile_form = []
         mappend = mobile_form.append
 
@@ -1285,7 +1285,7 @@ class dc_TemplateEditor(S3Method):
                                _href=URL(c="dc", f="target",
                                          args=[target_id, "activate.popup"],
                                          ),
-                               _class="button round alert tiny s3_modal",
+                               _class="button round tiny s3_modal",
                                _title=T("Activate Survey"),
                                )
                     read_only = False
@@ -1295,7 +1295,7 @@ class dc_TemplateEditor(S3Method):
                                _href=URL(c="dc", f="target",
                                          args=[target_id, "edit_confirm.popup"],
                                          ),
-                               _class="button round alert tiny s3_modal",
+                               _class="button round tiny s3_modal",
                                _title=T("Edit Survey"),
                                )
                 else:
@@ -1462,10 +1462,11 @@ class dc_TemplateEditor(S3Method):
                                   _class="row",
                                   ),
                               DIV(A(T("Upload translation"),
-                                    _class="button tiny fright",
+                                    _class="button tiny round fright",
                                     ),
                                   _class="row",
                                   ),
+                              _id = "question-bar",
                               )
 
                 hidden_input = INPUT(_type = "hidden",

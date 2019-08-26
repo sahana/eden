@@ -31,6 +31,7 @@
   } */
 }
 
+/*
 .card-title2 {
   border-left: 1px solid rgba(0, 0, 0, 0.1);
   padding-left: 10px;
@@ -100,24 +101,32 @@ a h5.media-heading {
     color: #0187cc;
   }
 }
+*/
 
 /* Edit Toolbar */
 
 .edit-bar {
-  color: #8a8989;
+  /* color: #8a8989; */
+  color: white;
   font-size: 14px;
   position: relative;
   top: 4px;
+  a {
+    padding: 0 5px;
+  }
   .icon-bookmark, .icon-bookmark-empty, .icon-edit, .icon-link, .icon-file-alt, .icon-paperclip, .icon-trash, .icon-remove-sign {
-    color: #999;
+    /* color: #999; */
+    color: white;
     padding-left: 2px;
   }
   a, .icon-bookmark:hover, .icon-bookmark-empty:hover, .icon-edit:hover, .icon-link:hover, .icon-file-alt:hover, .icon-paperclip:hover {
-    color: #0095fe;
+    /* color: #0095fe; */
+    color: white;
     text-decoration: none;
   }
   .icon-trash:hover, .icon-remove-sign:hover {
-    color: #E74C3C;
+    /* color: #E74C3C; */
+    color: white;
     text-decoration: none;
   }
 }
@@ -163,6 +172,10 @@ a h5.media-heading {
   margin: -3px -5px;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
+  //background-color: $prussian-blue;
+  background-color: #023859;
+  height: 3rem;
+  /*
   background: rgba(255, 255, 255, 1);
   background: -moz-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
   background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(255, 255, 255, 1)), color-stop(47%, rgba(246, 246, 246, 1)), color-stop(100%, rgba(237, 237, 237, 1)));
@@ -171,10 +184,23 @@ a h5.media-heading {
   background: -ms-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
   background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );
+  */
+}
+
+.card-footer {
+  border-bottom: 1px solid #bdbdbb;
+  padding: 5px;
+  margin: -3px -5px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  background-color: #EEEEEE; // $white-smoke
 }
 
 .card-title {
+  color: white;
+  /*
   font-size: 14px;
   text-shadow: 0 1px 0 white;
   letter-spacing: -1px;
+  */
 }

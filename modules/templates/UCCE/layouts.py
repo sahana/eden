@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from gluon import A, DIV, LI, UL
+from gluon import A, DIV, TAG
 from s3 import ICON, S3NavigationItem
-from s3theme import NAV
+#from s3theme import NAV
 
 # =============================================================================
 class S3OptionsMenuLayout(S3NavigationItem):
@@ -23,7 +23,13 @@ class S3OptionsMenuLayout(S3NavigationItem):
             visible = True
 
         if enabled and visible:
-            if item.parent is not None:
+            if item.parent is None:
+                # Main menu
+                items = item.render_components()
+                return DIV(items, _id="main-sub-menu", _class="icon-bar vertical three-up")
+
+            else:   
+                # Menu item
                 if item.enabled and item.authorized:
 
                     attr = {"_id": item.attr._id}
@@ -32,60 +38,21 @@ class S3OptionsMenuLayout(S3NavigationItem):
                     else:
                         attr["_href"] = item.url()
 
-                    if item.components:
-                        # Submenu
-                        items = item.render_components()
-
-                        # Hide submenus which have no active links
-                        if not items and not item.link:
-                            return None
-
-                        _class = ""
-                        if item.parent.parent is None and item.selected:
-                            _class = "active"
-
-                        icon = item.opts.icon
-                        if icon:
-                            icon = ICON(icon)
-                        else:
-                            icon = ""
-
-                        section = [LI(icon,
-                                      A(item.label,
-                                        **attr
-                                        ),
-                                      _class="heading %s" % _class,
-                                      ),
-                                   ]
-
-                        if items:
-                            section.append(UL(items))
-                        return section
-
+                    if item.selected:
+                        attr["_class"] = "active item"
                     else:
-                        # Submenu item
-                        if item.parent.parent is None:
-                            _class = "heading"
-                        else:
-                            _class = ""
+                        attr["_class"] = "item"
 
-                        icon = item.opts.icon
-                        if icon:
-                            icon = ICON(icon)
-                        else:
-                            icon = ""
+                    icon = item.opts.icon
+                    if icon:
+                        icon = ICON(icon)
+                    else:
+                        icon = ""
 
-                        return LI(A(icon,
-                                    item.label,
-                                    **attr
-                                    ),
-                                  _class=_class,
-                                  )
-            else:
-                # Main menu
-                items = item.render_components()
-                return DIV(NAV(UL(items, _id="main-sub-menu", _class="side-nav")), _class="sidebar")
-
+                    return A(icon,
+                             TAG["label"](item.label),
+                             **attr
+                             )
         else:
             return None
 

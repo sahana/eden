@@ -1,5 +1,9 @@
-/* Template Editor */
+/* Side Bar */
+.icon-bar .ucce {
+  font-size: 32px;
+}
 
+/* Template Editor */
 .survey-item {
   float: none;
 }
@@ -74,6 +78,30 @@
 .heatmap > .preview-empty {
   height: 480px;
   width: 480px;
+}
+
+/*
+.move-up {
+  margin-top: -6px;
+}*/
+
+.move-down {
+  margin-top: -3px;
+}
+
+.ucce-down-alt, .ucce-delete-page {
+  color: #535353;
+}
+
+#question-bar h2 {
+  background-color: #00AAA0; /* $persian-green */
+  color: white;
+  text-align: center;
+}
+
+.tabs .tab-title > a {
+  font-weight: bold; /* No option for this in _tabs.scss */
+  padding: 0.5rem 1.75rem; /* Insufficient control of this in _tabs.scss */
 }
 
 /* Switch Backported from Foundation 6 instead of using the Foundation 5 version */

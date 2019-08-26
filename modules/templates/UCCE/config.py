@@ -188,9 +188,9 @@ def config(settings):
         #"attachment": "ucce-", # Will fallback
         "bar-chart": "ucce-reports",
         "comment-alt": "ucce-textbox",
-        "copy": "ucce-survey-duplicate",
-        "delete": "ucce-survey-delete",
-        "edit": "ucce-survey-edit",
+        "copy": "ucce-duplicate",
+        "delete": "ucce-delete",
+        "edit": "ucce-edit",
         "eye": "ucce-survey-preview",
         "file-text-alt": "ucce-guides",
         "folder-alt": "ucce-projects",
@@ -203,6 +203,9 @@ def config(settings):
         "plus": "ucce-plus",
         "reports": "ucce-reports",
         "section-break": "ucce-section-break",
+        "survey-copy": "ucce-survey-duplicate",
+        "survey-delete": "ucce-survey-delete",
+        "survey-edit": "ucce-survey-edit",
         "tasks": "ucce-likert-scale",
         "upload": "ucce-survey-export",
     }

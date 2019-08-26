@@ -108,14 +108,14 @@ $ghost          : #FAFAFA;
 // $aluminum    : #999999;
 // $jumbo       : #888888;
 // $monsoon     : #777777;
-$steel          : #666666;
-$charcoal       : #555555;
-$tuatara        : #444444;
-$oil            : #333333;
+// $steel         : #666666;
+//$charcoal       : #555555;
+$tuatara        : #444444; // Currently still used by $side-nav-link-color, which is used by _menus.scss even though we no longer use that part of that file
+//$oil            : #333333;
 // $jet         : #222222;
 // $black       : #000000;
-$lightblue      : #2ba6cb;
-$blood          : #c60f13;
+$lightblue      : #2ba6cb; // Currently still used by $primary-color, $side-nav-link-bg-hover
+$blood          : #c60f13; // Currently still used by $alert-color
 
 // UCCE colours
 // Names from https://www.color-blindness.com/color-name-hue/
@@ -134,6 +134,7 @@ $mortar         : #535353;
 $primary-color: $lightblue;
 // $secondary-color: #e7e7e7;
 $alert-color: $blood;
+//$alert-color: $coral;
 // $success-color: #43AC6A;
 // $warning-color: #f08a24;
 // $info-color: #a0d3e8;
@@ -145,6 +146,8 @@ $alert-color: $blood;
 $body-font-family: Nunito;
 // $body-font-weight: $font-weight-normal;
 // $body-font-style: normal;
+
+$title_bgcolor: $white;
 
 // We use this to control font-smoothing
 // $font-smoothing: antialiased;
@@ -491,7 +494,9 @@ $paragraph-font-size: rem-calc(16); // UCCE: 16px or 14px
 // $button-border-width: 0;
 // $button-border-style: solid;
 // $button-bg-color: $primary-color;
+$button-bg-color: $coral;
 // $button-bg-hover: scale-color($button-bg-color, $lightness: $button-function-factor);
+$button-bg-hover: $persian-green;
 // $button-border-color: $button-bg-hover;
 // $secondary-button-bg-hover: scale-color($secondary-color, $lightness: $button-function-factor);
 // $secondary-button-border-color: $secondary-button-bg-hover;
@@ -737,17 +742,21 @@ $paragraph-font-size: rem-calc(16); // UCCE: 16px or 14px
 // - - - - - - - - - - - - - - - - - - - - - - - - -
 
 // We use these to style the icon-bar and items
-$icon-bar-bg: $white;
-$icon-bar-font-color: $oil;
+//$icon-bar-bg: $white;
+$icon-bar-bg: $prussian-blue;
+//$icon-bar-font-color: $oil;
+$icon-bar-font-color: $white;
 // $icon-bar-font-color-hover: $icon-bar-font-color;
 // $icon-bar-font-size: 1rem;
-$icon-bar-hover-color: $ghost;
-$icon-bar-icon-color: $oil;
+//$icon-bar-hover-color: $ghost;
+$icon-bar-hover-color: $persian-green;
+//$icon-bar-icon-color: $oil;
 // $icon-bar-icon-color-hover: $icon-bar-icon-color;
 // $icon-bar-icon-size: 1.875rem;
 // $icon-bar-image-width: 1.875rem;
 // $icon-bar-image-height: 1.875rem;
 // $icon-bar-active-color: $primary-color;
+$icon-bar-active-color: $coral;
 // $icon-bar-item-padding: 1.25rem;
 
 // We use this to set default opacity and cursor for disabled icons.
@@ -1199,11 +1208,14 @@ $side-nav-list-margin: rem-calc(0 0 3 0);
 
 // We use these to control link styles.
 $side-nav-link-color: $tuatara;
-$side-nav-link-color-active: $tuatara;
-$side-nav-link-color-hover: $white;
-$side-nav-link-bg-hover: $lightblue;
+//$side-nav-link-color-active: $tuatara;
+//$side-nav-link-color: $white;
+//$side-nav-link-color-active: $white;
+//$side-nav-link-color-hover: $white;
+//$side-nav-link-bg-hover: $lightblue;
+//$side-nav-link-bg-hover: $persian-green;
 // $side-nav-link-margin: 0;
-$side-nav-link-padding: rem-calc(4 8);
+//$side-nav-link-padding: rem-calc(4 8);
 // $side-nav-font-size: rem-calc(14);
 // $side-nav-font-weight: $font-weight-normal;
 // $side-nav-font-weight-active: $side-nav-font-weight;
@@ -1217,9 +1229,9 @@ $side-nav-link-padding: rem-calc(4 8);
 // $side-nav-heading-text-transform: uppercase;
 
 // We use these to control border styles
-$side-nav-divider-size: 1px;
+//$side-nav-divider-size: 1px;
 // $side-nav-divider-style: solid;
-$side-nav-divider-color: transparent;
+//$side-nav-divider-color: transparent;
 
 // 27. Split Buttons
 // - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1366,7 +1378,7 @@ $side-nav-divider-color: transparent;
 // $include-html-tabs-classes: $include-html-classes;
 
 // $tabs-navigation-padding: rem-calc(16);
-$tabs-navigation-padding: rem-calc(14);
+//$tabs-navigation-padding: rem-calc(14);
 // $tabs-navigation-bg-color: $silver;
 $tabs-navigation-bg-color: $prussian-blue;
 // $tabs-navigation-active-bg-color: $white;
@@ -1454,9 +1466,11 @@ $topbar-link-color: $prussian-blue;
 // $topbar-link-font-size: rem-calc(13);
 // $topbar-link-hover-lightness: -10%; // Darken by 10%
 // $topbar-link-bg: $topbar-bg;
-$topbar-link-bg-hover: $lightblue;
+//$topbar-link-bg-hover: $lightblue;
+$topbar-link-bg-hover: $persian-green;
 // $topbar-link-bg-color-hover: $charcoal;
-$topbar-link-bg-active: $charcoal;
+//$topbar-link-bg-active: $charcoal;
+$topbar-link-bg-active: $coral;
 // $topbar-link-bg-active-hover: scale-color($primary-color, $lightness: -14%);
 // $topbar-link-font-family: $body-font-family;
 // $topbar-link-text-transform: none;
@@ -1467,8 +1481,10 @@ $topbar-link-bg-active: $charcoal;
 // $topbar-button-top: 7px;
 
 // Style the top bar dropdown elements
-$topbar-dropdown-bg: #777879;
+//$topbar-dropdown-bg: #777879;
+$topbar-dropdown-bg: $zumthor;
 // $topbar-dropdown-link-color: $white;
+$topbar-dropdown-link-color: $mortar;
 // $topbar-dropdown-link-color-hover: $topbar-link-color-hover;
 $topbar-dropdown-link-bg: $topbar-dropdown-bg;
 $topbar-dropdown-link-bg-hover: $topbar-link-bg-hover;
