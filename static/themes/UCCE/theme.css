@@ -204,7 +204,7 @@ body.rtl .username i.icon, body.rtl .username i.fa {
 #content h2 {
   font-size: 1.3em;
   font-weight: bolder;
-  background-color: #FFFFFF;
+  background-color: inherit;
   padding: 0.35rem;
 }
 /* line 157, ../../default/scss/theme/_page.scss */
