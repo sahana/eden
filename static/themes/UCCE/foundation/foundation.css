@@ -4928,6 +4928,26 @@ label.error {
   color: #333333;
 }
 
+/* line 18, ../../foundation/scss/components/_magellan.scss */
+[data-magellan-expedition], [data-magellan-expedition-clone] {
+  background: #FFFFFF;
+  min-width: 100%;
+  padding: 10px;
+  z-index: 50;
+}
+/* line 24, ../../foundation/scss/components/_magellan.scss */
+[data-magellan-expedition] .sub-nav, [data-magellan-expedition-clone] .sub-nav {
+  margin-bottom: 0;
+}
+/* line 26, ../../foundation/scss/components/_magellan.scss */
+[data-magellan-expedition] .sub-nav dd, [data-magellan-expedition-clone] .sub-nav dd {
+  margin-bottom: 0;
+}
+/* line 27, ../../foundation/scss/components/_magellan.scss */
+[data-magellan-expedition] .sub-nav a, [data-magellan-expedition-clone] .sub-nav a {
+  line-height: 1.8em;
+}
+
 @-webkit-keyframes rotate {
   from {
     -webkit-transform: rotate(0deg);

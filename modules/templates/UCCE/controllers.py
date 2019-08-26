@@ -1468,6 +1468,10 @@ class dc_TemplateEditor(S3Method):
                                   ),
                               _id = "question-bar",
                               )
+                toolbar["_data-magellan-expedition"] = "fixed"
+                toolbar = DIV(toolbar,
+                              _class = "magellan-scrollnav",
+                              )
 
                 hidden_input = INPUT(_type = "hidden",
                                      _id = "survey-layout",
