@@ -6156,11 +6156,11 @@ meta.foundation-mq-topbar {
 /* line 383, ../../foundation/scss/components/_top-bar.scss */
 .top-bar-section ul li.active > a {
   background: #FFFFFF;
-  color: #FFFFFF;
+  color: #023859;
 }
 /* line 387, ../../foundation/scss/components/_top-bar.scss */
 .top-bar-section ul li.active > a:hover {
-  background: #258faf;
+  background: #FFFFFF;
   color: #023859;
 }
 /* line 395, ../../foundation/scss/components/_top-bar.scss */
@@ -6373,13 +6373,13 @@ meta.foundation-mq-topbar {
   /* line 577, ../../foundation/scss/components/_top-bar.scss */
   .top-bar-section li.active:not(.has-form) a:not(.button) {
     background: #FFFFFF;
-    color: #FFFFFF;
+    color: #023859;
     line-height: 2.8125rem;
     padding: 0 0.9375rem;
   }
   /* line 582, ../../foundation/scss/components/_top-bar.scss */
   .top-bar-section li.active:not(.has-form) a:not(.button):hover {
-    background: #258faf;
+    background: #FFFFFF;
     color: #023859;
   }
   /* line 592, ../../foundation/scss/components/_top-bar.scss */
@@ -6518,7 +6518,7 @@ meta.foundation-mq-topbar {
   /* line 725, ../../foundation/scss/components/_top-bar.scss */
   .no-js .top-bar-section ul li:active > a {
     background: #FFFFFF;
-    color: #FFFFFF;
+    color: #023859;
   }
   /* line 733, ../../foundation/scss/components/_top-bar.scss */
   .no-js .top-bar-section .has-dropdown:hover > .dropdown {
