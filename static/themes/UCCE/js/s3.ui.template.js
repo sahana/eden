@@ -3300,13 +3300,13 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 $(document).foundation('tab', 'reflow');
                                 // Enable Upload/Download
                                 $('div[data-magellan-expedition="fixed"] #upload-translation').prop('disabled', false)
-                                                                                              .parent().parent().removeClass('hide').show();
+                                                                                              .parent().parent().parent().removeClass('hide').show();
                             } else {
                                 // Hide Translation Tabs
                                 $('li.l10n').hide();
                                 // Disable Upload/Download
                                 $('div[data-magellan-expedition="fixed"] #upload-translation').prop('disabled', true)
-                                                                                              .parent().parent().hide();
+                                                                                              .parent().parent().parent().hide();
                             }
                         },
                         'error': function(request, status, error) {

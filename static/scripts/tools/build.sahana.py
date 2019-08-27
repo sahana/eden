@@ -481,6 +481,9 @@ def do_js(minimize, do_gis = False, warnings = True):
     # - enable at the top when desired
     #
     if JS_FULL:
+        # To do just 1 file:
+        # cd static/scripts
+        # java -jar tools/compiler.jar --js jquery.fileupload.js --js_output_file jquery.fileupload.min.js
         for filename in ("jquery.fileupload", # Used by UCCE
                          "jquery.iframe-transport", # Used by jquery.fileupload
                          "spectrum",
