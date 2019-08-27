@@ -1591,10 +1591,7 @@ class dc_TemplateExportL10n(S3Method):
             if r.representation == "xls":
                 # XLS export
 
-                #table = r.table
-                template_id = r.id
-                #if not current.auth.s3_has_permission("read", table, record_id=template_id):
-                #    r.unauthorised()
+                # No need to check for 'read' permission within single-record methods, as that has already been checked
 
                 from s3.codecs.xls import S3XLS
 
@@ -1603,6 +1600,7 @@ class dc_TemplateExportL10n(S3Method):
                 except ImportError:
                     r.error(503, S3XLS.ERROR.XLWT_ERROR)
 
+                template_id = r.id
                 record = r.record
                 layout = record.layout
 
@@ -1622,8 +1620,7 @@ class dc_TemplateExportL10n(S3Method):
                     l10n = l10n.language
 
                 instructions = {}
-                questions = []
-                qappend = questions.append
+                questions_by_id = {}
                 question_ids = []
                 qiappend = question_ids.append
 
@@ -1653,9 +1650,12 @@ class dc_TemplateExportL10n(S3Method):
                                                   "do_l10n": do_l10n,
                                                   "say_l10n": say_l10n,
                                                   }
-                    elif item_type == "questions":
-                        qiappend(question["id"])
-                        qappend(question)
+                    elif item_type == "question":
+                        question_id = item["id"]
+                        qiappend(question_id)
+                        position = int(position)
+                        questions_by_id[question_id] = {"position": position,
+                                                        }
 
                 sorted_instructions = []
                 sappend = sorted_instructions.append
@@ -1670,20 +1670,41 @@ class dc_TemplateExportL10n(S3Method):
                 if l10n:
                     qltable = s3db.dc_question_l10n
                     left = qltable.on(qltable.question_id == qtable.id)
+                    fields += [qltable.name_l10n,
+                               qltable.options_l10n,
+                               ]
                 else:
                     left = None
-                questions = db(qtable.id.belongs(question_ids)).select(left = left,
-                                                                       *fields
-                                                                       )
+                rows = db(qtable.id.belongs(question_ids)).select(left = left,
+                                                                  *fields
+                                                                  )
+                questions_by_position = {}
                 max_options = 0
-                for q in questions:
+                for row in rows:
                     if l10n:
-                        options = q["dc_question.options"]
+                        name_l10n = row["dc_question_l10n.name_l10n"] or ""
+                        options_l10n = row["dc_question_l10n.options_l10n"] or []
+                        row = row["dc_question"]
                     else:
-                        options = q.options
+                        name_l10n = ""
+                        options_l10n = []
+                    options = row.options or []
                     options_length = len(options)
                     if options_length > max_options:
                         max_options = options_length
+                    question_id = row.id
+                    position = questions_by_id[question_id]["position"]
+                    questions_by_position[position] = {"id": question_id,
+                                                       "name": row.name or "",
+                                                       "options": options,
+                                                       "name_l10n": name_l10n,
+                                                       "options_l10n": options_l10n,
+                                                       }
+
+                sorted_questions = []
+                sappend = sorted_questions.append
+                for position in sorted(questions_by_position.keys()):
+                    sappend(questions_by_position[position])
 
                 # Create the workbook
                 book = xlwt.Workbook(encoding="utf-8")
@@ -1758,6 +1779,28 @@ class dc_TemplateExportL10n(S3Method):
                 write = current_row.write
                 for i in xrange(len(labels)):
                     write(i, labels[i])
+
+                # Data rows
+                for i in xrange(len(sorted_questions)):
+                    question = sorted_questions[i]
+                    current_row = sheet.row(i + 1)
+                    write = current_row.write
+                    write(0, template_id)
+                    write(1, question["id"])
+                    write(2, question["name"])
+                    write(3, question["name_l10n"])
+                    options = question["options"]
+                    options_l10n = question["options_l10n"]
+                    cell = 2
+                    for j in xrange(len(options)):
+                        cell = cell + 2
+                        write(cell, options[j])
+                        try:
+                            option_l10n = options_l10n[j]
+                        except IndexError:
+                            pass
+                        else:
+                            write(cell + 1, option_l10n)
 
                 # Export to File
                 output = StringIO()
