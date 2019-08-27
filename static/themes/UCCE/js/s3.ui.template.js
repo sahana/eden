@@ -597,7 +597,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 '<div class="columns medium-5">' + 
                                  '<div class="row"><h3>Number of clicks allowed:</h3></div>' +
                                  '<div class="row" id="clicks-row-' + questionID + '"><i class="ucce ucce-minus"> </i><span> ' + numClicks + ' </span><i class="ucce ucce-plus"> </i></div>' +
-                                 '<div class="row"><h3>Tap/click regions:</h3></div>' +
+                                 '<div class="row"><h3>Tap regions:</h3></div>' +
                                  choices +
                               '</div></div></div>';
                     translationTab = '<div class="media content" id="translation-' + position + '">' +
@@ -3298,9 +3298,15 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                             .show();
                                 // Re-apply events
                                 $(document).foundation('tab', 'reflow');
-                            } else{
+                                // Enable Upload/Download
+                                $('div[data-magellan-expedition="fixed"] #upload-translation').prop('disabled', false)
+                                                                                              .parent().parent().removeClass('hide').show();
+                            } else {
                                 // Hide Translation Tabs
                                 $('li.l10n').hide();
+                                // Disable Upload/Download
+                                $('div[data-magellan-expedition="fixed"] #upload-translation').prop('disabled', true)
+                                                                                              .parent().parent().hide();
                             }
                         },
                         'error': function(request, status, error) {
@@ -3321,6 +3327,13 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     revertDuration: 250
                 });
             }
+
+            // Translation Upload
+            $('#upload-translation').fileupload({
+                dataType: 'json',
+                maxNumberOfFiles: 1,
+                url: S3.Ap.concat('/dc/template/') + self.recordID + '/upload_l10n.json'
+            });
 
         },
 

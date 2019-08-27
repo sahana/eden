@@ -1,3 +1,19 @@
+/* Icons */
+
+.ucce {
+  color: #AFAEAE;
+}
+.ucce:hover {
+  color: #00AAA0; /* $persian-green */
+}
+
+a.no-link {
+  color: #222;
+}
+a.no-link:hover {
+  color: #00AAA0; /* $persian-green */
+}
+
 /* Side Bar */
 .icon-bar .ucce {
   font-size: 32px;
@@ -89,7 +105,8 @@
   margin-top: -3px;
 }
 
-.ucce-down-alt, .ucce-delete-page {
+.ucce-down-alt,
+.ucce-delete-page {
   color: #535353;
 }
 
@@ -97,6 +114,16 @@
   background-color: #00AAA0; /* $persian-green */
   color: white;
   text-align: center;
+}
+
+.ucce-survey-export,
+.ucce-survey-import {
+  /*background-color: #AFAEAE;
+  color: #EEEEEE; */
+  margin-right: 10px;
+}
+.ucce-survey-import + span:hover {
+  color: #00AAA0; /* $persian-green */
 }
 
 /* For Magellan */

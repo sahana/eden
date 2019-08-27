@@ -213,14 +213,14 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                args=[template_id, "editor"],
                                )
                 _title = T("Edit") # Only used in popover
-                _class = ""
+                _class = "no-link"
             else:
                 # Activated/Deactivated - need to change status before can edit
                 edit_url = URL(c="dc", f="target",
                                args=[target_id, "edit_confirm.popup"],
                                )
                 _title = T("Edit survey") # Used in popup as well as popover
-                _class = "s3_modal"
+                _class = "no-link s3_modal"
 
             edit_btn = A(ICON("survey-edit"),
                          SPAN("edit",
@@ -244,7 +244,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                      #      "record": record_id}
                                      ),
                            #_class="dl-survey-delete",
-                           _class="s3_modal",
+                           _class="no-link s3_modal",
                            _title=T("Delete survey"), # Visible in both popup & popover
                            )
         else:
@@ -259,28 +259,30 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                    vars={"refresh": list_id}
                                    ),
                          _title=T("Copy"),
+                         _class="no-link",
                          )
         else:
             copy_btn = ""
         if status == 1:
             # Draft
             responses = DIV("Draft")
-            export_btn = ""
+            #export_btn = ""
             preview_btn = ""
             report_btn = ""
             switch = ""
         else:
             responses = db(rtable.target_id == target_id).count()
             responses = DIV("%s Responses" % responses)
-            export_btn = A(ICON("upload"),
-                           SPAN("export",
-                                _class = "show-for-sr",
-                                ),
-                           _href=URL(c="dc", f="template",
-                                     args=[template_id, "export_l10n.xls"],
-                                     ),
-                           _title=T("Export"),
-                           )
+            #export_btn = A(ICON("upload"),
+            #               SPAN("export",
+            #                    _class = "show-for-sr",
+            #                    ),
+            #               _href=URL(c="dc", f="template",
+            #                         args=[template_id, "export_l10n.xls"],
+            #                         ),
+            #               _title=T("Export"),
+            #               _class="no-link",
+            #               )
             preview_btn = A(ICON("eye"),
                             SPAN("preview",
                                  _class = "show-for-sr",
@@ -289,6 +291,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                       args=[template_id, "editor"],
                                       ),
                             _title=T("Preview"),
+                            _class="no-link",
                             )
             report_btn = A(ICON("bar-chart"),
                            SPAN("report",
@@ -298,6 +301,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                      args=[target_id, "report"],
                                      ),
                            _title=T("Report"),
+                           _class="no-link",
                            )
             switch_id = "target_status-%s" % target_id
             if status == 2:
@@ -335,7 +339,8 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                     # Copy button disabled until implemented
                     #DIV(edit_btn, copy_btn, delete_btn),
                     DIV(edit_btn, delete_btn),
-                    DIV(preview_btn, export_btn, report_btn),
+                    #DIV(preview_btn, export_btn, report_btn),
+                    DIV(preview_btn, report_btn),
                     switch,
                     _class="thumbnail medium-2 columns",
                     ))
@@ -343,13 +348,14 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
     if permit("create", ttable):
         # Create Button
         create_btn = A(ICON("plus"),
-                     SPAN("Create new survey",
-                          ),
-                     _href=URL(c="project", f="project",
-                               args=[record_id, "target", "create"],
-                               ),
-                     _title=T("Create new survey"),
-                     )
+                       SPAN("Create new survey",
+                            ),
+                       _href=URL(c="project", f="project",
+                                 args=[record_id, "target", "create"],
+                                 ),
+                       _title=T("Create new survey"),
+                       _class="no-link",
+                       )
         bappend(DIV(create_btn,
                     _class="thumbnail medium-2 columns end",
                     ))
@@ -1332,14 +1338,50 @@ class dc_TemplateEditor(S3Method):
                              DIV(button,
                                  _class="medium-3 columns",
                                  ),
-                             _class="row"
+                             _class="row",
                              )
 
                 info_instructions = SPAN(ICON("info-circle"),
                                          _class="has-tip",
-                                         _title=T("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."),
+                                         _title=T("Add instructions for the data collector to indicate what they should do and say at different stages of the survey."),
                                          )
                 info_instructions["data-tooltip"] = 1
+
+                info_text = SPAN(ICON("info-circle"),
+                                 _class="has-tip",
+                                 _title=T("Add a single text box. This question type has no response options and is perfect for adding text-based information to your survey."),
+                                 )
+                info_text["data-tooltip"] = 1
+
+                info_number = SPAN(ICON("info-circle"),
+                                   _class="has-tip",
+                                   _title=T("Add a question that requires a numeric response. Use question settings to restrict input to numbers within a specified range."),
+                                   )
+                info_number["data-tooltip"] = 1
+
+                info_multichoice = SPAN(ICON("info-circle"),
+                                        _class="has-tip",
+                                        _title=T("Add a question with multiple response choices. Use question settings to allow respondents to select one or several response options."),
+                                        )
+                info_multichoice["data-tooltip"] = 1
+
+                info_likert = SPAN(ICON("info-circle"),
+                                   _class="has-tip",
+                                   _title=T("Add a multiple choice question with Likert-scale responses. Use question settings to select one of the predefined Likert scales."),
+                                   )
+                info_likert["data-tooltip"] = 1
+
+                info_heatmap = SPAN(ICON("info-circle"),
+                                    _class="has-tip",
+                                    _title=T("Add an image-based question to collect interactive responses on a heatmap. Use question settings to define tap regions and number of taps available."),
+                                    )
+                info_heatmap["data-tooltip"] = 1
+
+                info_break = SPAN(ICON("info-circle"),
+                                  _class="has-tip",
+                                  _title=T("Add a page break to your survey to display questions on different pages."),
+                                  )
+                info_break["data-tooltip"] = 1
 
                 ltable = s3db.dc_template_l10n
                 l10n = db(ltable.template_id == template_id).select(ltable.language,
@@ -1365,6 +1407,10 @@ class dc_TemplateEditor(S3Method):
                         languages_dropdown.append(OPTION(l10n_options[lang],
                                                          _value=lang,
                                                          ))
+                if l10n:
+                    hidden = ""
+                else:
+                    hidden = " hide"
 
                 toolbar = DIV(DIV(H2(T("Question types")),
                                   _class="row",
@@ -1387,7 +1433,7 @@ class dc_TemplateEditor(S3Method):
                                   DIV(T("Text box"),
                                       _class="medium-9 columns",
                                       ),
-                                  DIV(ICON("info-circle"),
+                                  DIV(info_text,
                                       _class="medium-1 columns",
                                       ),
                                   _class="row draggable",
@@ -1399,7 +1445,7 @@ class dc_TemplateEditor(S3Method):
                                   DIV(T("Number question"),
                                       _class="medium-9 columns",
                                       ),
-                                  DIV(ICON("info-circle"),
+                                  DIV(info_number,
                                       _class="medium-1 columns",
                                       ),
                                   _class="row draggable",
@@ -1411,7 +1457,7 @@ class dc_TemplateEditor(S3Method):
                                   DIV(T("Multiple choice question"),
                                       _class="medium-9 columns",
                                       ),
-                                  DIV(ICON("info-circle"),
+                                  DIV(info_multichoice,
                                       _class="medium-1 columns",
                                       ),
                                   _class="row draggable",
@@ -1423,7 +1469,7 @@ class dc_TemplateEditor(S3Method):
                                   DIV(T("Likert-scale"),
                                       _class="medium-9 columns",
                                       ),
-                                  DIV(ICON("info-circle"),
+                                  DIV(info_likert ,
                                       _class="medium-1 columns",
                                       ),
                                   _class="row draggable",
@@ -1435,7 +1481,7 @@ class dc_TemplateEditor(S3Method):
                                   DIV(T("Heatmap"),
                                       _class="medium-9 columns",
                                       ),
-                                  DIV(ICON("info-circle"),
+                                  DIV(info_heatmap,
                                       _class="medium-1 columns",
                                       ),
                                   _class="row draggable",
@@ -1447,7 +1493,7 @@ class dc_TemplateEditor(S3Method):
                                   DIV(T("Section / Page break"),
                                       _class="medium-9 columns",
                                       ),
-                                  DIV(ICON("info-circle"),
+                                  DIV(info_break,
                                       _class="medium-1 columns",
                                       ),
                                   _class="row draggable",
@@ -1462,10 +1508,25 @@ class dc_TemplateEditor(S3Method):
                                   languages_dropdown,
                                   _class="row",
                                   ),
-                              DIV(A(T("Upload translation"),
-                                    _class="button tiny round fright",
+                              DIV(A(ICON("download"),
+                                    SPAN(T("Download survey .xls"),
+                                         ),
+                                    _href=URL(c="dc", f="template",
+                                              args=[template_id, "export_l10n.xls"],
+                                              ),
+                                    _class="no-link",
                                     ),
-                                  _class="row",
+                                  DIV(ICON("upload"),
+                                      SPAN(T("Upload translation .xls"),
+                                           ),
+                                      INPUT(_name = "file",
+                                            _type = "file",
+                                            _accept = "application/vnd.ms-excel",
+                                            _id = "upload-translation",
+                                            _class = "show-for-sr",
+                                            ),
+                                      ),
+                                  _class="row%s" % hidden,
                                   ),
                               _id = "question-bar",
                               )
@@ -1823,6 +1884,46 @@ class dc_TemplateExportL10n(S3Method):
 
                 return output.read()
                 
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
+
+# =============================================================================
+class dc_TemplateImportL10n(S3Method):
+    """
+        Export the Strings to localise a Survey
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "template":
+            if r.http == "POST" and r.representation == "json":
+                # AJAX method
+                # Action the request
+                table = r.table
+                record_id = r.id
+                if not current.auth.s3_has_permission("update", table, record_id=record_id):
+                    r.unauthorised()
+                field_storage = r.post_vars.get("file")
+                if field_storage not in ("", None):
+
+                    field_storage.file
+
+                    # Results (Empty Message so we don't get it shown to User)
+                    current.response.headers["Content-Type"] = "application/json"
+                    output = current.xml.json_message(True, 200, "")
+                else:
+                    r.error(400, current.T("Invalid Parameters"))
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
         else:

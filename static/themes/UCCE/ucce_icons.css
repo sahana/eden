@@ -123,19 +123,19 @@
   content: "\f129";
 }
 .ucce-smiley-2:before {
-  content: "\f12A";
+  content: "\f12a";
 }
 .ucce-smiley-3:before {
-  content: "\f12B";
+  content: "\f12b";
 }
 .ucce-smiley-4:before {
-  content: "\f12C";
+  content: "\f12c";
 }
 .ucce-smiley-5:before {
-  content: "\f12D";
+  content: "\f12d";
 }
 .ucce-smiley-6:before {
-  content: "\f12E";
+  content: "\f12e";
 }
 .ucce-smiley-1-reverse:before {
   content: "\f128";
@@ -154,4 +154,7 @@
 }
 .ucce-smiley-6-reverse:before {
   content: "\f123";
+}
+.ucce-survey-import:before {
+  content: "\f12f";
 }

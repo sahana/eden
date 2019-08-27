@@ -190,6 +190,7 @@ def config(settings):
         "comment-alt": "ucce-textbox",
         "copy": "ucce-duplicate",
         "delete": "ucce-delete",
+        "download": "ucce-survey-export",
         "edit": "ucce-edit",
         "eye": "ucce-survey-preview",
         "file-text-alt": "ucce-guides",
@@ -207,7 +208,7 @@ def config(settings):
         "survey-delete": "ucce-survey-delete",
         "survey-edit": "ucce-survey-edit",
         "tasks": "ucce-likert-scale",
-        "upload": "ucce-survey-export",
+        "upload": "ucce-survey-import",
     }
 
     # -------------------------------------------------------------------------
@@ -609,6 +610,7 @@ def config(settings):
         # Custom Methods
         from templates.UCCE.controllers import dc_TemplateEditor
         from templates.UCCE.controllers import dc_TemplateExportL10n
+        from templates.UCCE.controllers import dc_TemplateImportL10n
         from templates.UCCE.controllers import dc_TemplateSave
 
         set_method = s3db.set_method
@@ -619,6 +621,10 @@ def config(settings):
         set_method("dc", "template",
                    method = "export_l10n",
                    action = dc_TemplateExportL10n())
+
+        set_method("dc", "template",
+                   method = "upload_l10n",
+                   action = dc_TemplateImportL10n())
 
         set_method("dc", "template",
                    method = "update_json",
