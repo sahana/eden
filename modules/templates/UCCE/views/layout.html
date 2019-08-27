@@ -60,10 +60,10 @@
  <div class='row'>
   {{if current.menu.options is not None:}}
   <a id='menu-options-toggle' class='tiny secondary button show-for-small' data-status='off' data-off='{{=T("Show Options")}}' data-on='{{=T("Hide Options")}}'>{{=T("Show Options")}}</a>
-  <div class='medium-3 large-2 columns hide-for-small' id='menu-options'>
+  <div class='medium-2 large-1 columns hide-for-small' id='menu-options'>
    {{=current.menu.options}}
   </div>
-  <div class='medium-9 large-10 columns' id='content'>
+  <div class='medium-10 large-11 columns' id='content'>
   {{else:}}
   <div class='medium-12 columns'>
   {{pass}}

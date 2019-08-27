@@ -159,6 +159,7 @@ $body-font-family: Nunito;
 // We use these to make sure border radius matches unless we want it different.
 // $global-radius: 3px;
 // $global-rounded: 1000px;
+$global-rounded: 18px;
 
 // We use these to control inset shadow shiny edges and depressions.
 // $shiny-edge-size: 0 1px 0;
@@ -756,6 +757,7 @@ $icon-bar-hover-color: $persian-green;
 // $icon-bar-active-color: $primary-color;
 $icon-bar-active-color: $coral;
 // $icon-bar-item-padding: 1.25rem;
+$icon-bar-item-padding: 2rem;
 
 // We use this to set default opacity and cursor for disabled icons.
 // $icon-bar-disabled-opacity: .7;

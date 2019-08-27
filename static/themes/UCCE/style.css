@@ -1,5 +1,4 @@
 /* Icons */
-
 .ucce {
   color: #AFAEAE;
 }
@@ -17,6 +16,62 @@ a.no-link:hover {
 /* Side Bar */
 .icon-bar .ucce {
   font-size: 32px;
+}
+
+/* Datalists */
+.search-wrapper {
+  position: relative;
+}
+.search-icon {
+  /*font-size: 24px;*/
+  position: absolute;
+  padding-left: 0.75rem;
+  padding-top: 0.65rem;
+  left: 0;
+  top: 0;
+}
+.search-icon .fa {
+  color: #AFAEAE;
+  line-height: inherit;
+}
+input[type="text"].text-filter {
+  height: 2.3125rem;
+  padding-left: 1.875rem !important;
+  width: 100% !important;
+  border-color: #EEEEEE;
+  box-shadow: 1px 1px #EEEEEE;
+}
+#list-btn-add.fleft {
+  margin-left: 1.35rem;
+}
+#dl-container {
+  margin-left: 1.35rem;
+}
+.add-btn .ucce {
+  color: #FF7A5A; /* $coral */
+  font-size: 24px;
+  margin-right: 5px;
+}
+.add-btn span {
+  font-weight: bold;
+}
+
+/* Projects dataList */
+.project-survey-card {
+  text-align: center;
+  margin: 8px;
+  height: 160px;
+  border: 1px solid #E0E0E0;
+  border-radius: 10px;
+  box-shadow: 1px 1px #EEEEEE;
+}
+.project-survey-card .ucce {
+  font-size: 24px;
+}
+.project-survey-card .ucce-plus {
+  color: #FF7A5A; /* $coral */
+  font-size: 32px;
+  padding-top: 40px;
 }
 
 /* Template Editor */
@@ -132,6 +187,7 @@ a.no-link:hover {
   left: auto !important;
 }
 .magellan-scrollnav {
+  margin-left: 1.35rem;
   width: 33%;
 }
 [data-magellan-expedition] {
@@ -159,12 +215,14 @@ a.no-link:hover {
   -webkit-user-select: none;
      -moz-user-select: none;
       -ms-user-select: none;
-          user-select: none; }
+          user-select: none;
+}
 
 .switch-input {
   position: absolute;
   margin-bottom: 0;
-  opacity: 0; }
+  opacity: 0;
+}
 
 .switch-paddle {
   position: relative;
@@ -177,29 +235,35 @@ a.no-link:hover {
   transition: all 0.25s ease-out;
   font-weight: inherit;
   color: inherit;
-  cursor: pointer; }
-  input + .switch-paddle {
-    margin: 0; }
-  .switch-paddle::after {
-    position: absolute;
-    top: 0.25rem;
-    left: 0.25rem;
-    display: block;
-    width: 1.5rem;
-    height: 1.5rem;
-    -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
-    border-radius: 0;
-    background: #fefefe;
-    -webkit-transition: all 0.25s ease-out;
-    transition: all 0.25s ease-out;
-    content: ''; }
-  input:checked ~ .switch-paddle {
-    background: #1779ba; }
-    input:checked ~ .switch-paddle::after {
-      left: 2.25rem; }
-  [data-whatinput='mouse'] input:focus ~ .switch-paddle {
-    outline: 0; }
+  cursor: pointer;
+}
+input + .switch-paddle {
+  margin: 0;
+}
+.switch-paddle::after {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  -webkit-transform: translate3d(0, 0, 0);
+          transform: translate3d(0, 0, 0);
+  border-radius: 0;
+  background: #fefefe;
+  -webkit-transition: all 0.25s ease-out;
+  transition: all 0.25s ease-out;
+  content: '';
+}
+input:checked ~ .switch-paddle {
+  background: #FF7A5A; /* $coral */
+}
+input:checked ~ .switch-paddle::after {
+  left: 2.25rem;
+}
+[data-whatinput='mouse'] input:focus ~ .switch-paddle {
+  outline: 0;
+}
 
 .switch-active, .switch-inactive {
   position: absolute;
@@ -210,63 +274,80 @@ a.no-link:hover {
 
 .switch-active {
   left: 8%;
-  display: none; }
-  input:checked + label > .switch-active {
-    display: block; }
+  display: none;
+}
+input:checked + label > .switch-active {
+  display: block;
+}
 
 .switch-inactive {
   /*right: 15%;*/
-  right: 10%;  }
-  input:checked + label > .switch-inactive {
-    display: none; }
-
+  right: 10%;
+}
+input:checked + label > .switch-inactive {
+  display: none;
+}
 
 .switch.tiny {
-  height: 1.5rem; }
-  .switch.tiny .switch-paddle {
-    width: 3rem;
-    height: 1.5rem;
-    font-size: 0.625rem; }
-  .switch.tiny .switch-paddle::after {
-    top: 0.25rem;
-    left: 0.25rem;
-    width: 1rem;
-    height: 1rem; }
-  .switch.tiny input:checked ~ .switch-paddle::after {
-    left: 1.75rem; }
+  height: 1.5rem;
+}
+.switch.tiny .switch-paddle {
+  width: 3rem;
+  height: 1.5rem;
+  font-size: 0.625rem;
+}
+.switch.tiny .switch-paddle::after {
+  top: 0.25rem;
+  left: 0.25rem;
+  width: 1rem;
+  height: 1rem;
+}
+.switch.tiny input:checked ~ .switch-paddle::after {
+  left: 1.75rem;
+}
 
 .switch.small {
-  height: 1.75rem; }
-  .switch.small .switch-paddle {
-    width: 3.5rem;
-    height: 1.75rem;
-    font-size: 0.75rem; }
-  .switch.small .switch-paddle::after {
-    top: 0.25rem;
-    left: 0.25rem;
-    width: 1.25rem;
-    height: 1.25rem; }
-  .switch.small input:checked ~ .switch-paddle::after {
-    left: 2rem; }
+  height: 1.75rem;
+}
+.switch.small .switch-paddle {
+  width: 3.5rem;
+  height: 1.75rem;
+  font-size: 0.75rem;
+}
+.switch.small .switch-paddle::after {
+  top: 0.25rem;
+  left: 0.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.switch.small input:checked ~ .switch-paddle::after {
+  left: 2rem;
+}
 
 .switch.large {
-  height: 2.5rem; }
-  .switch.large .switch-paddle {
-    width: 5rem;
-    height: 2.5rem;
-    font-size: 1rem; }
-  .switch.large .switch-paddle::after {
-    top: 0.25rem;
-    left: 0.25rem;
-    width: 2rem;
-    height: 2rem; }
-  .switch.large input:checked ~ .switch-paddle::after {
-    left: 2.75rem; }
+  height: 2.5rem;
+}
+.switch.large .switch-paddle {
+  width: 5rem;
+  height: 2.5rem;
+  font-size: 1rem;
+}
+.switch.large .switch-paddle::after {
+  top: 0.25rem;
+  left: 0.25rem;
+  width: 2rem;
+  height: 2rem;
+}
+.switch.large input:checked ~ .switch-paddle::after {
+  left: 2.75rem;
+}
 
 /* https://github.com/zurb/foundation-sites/pull/10632/commits */
 .switch-paddle.rounded {
-    border-radius: 2rem;
+  /*border-radius: 2rem;*/
+  border-radius: 1rem;
 }
 .switch-paddle.rounded:after {
-    border-radius: 2rem;
+  /*border-radius: 2rem;*/
+  border-radius: 1rem;
 }

@@ -330,11 +330,11 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                _for = switch_id,
                                _class="switch-paddle rounded",
                                ),
-                         _class="switch large",
+                         _class="switch",
                          )
 
         bappend(DIV(DIV(_class="card-inner-header"),
-                    DIV(target.name),
+                    H2(target.name),
                     responses,
                     # Copy button disabled until implemented
                     #DIV(edit_btn, copy_btn, delete_btn),
@@ -342,22 +342,21 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                     #DIV(preview_btn, export_btn, report_btn),
                     DIV(preview_btn, report_btn),
                     switch,
-                    _class="thumbnail medium-2 columns",
+                    _class="project-survey-card medium-2 columns",
                     ))
 
     if permit("create", ttable):
         # Create Button
         create_btn = A(ICON("plus"),
-                       SPAN("Create new survey",
-                            ),
                        _href=URL(c="project", f="project",
                                  args=[record_id, "target", "create"],
                                  ),
-                       _title=T("Create new survey"),
                        _class="no-link",
                        )
         bappend(DIV(create_btn,
-                    _class="thumbnail medium-2 columns end",
+                    H2(T("Create new survey")
+                       ),
+                    _class="project-survey-card medium-2 columns end",
                     ))
 
 
@@ -2078,5 +2077,38 @@ class dc_ProjectDelete(S3Method):
             r.error(404, current.ERROR.BAD_RESOURCE)
 
         return output
+
+# =============================================================================
+def text_filter_formstyle(form, fields, *args, **kwargs):
+    """
+        Custom formstyle for S3TextFilter
+    """
+
+    def render_row(row_id, label, widget, comment, hidden=False):
+
+        controls = DIV(SPAN(ICON("search"),
+                            _class="search-icon",
+                            ),
+                       widget,
+                       _class="search-wrapper",
+                       _id=row_id,
+                       )
+        return DIV(DIV(controls,
+                       #_class="small-12 column",
+                       ),
+                   _class="row",
+                   )
+
+    if args:
+        row_id = form
+        label = fields
+        widget, comment = args
+        hidden = kwargs.get("hidden", False)
+        return render_row(row_id, label, widget, comment, hidden)
+    else:
+        parent = TAG[""]()
+        for row_id, label, widget, comment in fields:
+            parent.append(render_row(row_id, label, widget, comment))
+        return parent
 
 # END =========================================================================

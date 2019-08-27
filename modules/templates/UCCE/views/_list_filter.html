@@ -1,0 +1,77 @@
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{if title:}}{{=H2(title)}}{{pass}}{{except:}}{{pass}}
+ </div>
+</div>
+{{try:}}{{rheader=rheader}}
+<div id='rheader' class='row'>
+ <div class='small-12 columns'>
+  {{=XML(rheader)}}
+ </div>
+</div>
+<div id='component' class='row'>
+{{except:}}
+<div class='row'>
+{{pass}}
+ <div class='small-12 columns'>
+  <div class='row'>
+   <div id='map' class='small-12 columns'></div>
+  </div>
+  <div id='list-add' class='row'>
+   <div class="small-12 columns">
+    {{try:}}{{=H3(addtitle)}}{{except:}}{{pass}}
+    {{try:}}{{=addheader}}{{except:}}{{pass}}
+    {{include "key.html"}}
+    <div class='form-container'>
+     {{try:}}{{=form}}{{except:}}{{pass}}
+    </div>
+   </div>
+  </div>
+  <div class='row'>
+   <div class="small-12 columns">
+    {{try:}}{{if list_filter_form:}}
+    <div id='list-filter' class='form-container'>
+     {{=list_filter_form}}
+    </div>
+    {{pass}}
+    {{except:}}{{pass}}
+   </div>
+  </div>
+  <div class='row'>
+   <div class='small-12 columns'>
+    <div id='list-btn-add' class='fleft'>
+     {{try:}}{{showadd_btn=showadd_btn}}{{except:}}{{showadd_btn=None}}{{pass}}
+     {{if showadd_btn:}}{{=showadd_btn}}{{hide_listadd = True}}
+     {{else:}}{{try:}}{{=buttons["add_btn"]}}{{except:}}{{pass}}{{hide_listadd = False}}{{pass}}
+    </div>
+   </div>
+  </div>
+  <div class='row'>
+   {{try:}}{{ltype = list_type}}{{except:}}{{ltype = "datatable"}}{{pass}}
+   {{try:}}{{items = items}}
+   {{if ltype == "datalist":}}
+    <div id='dl-container' class='card-holder-home small-12 columns'>
+     {{=items}}
+    </div>
+   {{else:}}
+    <div id='table-container' class='small-12 columns'>
+     {{=items}}
+    </div>
+   {{pass}}
+   {{except:}}{{pass}}
+  </div>
+ </div>
+</div>
+{{if s3.rfooter:}}
+<div id='rfooter' class='row'>
+ <div class='small-12 columns'>
+  {{=XML(s3.rfooter)}}
+ </div>
+</div>{{pass}}
+{{if ltype == "datalist":}}{{include "dataLists.html"}}
+{{else:}}{{include "dataTables.html"}}{{pass}}
+{{if r.http == "POST" or not hide_listadd:}}
+{{script = '''$('#list-add').show()
+$('#show-add-btn').hide()'''}}
+{{s3.jquery_ready.append(script)}}
+{{pass}}

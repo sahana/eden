@@ -3232,7 +3232,7 @@ def text_filter_formstyle(form, fields, *args, **kwargs):
     def render_row(row_id, label, widget, comment, hidden=False):
 
         controls = DIV(widget,
-                       SPAN(I(_class="fa fa-search"),
+                       SPAN(ICON("search"),
                             _class="search-icon",
                             ),
                        _class="search-wrapper",
