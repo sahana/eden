@@ -84,17 +84,16 @@ class S3MainMenu(default.S3MainMenu):
             # Logged-in
 
             if settings.get_auth_password_changes():
-                change_pw = MM("Change Password", m="change_password")
+                change_pw = MM("Change password", m="change_password")
             else:
                 change_pw = None
 
-            menu_auth = MM(auth.user.email, c="default", f="user",
-                           translate=False, link=False, _id="auth_menu_email",
+            menu_auth = MM("My Account", c="default", f="user", link=False,
                            **attr)(
                             MM("Dashboard", c="project", f="project", m="datalist"),
-                            MM("User Profile", m="profile"),
+                            MM("User profile", m="profile"),
                             change_pw,
-                            MM("Logout", m="logout", _id="auth_menu_logout"),
+                            MM("Log out", m="logout", _id="auth_menu_logout"),
                         )
 
         return menu_auth

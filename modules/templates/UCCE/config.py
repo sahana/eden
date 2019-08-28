@@ -190,6 +190,7 @@ def config(settings):
         "comment-alt": "ucce-textbox",
         "copy": "ucce-duplicate",
         "delete": "ucce-delete",
+        "download": "ucce-survey-export",
         "edit": "ucce-edit",
         "eye": "ucce-survey-preview",
         "file-text-alt": "ucce-guides",
@@ -207,8 +208,14 @@ def config(settings):
         "survey-delete": "ucce-survey-delete",
         "survey-edit": "ucce-survey-edit",
         "tasks": "ucce-likert-scale",
-        "upload": "ucce-survey-export",
+        "upload": "ucce-survey-import",
     }
+
+    # -------------------------------------------------------------------------
+    def filter_formstyle(row_id, label, widget, comment, hidden=False):
+        return DIV(label, widget, comment,
+                   _id=row_id,
+                   _class="large-3 columns")
 
     # -------------------------------------------------------------------------
     def ucce_rheader(r):
@@ -458,6 +465,7 @@ def config(settings):
         from s3 import IS_ISO639_2_LANGUAGE_CODE, S3SQLCustomForm, S3TextFilter
 
         from templates.UCCE.controllers import dc_target_list_layout
+        from templates.UCCE.controllers import text_filter_formstyle
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Create Survey"),
@@ -507,7 +515,7 @@ def config(settings):
                        filter_widgets = [S3TextFilter(["name",
                                                        "project.name",
                                                        ],
-                                                      #formstyle = text_filter_formstyle,
+                                                      formstyle = text_filter_formstyle,
                                                       label = "",
                                                       _placeholder = T("Search project or survey"),
                                                       ),
@@ -608,12 +616,22 @@ def config(settings):
 
         # Custom Methods
         from templates.UCCE.controllers import dc_TemplateEditor
+        from templates.UCCE.controllers import dc_TemplateExportL10n
+        from templates.UCCE.controllers import dc_TemplateImportL10n
         from templates.UCCE.controllers import dc_TemplateSave
 
         set_method = s3db.set_method
         set_method("dc", "template",
                    method = "editor",
                    action = dc_TemplateEditor())
+
+        set_method("dc", "template",
+                   method = "export_l10n",
+                   action = dc_TemplateExportL10n())
+
+        set_method("dc", "template",
+                   method = "upload_l10n",
+                   action = dc_TemplateImportL10n())
 
         set_method("dc", "template",
                    method = "update_json",
@@ -711,9 +729,10 @@ def config(settings):
         from s3 import S3SQLCustomForm, S3TextFilter
 
         from templates.UCCE.controllers import doc_document_list_layout
+        from templates.UCCE.controllers import text_filter_formstyle
 
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Add Guide"),
+            label_create = T("New guide"),
             title_display = T("Guide Details"),
             #title_list = T("Guides"),
             title_list = "",
@@ -745,7 +764,7 @@ def config(settings):
                        list_layout = doc_document_list_layout,
                        filter_widgets = [S3TextFilter(["name",
                                                        ],
-                                                      #formstyle = text_filter_formstyle,
+                                                      formstyle = text_filter_formstyle,
                                                       label = "",
                                                       _placeholder = T("Search guides"),
                                                       ),
@@ -757,7 +776,32 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_doc_document_controller(**attr):
 
-        current.response.s3.dl_no_header = True
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_postp = s3.postp
+        def postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.method == "datalist":
+                if "showadd_btn" in output:
+                    from gluon import A, SPAN, URL
+                    from s3 import ICON
+                    output["showadd_btn"] = A(ICON("plus"),
+                                              SPAN(T("New guide")),
+                                              _class = "add-btn no-link s3_modal",
+                                              _href = URL(c="doc", f="document",
+                                                          args = "create.popup",
+                                                          vars = {"refresh": "datalist"},
+                                                          ),
+                                              )
+
+            return output
+        s3.postp = postp
+
+        s3.dl_no_header = True
 
         return attr
 
@@ -876,6 +920,7 @@ def config(settings):
         from s3 import IS_ISO639_2_LANGUAGE_CODE, S3SQLCustomForm, S3TextFilter
 
         from templates.UCCE.controllers import project_project_list_layout
+        from templates.UCCE.controllers import text_filter_formstyle
 
         s3db = current.s3db
 
@@ -933,7 +978,7 @@ def config(settings):
                        filter_widgets = [S3TextFilter(["name",
                                                        "target.name",
                                                        ],
-                                                      #formstyle = text_filter_formstyle,
+                                                      formstyle = text_filter_formstyle,
                                                       label = "",
                                                       _placeholder = T("Search project or survey"),
                                                       ),
@@ -959,7 +1004,7 @@ def config(settings):
 
         s3 = current.response.s3
 
-        # Custom postp
+        # Custom prep
         standard_prep = s3.prep
         def prep(r):
             # Call standard prep
@@ -991,6 +1036,29 @@ def config(settings):
 
             return result
         s3.prep = prep
+
+        # Custom postp
+        standard_postp = s3.postp
+        def postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.method == "datalist":
+                if "showadd_btn" in output:
+                    from gluon import A, SPAN, URL
+                    from s3 import ICON
+                    output["showadd_btn"] = A(ICON("plus"),
+                                              SPAN(T("New project")),
+                                              _class = "add-btn no-link s3_modal",
+                                              _href = URL(c="project", f="project",
+                                                          args = "create.popup",
+                                                          vars = {"refresh": "datalist"},
+                                                          ),
+                                              )
+
+            return output
+        s3.postp = postp
 
         s3.dl_no_header = True
 

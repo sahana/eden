@@ -8887,6 +8887,7 @@ class ICON(I):
             "responsibility": "fa-briefcase",
             "return": "fa-arrow-left",
             "rss": "fa-rss",
+            "search": "fa-search",
             #"section-break": "fa-minus", # UCCE
             "sent": "fa-check",
             "settings": "fa-wrench",
@@ -8981,6 +8982,7 @@ class ICON(I):
             "responsibility": "fi-sheriff-badge",
             "return": "fi-arrow-left",
             "rss": "fi-rss",
+            "search": "fi-magnifying-glass",
             #"section-break": "fi-minus", # UCCE
             "sent": "fi-check",
             "settings": "fi-wrench",
@@ -9074,6 +9076,7 @@ class ICON(I):
             "responsibility": "icon-briefcase",
             "return": "icon-arrow-left",
             "rss": "icon-rss",
+            "search": "icon-search",
             #"section-break": "icon-minus", # UCCE
             "sent": "icon-ok",
             "settings": "icon-wrench",

@@ -6,6 +6,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3 import json, ICON, S3CustomController, S3Method
+from s3compat import StringIO, xrange
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -212,14 +213,14 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                args=[template_id, "editor"],
                                )
                 _title = T("Edit") # Only used in popover
-                _class = ""
+                _class = "no-link"
             else:
                 # Activated/Deactivated - need to change status before can edit
                 edit_url = URL(c="dc", f="target",
                                args=[target_id, "edit_confirm.popup"],
                                )
                 _title = T("Edit survey") # Used in popup as well as popover
-                _class = "s3_modal"
+                _class = "no-link s3_modal"
 
             edit_btn = A(ICON("survey-edit"),
                          SPAN("edit",
@@ -243,7 +244,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                      #      "record": record_id}
                                      ),
                            #_class="dl-survey-delete",
-                           _class="s3_modal",
+                           _class="no-link s3_modal",
                            _title=T("Delete survey"), # Visible in both popup & popover
                            )
         else:
@@ -258,28 +259,30 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                    vars={"refresh": list_id}
                                    ),
                          _title=T("Copy"),
+                         _class="no-link",
                          )
         else:
             copy_btn = ""
         if status == 1:
             # Draft
             responses = DIV("Draft")
-            export_btn = ""
+            #export_btn = ""
             preview_btn = ""
             report_btn = ""
             switch = ""
         else:
             responses = db(rtable.target_id == target_id).count()
             responses = DIV("%s Responses" % responses)
-            export_btn = A(ICON("upload"),
-                           SPAN("export",
-                                _class = "show-for-sr",
-                                ),
-                           _href=URL(c="dc", f="target",
-                                     args=[target_id, "export"],
-                                     ),
-                           _title=T("Export"),
-                           )
+            #export_btn = A(ICON("upload"),
+            #               SPAN("export",
+            #                    _class = "show-for-sr",
+            #                    ),
+            #               _href=URL(c="dc", f="template",
+            #                         args=[template_id, "export_l10n.xls"],
+            #                         ),
+            #               _title=T("Export"),
+            #               _class="no-link",
+            #               )
             preview_btn = A(ICON("eye"),
                             SPAN("preview",
                                  _class = "show-for-sr",
@@ -288,6 +291,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                       args=[template_id, "editor"],
                                       ),
                             _title=T("Preview"),
+                            _class="no-link",
                             )
             report_btn = A(ICON("bar-chart"),
                            SPAN("report",
@@ -297,6 +301,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                      args=[target_id, "report"],
                                      ),
                            _title=T("Report"),
+                           _class="no-link",
                            )
             switch_id = "target_status-%s" % target_id
             if status == 2:
@@ -325,32 +330,33 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                _for = switch_id,
                                _class="switch-paddle rounded",
                                ),
-                         _class="switch large",
+                         _class="switch",
                          )
 
         bappend(DIV(DIV(_class="card-inner-header"),
-                    DIV(target.name),
+                    H2(target.name),
                     responses,
                     # Copy button disabled until implemented
                     #DIV(edit_btn, copy_btn, delete_btn),
                     DIV(edit_btn, delete_btn),
-                    DIV(preview_btn, export_btn, report_btn),
+                    #DIV(preview_btn, export_btn, report_btn),
+                    DIV(preview_btn, report_btn),
                     switch,
-                    _class="thumbnail medium-2 columns",
+                    _class="project-survey-card medium-2 columns",
                     ))
 
     if permit("create", ttable):
         # Create Button
         create_btn = A(ICON("plus"),
-                     SPAN("Create new survey",
-                          ),
-                     _href=URL(c="project", f="project",
-                               args=[record_id, "target", "create"],
-                               ),
-                     _title=T("Create new survey"),
-                     )
+                       _href=URL(c="project", f="project",
+                                 args=[record_id, "target", "create"],
+                                 ),
+                       _class="no-link",
+                       )
         bappend(DIV(create_btn,
-                    _class="thumbnail medium-2 columns end",
+                    H2(T("Create new survey")
+                       ),
+                    _class="project-survey-card medium-2 columns end",
                     ))
 
 
@@ -787,7 +793,7 @@ class dc_TargetActivate(S3Method):
                                                 #"label": _row.label,
                                                 }
 
-        for posn in range(1, len(layout) + 1):
+        for posn in xrange(1, len(layout) + 1):
             item = layout[str(posn)]
             item_type = item["type"]
             if item_type == "question":
@@ -1331,14 +1337,50 @@ class dc_TemplateEditor(S3Method):
                              DIV(button,
                                  _class="medium-3 columns",
                                  ),
-                             _class="row"
+                             _class="row",
                              )
 
                 info_instructions = SPAN(ICON("info-circle"),
                                          _class="has-tip",
-                                         _title=T("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."),
+                                         _title=T("Add instructions for the data collector to indicate what they should do and say at different stages of the survey."),
                                          )
                 info_instructions["data-tooltip"] = 1
+
+                info_text = SPAN(ICON("info-circle"),
+                                 _class="has-tip",
+                                 _title=T("Add a single text box. This question type has no response options and is perfect for adding text-based information to your survey."),
+                                 )
+                info_text["data-tooltip"] = 1
+
+                info_number = SPAN(ICON("info-circle"),
+                                   _class="has-tip",
+                                   _title=T("Add a question that requires a numeric response. Use question settings to restrict input to numbers within a specified range."),
+                                   )
+                info_number["data-tooltip"] = 1
+
+                info_multichoice = SPAN(ICON("info-circle"),
+                                        _class="has-tip",
+                                        _title=T("Add a question with multiple response choices. Use question settings to allow respondents to select one or several response options."),
+                                        )
+                info_multichoice["data-tooltip"] = 1
+
+                info_likert = SPAN(ICON("info-circle"),
+                                   _class="has-tip",
+                                   _title=T("Add a multiple choice question with Likert-scale responses. Use question settings to select one of the predefined Likert scales."),
+                                   )
+                info_likert["data-tooltip"] = 1
+
+                info_heatmap = SPAN(ICON("info-circle"),
+                                    _class="has-tip",
+                                    _title=T("Add an image-based question to collect interactive responses on a heatmap. Use question settings to define tap regions and number of taps available."),
+                                    )
+                info_heatmap["data-tooltip"] = 1
+
+                info_break = SPAN(ICON("info-circle"),
+                                  _class="has-tip",
+                                  _title=T("Add a page break to your survey to display questions on different pages."),
+                                  )
+                info_break["data-tooltip"] = 1
 
                 ltable = s3db.dc_template_l10n
                 l10n = db(ltable.template_id == template_id).select(ltable.language,
@@ -1364,6 +1406,10 @@ class dc_TemplateEditor(S3Method):
                         languages_dropdown.append(OPTION(l10n_options[lang],
                                                          _value=lang,
                                                          ))
+                if l10n:
+                    hidden = ""
+                else:
+                    hidden = " hide"
 
                 toolbar = DIV(DIV(H2(T("Question types")),
                                   _class="row",
@@ -1386,7 +1432,7 @@ class dc_TemplateEditor(S3Method):
                                   DIV(T("Text box"),
                                       _class="medium-9 columns",
                                       ),
-                                  DIV(ICON("info-circle"),
+                                  DIV(info_text,
                                       _class="medium-1 columns",
                                       ),
                                   _class="row draggable",
@@ -1398,7 +1444,7 @@ class dc_TemplateEditor(S3Method):
                                   DIV(T("Number question"),
                                       _class="medium-9 columns",
                                       ),
-                                  DIV(ICON("info-circle"),
+                                  DIV(info_number,
                                       _class="medium-1 columns",
                                       ),
                                   _class="row draggable",
@@ -1410,7 +1456,7 @@ class dc_TemplateEditor(S3Method):
                                   DIV(T("Multiple choice question"),
                                       _class="medium-9 columns",
                                       ),
-                                  DIV(ICON("info-circle"),
+                                  DIV(info_multichoice,
                                       _class="medium-1 columns",
                                       ),
                                   _class="row draggable",
@@ -1422,7 +1468,7 @@ class dc_TemplateEditor(S3Method):
                                   DIV(T("Likert-scale"),
                                       _class="medium-9 columns",
                                       ),
-                                  DIV(ICON("info-circle"),
+                                  DIV(info_likert ,
                                       _class="medium-1 columns",
                                       ),
                                   _class="row draggable",
@@ -1434,7 +1480,7 @@ class dc_TemplateEditor(S3Method):
                                   DIV(T("Heatmap"),
                                       _class="medium-9 columns",
                                       ),
-                                  DIV(ICON("info-circle"),
+                                  DIV(info_heatmap,
                                       _class="medium-1 columns",
                                       ),
                                   _class="row draggable",
@@ -1446,7 +1492,7 @@ class dc_TemplateEditor(S3Method):
                                   DIV(T("Section / Page break"),
                                       _class="medium-9 columns",
                                       ),
-                                  DIV(ICON("info-circle"),
+                                  DIV(info_break,
                                       _class="medium-1 columns",
                                       ),
                                   _class="row draggable",
@@ -1461,12 +1507,35 @@ class dc_TemplateEditor(S3Method):
                                   languages_dropdown,
                                   _class="row",
                                   ),
-                              DIV(A(T("Upload translation"),
-                                    _class="button tiny round fright",
-                                    ),
-                                  _class="row",
+                              DIV(DIV(A(LABEL(ICON("download"),
+                                              T("Download survey .xls"),
+                                              ),
+                                        _href=URL(c="dc", f="template",
+                                                  args=[template_id, "export_l10n.xls"],
+                                                  ),
+                                        _class="no-link",
+                                        ),
+                                      ),
+                                  DIV(A(LABEL(ICON("upload"),
+                                              T("Upload translation .xls"),
+                                              _for = "upload-translation",
+                                              ),
+                                        INPUT(_name = "file",
+                                              _type = "file",
+                                              _accept = "application/vnd.ms-excel",
+                                              _class = "show-for-sr",
+                                              _id = "upload-translation",
+                                              ),
+                                        _class="no-link",
+                                        ),
+                                      ),
+                                  _class="row%s" % hidden,
                                   ),
                               _id = "question-bar",
+                              )
+                toolbar["_data-magellan-expedition"] = "fixed"
+                toolbar = DIV(toolbar,
+                              _class = "magellan-scrollnav",
                               )
 
                 hidden_input = INPUT(_type = "hidden",
@@ -1560,6 +1629,304 @@ class dc_TemplateEditor(S3Method):
                           "toolbar": toolbar,
                           }
 
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
+
+# =============================================================================
+class dc_TemplateExportL10n(S3Method):
+    """
+        Export the Strings from a Survey to be localised
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "template":
+            if r.representation == "xls":
+                # XLS export
+
+                # No need to check for 'read' permission within single-record methods, as that has already been checked
+
+                from s3.codecs.xls import S3XLS
+
+                try:
+                    import xlwt
+                except ImportError:
+                    r.error(503, S3XLS.ERROR.XLWT_ERROR)
+
+                template_id = r.id
+                record = r.record
+                layout = record.layout
+
+                if not layout:
+                    current.session.warning = current.T("No Layout yet defined")
+                    redirect("/%s/dc/template/%s/editor" % (r.application, r.id))
+
+                # Extract Data
+                db = current.db
+                s3db = current.s3db
+
+                tltable = s3db.dc_template_l10n
+                l10n = db(tltable.template_id == template_id).select(tltable.language,
+                                                                     limitby = (0, 1)
+                                                                     ).first()
+                if l10n:
+                    l10n = l10n.language
+
+                instructions = {}
+                questions_by_id = {}
+                question_ids = []
+                qiappend = question_ids.append
+
+                for position in layout:
+                    item = layout[position]
+                    item_type = item["type"]
+                    if item_type == "instructions":
+                        do = item["do"]
+                        do_l10n = None
+                        say = item["say"]
+                        say_l10n = None
+                        if l10n:
+                            do_l10n = do.get("l10n")
+                            if do_l10n:
+                                do_l10n = do_l10n.get(l10n)
+                            say_l10n = say.get("l10n")
+                            if say_l10n:
+                                say_l10n = say_l10n.get(l10n)
+                        if not do_l10n:
+                            do_l10n = ""
+                        if not say_l10n:
+                            say_l10n = ""
+                        position = int(position)
+                        instructions[position] = {"position": position,
+                                                  "do": do["text"],
+                                                  "say": say["text"],
+                                                  "do_l10n": do_l10n,
+                                                  "say_l10n": say_l10n,
+                                                  }
+                    elif item_type == "question":
+                        question_id = item["id"]
+                        qiappend(question_id)
+                        position = int(position)
+                        questions_by_id[question_id] = {"position": position,
+                                                        }
+
+                sorted_instructions = []
+                sappend = sorted_instructions.append
+                for position in sorted(instructions.keys()):
+                    sappend(instructions[position])
+
+                qtable = s3db.dc_question
+                fields = [qtable.id,
+                          qtable.name,
+                          qtable.options,
+                          ]
+                if l10n:
+                    qltable = s3db.dc_question_l10n
+                    left = qltable.on(qltable.question_id == qtable.id)
+                    fields += [qltable.name_l10n,
+                               qltable.options_l10n,
+                               ]
+                else:
+                    left = None
+                rows = db(qtable.id.belongs(question_ids)).select(left = left,
+                                                                  *fields
+                                                                  )
+                questions_by_position = {}
+                max_options = 0
+                for row in rows:
+                    if l10n:
+                        name_l10n = row["dc_question_l10n.name_l10n"] or ""
+                        options_l10n = row["dc_question_l10n.options_l10n"] or []
+                        row = row["dc_question"]
+                    else:
+                        name_l10n = ""
+                        options_l10n = []
+                    options = row.options or []
+                    options_length = len(options)
+                    if options_length > max_options:
+                        max_options = options_length
+                    question_id = row.id
+                    position = questions_by_id[question_id]["position"]
+                    questions_by_position[position] = {"id": question_id,
+                                                       "name": row.name or "",
+                                                       "options": options,
+                                                       "name_l10n": name_l10n,
+                                                       "options_l10n": options_l10n,
+                                                       }
+
+                sorted_questions = []
+                sappend = sorted_questions.append
+                for position in sorted(questions_by_position.keys()):
+                    sappend(questions_by_position[position])
+
+                # Create the workbook
+                book = xlwt.Workbook(encoding="utf-8")
+
+                COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
+
+                # Add sheet
+                sheet = book.add_sheet("Instructions")
+
+                labels = ["Template",
+                          "Position",
+                          "Do",
+                          "Translated Do",
+                          "Say",
+                          "Translated Say",
+                          ]
+
+                # Set column Widths
+                col_index = 0
+                column_widths = []
+                for label in labels:
+                    width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
+                    width = min(width, 65535) # USHRT_MAX
+                    column_widths.append(width)
+                    sheet.col(col_index).width = width
+                    col_index += 1
+
+                # 1st row => Column Titles
+                current_row = sheet.row(0)
+                write = current_row.write
+                for i in xrange(6):
+                    write(i, labels[i])
+
+                # Data rows
+                for i in xrange(len(sorted_instructions)):
+                    instructions = sorted_instructions[i]
+                    current_row = sheet.row(i + 1)
+                    write = current_row.write
+                    write(0, template_id)
+                    write(1, instructions["position"])
+                    write(2, instructions["do"])
+                    write(3, instructions["do_l10n"])
+                    write(4, instructions["say"])
+                    write(5, instructions["say_l10n"])
+
+
+                # Add sheet
+                sheet = book.add_sheet("Questions")
+
+                labels = ["Template",
+                          "Question ID",
+                          "Question",
+                          "Translated Question",
+                          ]
+                for i in xrange(1, max_options + 1):
+                    labels += ["Option %s" % i,
+                               "Translated Option %s" % i,
+                               ]
+
+                # Set column Widths
+                col_index = 0
+                column_widths = []
+                for label in labels:
+                    width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
+                    width = min(width, 65535) # USHRT_MAX
+                    column_widths.append(width)
+                    sheet.col(col_index).width = width
+                    col_index += 1
+
+                # 1st row => Column Titles
+                current_row = sheet.row(0)
+                write = current_row.write
+                for i in xrange(len(labels)):
+                    write(i, labels[i])
+
+                # Data rows
+                for i in xrange(len(sorted_questions)):
+                    question = sorted_questions[i]
+                    current_row = sheet.row(i + 1)
+                    write = current_row.write
+                    write(0, template_id)
+                    write(1, question["id"])
+                    write(2, question["name"])
+                    write(3, question["name_l10n"])
+                    options = question["options"]
+                    options_l10n = question["options_l10n"]
+                    cell = 2
+                    for j in xrange(len(options)):
+                        cell = cell + 2
+                        write(cell, options[j])
+                        try:
+                            option_l10n = options_l10n[j]
+                        except IndexError:
+                            pass
+                        else:
+                            write(cell + 1, option_l10n)
+
+                # Export to File
+                output = StringIO()
+                try:
+                    book.save(output)
+                except:
+                    import sys
+                    error = sys.exc_info()[1]
+                    current.log.error(error)
+                output.seek(0)
+
+                # Response headers
+                title = record.name
+                filename = "%s.xls" % title.encode("utf8")
+                response = current.response
+                from gluon.contenttype import contenttype
+                response.headers["Content-Type"] = contenttype(".xls")
+                disposition = "attachment; filename=\"%s\"" % filename
+                response.headers["Content-disposition"] = disposition
+
+                return output.read()
+                
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
+
+# =============================================================================
+class dc_TemplateImportL10n(S3Method):
+    """
+        Export the Strings to localise a Survey
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "template":
+            if r.http == "POST" and r.representation == "json":
+                # AJAX method
+                # Action the request
+                table = r.table
+                record_id = r.id
+                if not current.auth.s3_has_permission("update", table, record_id=record_id):
+                    r.unauthorised()
+                field_storage = r.post_vars.get("file")
+                if field_storage not in ("", None):
+
+                    field_storage.file
+
+                    # Results (Empty Message so we don't get it shown to User)
+                    current.response.headers["Content-Type"] = "application/json"
+                    output = current.xml.json_message(True, 200, "")
+                else:
+                    r.error(400, current.T("Invalid Parameters"))
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
         else:
@@ -1714,5 +2081,38 @@ class dc_ProjectDelete(S3Method):
             r.error(404, current.ERROR.BAD_RESOURCE)
 
         return output
+
+# =============================================================================
+def text_filter_formstyle(form, fields, *args, **kwargs):
+    """
+        Custom formstyle for S3TextFilter
+    """
+
+    def render_row(row_id, label, widget, comment, hidden=False):
+
+        controls = DIV(SPAN(ICON("search"),
+                            _class="search-icon",
+                            ),
+                       widget,
+                       _class="search-wrapper",
+                       _id=row_id,
+                       )
+        return DIV(DIV(controls,
+                       #_class="small-12 column",
+                       ),
+                   _class="row",
+                   )
+
+    if args:
+        row_id = form
+        label = fields
+        widget, comment = args
+        hidden = kwargs.get("hidden", False)
+        return render_row(row_id, label, widget, comment, hidden)
+    else:
+        parent = TAG[""]()
+        for row_id, label, widget, comment in fields:
+            parent.append(render_row(row_id, label, widget, comment))
+        return parent
 
 # END =========================================================================

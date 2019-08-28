@@ -979,7 +979,7 @@ class S3ProjectModel(S3Model):
         pltable = s3db.project_location
         ltable = s3db.gis_location
 
-        #get_vars = current.request.get_vars
+        #get_vars = r.get_vars
 
         themes = db(ttable.deleted == False).select(ttable.id,
                                                     ttable.name,
@@ -1047,7 +1047,7 @@ class S3ProjectModel(S3Model):
 
         if r.representation == "html" and r.name == "project":
 
-            appname = current.request.application
+            appname = r.application
             response = current.response
             s3 = response.s3
 
@@ -7172,7 +7172,7 @@ class project_SummaryReport(S3Method):
            not activity_ids:
             # Unfiltered, so can use pre-prepared values from project_planning_status_update
             record = r.record
-            end_date = current.request.utcnow
+            end_date = r.utcnow
             end_date = end_date.date()
 
             project = {"start_date": None, #record.start_date,
@@ -7394,7 +7394,7 @@ class project_SummaryReport(S3Method):
             if end_date:
                 end_date = s3_decode_iso_datetime(end_date)
             else:
-                end_date = current.request.utcnow
+                end_date = r.utcnow
             end_date = end_date.date()
 
             project = {"start_date": start_date,
@@ -8140,7 +8140,7 @@ class project_SummaryReport(S3Method):
         #if end_date:
         #    end_date = s3_decode_iso_datetime(end_date)
         #else:
-        #    end_date = current.request.utcnow
+        #    end_date = r.utcnow
         #query &= (table.end_date <= end_date)
         #end_date = end_date.date()
         #rows = db(query).select(table.indicator_id,
@@ -8818,7 +8818,7 @@ class project_IndicatorSummaryReport(S3Method):
         # Indicator Data
         table = s3db.project_indicator_data
         query = (table.project_id == project_id) & \
-                (table.end_date <= current.request.utcnow) & \
+                (table.end_date <= r.utcnow) & \
                 (table.deleted == False)
         rows = db(query).select(table.indicator_id,
                                 table.end_date,
@@ -9097,7 +9097,7 @@ class project_IndicatorSummaryReport(S3Method):
 
         if not years:
             current.session.warning = T("No Indicator Data available")
-            redirect("/%s/project/project/%s" % (current.request.application, r.id))
+            redirect("/%s/project/project/%s" % (r.application, r.id))
 
         s3db = current.s3db
         NONE = current.messages["NONE"]
@@ -9189,7 +9189,7 @@ class project_IndicatorSummaryReport(S3Method):
         # 3rd row => Export date/time
         current_row = sheet.row(2)
         current_row.write(0, "%s:" % T("Date Exported"), notes_style)
-        current_row.write(1, current.request.now, notes_style)
+        current_row.write(1, r.now, notes_style)
         # Fix the size of the last column to display the date
         #if 16 * COL_WIDTH_MULTIPLIER > width:
         #    sheet.col(col_index).width = 16 * COL_WIDTH_MULTIPLIER
