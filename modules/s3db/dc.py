@@ -622,7 +622,7 @@ class DataCollectionTemplateModel(S3Model):
         question_settings = question.settings or {}
         image = question.file
         if image:
-            mobile_settings["image"] = {"url": URL(c="default", f="download", args=file),
+            mobile_settings["image"] = {"url": URL(c="default", f="download", args=image),
                                         }
         else:
             pipe_image = question_settings.get("pipeImage")
