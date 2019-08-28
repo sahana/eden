@@ -62,7 +62,7 @@ class S3MainMenu(default.S3MainMenu):
                             #MM("Training Courses", c="hrm", f="course"),
                             ),
                         ]
-            elif not has_role("RDRT_ADMIN") and auth.s3_has_role("RDRT_MEMBER"):
+            elif not has_role("RDRT_ADMIN") and has_role("RDRT_MEMBER"):
                 # Simplified menu for AP RDRT
                 return []
 
@@ -369,10 +369,9 @@ class S3MainMenu(default.S3MainMenu):
                         menu_lang
             )
         else:
-            s3_has_role = auth.s3_has_role
-            ADMIN = s3_has_role("ADMIN")
-            is_org_admin = lambda i: not ADMIN and s3_has_role("ORG_ADMIN")
-            if not ADMIN and s3_has_role("RDRT_MEMBER") and not s3_has_role("RDRT_ADMIN"):
+            has_role = auth.s3_has_role
+            ADMIN = has_role("ADMIN")
+            if not ADMIN and has_role("RDRT_MEMBER") and not has_role("RDRT_ADMIN"):
                 db = current.db
                 s3db = current.s3db
                 person_id = auth.s3_logged_in_person()
@@ -390,9 +389,10 @@ class S3MainMenu(default.S3MainMenu):
                     profile = MP("Profile", c="default", f="person")
             else:
                 profile = MP("Profile", c="default", f="person")
+            is_org_admin = lambda i: not ADMIN and has_role("ORG_ADMIN")
             menu_personal = MP()(
                         MP("Administration", c="admin", f="index",
-                           check=s3_has_role("ADMIN")),
+                           check=has_role("ADMIN")),
                         MP("Administration", c="admin", f="user",
                            check=is_org_admin),
                         profile,

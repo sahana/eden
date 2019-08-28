@@ -496,6 +496,16 @@ def do_js(minimize, do_gis = False, warnings = True):
                 with openf(out_f, "w") as out:
                     out.write(minimize(inp.read()))
 
+        info("Compressing Foundation")
+        # Merge + minify
+        merged = mergejs.run("..", None, "foundation.cfg")
+        minimized = minimize(merged)
+        # Write minified file
+        with openf("foundation.min.js", "w") as outFile:
+            outFile.write(minimized)
+        # Replace target file
+        move_to("foundation.min.js", "../foundation")
+
     if JS_VULNERABILITY:
         # Vulnerability
         info("Compressing Vulnerability")

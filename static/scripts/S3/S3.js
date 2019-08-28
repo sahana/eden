@@ -643,8 +643,8 @@ var S3EnableNavigateAwayConfirm = function() {
             return;
         }
 
-        var readyState = jqXHR.readyState,
-            httpStatus = jqXHR.status,
+        var httpStatus = jqXHR.status,
+            readyState = jqXHR.readyState,
             navigateAway = !httpStatus && readyState === 0;
 
         if (textStatus == 'abort' || navigateAway) {
@@ -818,10 +818,11 @@ var S3EnableNavigateAwayConfirm = function() {
  * @param {string} message - the message to display
  * @param {string} type - the alert type:
  *                        'error', 'info', 'success', 'warning'
+ * @param {function} callback - optional callback to run when the message is closed
  *
  * @returns {jQuery} - the DOM node of the new alert
  */
-S3.showAlert = function(message, type) {
+S3.showAlert = function(message, type, callback) {
 
     if (!type) {
         type = 'success';
@@ -831,6 +832,9 @@ S3.showAlert = function(message, type) {
 
     alertSpace.append(alert).undelegate('.s3').delegate('.alert', 'click.s3', function() {
         $(this).fadeOut('slow').remove();
+        if (callback) {
+            callback();
+        }
         return false;
     });
     return alert;

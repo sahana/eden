@@ -25,8 +25,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             '4': ['Extremely safe', 'Very safe', 'Moderately safe', 'Slightly safe', 'Not safe at all'],
             '5': ['Very satisfied', 'Somewhat satisfied', 'Neither satisfied nor dissatisfied', 'Somewhat dissatisfied', 'Very dissatisfied'],
             // Note that for these 2, images will be seen by the users, not the text:
-            '6': ['Very happy', 'Happy', 'Neutral', 'Sad', 'Very sad'],
-            '7': ['Neutral', 'Sad', 'Very sad']
+            '6': [],
+            '7': []
         },
         pages = {}, // Store page -> position
         pageElements = {}, // Store page -> #elements
@@ -3332,9 +3332,63 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             $('#upload-translation').fileupload({
                 dataType: 'json',
                 maxNumberOfFiles: 1,
-                url: S3.Ap.concat('/dc/template/') + self.recordID + '/upload_l10n.json'
-            });
+                url: S3.Ap.concat('/dc/template/') + self.recordID + '/upload_l10n.json',
+                done: function (e, data) {
+                    var result = data.result;
+                    if (result) {
+                        var message = result.message;
+                        if (message) {
+                            if (result.status == 'failed') {
+                                // Note that fileupload() still sees this as a success
+                                S3.showAlert(message, 'error');
+                            } else {
+                                var callback = function() {
+                                    // Reload the page (much easier than loading all the affected elements)
+                                    /*
+                                    window.addEventListener('beforeunload', function(event) {
+                                        // Cancel the event as stated by the standard.
+                                        event.preventDefault();
+                                        // Chrome requires returnValue to be set (although all modern browsers ignore the message)
+                                        event.returnValue = message;
+                                    });*/
+                                    location.reload();
+                                }
+                                S3.showAlert(message, 'success', callback);
 
+                            }
+                        }
+                    }
+                },
+                fail: function (e, data) {
+                    var textStatus = data.textStatus,
+                        jqXHR = data.jqXHR,
+                        httpStatus = jqXHR.status,
+                        readyState = jqXHR.readyState,
+                        navigateAway = !httpStatus && readyState === 0;
+
+                    if (textStatus == 'abort' || navigateAway) {
+                        // Request aborted, or navigating away...don't show nasty messages
+                        return;
+
+                    } else if (textStatus == 'timeout') {
+
+                        // Request timeout
+                        // @ToDo: retry?
+
+                        // Show final error
+                        message = i18n.ajax_wht + ' ' + 1 + ' ' + i18n.ajax_gvn;
+                        S3.showAlert(message, 'error');
+
+                    } else if (httpStatus == 500) {
+                        // Internal server error
+                        S3.showAlert(i18n.ajax_500, 'error');
+                    }
+                }
+            });
+            $('#question-bar').on('after-clone.fndtn.magellan', function(/* event */) {
+                // Remove file input from clone, otherwise the label 'for' doesn't change the correct onem,which means that the 'change' event never gets fired & hence fileupload fails
+                $('div[data-magellan-expedition-clone] #upload-translation').remove();
+            });
         },
 
         /**

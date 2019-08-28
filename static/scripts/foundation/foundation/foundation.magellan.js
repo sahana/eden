@@ -118,6 +118,9 @@
             placeholder.attr(self.add_namespace('data-magellan-expedition-clone'), '');
             expedition.before(placeholder);
           }
+          /* Added by Fran: Trigger an Event which we can listen to (needed for UCCE fileupload */
+          expedition.trigger('after-clone.fndtn.magellan');
+          /* Fran End */
           expedition.css({position :'fixed', top : settings.fixed_top}).addClass('fixed');
         } else {
           expedition.prev('[' + self.add_namespace('data-magellan-expedition-clone') + ']').remove();

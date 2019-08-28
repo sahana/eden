@@ -1669,8 +1669,7 @@ class dc_TemplateExportL10n(S3Method):
                 layout = record.layout
 
                 if not layout:
-                    current.session.warning = current.T("No Layout yet defined")
-                    redirect("/%s/dc/template/%s/editor" % (r.application, r.id))
+                    r.error(400, current.T("No Layout yet defined"))
 
                 # Extract Data
                 db = current.db
@@ -1730,6 +1729,7 @@ class dc_TemplateExportL10n(S3Method):
                 fields = [qtable.id,
                           qtable.name,
                           qtable.options,
+                          qtable.settings,
                           ]
                 if l10n:
                     qltable = s3db.dc_question_l10n
@@ -1752,10 +1752,17 @@ class dc_TemplateExportL10n(S3Method):
                     else:
                         name_l10n = ""
                         options_l10n = []
+                        other_l10n = ""
                     options = row.options or []
                     options_length = len(options)
                     if options_length > max_options:
                         max_options = options_length
+                    settings = row.settings or {}
+                    other = settings.get("other", "")
+                    if l10n:
+                        other_l10n = settings.get("otherL10n", "")
+                    else:
+                        other_l10n = ""
                     question_id = row.id
                     position = questions_by_id[question_id]["position"]
                     questions_by_position[position] = {"id": question_id,
@@ -1763,6 +1770,8 @@ class dc_TemplateExportL10n(S3Method):
                                                        "options": options,
                                                        "name_l10n": name_l10n,
                                                        "options_l10n": options_l10n,
+                                                       "other": other,
+                                                       "other_l10n": other_l10n,
                                                        }
 
                 sorted_questions = []
@@ -1822,6 +1831,8 @@ class dc_TemplateExportL10n(S3Method):
                           "Question ID",
                           "Question",
                           "Translated Question",
+                          "Other",
+                          "Translated Other"
                           ]
                 for i in xrange(1, max_options + 1):
                     labels += ["Option %s" % i,
@@ -1853,9 +1864,11 @@ class dc_TemplateExportL10n(S3Method):
                     write(1, question["id"])
                     write(2, question["name"])
                     write(3, question["name_l10n"])
+                    write(4, question["other"])
+                    write(5, question["other_l10n"])
                     options = question["options"]
                     options_l10n = question["options_l10n"]
-                    cell = 2
+                    cell = 4
                     for j in xrange(len(options)):
                         cell = cell + 2
                         write(cell, options[j])
@@ -1897,7 +1910,7 @@ class dc_TemplateExportL10n(S3Method):
 # =============================================================================
 class dc_TemplateImportL10n(S3Method):
     """
-        Export the Strings to localise a Survey
+        Import the Strings to localise a Survey
     """
 
     # -------------------------------------------------------------------------
@@ -1914,17 +1927,173 @@ class dc_TemplateImportL10n(S3Method):
                 # AJAX method
                 # Action the request
                 table = r.table
-                record_id = r.id
-                if not current.auth.s3_has_permission("update", table, record_id=record_id):
+                template_id = r.id
+                if not current.auth.s3_has_permission("update", table, record_id=template_id):
                     r.unauthorised()
                 field_storage = r.post_vars.get("file")
                 if field_storage not in ("", None):
-
-                    field_storage.file
-
-                    # Results (Empty Message so we don't get it shown to User)
+                
+                    # Set Response Headers now so that we can return feedback to users
                     current.response.headers["Content-Type"] = "application/json"
-                    output = current.xml.json_message(True, 200, "")
+
+                    try:
+                        import xlrd
+                    except ImportError:
+                        message = "XLS import requires python-xlrd module to be installed on server"
+                        output = current.xml.json_message(False, 503, message)
+                        return output
+
+                    layout = r.record.layout
+                    if not layout:
+                        message = current.T("No Layout yet defined")
+                        output = current.xml.json_message(False, 400, message)
+                        return output
+
+                    db = current.db
+                    s3db = current.s3db
+
+                    tltable = s3db.dc_template_l10n
+                    l10n = db(tltable.template_id == template_id).select(tltable.language,
+                                                                         limitby = (0, 1)
+                                                                         ).first()
+                    if l10n:
+                        l10n = l10n.language
+
+                    if not l10n:
+                        message = current.T("This Template has no Language set to be Translated to")
+                        output = current.xml.json_message(False, 400, message)
+                        return output
+
+                    errors = 0
+                    source = field_storage.file
+                    source.seek(0)
+                    wb = xlrd.open_workbook(file_contents = source.read(),
+                                            # requires xlrd 0.7.x or higher
+                                            on_demand = True)
+
+                    sheet = wb.sheet_by_name("Instructions")
+                    for i in xrange(1, sheet.nrows):
+                        template = int(sheet.cell(i, 0).value)
+                        if template != template_id:
+                            message = current.T("Importing into wrong Template")
+                            output = current.xml.json_message(False, 400, message)
+                            return output
+                        position = str(int(sheet.cell(i, 1).value))
+                        do = sheet.cell(i, 2).value
+                        do_l10n = sheet.cell(i, 3).value
+                        say = sheet.cell(i, 4).value
+                        say_l10n = sheet.cell(i, 5).value
+
+                        if layout[position]["do"]["text"] == do:
+                            layout[position]["do"]["l10n"] = {l10n: do_l10n}
+                        else:
+                            errors += 1
+                        if layout[position]["say"]["text"] == say:
+                            layout[position]["say"]["l10n"] = {l10n: say_l10n}
+                        else:
+                            errors += 1
+
+                    db(table.id == template_id).update(layout = layout)
+
+                    sheet = wb.sheet_by_name("Questions")
+                    cols = sheet.ncols
+                    questions = {}
+                    question_ids = []
+                    qappend = question_ids.append
+                    for i in xrange(1, sheet.nrows):
+                        template = int(sheet.cell(i, 0).value)
+                        if template != template_id:
+                            # @ToDo: Message getting swallowed by fileupload
+                            message = current.T("Importing into wrong Template")
+                            output = current.xml.json_message(False, 400, message)
+                            return output
+                        question_id = int(sheet.cell(i, 1).value)
+                        qappend(question_id)
+                        name = sheet.cell(i, 2).value
+                        name_l10n = sheet.cell(i, 3).value
+                        other = sheet.cell(i, 4).value
+                        other_l10n = sheet.cell(i, 5).value
+                        options = []
+                        options_l10n = []
+                        for j in xrange(6, cols, 2):
+                            option = sheet.cell(i, j).value
+                            if not option:
+                                break
+                            option_l10n = sheet.cell(i, j + 1).value
+                            options.append(option)
+                            options_l10n.append(option_l10n)
+
+                        questions[question_id] = {"name": name,
+                                                  "name_l10n": name_l10n,
+                                                  "other": other,
+                                                  "other_l10n": other_l10n,
+                                                  "options": options,
+                                                  "options_l10n": options_l10n,
+                                                  }
+                    qtable = s3db.dc_question
+                    rows = db(qtable.id.belongs(question_ids)).select(qtable.id,
+                                                                      qtable.name,
+                                                                      qtable.options,
+                                                                      qtable.settings,
+                                                                      )
+
+                    qltable = s3db.dc_question_l10n
+                    for row in rows:
+                        question_id = row.id
+                        question = questions[question_id]
+                        l10n_data = {}
+
+                        if question["name"] == row.name:
+                            l10n_data["name_l10n"] = question["name_l10n"]
+                        else:
+                            errors += 1
+
+                        settings = row.settings or {}
+                        other = settings.get("other")
+                        if other:
+                            if other == question["other"]:
+                                other_l10n = settings.get("otherL10n")
+                                if other_l10n != question["other_l10n"]:
+                                    settings["otherL10n"] = question["other_l10n"]
+                                    db(qtable.id == question_id).update(settings = settings)
+                            else:
+                                errors += 1
+
+                        qoptions = question["options"]
+                        options_length = len(qoptions)
+                        if options_length:
+                            doptions = row.options
+                            qoptions_l10n = question["options_l10n"]
+                            options_l10n = []
+                            option_errors = 0
+                            for i in xrange(options_length):
+                                if qoptions[i] == doptions[i]:
+                                    options_l10n.append(qoptions_l10n[i])
+                                else:
+                                    option_errors += 1
+                                    options_l10n.append("")
+                            if option_errors < options_length:
+                                l10n_data["options_l10n"] = options_l10n
+                            errors += option_errors
+
+                        if l10n_data:
+                            query = (qltable.question_id == question_id) & \
+                                    (qltable.language == l10n)
+                            existing = db(query).select(qltable.id,
+                                                        limitby = (0, 1)
+                                                        ).first()
+                            if existing:
+                                existing.update_record(**l10n_data)
+                            else:
+                                l10n_data["question_id"] = question_id
+                                qltable.insert(**l10n_data)
+
+                    # Results
+                    if errors:
+                        message = "File Imported OK, apart from %s Errors. Page will be reloaded when you click this message." % errors
+                    else:
+                        message = "File Imported OK, no Error. Page will be reloaded when you click this message."
+                    output = current.xml.json_message(True, 200, message)
                 else:
                     r.error(400, current.T("Invalid Parameters"))
             else:

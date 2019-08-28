@@ -105,18 +105,23 @@ input[type="text"].text-filter {
 .project-survey-card {
   text-align: center;
   margin: 8px;
-  height: 160px;
+  height: 200px;
   border: 1px solid #E0E0E0;
   border-radius: 10px;
   box-shadow: 1px 1px #EEEEEE;
 }
 .project-survey-card .ucce {
   font-size: 24px;
+  margin: 2px;
 }
 .project-survey-card .ucce-plus {
   color: #FF7A5A; /* $coral */
   font-size: 32px;
   padding-top: 40px;
+}
+.project-survey-card .switch {
+  margin-top: 1rem;
+  margin-left: 0.8rem;
 }
 
 /* Template Editor */

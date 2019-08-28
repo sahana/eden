@@ -675,10 +675,13 @@ class DataCollectionTemplateModel(S3Model):
                 field_type = "string"
             other = question_settings.get("other")
             if other:
+                other_l10n = question_settings.get("otherL10n")
+                if other_l10n:
+                    mobile_settings["otherL10n"] = other_l10n
                 other_id = question_settings.get("other_id")
                 if other_id:
                     # Update the Dynamic Field
-                    db(current.s3db.s3_field.id == other_id).update(label = question.name)
+                    db(current.s3db.s3_field.id == other_id).update(label = other)
                     # @ToDo: Call onaccept if this starts doing anything other than just setting 'master'
                 else:
                     # Create the Dynamic Field
