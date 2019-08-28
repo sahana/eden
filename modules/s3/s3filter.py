@@ -3246,7 +3246,8 @@ class S3FilterForm(object):
         """
             Add default filters to resource, to be called a multi-record
             view with a filter form is rendered the first time and before
-            the view elements get processed
+            the view elements get processed; can be overridden in request
+            URL with ?default_filters=0
 
             @param request: the request
             @param resource: the resource
@@ -3254,12 +3255,15 @@ class S3FilterForm(object):
             @return: dict with default filters (URL vars)
         """
 
-        s3 = current.response.s3
+        default_filters = {}
 
         get_vars = request.get_vars
-        tablename = resource.tablename
+        if get_vars.get("default_filters") == "0":
+            # Skip default filters (e.g. link in report)
+            return default_filters
 
-        default_filters = {}
+        s3 = current.response.s3
+        tablename = resource.tablename
 
         # Do we have filter defaults for this resource?
         filter_defaults = s3
@@ -3338,7 +3342,7 @@ class S3FilterForm(object):
                         default = applicable_defaults[operator]
                     else:
                         continue
-                elif operator in (None, "belongs", "eq", "ne"):
+                elif operator in (None, "belongs", "eq", "ne", "like"):
                     default = applicable_defaults
                 else:
                     continue
