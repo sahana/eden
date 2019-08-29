@@ -502,6 +502,9 @@ div.dl {
 .dl-3-cols {
     width: 31%;
 }
+.dl-4-cols {
+    width: 22%;
+}
 
 .dl-field {
     clear: left;

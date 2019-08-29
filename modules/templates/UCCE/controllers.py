@@ -761,8 +761,8 @@ class dc_TargetActivate(S3Method):
         rows = db(query).select(ftable.name,
                                 #ftable.label,
                                 qtable.id,
-                                qtable.field_type,
-                                qtable.options,
+                                #qtable.field_type,
+                                #qtable.options,
                                 left = left
                                 )
         questions = {}
@@ -770,8 +770,8 @@ class dc_TargetActivate(S3Method):
             field_name = row["s3_field.name"]
             row = row["dc_question"]
             questions[row.id] = {"name": field_name,
-                                 "field_type": row.field_type,
-                                 "options": row.options,
+                                 #"field_type": row.field_type,
+                                 #"options": row.options,
                                  }
 
         for posn in xrange(1, len(layout) + 1):

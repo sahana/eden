@@ -366,8 +366,6 @@ def config(settings):
                    method = "update_json",
                    action = dc_QuestionSave())
 
-        return attr
-
     settings.customise_dc_question_controller = customise_dc_question_controller
 
     # -------------------------------------------------------------------------
@@ -559,8 +557,27 @@ def config(settings):
                    method = "report_custom",
                    action = dc_TargetReport())
 
-        current.response.s3.dl_no_header = True
-        attr["dl_rowsize"] = 2
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.method == "datalist":
+                # Filter out Draft Surveys
+                from s3 import FS
+                r.resource.add_filter(FS("status") != 1)
+
+            return result
+        s3.prep = prep
+
+        s3.dl_no_header = True
+        attr["dl_rowsize"] = 4
 
         return attr
 
