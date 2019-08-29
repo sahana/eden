@@ -507,7 +507,7 @@ def config(settings):
                                                    ),
                        listadd = False,
                        list_fields = ["name",
-                                      "status",
+                                      #"status",
                                       "project_target.project_id",
                                       ],
                        list_layout = dc_target_list_layout,
@@ -534,6 +534,7 @@ def config(settings):
         from templates.UCCE.controllers import dc_TargetEdit
         from templates.UCCE.controllers import dc_TargetName
         from templates.UCCE.controllers import dc_TargetL10n
+        from templates.UCCE.controllers import dc_TargetReport
 
         set_method = current.s3db.set_method
         set_method("dc", "target",
@@ -554,9 +555,12 @@ def config(settings):
         set_method("dc", "target",
                    method = "l10n",
                    action = dc_TargetL10n())
+        set_method("dc", "target",
+                   method = "report_custom",
+                   action = dc_TargetReport())
 
         current.response.s3.dl_no_header = True
-        attr["dl_rowsize"] = 2
+        attr["dl_rowsize"] = 4
 
         return attr
 

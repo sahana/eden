@@ -1419,7 +1419,7 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
                 value = current.xml.xml_decode(child.text)
             try:
                 value = S3Importer._decode_data(field, value)
-            except ValueError:
+            except (TypeError, ValueError):
                 pass
             if value:
                 value = s3_unicode(value)

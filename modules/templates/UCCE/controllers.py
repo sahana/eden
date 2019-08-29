@@ -37,10 +37,15 @@ def dc_target_list_layout(list_id, item_id, resource, rfields, record):
     #T = current.T
 
     #raw = record._row
-    #record_id = record["dc_target.id"]
+    record_id = record["dc_target.id"]
     title = record["dc_target.name"]
+    project = record["project_project_target.project_id"]
 
-    item = DIV(title,
+    item = DIV(A(H2(title),
+                 _href=URL(c="dc", f="target",
+                           args=[record_id, "report_custom"]),
+                 ),
+               project,
                _class = "card",
                _id = item_id,
                )
@@ -294,7 +299,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                             _class="no-link",
                             )
             report_btn = A(ICON("bar-chart"),
-                           SPAN("report",
+                           SPAN("report_custom",
                                 _class = "show-for-sr",
                                 ),
                            _href=URL(c="dc", f="target",
@@ -806,7 +811,7 @@ class dc_TargetActivate(S3Method):
                         dq = questions.get(displayLogic["id"])
                         if dq:
                             dfname = dq["name"]
-                            displayLogic["field"] = fname
+                            displayLogic["field"] = dfname
                             displayLogic.pop("id")
                             item = {"type": "input",
                                     "field": fname,
@@ -831,7 +836,7 @@ class dc_TargetActivate(S3Method):
                     dq = questions.get(displayLogic["id"])
                     if dq:
                         dfname = dq["name"]
-                        displayLogic["field"] = fname
+                        displayLogic["field"] = dfname
                         displayLogic.pop("id")
                         new_item["displayLogic"] = displayLogic
                         
@@ -1236,6 +1241,40 @@ class dc_TargetL10n(S3Method):
                     output = current.xml.json_message(True, 200, "")
                 else:
                     r.error(400, current.T("Invalid Parameters"))
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
+
+        return output
+
+# =============================================================================
+class dc_TargetReport(S3Method):
+    """
+        Survey Report
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "target":
+            if r.interactive:
+                # Custom Report
+
+                # No need to check for 'read' permission within single-record methods, as that has already been checked
+
+                current.response.view = "simple.html"
+                output = {"item": "tbc"}
+
+            elif r.representation == "pdf":
+                raise NotImplementedError
+
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
         else:
