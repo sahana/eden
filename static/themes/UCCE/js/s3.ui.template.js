@@ -549,7 +549,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     break;
 
                 case 'heatmap':
-                    newChoice = '<div id="choice-row-' + questionID + '-0" class="row"><a class="button tiny secondary choice-define-' + questionID + '">Add region 1</a><input type="hidden" id="choice-json-' + questionID + '-0"><input class="choice-' + questionID + '" type="text" placeholder="enter label" disabled><i class="ucce ucce-minus"> </i></div>';
+                    newChoice = '<div id="choice-row-' + questionID + '-0" class="row"><a class="button tiny secondary choice-define-' + questionID + '">Add region 1</a><input type="hidden" id="choice-json-' + questionID + '-0"><input class="choice-' + questionID + '" type="text" placeholder="enter label" disabled><i class="ucce ucce-minus hide"> </i></div>';
                     var name = '',
                         nameL10n = '',
                         numClicks = 1,
@@ -1199,9 +1199,13 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         var deleteOption = $('.choice-' + questionID).next();
                         deleteOption.off('click' + ns)
                                     .on('click' + ns, function() {
+                            var $this = $(this),
+                                // Parse currentPosition now...as can't do it after we .remove()
+                                currentPosition = parseInt($this.closest('.media').attr('id').split('-')[1]);
+                            
                             if ($('.choice-' + questionID).length > 1) {
                                 // Remove Region
-                                var currentRow = $(this).closest('.row'),
+                                var currentRow = $this.closest('.row'),
                                     index = parseInt(currentRow.attr('id').split('-')[3]);
                                 currentRow.remove();
                                 // & from l10n
@@ -1221,25 +1225,17 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 self.saveQuestion(type, questionID);
                             } else {
                                 // Just remove value - since we always need at least 1 region available
-                                var input = $(this).prev();
-                                input.val('')
-                                     .prop('disabled', true);
-                                input.prev().addClass('secondary');
+                                $this.hide()
+                                     .prev()
+                                     .val('')
+                                     .prop('disabled', true)
+                                     .prev().addClass('secondary');
                             }
-                            // Remove any outdated displayLogic
-                            var currentPosition = parseInt($(this).closest('.media').attr('id').split('-')[1]),
+                            
+                            // Loop through Layout to remove outdated displayLogic &/or pipeImage
+                            var layoutLength = Object.keys(layout).length,
                                 thisItem,
-                                layoutLength = Object.keys(layout).length;
-                            for (var i=currentPosition + 1; i <= layoutLength; i++) {
-                                thisItem = layout[i];
-                                if (thisItem.displayLogic && thisItem.displayLogic.id == questionID && thisItem.displayLogic.eq == index) {
-                                    delete thisItem.displayLogic;
-                                    $('#logic-select-' + i).val('')
-                                                           .trigger('change');
-                                }
-                            }
-                            // Remove any outdated pipeImage
-                            var thisQuestionID,
+                                thisQuestionID,
                                 thisQuestionSettings;
                             for (var i=1; i <= layoutLength; i++) {
                                 thisItem = layout[i];
@@ -1247,9 +1243,18 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                     thisQuestionID = thisItem.id;
                                     thisQuestionSettings = questions[thisQuestionID].settings;
                                     if (thisQuestionSettings.pipeImage && thisQuestionSettings.pipeImage.id == questionID && thisQuestionSettings.pipeImage.region == index) {
+                                        // Remove outdated pipeImage
                                         delete thisQuestionSettings.pipeImage;
                                         $('#pipe-' + thisQuestionID).val('')
                                                                     .trigger('change');
+                                    }
+                                }
+                                if (i > currentPosition + 1) {
+                                    if (thisItem.displayLogic && thisItem.displayLogic.id == questionID && thisItem.displayLogic.eq == index) {
+                                        // Remove outdated displayLogic
+                                        delete thisItem.displayLogic;
+                                        $('#logic-select-' + i).val('')
+                                                               .trigger('change');
                                     }
                                 }
                             }
@@ -1284,8 +1289,10 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 // Add Events
                                 inputEvents();
                                 multichoiceEvents();
-                                $this.removeClass('secondary');
-                                $this.next().next().prop('disabled', false);
+                                $this.removeClass('secondary')
+                                     .next().next().prop('disabled', false)
+                                                   .next().removeClass('hide')
+                                                          .show();
                             }
                             // Show existing Region Polygon in a different Colour
                             var callback = function(feature) {
@@ -1533,7 +1540,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     var feature,
                         geojson,
                         region,
-                        regions = self.data.questions[questionID].settings.regions;
+                        regions = self.data.questions[questionID].settings.regions || [];
                     for (var i=0, len=regions.length; i < len; i++) {
                         region = regions[i];
                         if (region) {
