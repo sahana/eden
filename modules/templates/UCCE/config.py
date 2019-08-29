@@ -366,6 +366,8 @@ def config(settings):
                    method = "update_json",
                    action = dc_QuestionSave())
 
+        return attr
+
     settings.customise_dc_question_controller = customise_dc_question_controller
 
     # -------------------------------------------------------------------------

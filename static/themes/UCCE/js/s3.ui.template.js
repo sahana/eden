@@ -1749,7 +1749,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     logicTerm2 = $('#logic-term-2-' + currentPosition);
                 logicOperator1.on('change' + ns, function(/* event */) {
                     operator = $(this).val();
-                    value = logicTerm1.val();
+                    value = parseInt(logicTerm1.val());
                     displayLogic = {
                         id: logicQuestionID
                     };
@@ -1770,7 +1770,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         if (value) {
                             displayLogic.gt = value;
                         }
-                        value = logicTerm2.val();
+                        value = parseInt(logicTerm2.val());
                         if (value) {
                             displayLogic.lt = value;
                         }
@@ -1784,7 +1784,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         if (value) {
                             displayLogic.lt = value;
                         }
-                        value = logicTerm2.val();
+                        value = parseInt(logicTerm2.val());
                         if (value) {
                             displayLogic.gt = value;
                         }
@@ -1803,11 +1803,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         logicOperator1.val('lt');
                         // Update Data
                         if (value) {
-                            displayLogic.gt = value;
+                            displayLogic.gt = parseInt(value);
                         }
                         value = logicTerm1.val();
                         if (value) {
-                            displayLogic.lt = value;
+                            displayLogic.lt = parseInt(value);
                         }
                     } else if (operator == 'lt') {
                         // Set other as gt selected
@@ -1818,7 +1818,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         }
                         value = logicTerm1.val();
                         if (value) {
-                            displayLogic.gt = value;
+                            displayLogic.gt = parseInt(value);
                         }
                     }
                     self.data.layout[currentPosition].displayLogic = displayLogic;
@@ -1835,20 +1835,20 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         };
                         operator = logicOperator1.val();
                         if (operator == 'eq') {
-                            displayLogic.eq = value;
+                            displayLogic.eq = parseInt(value);
                         } else {
                             if (operator == 'gt') {
-                                displayLogic.gt = value;
+                                displayLogic.gt = parseInt(value);
                             } else {
-                                displayLogic.lt = value;
+                                displayLogic.lt = parseInt(value);
                             }
                             value = logicTerm2.val();
                             if (value) {
                                 operator = logicOperator2.val();
                                 if (operator == 'gt') {
-                                    displayLogic.gt = value;
+                                    displayLogic.gt = parseInt(value);
                                 } else {
-                                    displayLogic.lt = value;
+                                    displayLogic.lt = parseInt(value);
                                 }
                             }
                         }
@@ -1862,9 +1862,9 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             };
                             operator = logicOperator1.val();
                             if (operator == 'gt') {
-                                displayLogic.gt = value;
+                                displayLogic.gt = parseInt(value);
                             } else {
-                                displayLogic.lt = value;
+                                displayLogic.lt = parseInt(value);
                             }
                             self.data.layout[currentPosition].displayLogic = displayLogic;
                         } else {
@@ -1883,17 +1883,17 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         };
                         operator = logicOperator2.val();
                         if (operator == 'gt') {
-                            displayLogic.gt = value;
+                            displayLogic.gt = parseInt(value);
                         } else {
-                            displayLogic.lt = value;
+                            displayLogic.lt = parseInt(value);
                         }
                         value = logicTerm1.val();
                         if (value) {
                             operator = logicOperator1.val();
                             if (operator == 'gt') {
-                                displayLogic.gt = value;
+                                displayLogic.gt = parseInt(value);
                             } else {
-                                displayLogic.lt = value;
+                                displayLogic.lt = parseInt(value);
                             }
                         }
                         self.data.layout[currentPosition].displayLogic = displayLogic;
@@ -1906,11 +1906,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             };
                             operator = logicOperator1.val();
                             if (operator == 'eq') {
-                                displayLogic.eq = value;
+                                displayLogic.eq = parseInt(value);
                             } else if (operator == 'gt') {
-                                displayLogic.gt = value;
+                                displayLogic.gt = parseInt(value);
                             } else {
-                                displayLogic.lt = value;
+                                displayLogic.lt = parseInt(value);
                             }
                             self.data.layout[currentPosition].displayLogic = displayLogic;
                         } else {
@@ -1980,7 +1980,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     var newDisplayLogic = {
                         id: logicQuestionID,
                     };
-                    newDisplayLogic[operator] = $(this).val();
+                    newDisplayLogic[operator] = parseInt($(this).val());
                     self.data.layout[currentPosition].displayLogic = newDisplayLogic;
                     // Save Layout
                     self.saveLayout();
@@ -2003,7 +2003,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
             if (value) {
                 // Show 2nd select
-                this.logicSubOptions(currentPosition, value);
+                this.logicSubOptions(currentPosition, parseInt(value));
             } else {
                 // Update Data
                 delete this.data.layout[currentPosition].displayLogic;
@@ -3058,7 +3058,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         scale = $('#scale-' + questionID).val();
                     if (scale) {
                         options = likertOptions[scale];
-                        settings.scale = scale;
+                        settings.scale = parseInt(scale);
                     } else {
                         options = [];
                         settings.scale = null;
