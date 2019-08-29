@@ -70,41 +70,27 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
 
     raw = record._row
     record_id = record["doc_document.id"]
-    title = raw["doc_document.name"]
-    filename = raw["doc_document.file"] or ""
-    #url = raw["doc_document.url"] or ""
-    comments = raw["doc_document.comments"] or ""
-    #category = record["doc_document.series_id"]
+    title = record["doc_document.name"]
+    comments = record["doc_document.comments"]
+    project = record["project_project_target.project_id"]
 
+    filename = raw["doc_document.file"]
     if filename:
         try:
             # Check whether file exists and extract the original
             # file name from the stored file name
-            origname = current.s3db.doc_document.file.retrieve(filename)[0]
+            origname = table.file.retrieve(filename)[0]
         except (IOError, TypeError):
             origname = current.messages["NONE"]
         doc_url = URL(c="default", f="download", args=[filename])
-        body = P(ICON("attachment"),
-                 " ",
-                 SPAN(A(origname,
-                        _href=doc_url,
-                        )
-                      ),
-                 " ",
-                 _class="card_1_line",
-                 )
-    #elif url:
-    #    body = P(ICON("link"),
-    #             " ",
-    #             SPAN(A(url,
-    #                    _href=url,
-    #                    )),
-    #             " ",
-    #             _class="card_1_line",
-    #             )
     else:
-        # Shouldn't happen!
-        body = P(_class="card_1_line")
+        # Should only happen for dummy prepop
+        doc_url = ""
+        
+    button = A(T("Download PDF"),
+               _href=doc_url,
+               _class="button round",
+               )
 
     # Toolbar
     permit = current.auth.s3_has_permission
@@ -140,26 +126,12 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
                   _class="edit-bar fright",
                   )
 
-    # Render the item
-    item = DIV(DIV(#ICON(icon),
-                   SPAN(" %s" % title,
-                        _class="card-title"),
-                   toolbar,
-                   _class="card-header",
-                   ),
-               DIV(DIV(DIV(body,
-                           P(SPAN(comments),
-                             " ",
-                             _class="card_manylines",
-                             ),
-                           _class="media",
-                           ),
-                       _class="media-body",
-                       ),
-                   _class="media",
-                   ),
-               _class="thumbnail",
-               _id=item_id,
+    item = DIV(toolbar,
+               H2(title),
+               comments,
+               button,
+               _class = "card",
+               _id = item_id,
                )
 
     return item

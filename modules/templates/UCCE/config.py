@@ -560,7 +560,7 @@ def config(settings):
                    action = dc_TargetReport())
 
         current.response.s3.dl_no_header = True
-        attr["dl_rowsize"] = 4
+        attr["dl_rowsize"] = 2
 
         return attr
 
@@ -806,6 +806,7 @@ def config(settings):
         s3.postp = postp
 
         s3.dl_no_header = True
+        attr["dl_rowsize"] = 2
 
         return attr
 
