@@ -670,7 +670,7 @@ class DataCollectionTemplateModel(S3Model):
             # Options
             options = question.options
             multiple = question_settings.get("multiple")
-            if multiple > 1:
+            if multiple and multiple > 1:
                 field_type = "list:string"
                 mobile_settings["requires"] = {"selectedOpts": {"max": multiple}}
             else:
