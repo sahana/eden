@@ -1231,7 +1231,19 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                      .prop('disabled', true)
                                      .prev().addClass('secondary');
                             }
-                            
+
+                            // Remove existing Region Polygon
+                            var callback = function(feature) {
+                                if (feature.get('region') == index) {
+                                    source.removeFeature(feature);
+                                    // Stop Iterating
+                                    return true;
+                                }
+                                // Continue Iterating
+                                return false;
+                            };
+                            source.forEachFeature(callback);
+
                             // Loop through Layout to remove outdated displayLogic &/or pipeImage
                             var layoutLength = Object.keys(layout).length,
                                 thisItem,
