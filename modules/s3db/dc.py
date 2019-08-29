@@ -121,8 +121,10 @@ class DataCollectionTemplateModel(S3Model):
                      #              'l10n': {'fr': "Mettez-vous à l'aise",
                      #                       },
                      #              },
-                     #      'displayLogic': {'id': questionID, (Multichoice, Likert or Heatmap)
-                     #                       'eq': option or region,
+                     #      'displayLogic': {'id': questionID,
+                     #                       'eq': option_id (Multichoice, Likert)
+                     #                       or
+                     #                       'selectedRegion': region_id (Heatmap)
                      #                       },
                      #      },
                      #  3: {'type': 'question',

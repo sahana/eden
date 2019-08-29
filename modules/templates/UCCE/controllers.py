@@ -789,14 +789,18 @@ class dc_TargetActivate(S3Method):
         rows = db(query).select(ftable.name,
                                 #ftable.label,
                                 qtable.id,
+                                qtable.field_type,
+                                qtable.options,
                                 left = left
                                 )
         questions = {}
         for row in rows:
-            _row = row["s3_field"]
-            questions[row["dc_question.id"]] = {"name": _row.name,
-                                                #"label": _row.label,
-                                                }
+            field_name = row["s3_field.name"]
+            row = row["dc_question"]
+            questions[row.id] = {"name": field_name,
+                                 "field_type": row.field_type,
+                                 "options": row.options,
+                                 }
 
         for posn in xrange(1, len(layout) + 1):
             item = layout[str(posn)]
@@ -808,10 +812,9 @@ class dc_TargetActivate(S3Method):
                     displayLogic = item.get("displayLogic")
                     if displayLogic:
                         # Convert Question ID to fieldname
-                        dq = questions.get(displayLogic["id"])
+                        dq = questions.get(int(displayLogic["id"]))
                         if dq:
-                            dfname = dq["name"]
-                            displayLogic["field"] = dfname
+                            displayLogic["field"] = dq["name"]
                             displayLogic.pop("id")
                             item = {"type": "input",
                                     "field": fname,
@@ -833,10 +836,9 @@ class dc_TargetActivate(S3Method):
                 displayLogic = item.get("displayLogic")
                 if displayLogic:
                     # Convert Question ID to fieldname
-                    dq = questions.get(displayLogic["id"])
+                    dq = questions.get(int(displayLogic["id"]))
                     if dq:
-                        dfname = dq["name"]
-                        displayLogic["field"] = dfname
+                        displayLogic["field"] = dq["name"]
                         displayLogic.pop("id")
                         new_item["displayLogic"] = displayLogic
                         

@@ -1670,7 +1670,6 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             var ns = this.eventNamespace,
                 self = this,
                 displayLogic = this.data.layout[currentPosition].displayLogic,
-                label,
                 logicQuestion = this.data.questions[logicQuestionID],
                 type = typesToText[logicQuestion.type];
 
@@ -1924,62 +1923,69 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
                 return;
 
-            } else if (type == 'heatmap') {
-                label = 'region';
             } else {
-                // Multichoice or Likert
-                label = 'option';
-            }
+                // Display a dropdown of Options for the selected Question
 
-            // Display a dropdown of Options for the selected Question
+                var label,
+                    operator;
 
-            var displayLogicOption,
-                opt,
-                options = logicQuestion.options,
-                selected,
-                subOptionSelect = '<select id="sub-logic-select-' + currentPosition + '"><option value="">select ' + label + '</option>';
-
-            if (displayLogic) {
-                displayLogicOption = displayLogic.eq;
-            }
-
-            for (var i=0, len=options.length; i < len; i++) {
-                opt = options[i];
-                if (opt == displayLogicOption) {
-                    selected = ' selected';
+                if (type == 'heatmap') {
+                    label = 'region';
+                    operator = 'selectedRegion';
                 } else {
-                    selected = '';
+                    // Multichoice or Likert
+                    label = 'option';
+                    operator = 'eq';
                 }
-                subOptionSelect += '<option value="' + opt + '"' + selected + '>' + opt + '</option>';
-            }
 
-            if (type == 'multichoice') {
-                var otherLabel = logicQuestion.settings.other;
-                if (otherLabel) {
-                    if (displayLogicOption == '_other') {
+                var displayLogicOption,
+                    opt,
+                    options = logicQuestion.options,
+                    selected,
+                    subOptionSelect = '<select id="sub-logic-select-' + currentPosition + '"><option value="">select ' + label + '</option>';
+
+                if (displayLogic) {
+                    displayLogicOption = displayLogic[operator];
+                }
+
+                for (var i=0, len=options.length; i < len; i++) {
+                    if (i == displayLogicOption) {
                         selected = ' selected';
                     } else {
                         selected = '';
                     }
-                    subOptionSelect += '<option value="_other"' + selected + '>' + otherLabel + '</option>';
+                    subOptionSelect += '<option value="' + i + '"' + selected + '>' + options[i] + '</option>';
                 }
+
+                if (type == 'multichoice') {
+                    var otherLabel = logicQuestion.settings.other;
+                    if (otherLabel) {
+                        if (displayLogicOption == '_other') {
+                            selected = ' selected';
+                        } else {
+                            selected = '';
+                        }
+                        subOptionSelect += '<option value="_other"' + selected + '>' + otherLabel + '</option>';
+                    }
+                }
+
+                subOptionSelect += '</select>';
+
+                $('#logic-response-' + currentPosition).html(subOptionSelect);
+
+                // Add Events
+                // - listen to dropdown of options
+                $('#sub-logic-select-' + currentPosition).on('change' + ns, function(/* event */) {
+                    // Update Data
+                    var newDisplayLogic = {
+                        id: logicQuestionID,
+                    };
+                    newDisplayLogic[operator] = $(this).val();
+                    self.data.layout[currentPosition].displayLogic = newDisplayLogic;
+                    // Save Layout
+                    self.saveLayout();
+                });
             }
-
-            subOptionSelect += '</select>';
-
-            $('#logic-response-' + currentPosition).html(subOptionSelect);
-
-            // Add Events
-            // - listen to dropdown of options
-            $('#sub-logic-select-' + currentPosition).on('change' + ns, function(/* event */) {
-                // Update Data
-                self.data.layout[currentPosition].displayLogic = {
-                    id: logicQuestionID,
-                    eq: $(this).val()
-                };
-                // Save Layout
-                self.saveLayout();
-            });
         },
 
         /**
@@ -2356,6 +2362,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         $('#logic-' + currentPosition).attr('id', 'logic-' + newPosition);
                         $('#logic-select-' + currentPosition).attr('id', 'logic-select-' + newPosition);
                         $('#sub-logic-select-' + currentPosition).attr('id', 'sub-logic-select-' + newPosition);
+                        $('#logic-response-' + currentPosition).attr('id', 'logic-response-' + newPosition);
+                        $('#logic-response-row-' + currentPosition).attr('id', 'logic-response-row-' + newPosition);
                         $('#logic-operator-1-' + currentPosition).attr('id', 'logic-operator-1-' + newPosition);
                         $('#logic-operator-2-' + currentPosition).attr('id', 'logic-operator-2-' + newPosition);
                         $('#logic-term-1-' + currentPosition).attr('id', 'logic-term-1-' + newPosition);
@@ -2429,6 +2437,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         $('#edit-' + newPosition).attr('id', 'edit-' + 'interim');
                         $('#logic-' + newPosition).attr('id', 'logic-' + 'interim');
                         $('#logic-select-' + newPosition).attr('id', 'logic-select-' + 'interim');
+                        $('#logic-response-' + newPosition).attr('id', 'logic-response-' + 'interim');
+                        $('#logic-response-row-' + newPosition).attr('id', 'logic-response-row-' + 'interim');
                         $('#sub-logic-select-' + newPosition).attr('id', 'sub-logic-select-' + 'interim');
                         $('#logic-operator-1-' + newPosition).attr('id', 'logic-operator-1-' + 'interim');
                         $('#logic-operator-2-' + newPosition).attr('id', 'logic-operator-2-' + 'interim');
@@ -2448,6 +2458,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         $('#edit-' + currentPosition).attr('id', 'edit-' + newPosition);
                         $('#logic-' + currentPosition).attr('id', 'logic-' + newPosition);
                         $('#logic-select-' + currentPosition).attr('id', 'logic-select-' + newPosition);
+                        $('#logic-response-' + currentPosition).attr('id', 'logic-response-' + newPosition);
+                        $('#logic-response-row-' + currentPosition).attr('id', 'logic-response-row-' + newPosition);
                         $('#sub-logic-select-' + currentPosition).attr('id', 'sub-logic-select-' + newPosition);
                         $('#logic-operator-1-' + currentPosition).attr('id', 'logic-operator-1-' + newPosition);
                         $('#logic-operator-2-' + currentPosition).attr('id', 'logic-operator-2-' + newPosition);
@@ -2475,6 +2487,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         $('#edit-' + 'interim').attr('id', 'edit-' + currentPosition);
                         $('#logic-' + 'interim').attr('id', 'logic-' + currentPosition);
                         $('#logic-select-' + 'interim').attr('id', 'logic-select-' + currentPosition);
+                        $('#logic-response-' + 'interim').attr('id', 'logic-response-' + currentPosition);
+                        $('#logic-response-row-' + 'interim').attr('id', 'logic-response-row-' + currentPosition);
                         $('#sub-logic-select-' + 'interim').attr('id', 'sub-logic-select-' + currentPosition);
                         $('#logic-operator-1-' + 'interim').attr('id', 'logic-operator-1-' + currentPosition);
                         $('#logic-operator-2-' + 'interim').attr('id', 'logic-operator-2-' + currentPosition);
@@ -2614,6 +2628,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             $('#edit-' + oldPosition).attr('id', 'edit-' + thisNewPosition);
                             $('#logic-' + oldPosition).attr('id', 'logic-' + thisNewPosition);
                             $('#logic-select-' + oldPosition).attr('id', 'logic-select-' + thisNewPosition);
+                            $('#logic-response-' + oldPosition).attr('id', 'logic-response-' + thisNewPosition);
+                            $('#logic-response-row-' + oldPosition).attr('id', 'logic-response-row-' + thisNewPosition);
                             $('#sub-logic-select-' + oldPosition).attr('id', 'sub-logic-select-' + thisNewPosition);
                             $('#logic-operator-1-' + oldPosition).attr('id', 'logic-operator-1-' + thisNewPosition);
                             $('#logic-operator-2-' + oldPosition).attr('id', 'logic-operator-2-' + thisNewPosition);
@@ -2751,6 +2767,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             $('#edit-' + oldPosition).attr('id', 'edit-' + thisNewPosition);
                             $('#logic-' + oldPosition).attr('id', 'logic-' + thisNewPosition);
                             $('#logic-select-' + oldPosition).attr('id', 'logic-select-' + thisNewPosition);
+                            $('#logic-response-' + oldPosition).attr('id', 'logic-response-' + thisNewPosition);
+                            $('#logic-response-row-' + oldPosition).attr('id', 'logic-response-row-' + thisNewPosition);
                             $('#sub-logic-select-' + oldPosition).attr('id', 'sub-logic-select-' + thisNewPosition);
                             $('#logic-operator-1-' + oldPosition).attr('id', 'logic-operator-1-' + thisNewPosition);
                             $('#logic-operator-2-' + oldPosition).attr('id', 'logic-operator-2-' + thisNewPosition);
