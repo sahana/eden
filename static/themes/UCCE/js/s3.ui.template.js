@@ -2819,7 +2819,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
                 if (itemType == 'question') {
                     // Remove final questionNumber from questionNumbers
-                    delete questionNumbers[oldQuestionNumber];
+                    delete questionNumbers[Object.keys(questionNumbers).length];
                 }
             }
 
