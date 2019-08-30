@@ -580,6 +580,7 @@ def config(settings):
 
         s3.dl_no_header = True
         attr["dl_rowsize"] = 4
+        attr["rheader"] = None
 
         return attr
 

@@ -72,8 +72,6 @@ class DataCollectionTemplateModel(S3Model):
         configure = self.configure
         define_table = self.define_table
 
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-
         master_opts = {"dc_response": T("Assessments"),
                        "event_sitrep": T("Situation Reports"),
                        #"hrm_training_event": T("Training Events"), # Currently using dc_target
@@ -218,14 +216,14 @@ class DataCollectionTemplateModel(S3Model):
                      }
 
         # Scale defined in settings["scale"]
-        likert_opts = {1: T("Appropriateness (Very appropriate - Very inappropriate)"),
-                       2: T("Confidence (Extremely confident - Not confident at all)"),
-                       3: T("Frequency (Always - Never)"),
-                       4: T("Safety (Extremely safe - Not safe at all)"),
-                       5: T("Satisfaction (Satisfied - Dissatisfied)"),
-                       6: T("Smiley scale (5 point)"),
-                       7: T("Smiley scale (3 point)"),
-                       }
+        #likert_opts = {1: T("Appropriateness (Very appropriate - Very inappropriate)"),
+        #               2: T("Confidence (Extremely confident - Not confident at all)"),
+        #               3: T("Frequency (Always - Never)"),
+        #               4: T("Safety (Extremely safe - Not safe at all)"),
+        #               5: T("Satisfaction (Satisfied - Dissatisfied)"),
+        #               6: T("Smiley scale (5 point)"),
+        #               7: T("Smiley scale (3 point)"),
+        #               }
 
         tablename = "dc_question"
         define_table(tablename,
@@ -694,11 +692,14 @@ class DataCollectionTemplateModel(S3Model):
                                                                             ).first()
                     from uuid import uuid1
                     name = "f%s" % str(uuid1()).replace("-", "_")
-                    field_id = current.s3db.s3_field.insert(table_id = template.table_id,
+                    other_id = current.s3db.s3_field.insert(table_id = template.table_id,
                                                             label = other,
                                                             name = name,
                                                             field_type = "string",
                                                             )
+                    db(current.s3db.s3_field.id == other_id).update(label = other)
+                    question_settings["other_id"] = other_id
+                    question.update_record(settings = question_settings)
                     # @ToDo: Call onaccept if this starts doing anything other than just setting 'master'
                     # @ToDo: Call set_record_owner() once we start restricting these
         elif field_type == 7:

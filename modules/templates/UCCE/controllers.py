@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import division
+
 import os
 
 from gluon import *
 from gluon.storage import Storage
 
-from s3 import json, ICON, S3CustomController, S3Method
+from s3 import json, ICON, S3CustomController, S3DateTime, S3Method
 from s3compat import StringIO, xrange
 
 # Compact JSON encoding
@@ -275,7 +277,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                                 _class = "show-for-sr",
                                 ),
                            _href=URL(c="dc", f="target",
-                                     args=[target_id, "report"],
+                                     args=[target_id, "report_custom"],
                                      ),
                            _title=T("Report"),
                            _class="no-link",
@@ -1238,16 +1240,14 @@ class dc_TargetReport(S3Method):
         """
 
         if r.name == "target":
+            # No need to check for 'read' permission within single-record methods, as that has already been checked
             if r.interactive:
-                # Custom Report
-
-                # No need to check for 'read' permission within single-record methods, as that has already been checked
-
-                current.response.view = "simple.html"
-                output = {"item": "tbc"}
+                data = self.extract(r)
+                return self.html(data)
 
             elif r.representation == "pdf":
-                raise NotImplementedError
+                data = self.extract(r)
+                return self.pdf(data)
 
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
@@ -1255,6 +1255,232 @@ class dc_TargetReport(S3Method):
             r.error(404, current.ERROR.BAD_RESOURCE)
 
         return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def extract(r):
+        """
+            Extract the Data from the Database
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = r.table
+        target_id = r.id
+        record = r.record
+
+        date_format = "%d/%m/%Y"
+        date_represent = lambda v: S3DateTime.date_represent(v, format = date_format)
+
+        # Survey Name
+        survey_name = record.name
+
+        # Project Name
+        ptable = s3db.project_project
+        ltable = s3db.project_project_target
+        query = (ltable.target_id == target_id) & \
+                (ltable.project_id == ptable.id)
+        project = db(query).select(ptable.name,
+                                   limitby = (0, 1)
+                                   ).first()
+        try:
+            project_name = project.name
+        except AttributeError:
+            project_name = ""
+
+        # Created on
+        created_on = date_represent(record.created_on)
+
+        # Published on
+        #published_on = date_represent(record.activated_on)
+        published_on = ""
+
+        # Template
+        ttable = s3db.dc_template
+        template = db(ttable.id == record.template_id).select(ttable.layout,
+                                                              ttable.table_id,
+                                                              ttable.modified_on,
+                                                              limitby = (0, 1)
+                                                              ).first()
+
+        # Last edited on
+        updated_on = date_represent(template.modified_on)
+
+        layout = template.layout
+        if layout:
+            table_id = template.table_id
+
+            # Dynamic Table
+            s3_table = s3db.s3_table
+            table_row = db(s3_table.id == table_id).select(s3_table.name,
+                                                           limitby = (0, 1)
+                                                           ).first()
+            dtable = s3db.table(table_row.name)
+            # Because in UCCE, 1 Target == 1 Template, we can simply pull back all rows in the table,
+            # not just those linked to relevant response_ids
+            answers = db(dtable.deleted == False).select()
+
+            # Questions
+            qtable = s3db.dc_question
+            question_ids = []
+            qappend = question_ids.append
+            for position in sorted(layout.keys()):
+                question_id = layout[position].get("id")
+                if question_id:
+                    qappend(question_id)
+            questions_dict = db(qtable.id.belongs(question_ids)).select(qtable.id,
+                                                                        qtable.name,
+                                                                        qtable.field_id,
+                                                                        qtable.field_type,
+                                                                        qtable.options,
+                                                                        qtable.settings,
+                                                                        qtable.file,
+                                                                        ).as_dict()
+            # Fields
+            # Note that we want 'Other' fields too, so don't want to do this as a join with questions
+            ftable = s3db.s3_field
+            fields = db(ftable.table_id == table_id).select(ftable.id,
+                                                            ftable.name,
+                                                            ).as_dict()
+
+            questions = []
+            qappend = questions.append
+            for question_id in question_ids:
+                question_row = questions_dict.get(question_id)
+                field_type = question_row["field_type"]
+                dfieldname = fields.get(question_row["field_id"])
+                question = {"name": question_row["name"],
+                            "field_type": field_type,
+                            "field": dfieldname,
+                            }
+                if field_type == 6:
+                    # multichoice
+                    question["options"] = question_row["options"]
+                    other_id = question_row["settings"].get("other_id")
+                elif field_type == 12:
+                    # likert
+                    question["scale"] = question_row["settings"].get("scale")
+                elif field_type == 13:
+                    # heatmap
+                    question["file"] = question_row["file"]
+                    # selectedPoints in answer[field]
+                responses = []
+                rappend = responses.append
+                for row in answers:
+                    answer = row.get(dfieldname)
+                    if answer is not None:
+                        rappend(answer)
+                question["responses"] = responses
+                if field_type == 2:
+                    # Numeric
+                    if responses:
+                        question["max"] = max(responses)
+                        question["min"] = min(responses)
+                        question["mean"] = sum(responses) / len(responses)
+                    else:
+                        question["max"] = "N/A"
+                        question["min"] = "N/A"
+                        question["mean"] = "N/A"
+
+                qappend(question)
+
+            # Total Responses
+            rtable = s3db.dc_response
+            responses = db(rtable.target_id == target_id).select(rtable.date,
+                                                                 orderby = "date asc",
+                                                                 )
+
+            total_responses = len(responses)
+            if total_responses:
+                # Last survey uploaded on
+                last_upload = date_represent(responses.last().date)
+            else:
+                last_upload = "N/A"
+
+        else:
+            # layout is None
+            questions = []
+            total_responses = 0
+            last_upload = "N/A"
+
+        return {"survey_name": survey_name,
+                "project_name": project_name,
+                "created_on": created_on,
+                "published_on": published_on,
+                "updated_on": updated_on,
+                "total_responses":total_responses,
+                "last_upload": last_upload,
+                "questions": questions,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def html(data):
+        """
+            Produce an HTML representation of the report
+        """
+
+        header = DIV(DIV(H2("Total Responses: %s" % data["total_responses"]),
+                         DIV("Last survey uploaded on: %s" % data["last_upload"]),
+                         _class="columns medium-4",
+                         ),
+                     DIV(H1(data["survey_name"]),
+                         H3(data["project_name"]),
+                         _class="columns medium-4 tacenter",
+                         ),
+                     DIV(DIV("Created on: %s" % data["created_on"]),
+                         DIV("Published on: %s" % data["published_on"]),
+                         DIV("Last edited on: %s" % data["updated_on"]),
+                         _class="columns medium-4 taright",
+                         ),
+                     _class="row",
+                     )
+
+        questions_div = DIV()
+        questions = data["questions"]
+        for question in questions:
+            card = DIV(DIV(SPAN(question["name"],
+                                _class="card-title",
+                                ),
+                           _class="card-header",
+                           ))
+            questions_div.append(card)
+
+        output = {"header": header,
+                  "questions": questions_div,
+                  }
+
+        S3CustomController._view(THEME, "report_custom.html")
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pdf(data):
+        """
+            Produce a PDF representation of the report
+        """
+
+        raise NotImplementedError
+
+        from s3.codecs.pdf import EdenDocTemplate, S3RL_PDF
+
+        # etc, etc
+
+        # Build the PDF
+        doc.build(header_flowable,
+                  body_flowable,
+                  footer_flowable,
+                  )
+
+        # Return the generated PDF
+        response = current.response
+        from gluon.contenttype import contenttype
+        response.headers["Content-Type"] = contenttype(".pdf")
+        disposition = "attachment; filename=\"%s\"" % filename
+        response.headers["Content-disposition"] = disposition
+
+        return doc.output.getvalue()
 
 # =============================================================================
 class dc_TemplateEditor(S3Method):

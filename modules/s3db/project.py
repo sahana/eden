@@ -7141,7 +7141,8 @@ class project_SummaryReport(S3Method):
         r.error(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
-    def _extract(self, r, **attr):
+    @staticmethod
+    def _extract(r, **attr):
         """
             Extract the Data
 
