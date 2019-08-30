@@ -409,7 +409,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                         ),
                    _class="card-footer",
                    ),
-               _class="thumbnail",
+               _class="thumbnail project-card",
                _id=item_id,
                )
 
@@ -1266,8 +1266,6 @@ class dc_TargetReport(S3Method):
         else:
             r.error(404, current.ERROR.BAD_RESOURCE)
 
-        return output
-
     # -------------------------------------------------------------------------
     @staticmethod
     def extract(r):
@@ -1278,7 +1276,7 @@ class dc_TargetReport(S3Method):
         db = current.db
         s3db = current.s3db
 
-        table = r.table
+        #table = r.table
         target_id = r.id
         record = r.record
 
@@ -1361,35 +1359,47 @@ class dc_TargetReport(S3Method):
             for question_id in question_ids:
                 question_row = questions_dict.get(question_id)
                 field_type = question_row["field_type"]
-                dfieldname = fields.get(question_row["field_id"])
+                dfieldname = fields[question_row["field_id"]]["name"]
                 question = {"name": question_row["name"],
                             "field_type": field_type,
                             "field": dfieldname,
                             }
+                otherfieldname = None
                 if field_type == 6:
                     # multichoice
                     question["options"] = question_row["options"]
                     other_id = question_row["settings"].get("other_id")
+                    if other_id:
+                        otherfieldname = fields[other_id]["name"]
+                        others = []
+                        oappend = others.append
                 elif field_type == 12:
                     # likert
                     question["scale"] = question_row["settings"].get("scale")
                 elif field_type == 13:
                     # heatmap
                     question["file"] = question_row["file"]
-                    # selectedPoints in answer[field]
                 responses = []
                 rappend = responses.append
                 for row in answers:
                     answer = row.get(dfieldname)
                     if answer is not None:
                         rappend(answer)
+                    if otherfieldname:
+                        other = row.get(otherfieldname)
+                        if other is not None:
+                            oappend(other)
+
                 question["responses"] = responses
+                if otherfieldname:
+                    question["others"] = set(others)
+
                 if field_type == 2:
                     # Numeric
                     if responses:
                         question["max"] = max(responses)
                         question["min"] = min(responses)
-                        question["mean"] = sum(responses) / len(responses)
+                        question["mean"] = int(sum(responses) / len(responses))
                     else:
                         question["max"] = "N/A"
                         question["min"] = "N/A"
@@ -1433,18 +1443,22 @@ class dc_TargetReport(S3Method):
             Produce an HTML representation of the report
         """
 
-        header = DIV(DIV(H2("Total Responses: %s" % data["total_responses"]),
-                         DIV("Survey responses last uploaded on: %s" % data["last_upload"]),
-                         _class="columns medium-4",
-                         ),
-                     DIV(H1(data["survey_name"]),
-                         H3(data["project_name"]),
-                         _class="columns medium-4 tacenter",
-                         ),
-                     DIV(#DIV("Created on: %s" % data["created_on"]),
-                         DIV("Published on: %s" % data["published_on"]),
-                         #DIV("Last edited on: %s" % data["updated_on"]),
-                         _class="columns medium-4 taright",
+        T = current.T
+
+        header = DIV(DIV(DIV(H2("Total Responses: %s" % data["total_responses"]),
+                             DIV("Survey responses last uploaded on: %s" % data["last_upload"]),
+                             _class="columns medium-4",
+                             ),
+                         DIV(H1(data["survey_name"]),
+                             H3(data["project_name"]),
+                             _class="columns medium-4 tacenter",
+                             ),
+                         DIV(#DIV("Created on: %s" % data["created_on"]),
+                             DIV("Published on: %s" % data["published_on"]),
+                             #DIV("Last edited on: %s" % data["updated_on"]),
+                             _class="columns medium-4 taright",
+                             ),
+                         _class="medium-12 columns report-header",
                          ),
                      _class="row",
                      )
@@ -1452,11 +1466,70 @@ class dc_TargetReport(S3Method):
         questions_div = DIV()
         questions = data["questions"]
         for question in questions:
+            responses = question["responses"]
+            content = DIV("%s responses" % len(responses),
+                          _class="report-content",
+                          )
+            question_type = question["field_type"]
+
+            if question_type == 1:
+                # text
+                table = TABLE(_class="wide")
+                for answer in responses:
+                    table.append(TR(answer))
+                content.append(table)
+
+            elif question_type == 2:
+                # number
+                table = TABLE(TR(TD(T("Maximum"),
+                                    _class="tacenter",
+                                    ),
+                                 TD(question["max"],
+                                    _class="tacenter",
+                                    ),
+                                 ),
+                              TR(TD(T("Minimum"),
+                                    _class="tacenter",
+                                    ),
+                                 TD(question["min"],
+                                    _class="tacenter",
+                                    ),
+                                 ),
+                              TR(TD(T("Mean"),
+                                    _class="tacenter",
+                                    ),
+                                 TD(question["mean"],
+                                    _class="tacenter",
+                                    ),
+                                 ),
+                              )
+                content.append(table)
+
+            elif question_type == 6:
+                # multichoice
+                graph = DIV(_class="graph-container")
+                content.append(graph)
+
+            elif question_type == 12:
+                # likert
+                # scale
+                graph = DIV(_class="graph-container")
+                content.append(graph)
+
+            elif question_type == 13:
+                # heatmap
+                # selectedPoints in answer
+                heatmap = DIV(_class="heatmap-container")
+                content.append(heatmap)
+
             card = DIV(DIV(SPAN(question["name"],
                                 _class="card-title",
                                 ),
                            _class="card-header",
-                           ))
+                           ),
+                       content,
+                       _class="report-card",
+                       )
             questions_div.append(card)
 
         output = {"header": header,

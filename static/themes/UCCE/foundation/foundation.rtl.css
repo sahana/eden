@@ -5431,7 +5431,7 @@ ul.pagination li {
 
 /* line 131, ../../foundation/scss/components/_tables.scss */
 table {
-  background: #FFFFFF;
+  background: #cceeec;
   border: solid 1px #DDDDDD;
   margin-bottom: 1.25rem;
   table-layout: auto;
@@ -5477,7 +5477,7 @@ table tr td {
 }
 /* line 115, ../../foundation/scss/components/_tables.scss */
 table tr.even, table tr.alt, table tr:nth-of-type(even) {
-  background: #F9F9F9;
+  background: #EEEEEE;
 }
 /* line 120, ../../foundation/scss/components/_tables.scss */
 table thead tr th,

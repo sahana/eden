@@ -178,8 +178,8 @@ a h5.media-heading {
   border-bottom: 1px solid #bdbdbb;
   padding: 5px;
   margin: -3px -5px;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
   background-color: #023859;
   height: 3rem;
   /*
@@ -198,7 +198,7 @@ a h5.media-heading {
 .card-footer {
   border-bottom: 1px solid #bdbdbb;
   padding: 5px;
-  margin: -3px -5px;
+  margin: -5px -5px;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
   background-color: #EEEEEE;

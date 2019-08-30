@@ -674,6 +674,9 @@ def config(settings):
     def default_table_onaccept(form, tablename):
         """
             Set the response_id
+
+            NB We don't actually use this in UCCE since 1 Target == 1 Template
+            & we can't actually use this method for cases where this isn't the case either!
         """
 
         record_id = form.vars.get("id")

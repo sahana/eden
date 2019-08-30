@@ -1335,7 +1335,10 @@ $side-nav-link-color: $tuatara;
 
 // These control the background color for the table and even rows
 // $table-bg: $white;
+//$table-bg: scale-color($persian-green, $lightness: 30%);
+$table-bg: #cceeec;
 // $table-even-row-bg: $snow;
+$table-even-row-bg: $white-smoke;
 
 // These control the table cell border style
 // $table-border-style: solid;

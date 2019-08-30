@@ -64,6 +64,9 @@ nav.top-bar section.top-bar-section ul.dropdown li:last-child a {
 }
 
 /* Datalists */
+div.dl {
+  border: 0;
+}
 .search-wrapper {
   position: relative;
 }
@@ -91,6 +94,7 @@ input[type="text"].text-filter {
 }
 #dl-container {
   margin-left: 1.35rem;
+  padding-right: 1.35rem;
 }
 .add-btn .ucce {
   color: #FF7A5A; /* $coral */
@@ -102,6 +106,13 @@ input[type="text"].text-filter {
 }
 
 /* Projects dataList */
+.project-card {
+  border-radius: 10px;
+  box-shadow: 2px 2px #EEEEEE;
+}
+.card-footer {
+  border-radius: 0 0 10px 10px;
+}
 .project-survey-card {
   text-align: center;
   margin: 8px;
@@ -124,29 +135,73 @@ input[type="text"].text-filter {
   margin-left: 0.8rem;
 }
 
+/* Reports */
+.report-container {
+  margin: 1.35rem;
+  padding: 1.35rem;
+  border: 1px solid #EEEEEE;
+  border-radius: 10px;
+  box-shadow: 3px 3px #EEEEEE;
+}
+.report-header {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #AFAEAE;
+}
+.report-card {
+  border-radius: 10px;
+  border: 1px solid #EEEEEE;
+  box-shadow: 2px 2px #EEEEEE;
+  margin-bottom: 15px;
+}
+.report-card .card-header {
+  margin: 0;
+}
+.report-content {
+  padding: 10px;
+}
+.report-content table {
+  margin-top: 10px;
+}
+.report-content td {
+  border-right: 8px solid white;
+  min-width: 120px;
+}
+.graph-container {
+  margin-top: 10px;
+  margin-left: 100px;
+}
+.heatmap-container {
+  margin-top: 10px;
+  margin-left: 100px;
+  margin-right: 100px;
+}
+
 /* Template Editor */
 .survey-item {
   float: none;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 2px 2px #EEEEEE;
 }
 
 #survey-droppable {
-  border: 1px solid #bbb;
+  border: 1px solid #AFAEAE;
   height: 400px;
   left: 100%;
   right: 100%;
   text-align: center;
-  box-shadow: 2px 2px #bbb;
+  border-radius: 10px;
+  box-shadow: 2px 2px #EEEEEE;
 }
 
 #survey-droppable > span {
-  color: #bbb;
+  color: #AFAEAE;
   position: relative;
   display: inline-block;
   top: 50%;
 }
 
 .section-break {
-  color: #bbb;
+  color: #AFAEAE;
   display: block;
   text-align: center;
   overflow: hidden;
@@ -165,7 +220,7 @@ input[type="text"].text-filter {
   top: 50%;
   width: 9999px;
   height: 1px;
-  background: #bbb;
+  background: #AFAEAE;
 }
 
 .section-break > span:before {
@@ -180,9 +235,7 @@ input[type="text"].text-filter {
 
 .preview-empty {
   background-color: #eee;
-  border-color: #999;
-  border-style: dotted;
-  border-width: 1px;
+  border: 1px dotted #999;
   height: 80px;
   width: 80px;
 }
