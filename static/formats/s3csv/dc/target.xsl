@@ -9,6 +9,7 @@
          Name....................dc_target.name
          Template................dc_template.name
          Status..................dc_target.status
+         Date....................dc_target.date (e.g. Activation Date)
          Project.................project_project.name (Optional link to Project)
 
     *********************************************************************** -->
@@ -45,6 +46,7 @@
     <xsl:template match="row">
         <xsl:variable name="project" select="col[@field='Project']/text()"/>
         <xsl:variable name="status" select="col[@field='Status']/text()"/>
+        <xsl:variable name="date" select="col[@field='Date']/text()"/>
 
         <resource name="dc_target">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
@@ -52,6 +54,10 @@
             <xsl:if test="$status!=''">
                 <!-- @ToDo: Support represented text values as well as raw integers -->
                 <data field="status"><xsl:value-of select="$status"/></data>
+            </xsl:if>
+
+            <xsl:if test="$date!=''">
+                <data field="date"><xsl:value-of select="$date"/></data>
             </xsl:if>
 
             <!-- Link to Template -->

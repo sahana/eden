@@ -3456,6 +3456,12 @@ class S3Config(Storage):
         """
         return self.dc.get("sections_hierarchical", False)
 
+    def get_dc_target_status(self):
+        """
+            Whether Assessment Targets have Statuses
+        """
+        return self.dc.get("target_status", False)
+
     # -------------------------------------------------------------------------
     # Deployments
     #

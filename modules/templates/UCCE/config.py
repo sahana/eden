@@ -211,6 +211,9 @@ def config(settings):
         "upload": "ucce-survey-import",
     }
 
+    # Use Status in Assessment Targets
+    settings.dc.target_status = True
+
     # -------------------------------------------------------------------------
     def filter_formstyle(row_id, label, widget, comment, hidden=False):
         return DIV(label, widget, comment,

@@ -859,6 +859,7 @@ class DataCollectionModel(S3Model):
         add_components = self.add_components
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        settings = current.deployment_settings
 
         location_id = self.gis_location_id
         template_id = self.dc_template_id
@@ -877,10 +878,21 @@ class DataCollectionModel(S3Model):
         #    - can hold data
         #    - not visible to normal users (e.g. in mobile client)
 
+        target_status = settings.get_dc_target_status()
         status_opts = {1: T("Draft"),
                        2: T("Active"),
                        3: T("Inactive"),
                        }
+
+        if target_status:
+            # UCCE
+            default_status = 1 # Draft
+            default_date = None
+            date_label = T("Activation Date")
+        else:
+            default_status = 2 # Active
+            default_date = "now"
+            date_label = T("Date")
 
         # =====================================================================
         # Data Collection Target
@@ -893,12 +905,16 @@ class DataCollectionModel(S3Model):
                      Field("name"),
                      template_id(),
                      Field("status", "integer",
-                           default = 1,
+                           default = default_status,
                            label = T("Status"),
                            represent = S3Represent(options = status_opts),
                            requires = IS_IN_SET(status_opts),
+                           readable = target_status,
+                           writable = target_status,
                            ),
-                     s3_date(default = "now"),
+                     s3_date(default = default_date,
+                             label = date_label,
+                             ),
                      # Enable in-templates as-required
                      s3_language(readable = False,
                                  writable = False,
@@ -1014,7 +1030,7 @@ class DataCollectionModel(S3Model):
                        )
 
         # CRUD strings
-        label = current.deployment_settings.get_dc_response_label()
+        label = settings.get_dc_response_label()
         if label == "Assessment":
             label = T("Assessment")
             crud_strings[tablename] = Storage(

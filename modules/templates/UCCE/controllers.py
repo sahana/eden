@@ -734,11 +734,21 @@ class dc_TargetActivate(S3Method):
         db = current.db
         s3db = current.s3db
 
+        record = r.record
+
         # Update Status
-        db(table.id == target_id).update(status = 2)
+        if record.date:
+            # Don't Reset activated_on
+            db(table.id == target_id).update(status = 2,
+                                             )
+        else:
+            # Set activated_on
+            db(table.id == target_id).update(status = 2,
+                                             date = r.utcnow,
+                                             )
 
         # Lookup the Dynamic Table
-        template_id = r.record.template_id
+        template_id = record.template_id
         tetable = s3db.dc_template
         template = db(tetable.id == template_id).select(tetable.table_id,
                                                         tetable.layout,
@@ -982,8 +992,10 @@ class dc_TargetEdit(S3Method):
         resource = s3db.resource("dc_response", filter=(rtable.target_id == target_id))
         resource.delete()
 
-        # Update Status
-        db(table.id == target_id).update(status = 1)
+        # Update Status & clear activated_on
+        db(table.id == target_id).update(status = 1,
+                                         date = None,
+                                         )
 
         # Lookup the Dynamic Table
         tetable = s3db.dc_template
@@ -1270,11 +1282,8 @@ class dc_TargetReport(S3Method):
         target_id = r.id
         record = r.record
 
-        date_format = "%d/%m/%Y"
+        date_format = "%d/%B/%Y"
         date_represent = lambda v: S3DateTime.date_represent(v, format = date_format)
-
-        # Survey Name
-        survey_name = record.name
 
         # Project Name
         ptable = s3db.project_project
@@ -1290,22 +1299,25 @@ class dc_TargetReport(S3Method):
             project_name = ""
 
         # Created on
-        created_on = date_represent(record.created_on)
+        #created_on = date_represent(record.created_on)
 
         # Published on
-        #published_on = date_represent(record.activated_on)
-        published_on = ""
+        published_on = record.date
+        if published_on:
+            published_on = date_represent(published_on)
+        else:
+            published_on = "N/A"
 
         # Template
         ttable = s3db.dc_template
         template = db(ttable.id == record.template_id).select(ttable.layout,
                                                               ttable.table_id,
-                                                              ttable.modified_on,
+                                                              #ttable.modified_on,
                                                               limitby = (0, 1)
                                                               ).first()
 
         # Last edited on
-        updated_on = date_represent(template.modified_on)
+        #updated_on = date_represent(template.modified_on)
 
         layout = template.layout
         if layout:
@@ -1404,11 +1416,11 @@ class dc_TargetReport(S3Method):
             total_responses = 0
             last_upload = "N/A"
 
-        return {"survey_name": survey_name,
+        return {"survey_name": record.name,
                 "project_name": project_name,
-                "created_on": created_on,
+                #"created_on": created_on,
                 "published_on": published_on,
-                "updated_on": updated_on,
+                #"updated_on": updated_on,
                 "total_responses":total_responses,
                 "last_upload": last_upload,
                 "questions": questions,
@@ -1422,16 +1434,16 @@ class dc_TargetReport(S3Method):
         """
 
         header = DIV(DIV(H2("Total Responses: %s" % data["total_responses"]),
-                         DIV("Last survey uploaded on: %s" % data["last_upload"]),
+                         DIV("Survey responses last uploaded on: %s" % data["last_upload"]),
                          _class="columns medium-4",
                          ),
                      DIV(H1(data["survey_name"]),
                          H3(data["project_name"]),
                          _class="columns medium-4 tacenter",
                          ),
-                     DIV(DIV("Created on: %s" % data["created_on"]),
+                     DIV(#DIV("Created on: %s" % data["created_on"]),
                          DIV("Published on: %s" % data["published_on"]),
-                         DIV("Last edited on: %s" % data["updated_on"]),
+                         #DIV("Last edited on: %s" % data["updated_on"]),
                          _class="columns medium-4 taright",
                          ),
                      _class="row",
