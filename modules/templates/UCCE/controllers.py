@@ -1360,7 +1360,8 @@ class dc_TargetReport(S3Method):
                 question_row = questions_dict.get(question_id)
                 field_type = question_row["field_type"]
                 dfieldname = fields[question_row["field_id"]]["name"]
-                question = {"name": question_row["name"],
+                question = {"id": question_id,
+                            "name": question_row["name"],
                             "field_type": field_type,
                             "field": dfieldname,
                             }
@@ -1443,7 +1444,49 @@ class dc_TargetReport(S3Method):
             Produce an HTML representation of the report
         """
 
-        T = current.T
+        T = current.T # Not fully-used as no requirement for this in UCCE yet
+
+        likert_options = {1: ["Very appropriate",
+                              "Somewhat appropriate",
+                              "Neither appropriate nor inappropriate",
+                              "Somewhat inappropriate",
+                              "Very inappropriate",
+                              ],
+                          2: ["Extremely confident",
+                              "Very confident",
+                              "Moderately confident",
+                              "Slightly confident",
+                              "Not confident at all",
+                              ],
+                          3: ["Always",
+                              "Often",
+                              "Occasionally",
+                              "Rarely",
+                              "Never",
+                              ],
+                          4: ["Extremely safe",
+                              "Very safe",
+                              "Moderately safe",
+                              "Slightly safe",
+                              "Not safe at all",
+                              ],
+                          5: ["Very satisfied",
+                              "Somewhat satisfied",
+                              "Neither satisfied nor dissatisfied",
+                              "Somewhat dissatisfied",
+                              "Very dissatisfied",
+                              ],
+                          6: ["smiley-1",
+                              "smiley-2",
+                              "smiley-3",
+                              "smiley-4",
+                              "smiley-6",
+                              ],
+                          7: ["smiley-3",
+                              "smiley-4",
+                              "smiley-5",
+                              ],
+                          }
 
         header = DIV(DIV(DIV(H2("Total Responses: %s" % data["total_responses"]),
                              DIV("Survey responses last uploaded on: %s" % data["last_upload"]),
@@ -1467,7 +1510,8 @@ class dc_TargetReport(S3Method):
         questions = data["questions"]
         for question in questions:
             responses = question["responses"]
-            content = DIV("%s responses" % len(responses),
+            len_responses = len(responses)
+            content = DIV("%s responses" % len_responses,
                           _class="report-content",
                           )
             question_type = question["field_type"]
@@ -1507,13 +1551,84 @@ class dc_TargetReport(S3Method):
 
             elif question_type == 6:
                 # multichoice
-                graph = DIV(_class="graph-container")
+                options = question["options"]
+                values = []
+                vappend = values.append
+                for option in options:
+                    total = 0
+                    for answer in responses:
+                        if answer == option:
+                            total += 1
+                    # @ToDo: Get report.js to use these
+                    #if len_responses:
+                    #    percentage = total / len_responses
+                    #else:
+                    #    percentage = 0
+                    vappend({"label": option,
+                             "value": total,
+                             #"p": percentage,
+                             })
+                data = [{"values": values,
+                         }]
+                hidden_input = INPUT(_type="hidden",
+                                     _class="multichoice-graph",
+                                     _value=json.dumps(data, separators=SEPARATORS),
+                                     )
+                graph = DIV(hidden_input,
+                            _class="graph-container",
+                            _id="multichoice-graph-%s" % question["id"],
+                            )
                 content.append(graph)
+                others = question["others"]
+                table = TABLE(_class="wide")
+                for other in others:
+                    table.append(TR(other))
+                content.append(DIV(DIV(T("Other"),
+                                       _class="medium-1 columns taright",
+                                       ),
+                                   DIV(table,
+                                       _class="medium-11 columns",
+                                       ),
+                                   _class="row",
+                                   ))
 
             elif question_type == 12:
                 # likert
-                # scale
-                graph = DIV(_class="graph-container")
+                scale = question["scale"]
+                if scale == 7:
+                    # 3-point
+                    options = [0, 1, 2]
+                else:
+                    # 5-point
+                    options = [0, 1, 2, 3, 4]
+                labels = likert_options[scale]
+                values = []
+                vappend = values.append
+                for option in options:
+                    total = 0
+                    for answer in responses:
+                        if int(answer) == option:
+                            total += 1
+                    # @ToDo: Get report.js to use these
+                    #if len_responses:
+                    #    percentage = total / len_responses
+                    #else:
+                    #    percentage = 0
+                    vappend({"label": labels[option],
+                             "value": total,
+                             #"p": percentage,
+                             })
+                data = [{"values": values,
+                         }]
+                hidden_input = INPUT(_type="hidden",
+                                     _class="multichoice-graph",
+                                     _value=json.dumps(data, separators=SEPARATORS),
+                                     )
+                hidden_input["_data-scale"] = scale
+                graph = DIV(hidden_input,
+                            _class="graph-container",
+                            _id="multichoice-graph-%s" % question["id"],
+                            )
                 content.append(graph)
 
             elif question_type == 13:
@@ -1535,6 +1650,28 @@ class dc_TargetReport(S3Method):
         output = {"header": header,
                   "questions": questions_div,
                   }
+
+        appname = current.request.application
+        s3 = current.response.s3
+        scripts_append = s3.scripts.append
+        if s3.debug:
+            if s3.cdn:
+                scripts_append("https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.js")
+                # We use a patched v1.8.5 currently, so can't use the CDN version
+                #scripts_append("https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.js")
+            else:
+                scripts_append("/%s/static/scripts/d3/d3.js" % appname)
+            scripts_append("/%s/static/scripts/d3/nv.d3.js" % appname)
+            scripts_append("/%s/static/themes/UCCE/js/report.js" % appname)
+        else:
+            if s3.cdn:
+                scripts_append("https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js")
+                # We use a patched v1.8.5 currently, so can't use the CDN version
+                #scripts_append("https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.min.js")
+            else:
+                scripts_append("/%s/static/scripts/d3/d3.min.js" % appname)
+            scripts_append("/%s/static/scripts/d3/nv.d3.min.js" % appname)
+            scripts_append("/%s/static/themes/UCCE/js/report.min.js" % appname)
 
         S3CustomController._view(THEME, "report_custom.html")
         return output

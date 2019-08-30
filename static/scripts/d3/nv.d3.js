@@ -1575,7 +1575,7 @@ nv.utils.wrapTicks = function (text, width) {
 };
 
 /*
-Check equality of 2 array
+Check equality of 2 arrays
 */
 nv.utils.arrayEquals = function (array1, array2) {
     if (array1 === array2)
@@ -1673,7 +1673,7 @@ nv.models.axis = function() {
 
             //only skip when fontSize is undefined so it can be cleared with a null or blank string
             if (fontSize !== undefined) {
-                g.selectAll('g').select("text").style('font-size', fontSize);
+                g.selectAll('g').select('text').style('font-size', fontSize);
             }
 
             var xLabelMargin;
@@ -1937,7 +1937,7 @@ nv.models.axis = function() {
                     return !parseFloat(Math.round(d * 100000) / 1000000) && (d !== undefined)
                 }) 
                 .classed('zero', true);
-            
+
             //store old scales for use in transitions on update
             scale0 = scale.copy();
 

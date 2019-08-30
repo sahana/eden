@@ -145,7 +145,7 @@ input[type="text"].text-filter {
 }
 .report-header {
   margin-bottom: 20px;
-  border-bottom: 1px solid #AFAEAE;
+  border-bottom: 1px solid #AFAEAE; /* $darkgray */
 }
 .report-card {
   border-radius: 10px;
@@ -162,18 +162,27 @@ input[type="text"].text-filter {
 .report-content table {
   margin-top: 10px;
 }
+.report-content .columns table {
+  margin-top: 0;
+}
 .report-content td {
   border-right: 8px solid white;
   min-width: 120px;
 }
 .graph-container {
   margin-top: 10px;
-  margin-left: 100px;
 }
 .heatmap-container {
   margin-top: 10px;
-  margin-left: 100px;
-  margin-right: 100px;
+  /*margin-left: 100px;*/
+  /*margin-right: 100px;*/
+}
+/* Has no effect:
+.nv-zeroLine {
+  border: 10px solid #535353;
+} */
+.tick text.icon {
+  font-family: "ucce-icons";
 }
 
 /* Template Editor */

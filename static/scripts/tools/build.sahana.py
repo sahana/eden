@@ -701,6 +701,7 @@ def do_template(minimize, warnings):
     if theme == "UCCE":
         for filename in ("confirm_popup",
                          "projects",
+                         "report",
                          # Need to use Terser for this as Closure doesn't like ES6 modules
                          #"s3.ui.template",
                          ):
