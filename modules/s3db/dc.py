@@ -721,13 +721,21 @@ class DataCollectionTemplateModel(S3Model):
             field_settings["widget"] = "richtext"
         elif field_type == 12:
             # Likert
-            field_type = "string"
+            field_type = "string" # "integer" would be more efficient, since we hardcode options currently & indexes are far less likely to vary than the string representations
             options = question.options
-            # @ToDo: Allow displaying images for options
-            # UCCE uses options_l10n just like for multichoice, but in general, could have l10n done centrally instead
-            #mobile_settings["widget"] = {"type": "likert",
-            #                             "scale": question_settings.get("scale"),
-            #                             }
+            # NB UCCE uses options_l10n just like for multichoice, but in general, could have l10n done centrally instead
+            # Mobile client currently uses names for scales, rather than simple number, so map:
+            likert_scale_names = {1: "appropriateness",
+                                  2: "confidence",
+                                  3: "frequency"
+                                  4: "safety"
+                                  5: "satisfaction"
+                                  6: "smiley-5"
+                                  7: "smiley-3"
+                                  }
+            mobile_settings["widget"] = {"type": "likert",
+                                         "scale": likert_scale_names.get(question_settings.get("scale")),
+                                         }
         elif field_type == 13:
             # Heatmap
             field_type = "json" # Store list of Lat/Lons
