@@ -1595,29 +1595,51 @@ class dc_TargetReport(S3Method):
             elif question_type == 12:
                 # likert
                 scale = question["scale"]
-                if scale == 7:
-                    # 3-point
-                    options = [0, 1, 2]
+                if scale in (6, 7):
+                    if scale == 7:
+                        # 3-point
+                        options = [0, 1, 2]
+                    else:
+                        # 5-point
+                        options = [0, 1, 2, 3, 4]
+                    labels = likert_options[scale]
+                    values = []
+                    vappend = values.append
+
+                    for option in options:
+                        total = 0
+                        for answer in responses:
+                            if int(answer) == option:
+                                total += 1
+                        # @ToDo: Get report.js to use these
+                        #if len_responses:
+                        #    percentage = total / len_responses
+                        #else:
+                        #    percentage = 0
+                        vappend({"label": labels[option],
+                                 "value": total,
+                                 #"p": percentage,
+                                 })
                 else:
-                    # 5-point
-                    options = [0, 1, 2, 3, 4]
-                labels = likert_options[scale]
-                values = []
-                vappend = values.append
-                for option in options:
-                    total = 0
-                    for answer in responses:
-                        if int(answer) == option:
-                            total += 1
-                    # @ToDo: Get report.js to use these
-                    #if len_responses:
-                    #    percentage = total / len_responses
-                    #else:
-                    #    percentage = 0
-                    vappend({"label": labels[option],
-                             "value": total,
-                             #"p": percentage,
-                             })
+                    options = likert_options[scale]
+                    values = []
+                    vappend = values.append
+                
+                    for option in options:
+                        total = 0
+                        for answer in responses:
+                            if answer == option:
+                                total += 1
+                        # @ToDo: Get report.js to use these
+                        #if len_responses:
+                        #    percentage = total / len_responses
+                        #else:
+                        #    percentage = 0
+                        vappend({"label": option,
+                                 "value": total,
+                                 #"p": percentage,
+                                 })
+
                 data = [{"values": values,
                          }]
                 hidden_input = INPUT(_type="hidden",
