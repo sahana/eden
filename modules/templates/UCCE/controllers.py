@@ -888,7 +888,7 @@ class dc_TargetDeactivate(S3Method):
 # =============================================================================
 class dc_TargetEdit(S3Method):
     """
-        Edit a Survey
+        Edit a non-Draft Survey
     """
 
     # -------------------------------------------------------------------------
@@ -1004,7 +1004,11 @@ class dc_TargetEdit(S3Method):
                                                                  ).first()
         if template:
             # Update Dynamic Table
-            db(s3db.s3_table.id == template.table_id).update(mobile_form = False)
+            # - rename so that mobile clients cannot submit any offline data
+            # - deactivate so that clients don't download this
+            new_name = "s3dt_%s" % s3db.s3_table_random_name()
+            db(s3db.s3_table.id == template.table_id).update(name = new_name,
+                                                             mobile_form = False)
 
 # =============================================================================
 class dc_TargetDelete(S3Method):

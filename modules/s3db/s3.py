@@ -175,6 +175,7 @@ class S3DynamicTablesModel(S3Model):
 
     names = ("s3_table",
              "s3_table_id",
+             "s3_table_random_name",
              "s3_field",
              "s3_field_id",
              )
@@ -189,6 +190,8 @@ class S3DynamicTablesModel(S3Model):
         define_table = self.define_table
         crud_strings = s3.crud_strings
 
+        s3_table_random_name = self.s3_table_random_name
+
         # ---------------------------------------------------------------------
         # Dynamic Table
         #
@@ -200,7 +203,7 @@ class S3DynamicTablesModel(S3Model):
                      Field("name", length=128, unique=True, notnull=True,
                            # Set a random name as default, so this field
                            # can be hidden from the users (one-time default)
-                           default = "%s_%s" % (DYNAMIC_PREFIX, self.random_name()),
+                           default = "%s_%s" % (DYNAMIC_PREFIX, s3_table_random_name()),
                            label = T("Table Name"),
                            represent = self.s3_table_name_represent(),
                            requires = [IS_NOT_EMPTY(),
@@ -400,12 +403,13 @@ class S3DynamicTablesModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {"s3_table_id": table_id,
+                "s3_table_random_name": s3_table_random_name,
                 "s3_field_id": field_id,
                 }
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def random_name():
+    def s3_table_random_name():
         """
             Generate a random name
 
@@ -448,7 +452,7 @@ class S3DynamicTablesModel(S3Model):
         if not name or name == field.default:
             # The name currently being written is the default,
             # => set a new default for subsequent writes
-            field.default = "%s_%s" % (DYNAMIC_PREFIX, cls.random_name())
+            field.default = "%s_%s" % (DYNAMIC_PREFIX, cls.s3_table_random_name())
 
     # -------------------------------------------------------------------------
     @staticmethod
