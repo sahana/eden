@@ -780,10 +780,10 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     // Image to Load?
                     var file = thisQuestion.file;
                     if (file) {
+                        imageFiles[questionID] = file;
                         if (type == 'heatmap') {
                             self.heatMap(questionID, file, load);
                         } else {
-                            imageFiles[questionID] = file;
                             loadImage(S3.Ap.concat('/default/download/' + file), function(img) {
                                 var options = {
                                     canvas: true,
@@ -845,42 +845,6 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                                                         .trigger('change');
                                             }
 
-                                            // Check if we should add to ImageOptions
-                                            // (not done for Heatmaps, except for regions)
-                                            var img,
-                                                found = false;
-                                            for (img in imageOptions) {
-                                                if (img.id == questionID){
-                                                    found = true;
-                                                }
-                                            }
-                                            if (!found) {
-                                                // Read the questionNumber (can't trust original as it may have changed)
-                                                var questionNumber = $('#question-' + questionID).data('number');
-                                                var label = 'Q' + questionNumber + ' ' + type;
-                                                // Add to imageOptions
-                                                imageOptions.push({
-                                                    label: label,
-                                                    id: questionID
-                                                });
-                                            }
-
-                                            // Update the Pipe Options HTML for each question
-                                            var thatItem,
-                                                thatQuestionID,
-                                                thatQuestion;
-                                            for (var position=1; position <= Object.keys(layout).length; position++) {
-                                                thatItem = layout[position];
-                                                if (thatItem.type == 'question') {
-                                                    thatQuestionID = thatItem.id;
-                                                    thatQuestion = questions[thatQuestionID];
-                                                    if (thatQuestion.type != 13) {
-                                                        $('#pipe-' + thatQuestionID).empty()
-                                                                                    .append(self.pipeOptionsHtml(thatQuestionID));
-                                                    }
-                                                }
-                                            }
-
                                             return img;
 
                                         }, {}); // Empty Options
@@ -890,10 +854,17 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             }
                         },
                         done: function (e, data) {
+
+                            var file = data.result.file;
+
+                            imageFiles[questionID] = file;
+                            self.data.questions[questionID].file = file;
+
                             if (type == 'heatmap') {
-                                self.heatMap(questionID, data.result.file);
+                                self.heatMap(questionID, file);
                             } else {
-                                imageFiles[questionID] = data.result.file;
+                                // Update ImageOptions
+                                self.updateImageOptions();
                             }
                         }
                     });
@@ -1298,6 +1269,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 } else {
                                     $('#choice-l10n-row-' + questionID + '-' + (index - 1)).after(choiceL10nRow);
                                 }
+
                                 // Add Events
                                 inputEvents();
                                 multichoiceEvents();
@@ -1396,25 +1368,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 currentPosition = questionNumbers[questionNumber];
             }
 
-            this.rePosition(layout[currentPosition], currentPosition, null)
-
-            // Remove any outdated pipeImage
-            var item,
-                thisQuestionID,
-                thisQuestionSettings,
-                questions = this.data.questions;
-            for (var i=1, len=Object.keys(layout).length; i < len; i++) {
-                item = layout[i];
-                if (item.type == 'question') {
-                    thisQuestionID = item.id;
-                    thisQuestionSettings = questions[thisQuestionID].settings;
-                    if (thisQuestionSettings.pipeImage && thisQuestionSettings.pipeImage.id == questionID) {
-                        delete thisQuestionSettings.pipeImage;
-                        $('#pipe-' + thisQuestionID).val('')
-                                                    .trigger('change');
-                    }
-                }
-            }
+            this.rePosition(layout[currentPosition], currentPosition, null);
 
             // Remove from DOM
             if (type == 'instructions') {
@@ -1555,7 +1509,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         regions = self.data.questions[questionID].settings.regions || [];
                     for (var i=0, len=regions.length; i < len; i++) {
                         region = regions[i];
-                        if (region) {
+                        if (region && region != 'null') {
                             geojson = JSON.parse(region);
                             feature = format.readFeatureFromObject(geojson);
                             source.addFeature(feature);
@@ -1617,7 +1571,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
           * Produce the Options HTML for the Pipe dropdown
           */
         pipeOptionsHtml: function(questionID) {
-        
+
             var img,
                 pipeImage,
                 thisQuestion = this.data.questions[questionID],
@@ -1636,6 +1590,102 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 }
             }
             return optionsHtml;
+        },
+
+        /**
+          * Update the ImageOptions lookup
+          * - if loading, also update the questionNumbers lookup
+          * - otherwise, also update all pipeOptionsHtml
+          *
+          * optionally, also cleanup stale pipeOptions from deleted Question
+          *
+          */
+        updateImageOptions: function(load, deletedQuestionID) {
+
+            var item,
+                questionNumber = 0,
+                base_label,
+                label,
+                layout = this.data.layout,
+                layoutLength = Object.keys(layout).length,
+                options,
+                questions = this.data.questions,
+                regions,
+                thisQuestion,
+                thisQuestionID,
+                thisQuestionSettings,
+                thisQuestionType;
+
+            // Start with an empty imageOptions
+            imageOptions = [];
+
+            // Loop through the layout
+            for (var position=1; position <= layoutLength; position++) {
+                item = layout[position];
+                if (item.type == 'break') {
+                    // Skip: No Image or QuestionNumber
+                } else if (item.type == 'instructions') {
+                    // Skip: No Image or QuestionNumber
+                } else {
+                    // Question
+
+                    questionNumber++
+
+                    thisQuestionID = item.id;
+                    thisQuestion = questions[thisQuestionID];
+                    thisQuestionSettings = thisQuestion.settings;
+                    thisQuestionType = thisQuestion.type;
+
+                    if (load) {
+                        // We're in loadSurvey
+                        questionNumbers[questionNumber] = position;
+                    } else {
+                        if (thisQuestionType != 13) {
+                            // Update the Pipe Options HTML
+                            $('#pipe-' + thisQuestionID).empty()
+                                                        .append(this.pipeOptionsHtml(thisQuestionID));
+                        }
+                        if (deletedQuestionID) {
+                            // Clean up imageFiles
+                            delete imageFiles[questionID];
+
+                            if (thisQuestionSettings.pipeImage && thisQuestionSettings.pipeImage.id == deletedQuestionID) {
+                                // Remove the stale pipeImage
+                                delete thisQuestionSettings.pipeImage
+                                // & it's preview
+                                $('#preview-' + thisQuestionID).addClass('preview-empty')
+                                                               .empty()
+                            }
+                        }
+                    }
+
+                    if (thisQuestion.file) {
+                        if (thisQuestionType == 13) {
+                            // Heatmap
+                            options = thisQuestion.options;
+                            regions = thisQuestionSettings.regions;
+                            if (regions) {
+                                base_label = 'Q' + questionNumber + ' Heatmap; ';
+                                for (var i=0, len=regions.length; i < len; i++) {
+                                    label = base_label + '\'' + options[i] + '\'';
+                                    imageOptions.push({
+                                        label: label,
+                                        id: thisQuestionID,
+                                        region: i
+                                    });
+                                }
+                            }
+                        } else {
+                            label = 'Q' + questionNumber + ' ' + typesToText[thisQuestion.type];
+                            imageOptions.push({
+                                label: label,
+                                id: thisQuestionID
+                            });
+                        }
+                    }
+                }
+            }
+            
         },
 
         /**
@@ -2048,42 +2098,10 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         // Remove Image from Preview
                         preview.empty()
                                .addClass('preview-empty');
-                        // Remove entry from imageOptions
-                        var img,
-                            oldOptions = imageOptions;
-                        imageOptions = [];
-                        for (var i=0, len=oldOptions.length; i < len; i++) {
-                            img = oldOptions[i];
-                            if (img.id != questionID) {
-                                imageOptions.push(img);
-                            }
-                        }
-                        // Clean up imageFiles
-                        delete imageFiles[questionID];
-                        // Update the Pipe Options HTML for each question
-                        var item,
-                            thisQuestionID,
-                            thisQuestion,
-                            questions = self.data.questions,
-                            layout = self.data.layout;
-                        for (var position=1; position <= Object.keys(layout).length; position++) {
-                            item = layout[position];
-                            if (item.type == 'question') {
-                                thisQuestionID = item.id;
-                                thisQuestion = questions[thisQuestionID];
-                                if (thisQuestion.type != 13) {
-                                    $('#pipe-' + thisQuestionID).empty()
-                                                                .append(self.pipeOptionsHtml(thisQuestionID));
-                                    if (thisQuestion.settings.pipeImage && thisQuestion.settings.pipeImage.id == questionID) {
-                                        // Remove the stale pipeImage
-                                        delete thisQuestion.settings.pipeImage
-                                        // & it's preview
-                                        $('#preview-' + thisQuestionID).addClass('preview-empty')
-                                                                       .empty()
-                                    }
-                                }
-                            }
-                        }
+                        // Update questions lookup
+                        delete self.data.questions[questionID].file;
+                        // Update imageOptions
+                        self.updateImageOptions(false, questionID);
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
                         var msg;
@@ -2580,7 +2598,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             }
                         } else {
                             // moveUp
-                            if (swapQuestionID && currentItem.displayLogic && currentItem.displayLogic.id == questionID) {
+                            if (swapQuestionID && currentItem.displayLogic && currentItem.displayLogic.id == swapQuestionID) {
                                 delete currentItem.displayLogic;
                                 $('#logic-select-' + newPosition).val('')
                                                                  .trigger('change');
@@ -2591,6 +2609,10 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 } else {
                     // @ToDo (beyond requirements for UCCE)
                 }
+
+                // Update the ImageOptions lookup
+                this.updateImageOptions();
+
             } else if (newPosition) {
                 // Create
                 if (itemType == 'break') {
@@ -2757,6 +2779,10 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
                 if (itemType == 'question') {
                     questionNumbers[newQuestionNumber] = newPosition;
+                    if (newPosition <= layoutLength) {
+                        // Not added at the end of the Survey, so imageOptions needs updating for amended questionNumbers
+                        this.updateImageOptions();
+                    }
                 }
 
             } else {
@@ -2788,11 +2814,6 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
                 } else {
                     // Question/Instructions
-
-                    if (itemType == 'question') {
-                        // Clean up imageFiles
-                        delete imageFiles[questionID];
-                    }
 
                     // Update this pageElements
                     pageElements[currentPage]--;
@@ -2927,6 +2948,9 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     // Remove final questionNumber from questionNumbers
                     delete questionNumbers[Object.keys(questionNumbers).length];
                 }
+
+                // Update the ImageOptions lookup
+                this.updateImageOptions(false, questionID);
             }
 
             // Save Layout
@@ -2976,59 +3000,15 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 return;
             }
 
-            var file,
-                item,
+            var item,
                 page = 1,
                 questionID,
-                questionNumber = 0,
-                thisQuestion,
-                thisRegions,
-                base_label,
                 label,
                 questions = this.data.questions,
                 layoutLength = Object.keys(layout).length;
 
-            // Loop through layout to build the list of Images
-            // - this requires the Question Numbers too
-            for (var position=1; position <= layoutLength; position++) {
-                item = layout[position];
-                if (item.type == 'break') {
-                    // Skip
-                } else if (item.type == 'instructions') {
-                    // Skip
-                } else {
-                    // Question
-                    questionNumber++
-                    questionNumbers[questionNumber] = position;
-
-                    questionID = item.id,
-                    thisQuestion = questions[questionID];
-                    if (thisQuestion.file) {
-                        if (thisQuestion.type == 13) {
-                            // Heatmap
-                            var options = thisQuestion.options,
-                                regions = thisQuestion.settings.regions;
-                            if (regions) {
-                                base_label = 'Q' + questionNumber + ' Heatmap; ';
-                                for (var i=0, len=regions.length; i < len; i++) {
-                                    label = base_label + '\'' + options[i] + '\'';
-                                    imageOptions.push({
-                                        label: label,
-                                        id: questionID,
-                                        region: i
-                                    });
-                                }
-                            }
-                        } else {
-                            label = 'Q' + questionNumber + ' ' + typesToText[thisQuestion.type];
-                            imageOptions.push({
-                                label: label,
-                                id: questionID
-                            });
-                        }
-                    }
-                }
-            }
+            // Loop through layout to build imageOptions & questionNumbers
+            this.updateImageOptions(true);
 
             // Then loop through layout to add items to page
             for (var position=1; position <= layoutLength; position++) {
@@ -3230,6 +3210,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
             data.settings = settings;
             thisQuestion.settings = settings;
+
+            if (type == 'heatmap') {
+                // Update ImageOptions (regions may have been added/removed)
+                this.updateImageOptions();
+            }
 
             this.ajaxMethod({
                 url: ajaxURL,
