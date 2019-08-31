@@ -85,8 +85,8 @@ import { Map, View, getCenter, Feature, HeatmapLayer, ImageLayer, Point, Project
                 var vector = new HeatmapLayer({
                     source: source,
                     gradient: ['#00AAA0', '#f00'], // $persian-green to red
-                    blur: 8,   // default: 8 pixels
-                    radius: 15 // default: 15 pixels
+                    blur: 7,   // default: 8 pixels
+                    radius: 8  // default: 15 pixels
                 });
 
                 var map = new Map({
@@ -105,16 +105,18 @@ import { Map, View, getCenter, Feature, HeatmapLayer, ImageLayer, Point, Project
                     })
                 });
 
+                // We use simple coordinate pairs, not GeoJSON
                 //const format = new GeoJSON({featureProjection: projection});
 
                 // Add features
                 var feature,
                     point;
                 for (var i=0, len=points.length; i < len; i++) {
-                    point = new Point(points[i]);
                     //geojson = JSON.parse(point);
                     //feature = format.readFeatureFromObject(geojson);
+                    point = new Point(points[i]);
                     feature = new Feature(point);
+                    feature.set('weight', 0.9); // This is about about Opacity...not how far along the gradient to colour
                     source.addFeature(feature);
                 }
 

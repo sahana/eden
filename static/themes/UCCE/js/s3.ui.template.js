@@ -2103,6 +2103,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
           */
         addSectionBreak: function(newPosition, page, load) {
 
+            var ns = this.eventNamespace;
+
             if (newPosition == 0) {
                 // 1st section break
                 pages[1] = newPosition;
@@ -2128,83 +2130,101 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 pageElements[1] = thisElements;
                 var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-0" data-page="1"><span>PAGE 1 (' + thisElements + ' ELEMENTS)</span></div><div class="medium-1 columns"><i class="ucce ucce-down-alt"> </i></div></div>';
                 $(this.element).parent().append(sectionBreak);
-                return;
-            }
 
-            page++;
+            } else {
 
-            var thisElements = 0;
+                page++;
 
-            if (load) {
-                // We're loading, so find how many elements on this page
-                var item,
-                    layout = this.data.layout,
-                    layoutLength = Object.keys(layout).length;
-                for (var position=newPosition + 1; position <= layoutLength; position++) {
-                    item = layout[position];
-                    if (item.type == 'break') {
-                        // Stop iteration
-                        break;
-                    } else {
-                        thisElements++;
+                var thisElements = 0;
+
+                if (load) {
+                    // We're loading, so find how many elements on this page
+                    var item,
+                        layout = this.data.layout,
+                        layoutLength = Object.keys(layout).length;
+                    for (var position=newPosition + 1; position <= layoutLength; position++) {
+                        item = layout[position];
+                        if (item.type == 'break') {
+                            // Stop iteration
+                            break;
+                        } else {
+                            thisElements++;
+                        }
                     }
-                }
-                pageElements[page] = thisElements;
-                pages[page] = newPosition;
-            } else {
-                this.rePosition({type: 'break'}, null, newPosition);
-                thisElements = pageElements[page];
-            }
-
-            var delete_btn,
-                readOnly = this.options.readOnly;
-
-            if (readOnly) {
-                delete_btn = '';
-            } else {
-                delete_btn = '<i class="ucce ucce-delete-page"> </i>';
-            }
-
-            var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-' + newPosition + '" data-page="' + page + '"><span>PAGE ' + page + ' (' + thisElements + ' ELEMENTS)</span></div><div class="medium-1 columns">' + delete_btn + '<i class="ucce ucce-down-alt"> </i></div></div>';
-
-            if (readOnly) { 
-                // Place after other elements
-                $(this.element).parent().append(sectionBreak);
-            } else {
-                var layout = this.data.layout;
-                if (load || newPosition == Object.keys(layout).length) {
-                    // Place before droppable
-                    $('#survey-droppable').before(sectionBreak);
+                    pageElements[page] = thisElements;
+                    pages[page] = newPosition;
                 } else {
-                    // Place after previous element
-                    var previousPosition = newPosition - 1,
-                        previousItem = layout[previousPosition];
-                    if (previousItem.type == 'break') {
-                        $('#section-break-' + previousPosition).parent().after(sectionBreak);
-                    } else if (previousItem.type == 'instructions') {
-                        $('#instructions-' + previousPosition).after(sectionBreak);
-                    } else {
-                        // Question
-                        $('#question-' + previousItem.id).after(sectionBreak);
-                    }
+                    this.rePosition({type: 'break'}, null, newPosition);
+                    thisElements = pageElements[page];
                 }
-                // Events
-                var self = this,
-                    ns = this.eventNamespace;
-                $('#section-break-' + newPosition).next().children('.ucce-delete-page').on('click' + ns, function(/* event */){
-                    // Delete this section-break
 
-                    // Read the position (can't trust original as it may have changed)
-                    var currentPosition = parseInt($(this).parent().prev().attr('id').split('-')[2]);
+                var delete_btn,
+                    readOnly = this.options.readOnly;
 
-                    self.deleteSectionBreak(currentPosition);
+                if (readOnly) {
+                    delete_btn = '';
+                } else {
+                    delete_btn = '<i class="ucce ucce-delete-page"> </i>';
+                }
 
-                });
-                //$('#section-break-' + newPosition).next().children('.ucce-down-alt').on('click' + ns, function(/* event */){
-                    // @ToDo: Unroll this section & rollup others
-                //});
+                var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-' + newPosition + '" data-page="' + page + '"><span>PAGE ' + page + ' (' + thisElements + ' ELEMENTS)</span></div><div class="medium-1 columns">' + delete_btn + '<i class="ucce ucce-down-alt"> </i></div></div>';
+
+                if (readOnly) { 
+                    // Place after other elements
+                    $(this.element).parent().append(sectionBreak);
+                } else {
+                    var layout = this.data.layout;
+                    if (load || newPosition == Object.keys(layout).length) {
+                        // Place before droppable
+                        $('#survey-droppable').before(sectionBreak);
+                    } else {
+                        // Place after previous element
+                        var previousPosition = newPosition - 1,
+                            previousItem = layout[previousPosition];
+                        if (previousItem.type == 'break') {
+                            $('#section-break-' + previousPosition).parent().after(sectionBreak);
+                        } else if (previousItem.type == 'instructions') {
+                            $('#instructions-' + previousPosition).after(sectionBreak);
+                        } else {
+                            // Question
+                            $('#question-' + previousItem.id).after(sectionBreak);
+                        }
+                    }
+                    // Events
+                    var self = this;
+                    $('#section-break-' + newPosition).next().children('.ucce-delete-page').on('click' + ns, function(/* event */){
+                        // Delete this section-break
+
+                        // Read the position (can't trust original as it may have changed)
+                        var currentPosition = parseInt($(this).parent().prev().attr('id').split('-')[2]);
+
+                        self.deleteSectionBreak(currentPosition);
+
+                    });
+                }
             }
-            // @ToDo: Roll-up previous sections
+            $('#section-break-' + newPosition).next().children('.ucce-down-alt').on('click' + ns, function(/* event */){
+                var $this = $(this),
+                    currentPage = $this.parent().prev().data('page');
+                
+                if ($this.hasClass('ucce-down-alt')) {
+                    // Hide elements on this page
+                    // NB This selector requires HTML attr to be modified when changing data, not just .data()
+                    $('.survey-item[data-page="' + currentPage + '"]').hide();
+
+                    // Change arrow
+                    $this.removeClass('ucce-down-alt')
+                         .addClass('ucce-up-alt');
+                } else {
+                    // Show elements on this page
+                    // NB This selector requires HTML attr to be modified when changing data, not just .data()
+                    $('.survey-item[data-page="' + currentPage + '"]').show();
+
+                    // Change arrow
+                    $this.removeClass('ucce-up-alt')
+                         .addClass('ucce-down-alt');
+                }
+            });
         },
 
         /**
@@ -2350,6 +2370,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
                         // Update Pages
                         $currentItem.data('page', newPage);
+                        $currentItem.attr('data-page', newPage); // Update attribute too so that show/hide page works
 
                         $('#section-break-' + newPosition).attr('id', 'section-break-' + currentPosition);
                         if (currentPosition == newPosition - 1) {
@@ -2425,11 +2446,13 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             // Swap Question Numbers (no need to update questionNumbers as that remains the same)
 
                             $currentItem.data('number', newQuestionNumber);
+                            //$currentItem.attr('data-number', newQuestionNumber);
                             // Update visual elements
                             $('#qlabel-' + questionID).html('Q' + newQuestionNumber);
                             $('#qlabel-l10n-' + questionID).html('Q' + newQuestionNumber);
 
                             $swapItem.data('number', oldQuestionNumber);
+                            //$swapItem.attr('data-number', oldQuestionNumber);
                             // Update visual elements
                             $('#qlabel-' + swapQuestionID).html('Q' + oldQuestionNumber);
                             $('#qlabel-l10n-' + swapQuestionID).html('Q' + oldQuestionNumber);
@@ -2598,6 +2621,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 thisPage = $thisItem.data('page') + 1;
                                 // Update Page
                                 $thisItem.data('page', thisPage);
+                                //$thisItem.attr('data-page', thisPage); // Section Breaks not affected by show/hide page
                                 // Update visual elements
                                 $('#section-break-' + oldPosition + ' > span').html('PAGE ' + thisPage + ' (' + pageElements[thisPage] + ' ELEMENTS)');
                             }
@@ -2616,6 +2640,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                     // Update questionNumber
                                     thisNewQuestionNumber = thisOldQuestionNumber + 1;
                                     $thisItem.data('number', thisNewQuestionNumber);
+                                    //$thisItem.attr('data-number', thisNewQuestionNumber);
                                     // Update visual elements
                                     $('#qlabel-' + thisQuestionID).html('Q' + thisNewQuestionNumber);
                                     $('#qlabel-l10n-' + thisQuestionID).html('Q' + thisNewQuestionNumber);
@@ -2641,6 +2666,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 thisPage = $thisItem.data('page') + 1;
                                 // Update Page
                                 $thisItem.data('page', thisPage);
+                                $thisItem.attr('data-page', thisPage); // Update attribute too so that show/hide page works
                             }
 
                             // Update Tab contents
@@ -2739,6 +2765,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 thisPage = $('#section-break-' + oldPosition).data('page') - 1;
                                 // Update Page
                                 $('#section-break-' + oldPosition).data('page', thisPage);
+                                //$('#section-break-' + oldPosition).attr('data-page', thisPage); // Section Breaks not affected by show/hide page
                                 // Update visual elements
                                 $('#section-break-' + oldPosition + ' > span').html('PAGE ' + thisPage + ' (' + pageElements[thisPage] + ' ELEMENTS)');
                             }
@@ -2757,6 +2784,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                     // Update questionNumber
                                     newQuestionNumber = thisQuestionNumber - 1;
                                     $thisItem.data('number', newQuestionNumber);
+                                    //$thisItem.attr('data-number', newQuestionNumber);
                                     // Update visual elements
                                     $('#qlabel-' + thisQuestionID).html('Q' + newQuestionNumber);
                                     $('#qlabel-l10n-' + thisQuestionID).html('Q' + newQuestionNumber);
@@ -2780,6 +2808,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 thisPage = $thisItem.data('page') - 1;
                                 // Update Page
                                 $thisItem.data('page', thisPage);
+                                $thisItem.attr('data-page', thisPage); // Update attribute too so that show/hide page works
                             }
 
                             // Update Tab contents
