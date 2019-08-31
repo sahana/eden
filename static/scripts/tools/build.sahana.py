@@ -724,6 +724,7 @@ def do_template(minimize, warnings):
         move_to("ol5.min.js.map", theme_dir)
         os.chdir(theme_dir)
         os.system("terser s3.ui.template.js -c  -o s3.ui.template.min.js")
+        os.system("terser s3.ui.heatmap.js -c  -o s3.ui.heatmap.min.js")
         # Restore CWD
         os.chdir(cwd)
 

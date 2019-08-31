@@ -174,8 +174,15 @@ input[type="text"].text-filter {
 }
 .heatmap-container {
   margin-top: 10px;
-  /*margin-left: 100px;*/
-  /*margin-right: 100px;*/
+}
+.scale-container {
+  margin-left: 200px;
+  margin-right: 200px;
+  margin-bottom: 20px;
+}
+.scale {
+  background-image: linear-gradient(to right, #00AAA0, #f00); /* $persian-green to red */
+  height: 50px;
 }
 /* Has no effect:
 .nv-zeroLine {

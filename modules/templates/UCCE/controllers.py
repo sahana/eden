@@ -1649,15 +1649,42 @@ class dc_TargetReport(S3Method):
                 hidden_input["_data-scale"] = scale
                 graph = DIV(hidden_input,
                             _class="graph-container",
-                            _id="multichoice-graph-%s" % question["id"],
+                            _id="likert-graph-%s" % question["id"],
                             )
                 content.append(graph)
 
             elif question_type == 13:
                 # heatmap
-                # selectedPoints in answer
-                heatmap = DIV(_class="heatmap-container")
+                points = []
+                pappend = points.append
+                for answer in responses:
+                    # We don't the selectedRegions in the answer...these are just for the mobile client's displayLogic to work
+                    selected_points = answer["selectedPoints"]
+                    for point in selected_points:
+                        pappend(point)
+                data = {"p": points,
+                        "i": question["file"],
+                        }
+                hidden_input = INPUT(_type="hidden",
+                                     _class="heatmap-data",
+                                     _value=json.dumps(data, separators=SEPARATORS),
+                                     )
+                heatmap = DIV(hidden_input,
+                              _class="heatmap-container",
+                              _id="heatmap-%s" % question["id"],
+                              )
                 content.append(heatmap)
+                scale = DIV(DIV(_class="scale wide",
+                                ),
+                            DIV(1,
+                                _class="fleft",
+                                ),
+                            DIV(12,
+                                _class="fright",
+                                ),
+                            _class="scale-container",
+                            )
+                content.append(scale)
 
             card = DIV(DIV(SPAN(question["name"],
                                 _class="card-title",
@@ -1684,6 +1711,7 @@ class dc_TargetReport(S3Method):
             else:
                 scripts_append("/%s/static/scripts/d3/d3.js" % appname)
             scripts_append("/%s/static/scripts/d3/nv.d3.js" % appname)
+            s3.scripts_modules.append("/%s/static/themes/UCCE/js/s3.ui.heatmap.js" % appname)
             scripts_append("/%s/static/themes/UCCE/js/report.js" % appname)
         else:
             if s3.cdn:
@@ -1693,6 +1721,7 @@ class dc_TargetReport(S3Method):
             else:
                 scripts_append("/%s/static/scripts/d3/d3.min.js" % appname)
             scripts_append("/%s/static/scripts/d3/nv.d3.min.js" % appname)
+            s3.scripts_modules.append("/%s/static/themes/UCCE/js/s3.ui.heatmap.min.js" % appname)
             scripts_append("/%s/static/themes/UCCE/js/report.min.js" % appname)
 
         S3CustomController._view(THEME, "report_custom.html")

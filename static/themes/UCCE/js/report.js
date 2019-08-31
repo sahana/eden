@@ -1,4 +1,5 @@
 $(document).ready(function(){
+
     $('.multichoice-graph').each(function(/* index */) {
 
         var $this = $(this),
@@ -109,4 +110,9 @@ $(document).ready(function(){
             return chart;
         });
     });
+
+    $('.heatmap-data').each(function(/* index */) {
+        $(this).heatMap();
+    });
+
 });
