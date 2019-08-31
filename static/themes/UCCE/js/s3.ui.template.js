@@ -2278,8 +2278,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 if (itemType == 'instructions') {
                     currentPage = $('#instructions-' + currentPosition).data('page');
                 } else if (itemType == 'question') {
-                    var oldQuestionID = item.id,
-                        oldElement = $('#question-' + oldQuestionID);
+                    var oldElement = $('#question-' + questionID);
                     currentPage = oldElement.data('page');
                     oldQuestionNumber = oldElement.data('number');
                 } else if (itemType == 'break') {
@@ -2570,6 +2569,24 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             newHref = newHref.substring(1, newHref.length);
                             $this.attr('href', '#' + newHref + '-' + currentPosition);
                         });
+
+                        // Remove any outdated displayLogic
+                        if (currentPosition == newPosition - 1) {
+                            // moveDown
+                            if (questionID && swapItem.displayLogic && swapItem.displayLogic.id == questionID) {
+                                delete swapItem.displayLogic;
+                                $('#logic-select-' + currentPosition).val('')
+                                                                     .trigger('change');
+                            }
+                        } else {
+                            // moveUp
+                            if (swapQuestionID && currentItem.displayLogic && currentItem.displayLogic.id == questionID) {
+                                delete currentItem.displayLogic;
+                                $('#logic-select-' + newPosition).val('')
+                                                                 .trigger('change');
+                            }
+                        }
+                        
                     }
                 } else {
                     // @ToDo (beyond requirements for UCCE)
