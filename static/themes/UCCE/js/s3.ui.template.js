@@ -2103,14 +2103,16 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
           */
         addSectionBreak: function(newPosition, page, load) {
 
-            var ns = this.eventNamespace;
+            var ns = this.eventNamespace,
+                thisElements = 0,
+                thisElementsText;
 
             if (newPosition == 0) {
                 // 1st section break
                 pages[1] = newPosition;
                 var layout = this.data.layout,
-                    layoutLength = Object.keys(layout).length,
-                    thisElements = 0;
+                    layoutLength = Object.keys(layout).length;
+                    
                 if (layoutLength) {
                     // We're loading, so find how many elements on this page
                     var item;
@@ -2128,14 +2130,17 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     //thisElements = 0;
                 }
                 pageElements[1] = thisElements;
-                var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-0" data-page="1"><span>PAGE 1 (' + thisElements + ' ELEMENTS)</span></div><div class="medium-1 columns"><i class="ucce ucce-down-alt"> </i></div></div>';
+                if (thisElements == 1) {
+                    thisElementsText = '1 ELEMENT';
+                } else {
+                    thisElementsText = thisElements + ' ELEMENTS';
+                }
+                var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-0" data-page="1"><span>PAGE 1 (' + thisElementsText + ')</span></div><div class="medium-1 columns"><i class="ucce ucce-down-alt"> </i></div></div>';
                 $(this.element).parent().append(sectionBreak);
 
             } else {
 
                 page++;
-
-                var thisElements = 0;
 
                 if (load) {
                     // We're loading, so find how many elements on this page
@@ -2167,7 +2172,13 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     delete_btn = '<i class="ucce ucce-delete-page"> </i>';
                 }
 
-                var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-' + newPosition + '" data-page="' + page + '"><span>PAGE ' + page + ' (' + thisElements + ' ELEMENTS)</span></div><div class="medium-1 columns">' + delete_btn + '<i class="ucce ucce-down-alt"> </i></div></div>';
+                if (thisElements == 1) {
+                    thisElementsText = '1 ELEMENT';
+                } else {
+                    thisElementsText = thisElements + ' ELEMENTS';
+                }
+
+                var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-' + newPosition + '" data-page="' + page + '"><span>PAGE ' + page + ' (' + thisElementsText + ')</span></div><div class="medium-1 columns">' + delete_btn + '<i class="ucce ucce-down-alt"> </i></div></div>';
 
                 if (readOnly) { 
                     // Place after other elements
@@ -2255,7 +2266,9 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 currentPage,
                 newPage,
                 oldQuestionNumber,
-                newQuestionNumber;
+                newQuestionNumber,
+                thisElements,
+                thisElementsText;
 
             if (itemType == 'question') {
                 questionID = item.id;
@@ -2383,8 +2396,20 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         pageElements[currentPage] --;
                         pageElements[newPage] ++;
                         // Update visual elements
-                        $('#section-break-' + pages[currentPage] + ' > span').html('PAGE ' + currentPage + ' (' + pageElements[currentPage] + ' ELEMENTS)');
-                        $('#section-break-' + pages[newPage] + ' > span').html('PAGE ' + newPage + ' (' + pageElements[newPage] + ' ELEMENTS)');
+                        thisElements = pageElements[currentPage];
+                        if (thisElements == 1) {
+                            thisElementsText = '1 ELEMENT';
+                        } else {
+                            thisElementsText = thisElements + ' ELEMENTS';
+                        }
+                        $('#section-break-' + pages[currentPage] + ' > span').html('PAGE ' + currentPage + ' (' + thisElementsText + ')');
+                        thisElements = pageElements[newPage];
+                        if (thisElements == 1) {
+                            thisElementsText = '1 ELEMENT';
+                        } else {
+                            thisElementsText = thisElements + ' ELEMENTS';
+                        }
+                        $('#section-break-' + pages[newPage] + ' > span').html('PAGE ' + newPage + ' (' + thisElementsText + ')');
 
                         // Update IDs
                         if (itemType == 'instructions') {
@@ -2576,7 +2601,12 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         newPageElements = pageElements[previousPage] - previousPageElements;
                         pageElements[previousPage] = previousPageElements;
                         pageElements[newPage] = newPageElements;
-                        $('#section-break-' + previousPagePosition + ' > span').html('PAGE ' + previousPage + ' (' + previousPageElements + ' ELEMENTS)');
+                        if (previousPageElements == 1) {
+                            thisElementsText = '1 ELEMENT';
+                        } else {
+                            thisElementsText = previousPageElements + ' ELEMENTS';
+                        }
+                        $('#section-break-' + previousPagePosition + ' > span').html('PAGE ' + previousPage + ' (' + thisElementsText + ')');
                     }
                 } else {
                     // Question/Instructions
@@ -2584,7 +2614,13 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     // Update the elements on the section
                     pageElements[newPage]++;
                     var pagePosition = pages[newPage];
-                    $('#section-break-' + pagePosition + ' > span').html('PAGE ' + newPage + ' (' + pageElements[newPage] + ' ELEMENTS)');
+                    thisElements = pageElements[newPage];
+                    if (thisElements == 1) {
+                        thisElementsText = '1 ELEMENT';
+                    } else {
+                        thisElementsText = thisElements + ' ELEMENTS';
+                    }
+                    $('#section-break-' + pagePosition + ' > span').html('PAGE ' + newPage + ' (' + thisElementsText + ')');
 
                     if (newPage != pagesLength) {
                         // Not the final page, so:
@@ -2623,7 +2659,13 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 $thisItem.data('page', thisPage);
                                 //$thisItem.attr('data-page', thisPage); // Section Breaks not affected by show/hide page
                                 // Update visual elements
-                                $('#section-break-' + oldPosition + ' > span').html('PAGE ' + thisPage + ' (' + pageElements[thisPage] + ' ELEMENTS)');
+                                thisElements = pageElements[thisPage];
+                                if (thisElements == 1) {
+                                    thisElementsText = '1 ELEMENT';
+                                } else {
+                                    thisElementsText = thisElements + ' ELEMENTS';
+                                }
+                                $('#section-break-' + oldPosition + ' > span').html('PAGE ' + thisPage + ' (' + thisElementsText + ')');
                             }
                             // Update ID
                             $('#section-break-' + oldPosition).attr('id', 'section-break-' + thisNewPosition);
@@ -2710,7 +2752,13 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         var previousPage = currentPage - 1;
                         pageElements[previousPage] += currentPageElements;
                         var previousPagePosition = pages[previousPage];
-                        $('#section-break-' + previousPagePosition + ' > span').html('PAGE ' + previousPage + ' (' + pageElements[previousPage] + ' ELEMENTS)');
+                        thisElements = pageElements[previousPage];
+                        if (thisElements == 1) {
+                            thisElementsText = '1 ELEMENT';
+                        } else {
+                            thisElementsText = thisElements + ' ELEMENTS';
+                        }
+                        $('#section-break-' + previousPagePosition + ' > span').html('PAGE ' + previousPage + ' (' + thisElementsText + ')');
                     }
 
                     // Update subsequent pages & pageElements
@@ -2732,7 +2780,13 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     // Update this pageElements
                     pageElements[currentPage]--;
                     // Update visual elements
-                    $('#section-break-' + pages[currentPage] + ' > span').html('PAGE ' + currentPage + ' (' + pageElements[currentPage] + ' ELEMENTS)');
+                    thisElements = pageElements[currentPage];
+                    if (thisElements == 1) {
+                        thisElementsText = '1 ELEMENT';
+                    } else {
+                        thisElementsText = thisElements + ' ELEMENTS';
+                    }
+                    $('#section-break-' + pages[currentPage] + ' > span').html('PAGE ' + currentPage + ' (' + thisElementsText + ')');
 
                     // Update subsequent pages
                     for (var i=currentPage + 1; i <= pagesLength; i++) {
@@ -2767,7 +2821,13 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 $('#section-break-' + oldPosition).data('page', thisPage);
                                 //$('#section-break-' + oldPosition).attr('data-page', thisPage); // Section Breaks not affected by show/hide page
                                 // Update visual elements
-                                $('#section-break-' + oldPosition + ' > span').html('PAGE ' + thisPage + ' (' + pageElements[thisPage] + ' ELEMENTS)');
+                                thisElements = pageElements[thisPage];
+                                if (thisElements == 1) {
+                                    thisElementsText = '1 ELEMENT';
+                                } else {
+                                    thisElementsText = thisElements + ' ELEMENTS';
+                                }
+                                $('#section-break-' + oldPosition + ' > span').html('PAGE ' + thisPage + ' (' + thisElementsText + ')');
                             }
                             // Update ID
                             $('#section-break-' + oldPosition).attr('id', 'section-break-' + thisNewPosition);
