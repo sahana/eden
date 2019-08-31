@@ -727,11 +727,11 @@ class DataCollectionTemplateModel(S3Model):
             # Mobile client currently uses names for scales, rather than simple number, so map:
             likert_scale_names = {1: "appropriateness",
                                   2: "confidence",
-                                  3: "frequency"
-                                  4: "safety"
-                                  5: "satisfaction"
-                                  6: "smiley-5"
-                                  7: "smiley-3"
+                                  3: "frequency",
+                                  4: "safety",
+                                  5: "satisfaction",
+                                  6: "smiley-5",
+                                  7: "smiley-3",
                                   }
             mobile_settings["widget"] = {"type": "likert",
                                          "scale": likert_scale_names.get(question_settings.get("scale")),
