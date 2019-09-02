@@ -721,8 +721,9 @@ class DataCollectionTemplateModel(S3Model):
             field_settings["widget"] = "richtext"
         elif field_type == 12:
             # Likert
-            field_type = "string" # "integer" would be more efficient, since we hardcode options currently & indexes are far less likely to vary than the string representations
-            options = question.options
+            field_type = "integer" # We hardcode options currently & indexes are far less likely to vary than the string representations
+            # No need to pass these to mobile as it has it's own lookup based on scale
+            #options = question.options
             # NB UCCE uses options_l10n just like for multichoice, but in general, could have l10n done centrally instead
             # Mobile client currently uses names for scales, rather than simple number, so map:
             likert_scale_names = {1: "appropriateness",
