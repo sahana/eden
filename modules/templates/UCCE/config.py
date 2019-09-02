@@ -2,7 +2,7 @@
 
 from collections import OrderedDict
 
-from gluon import current, DIV
+from gluon import current
 from gluon.storage import Storage
 
 def config(settings):
@@ -213,12 +213,6 @@ def config(settings):
 
     # Use Status in Assessment Targets
     settings.dc.target_status = True
-
-    # -------------------------------------------------------------------------
-    def filter_formstyle(row_id, label, widget, comment, hidden=False):
-        return DIV(label, widget, comment,
-                   _id=row_id,
-                   _class="large-3 columns")
 
     # -------------------------------------------------------------------------
     def ucce_rheader(r):
