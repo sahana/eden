@@ -673,7 +673,7 @@ class DataCollectionTemplateModel(S3Model):
             if multiple and multiple > 1:
                 field_type = "list:string"
                 if requires:
-                    mobile_settings["requires"]["selectedOpts"] = {"max": multiple}}
+                    mobile_settings["requires"]["selectedOpts"] = {"max": multiple}
                 else:
                     mobile_settings["requires"] = {"selectedOpts": {"max": multiple}}
             else:
@@ -761,7 +761,7 @@ class DataCollectionTemplateModel(S3Model):
             num_clicks = question_settings.get("numClicks")
             if num_clicks:
                 if requires:
-                    mobile_settings["requires"]["selectedOpts"] = {"max": num_clicks}}
+                    mobile_settings["requires"]["selectedOpts"] = {"max": num_clicks}
                 else:
                     mobile_settings["requires"] = {"selectedOpts": {"max": num_clicks}}
         else:
