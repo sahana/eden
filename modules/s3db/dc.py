@@ -680,8 +680,15 @@ class DataCollectionTemplateModel(S3Model):
                     mobile_settings["otherL10n"] = other_l10n
                 other_id = question_settings.get("other_id")
                 if other_id:
-                    # Update the Dynamic Field
-                    db(current.s3db.s3_field.id == other_id).update(label = other)
+                    # Read the Dyanmic Field to get the fieldname for the Mobile client
+                    ftable = current.s3db.s3_field
+                    other_field = db(ftable.id == other_id).select(ftable.id,
+                                                                   ftable.name,
+                                                                   limitby = (0, 1)
+                                                                   ).first()
+                    mobile_settings["other"] = other_field.name
+                    # Update the Dynamic Field with the current label
+                    other_field.update_record(label = other)
                     # @ToDo: Call onaccept if this starts doing anything other than just setting 'master'
                 else:
                     # Create the Dynamic Field
@@ -692,12 +699,12 @@ class DataCollectionTemplateModel(S3Model):
                                                                             ).first()
                     from uuid import uuid1
                     name = "f%s" % str(uuid1()).replace("-", "_")
+                    mobile_settings["other"] = name
                     other_id = current.s3db.s3_field.insert(table_id = template.table_id,
                                                             label = other,
                                                             name = name,
                                                             field_type = "string",
                                                             )
-                    db(current.s3db.s3_field.id == other_id).update(label = other)
                     question_settings["other_id"] = other_id
                     question.update_record(settings = question_settings)
                     # @ToDo: Call onaccept if this starts doing anything other than just setting 'master'
