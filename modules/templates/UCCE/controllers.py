@@ -495,6 +495,8 @@ class dc_QuestionImageDelete(S3Method):
 
                     # Update record
                     current.db(table.id == record_id).update(file = None)
+                    onaccept = current.s3db.get_config("dc_question", "onaccept")
+                    onaccept(Storage(vars = Storage(id = record_id)))
 
                 # Results (Empty Message so we don't get it shown to User)
                 current.response.headers["Content-Type"] = "application/json"
@@ -540,6 +542,8 @@ class dc_QuestionImageUpload(S3Method):
 
                     # Update record
                     current.db(table.id == record_id).update(file = newfilename)
+                    onaccept = current.s3db.get_config("dc_question", "onaccept")
+                    onaccept(Storage(vars = Storage(id = record_id)))
 
                     # Results (Empty Message so we don't get it shown to User)
                     current.response.headers["Content-Type"] = "application/json"
