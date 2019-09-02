@@ -1594,7 +1594,7 @@ class dc_TargetReport(S3Method):
                                  "value": total,
                                  #"p": percentage,
                                  })
-                other = question["other"]
+                other = question.get("other")
                 if other:
                     if multiple:
                         total = 0
