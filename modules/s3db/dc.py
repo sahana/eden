@@ -641,6 +641,12 @@ class DataCollectionTemplateModel(S3Model):
                         mobile_settings["image"] = {"url": URL(c="default", f="download", args=piped_question.file),
                                                     }
 
+        requires = question_settings.get("requires")
+        if requires:
+            # "isNotEmpty": {}
+            # "isIntInRange": {"min": min, "max": max}
+            mobile_settings["requires"] = requires
+
         options = None
         if field_type == 1:
             # Text
@@ -648,10 +654,6 @@ class DataCollectionTemplateModel(S3Model):
         elif field_type == 2:
             # Number
             field_type = "integer"
-            requires = question_settings.get("requires")
-            if requires:
-                # "isIntInRange": {"min": min, "max": max}
-                mobile_settings["requires"] = requires
         elif field_type == 4:
             # Boolean
             field_type = "boolean"
