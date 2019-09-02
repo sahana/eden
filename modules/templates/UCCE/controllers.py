@@ -1594,8 +1594,8 @@ class dc_TargetReport(S3Method):
                                  "value": total,
                                  #"p": percentage,
                                  })
-                other = question.get("other")
-                if other:
+                others = question.get("others")
+                if others:
                     if multiple:
                         total = 0
                         for answer in responses:
@@ -1606,7 +1606,7 @@ class dc_TargetReport(S3Method):
                         #    percentage = total / len_responses
                         #else:
                         #    percentage = 0
-                        vappend({"label": other,
+                        vappend({"label": T("Other"),
                                  "value": total,
                                  #"p": percentage,
                                  })
@@ -1636,18 +1636,18 @@ class dc_TargetReport(S3Method):
                             _id="multichoice-graph-%s" % question["id"],
                             )
                 content.append(graph)
-                others = question["others"]
-                table = TABLE(_class="wide")
-                for other in others:
-                    table.append(TR(other))
-                content.append(DIV(DIV(T("Other"),
-                                       _class="medium-1 columns taright",
-                                       ),
-                                   DIV(table,
-                                       _class="medium-11 columns",
-                                       ),
-                                   _class="row",
-                                   ))
+                if others:
+                    table = TABLE(_class="wide")
+                    for other in others:
+                        table.append(TR(other))
+                    content.append(DIV(DIV(T("Other"),
+                                           _class="medium-1 columns taright",
+                                           ),
+                                       DIV(table,
+                                           _class="medium-11 columns",
+                                           ),
+                                       _class="row",
+                                       ))
 
             elif question_type == 12:
                 # likert
