@@ -2153,7 +2153,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 } else {
                     thisElementsText = thisElements + ' ELEMENTS';
                 }
-                var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-0" data-page="1"><span>PAGE 1 (' + thisElementsText + ')</span></div><div class="medium-1 columns"><i class="ucce ucce-down-alt"> </i></div></div>';
+                var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-0" data-page="1"><span>PAGE 1 (' + thisElementsText + ')</span></div><div class="medium-1 columns"><i class="ucce ucce-up-alt"> </i></div></div>';
                 $(this.element).parent().append(sectionBreak);
 
             } else {
@@ -2196,7 +2196,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     thisElementsText = thisElements + ' ELEMENTS';
                 }
 
-                var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-' + newPosition + '" data-page="' + page + '"><span>PAGE ' + page + ' (' + thisElementsText + ')</span></div><div class="medium-1 columns">' + delete_btn + '<i class="ucce ucce-down-alt"> </i></div></div>';
+                var sectionBreak = '<div class="row"><div class="section-break medium-11 columns" id="section-break-' + newPosition + '" data-page="' + page + '"><span>PAGE ' + page + ' (' + thisElementsText + ')</span></div><div class="medium-1 columns">' + delete_btn + '<i class="ucce ucce-up-alt"> </i></div></div>';
 
                 if (readOnly) { 
                     // Place after other elements
@@ -2232,26 +2232,26 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     });
                 }
             }
-            $('#section-break-' + newPosition).next().children('.ucce-down-alt').on('click' + ns, function(/* event */){
+            $('#section-break-' + newPosition).next().children('.ucce-up-alt').on('click' + ns, function(/* event */){
                 var $this = $(this),
                     currentPage = $this.parent().prev().data('page');
                 
-                if ($this.hasClass('ucce-down-alt')) {
+                if ($this.hasClass('ucce-up-alt')) {
                     // Hide elements on this page
                     // NB This selector requires HTML attr to be modified when changing data, not just .data()
                     $('.survey-item[data-page="' + currentPage + '"]').hide();
 
                     // Change arrow
-                    $this.removeClass('ucce-down-alt')
-                         .addClass('ucce-up-alt');
+                    $this.removeClass('ucce-up-alt')
+                         .addClass('ucce-down-alt');
                 } else {
                     // Show elements on this page
                     // NB This selector requires HTML attr to be modified when changing data, not just .data()
                     $('.survey-item[data-page="' + currentPage + '"]').show();
 
                     // Change arrow
-                    $this.removeClass('ucce-up-alt')
-                         .addClass('ucce-down-alt');
+                    $this.removeClass('ucce-down-alt')
+                         .addClass('ucce-up-alt');
                 }
             });
         },
