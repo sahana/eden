@@ -1599,7 +1599,7 @@ class dc_TargetReport(S3Method):
                     if multiple:
                         total = 0
                         for answer in responses:
-                            if "XX__OTHER__XXX" in answer:
+                            if "__other__" in answer:
                                 total += 1
                         # @ToDo: Get report.js to use these
                         #if len_responses:
@@ -1613,7 +1613,7 @@ class dc_TargetReport(S3Method):
                     else:
                         total = 0
                         for answer in responses:
-                            if answer == "XX__OTHER__XXX":
+                            if answer == "__other__":
                                 total += 1
                         # @ToDo: Get report.js to use these
                         #if len_responses:

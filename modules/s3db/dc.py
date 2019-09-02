@@ -675,7 +675,7 @@ class DataCollectionTemplateModel(S3Model):
                 field_type = "string"
             other = question_settings.get("other")
             if other:
-                #options.append("XX__OTHER__XX")
+                options.append("__other__")
                 other_l10n = question_settings.get("otherL10n")
                 if other_l10n:
                     mobile_settings["otherL10n"] = other_l10n
