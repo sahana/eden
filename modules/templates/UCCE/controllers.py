@@ -1609,7 +1609,7 @@ class dc_TargetReport(S3Method):
                         vappend({"label": other,
                                  "value": total,
                                  #"p": percentage,
-                                 }):
+                                 })
                     else:
                         total = 0
                         for answer in responses:
