@@ -1378,6 +1378,7 @@ class dc_TargetReport(S3Method):
                         otherfieldname = fields[other_id]["name"]
                         others = []
                         oappend = others.append
+                    question["multiple"] = question_row["settings"].get("multiple")
                 elif field_type == 12:
                     # likert
                     question["scale"] = question_row["settings"].get("scale")
@@ -1555,23 +1556,74 @@ class dc_TargetReport(S3Method):
 
             elif question_type == 6:
                 # multichoice
+                multiple = question["multiple"]
+                if multiple is not None and multiple > 1:
+                    multiple = True
+                else:
+                    multiple = False
                 options = question["options"]
                 values = []
                 vappend = values.append
-                for option in options:
-                    total = 0
-                    for answer in responses:
-                        if answer == option:
-                            total += 1
-                    # @ToDo: Get report.js to use these
-                    #if len_responses:
-                    #    percentage = total / len_responses
-                    #else:
-                    #    percentage = 0
-                    vappend({"label": option,
-                             "value": total,
-                             #"p": percentage,
-                             })
+                if multiple:
+                    for option in options:
+                        total = 0
+                        for answer in responses:
+                            if option in answer:
+                                total += 1
+                        # @ToDo: Get report.js to use these
+                        #if len_responses:
+                        #    percentage = total / len_responses
+                        #else:
+                        #    percentage = 0
+                        vappend({"label": option,
+                                 "value": total,
+                                 #"p": percentage,
+                                 })
+                else:
+                    for option in options:
+                        total = 0
+                        for answer in responses:
+                            if answer == option:
+                                total += 1
+                        # @ToDo: Get report.js to use these
+                        #if len_responses:
+                        #    percentage = total / len_responses
+                        #else:
+                        #    percentage = 0
+                        vappend({"label": option,
+                                 "value": total,
+                                 #"p": percentage,
+                                 })
+                other = question["other"]
+                if other:
+                    if multiple:
+                        total = 0
+                        for answer in responses:
+                            if "XX__OTHER__XXX" in answer:
+                                total += 1
+                        # @ToDo: Get report.js to use these
+                        #if len_responses:
+                        #    percentage = total / len_responses
+                        #else:
+                        #    percentage = 0
+                        vappend({"label": other,
+                                 "value": total,
+                                 #"p": percentage,
+                                 }):
+                    else:
+                        total = 0
+                        for answer in responses:
+                            if answer == "XX__OTHER__XXX":
+                                total += 1
+                        # @ToDo: Get report.js to use these
+                        #if len_responses:
+                        #    percentage = total / len_responses
+                        #else:
+                        #    percentage = 0
+                        vappend({"label": T("Other"),
+                                 "value": total,
+                                 #"p": percentage,
+                                 })
 
                 data = [{"values": values,
                          }]
