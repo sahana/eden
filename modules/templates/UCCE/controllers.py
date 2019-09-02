@@ -762,6 +762,14 @@ class dc_TargetActivate(S3Method):
             current.log.error("Error Activating Target %s: Cannot find Template!" % target_id)
             return
 
+        # Check if we need l10n
+        ltable = s3db.dc_template_l10n
+        l10n = db(ltable.template_id == template_id).select(ltable.language,
+                                                            limitby = (0, 1)
+                                                            ).first()
+        if l10n:
+            l10n = l10n.language
+
         # Convert dc_template.layout to s3_table.settings["mobile_form"]
         layout = template.layout or []
         mobile_form = []
@@ -820,7 +828,17 @@ class dc_TargetActivate(S3Method):
                 say = item.get("say")
                 new_item["do"] = do.get("text")
                 new_item["say"] = say.get("text")
-                # @ToDo: l10n
+                if l10n:
+                    # Convert format used by DC to that used by mobile
+                    do_l10n = do.get("l10n")
+                    if do_l10n:
+                        do_l10n = do_l10n.get(l10n)
+                    say_l10n = say.get("l10n")
+                    if say_l10n:
+                        say_l10n = say_l10n.get(l10n)
+                    new_item["l10n"] = {l10n: {"do": do_l10n,
+                                               "say": say_l10n,
+                                               }}
                 displayLogic = item.get("displayLogic")
                 if displayLogic:
                     # Convert Question ID to fieldname
