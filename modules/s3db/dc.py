@@ -672,7 +672,10 @@ class DataCollectionTemplateModel(S3Model):
             multiple = question_settings.get("multiple")
             if multiple and multiple > 1:
                 field_type = "list:string"
-                mobile_settings["requires"] = {"selectedOpts": {"max": multiple}}
+                if requires:
+                    mobile_settings["requires"]["selectedOpts"] = {"max": multiple}}
+                else:
+                    mobile_settings["requires"] = {"selectedOpts": {"max": multiple}}
             else:
                 field_type = "string"
             other = question_settings.get("other")
@@ -754,10 +757,13 @@ class DataCollectionTemplateModel(S3Model):
             regions = question_settings.get("regions")
             if regions:
                 widget["regions"] = regions
-            field_settings["mobile"]["widget"] = widget
+            mobile_settings["widget"] = widget
             num_clicks = question_settings.get("numClicks")
             if num_clicks:
-                field_settings["mobile"]["requires"] = {"selectedOpts": {"max": num_clicks}}
+                if requires:
+                    mobile_settings["requires"]["selectedOpts"] = {"max": num_clicks}}
+                else:
+                    mobile_settings["requires"] = {"selectedOpts": {"max": num_clicks}}
         else:
             current.log.debug(field_type)
             raise NotImplementedError
