@@ -233,7 +233,7 @@ def config(settings):
             # List or Create form: rheader makes no sense here
             return None
 
-        from gluon import A, TABLE, TR, TH, URL
+        from gluon import A, DIV, TABLE, TR, TH, URL
 
         if tablename == "dc_template":
             #tabs = [(T("Basic Details"), None),
