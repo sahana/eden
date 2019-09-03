@@ -617,6 +617,7 @@ class S3MobileSchema(object):
         resource = self.resource
         resolve_selector = resource.resolve_selector
 
+        table = resource.table
         tablename = resource.tablename
 
         fields = []
@@ -653,6 +654,12 @@ class S3MobileSchema(object):
                         mappend(element)
                         include(fname)
 
+                        # Other-field
+                        other = self.get_other_field(table, rfield.field)
+                        if other and other not in fnames:
+                            fields.append(table[other])
+                            include(other)
+
         else:
             for element in form.elements:
                 if isinstance(element, S3SQLField):
@@ -665,6 +672,12 @@ class S3MobileSchema(object):
                         fields.append(rfield.field)
                         mappend(fname)
                         include(fname)
+
+                        # Other-field
+                        other = self.get_other_field(table, rfield.field)
+                        if other and other not in fnames:
+                            fields.append(table[other])
+                            include(other)
 
                 elif isinstance(element, S3SQLDummyField):
                     field = {"type": "dummy",
@@ -695,6 +708,32 @@ class S3MobileSchema(object):
                 #include(fkey)
 
         return fields
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_other_field(table, field):
+        """
+            Check for an "other"-field
+            - additional input for option-widgets when the user chooses
+              the "other"-option
+            - other-field must be in the schema, but not in the mobile_form
+
+            @param table: the table
+            @param field: the option-field
+
+            @returns: the name of the other-field, or None
+        """
+
+        other = None
+
+        if hasattr(field, "s3_settings"):
+            mobile_settings = field.s3_settings.get("mobile")
+            other = mobile_settings.get("other")
+
+        if other and other in table.fields:
+            return other
+        else:
+            return None
 
     # -------------------------------------------------------------------------
     @staticmethod
