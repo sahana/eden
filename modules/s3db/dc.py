@@ -638,6 +638,7 @@ class DataCollectionTemplateModel(S3Model):
             options_l10n = l10n.get("options_l10n") or []
             l10n = {language: {"label": name_l10n,
                                }
+                    }
             if options_l10n:
                 l10n[language]["options"] = options_l10n
             mobile_settings["l10n"] = l10n
