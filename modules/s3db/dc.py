@@ -592,6 +592,8 @@ class DataCollectionTemplateModel(S3Model):
         """
             On-accept routine for dc_question:
              - Create & link a Dynamic Field to use to store the Question
+
+            Currently assumes only a single Translation available for each Question
         """
 
         try:
@@ -603,6 +605,8 @@ class DataCollectionTemplateModel(S3Model):
 
         # Read the full Question
         qtable = db.dc_question
+        ltable = db.dc_question_l10n
+        left = ltable.on(ltable.question_id == qtable.id)
         question = db(qtable.id == question_id).select(qtable.id,
                                                        qtable.template_id,
                                                        qtable.field_id,
@@ -613,14 +617,31 @@ class DataCollectionTemplateModel(S3Model):
                                                        qtable.options,
                                                        qtable.settings,
                                                        qtable.require_not_empty,
+                                                       ltable.language,
+                                                       ltable.name_l10n,
+                                                       ltable.options_l10n,
+                                                       left = left,
                                                        limitby=(0, 1)
                                                        ).first()
 
+        l10n = question["dc_question_l10n"]
+        language = l10n.get("language")
+
+        question = question["dc_question"]
         field_type = question.field_type
+        question_settings = question.settings or {}
+
         field_settings = {"mobile": {}}
         mobile_settings = field_settings["mobile"]
+        if language:
+            name_l10n = l10n.get("name_l10n")
+            options_l10n = l10n.get("options_l10n") or []
+            l10n = {language: {"label": name_l10n,
+                               }
+            if options_l10n:
+                l10n[language]["options"] = options_l10n
+            mobile_settings["l10n"] = l10n
 
-        question_settings = question.settings or {}
         image = question.file
         if image:
             mobile_settings["image"] = {"url": URL(c="default", f="download", args=image),
@@ -681,9 +702,18 @@ class DataCollectionTemplateModel(S3Model):
             other = question_settings.get("other")
             if other:
                 options.append("__other__")
-                other_l10n = question_settings.get("otherL10n")
-                if other_l10n:
-                    mobile_settings["otherL10n"] = other_l10n
+                if language:
+                    other_l10n = question_settings.get("otherL10n")
+                    if other_l10n:
+                        other_settings = {"mobile": {"l10n": {language: {"label": other_l10n,
+                                                                         },
+                                                              },
+                                                     },
+                                          }
+                    else:
+                        other_settings = {}
+                else:
+                    other_settings = {}
                 other_id = question_settings.get("other_id")
                 if other_id:
                     # Read the Dyanmic Field to get the fieldname for the Mobile client
@@ -694,7 +724,9 @@ class DataCollectionTemplateModel(S3Model):
                                                                    ).first()
                     mobile_settings["other"] = other_field.name
                     # Update the Dynamic Field with the current label
-                    other_field.update_record(label = other)
+                    other_field.update_record(label = other,
+                                              settings = other_settings,
+                                              )
                     # @ToDo: Call onaccept if this starts doing anything other than just setting 'master'
                 else:
                     # Create the Dynamic Field
@@ -710,6 +742,7 @@ class DataCollectionTemplateModel(S3Model):
                                                             label = other,
                                                             name = name,
                                                             field_type = "string",
+                                                            settings = other_settings,
                                                             )
                     question_settings["other_id"] = other_id
                     question.update_record(settings = question_settings)
