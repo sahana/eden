@@ -659,9 +659,9 @@ class DataCollectionTemplateModel(S3Model):
                     from_field = db(ftable.id == pipe_image["id"]).select(ftable.name,
                                                                           limitby = (0, 1)
                                                                           ).first()
-                    mobile_settings["pipeImage"] = {"from": from_field.name,
-                                                    "region": region,
-                                                    }
+                    mobile_settings["image"] = {"from": from_field.name,
+                                                "region": region,
+                                                }
                 else:
                     # Nothing special needed client-side
                     piped_question = db(qtable.id == pipe_image["id"]).select(qtable.file,
