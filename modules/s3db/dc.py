@@ -643,6 +643,8 @@ class DataCollectionTemplateModel(S3Model):
                 l10n[language]["options"] = options_l10n
             mobile_settings["l10n"] = l10n
 
+        ftable = current.s3db.s3_field
+
         image = question.file
         if image:
             mobile_settings["image"] = {"url": URL(c="default", f="download", args=image),
@@ -650,10 +652,16 @@ class DataCollectionTemplateModel(S3Model):
         else:
             pipe_image = question_settings.get("pipeImage")
             if pipe_image:
-                if pipe_image.get("region"):
+                region = pipe_image.get("region")
+                if region is not None:
                     # Heatmap
-                    # @ToDo: Convert Question ID to fieldname
-                    mobile_settings["pipeImage"] = pipe_image
+                    # Convert Question ID to fieldname
+                    from_field = db(ftable.id == pipe_image["id"]).select(ftable.name,
+                                                                          limitby = (0, 1)
+                                                                          ).first()
+                    mobile_settings["pipeImage"] = {"from": from_field.name,
+                                                    "region": region,
+                                                    }
                 else:
                     # Nothing special needed client-side
                     piped_question = db(qtable.id == pipe_image["id"]).select(qtable.file,
@@ -718,7 +726,6 @@ class DataCollectionTemplateModel(S3Model):
                 other_id = question_settings.get("other_id")
                 if other_id:
                     # Read the Dyanmic Field to get the fieldname for the Mobile client
-                    ftable = current.s3db.s3_field
                     other_field = db(ftable.id == other_id).select(ftable.id,
                                                                    ftable.name,
                                                                    limitby = (0, 1)
@@ -739,12 +746,12 @@ class DataCollectionTemplateModel(S3Model):
                     from uuid import uuid1
                     name = "f%s" % str(uuid1()).replace("-", "_")
                     mobile_settings["other"] = name
-                    other_id = current.s3db.s3_field.insert(table_id = template.table_id,
-                                                            label = other,
-                                                            name = name,
-                                                            field_type = "string",
-                                                            settings = other_settings,
-                                                            )
+                    other_id = ftable.insert(table_id = template.table_id,
+                                             label = other,
+                                             name = name,
+                                             field_type = "string",
+                                             settings = other_settings,
+                                             )
                     question_settings["other_id"] = other_id
                     question.update_record(settings = question_settings)
                     # @ToDo: Call onaccept if this starts doing anything other than just setting 'master'
