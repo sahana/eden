@@ -272,7 +272,8 @@ input[type="text"].text-filter {
   margin-left: 5px;
 }
 .heatmap {
-  margin-top: -120px;
+  /*margin-top: -120px;*/
+  margin-top: -100px;
 }
 
 /*
