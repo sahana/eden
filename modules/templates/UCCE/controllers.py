@@ -7,7 +7,7 @@ import os
 from gluon import *
 from gluon.storage import Storage
 
-from s3 import json, ICON, S3CustomController, S3DateTime, S3Method
+from s3 import json, s3_str, ICON, S3CustomController, S3DateTime, S3Method
 from s3compat import StringIO, xrange
 
 # Compact JSON encoding
@@ -1628,7 +1628,7 @@ class dc_TargetReport(S3Method):
                         #    percentage = total / len_responses
                         #else:
                         #    percentage = 0
-                        vappend({"label": T("Other"),
+                        vappend({"label": s3_str(T("Other")),
                                  "value": total,
                                  #"p": percentage,
                                  })
@@ -1642,7 +1642,7 @@ class dc_TargetReport(S3Method):
                         #    percentage = total / len_responses
                         #else:
                         #    percentage = 0
-                        vappend({"label": T("Other"),
+                        vappend({"label": s3_str(T("Other")),
                                  "value": total,
                                  #"p": percentage,
                                  })
