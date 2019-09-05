@@ -603,12 +603,13 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Image</h2></div></div>' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"></div></div>' +
                                '<div class="row">' +
-                                '<div class="columns medium-7 heatmap" id="map-' + questionID + '"><span id="preview-' + questionID + '" class="preview-empty fleft"></span></div>' +
-                                '<div class="columns medium-5">' + 
-                                 '<div class="row"><h3>Number of clicks allowed:</h3></div>' +
-                                 '<div class="row" id="clicks-row-' + questionID + '"><i class="ucce ucce-minus"> </i><span> ' + numClicks + ' </span><i class="ucce ucce-plus"> </i></div>' +
-                                 '<div class="row"><h3>Tap regions:</h3></div>' +
-                                 choices +
+                                '<div class="heatmap" id="map-' + questionID + '"><span id="preview-' + questionID + '" class="preview-empty fleft"></span></div>' +
+                               '</div>' +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11">' +
+                                '<div class="row"><h3>Number of clicks allowed:</h3></div>' +
+                                '<div class="row" id="clicks-row-' + questionID + '"><i class="ucce ucce-minus"> </i><span> ' + numClicks + ' </span><i class="ucce ucce-plus"> </i></div>' +
+                                '<div class="row"><h3>Tap regions:</h3></div>' +
+                                choices +
                               '</div></div></div>';
                     translationTab = '<div class="media content" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Heatmap</h2></div></div>' +
@@ -818,21 +819,48 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         self.deleteImage(questionID);
                     });
                     // Image Upload
-                    $('#image-' + questionID).fileupload({
-                        dataType: 'json',
-                        dropZone: $('#preview-' + questionID + ', #image-' + questionID),
-                        maxNumberOfFiles: 1,
-                        url: S3.Ap.concat('/dc/question/') + questionID + '/image_upload.json',
-                        add: function(e, data) {
-                            if (e.isDefaultPrevented()) {
-                                return false;
+                    var options;
+                    if (type == 'heatmap') {
+                        options = {
+                            dataType: 'json',
+                            dropZone: $('#preview-' + questionID + ', #image-' + questionID),
+                            disableImageResize: false,
+                            imageMaxWidth: 480,
+                            imageMaxHeight: 480,
+                            imageMinWidth: 480,
+                            imageMinheight: 480,
+                            maxNumberOfFiles: 1,
+                            url: S3.Ap.concat('/dc/question/') + questionID + '/image_upload.json',
+                            add: function(e, data) {
+                                if (e.isDefaultPrevented()) {
+                                    return false;
+                                }
+                                if (data.autoUpload || (data.autoUpload !== false && $(this).fileupload('option', 'autoUpload'))) {
+                                    data.process().done(function() {
+                                        data.submit();
+                                    });
+                                }
+                            },
+                            done: function (e, data) {
+                                var file = data.result.file;
+                                imageFiles[questionID] = file;
+                                self.data.questions[questionID].file = file;
+                                self.heatMap(questionID, file);
                             }
-
-                            if (data.autoUpload || (data.autoUpload !== false && $(this).fileupload('option', 'autoUpload'))) {
-                                data.process().done(function() {
-                                    data.submit();
-
-                                    if (type != 'heatmap') {
+                        };
+                    } else {
+                        options = {
+                            dataType: 'json',
+                            dropZone: $('#preview-' + questionID + ', #image-' + questionID),
+                            maxNumberOfFiles: 1,
+                            url: S3.Ap.concat('/dc/question/') + questionID + '/image_upload.json',
+                            add: function(e, data) {
+                                if (e.isDefaultPrevented()) {
+                                    return false;
+                                }
+                                if (data.autoUpload || (data.autoUpload !== false && $(this).fileupload('option', 'autoUpload'))) {
+                                    data.process().done(function() {
+                                        data.submit();
                                         // Create Preview Image
                                         var file = data.files[0];
 
@@ -848,36 +876,26 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                             $('#preview-' + questionID).removeClass('preview-empty')
                                                                        .empty()
                                                                        .append(preview);
-
                                             // Ensure that we aren't trying to Pipe at the same time
                                             if (thisQuestion.settings.hasOwnProperty('pipeImage')) {
                                                 $('#pipe-' + questionID).val('')
                                                                         .trigger('change');
                                             }
-
                                             return img;
-
                                         }, {}); // Empty Options
-                                    }
-                                    
-                                });
-                            }
-                        },
-                        done: function (e, data) {
-
-                            var file = data.result.file;
-
-                            imageFiles[questionID] = file;
-                            self.data.questions[questionID].file = file;
-
-                            if (type == 'heatmap') {
-                                self.heatMap(questionID, file);
-                            } else {
+                                    });
+                                }
+                            },
+                            done: function (e, data) {
+                                var file = data.result.file;
+                                imageFiles[questionID] = file;
+                                self.data.questions[questionID].file = file;
                                 // Update ImageOptions
                                 self.updateImageOptions();
                             }
-                        }
-                    });
+                        };
+                    }
+                    $('#image-' + questionID).fileupload(options);
                 }
             }
             
@@ -1423,8 +1441,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
             // Add image to DOM to get the height/width
             $('<img>').attr('src', url).load(function() {
-                var width = this.width,
-                    height = this.height;
+                var width = this.width,     // Should always be 480
+                    height = this.height;   // Should always be 480
 
                 // Remove preview
                 $('#map-' + questionID).empty();
@@ -1466,8 +1484,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     view: new View({
                         projection: projection,
                         center: getCenter(extent),
-                        zoom: 0,
-                        maxZoom: 0
+                        zoom: 2,
+                        maxZoom: 2
                     })
                 });
 

@@ -267,8 +267,12 @@ input[type="text"].text-filter {
 
 .heatmap,
 .heatmap > .preview-empty {
-  height: 480px;
-  width: 480px;
+  height: 960px;
+  width: 960px;
+  margin-left: 5px;
+}
+.heatmap {
+  margin-top: -120px;
 }
 
 /*

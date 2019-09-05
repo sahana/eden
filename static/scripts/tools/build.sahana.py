@@ -485,6 +485,8 @@ def do_js(minimize, do_gis = False, warnings = True):
         # cd static/scripts
         # java -jar tools/compiler.jar --js jquery.fileupload.js --js_output_file jquery.fileupload.min.js
         for filename in ("jquery.fileupload", # Used by UCCE
+                         "jquery.fileupload-process", # Used by UCCE
+                         "jquery.fileupload-image", # Used by UCCE
                          "jquery.iframe-transport", # Used by jquery.fileupload
                          "spectrum",
                          "tag-it",

@@ -2173,6 +2173,8 @@ class dc_TemplateEditor(S3Method):
                     # The Iframe Transport is required for browsers without support for XHR file uploads
                     scripts_append("/%s/static/scripts/jquery.iframe-transport.js" % appname)
                     scripts_append("/%s/static/scripts/jquery.fileupload.js" % appname)
+                    scripts_append("/%s/static/scripts/jquery.fileupload-process.js" % appname)
+                    scripts_append("/%s/static/scripts/jquery.fileupload-image.js" % appname)
                     scripts_append("/%s/static/scripts/jquery.validate.js" % appname)
                     s3.scripts_modules.append("/%s/static/themes/UCCE/js/s3.ui.template.js" % appname)
                 else:
@@ -2181,6 +2183,8 @@ class dc_TemplateEditor(S3Method):
                     # The Iframe Transport is required for browsers without support for XHR file uploads
                     scripts_append("/%s/static/scripts/jquery.iframe-transport.js" % appname)
                     scripts_append("/%s/static/scripts/jquery.fileupload.min.js" % appname)
+                    scripts_append("/%s/static/scripts/jquery.fileupload-process.min.js" % appname)
+                    scripts_append("/%s/static/scripts/jquery.fileupload-image.min.js" % appname)
                     scripts_append("/%s/static/scripts/jquery.validate.min.js" % appname)
                     s3.scripts_modules.append("/%s/static/themes/UCCE/js/s3.ui.template.min.js" % appname)
 
