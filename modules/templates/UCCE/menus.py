@@ -126,7 +126,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         request = current.request
         if request.function == "user" and \
-           request.args(0) == "profile":
+           request.args(0) in ("change_password", "profile"):
             return self.ucce()
         else:
             return None
