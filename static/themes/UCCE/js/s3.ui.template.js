@@ -1646,7 +1646,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     thisQuestionID = item.id;
                     thisQuestion = questions[thisQuestionID];
                     if (thisQuestion === undefined) {
-                        // We have a deleted question in the layout somehow
+                        // We have a deleted question in the layout somehow!
                         continue;
                     }
                     thisQuestionSettings = thisQuestion.settings;
@@ -3033,8 +3033,9 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 page = 1,
                 questionID,
                 label,
+                layoutLength = Object.keys(layout).length,
                 questions = this.data.questions,
-                layoutLength = Object.keys(layout).length;
+                thisQuestion;
 
             // Loop through layout to build imageOptions & questionNumbers
             this.updateImageOptions(true);
@@ -3050,7 +3051,12 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 } else {
                     // Question
                     questionID = item.id;
-                    this.addQuestion(position, page, typesToText[questions[questionID].type], questionID);
+                    thisQuestion = questions[questionID];
+                    if (thisQuestion === undefined) {
+                        // We have a deleted question in the layout somehow!
+                        continue;
+                    }
+                    this.addQuestion(position, page, typesToText[thisQuestion.type], questionID);
                 }
             }
         },
