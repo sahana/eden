@@ -1634,8 +1634,10 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 item = layout[position];
                 if (item.type == 'break') {
                     // Skip: No Image or QuestionNumber
+                    continue;
                 } else if (item.type == 'instructions') {
                     // Skip: No Image or QuestionNumber
+                    continue;
                 } else {
                     // Question
 
@@ -1643,6 +1645,10 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
                     thisQuestionID = item.id;
                     thisQuestion = questions[thisQuestionID];
+                    if (thisQuestion === undefined) {
+                        // We have a deleted question in the layout somehow
+                        continue;
+                    }
                     thisQuestionSettings = thisQuestion.settings;
                     thisQuestionType = thisQuestion.type;
 
