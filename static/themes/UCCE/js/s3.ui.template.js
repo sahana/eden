@@ -419,7 +419,9 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         otherLabel = '',
                         otherL10n = '',
                         multiple = 1,
-                        multiChecked = '';
+                        multiChecked = '',
+                        otherL10nRow;
+
                     if (load) {
                         name = thisQuestion.name;
                         if (l10n) {
@@ -461,14 +463,14 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             otherL10n = settings.otherL10n || '';
                             otherL10nHide = '';
                         }
-                        choiceL10nRow = '<div id="other-l10n-row-' + questionID + '" class="row' + otherL10nHide + '">' +
-                                         '<div class="columns medium-1"></div>' +
-                                         '<div class="columns medium-11">' +
-                                          '<div class="row">' +
-                                           '<div class="columns medium-6"><div id="other-l10n-from-' + questionID + '" class="translate-from">' + otherLabel + '</div></div>' +
-                                           '<div class="columns medium-6"><input id="other-l10n-' + questionID + '" type="text" placeholder="Type translation..." value="' + otherL10n + '"></div>' +
-                                        '</div></div></div>';
-                        choicesL10n += choiceL10nRow;
+                        otherL10nRow = '<div id="other-l10n-row-' + questionID + '" class="row' + otherL10nHide + '">' +
+                                        '<div class="columns medium-1"></div>' +
+                                        '<div class="columns medium-11">' +
+                                         '<div class="row">' +
+                                          '<div class="columns medium-6"><div id="other-l10n-from-' + questionID + '" class="translate-from">' + otherLabel + '</div></div>' +
+                                          '<div class="columns medium-6"><input id="other-l10n-' + questionID + '" type="text" placeholder="Type translation..." value="' + otherL10n + '"></div>' +
+                                       '</div></div></div>';
+                        choicesL10n += otherL10nRow;
                         multiple = settings.multiple || 1;
                         if (multiple > 1) {
                             multiChecked = ' checked';
@@ -476,7 +478,14 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     } else {
                         // Add an empty row to hold the first choice
                         choices = newChoice;
-                        choicesL10n = newChoiceL10n;
+                        otherL10nRow = '<div id="other-l10n-row-' + questionID + '" class="row' + otherL10nHide + '">' +
+                                        '<div class="columns medium-1"></div>' +
+                                        '<div class="columns medium-11">' +
+                                         '<div class="row">' +
+                                          '<div class="columns medium-6"><div id="other-l10n-from-' + questionID + '" class="translate-from"></div></div>' +
+                                          '<div class="columns medium-6"><input id="other-l10n-' + questionID + '" type="text" placeholder="Type translation..."></div>' +
+                                       '</div></div></div>';
+                        choicesL10n = newChoiceL10n + otherL10nRow;
                     }
                     editTab = '<div class="media content active" id="edit-' + position + '">' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Multiple choice question</h2></div></div>' +
@@ -1646,9 +1655,6 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                                         .append(this.pipeOptionsHtml(thisQuestionID));
                         }
                         if (deletedQuestionID) {
-                            // Clean up imageFiles
-                            delete imageFiles[questionID];
-
                             if (thisQuestionSettings.pipeImage && thisQuestionSettings.pipeImage.id == deletedQuestionID) {
                                 // Remove the stale pipeImage
                                 delete thisQuestionSettings.pipeImage
@@ -1695,30 +1701,43 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
             var optionsHtml = '<option value="">select question</option>';
 
-            // Loop through Questions: Build list of all which are multichoice, likert, heatmap or number
+            // Loop through Layout: Build list of all questions which are multichoice, likert, heatmap or number
             // - only include questions earlier in the Layout
-            var questions = this.data.questions,
-                layout = this.data.layout,
-                label,
-                position,
-                qtype,
+            var layout = this.data.layout,
                 displayLogic = layout[currentPosition].displayLogic,
                 displayLogicID,
+                questions = this.data.questions,
+                questionNumber,
+                qtype,
+                label,
+                position,
                 selected,
                 thisQuestion,
                 thisQuestionID;
 
             if (displayLogic) {
+                // Current setting to display as selected in dropdown
                 displayLogicID = displayLogic.id;
             }
 
-            for (var i=1; i < currentPosition; i++) {
-                position = questionNumbers[i];
+            // Invert questionNumbers array
+            var posnToNumber = {};
+            for (questionNumber = 1; questionNumber <= Object.keys(questionNumbers).length; questionNumber++) {
+                position = questionNumbers[questionNumber];
+                posnToNumber[position] = questionNumber;
+            }
+
+            for (position=1; position < currentPosition; position++) {
                 thisQuestionID = layout[position].id;
+                if (thisQuestionID === undefined) {
+                    // Instructions or Section Break
+                    continue;
+                }
                 thisQuestion = questions[thisQuestionID];
                 qtype = typesToText[thisQuestion.type];
                 if ((qtype == 'number') || (qtype == 'multichoice') || (qtype == 'likert') || (qtype == 'heatmap')) {
-                    label = 'Q' + i + ': ' + truncate(thisQuestion.name || '');
+                    questionNumber = posnToNumber[position];
+                    label = 'Q' + questionNumber + ': ' + truncate(thisQuestion.name || '');
                     if (thisQuestionID == displayLogicID) {
                         selected = ' selected';
                     } else {
@@ -2100,6 +2119,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                .addClass('preview-empty');
                         // Update questions lookup
                         delete self.data.questions[questionID].file;
+                        // Clean up imageFiles
+                        delete imageFiles[questionID];
                         // Update imageOptions
                         self.updateImageOptions(false, questionID);
                     },
@@ -2947,8 +2968,9 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 if (itemType == 'question') {
                     // Remove final questionNumber from questionNumbers
                     delete questionNumbers[Object.keys(questionNumbers).length];
+                    // Clean up imageFiles
+                    delete imageFiles[questionID];
                 }
-
                 // Update the ImageOptions lookup
                 this.updateImageOptions(false, questionID);
             }
