@@ -286,6 +286,11 @@ input[type="text"].text-filter {
   color: #535353;
 }
 
+.button.defining {
+    /* Add Region should have hover colour until polygon defined */
+    background-color: #00AAA0; /* $persian-green */
+}
+
 #question-bar h2 {
   background-color: #00AAA0; /* $persian-green */
   color: white;

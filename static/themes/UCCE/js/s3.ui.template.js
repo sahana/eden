@@ -1260,6 +1260,9 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 index = parseInt(currentRow.attr('id').split('-')[3]),
                                 regions = questions[questionID].settings.regions;
 
+                            // Maintain Hover colour until Polygon defined
+                            $this.addClass('defining');
+
                             if ($this.hasClass('secondary')) {
                                 // Add new Region after current row
                                 var newIndex = index + 1;
@@ -1504,7 +1507,9 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
                     // Store the GeoJSON
                     var geojson = format.writeFeatureObject(feature, {decimals: 0});
-                    $('#choice-json-' + questionID + '-' + region).val(JSON.stringify(geojson));
+                    $('#choice-json-' + questionID + '-' + region).val(JSON.stringify(geojson))
+                                                                  // Reset the Button to normal colours
+                                                                  .prev().removeClass('defining');
                     self.saveQuestion('heatmap', questionID);
 
                     // We only want a single Polygon per Region
