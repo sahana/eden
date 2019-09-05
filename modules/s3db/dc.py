@@ -656,9 +656,11 @@ class DataCollectionTemplateModel(S3Model):
                 if region is not None:
                     # Heatmap
                     # Convert Question ID to fieldname
-                    from_field = db(ftable.id == pipe_image["id"]).select(ftable.name,
-                                                                          limitby = (0, 1)
-                                                                          ).first()
+                    query = (qtable.id == pipe_image["id"]) & \
+                            (ftable.id == qtable.field_id)
+                    from_field = db(query).select(ftable.name,
+                                                  limitby = (0, 1)
+                                                  ).first()
                     mobile_settings["image"] = {"from": from_field.name,
                                                 "region": region,
                                                 }
