@@ -1854,7 +1854,8 @@ class S3DynamicModel(object):
             settings = row.settings
             if settings:
 
-                config = {}
+                config = {"orderby": "%s.created_on" % tablename,
+                          }
 
                 # CRUD Form
                 crud_fields = settings.get("form")

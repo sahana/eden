@@ -728,7 +728,8 @@ class S3MobileSchema(object):
 
         if hasattr(field, "s3_settings"):
             mobile_settings = field.s3_settings.get("mobile")
-            other = mobile_settings.get("other")
+            if mobile_settings:
+                other = mobile_settings.get("other")
 
         if other and other in table.fields:
             return other
