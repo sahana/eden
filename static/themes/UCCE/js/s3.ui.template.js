@@ -1695,30 +1695,43 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
             var optionsHtml = '<option value="">select question</option>';
 
-            // Loop through Questions: Build list of all which are multichoice, likert, heatmap or number
+            // Loop through Layout: Build list of all questions which are multichoice, likert, heatmap or number
             // - only include questions earlier in the Layout
-            var questions = this.data.questions,
-                layout = this.data.layout,
-                label,
-                position,
-                qtype,
+            var layout = this.data.layout,
                 displayLogic = layout[currentPosition].displayLogic,
                 displayLogicID,
+                questions = this.data.questions,
+                questionNumber,
+                qtype,
+                label,
+                position,
                 selected,
                 thisQuestion,
                 thisQuestionID;
 
             if (displayLogic) {
+                // Current setting to display as selected in dropdown
                 displayLogicID = displayLogic.id;
             }
 
-            for (var i=1; i < currentPosition; i++) {
-                position = questionNumbers[i];
+            // Invert questionNumbers array
+            var posnToNumber = {};
+            for (questionNumber = 1; questionNumber <= Object.keys(questionNumbers).length; questionNumber++) {
+                position = questionNumbers[questionNumber];
+                posnToNumber[position] = questionNumber;
+            }
+
+            for (position=1; position < currentPosition; position++) {
                 thisQuestionID = layout[position].id;
+                if (thisQuestionID === undefined) {
+                    // Instructions or Section Break
+                    continue;
+                }
                 thisQuestion = questions[thisQuestionID];
                 qtype = typesToText[thisQuestion.type];
                 if ((qtype == 'number') || (qtype == 'multichoice') || (qtype == 'likert') || (qtype == 'heatmap')) {
-                    label = 'Q' + i + ': ' + truncate(thisQuestion.name || '');
+                    questionNumber = posnToNumber[position];
+                    label = 'Q' + questionNumber + ': ' + truncate(thisQuestion.name || '');
                     if (thisQuestionID == displayLogicID) {
                         selected = ' selected';
                     } else {
