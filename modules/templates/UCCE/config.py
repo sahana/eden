@@ -305,6 +305,65 @@ def config(settings):
         return rheader
 
     # -------------------------------------------------------------------------
+    def ucce_masterkey_context(masterkey):
+        """
+            Provide context information for a masterkey (populates session
+            in mobile app when linking to this masterkey)
+
+            @param masterkey: the auth_masterkey Row
+
+            @returns: a JSON-serializable dict with the context data
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        context = {}
+
+        # Look up the project linked to the master key
+        ptable = s3db.project_project
+        ltable = s3db.project_project_masterkey
+
+        query = (ltable.id == masterkey.id) & \
+                (ltable.deleted == False) & \
+                (ptable.id == ltable.project_id) & \
+                (ptable.deleted == False)
+        project = db(query).select(ptable.id,
+                                   ptable.name,
+                                   limitby = (0, 1),
+                                   ).first()
+        if project:
+            # Provide the project title
+            context["projectTitle"] = project.name
+
+            # Provide a list of available translations in this project
+            languages = []
+
+            # Use translated language names
+            from s3 import IS_ISO639_2_LANGUAGE_CODE, s3_str
+            represent = IS_ISO639_2_LANGUAGE_CODE.represent_local
+
+            # Look up the languages
+            ttable = s3db.project_project_target
+            l10ntable = s3db.dc_target_l10n
+            query = (ttable.project_id == project.id) & \
+                    (ttable.deleted == False) & \
+                    (ttable.target_id == l10ntable.target_id) & \
+                    (l10ntable.language != None)
+
+            # Build the language list
+            rows = db(query).select(l10ntable.language)
+            for row in rows:
+                code = row.language
+                languages.append((code, s3_str(represent(code))))
+
+            context["surveyLanguages"] = languages
+
+        return context
+
+    settings.auth.masterkey_context = ucce_masterkey_context
+
+    # -------------------------------------------------------------------------
     def customise_dc_question_resource(r, tablename):
 
         from gluon import IS_IN_SET
