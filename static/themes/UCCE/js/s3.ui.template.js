@@ -603,14 +603,15 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Image</h2></div></div>' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label for="image-' + questionID + '" class="button tiny fleft">Upload image</label><input id="image-' + questionID + '" name="file" type="file" accept="image/png, image/jpeg" class="show-for-sr"></div></div>' +
                                '<div class="row">' +
-                                '<div class="heatmap" id="map-' + questionID + '"><span id="preview-' + questionID + '" class="preview-empty fleft"></span></div>' +
-                               '</div>' +
-                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11">' +
-                                '<div class="row"><h3>Number of clicks allowed:</h3></div>' +
-                                '<div class="row" id="clicks-row-' + questionID + '"><i class="ucce ucce-minus"> </i><span> ' + numClicks + ' </span><i class="ucce ucce-plus"> </i></div>' +
-                                '<div class="row"><h3>Tap regions:</h3></div>' +
-                                choices +
-                              '</div></div></div>';
+                                '<div class="columns medium-8">' +
+                                 '<div class="heatmap" id="map-' + questionID + '"><span id="preview-' + questionID + '" class="preview-empty fleft"></span></div>' +
+                                '</div>' +
+                                '<div class="columns medium-4">' +
+                                 '<div class="row"><h3>Number of clicks allowed:</h3></div>' +
+                                 '<div class="row" id="clicks-row-' + questionID + '"><i class="ucce ucce-minus"> </i><span> ' + numClicks + ' </span><i class="ucce ucce-plus"> </i></div>' +
+                                 '<div class="row"><h3>Tap regions:</h3></div>' +
+                                 choices +
+                               '</div></div></div>';
                     translationTab = '<div class="media content" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Heatmap</h2></div></div>' +
                                       '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
@@ -1484,8 +1485,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     view: new View({
                         projection: projection,
                         center: getCenter(extent),
-                        zoom: 2,
-                        maxZoom: 2
+                        zoom: 1,
+                        maxZoom: 1
                     })
                 });
 
@@ -2275,10 +2276,12 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     $('#section-break-' + newPosition).next().children('.ucce-delete-page').on('click' + ns, function(/* event */){
                         // Delete this section-break
 
-                        // Read the position (can't trust original as it may have changed)
-                        var currentPosition = parseInt($(this).parent().prev().attr('id').split('-')[2]);
+                        // Read the page & position (can't trust originals as they may have changed)
+                        var $el = $(this).parent().prev(),
+                            currentPage = $el.data('page'),
+                            currentPosition = parseInt($el.attr('id').split('-')[2]);
 
-                        self.deleteSectionBreak(currentPosition);
+                        self.deleteSectionBreak(currentPage, currentPosition);
 
                     });
                 }
@@ -2310,7 +2313,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
         /**
           * Delete a Section Break
           */
-        deleteSectionBreak: function(currentPosition) {
+        deleteSectionBreak: function(currentPage, currentPosition) {
+
+            // Show elements on this page
+            // NB This selector requires HTML attr to be modified when changing data, not just .data()
+            $('.survey-item[data-page="' + currentPage + '"]').show();
 
             // Update layout & all subsequent items in it
             this.rePosition({type: 'break'}, currentPosition, null);

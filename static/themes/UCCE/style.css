@@ -267,13 +267,13 @@ input[type="text"].text-filter {
 
 .heatmap,
 .heatmap > .preview-empty {
-  height: 960px;
-  width: 960px;
-  margin-left: 5px;
+  height: 480px;
+  width: 480px;
+  /*margin-left: -5px;*/
 }
 .heatmap {
-  /*margin-top: -120px;*/
-  margin-top: -100px;
+  margin-top: -60px;
+  margin-bottom: -100px;
 }
 
 /*
