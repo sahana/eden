@@ -10,9 +10,9 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 })(function($, loadImage, Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Static, Stroke, Style, VectorLayer, VectorSource) {
     'use strict';
     var surveyID = 0,
-        draw,   // Draw control on Map
-        map,    // Map
-        source, // VectorSource on Map
+        draws = [],   // Draw controls on Maps (indexed by QuestionID)
+        maps = [],    // Maps (indexed by QuestionID)
+        sources = [], // VectorSources on Maps (indexed by QuestionID)
         imageFiles = {},   // Store {id: questionID, file: filename}
         imageOptions = [], // Store {label: label, (just held locally)
                            //        id: questionID, {Also on server in settings.pipeImage)
@@ -1329,11 +1329,12 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 // Continue Iterating
                                 return false;
                             };
-                            source.forEachFeature(callback); 
+                            sources[questionID].forEachFeature(callback); 
                             // Define Region
+                            var draw = draws[questionID];
                             draw.set('questionID', questionID, true);
                             draw.set('region', index, true);
-                            map.addInteraction(draw);
+                            maps[questionID].addInteraction(draw);
                         });
                     };
                     multichoiceEvents();
@@ -1466,15 +1467,14 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     })
                 });
 
-                // Deliberately module scope
-                source = new VectorSource({wrapX: false});
+                var source = new VectorSource({wrapX: false});
+                sources[questionID] = source;
 
                 var vector = new VectorLayer({
                     source: source
                 });
 
-                // Deliberately module scope
-                map = new Map({
+                var map = new Map({
                     controls: [],
                     interactions: [],
                     layers: [
@@ -1489,14 +1489,15 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         maxZoom: 1
                     })
                 });
+                maps[questionID] = map;
 
                 const format = new GeoJSON({featureProjection: projection});
 
-                // Deliberately module scope
-                draw = new Draw({
+                var draw = new Draw({
                     source: source,
                     type: 'Polygon'
                 });
+                draws[questionID] = draw;
 
                 draw.on('drawstart', function(event) {
 
