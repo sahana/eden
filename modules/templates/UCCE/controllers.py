@@ -1750,10 +1750,11 @@ class dc_TargetReport(S3Method):
                 options = question["options"]
                 values = []
                 vappend = values.append
+                i = 0
                 for option in options:
                     total = 0
                     for answer in responses:
-                        if option in answer.get("selectedRegions", []):
+                        if i in answer.get("selectedRegions", []):
                             total += 1
                     # @ToDo: Get report.js to use these
                     #if len_responses:
@@ -1764,6 +1765,7 @@ class dc_TargetReport(S3Method):
                              "value": total,
                              #"p": percentage,
                              })
+                    i += 1
 
                 data = [{"values": values,
                          }]
