@@ -1407,6 +1407,7 @@ class dc_TargetReport(S3Method):
                 elif field_type == 13:
                     # heatmap
                     question["file"] = question_row["file"]
+                    question["options"] = question_row["options"]
                 responses = []
                 rappend = responses.append
                 for row in answers:
@@ -1717,10 +1718,10 @@ class dc_TargetReport(S3Method):
                 points = []
                 pappend = points.append
                 for answer in responses:
-                    # We don't the selectedRegions in the answer...these are just for the mobile client's displayLogic to work
-                    selected_points = answer["selectedPoints"]
+                    selected_points = answer.get("selectedPoints", [])
                     for point in selected_points:
                         pappend(point)
+                    
                 data = {"p": points,
                         "i": question["file"],
                         }
@@ -1733,17 +1734,48 @@ class dc_TargetReport(S3Method):
                               _id="heatmap-%s" % question["id"],
                               )
                 content.append(heatmap)
-                scale = DIV(DIV(_class="scale wide",
-                                ),
-                            DIV(1,
-                                _class="fleft",
-                                ),
-                            DIV(12,
-                                _class="fright",
-                                ),
-                            _class="scale-container",
+
+                #scale = DIV(DIV(_class="scale wide",
+                #                ),
+                #            DIV(1,
+                #                _class="fleft",
+                #                ),
+                #            DIV(12,
+                #                _class="fright",
+                #                ),
+                #            _class="scale-container",
+                #            )
+                #content.append(scale)
+
+                options = question["options"]
+                values = []
+                vappend = values.append
+                for option in options:
+                    total = 0
+                    for answer in responses:
+                        if option in answer.get("selectedRegions", []):
+                            total += 1
+                    # @ToDo: Get report.js to use these
+                    #if len_responses:
+                    #    percentage = total / len_responses
+                    #else:
+                    #    percentage = 0
+                    vappend({"label": option,
+                             "value": total,
+                             #"p": percentage,
+                             })
+
+                data = [{"values": values,
+                         }]
+                hidden_input = INPUT(_type="hidden",
+                                     _class="multichoice-graph",
+                                     _value=json.dumps(data, separators=SEPARATORS),
+                                     )
+                graph = DIV(hidden_input,
+                            _class="graph-container",
+                            _id="heatmap-graph-%s" % question["id"],
                             )
-                content.append(scale)
+                content.append(graph)
 
             card = DIV(DIV(SPAN(question["name"],
                                 _class="card-title",

@@ -176,6 +176,7 @@ input[type="text"].text-filter {
   margin-top: 10px;
   max-height: 320px; /* .ol-unselectable inside this goes large, but is influenced by this */
 }
+/*
 .scale-container {
   margin-left: 200px;
   margin-right: 200px;
@@ -183,8 +184,8 @@ input[type="text"].text-filter {
 }
 .scale {
   background-image: linear-gradient(to right, #00AAA0, #f00); /* $persian-green to red */
-  height: 50px;
-}
+/*  height: 50px;
+}*/
 /* Has no effect:
 .nv-zeroLine {
   border: 10px solid #535353;
