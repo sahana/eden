@@ -10,9 +10,9 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 })(function($, loadImage, Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Static, Stroke, Style, VectorLayer, VectorSource) {
     'use strict';
     var surveyID = 0,
-        draws = [],   // Draw controls on Maps (indexed by QuestionID)
-        maps = [],    // Maps (indexed by QuestionID)
-        sources = [], // VectorSources on Maps (indexed by QuestionID)
+        draws = {},   // Draw controls on Maps (indexed by QuestionID)
+        maps = {},    // Maps (indexed by QuestionID)
+        sources = {}, // VectorSources on Maps (indexed by QuestionID)
         imageFiles = {},   // Store {id: questionID, file: filename}
         imageOptions = [], // Store {label: label, (just held locally)
                            //        id: questionID, {Also on server in settings.pipeImage)
@@ -1280,6 +1280,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 regions = questions[questionID].settings.regions;
 
                             // Maintain Hover colour until Polygon defined
+                            // - remove from all others 1st
+                            currentRow.parent().find('.defining').removeClass('defining');
                             $this.addClass('defining');
 
                             if ($this.hasClass('secondary')) {
@@ -1399,6 +1401,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 var questionNumber = $('#question-' + questionID).data('number');
                 // Read the position (can't trust original as it may have changed)
                 currentPosition = questionNumbers[questionNumber];
+
+                // Cleanup Maps
+                delete draws[questionID];
+                delete maps[questionID];
+                delete sources[questionID];
             }
 
             this.rePosition(layout[currentPosition], currentPosition, null);
