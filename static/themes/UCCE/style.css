@@ -174,7 +174,7 @@ input[type="text"].text-filter {
 }
 .heatmap-container {
   margin-top: 10px;
-  max-height: 320px; /* .ol-unselectable inside this goes large, but is influenced by this */
+  max-height: 320px; /* .ol-unselectable inside this goes larger, but is influenced by this */
 }
 /*
 .scale-container {
@@ -273,8 +273,8 @@ input[type="text"].text-filter {
   /*margin-left: -5px;*/
 }
 .heatmap {
-  margin-top: -60px;
-  margin-bottom: -100px;
+  margin-top: -10px;
+  margin-bottom: -40px;
 }
 
 /*
