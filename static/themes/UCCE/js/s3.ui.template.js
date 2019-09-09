@@ -3163,8 +3163,29 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         delete layout[i];
                     }
                 }
+
                 // Update layoutLength
                 layoutLength = Object.keys(layout).length;
+
+                // Update elements on 1st page
+                var thisElements = 0,
+                    thisElementsText;
+                for (position=1; position <= layoutLength; position++) {
+                    item = layout[position];
+                    if (item.type == 'break') {
+                        // Stop iteration
+                        break;
+                    } else {
+                        thisElements++;
+                    }
+                }
+                pageElements[1] = thisElements;
+                if (thisElements == 1) {
+                    thisElementsText = '1 ELEMENT';
+                } else {
+                    thisElementsText = thisElements + ' ELEMENTS';
+                }
+                $('#section-break-0 > span').html('PAGE 1 (' + thisElementsText + ')');
             }
 
             // Loop through layout to build imageOptions & questionNumbers
