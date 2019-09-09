@@ -3067,7 +3067,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 return;
             }
 
-            var deleted = [],
+            var deleted,
                 item,
                 page = 1,
                 position,
@@ -3086,30 +3086,85 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     thisQuestion = questions[questionID];
                     if (thisQuestion === undefined) {
                         // Deleted Question! (e.g. 2 people editing the survey at the same time?)
-                        deleted.push(position);
+                        delete layout[position];
+                        deleted = true;
                     }
                 }
             }
 
-            if (deleted.length) {
-                // Loop through layout to handle the deleted Questions
+            if (deleted) {
+                // Loop through layout to reposition elements after the deleted Questions
                 var i,
                     oldPosition,
                     newPosition;
                 for (position=1; position <= layoutLength; position++) {
-                    if (deleted.indexOf(position) > -1) {
+                    if (layout[position] === undefined) {
                         for (i=position; i < layoutLength; i++) {
                             // Move item to it's new position in the layout
                             oldPosition = i + 1;
                             newPosition = i;
-                            layout[newPosition] = layout[oldPosition];
+                            item = layout[oldPosition];
+                            if (item === undefined) {
+                                // Next Item is also deleted so get from next place up
+                                oldPosition = i + 2;
+                                item = layout[oldPosition];
+                                if ((item === undefined) && (oldPosition < layoutLength)) {
+                                    // Next Item is also deleted so get from next place up
+                                    oldPosition = i + 3;
+                                    item = layout[oldPosition];
+                                    if ((item === undefined) && (oldPosition < layoutLength)) {
+                                        // Next Item is also deleted so get from next place up
+                                        oldPosition = i + 4;
+                                        item = layout[oldPosition];
+                                        if ((item === undefined) && (oldPosition < layoutLength)) {
+                                            // Next Item is also deleted so get from next place up
+                                            oldPosition = i + 5;
+                                            item = layout[oldPosition];
+                                            if ((item === undefined) && (oldPosition < layoutLength)) {
+                                                // Next Item is also deleted so get from next place up
+                                                oldPosition = i + 6;
+                                                item = layout[oldPosition];
+                                                if ((item === undefined) && (oldPosition < layoutLength)) {
+                                                    // Next Item is also deleted so get from next place up
+                                                    oldPosition = i + 7;
+                                                    item = layout[oldPosition];
+                                                    if ((item === undefined) && (oldPosition < layoutLength)) {
+                                                        // Next Item is also deleted so get from next place up
+                                                        oldPosition = i + 8;
+                                                        item = layout[oldPosition];
+                                                        if ((item === undefined) && (oldPosition < layoutLength)) {
+                                                            pass;
+                                                        } else {
+                                                            layout[newPosition] = item;
+                                                        }
+                                                    } else {
+                                                        layout[newPosition] = item;
+                                                    }
+                                                } else {
+                                                    layout[newPosition] = item;
+                                                }
+                                            } else {
+                                                layout[newPosition] = item;
+                                            }
+                                        } else {
+                                            layout[newPosition] = item;
+                                        }
+                                    } else {
+                                        layout[newPosition] = item;
+                                    }
+                                } else {
+                                    layout[newPosition] = item;
+                                }
+                            } else {
+                                layout[newPosition] = item;
+                            }
                         }
                         // Remove final item from layout (we've already copied it to the previous position)
                         delete layout[i];
-                        // Update layoutLength
-                        layoutLength = Object.keys(layout).length;
                     }
                 }
+                // Update layoutLength
+                layoutLength = Object.keys(layout).length;
             }
 
             // Loop through layout to build imageOptions & questionNumbers
