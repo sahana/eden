@@ -1142,6 +1142,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                     }
                                 }
                             }
+                            self.saveQuestion(type, questionID);
                         });
                         // Multiple
                         multipleCheckbox.off('change' + ns)
