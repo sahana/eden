@@ -1954,6 +1954,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         doc_list = UL(_class="f-dropdown dropdown-menu",
                       _role="menu",
                       _id=doc_list_id,
+                      # Foundation:
                       data={"dropdown-content": ""},
                       )
         retrieve = db.doc_document.file.retrieve
@@ -1976,8 +1977,12 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                      SPAN(_class="caret"),
                      _class="btn dropdown-toggle dropdown",
                      _href="#",
-                     data={"toggle": "dropdown",
+                     data={# Both Bootstrap & Foundation:
                            "dropdown": doc_list_id,
+                           # Foundation:
+                           "options": "is_hover:true; hover_timeout:5000",
+                           # Bootstrap:
+                           "toggle": "dropdown",
                            },
                      ),
                    doc_list,

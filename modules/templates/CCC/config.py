@@ -437,7 +437,7 @@ def config(settings):
     def customise_cms_post_resource(r, tablename):
 
         from gluon import URL
-        from s3 import S3SQLCustomForm, S3TextFilter
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3TextFilter
 
         #from templates.CCC.controllers import cms_post_list_layout
 
@@ -465,11 +465,18 @@ def config(settings):
                        crud_form = S3SQLCustomForm(#"series_id",
                                                    "title",
                                                    "body",
+                                                   S3SQLInlineComponent(
+                                                        "document",
+                                                        label = T("Attachment"),
+                                                        #multiple = False,
+                                                        fields = [("", "file")],
+                                                        ),
                                                    ),
                        list_fields = [#"series_id",
                                       "title",
                                       "body",
                                       "date",
+                                      "document.file",
                                       ],
                        #list_layout = cms_post_list_layout,
                        filter_widgets = [S3TextFilter(["title",
@@ -548,13 +555,15 @@ def config(settings):
         s3db.configure("doc_document",
                        create_next = URL(args="datalist"),
                        crud_form = S3SQLCustomForm("organisation_id",
-                                                   "name",
+                                                   (T("Document Name"), "name"),
                                                    "file",
+                                                   "date",
                                                    "comments",
                                                    ),
                        list_fields = ["organisation_id",
                                       "name",
                                       "file",
+                                      "date",
                                       "comments",
                                       ],
                        #list_layout = doc_document_list_layout,

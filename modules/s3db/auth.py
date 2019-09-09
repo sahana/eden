@@ -593,7 +593,7 @@ class auth_Consent(object):
             # Optional explanation
             description = spec.get("description")
             if description:
-                option.append(P(description, _class="consent-explanation"))
+                option.append(P(XML(description), _class="consent-explanation"))
 
             # Append to widget
             widget.append(option)

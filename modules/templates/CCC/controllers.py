@@ -5,7 +5,7 @@ import uuid
 
 from gluon import *
 from gluon.storage import Storage
-from s3 import IS_ONE_OF, S3CustomController, S3Method, S3MultiSelectWidget, \
+from s3 import ICON, IS_ONE_OF, S3CustomController, S3Method, S3MultiSelectWidget, \
                S3Profile, S3SQLCustomForm, \
                s3_mark_required, s3_phone_requires, s3_str
 
@@ -533,11 +533,11 @@ class personAdditional(S3Method):
                                                          style="divs")
 
             form = S3SQLCustomForm(#"where_operate.value",
-                                   (T("Do you have any unspent convictions?"), "convictions.value"),
                                    (T("That require significant physical activity (including lifting and carrying) and may involve being outdoors (e.g. clean up of affected properties)"), "significant_physical.value"),
                                    (T("That require some physical activity and may involve being outdoors (e.g. door knocking)"), "some_physical.value"),
                                    (T("That require little physical activity and are based indoors (e.g. preparing refreshments)"), "little_physical.value"),
                                    (T("If you wish, you can give us some further information on any fitness, medical or mobility issues that might limit the kind of activities you are able to volunteer for; this will help us to suggest suitable opportunities for you"), "health_details.value"),
+                                   (T("Do you have any unspent convictions?"), "convictions.value"),
                                    )
 
             form = {"type": "form",
@@ -604,10 +604,6 @@ class register(S3CustomController):
         utable = auth_settings.table_user
         passfield = auth_settings.password_field
 
-        # Instantiate Consent Tracker
-        # TODO: limit to relevant data processing types
-        consent = s3db.auth_Consent()
-
         # Lookup Districts
         gtable = s3db.gis_location
         districts = db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
@@ -621,6 +617,9 @@ class register(S3CustomController):
             """
                 DRY Helper for individuals (whether with existing agency or not)
             """
+            # Instantiate Consent Tracker
+            consent = s3db.auth_Consent(processing_types=["18+", "STOREPID", "FOCV"])
+
             formfields = [utable.first_name,
                           utable.last_name,
                           Field("addr_L3",
@@ -669,16 +668,6 @@ class register(S3CustomController):
                                 widget = S3MultiSelectWidget(header="",
                                                              selectedList=3),
                                 ),
-                          Field("convictions", "integer",
-                                label = T("Do you have any unspent convictions?"),
-                                comment = T("Please tick 'Yes' if you have any convictions that are not yet spent under the Rehabilitation of Offenders Act 1974. The term 'convictions' is used to refer to any sentence or disposal issued by a court. If all your convictions are spent, you can tick 'No'. If you're not sure if your convictions are unspent or spent, you can use a tool available at www.disclosurecalculator.org.uk and read guidance at hub.unlock.org.uk/roa"),
-                                requires = IS_IN_SET({0: T("No"),
-                                                      1: T("Yes"),
-                                                      }),
-                                widget = lambda f, v: \
-                                    SQLFORM.widgets.radio.widget(f, v,
-                                                                 style="divs"),
-                                ),
                           Field("significant_physical", "integer",
                                 label = T("That require significant physical activity (including lifting and carrying) and may involve being outdoors (e.g. clean up of affected properties)"),
                                 requires = IS_IN_SET({0: T("No"),
@@ -721,7 +710,17 @@ class register(S3CustomController):
                                 label = T("Relationship"),
                                 requires = IS_NOT_EMPTY(),
                                 ),
-                          # GDPR Consent
+                          Field("convictions", "integer",
+                                label = T("Do you have any unspent convictions?"),
+                                comment = T("Please tick 'Yes' if you have any convictions that are not yet spent under the Rehabilitation of Offenders Act 1974. The term 'convictions' is used to refer to any sentence or disposal issued by a court. If all your convictions are spent, you can tick 'No'. If you're not sure if your convictions are unspent or spent, you can use a tool available at www.disclosurecalculator.org.uk and read guidance at hub.unlock.org.uk/roa"),
+                                requires = IS_IN_SET({0: T("No"),
+                                                      1: T("Yes"),
+                                                      }),
+                                widget = lambda f, v: \
+                                    SQLFORM.widgets.radio.widget(f, v,
+                                                                 style="divs"),
+                                ),
+                          # Consent (GDPR + FOC)
                           Field("consent",
                                 label = T("Consent"),
                                 widget = consent.widget,
@@ -765,6 +764,9 @@ class register(S3CustomController):
                        A("Volunteer Group", _href=URL(args="register", vars={"vol_group": 1})),
                        " if you do not fall into these",
                        )
+
+            # Instantiate Consent Tracker
+            consent = s3db.auth_Consent(processing_types=["STOREPID", "FOCV"])
 
             # Form Fields
             formfields = [Field("organisation",
@@ -844,7 +846,7 @@ class register(S3CustomController):
                           Field("home2",
                                 label = T("Contact Number (Secondary)"),
                                 ),
-                          # GDPR Consent
+                          # Consent (GDPR + FOC)
                           Field("consent",
                                 label = T("Consent"),
                                 widget = consent.widget,
@@ -866,6 +868,9 @@ class register(S3CustomController):
             header = P("This is to register to Donate Goods / Services. If instead you wish to Volunteer your time, please ",
                        A("Register as a Volunteer", _href=URL(args="register", vars={})),
                        )
+
+            # Instantiate Consent Tracker
+            consent = s3db.auth_Consent(processing_types=["STOREPID", "FOCD"])
 
             # Form Fields
             formfields = [utable.first_name,
@@ -930,13 +935,19 @@ class register(S3CustomController):
                           Field("items_details",
                                 label = T("Please specify details"),
                                 ),
-                          Field("delivery", "boolean",
+                          Field("delivery", "integer",
                                 label = T("Are you able to Deliver?"),
+                                requires = IS_IN_SET({0: T("No"),
+                                                      1: T("Yes"),
+                                                      }),
+                                widget = lambda f, v: \
+                                    SQLFORM.widgets.radio.widget(f, v,
+                                                                 style="divs"),
                                 ),
                           Field("availability",
-                                label = T("Length of time the offer is available?"),
+                                label = T("Please indicate if the offer is only available for a period of time (please state) or it is an open ended offer. In many cases items such as furniture for homes affected by a Major Incident are not required for some months, or even more than a year after an incident has occurred, but very gratefully received at the right time."),
                                 ),
-                          # GDPR Consent
+                          # Consent (GDPR + FOC)
                           Field("consent",
                                 label = T("Consent"),
                                 widget = consent.widget,
@@ -960,6 +971,9 @@ class register(S3CustomController):
             header = P("This is for an established group from outside of Cumbria. If you are a known CEP/Flood Action Group etc based within Cumbria, please use ",
                        A("Organisation or Agency", _href=URL(args="register", vars={"agency": 1})),
                        )
+
+            # Instantiate Consent Tracker
+            consent = s3db.auth_Consent(processing_types=["STOREPID", "FOCV"])
 
             # Form Fields
             formfields = [Field("group",
@@ -1043,7 +1057,7 @@ class register(S3CustomController):
                                 ),
                           Field("transport",
                                 label = T("Mode of Transport"),
-                                comment = T("access can be an issue"),
+                                comment = T("This will help organisations find your group appropriate volunteering opportunities. Cumbria is a rural county with many hard to access communities where a coach would be unable to access. Please be aware public transport is limited and can be impacted by incidents."),
                                 requires = IS_NOT_EMPTY(),
                                 ),
                           # Skills
@@ -1068,7 +1082,7 @@ class register(S3CustomController):
                                 label = T("Contact Number"),
                                 requires = s3_phone_requires,
                                 ),
-                          # GDPR Consent
+                          # Consent (GDPR + FOC)
                           Field("consent",
                                 label = T("Consent"),
                                 widget = consent.widget,
@@ -1166,11 +1180,13 @@ class register(S3CustomController):
             form[0].insert(12, DIV(_class = "subheading",
                                    ))
             # Health
-            form[0].insert(17, DIV("Many of the opportunities available following an incident require volunteers to be fit and active, may involve working in dirty or dusty environments, and could involve being outdoors - for example, removing damaged furniture and cleaning affected buildings, or lifting, packaging and distributing donated items. Some volunteer roles will be less physically demanding - for example, knocking on doors to check people are OK and gather information, making refreshments and helping with administration. Are you interested in opportunities:",
+            form[0].insert(16, DIV("Many of the opportunities available following an incident require volunteers to be fit and active, may involve working in dirty or dusty environments, and could involve being outdoors - for example, removing damaged furniture and cleaning affected buildings, or lifting, packaging and distributing donated items. Some volunteer roles will be less physically demanding - for example, knocking on doors to check people are OK and gather information, making refreshments and helping with administration. Are you interested in opportunities:",
                                    _class = "subheading",
                                    ))
-            form[0].insert(-5, DIV("Person to be contacted in case of an emergency",
+            form[0].insert(-6, DIV("Person to be contacted in case of an emergency",
                                    _class = "subheading",
+                                   ))
+            form[0].insert(-3, DIV(_class = "subheading",
                                    ))
             form[0].insert(-2, DIV(_class = "subheading",
                                    ))
@@ -2216,5 +2232,448 @@ def auth_user_register_onaccept(user_id):
                                 )
 
     return
+
+# =============================================================================
+def cms_post_list_layout(list_id, item_id, resource, rfields, record):
+    """
+        Default dataList item renderer for CMS Posts on the
+        Home & News Feed pages.
+
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+    """
+
+    record_id = record["cms_post.id"]
+    item_class = "thumbnail"
+
+    db = current.db
+    s3db = current.s3db
+    settings = current.deployment_settings
+    NONE = current.messages["NONE"]
+
+    org_field = settings.get_cms_organisation()
+    # Convert to the right format for this context
+    if org_field == "created_by$organisation_id":
+        org_field = "auth_user.organisation_id"
+    elif org_field == "post_organisation.organisation_id":
+        org_field = "cms_post_organisation.organisation_id"
+
+    org_group_field = settings.get_cms_organisation_group()
+    # Convert to the right format for this context
+    if org_group_field == "created_by$org_group_id":
+        org_group_field = "auth_user.org_group_id"
+    elif org_group_field == "post_organisation_group.group_id":
+        org_group_field = "cms_post_organisation_group.group_id"
+
+    raw = record._row
+    body = record["cms_post.body"]
+    series_id = raw["cms_post.series_id"]
+
+    title  = record["cms_post.title"]
+    if title and title != NONE:
+        subtitle = [DIV(title,
+                        _class="card-subtitle"
+                        )
+                    ]
+    else:
+        subtitle = []
+
+    #for event_resource in ["event", "incident"]:
+    #    label = record["event_post.%s_id" % event_resource]
+    #    if label and label != NONE:
+    #        link=URL(c="event", f=event_resource,
+    #                 args=[raw["event_post.%s_id" % event_resource],
+    #                      "profile"]
+    #                 )
+    #        subtitle.append(DIV(A(ICON(event_resource),
+    #                              label,
+    #                              _href=link,
+    #                              _target="_blank",
+    #                              ),
+    #                            _class="card-subtitle"
+    #                            ))
+    if subtitle:
+        subtitle.append(body)
+        body = TAG[""](*subtitle)
+
+    # Allow records to be truncated
+    # (not yet working for HTML)
+    body = DIV(body,
+               _class="s3-truncate",
+               )
+
+    date = record["cms_post.date"] or ""
+    date = SPAN(date,
+                _class="date-title",
+                )
+
+    location_id = raw["cms_post.location_id"]
+    if location_id:
+        location = record["cms_post.location_id"]
+        if settings.get_cms_location_click_filters():
+            # Which levels of Hierarchy are we using?
+            levels = current.gis.get_relevant_hierarchy_levels()
+
+            data = {}
+            for level in levels:
+                data[level[1:]] = raw["gis_location.%s" % level]
+            onclick = '''S3.filter_location(%s)''' % json.dumps(data, separators=SEPARATORS)
+            location = SPAN(A(location,
+                              _href="#",
+                              _onclick=onclick,
+                              ),
+                            _class="location-title",
+                            )
+        else:
+            location_url = URL(c="gis", f="location", args=[location_id, "profile"])
+            location = SPAN(A(location,
+                              _href=location_url,
+                              ),
+                            _class="location-title",
+                            )
+    else:
+        location = ""
+
+    person = ""
+    contact_field = settings.get_cms_person()
+    if contact_field == "created_by":
+        author_id = raw["cms_post.created_by"]
+        person = record["cms_post.created_by"]
+
+        # @ToDo: Bulk lookup
+        ltable = s3db.pr_person_user
+        ptable = db.pr_person
+        query = (ltable.user_id == author_id) & \
+                (ltable.pe_id == ptable.pe_id)
+        row = db(query).select(ptable.id,
+                               limitby=(0, 1)
+                               ).first()
+        if row:
+            person_id = row.id
+        else:
+            person_id = None
+    elif contact_field == "person_id":
+        person_id = raw["cms_post.person_id"]
+        if person_id:
+            person = record["cms_post.person_id"]
+    else:
+        person_id = None
+
+    if person:
+        if person_id:
+            # @ToDo: deployment_setting for controller to use?
+            person_url = URL(c="pr", f="person", args=[person_id])
+        else:
+            person_url = "#"
+        person = A(person,
+                   _href=person_url,
+                   )
+
+    avatar = ""
+
+    organisation = ""
+    if org_field:
+        organisation_id = raw[org_field]
+        if organisation_id:
+            organisation = record[org_field]
+            org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+            organisation = A(organisation,
+                             _href=org_url,
+                             _class="card-organisation",
+                             )
+
+            # Avatar
+            # Try Organisation Logo
+            otable = db.org_organisation
+            row = db(otable.id == organisation_id).select(otable.logo,
+                                                          limitby=(0, 1)
+                                                          ).first()
+            if row and row.logo:
+                logo = URL(c="default", f="download", args=[row.logo])
+                avatar = IMG(_src=logo,
+                             _height=50,
+                             _width=50,
+                             _style="padding-right:5px",
+                             _class="media-object")
+            else:
+                avatar = organisation
+            avatar = A(avatar,
+                       _href=org_url,
+                       _class="pull-left",
+                       )
+
+    org_group = ""
+    if org_group_field:
+        org_group_id = raw[org_group_field]
+        if org_group_id:
+            org_group = record[org_group_field]
+            org_group_url = URL(c="org", f="group", args=[org_group_id, "profile"])
+            org_group = A(org_group,
+                          _href=org_group_url,
+                          _class="card-org-group",
+                          )
+
+    if not avatar and person_id:
+        # Personal Avatar
+        avatar = s3_avatar_represent(person_id,
+                                     tablename="pr_person",
+                                     _class="media-object")
+
+        avatar = A(avatar,
+                   _href=person_url,
+                   _class="pull-left",
+                   )
+
+    if person and organisation:
+        card_person = DIV(person,
+                          " - ",
+                          organisation,
+                          _class="card-person",
+                          )
+    elif person and org_group:
+        card_person = DIV(person,
+                          " - ",
+                          org_group,
+                          _class="card-person",
+                          )
+    elif person:
+        card_person = DIV(person,
+                          _class="card-person",
+                          )
+    #elif organisation:
+    #    card_person = DIV(organisation,
+    #                      _class="card-person",
+    #                      )
+    elif org_group:
+        card_person = DIV(org_group,
+                          _class="card-person",
+                          )
+    else:
+        card_person = DIV(_class="card-person",
+                          )
+
+    permit = current.auth.s3_has_permission
+    table = db.cms_post
+    updateable = permit("update", table, record_id=record_id)
+
+    if settings.get_cms_show_tags():
+        tags = raw["cms_tag.name"]
+        if tags or updateable:
+            tag_list = UL(_class="s3-tags",
+                          )
+            tag_list["_data-post_id"] = record_id
+        else:
+            tag_list = ""
+        if tags:
+            if not isinstance(tags, list):
+                tags = [tags]#.split(", ")
+            for tag in tags:
+                tag_item = LI(tag)
+                tag_list.append(tag_item)
+        tags = tag_list
+    else:
+        tags = ""
+
+    T = current.T
+    if series_id:
+        series = record["cms_post.series_id"]
+        translate = settings.get_L10n_translate_cms_series()
+        if translate:
+            series_title = T(series)
+        else:
+            series_title = series
+    else:
+        series_title = series = ""
+
+    request = current.request
+
+    # Tool box
+    if updateable:
+        if request.function == "newsfeed":
+            fn = "newsfeed"
+        else:
+            fn = "post"
+        edit_btn = A(ICON("edit"),
+                     _href=URL(c="cms", f=fn,
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": list_id,
+                                     "record": record_id}
+                               ),
+                     _class="s3_modal",
+                     _title=T("Edit %(type)s") % dict(type=series_title),
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(ICON("delete"),
+                       _class="dl-item-delete",
+                       )
+    else:
+        delete_btn = ""
+    user = current.auth.user
+    if user and settings.get_cms_bookmarks():
+        ltable = s3db.cms_post_user
+        query = (ltable.post_id == record_id) & \
+                (ltable.user_id == user.id)
+        exists = db(query).select(ltable.id,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            bookmark_btn = A(ICON("bookmark"),
+                             _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
+                                (URL(c="cms", f="post",
+                                     args=[record_id, "remove_bookmark"]),
+                                 list_id,
+                                 record_id),
+                             _title=T("Remove Bookmark"),
+                             )
+        else:
+            bookmark_btn = A(ICON("bookmark-empty"),
+                             _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
+                                (URL(c="cms", f="post",
+                                     args=[record_id, "add_bookmark"]),
+                                 list_id,
+                                 record_id),
+                             _title=T("Add Bookmark"),
+                             )
+    else:
+        bookmark_btn = ""
+    toolbox = DIV(bookmark_btn,
+                  edit_btn,
+                  delete_btn,
+                  _class="edit-bar fright",
+                  )
+
+    # Dropdown of available documents
+    documents = raw["doc_document.file"]
+    if documents:
+        if not isinstance(documents, list):
+            documents = [documents]
+        doc_list_id = "attachments-%s" % item_id
+        doc_list = UL(_class="f-dropdown dropdown-menu",
+                      _role="menu",
+                      _id=doc_list_id,
+                      # Foundation:
+                      data={"dropdown-content": ""},
+                      )
+        retrieve = db.doc_document.file.retrieve
+        for doc in documents:
+            try:
+                doc_name = retrieve(doc)[0]
+            except (IOError, TypeError):
+                doc_name = NONE
+            doc_url = URL(c="default", f="download",
+                          args=[doc])
+            doc_item = LI(A(ICON("file"),
+                            " ",
+                            doc_name,
+                            _href=doc_url,
+                            ),
+                          _role="menuitem",
+                          )
+            doc_list.append(doc_item)
+        docs = DIV(A(ICON("attachment"),
+                     SPAN(_class="caret"),
+                     _class="btn dropdown-toggle dropdown",
+                     _href="#",
+                     data={# Both Bootstrap & Foundation:
+                           "dropdown": doc_list_id,
+                           # Foundation:
+                           "options": "is_hover:true; hover_timeout:5000",
+                           # Bootstrap:
+                           "toggle": "dropdown",
+                           },
+                     ),
+                   doc_list,
+                   _class="btn-group attachments dropdown pull-right",
+                   )
+    else:
+        docs = ""
+
+    links = raw["doc_document.url"]
+    if links:
+        if not isinstance(links, list):
+            links = [links]
+        link_list = DIV(_class="media card-links")
+        for link in links:
+            link_item = A(ICON("link"),
+                          " ",
+                          link,
+                          _href=link,
+                          _target="_blank",
+                          _class="card-link",
+                          )
+            link_list.append(link_item)
+    else:
+        link_list = ""
+
+    if "profile" in request.args:
+        # Single resource list
+        # - don't show series_title
+        if settings.get_cms_show_titles():
+            title = raw["cms_post.title"] or ""
+        else:
+            title = ""
+        card_label = SPAN(" %s" % title,
+                          _class="card-title")
+    else:
+        # Mixed resource lists (Home, News Feed)
+        icon = series.lower().replace(" ", "_")
+        series_title = SPAN(" %s" % series_title,
+                            _class="card-title")
+        raw_title = raw["cms_post.title"]
+        if settings.get_cms_show_titles() and raw_title:
+            title = SPAN(s3_truncate(raw_title), _class="card-title2")
+            card_label = TAG[""](ICON(icon),
+                                 series_title,
+                                 title,
+                                 )
+        else:
+            card_label = TAG[""](ICON(icon),
+                                 series_title,
+                                 )
+        # Type cards
+        #if series == "Alert":
+        #    # Apply additional highlighting for Alerts
+        #    item_class = "%s disaster" % item_class
+
+    # Render the item
+    if series == "Event" and "newsfeed" not in request.args: # and request.function != "newsfeed"
+        # Events on Homepage have a different header
+        date.add_class("event")
+        header = DIV(date,
+                     location,
+                     toolbox,
+                     _class="card-header",
+                     )
+    else:
+        header = DIV(card_label,
+                     location,
+                     date,
+                     toolbox,
+                     _class="card-header",
+                     )
+
+    item = DIV(header,
+               DIV(avatar,
+                   DIV(DIV(body,
+                           card_person,
+                           _class="media",
+                           ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               tags,
+               docs,
+               link_list,
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
 
 # END =========================================================================

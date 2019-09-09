@@ -463,6 +463,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             otherDisabled = '';
                             otherL10n = settings.otherL10n || '';
                             otherL10nHide = '';
+                        } else {
+                            otherLabel = 'Other (please specify)'
                         }
                         otherL10nRow = '<div id="other-l10n-row-' + questionID + '" class="row' + otherL10nHide + '">' +
                                         '<div class="columns medium-1"></div>' +
@@ -496,7 +498,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>Choices</label></div></div>' +
                                choices +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="other-' + questionID + '" type="checkbox"' + other + '><label>Add \'other field\'</label></div></div>' + 
-                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" placeholder="Other (please specify)" value="' + otherLabel + '"' + otherDisabled + '></div></div>' + 
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label class="fleft">Field label</label><input id="other-label-' + questionID + '" type="text" value="' + otherLabel + '"' + otherDisabled + '></div></div>' + 
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="multiple-' + questionID + '" type="checkbox"' + multiChecked + '><label>Allow multiple responses</label></div></div>' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label class="fleft">Maximum No. of responses:</label><i class="ucce ucce-minus"> </i> <span id="multiple-count-' + questionID + '">' + multiple + '</span> <i class="ucce ucce-plus"> </i></div></div>' +
                               '</div>';
@@ -3324,7 +3326,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         data.options_l10n = options_l10n;
                     }
                     if ($('#other-' + questionID).prop('checked')) {
-                        settings.other = $('#other-label-' + questionID).val();
+                        settings.other = $('#other-label-' + questionID).val() || 'Other (please specify)';
                         if (l10n) {
                             settings.otherL10n = $('#other-l10n-' + questionID).val();
                         }

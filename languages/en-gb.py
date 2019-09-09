@@ -222,6 +222,7 @@
 'To Organization': 'To Organisation',
 'Training Course Catalog': 'Training Course Catalogue',
 'Transfer Ownership To (Organization/Branch)': 'Transfer Ownership To (Organisation/Branch)',
+'Type of Organization': 'Type of Organisation',
 "Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog.": "Type the name of an existing catalogue item OR Click 'Create Item' to add an item which is not in the catalogue.",
 'Under which condition a local record shall be updated if it also has been modified locally since the last synchronization': 'Under which condition a local record shall be updated if it also has been modified locally since the last synchronisation',
 'Unique identifier which THIS repository identifies itself with when sending synchronization requests.': 'Unique identifier which THIS repository identifies itself with when sending synchronisation requests.',
