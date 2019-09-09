@@ -3067,19 +3067,56 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 return;
             }
 
-            var item,
+            var deleted = [],
+                item,
                 page = 1,
+                position,
                 questionID,
                 label,
                 layoutLength = Object.keys(layout).length,
                 questions = this.data.questions,
                 thisQuestion;
 
+            // Loop through layout to find any deleted Questions
+            for (position=1; position <= layoutLength; position++) {
+                item = layout[position];
+                if (item.type == 'question') {
+                    // Question
+                    questionID = item.id;
+                    thisQuestion = questions[questionID];
+                    if (thisQuestion === undefined) {
+                        // Deleted Question! (e.g. 2 people editing the survey at the same time?)
+                        deleted.push(position);
+                    }
+                }
+            }
+
+            if (deleted.length) {
+                // Loop through layout to handle the deleted Questions
+                var i,
+                    oldPosition,
+                    newPosition;
+                for (position=1; position <= layoutLength; position++) {
+                    if (deleted.indexOf(position) > -1) {
+                        for (i=position; i < layoutLength; i++) {
+                            // Move item to it's new position in the layout
+                            oldPosition = i + 1;
+                            newPosition = i;
+                            layout[newPosition] = layout[oldPosition];
+                        }
+                        // Remove final item from layout (we've already copied it to the previous position)
+                        delete layout[i];
+                        // Update layoutLength
+                        layoutLength = Object.keys(layout).length;
+                    }
+                }
+            }
+
             // Loop through layout to build imageOptions & questionNumbers
             this.updateImageOptions(true);
 
-            // Then loop through layout to add items to page
-            for (var position=1; position <= layoutLength; position++) {
+            // Loop through layout to add items to page
+            for (position=1; position <= layoutLength; position++) {
                 item = layout[position];
                 if (item.type == 'break') {
                     this.addSectionBreak(position, page, true);
@@ -3090,10 +3127,6 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     // Question
                     questionID = item.id;
                     thisQuestion = questions[questionID];
-                    if (thisQuestion === undefined) {
-                        // We have a deleted question in the layout somehow!
-                        continue;
-                    }
                     this.addQuestion(position, page, typesToText[thisQuestion.type], questionID);
                 }
             }
