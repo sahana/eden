@@ -3506,7 +3506,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         var tabText = tab.text();
                         if (tabText == 'Display logic') {
                             // Update list of Questions to select from
-                            var currentPosition = tab.children().first().attr('href').split('-')[1],
+                            var currentPosition = parseInt(tab.children().first().attr('href').split('-')[1]),
                                 logicSelect = $('#logic-select-' + currentPosition),
                                 parts = tab.closest('.survey-item').attr('id').split('-'),
                                 type = parts[0];
@@ -3519,7 +3519,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             self.logicSelected(logicSelect, currentPosition);
                         } else if (tabText == 'Translation') {
                             // Copy original language to 'translate-from' div
-                            var currentPosition = tab.children().first().attr('href').split('-')[1],
+                            var currentPosition = parseInt(tab.children().first().attr('href').split('-')[1]),
                                 parts = tab.closest('.survey-item').attr('id').split('-'),
                                 type = parts[0];
                             if (type == 'instructions') {

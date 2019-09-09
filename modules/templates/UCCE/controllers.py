@@ -1358,11 +1358,14 @@ class dc_TargetReport(S3Method):
             answers = db(dtable.deleted == False).select()
 
             # Questions
+            # - in order
+            # - NB we want these in layout order, but JSON.Stringify has converted
+            #      the integer positions to strings, so we need to sort with key=int
             qtable = s3db.dc_question
             question_ids = []
             qappend = question_ids.append
-            for position in sorted(layout.keys()):
-                question_id = layout[position].get("id")
+            for position in sorted(layout.keys(), key=int):
+                question_id = layout[str(position)].get("id")
                 if question_id:
                     qappend(question_id)
             questions_dict = db(qtable.id.belongs(question_ids)).select(qtable.id,
@@ -1394,20 +1397,22 @@ class dc_TargetReport(S3Method):
                 otherfieldname = None
                 if field_type == 6:
                     # multichoice
-                    question["options"] = question_row["options"]
-                    other_id = question_row["settings"].get("other_id")
+                    question["options"] = question_row["options"] or []
+                    settings = question_row["settings"] or {}
+                    other_id = settings.get("other_id")
                     if other_id:
                         otherfieldname = fields[other_id]["name"]
                         others = []
                         oappend = others.append
-                    question["multiple"] = question_row["settings"].get("multiple")
+                    question["multiple"] = settings.get("multiple")
                 elif field_type == 12:
                     # likert
-                    question["scale"] = question_row["settings"].get("scale")
+                    settings = question_row["settings"] or {}
+                    question["scale"] = settings.get("scale")
                 elif field_type == 13:
                     # heatmap
                     question["file"] = question_row["file"]
-                    question["options"] = question_row["options"]
+                    question["options"] = question_row["options"] or []
                 responses = []
                 rappend = responses.append
                 for row in answers:
