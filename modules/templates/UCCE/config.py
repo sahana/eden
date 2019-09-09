@@ -353,9 +353,12 @@ def config(settings):
 
             # Build the language list
             rows = db(query).select(l10ntable.language)
+            seen = set()
             for row in rows:
                 code = row.language
-                languages.append((code, s3_str(represent(code))))
+                if code not in seen:
+                    languages.append((code, s3_str(represent(code))))
+                seen.add(code)
 
             context["surveyLanguages"] = languages
 
