@@ -1046,11 +1046,12 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         var deleteOption = $('.choice-' + questionID).next();
                         deleteOption.off('click' + ns)
                                     .on('click' + ns, function() {
-                            var optionInput = $(this).prev(),
+                            var $this = $(this),
+                                optionInput = $this.prev(),
                                 value = optionInput.val();
                             if ($('.choice-' + questionID).length > 1) {
                                 // Remove Option
-                                var currentRow = $(this).closest('.row'),
+                                var currentRow = $this.closest('.row'),
                                     index = parseInt(currentRow.attr('id').split('-')[3]);
                                 currentRow.remove();
                                 // & from l10n
@@ -1085,7 +1086,9 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             }
                             if (value) {
                                 // Remove any outdated displayLogic
-                                var thisItem;
+                                // Can't trust original position as it may have changed
+                                var currentPosition = parseInt($this.closest('.media').attr('id').split('-')[1]),
+                                    thisItem;
                                 for (var i=currentPosition + 1, len=Object.keys(layout).length; i <= len; i++) {
                                     thisItem = layout[i];
                                     if (thisItem.displayLogic && thisItem.displayLogic.id == questionID && thisItem.displayLogic.eq == value) {
