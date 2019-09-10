@@ -417,7 +417,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         choicesL10n,
                         other = '',
                         otherDisabled = ' disabled',
-                        otherLabel = '',
+                        otherLabel = 'Other (please specify)',
                         otherL10n = '',
                         multiple = 1,
                         multiChecked = '',
@@ -454,17 +454,14 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             choices = newChoice;
                             choicesL10n = newChoiceL10n;
                         }
-                        var settings = thisQuestion.settings,
-                            otherL10n = '',
-                            otherL10nHide = ' hide';
-                        otherLabel = settings.other || '';
-                        if (otherLabel) {
+                        if (settings.other) {
+                            otherLabel = settings.other;
                             other = ' checked';
                             otherDisabled = '';
                             otherL10n = settings.otherL10n || '';
                             otherL10nHide = '';
                         } else {
-                            otherLabel = 'Other (please specify)'
+                            otherL10nHide = ' hide';
                         }
                         otherL10nRow = '<div id="other-l10n-row-' + questionID + '" class="row' + otherL10nHide + '">' +
                                         '<div class="columns medium-1"></div>' +
@@ -481,7 +478,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     } else {
                         // Add an empty row to hold the first choice
                         choices = newChoice;
-                        otherL10nRow = '<div id="other-l10n-row-' + questionID + '" class="row' + otherL10nHide + '">' +
+                        otherL10nRow = '<div id="other-l10n-row-' + questionID + '" class="row hide">' +
                                         '<div class="columns medium-1"></div>' +
                                         '<div class="columns medium-11">' +
                                          '<div class="row">' +
