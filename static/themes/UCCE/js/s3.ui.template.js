@@ -454,6 +454,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             choices = newChoice;
                             choicesL10n = newChoiceL10n;
                         }
+                        var otherL10nHide;
                         if (settings.other) {
                             otherLabel = settings.other;
                             other = ' checked';
