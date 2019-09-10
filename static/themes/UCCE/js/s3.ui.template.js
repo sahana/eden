@@ -1240,7 +1240,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             }
 
                             // Remove existing Region Polygon
-                            var callback = function(feature) {
+                            var source = sources[questionID],
+                                callback = function(feature) {
                                 if (feature.get('region') == index) {
                                     source.removeFeature(feature);
                                     // Stop Iterating
@@ -1268,8 +1269,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                                                     .trigger('change');
                                     }
                                 }
-                                if (i > currentPosition + 1) {
-                                    if (thisItem.displayLogic && thisItem.displayLogic.id == questionID && thisItem.displayLogic.eq == index) {
+                                if (i > currentPosition) {
+                                    if (thisItem.displayLogic && thisItem.displayLogic.id == questionID && thisItem.displayLogic.selectedRegion == index) {
                                         // Remove outdated displayLogic
                                         delete thisItem.displayLogic;
                                         $('#logic-select-' + i).val('')
