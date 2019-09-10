@@ -1048,7 +1048,10 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                     .on('click' + ns, function() {
                             var $this = $(this),
                                 optionInput = $this.prev(),
-                                value = optionInput.val();
+                                value = optionInput.val(),
+                                // Can't trust original position as it may have changed
+                                // Need to look this up *before* DOM removal
+                                currentPosition = parseInt($this.closest('.media').attr('id').split('-')[1]);
                             if ($('.choice-' + questionID).length > 1) {
                                 // Remove Option
                                 var currentRow = $this.closest('.row'),
@@ -1086,9 +1089,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             }
                             if (value) {
                                 // Remove any outdated displayLogic
-                                // Can't trust original position as it may have changed
-                                var currentPosition = parseInt($this.closest('.media').attr('id').split('-')[1]),
-                                    thisItem;
+                                var thisItem;
                                 for (var i=currentPosition + 1, len=Object.keys(layout).length; i <= len; i++) {
                                     thisItem = layout[i];
                                     if (thisItem.displayLogic && thisItem.displayLogic.id == questionID && thisItem.displayLogic.eq == value) {
