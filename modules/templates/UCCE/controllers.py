@@ -2657,7 +2657,8 @@ class dc_TemplateImportL10n(S3Method):
                     for row in rows:
                         question_id = row.id
                         question = questions[question_id]
-                        l10n_data = {}
+                        l10n_data = {"language": l10n,
+                                     }
 
                         if question["name"] == row.name:
                             l10n_data["name_l10n"] = question["name_l10n"]
