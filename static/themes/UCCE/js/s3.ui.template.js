@@ -1192,6 +1192,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             // Can't trust original position as it may have changed
                             var currentPosition = parseInt($(this).closest('.media').attr('id').split('-')[1]);
                             $('#translation-' + currentPosition).append(choicesL10n);
+                            // Add Events to new inputs
+                            inputEvents();
                         }
                     });
                     break;
