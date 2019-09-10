@@ -853,6 +853,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     } else {
                         options = {
                             dataType: 'json',
+                            disableImageResize: false,
                             dropZone: $('#preview-' + questionID + ', #image-' + questionID),
                             maxNumberOfFiles: 1,
                             url: S3.Ap.concat('/dc/question/') + questionID + '/image_upload.json',
@@ -3674,6 +3675,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             // Translation Upload
             $('#upload-translation').fileupload({
                 dataType: 'json',
+                disableImageMetaDataLoad: true,
+                disableImageLoad: true,
+                disableImageMetaDataSave: true,
+                disableImagePreview: true,
+                disableImageReferencesDeletion: true,
                 maxNumberOfFiles: 1,
                 url: S3.Ap.concat('/dc/template/') + self.recordID + '/upload_l10n.json',
                 done: function (e, data) {
@@ -3681,11 +3687,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     if (result) {
                         var message = result.message;
                         if (message) {
-                            if (result.status == 'failed') {
-                                // Note that fileupload() still sees this as a success
-                                S3.showAlert(message, 'error');
-                            } else {
-                                var callback = function() {
+                            var callback = function() {
                                     // Reload the page (much easier than loading all the affected elements)
                                     /*
                                     window.addEventListener('beforeunload', function(event) {
@@ -3696,8 +3698,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                     });*/
                                     location.reload();
                                 }
+                            if (result.status == 'failed') {
+                                // Note that fileupload() still sees this as a success
+                                S3.showAlert(message, 'error', callback);
+                            } else {
                                 S3.showAlert(message, 'success', callback);
-
                             }
                         }
                     }
@@ -3729,7 +3734,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 }
             });
             $('#question-bar').on('after-clone.fndtn.magellan', function(/* event */) {
-                // Remove file input from clone, otherwise the label 'for' doesn't change the correct onem,which means that the 'change' event never gets fired & hence fileupload fails
+                // Remove file input from clone, otherwise the label 'for' doesn't change the correct one,which means that the 'change' event never gets fired & hence fileupload fails
                 $('div[data-magellan-expedition-clone] #upload-translation').remove();
             });
         },
