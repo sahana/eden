@@ -787,8 +787,8 @@ class dc_TargetActivate(S3Method):
         rows = db(query).select(ftable.name,
                                 #ftable.label,
                                 qtable.id,
-                                #qtable.field_type,
-                                #qtable.options,
+                                qtable.field_type,
+                                qtable.options,
                                 left = left
                                 )
         questions = {}
@@ -796,8 +796,8 @@ class dc_TargetActivate(S3Method):
             field_name = row["s3_field.name"]
             row = row["dc_question"]
             questions[row.id] = {"name": field_name,
-                                 #"field_type": row.field_type,
-                                 #"options": row.options,
+                                 "field_type": row.field_type,
+                                 "options": row.options,
                                  }
 
         for posn in xrange(1, len(layout) + 1):
@@ -814,6 +814,10 @@ class dc_TargetActivate(S3Method):
                         if dq:
                             displayLogic["field"] = dq["name"]
                             displayLogic.pop("id")
+                            dfield_type = dq["field_type"]
+                            if dfield_type == 6:
+                                # Multichoice, so convert index to label
+                                displayLogic["eq"] = dq["options"][displayLogic["eq"]]
                             item = {"type": "input",
                                     "field": fname,
                                     "displayLogic": displayLogic,
