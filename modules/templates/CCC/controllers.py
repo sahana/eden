@@ -7,8 +7,10 @@ from gluon import *
 from gluon.storage import Storage
 from s3 import ICON, IS_ONE_OF, S3CustomController, S3Method, S3MultiSelectWidget, \
                S3Profile, S3SQLCustomForm, \
-               s3_mark_required, s3_phone_requires, s3_str
+               s3_avatar_represent, \
+               s3_mark_required, s3_phone_requires, s3_str, s3_truncate
 
+SEPARATORS = (",", ":")
 THEME = "CCC"
 
 # =============================================================================
@@ -654,7 +656,7 @@ class register(S3CustomController):
                                                    error_message = auth_messages.mismatched_password,
                                                    ),
                                 ),
-                          
+
                           # Skills
                           s3db.hrm_multi_skill_id(empty = False,
                                                   label = T("Volunteer Offer"),
@@ -755,7 +757,7 @@ class register(S3CustomController):
 
             # Form Fields
             formfields, required_fields = individual_formfields()
-            
+
         elif get_vars_get("agency"):
             # Organisation or Agency
             agency = True
@@ -917,7 +919,7 @@ class register(S3CustomController):
                                                    error_message = auth_messages.mismatched_password,
                                                    ),
                                 ),
-                          
+
                           # Goods / Services
                           Field("item_id", "list:reference supply_item",
                                 label = T("Goods / Services"),
@@ -1302,7 +1304,7 @@ class register(S3CustomController):
                     custom["registration_type"] = "existing"
                 else:
                     custom["registration_type"] = "individual"
-            
+
             record["custom"] = json.dumps(custom)
 
             temptable.update_or_insert(**record)
