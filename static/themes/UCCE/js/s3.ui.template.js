@@ -10,9 +10,10 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 })(function($, loadImage, Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Static, Stroke, Style, VectorLayer, VectorSource) {
     'use strict';
     var surveyID = 0,
-        draws = {},   // Draw controls on Maps (indexed by QuestionID)
-        maps = {},    // Maps (indexed by QuestionID)
-        sources = {}, // VectorSources on Maps (indexed by QuestionID)
+        draws = {},     // Draw controls on Maps (indexed by QuestionID)
+        format,         // Map format
+        maps = {},      // Maps (indexed by QuestionID)
+        sources = {},   // VectorSources on Maps (indexed by QuestionID)
         imageFiles = {},   // Store {id: questionID, file: filename}
         imageOptions = [], // Store {label: label, (just held locally)
                            //        id: questionID, {Also on server in settings.pipeImage)
@@ -591,7 +592,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                                 '</div></div></div>';
                                 choicesL10n += choiceL10nRow;
                             }
-                            choices += newChoice.replace('-0', '-' + lenOptions).replace('region 1', 'region ' + (lenOptions + 1));
+                            choices += newChoice.replace(/-0/gi, '-' + lenOptions).replace('region 1', 'region ' + (lenOptions + 1));
                         }
                         numClicks = thisQuestion.settings.numClicks || 1
                     }
@@ -1225,11 +1226,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 for (var i = index + 1; i <= optionsCount; i++) {
                                     newIndex = i - 1;
                                     $('#choice-row-' + questionID + '-' + i).attr('id', 'choice-row-' + questionID + '-' + newIndex);
+                                    $('#choice-json-' + questionID + '-' + i).attr('id', 'choice-json-' + questionID + '-' + newIndex);
                                     $('#choice-row-' + questionID + '-' + newIndex + ' > .button').html('Add region ' + (newIndex + 1));
                                     $('#choice-l10n-row-' + questionID + '-' + i).attr('id', 'choice-l10n-row-' + questionID + '-' + newIndex);
                                     $('#choice-from-' + questionID + '-' + i).attr('id', 'choice-from-' + questionID + '-' + newIndex);
                                 }
-                                self.saveQuestion(type, questionID);
                             } else {
                                 // Just remove value - since we always need at least 1 region available
                                 $this.hide()
@@ -1242,15 +1243,24 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             // Remove existing Region Polygon
                             var source = sources[questionID],
                                 callback = function(feature) {
-                                if (feature.get('region') == index) {
+                                var region = feature.get('region');
+                                if (region == index) {
                                     source.removeFeature(feature);
                                     // Stop Iterating
-                                    return true;
+                                    //return true;
+                                } else if (region > index){
+                                    var newRegion = region - 1;
+                                    feature.set('region', newRegion);
+                                    // Store the GeoJSON
+                                    var geojson = format.writeFeatureObject(feature, {decimals: 0});
+                                    $('#choice-json-' + questionID + '-' + newRegion).val(JSON.stringify(geojson));
                                 }
                                 // Continue Iterating
                                 return false;
                             };
                             source.forEachFeature(callback);
+
+                            self.saveQuestion('heatmap', questionID);
 
                             // Loop through Layout to remove outdated displayLogic &/or pipeImage
                             var layoutLength = Object.keys(layout).length,
@@ -1506,7 +1516,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 });
                 maps[questionID] = map;
 
-                const format = new GeoJSON({featureProjection: projection});
+                // Deliberately module scope
+                format = new GeoJSON({featureProjection: projection});
 
                 var draw = new Draw({
                     source: source,
