@@ -3142,25 +3142,39 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                                         if ((item === undefined) && (oldPosition < layoutLength)) {
                                                             pass;
                                                         } else {
-                                                            layout[newPosition] = item;
+                                                            if (oldPosition < layoutLength) {
+                                                                layout[newPosition] = item;
+                                                            }
                                                         }
                                                     } else {
-                                                        layout[newPosition] = item;
+                                                        if (oldPosition < layoutLength) {
+                                                            layout[newPosition] = item;
+                                                        }
                                                     }
                                                 } else {
-                                                    layout[newPosition] = item;
+                                                    if (oldPosition < layoutLength) {
+                                                        layout[newPosition] = item;
+                                                    }
                                                 }
                                             } else {
-                                                layout[newPosition] = item;
+                                                if (oldPosition < layoutLength) {
+                                                    layout[newPosition] = item;
+                                                }
                                             }
                                         } else {
-                                            layout[newPosition] = item;
+                                            if (oldPosition < layoutLength) {
+                                                layout[newPosition] = item;
+                                            }
                                         }
                                     } else {
-                                        layout[newPosition] = item;
+                                        if (oldPosition < layoutLength) {
+                                            layout[newPosition] = item;
+                                        }
                                     }
                                 } else {
-                                    layout[newPosition] = item;
+                                    if (oldPosition < layoutLength) {
+                                        layout[newPosition] = item;
+                                    }
                                 }
                             } else {
                                 layout[newPosition] = item;
