@@ -587,6 +587,7 @@ class dc_QuestionSave(S3Method):
                 name = post_vars_get("name")
                 if name:
                     db = current.db
+                    s3db = current.s3db
                     mandatory = post_vars_get("mandatory")
                     options = post_vars_get("options")
                     #if options:
@@ -606,14 +607,11 @@ class dc_QuestionSave(S3Method):
                                                      options = options,
                                                      settings = settings,
                                                      )
-                    onaccept = current.s3db.get_config("dc_question", "onaccept")
-                    onaccept(Storage(vars = Storage(id = record_id)))
 
                     # Translation
                     name_l10n = post_vars_get("name_l10n")
                     options_l10n = post_vars_get("options_l10n")
                     if name_l10n or options_l10n:
-                        s3db = current.s3db
                         ltable = s3db.dc_template_l10n
                         l10n = db(ltable.template_id == r.record.template_id).select(ltable.language,
                                                                                      limitby = (0, 1)
@@ -634,6 +632,10 @@ class dc_QuestionSave(S3Method):
                             else:
                                 new_vars["question_id"] = record_id
                                 ltable.insert(**new_vars)
+
+                    # Onaccept (run after L10n populated so that it gets into mobile.settings)
+                    onaccept = s3db.get_config("dc_question", "onaccept")
+                    onaccept(Storage(vars = Storage(id = record_id)))
 
                     # Results (Empty Message so we don't get it shown to User)
                     current.response.headers["Content-Type"] = "application/json"
