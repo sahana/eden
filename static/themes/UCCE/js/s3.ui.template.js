@@ -703,37 +703,81 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             var inputEvents = function() {
                 $(formElements).off('change' + ns)
                                .on('change' + ns, function(/* event */) {
-                    var parts = this.id.split('-');
-                    if (parts[0] == 'logic') {
+                    var parts = this.id.split('-'),
+                        part_0 = parts[0];
+                    if (part_0 == 'logic') {
                         // Display Logic 1st select has been selected
                         // Can't trust original position as it may have changed
                         var currentPosition = parseInt(parts[parts.length - 1]);
                         // Show 2nd Logic select
                         self.logicSelected($(this), currentPosition);
                     } else {
-                        // If form elements change, then Save
+                        // If form elements change, then clear any obsolete Translations & Save
+                        // Can't trust original l10n
+                        var l10n = self.data.l10n;
                         if (type == 'instructions') {
                             // Update Data
                             // Can't trust original position as it may have changed
                             var currentPosition = parseInt(parts[parts.length - 1]),
                                 thisLayout = layout[currentPosition];
-                            thisLayout.do.text = $('#do-' + currentPosition).val();
-                            thisLayout.say.text = $('#say-' + currentPosition).val();
-                            // Can't trust original l10n
-                            var l10n = self.data.l10n;
                             if (l10n) {
                                 if (!thisLayout.do.hasOwnProperty('10n')) {
                                     thisLayout.do.l10n = {};
                                 }
-                                thisLayout.do.l10n[l10n] = $('#do-l10n-' + currentPosition).val();
                                 if (!thisLayout.say.hasOwnProperty('10n')) {
                                     thisLayout.say.l10n = {};
                                 }
-                                thisLayout.say.l10n[l10n] = $('#say-l10n-' + currentPosition).val();
+                            }
+                            if (part_0 == 'do') {
+                                if (parts[1] == 'l10n') {
+                                    thisLayout.do.l10n[l10n] = $('#do-l10n-' + currentPosition).val();
+                                } else {
+                                    thisLayout.do.text = $('#do-' + currentPosition).val();
+                                    if (l10n) {
+                                        // Clear l10n when text changes
+                                        $('#do-l10n-' + currentPosition).val('');
+                                        thisLayout.do.l10n[l10n] = '';
+                                    }
+                                }
+                            } else {
+                                if (parts[1] == 'l10n') {
+                                    thisLayout.say.l10n[l10n] = $('#say-l10n-' + currentPosition).val();
+                                } else {
+                                    thisLayout.say.text = $('#say-' + currentPosition).val();
+                                    if (l10n) {
+                                        // Clear l10n when text changes
+                                        $('#say-l10n-' + currentPosition).val('');
+                                        thisLayout.say.l10n[l10n] = '';
+                                    }
+                                }
                             }
                             // Save Template
                             self.saveLayout();
                         } else {
+                            if (l10n) {
+                                // Clear obsolete Translations
+                                if ((part_0 == 'name') && (parts[1] != 'l10n')) {
+                                    $('#name-l10n-' + questionID).val('');
+                                } else if (part_0 == '') {
+                                    // Heatmap Region?
+                                    var choiceRowID = $(this).parent().attr('id');
+                                    if (choiceRowID !== undefined) {
+                                        parts = choiceRowID.split('-');
+                                        if (parts[0] == 'choice') {
+                                            $('#choice-from-' + questionID + '-' + parts[3]).parent().next().children().first().val('');
+                                        }
+                                    } else {
+                                        // MCQ choice?
+                                        choiceRowID = $(this).parent().parent().attr('id');
+                                        if (choiceRowID !== undefined) {
+                                            parts = choiceRowID.split('-');
+                                            if (parts[0] == 'choice') {
+                                                $('#choice-from-' + questionID + '-' + parts[3]).parent().next().children().first().val('');
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             // Save Question
                             self.saveQuestion(type, questionID);
                         }
@@ -1201,36 +1245,40 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
                 case 'likert':
                     // Display options when scale selected
-                    $('#scale-' + questionID).on('change' + ns, function() {
+                    var likertEvents = function() {
+                        $('#scale-' + questionID).on('change' + ns, function() {
 
-                        // Remove old display
-                        $('#display-' + questionID).empty();
-                        var choicesRow = $('#choices-l10n-row-' + questionID);
-                        if (choicesRow.length) {
-                            choicesRow.prev().remove();
-                            for (var i=0; i < 5; i++) {
-                                choicesRow.next().remove();
+                            // Remove old display
+                            $('#display-' + questionID).empty();
+                            var choicesRow = $('#choices-l10n-row-' + questionID);
+                            if (choicesRow.length) {
+                                choicesRow.prev().remove();
+                                for (var i=0; i < 5; i++) {
+                                    choicesRow.next().remove();
+                                }
+                                choicesRow.remove();
                             }
-                            choicesRow.remove();
-                        }
 
-                        // Remove old l10n
-                        thisQuestion.options_l10n = [];
+                            // Remove old l10n
+                            thisQuestion.options_l10n = [];
 
-                        // Add new display
-                        var scale = $(this).val();
-                        if (scale) {
-                            var result = self.likertOptionsHtml(questionID, scale),
-                                choicesL10n = result.choicesL10n,
-                                displayOptions = result.displayOptions;
-                            $('#display-' + questionID).append(displayOptions);
-                            // Can't trust original position as it may have changed
-                            var currentPosition = parseInt($(this).closest('.media').attr('id').split('-')[1]);
-                            $('#translation-' + currentPosition).append(choicesL10n);
-                            // Add Events to new inputs
-                            inputEvents();
-                        }
-                    });
+                            // Add new display
+                            var scale = $(this).val();
+                            if (scale) {
+                                var result = self.likertOptionsHtml(questionID, scale),
+                                    choicesL10n = result.choicesL10n,
+                                    displayOptions = result.displayOptions;
+                                $('#display-' + questionID).append(displayOptions);
+                                // Can't trust original position as it may have changed
+                                var currentPosition = parseInt($(this).closest('.media').attr('id').split('-')[1]);
+                                $('#translation-' + currentPosition).append(choicesL10n);
+                                // Add Events to new inputs
+                                inputEvents();
+                                likertEvents();
+                            }
+                        });
+                    };
+                    likertEvents();
                     break;
 
                 case 'heatmap':
