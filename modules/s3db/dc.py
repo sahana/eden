@@ -147,6 +147,7 @@ class DataCollectionTemplateModel(S3Model):
         configure(tablename,
                   create_onaccept = self.dc_template_create_onaccept,
                   onaccept = self.dc_template_onaccept,
+                  ondelete = self.dc_template_ondelete,
                   deduplicate = S3Duplicate(),
                   )
 
@@ -532,59 +533,92 @@ class DataCollectionTemplateModel(S3Model):
     def dc_template_onaccept(form):
         """
             On-accept routine for dc_template:
+             - Set the Dynamnic Table to the same Title as the Template
              - Convert Question Codes to IDs in the layout
         """
 
-        form_vars_get = form.vars.get
-        template_id = form_vars_get("id")
+        template_id = form.vars.get("id")
         if not template_id:
             return
 
         db = current.db
         s3db = current.s3db
+
+        # Load full record
         ttable = s3db.dc_template
+        record = db(ttable.id == template_id).select(ttable.name,
+                                                     ttable.layout,
+                                                     ttable.table_id,
+                                                     limitby = (0, 1),
+                                                     ).first()
 
-        layout = form_vars_get("layout")
-        if layout is None:
-            # Load full record
-            record = db(ttable.id == template_id).select(ttable.layout,
-                                                         limitby = (0, 1),
-                                                         ).first()
-            layout = record.layout
+        # Sync the name of the Template to that of the Dynamic Table
+        # (UCCE's mobile app uses s3_table.title for the Survey name...which works since 1 Template == 1 Target, beyond UCCE this won't be possible)
+        dtable = s3db.s3_table
+        db(dtable.id == record.table_id).update(title = record.name)
 
-        if layout is None:
+        # Convert Question Codes to IDs in the layout
+        layout = record.layout
+        if layout is not None:
+
+            qtable = s3db.dc_question
+
+            # Not needed for JSON field type:
+            #layout = json.loads(layout)
+            new_layout = {}
+            questions = {}
+
+            for position in layout:
+                item = layout[position]
+                if item["type"] != "question":
+                    new_layout[position] = item
+                    continue
+                if item.get("id"):
+                    new_layout[position] = item
+                    continue
+                code = item.get("code")
+                if not code:
+                    current.log.error("Question without ID or Code")
+                    continue
+                questions[code] = position
+
+            rows = db(qtable.code.belongs(questions)).select(qtable.id,
+                                                             qtable.code,
+                                                             )
+            for row in rows:
+                new_layout[questions.get(row.code)] = {"type": "question",
+                                                       "id": row.id,
+                                                       }
+
+            db(ttable.id == template_id).update(layout = new_layout)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def dc_template_ondelete(form):
+        """
+            On-delete routine for dc_template:
+             - Delete the associated Dynamic Table
+        """
+
+        template_id = form.id
+        if not template_id:
             return
 
-        qtable = s3db.dc_question
+        db = current.db
+        s3db = current.s3db
 
-        # Not needed for JSON field type:
-        #layout = json.loads(layout)
-        new_layout = {}
-        questions = {}
+        # Load full record
+        ttable = s3db.dc_template
+        record = db(ttable.id == template_id).select(ttable.deleted_fk,
+                                                     limitby = (0, 1),
+                                                     ).first()
 
-        for position in layout:
-            item = layout[position]
-            if item["type"] != "question":
-                new_layout[position] = item
-                continue
-            if item.get("id"):
-                new_layout[position] = item
-                continue
-            code = item.get("code")
-            if not code:
-                current.log.error("Question without ID or Code")
-                continue
-            questions[code] = position
-
-        rows = db(qtable.code.belongs(questions)).select(qtable.id,
-                                                         qtable.code,
-                                                         )
-        for row in rows:
-            new_layout[questions.get(row.code)] = {"type": "question",
-                                                   "id": row.id,
-                                                   }
-
-        db(ttable.id == template_id).update(layout = new_layout)
+        deleted_fk = json.loads(record.deleted_fk)
+        table_id = deleted_fk.get("table_id")
+        if table_id:
+            dtable = s3db.s3_table
+            resource = s3db.resource("s3_table", filter=(dtable.id == table_id))
+            resource.delete()
 
     # -------------------------------------------------------------------------
     @staticmethod
