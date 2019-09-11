@@ -1318,7 +1318,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                             // Update outdated pipeImage
                                             thisQuestionSettings.pipeImage.region--;
                                             $('#pipe-' + thisQuestionID).empty()
-                                                                        .append(self.pipeOptionsHtml(thisQuestionID));
+                                                                        .append(self.pipeOptionsHtml(thisQuestionID))
+                                                                        .trigger('change');
                                         }
                                     }
                                 }
