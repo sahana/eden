@@ -846,7 +846,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             done: function (e, data) {
                                 var file = data.result.file;
                                 imageFiles[questionID] = file;
-                                self.data.questions[questionID].file = file;
+                                thisQuestion.file = file;
                                 self.heatMap(questionID, file);
                             }
                         };
@@ -892,7 +892,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             done: function (e, data) {
                                 var file = data.result.file;
                                 imageFiles[questionID] = file;
-                                self.data.questions[questionID].file = file;
+                                thisQuestion.file = file;
                                 // Update ImageOptions
                                 self.updateImageOptions();
                             }
@@ -1177,6 +1177,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 case 'likert':
                     // Display options when scale selected
                     $('#scale-' + questionID).on('change' + ns, function() {
+
                         // Remove old display
                         $('#display-' + questionID).empty();
                         var choicesRow = $('#choices-l10n-row-' + questionID);
@@ -1187,6 +1188,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             }
                             choicesRow.remove();
                         }
+
+                        // Remove old l10n
+                        thisQuestion.options_l10n = [];
+
+                        // Add new display
                         var scale = $(this).val();
                         if (scale) {
                             var result = self.likertOptionsHtml(questionID, scale),
@@ -1241,25 +1247,27 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                      .prev().addClass('secondary');
                             }
 
-                            // Remove existing Region Polygon
-                            var source = sources[questionID],
-                                callback = function(feature) {
-                                var region = feature.get('region');
-                                if (region == index) {
-                                    source.removeFeature(feature);
-                                    // Stop Iterating
-                                    //return true;
-                                } else if (region > index){
-                                    var newRegion = region - 1;
-                                    feature.set('region', newRegion);
-                                    // Store the GeoJSON
-                                    var geojson = format.writeFeatureObject(feature, {decimals: 0});
-                                    $('#choice-json-' + questionID + '-' + newRegion).val(JSON.stringify(geojson));
-                                }
-                                // Continue Iterating
-                                return false;
-                            };
-                            source.forEachFeature(callback);
+                            var source = sources[questionID];
+                            if (source !== undefined) {
+                                // Remove existing Region Polygon
+                                var callback = function(feature) {
+                                    var region = feature.get('region');
+                                    if (region == index) {
+                                        source.removeFeature(feature);
+                                        // Stop Iterating
+                                        //return true;
+                                    } else if (region > index){
+                                        var newRegion = region - 1;
+                                        feature.set('region', newRegion);
+                                        // Store the GeoJSON
+                                        var geojson = format.writeFeatureObject(feature, {decimals: 0});
+                                        $('#choice-json-' + questionID + '-' + newRegion).val(JSON.stringify(geojson));
+                                    }
+                                    // Continue Iterating
+                                    return false;
+                                };
+                                source.forEachFeature(callback);
+                            }
 
                             self.saveQuestion('heatmap', questionID);
 
@@ -1331,31 +1339,35 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                                    .next().removeClass('hide')
                                                           .show();
                             }
-                            // Show existing Region Polygon in a different Colour
-                            var callback = function(feature) {
-                                if (feature.get('region') == index) {
-                                    var style = new Style({
-                                        fill: new Fill({
-                                          color: '#ffc0cb' // pink
-                                        }),
-                                        stroke: new Stroke({
-                                          color: 'red'
-                                        })
-                                    });
-                                    feature.setStyle(style);
-                                } else {
-                                    // Ensure has default Style
-                                    feature.setStyle(null);
-                                }
-                                // Continue Iterating
-                                return false;
-                            };
-                            sources[questionID].forEachFeature(callback); 
-                            // Define Region
-                            var draw = draws[questionID];
-                            draw.set('questionID', questionID, true);
-                            draw.set('region', index, true);
-                            maps[questionID].addInteraction(draw);
+
+                            var source = sources[questionID];
+                            if (source !== undefined) {
+                                // Show existing Region Polygon in a different Colour
+                                var callback = function(feature) {
+                                    if (feature.get('region') == index) {
+                                        var style = new Style({
+                                            fill: new Fill({
+                                              color: '#ffc0cb' // pink
+                                            }),
+                                            stroke: new Stroke({
+                                              color: 'red'
+                                            })
+                                        });
+                                        feature.setStyle(style);
+                                    } else {
+                                        // Ensure has default Style
+                                        feature.setStyle(null);
+                                    }
+                                    // Continue Iterating
+                                    return false;
+                                };
+                                source.forEachFeature(callback); 
+                                // Define Region
+                                var draw = draws[questionID];
+                                draw.set('questionID', questionID, true);
+                                draw.set('region', index, true);
+                                maps[questionID].addInteraction(draw);
+                            }
                         });
                     };
                     multichoiceEvents();
@@ -1388,7 +1400,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         // Increment value
                         value++;
                         // Update Data
-                        questions[questionID].settings.numClicks = value;
+                        thisQuestion.settings.numClicks = value;
                         // Save Question
                         self.saveQuestion(type, questionID);
                         // Update visual element
