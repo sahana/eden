@@ -10,9 +10,10 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 })(function($, loadImage, Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Static, Stroke, Style, VectorLayer, VectorSource) {
     'use strict';
     var surveyID = 0,
-        draws = {},   // Draw controls on Maps (indexed by QuestionID)
-        maps = {},    // Maps (indexed by QuestionID)
-        sources = {}, // VectorSources on Maps (indexed by QuestionID)
+        draws = {},     // Draw controls on Maps (indexed by QuestionID)
+        format,         // Map format
+        maps = {},      // Maps (indexed by QuestionID)
+        sources = {},   // VectorSources on Maps (indexed by QuestionID)
         imageFiles = {},   // Store {id: questionID, file: filename}
         imageOptions = [], // Store {label: label, (just held locally)
                            //        id: questionID, {Also on server in settings.pipeImage)
@@ -417,7 +418,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         choicesL10n,
                         other = '',
                         otherDisabled = ' disabled',
-                        otherLabel = '',
+                        otherLabel = 'Other (please specify)',
                         otherL10n = '',
                         multiple = 1,
                         multiChecked = '',
@@ -454,17 +455,15 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             choices = newChoice;
                             choicesL10n = newChoiceL10n;
                         }
-                        var settings = thisQuestion.settings,
-                            otherL10n = '',
-                            otherL10nHide = ' hide';
-                        otherLabel = settings.other || '';
-                        if (otherLabel) {
+                        var otherL10nHide;
+                        if (settings.other) {
+                            otherLabel = settings.other;
                             other = ' checked';
                             otherDisabled = '';
                             otherL10n = settings.otherL10n || '';
                             otherL10nHide = '';
                         } else {
-                            otherLabel = 'Other (please specify)'
+                            otherL10nHide = ' hide';
                         }
                         otherL10nRow = '<div id="other-l10n-row-' + questionID + '" class="row' + otherL10nHide + '">' +
                                         '<div class="columns medium-1"></div>' +
@@ -481,7 +480,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     } else {
                         // Add an empty row to hold the first choice
                         choices = newChoice;
-                        otherL10nRow = '<div id="other-l10n-row-' + questionID + '" class="row' + otherL10nHide + '">' +
+                        otherL10nRow = '<div id="other-l10n-row-' + questionID + '" class="row hide">' +
                                         '<div class="columns medium-1"></div>' +
                                         '<div class="columns medium-11">' +
                                          '<div class="row">' +
@@ -593,7 +592,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                                 '</div></div></div>';
                                 choicesL10n += choiceL10nRow;
                             }
-                            choices += newChoice.replace('-0', '-' + lenOptions).replace('region 1', 'region ' + (lenOptions + 1));
+                            choices += newChoice.replace(/-0/gi, '-' + lenOptions).replace('region 1', 'region ' + (lenOptions + 1));
                         }
                         numClicks = thisQuestion.settings.numClicks || 1
                     }
@@ -854,6 +853,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     } else {
                         options = {
                             dataType: 'json',
+                            disableImageResize: false,
                             dropZone: $('#preview-' + questionID + ', #image-' + questionID),
                             maxNumberOfFiles: 1,
                             url: S3.Ap.concat('/dc/question/') + questionID + '/image_upload.json',
@@ -1048,11 +1048,15 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         var deleteOption = $('.choice-' + questionID).next();
                         deleteOption.off('click' + ns)
                                     .on('click' + ns, function() {
-                            var optionInput = $(this).prev(),
-                                value = optionInput.val();
+                            var $this = $(this),
+                                optionInput = $this.prev(),
+                                value = optionInput.val(),
+                                // Can't trust original position as it may have changed
+                                // Need to look this up *before* DOM removal
+                                currentPosition = parseInt($this.closest('.media').attr('id').split('-')[1]);
                             if ($('.choice-' + questionID).length > 1) {
                                 // Remove Option
-                                var currentRow = $(this).closest('.row'),
+                                var currentRow = $this.closest('.row'),
                                     index = parseInt(currentRow.attr('id').split('-')[3]);
                                 currentRow.remove();
                                 // & from l10n
@@ -1192,6 +1196,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             // Can't trust original position as it may have changed
                             var currentPosition = parseInt($(this).closest('.media').attr('id').split('-')[1]);
                             $('#translation-' + currentPosition).append(choicesL10n);
+                            // Add Events to new inputs
+                            inputEvents();
                         }
                     });
                     break;
@@ -1221,11 +1227,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 for (var i = index + 1; i <= optionsCount; i++) {
                                     newIndex = i - 1;
                                     $('#choice-row-' + questionID + '-' + i).attr('id', 'choice-row-' + questionID + '-' + newIndex);
+                                    $('#choice-json-' + questionID + '-' + i).attr('id', 'choice-json-' + questionID + '-' + newIndex);
                                     $('#choice-row-' + questionID + '-' + newIndex + ' > .button').html('Add region ' + (newIndex + 1));
                                     $('#choice-l10n-row-' + questionID + '-' + i).attr('id', 'choice-l10n-row-' + questionID + '-' + newIndex);
                                     $('#choice-from-' + questionID + '-' + i).attr('id', 'choice-from-' + questionID + '-' + newIndex);
                                 }
-                                self.saveQuestion(type, questionID);
                             } else {
                                 // Just remove value - since we always need at least 1 region available
                                 $this.hide()
@@ -1236,16 +1242,26 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             }
 
                             // Remove existing Region Polygon
-                            var callback = function(feature) {
-                                if (feature.get('region') == index) {
+                            var source = sources[questionID],
+                                callback = function(feature) {
+                                var region = feature.get('region');
+                                if (region == index) {
                                     source.removeFeature(feature);
                                     // Stop Iterating
-                                    return true;
+                                    //return true;
+                                } else if (region > index){
+                                    var newRegion = region - 1;
+                                    feature.set('region', newRegion);
+                                    // Store the GeoJSON
+                                    var geojson = format.writeFeatureObject(feature, {decimals: 0});
+                                    $('#choice-json-' + questionID + '-' + newRegion).val(JSON.stringify(geojson));
                                 }
                                 // Continue Iterating
                                 return false;
                             };
                             source.forEachFeature(callback);
+
+                            self.saveQuestion('heatmap', questionID);
 
                             // Loop through Layout to remove outdated displayLogic &/or pipeImage
                             var layoutLength = Object.keys(layout).length,
@@ -1264,8 +1280,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                                                     .trigger('change');
                                     }
                                 }
-                                if (i > currentPosition + 1) {
-                                    if (thisItem.displayLogic && thisItem.displayLogic.id == questionID && thisItem.displayLogic.eq == index) {
+                                if (i > currentPosition) {
+                                    if (thisItem.displayLogic && thisItem.displayLogic.id == questionID && thisItem.displayLogic.selectedRegion == index) {
                                         // Remove outdated displayLogic
                                         delete thisItem.displayLogic;
                                         $('#logic-select-' + i).val('')
@@ -1501,7 +1517,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 });
                 maps[questionID] = map;
 
-                const format = new GeoJSON({featureProjection: projection});
+                // Deliberately module scope
+                format = new GeoJSON({featureProjection: projection});
 
                 var draw = new Draw({
                     source: source,
@@ -3138,25 +3155,39 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                                         if ((item === undefined) && (oldPosition < layoutLength)) {
                                                             pass;
                                                         } else {
-                                                            layout[newPosition] = item;
+                                                            if (oldPosition < layoutLength) {
+                                                                layout[newPosition] = item;
+                                                            }
                                                         }
                                                     } else {
-                                                        layout[newPosition] = item;
+                                                        if (oldPosition < layoutLength) {
+                                                            layout[newPosition] = item;
+                                                        }
                                                     }
                                                 } else {
-                                                    layout[newPosition] = item;
+                                                    if (oldPosition < layoutLength) {
+                                                        layout[newPosition] = item;
+                                                    }
                                                 }
                                             } else {
-                                                layout[newPosition] = item;
+                                                if (oldPosition < layoutLength) {
+                                                    layout[newPosition] = item;
+                                                }
                                             }
                                         } else {
-                                            layout[newPosition] = item;
+                                            if (oldPosition < layoutLength) {
+                                                layout[newPosition] = item;
+                                            }
                                         }
                                     } else {
-                                        layout[newPosition] = item;
+                                        if (oldPosition < layoutLength) {
+                                            layout[newPosition] = item;
+                                        }
                                     }
                                 } else {
-                                    layout[newPosition] = item;
+                                    if (oldPosition < layoutLength) {
+                                        layout[newPosition] = item;
+                                    }
                                 }
                             } else {
                                 layout[newPosition] = item;
@@ -3644,6 +3675,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             // Translation Upload
             $('#upload-translation').fileupload({
                 dataType: 'json',
+                disableImageMetaDataLoad: true,
+                disableImageLoad: true,
+                disableImageMetaDataSave: true,
+                disableImagePreview: true,
+                disableImageReferencesDeletion: true,
                 maxNumberOfFiles: 1,
                 url: S3.Ap.concat('/dc/template/') + self.recordID + '/upload_l10n.json',
                 done: function (e, data) {
@@ -3651,11 +3687,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     if (result) {
                         var message = result.message;
                         if (message) {
-                            if (result.status == 'failed') {
-                                // Note that fileupload() still sees this as a success
-                                S3.showAlert(message, 'error');
-                            } else {
-                                var callback = function() {
+                            var callback = function() {
                                     // Reload the page (much easier than loading all the affected elements)
                                     /*
                                     window.addEventListener('beforeunload', function(event) {
@@ -3666,8 +3698,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                     });*/
                                     location.reload();
                                 }
+                            if (result.status == 'failed') {
+                                // Note that fileupload() still sees this as a success
+                                S3.showAlert(message, 'error', callback);
+                            } else {
                                 S3.showAlert(message, 'success', callback);
-
                             }
                         }
                     }
@@ -3699,7 +3734,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 }
             });
             $('#question-bar').on('after-clone.fndtn.magellan', function(/* event */) {
-                // Remove file input from clone, otherwise the label 'for' doesn't change the correct onem,which means that the 'change' event never gets fired & hence fileupload fails
+                // Remove file input from clone, otherwise the label 'for' doesn't change the correct one,which means that the 'change' event never gets fired & hence fileupload fails
                 $('div[data-magellan-expedition-clone] #upload-translation').remove();
             });
         },

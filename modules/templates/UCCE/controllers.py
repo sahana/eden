@@ -587,6 +587,7 @@ class dc_QuestionSave(S3Method):
                 name = post_vars_get("name")
                 if name:
                     db = current.db
+                    s3db = current.s3db
                     mandatory = post_vars_get("mandatory")
                     options = post_vars_get("options")
                     #if options:
@@ -606,14 +607,11 @@ class dc_QuestionSave(S3Method):
                                                      options = options,
                                                      settings = settings,
                                                      )
-                    onaccept = current.s3db.get_config("dc_question", "onaccept")
-                    onaccept(Storage(vars = Storage(id = record_id)))
 
                     # Translation
                     name_l10n = post_vars_get("name_l10n")
                     options_l10n = post_vars_get("options_l10n")
                     if name_l10n or options_l10n:
-                        s3db = current.s3db
                         ltable = s3db.dc_template_l10n
                         l10n = db(ltable.template_id == r.record.template_id).select(ltable.language,
                                                                                      limitby = (0, 1)
@@ -634,6 +632,10 @@ class dc_QuestionSave(S3Method):
                             else:
                                 new_vars["question_id"] = record_id
                                 ltable.insert(**new_vars)
+
+                    # Onaccept (run after L10n populated so that it gets into mobile.settings)
+                    onaccept = s3db.get_config("dc_question", "onaccept")
+                    onaccept(Storage(vars = Storage(id = record_id)))
 
                     # Results (Empty Message so we don't get it shown to User)
                     current.response.headers["Content-Type"] = "application/json"
@@ -785,8 +787,8 @@ class dc_TargetActivate(S3Method):
         rows = db(query).select(ftable.name,
                                 #ftable.label,
                                 qtable.id,
-                                #qtable.field_type,
-                                #qtable.options,
+                                qtable.field_type,
+                                qtable.options,
                                 left = left
                                 )
         questions = {}
@@ -794,8 +796,8 @@ class dc_TargetActivate(S3Method):
             field_name = row["s3_field.name"]
             row = row["dc_question"]
             questions[row.id] = {"name": field_name,
-                                 #"field_type": row.field_type,
-                                 #"options": row.options,
+                                 "field_type": row.field_type,
+                                 "options": row.options,
                                  }
 
         for posn in xrange(1, len(layout) + 1):
@@ -812,6 +814,10 @@ class dc_TargetActivate(S3Method):
                         if dq:
                             displayLogic["field"] = dq["name"]
                             displayLogic.pop("id")
+                            dfield_type = dq["field_type"]
+                            if dfield_type == 6:
+                                # Multichoice, so convert index to label
+                                displayLogic["eq"] = dq["options"][displayLogic["eq"]]
                             item = {"type": "input",
                                     "field": fname,
                                     "displayLogic": displayLogic,
@@ -2655,7 +2661,8 @@ class dc_TemplateImportL10n(S3Method):
                     for row in rows:
                         question_id = row.id
                         question = questions[question_id]
-                        l10n_data = {}
+                        l10n_data = {"language": l10n,
+                                     }
 
                         if question["name"] == row.name:
                             l10n_data["name_l10n"] = question["name_l10n"]
