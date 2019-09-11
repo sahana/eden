@@ -1053,11 +1053,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 value = optionInput.val(),
                                 // Can't trust original position as it may have changed
                                 // Need to look this up *before* DOM removal
-                                currentPosition = parseInt($this.closest('.media').attr('id').split('-')[1]);
+                                currentPosition = parseInt($this.closest('.media').attr('id').split('-')[1]),
+                                currentRow = $this.closest('.row'),
+                                index = parseInt(currentRow.attr('id').split('-')[3]);
                             if ($('.choice-' + questionID).length > 1) {
                                 // Remove Option
-                                var currentRow = $this.closest('.row'),
-                                    index = parseInt(currentRow.attr('id').split('-')[3]);
                                 currentRow.remove();
                                 // & from l10n
                                 $('#choice-l10n-row-' + questionID + '-' + index).remove();
@@ -1089,15 +1089,21 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 // Just remove value - since we always need at least 1 option available
                                 optionInput.val('');
                             }
-                            if (value) {
-                                // Remove any outdated displayLogic
-                                var thisItem;
-                                for (var i=currentPosition + 1, len=Object.keys(layout).length; i <= len; i++) {
-                                    thisItem = layout[i];
-                                    if (thisItem.displayLogic && thisItem.displayLogic.id == questionID && thisItem.displayLogic.eq == value) {
+                            // Update/Remove any outdated displayLogic
+                            var eq,
+                                thisItem;
+                            for (var i=currentPosition + 1, len=Object.keys(layout).length; i <= len; i++) {
+                                thisItem = layout[i];
+                                if (thisItem.displayLogic && thisItem.displayLogic.id == questionID) {
+                                    eq = thisItem.displayLogic.eq; 
+                                    if (eq == index) {
                                         delete thisItem.displayLogic;
                                         $('#logic-select-' + i).val('')
                                                                .trigger('change');
+                                    } else if (eq > index) {
+                                        thisItem.displayLogic.eq--;
+                                        $('#sub-logic-select-' + i).val(eq - 1)
+                                                                   .trigger('change');
                                     }
                                 }
                             }
@@ -1106,7 +1112,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                            .on('click' + ns, function() {
                             // Pepare to add a new Option
                             // Update IDs for all subsequent rows
-                            var currentRow = $(this).closest('.row'),
+                            var $this = $(this),
+                                currentRow = $this.closest('.row'),
                                 index = parseInt(currentRow.attr('id').split('-')[3]),
                                 newIndex,
                                 optionsCount = $('.choice-' + questionID).length;
@@ -1121,6 +1128,24 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             currentRow.after(newChoice.replace('-0', '-' + newIndex));
                             // & in l10n
                             $('#choice-l10n-row-' + questionID + '-' + index).after(newChoiceL10n.replace(/-0/g, '-' + newIndex));
+                            // Update thisQuestion.options, saveQuestion
+                            $('#name-' + questionID).trigger('change');
+                            // Update any outdated displayLogic
+                            var currentPosition = parseInt($this.closest('.media').attr('id').split('-')[1]),
+                                eq,
+                                thisItem;
+                            for (var i=currentPosition + 1, len=Object.keys(layout).length; i <= len; i++) {
+                                thisItem = layout[i];
+                                if (thisItem.displayLogic && thisItem.displayLogic.id == questionID) {
+                                    eq = thisItem.displayLogic.eq; 
+                                    if (eq > index) {
+                                        thisItem.displayLogic.eq++;
+                                        self.logicSubOptions(i, questionID);
+                                        $('#sub-logic-select-' + i).val(eq + 1)
+                                                                   .trigger('change');
+                                    }
+                                }
+                            }
                             // Add Events
                             inputEvents();
                             multichoiceEvents();
@@ -1271,8 +1296,9 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
                             self.saveQuestion('heatmap', questionID);
 
-                            // Loop through Layout to remove outdated displayLogic &/or pipeImage
+                            // Loop through Layout to update/remove outdated displayLogic &/or pipeImage
                             var layoutLength = Object.keys(layout).length,
+                                region,
                                 thisItem,
                                 thisQuestionID,
                                 thisQuestionSettings;
@@ -1281,19 +1307,35 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 if (thisItem.type == 'question') {
                                     thisQuestionID = thisItem.id;
                                     thisQuestionSettings = questions[thisQuestionID].settings;
-                                    if (thisQuestionSettings.pipeImage && thisQuestionSettings.pipeImage.id == questionID && thisQuestionSettings.pipeImage.region == index) {
-                                        // Remove outdated pipeImage
-                                        delete thisQuestionSettings.pipeImage;
-                                        $('#pipe-' + thisQuestionID).val('')
-                                                                    .trigger('change');
+                                    if (thisQuestionSettings.pipeImage && thisQuestionSettings.pipeImage.id == questionID) {
+                                        region = thisQuestionSettings.pipeImage.region;
+                                        if (region == index) {
+                                            // Remove outdated pipeImage
+                                            delete thisQuestionSettings.pipeImage;
+                                            $('#pipe-' + thisQuestionID).val('')
+                                                                        .trigger('change');
+                                        } else if (region > index) {
+                                            // Update outdated pipeImage
+                                            thisQuestionSettings.pipeImage.region--;
+                                            $('#pipe-' + thisQuestionID).empty()
+                                                                        .append(self.pipeOptionsHtml(thisQuestionID));
+                                        }
                                     }
                                 }
                                 if (i > currentPosition) {
-                                    if (thisItem.displayLogic && thisItem.displayLogic.id == questionID && thisItem.displayLogic.selectedRegion == index) {
-                                        // Remove outdated displayLogic
-                                        delete thisItem.displayLogic;
-                                        $('#logic-select-' + i).val('')
-                                                               .trigger('change');
+                                    if (thisItem.displayLogic && thisItem.displayLogic.id == questionID) {
+                                        region = thisItem.displayLogic.selectedRegion;
+                                        if (region == index) {
+                                            // Remove outdated displayLogic
+                                            delete thisItem.displayLogic;
+                                            $('#logic-select-' + i).val('')
+                                                                   .trigger('change');
+                                        } else if (region > index) {
+                                            // Update outdated displayLogic
+                                            thisItem.displayLogic.selectedRegion--;
+                                            $('#sub-logic-select-' + i).val(region - 1)
+                                                                       .trigger('change');
+                                        }
                                     }
                                 }
                             }
