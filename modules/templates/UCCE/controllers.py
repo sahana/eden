@@ -609,29 +609,28 @@ class dc_QuestionSave(S3Method):
                                                      )
 
                     # Translation
-                    name_l10n = post_vars_get("name_l10n")
-                    options_l10n = post_vars_get("options_l10n")
-                    if name_l10n or options_l10n:
-                        ltable = s3db.dc_template_l10n
-                        l10n = db(ltable.template_id == r.record.template_id).select(ltable.language,
-                                                                                     limitby = (0, 1)
-                                                                                     ).first()
-                        if l10n:
-                            l10n = l10n.language
-                            ltable = s3db.dc_question_l10n
-                            exists = db(ltable.question_id == record_id).select(ltable.id,
-                                                                                limitby = (0, 1)
-                                                                                ).first()
-                            new_vars = {"name_l10n": name_l10n,
-                                        "language": l10n,
-                                        }
-                            if options_l10n:
-                                new_vars["options_l10n"] = options_l10n
-                            if exists:
-                                exists.update_record(**new_vars)
-                            else:
-                                new_vars["question_id"] = record_id
-                                ltable.insert(**new_vars)
+                    ltable = s3db.dc_template_l10n
+                    l10n = db(ltable.template_id == r.record.template_id).select(ltable.language,
+                                                                                 limitby = (0, 1)
+                                                                                 ).first()
+                    if l10n:
+                        l10n = l10n.language
+                        name_l10n = post_vars_get("name_l10n")
+                        options_l10n = post_vars_get("options_l10n")
+                        ltable = s3db.dc_question_l10n
+                        exists = db(ltable.question_id == record_id).select(ltable.id,
+                                                                            limitby = (0, 1)
+                                                                            ).first()
+                        new_vars = {"name_l10n": name_l10n,
+                                    "language": l10n,
+                                    }
+                        if options_l10n:
+                            new_vars["options_l10n"] = options_l10n
+                        if exists:
+                            exists.update_record(**new_vars)
+                        else:
+                            new_vars["question_id"] = record_id
+                            ltable.insert(**new_vars)
 
                     # Onaccept (run after L10n populated so that it gets into mobile.settings)
                     onaccept = s3db.get_config("dc_question", "onaccept")

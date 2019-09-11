@@ -3299,10 +3299,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
             if (l10n) {
                 var name_l10n = $('#name-l10n-' + questionID).val();
-                if (name_l10n) {
-                    data.name_l10n = name_l10n;
-                    thisQuestion.name_l10n = name_l10n;
-                }
+                data.name_l10n = name_l10n;
+                thisQuestion.name_l10n = name_l10n;
             }
 
             var pipeImage = thisQuestion.settings.pipeImage;
