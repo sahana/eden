@@ -269,7 +269,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             if (type == 'instructions') {
                 idHtml = 'instructions-' + position;
                 dataHtml = '';
-                formElements = '#instructions-' + position + ' input, #instructions-' + position + ' select';
+                formElements = '#instructions-' + position + ' textarea, #instructions-' + position + ' select';
                 itemSelector = '#instructions-' + position;
                 trash = '#instructions-' + position + ' .ucce-delete';
                 moveUp = '#instructions-' + position + ' .ucce-up';
@@ -338,11 +338,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                     }
                     editTab = '<div class="media content active" id="edit-' + position + '">' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Data collector instructions</h2></div></div>' +
-                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>What data collector should do</label><input id="do-' + position + '" type="text" size=100 placeholder="Type what data collector should do" value="' + doText + '"><label>What data collector should say</label><input id="say-' + position + '" type="text" size=100 placeholder="Type what data collector should say" value="' + sayText + '"></div></div>' +
+                               '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>What data collector should do</label><textarea id="do-' + position + '" type="text" size=100 placeholder="Type what data collector should do">' + doText + '</textarea><label>What data collector should say</label><textarea id="say-' + position + '" type="text" size=100 placeholder="Type what data collector should say">' + sayText + '</textarea></div></div>' +
                               '</div>';
                     translationTab = '<div class="media content" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Data collector instructions</h2></div></div>' +
-                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>What data collector should do</label><div class="translate-from"></div><input id="do-l10n-' + position + '" type="text" size=100 placeholder="Type translation..." value="' + doTextL10n + '"><label>What data collector should say</label><div class="translate-from"></div><input id="say-l10n-' + position + '" type="text" size=100 placeholder="Type translation..." value="' + sayTextL10n + '"></div></div>' + 
+                                      '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>What data collector should do</label><div class="translate-from"></div><textarea id="do-l10n-' + position + '" type="text" size=100 placeholder="Type translation...">' + doTextL10n + '</textarea><label>What data collector should say</label><div class="translate-from"></div><textarea id="say-l10n-' + position + '" type="text" size=100 placeholder="Type translation...">' + sayTextL10n + '</textarea></div></div>' + 
                                      '</div>';
                     break;
 

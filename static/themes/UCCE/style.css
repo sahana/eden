@@ -264,6 +264,7 @@ input[type="text"].text-filter {
 
 .translate-from {
   background-color: #ddd;
+  white-space: pre-line;
 }
 
 .heatmap,
