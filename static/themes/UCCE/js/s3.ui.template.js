@@ -703,37 +703,81 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             var inputEvents = function() {
                 $(formElements).off('change' + ns)
                                .on('change' + ns, function(/* event */) {
-                    var parts = this.id.split('-');
-                    if (parts[0] == 'logic') {
+                    var parts = this.id.split('-'),
+                        part_0 = parts[0];
+                    if (part_0 == 'logic') {
                         // Display Logic 1st select has been selected
                         // Can't trust original position as it may have changed
                         var currentPosition = parseInt(parts[parts.length - 1]);
                         // Show 2nd Logic select
                         self.logicSelected($(this), currentPosition);
                     } else {
-                        // If form elements change, then Save
+                        // If form elements change, then clear any obsolete Translations & Save
+                        // Can't trust original l10n
+                        var l10n = self.data.l10n;
                         if (type == 'instructions') {
                             // Update Data
                             // Can't trust original position as it may have changed
                             var currentPosition = parseInt(parts[parts.length - 1]),
                                 thisLayout = layout[currentPosition];
-                            thisLayout.do.text = $('#do-' + currentPosition).val();
-                            thisLayout.say.text = $('#say-' + currentPosition).val();
-                            // Can't trust original l10n
-                            var l10n = self.data.l10n;
                             if (l10n) {
                                 if (!thisLayout.do.hasOwnProperty('10n')) {
                                     thisLayout.do.l10n = {};
                                 }
-                                thisLayout.do.l10n[l10n] = $('#do-l10n-' + currentPosition).val();
                                 if (!thisLayout.say.hasOwnProperty('10n')) {
                                     thisLayout.say.l10n = {};
                                 }
-                                thisLayout.say.l10n[l10n] = $('#say-l10n-' + currentPosition).val();
+                            }
+                            if (part_0 == 'do') {
+                                if (parts[1] == 'l10n') {
+                                    thisLayout.do.l10n[l10n] = $('#do-l10n-' + currentPosition).val();
+                                } else {
+                                    thisLayout.do.text = $('#do-' + currentPosition).val();
+                                    if (l10n) {
+                                        // Clear l10n when text changes
+                                        $('#do-l10n-' + currentPosition).val('');
+                                        thisLayout.do.l10n[l10n] = '';
+                                    }
+                                }
+                            } else {
+                                if (parts[1] == 'l10n') {
+                                    thisLayout.say.l10n[l10n] = $('#say-l10n-' + currentPosition).val();
+                                } else {
+                                    thisLayout.say.text = $('#say-' + currentPosition).val();
+                                    if (l10n) {
+                                        // Clear l10n when text changes
+                                        $('#say-l10n-' + currentPosition).val('');
+                                        thisLayout.say.l10n[l10n] = '';
+                                    }
+                                }
                             }
                             // Save Template
                             self.saveLayout();
                         } else {
+                            if (l10n) {
+                                // Clear obsolete Translations
+                                if ((part_0 == 'name') && (parts[1] != 'l10n')) {
+                                    $('#name-l10n-' + questionID).val('');
+                                } else if (part_0 == '') {
+                                    // Heatmap Region?
+                                    var choiceRowID = $(this).parent().attr('id');
+                                    if (choiceRowID !== undefined) {
+                                        parts = choiceRowID.split('-');
+                                        if (parts[0] == 'choice') {
+                                            $('#choice-from-' + questionID + '-' + parts[3]).parent().next().children().first().val('');
+                                        }
+                                    } else {
+                                        // MCQ choice?
+                                        choiceRowID = $(this).parent().parent().attr('id');
+                                        if (choiceRowID !== undefined) {
+                                            parts = choiceRowID.split('-');
+                                            if (parts[0] == 'choice') {
+                                                $('#choice-from-' + questionID + '-' + parts[3]).parent().next().children().first().val('');
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             // Save Question
                             self.saveQuestion(type, questionID);
                         }
@@ -846,7 +890,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             done: function (e, data) {
                                 var file = data.result.file;
                                 imageFiles[questionID] = file;
-                                self.data.questions[questionID].file = file;
+                                thisQuestion.file = file;
                                 self.heatMap(questionID, file);
                             }
                         };
@@ -892,7 +936,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             done: function (e, data) {
                                 var file = data.result.file;
                                 imageFiles[questionID] = file;
-                                self.data.questions[questionID].file = file;
+                                thisQuestion.file = file;
                                 // Update ImageOptions
                                 self.updateImageOptions();
                             }
@@ -1053,11 +1097,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 value = optionInput.val(),
                                 // Can't trust original position as it may have changed
                                 // Need to look this up *before* DOM removal
-                                currentPosition = parseInt($this.closest('.media').attr('id').split('-')[1]);
+                                currentPosition = parseInt($this.closest('.media').attr('id').split('-')[1]),
+                                currentRow = $this.closest('.row'),
+                                index = parseInt(currentRow.attr('id').split('-')[3]);
                             if ($('.choice-' + questionID).length > 1) {
                                 // Remove Option
-                                var currentRow = $this.closest('.row'),
-                                    index = parseInt(currentRow.attr('id').split('-')[3]);
                                 currentRow.remove();
                                 // & from l10n
                                 $('#choice-l10n-row-' + questionID + '-' + index).remove();
@@ -1089,15 +1133,21 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 // Just remove value - since we always need at least 1 option available
                                 optionInput.val('');
                             }
-                            if (value) {
-                                // Remove any outdated displayLogic
-                                var thisItem;
-                                for (var i=currentPosition + 1, len=Object.keys(layout).length; i <= len; i++) {
-                                    thisItem = layout[i];
-                                    if (thisItem.displayLogic && thisItem.displayLogic.id == questionID && thisItem.displayLogic.eq == value) {
+                            // Update/Remove any outdated displayLogic
+                            var eq,
+                                thisItem;
+                            for (var i=currentPosition + 1, len=Object.keys(layout).length; i <= len; i++) {
+                                thisItem = layout[i];
+                                if (thisItem.displayLogic && thisItem.displayLogic.id == questionID) {
+                                    eq = thisItem.displayLogic.eq; 
+                                    if (eq == index) {
                                         delete thisItem.displayLogic;
                                         $('#logic-select-' + i).val('')
                                                                .trigger('change');
+                                    } else if (eq > index) {
+                                        thisItem.displayLogic.eq--;
+                                        $('#sub-logic-select-' + i).val(eq - 1)
+                                                                   .trigger('change');
                                     }
                                 }
                             }
@@ -1106,7 +1156,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                            .on('click' + ns, function() {
                             // Pepare to add a new Option
                             // Update IDs for all subsequent rows
-                            var currentRow = $(this).closest('.row'),
+                            var $this = $(this),
+                                currentRow = $this.closest('.row'),
                                 index = parseInt(currentRow.attr('id').split('-')[3]),
                                 newIndex,
                                 optionsCount = $('.choice-' + questionID).length;
@@ -1121,6 +1172,24 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             currentRow.after(newChoice.replace('-0', '-' + newIndex));
                             // & in l10n
                             $('#choice-l10n-row-' + questionID + '-' + index).after(newChoiceL10n.replace(/-0/g, '-' + newIndex));
+                            // Update thisQuestion.options, saveQuestion
+                            $('#name-' + questionID).trigger('change');
+                            // Update any outdated displayLogic
+                            var currentPosition = parseInt($this.closest('.media').attr('id').split('-')[1]),
+                                eq,
+                                thisItem;
+                            for (var i=currentPosition + 1, len=Object.keys(layout).length; i <= len; i++) {
+                                thisItem = layout[i];
+                                if (thisItem.displayLogic && thisItem.displayLogic.id == questionID) {
+                                    eq = thisItem.displayLogic.eq; 
+                                    if (eq > index) {
+                                        thisItem.displayLogic.eq++;
+                                        self.logicSubOptions(i, questionID);
+                                        $('#sub-logic-select-' + i).val(eq + 1)
+                                                                   .trigger('change');
+                                    }
+                                }
+                            }
                             // Add Events
                             inputEvents();
                             multichoiceEvents();
@@ -1176,30 +1245,40 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
                 case 'likert':
                     // Display options when scale selected
-                    $('#scale-' + questionID).on('change' + ns, function() {
-                        // Remove old display
-                        $('#display-' + questionID).empty();
-                        var choicesRow = $('#choices-l10n-row-' + questionID);
-                        if (choicesRow.length) {
-                            choicesRow.prev().remove();
-                            for (var i=0; i < 5; i++) {
-                                choicesRow.next().remove();
+                    var likertEvents = function() {
+                        $('#scale-' + questionID).on('change' + ns, function() {
+
+                            // Remove old display
+                            $('#display-' + questionID).empty();
+                            var choicesRow = $('#choices-l10n-row-' + questionID);
+                            if (choicesRow.length) {
+                                choicesRow.prev().remove();
+                                for (var i=0; i < 5; i++) {
+                                    choicesRow.next().remove();
+                                }
+                                choicesRow.remove();
                             }
-                            choicesRow.remove();
-                        }
-                        var scale = $(this).val();
-                        if (scale) {
-                            var result = self.likertOptionsHtml(questionID, scale),
-                                choicesL10n = result.choicesL10n,
-                                displayOptions = result.displayOptions;
-                            $('#display-' + questionID).append(displayOptions);
-                            // Can't trust original position as it may have changed
-                            var currentPosition = parseInt($(this).closest('.media').attr('id').split('-')[1]);
-                            $('#translation-' + currentPosition).append(choicesL10n);
-                            // Add Events to new inputs
-                            inputEvents();
-                        }
-                    });
+
+                            // Remove old l10n
+                            thisQuestion.options_l10n = [];
+
+                            // Add new display
+                            var scale = $(this).val();
+                            if (scale) {
+                                var result = self.likertOptionsHtml(questionID, scale),
+                                    choicesL10n = result.choicesL10n,
+                                    displayOptions = result.displayOptions;
+                                $('#display-' + questionID).append(displayOptions);
+                                // Can't trust original position as it may have changed
+                                var currentPosition = parseInt($(this).closest('.media').attr('id').split('-')[1]);
+                                $('#translation-' + currentPosition).append(choicesL10n);
+                                // Add Events to new inputs
+                                inputEvents();
+                                likertEvents();
+                            }
+                        });
+                    };
+                    likertEvents();
                     break;
 
                 case 'heatmap':
@@ -1241,30 +1320,33 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                      .prev().addClass('secondary');
                             }
 
-                            // Remove existing Region Polygon
-                            var source = sources[questionID],
-                                callback = function(feature) {
-                                var region = feature.get('region');
-                                if (region == index) {
-                                    source.removeFeature(feature);
-                                    // Stop Iterating
-                                    //return true;
-                                } else if (region > index){
-                                    var newRegion = region - 1;
-                                    feature.set('region', newRegion);
-                                    // Store the GeoJSON
-                                    var geojson = format.writeFeatureObject(feature, {decimals: 0});
-                                    $('#choice-json-' + questionID + '-' + newRegion).val(JSON.stringify(geojson));
-                                }
-                                // Continue Iterating
-                                return false;
-                            };
-                            source.forEachFeature(callback);
+                            var source = sources[questionID];
+                            if (source !== undefined) {
+                                // Remove existing Region Polygon
+                                var callback = function(feature) {
+                                    var region = feature.get('region');
+                                    if (region == index) {
+                                        source.removeFeature(feature);
+                                        // Stop Iterating
+                                        //return true;
+                                    } else if (region > index){
+                                        var newRegion = region - 1;
+                                        feature.set('region', newRegion);
+                                        // Store the GeoJSON
+                                        var geojson = format.writeFeatureObject(feature, {decimals: 0});
+                                        $('#choice-json-' + questionID + '-' + newRegion).val(JSON.stringify(geojson));
+                                    }
+                                    // Continue Iterating
+                                    return false;
+                                };
+                                source.forEachFeature(callback);
+                            }
 
                             self.saveQuestion('heatmap', questionID);
 
-                            // Loop through Layout to remove outdated displayLogic &/or pipeImage
+                            // Loop through Layout to update/remove outdated displayLogic &/or pipeImage
                             var layoutLength = Object.keys(layout).length,
+                                region,
                                 thisItem,
                                 thisQuestionID,
                                 thisQuestionSettings;
@@ -1273,19 +1355,36 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 if (thisItem.type == 'question') {
                                     thisQuestionID = thisItem.id;
                                     thisQuestionSettings = questions[thisQuestionID].settings;
-                                    if (thisQuestionSettings.pipeImage && thisQuestionSettings.pipeImage.id == questionID && thisQuestionSettings.pipeImage.region == index) {
-                                        // Remove outdated pipeImage
-                                        delete thisQuestionSettings.pipeImage;
-                                        $('#pipe-' + thisQuestionID).val('')
-                                                                    .trigger('change');
+                                    if (thisQuestionSettings.pipeImage && thisQuestionSettings.pipeImage.id == questionID) {
+                                        region = thisQuestionSettings.pipeImage.region;
+                                        if (region == index) {
+                                            // Remove outdated pipeImage
+                                            delete thisQuestionSettings.pipeImage;
+                                            $('#pipe-' + thisQuestionID).val('')
+                                                                        .trigger('change');
+                                        } else if (region > index) {
+                                            // Update outdated pipeImage
+                                            thisQuestionSettings.pipeImage.region--;
+                                            $('#pipe-' + thisQuestionID).empty()
+                                                                        .append(self.pipeOptionsHtml(thisQuestionID))
+                                                                        .trigger('change');
+                                        }
                                     }
                                 }
                                 if (i > currentPosition) {
-                                    if (thisItem.displayLogic && thisItem.displayLogic.id == questionID && thisItem.displayLogic.selectedRegion == index) {
-                                        // Remove outdated displayLogic
-                                        delete thisItem.displayLogic;
-                                        $('#logic-select-' + i).val('')
-                                                               .trigger('change');
+                                    if (thisItem.displayLogic && thisItem.displayLogic.id == questionID) {
+                                        region = thisItem.displayLogic.selectedRegion;
+                                        if (region == index) {
+                                            // Remove outdated displayLogic
+                                            delete thisItem.displayLogic;
+                                            $('#logic-select-' + i).val('')
+                                                                   .trigger('change');
+                                        } else if (region > index) {
+                                            // Update outdated displayLogic
+                                            thisItem.displayLogic.selectedRegion--;
+                                            $('#sub-logic-select-' + i).val(region - 1)
+                                                                       .trigger('change');
+                                        }
                                     }
                                 }
                             }
@@ -1331,31 +1430,35 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                                    .next().removeClass('hide')
                                                           .show();
                             }
-                            // Show existing Region Polygon in a different Colour
-                            var callback = function(feature) {
-                                if (feature.get('region') == index) {
-                                    var style = new Style({
-                                        fill: new Fill({
-                                          color: '#ffc0cb' // pink
-                                        }),
-                                        stroke: new Stroke({
-                                          color: 'red'
-                                        })
-                                    });
-                                    feature.setStyle(style);
-                                } else {
-                                    // Ensure has default Style
-                                    feature.setStyle(null);
-                                }
-                                // Continue Iterating
-                                return false;
-                            };
-                            sources[questionID].forEachFeature(callback); 
-                            // Define Region
-                            var draw = draws[questionID];
-                            draw.set('questionID', questionID, true);
-                            draw.set('region', index, true);
-                            maps[questionID].addInteraction(draw);
+
+                            var source = sources[questionID];
+                            if (source !== undefined) {
+                                // Show existing Region Polygon in a different Colour
+                                var callback = function(feature) {
+                                    if (feature.get('region') == index) {
+                                        var style = new Style({
+                                            fill: new Fill({
+                                              color: '#ffc0cb' // pink
+                                            }),
+                                            stroke: new Stroke({
+                                              color: 'red'
+                                            })
+                                        });
+                                        feature.setStyle(style);
+                                    } else {
+                                        // Ensure has default Style
+                                        feature.setStyle(null);
+                                    }
+                                    // Continue Iterating
+                                    return false;
+                                };
+                                source.forEachFeature(callback); 
+                                // Define Region
+                                var draw = draws[questionID];
+                                draw.set('questionID', questionID, true);
+                                draw.set('region', index, true);
+                                maps[questionID].addInteraction(draw);
+                            }
                         });
                     };
                     multichoiceEvents();
@@ -1388,7 +1491,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         // Increment value
                         value++;
                         // Update Data
-                        questions[questionID].settings.numClicks = value;
+                        thisQuestion.settings.numClicks = value;
                         // Save Question
                         self.saveQuestion(type, questionID);
                         // Update visual element
@@ -3299,10 +3402,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
             if (l10n) {
                 var name_l10n = $('#name-l10n-' + questionID).val();
-                if (name_l10n) {
-                    data.name_l10n = name_l10n;
-                    thisQuestion.name_l10n = name_l10n;
-                }
+                data.name_l10n = name_l10n;
+                thisQuestion.name_l10n = name_l10n;
             }
 
             var pipeImage = thisQuestion.settings.pipeImage;

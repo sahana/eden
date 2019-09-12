@@ -609,29 +609,28 @@ class dc_QuestionSave(S3Method):
                                                      )
 
                     # Translation
-                    name_l10n = post_vars_get("name_l10n")
-                    options_l10n = post_vars_get("options_l10n")
-                    if name_l10n or options_l10n:
-                        ltable = s3db.dc_template_l10n
-                        l10n = db(ltable.template_id == r.record.template_id).select(ltable.language,
-                                                                                     limitby = (0, 1)
-                                                                                     ).first()
-                        if l10n:
-                            l10n = l10n.language
-                            ltable = s3db.dc_question_l10n
-                            exists = db(ltable.question_id == record_id).select(ltable.id,
-                                                                                limitby = (0, 1)
-                                                                                ).first()
-                            new_vars = {"name_l10n": name_l10n,
-                                        "language": l10n,
-                                        }
-                            if options_l10n:
-                                new_vars["options_l10n"] = options_l10n
-                            if exists:
-                                exists.update_record(**new_vars)
-                            else:
-                                new_vars["question_id"] = record_id
-                                ltable.insert(**new_vars)
+                    ltable = s3db.dc_template_l10n
+                    l10n = db(ltable.template_id == r.record.template_id).select(ltable.language,
+                                                                                 limitby = (0, 1)
+                                                                                 ).first()
+                    if l10n:
+                        l10n = l10n.language
+                        name_l10n = post_vars_get("name_l10n")
+                        options_l10n = post_vars_get("options_l10n")
+                        ltable = s3db.dc_question_l10n
+                        exists = db(ltable.question_id == record_id).select(ltable.id,
+                                                                            limitby = (0, 1)
+                                                                            ).first()
+                        new_vars = {"name_l10n": name_l10n,
+                                    "language": l10n,
+                                    }
+                        if options_l10n:
+                            new_vars["options_l10n"] = options_l10n
+                        if exists:
+                            exists.update_record(**new_vars)
+                        else:
+                            new_vars["question_id"] = record_id
+                            ltable.insert(**new_vars)
 
                     # Onaccept (run after L10n populated so that it gets into mobile.settings)
                     onaccept = s3db.get_config("dc_question", "onaccept")
@@ -1044,6 +1043,7 @@ class dc_TargetDelete(S3Method):
         Delete a Survey
             - confirmation popup
             - delete linked Template
+            - delete linked Dynamic Table
     """
 
     # -------------------------------------------------------------------------
@@ -1119,10 +1119,21 @@ class dc_TargetDelete(S3Method):
                 resource = s3db.resource("dc_target", filter=(query))
                 resource.delete()
 
-                # Delete Template
+                # Lookup Dynamic Table
                 tetable = s3db.dc_template
-                resource = s3db.resource("dc_template", filter=(tetable.id == template_id))
+                query = (tetable.id == template_id)
+                #template = db(query).select(tetable.table_id,
+                #                            limitby = (0,1)
+                #                            ).first()
+
+                # Delete Template
+                resource = s3db.resource("dc_template", filter=(query))
                 resource.delete()
+
+                # Delete Dynamic Table - done by dc_template ondelete
+                #dtable = s3db.s3_table
+                #resource = s3db.resource("s3_table", filter=(dtable.id == template.table_id))
+                #resource.delete()
 
                 # Message
                 current.session.confirmation = current.T("Survey deleted")
@@ -1167,13 +1178,23 @@ class dc_TargetName(S3Method):
                 name = r.post_vars.get("name")
                 if name:
                     db = current.db
+                    s3db = current.s3db
 
                     # Update Target
                     db(table.id == target_id).update(name = name)
 
                     # Update Template
-                    ttable = current.s3db.dc_template
-                    db(ttable.id == r.record.template_id).update(name = name)
+                    ttable = s3db.dc_template
+                    template = db(ttable.id == r.record.template_id).select(ttable.id,
+                                                                            ttable.table_id,
+                                                                            limitby = (0, 1)
+                                                                            ).first()
+                    template.update_record(name = name)
+
+                    # Update Dynamic Table
+                    # (UCCE's mobile app uses s3_table.title for the Survey name...which works since 1 Template == 1 Target, beyond UCCE this won't be possible)
+                    dtable = s3db.s3_table
+                    db(dtable.id == template.table_id).update(title = name)
 
                     # Message
                     current.response.headers["Content-Type"] = "application/json"
@@ -2768,7 +2789,7 @@ class dc_ProjectDelete(S3Method):
     """
         Delete a Project
             - confirmation popup
-            - delete all linked Surveys
+            - delete all linked Surveys (Targets, Templates & Dynamic Tables)
     """
 
     # -------------------------------------------------------------------------
@@ -2849,10 +2870,18 @@ class dc_ProjectDelete(S3Method):
                 # Delete Targets
                 resource = s3db.resource("dc_target", filter=(query))
                 resource.delete()
-                # Delete Templates
+                # Lookup Dynamic Tables
                 tetable = s3db.dc_template
-                resource = s3db.resource("dc_template", filter=(tetable.id.belongs(template_ids)))
+                query = (tetable.id.belongs(template_ids))
+                #templates = db(query).select(tetable.table_id)
+                #table_ids = [t.table_id for t in templates]
+                # Delete Templates
+                resource = s3db.resource("dc_template", filter=(query))
                 resource.delete()
+                # Delete Dynamic Tables - done by dc_template ondelete
+                #dtable = s3db.s3_table
+                #resource = s3db.resource("s3_table", filter=(dtable.id.belongs(table_ids)))
+                #resource.delete()
                 # Delete Project
                 resource = s3db.resource("project_project", filter=(table.id == project_id))
                 resource.delete()
