@@ -77,6 +77,8 @@ class S3MobileFormList(object):
         formdict = {}
 
         forms = settings.get_mobile_forms()
+        if callable(forms):
+            forms = forms(masterkey_id)
         if forms:
             keys = set()
             for item in forms:

@@ -4619,8 +4619,8 @@ class S3Config(Storage):
     #
     def get_mobile_forms(self):
         """
-            Configure mobile forms - a list of items, or a callable returning
-            a list of items.
+            Configure mobile forms - a list of items, or a callable accepting
+            a auth_masterkey.id as parameter and returning a list of items.
 
             Item formats:
                 "tablename"
@@ -4638,7 +4638,7 @@ class S3Config(Storage):
             Example:
                 settings.mobile.forms = [("Request", "req_req")]
         """
-        return self.__lazy("mobile", "forms", [])
+        return self.mobile.get("forms", [])
 
     def get_mobile_dynamic_tables(self):
         """
