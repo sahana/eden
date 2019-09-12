@@ -721,10 +721,10 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             var currentPosition = parseInt(parts[parts.length - 1]),
                                 thisLayout = layout[currentPosition];
                             if (l10n) {
-                                if (!thisLayout.do.hasOwnProperty('10n')) {
+                                if (!thisLayout.do.hasOwnProperty('l10n')) {
                                     thisLayout.do.l10n = {};
                                 }
-                                if (!thisLayout.say.hasOwnProperty('10n')) {
+                                if (!thisLayout.say.hasOwnProperty('l10n')) {
                                     thisLayout.say.l10n = {};
                                 }
                             }
