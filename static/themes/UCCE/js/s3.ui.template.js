@@ -1274,8 +1274,12 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 $('#translation-' + currentPosition).append(choicesL10n);
                                 // Add Events to new inputs
                                 inputEvents();
+                                // Re-run this event listener otherwise clobbered by inputEvents()
                                 likertEvents();
                             }
+
+                            // Save Question
+                            self.saveQuestion('likert', questionID);
                         });
                     };
                     likertEvents();
