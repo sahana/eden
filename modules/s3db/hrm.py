@@ -6530,7 +6530,12 @@ def hrm_rheader(r, tabs=None, profile=False):
                               str(training_hours_year)
                               )
                     row4 = ""
-
+                try:
+                    language = current.session.s3.language
+                except Exception:
+                    language = current.session.auth.user.language
+                if not language:
+                    language = current.deployment_settings.get_L10n_default_language()
                 tbl = TABLE(TR(TH(name,
                                   _colspan=4)
                                ),
@@ -6542,7 +6547,8 @@ def hrm_rheader(r, tabs=None, profile=False):
                 service_record = A(T("Service Record"),
                                    _href = URL(c = "vol",
                                                f = "human_resource",
-                                               args = [hr, "form"]
+                                               args = [hr, "form"],
+                                               vars = {'_language':language},
                                                ),
                                    _id = "service_record",
                                    _class = "action-btn"

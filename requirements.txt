@@ -1,2 +1,3 @@
 python-dateutil>=1.5,!=2.0 #dateutil
 lxml>=2.2.8
+rtl==0.4.3
