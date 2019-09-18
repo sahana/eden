@@ -888,15 +888,47 @@ class DataCollectionTemplateModel(S3Model):
                 - Update the Translations file with translated Options
         """
 
+        form_vars = form.vars
+
         try:
-            question_l10n_id = form.vars.id
+            question_l10n_id = form_vars.get("id")
         except AttributeError:
             return
 
         db = current.db
+        qtable = db.dc_question
+        settings = current.deployment_settings
+
+        if settings.get_dc_response_mobile():
+            # Pass Translations to s3_field.settings
+            # Read the current Field Settings
+            question_id = form_vars.get("question_id")
+            ftable = db.s3_field
+            query = (qtable.id == question_id) & \
+                    (qtable.field_id == ftable.id)
+            field = db(query).select(ftable.id,
+                                     ftable.settings,
+                                     limitby = (0, 1)
+                                     ).first()
+            field_settings = field.settings
+            if field_settings.get("mobile") is None:
+                field_settings["mobile"] = {}
+            if field_settings["mobile"].get("l10n") is None:
+                field_settings["mobile"]["l10n"] = {}
+            # Add the L10n options
+            language = form_vars.get("language")
+            name_l10n = form_vars.get("name_l10n")
+            field_settings["mobile"]["l10n"][language] = {"label": name_l10n,
+                                                          }
+            options_l10n = form_vars.get("options_l10n")
+            if options_l10n:
+                field_settings["mobile"]["l10n"][language]["options"] = options_l10n
+            field.update_record(settings = field_settings)
+
+        if not settings.get_dc_response_web():
+            return
 
         # Read the Question
-        qtable = db.dc_question
         ltable = db.dc_question_l10n
         query = (qtable.id == ltable.question_id) & \
                 (ltable.id == question_l10n_id)
@@ -907,12 +939,12 @@ class DataCollectionTemplateModel(S3Model):
                                     limitby=(0, 1)
                                     ).first()
 
-        if question["dc_question.field_type"] != 6:
+        if question["dc_question.field_type"] in (6, 12):
             # Nothing we need to do
             return
 
-        options = question["dc_question.options"]
-        options_l10n = question["dc_question_l10n.options_l10n"]
+        options = question["dc_question.options"] or []
+        options_l10n = question["dc_question_l10n.options_l10n"] or []
 
         len_options = len(options)
         if len_options != len(options_l10n):

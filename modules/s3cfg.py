@@ -3421,22 +3421,6 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # DC: Data Collection
     #
-    def get_dc_response_label(self):
-        """
-            Label for Responses
-            - 'Assessment;
-            - 'Response' (default if set to None)
-            - 'Survey'
-        """
-        return self.dc.get("response_label", "Assessment")
-
-    def get_dc_unique_question_names_per_template(self):
-        """
-            Deduplicate Questions by Name/Template
-             - needed for importing multiple translations
-        """
-        return self.dc.get("unique_question_names_per_template", False)
-
     def get_dc_mobile_data(self):
         """
             Whether Mobile Clients should download Assessments (Data not just Forms)
@@ -3450,17 +3434,39 @@ class S3Config(Storage):
         """
         return self.dc.get("mobile_inserts", True)
 
-    def get_dc_sections_hierarchical(self):
+    def get_dc_response_label(self):
         """
-            Whether Assessments have nested Sections
+            Label for Responses
+            - 'Assessment;
+            - 'Response' (default if set to None)
+            - 'Survey'
         """
-        return self.dc.get("sections_hierarchical", False)
+        return self.dc.get("response_label", "Assessment")
+
+    def get_dc_response_mobile(self):
+        """
+            Whether Assessments are filled-out on the EdenMobile App
+        """
+        return self.dc.get("response_mobile", True)
+
+    def get_dc_response_web(self):
+        """
+            Whether Assessments are filled-out on the Web interface
+        """
+        return self.dc.get("response_web", True)
 
     def get_dc_target_status(self):
         """
             Whether Assessment Targets have Statuses
         """
         return self.dc.get("target_status", False)
+
+    def get_dc_unique_question_names_per_template(self):
+        """
+            Deduplicate Questions by Name/Template
+             - needed for importing multiple translations
+        """
+        return self.dc.get("unique_question_names_per_template", False)
 
     # -------------------------------------------------------------------------
     # Deployments

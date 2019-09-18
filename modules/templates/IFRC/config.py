@@ -541,6 +541,10 @@ def config(settings):
     settings.dc.response_label = "Survey"
     settings.dc.unique_question_names_per_template = True
 
+    # Fill-out Assessments on Web-only
+    settings.dc.response_mobile = False
+    #settings.dc.response_web = False
+
     # -------------------------------------------------------------------------
     # Organisation Management
     # Enable the use of Organisation Branches

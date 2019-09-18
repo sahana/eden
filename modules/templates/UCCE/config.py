@@ -214,6 +214,10 @@ def config(settings):
     # Use Status in Assessment Targets
     settings.dc.target_status = True
 
+    # Fill-out Assessments on EdenMobile-only
+    #settings.dc.response_mobile = False
+    settings.dc.response_web = False
+
     # -------------------------------------------------------------------------
     def ucce_rheader(r):
         """

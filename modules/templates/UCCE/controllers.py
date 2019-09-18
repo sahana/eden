@@ -2671,6 +2671,7 @@ class dc_TemplateImportL10n(S3Method):
                                                   "options": options,
                                                   "options_l10n": options_l10n,
                                                   }
+
                     qtable = s3db.dc_question
                     rows = db(qtable.id.belongs(question_ids)).select(qtable.id,
                                                                       qtable.name,
@@ -2679,6 +2680,7 @@ class dc_TemplateImportL10n(S3Method):
                                                                       )
 
                     qltable = s3db.dc_question_l10n
+                    onaccept = s3db.get_config("dc_question_l10n", "onaccept")
                     for row in rows:
                         question_id = row.id
                         question = questions[question_id]
@@ -2726,9 +2728,14 @@ class dc_TemplateImportL10n(S3Method):
                                                         ).first()
                             if existing:
                                 existing.update_record(**l10n_data)
+                                l10n_data["question_id"] = question_id
+                                ql_id = existing.id
                             else:
                                 l10n_data["question_id"] = question_id
-                                qltable.insert(**l10n_data)
+                                ql_id = qltable.insert(**l10n_data)
+                            # Run onaccept to pass data through to s3_field.settings for the mobile app
+                            l10n_data["id"] = ql_id
+                            onaccept(Storage(vars = l10n_data))
 
                     # Results
                     if errors:
