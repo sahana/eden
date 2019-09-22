@@ -122,9 +122,9 @@ class S3Parser(object):
             return reply
 
         # Link Message to Mission
-        data = dict(message_id=message_id,
-                    mission_id=mission_id,
-                    )
+        data = {"message_id": message_id,
+                "mission_id": mission_id,
+                }
 
         # Can we identify the Member?
         hr_id = None

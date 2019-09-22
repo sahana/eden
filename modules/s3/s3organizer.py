@@ -196,13 +196,13 @@ class S3Organizer(S3Method):
                            "useTime": config.get("use_time"),
                            "baseURL": r.url(method=""),
                            "labelCreate": s3_str(crud_string(self.tablename, "label_create")),
-                           "insertable": resource.get_config("insertable", True) and \
+                           "insertable": get_config("insertable", True) and \
                                          permitted("create"),
-                           "editable": resource.get_config("editable", True) and \
+                           "editable": get_config("editable", True) and \
                                        permitted("update"),
                            "startEditable": start.field and start.field.writable,
                            "durationEditable": end and end.field and end.field.writable,
-                           "deletable": resource.get_config("deletable", True) and \
+                           "deletable": get_config("deletable", True) and \
                                         permitted("delete"),
                            # Forced reload on update, e.g. if onaccept changes
                            # other data that are visible in the organizer

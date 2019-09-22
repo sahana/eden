@@ -1671,7 +1671,8 @@ class S3Msg(object):
                                    table.use_ssl,
                                    table.port,
                                    table.delete_from_server,
-                                   limitby=(0, 1)).first()
+                                   limitby=(0, 1)
+                                   ).first()
         if not channel:
             return "No Such Email Channel: %s" % channel_id
 
@@ -1739,17 +1740,17 @@ class S3Msg(object):
                 attachments.append((filename, part.get_payload(decode=True)))
 
             # Store in DB
-            data = dict(channel_id=channel_id,
-                        from_address=sender,
-                        subject=subject[:78],
-                        body=body,
-                        raw=raw,
-                        inbound=True,
-                        )
+            data = {"channel_id": channel_id,
+                    "from_address": sender,
+                    "subject": subject[:78],
+                    "body": body,
+                    "raw": raw,
+                    "inbound": True,
+                    }
             if date_sent:
                 data["date"] = date_parse(date_sent)
             _id = minsert(**data)
-            record = dict(id=_id)
+            record = {"id": _id}
             update_super(mtable, record)
             message_id = record["message_id"]
             for a in attachments:
@@ -1762,19 +1763,21 @@ class S3Msg(object):
                 fp.seek(0)
                 newfilename = store(fp, filename)
                 fp.close()
-                document_id = dinsert(name=filename,
-                                      file=newfilename)
-                update_super(dtable, dict(id=document_id))
-                ainsert(message_id=message_id,
-                        document_id=document_id)
+                document_id = dinsert(name = filename,
+                                      file = newfilename)
+                update_super(dtable, {"id": document_id})
+                ainsert(message_id = message_id,
+                        document_id = document_id)
             if parser:
-                pinsert(message_id=message_id,
-                        channel_id=channel_id)
+                pinsert(message_id = message_id,
+                        channel_id = channel_id)
 
         dellist = []
         if protocol == "pop3":
-            import poplib
             # http://docs.python.org/library/poplib.html
+            import poplib
+            # https://stackoverflow.com/questions/30976106/python-poplib-error-proto-line-too-long
+            poplib._MAXLINE = 20480
             try:
                 if ssl:
                     p = poplib.POP3_SSL(host, port)
@@ -1784,8 +1787,8 @@ class S3Msg(object):
                 error = "Cannot connect: %s" % e
                 current.log.error(error)
                 # Store status in the DB
-                sinsert(channel_id=channel_id,
-                        status=error)
+                sinsert(channel_id = channel_id,
+                        status = error)
                 return error
             except poplib.error_proto as e:
                 # Something else went wrong - probably transient (have seen '-ERR EOF' here)
@@ -1804,8 +1807,8 @@ class S3Msg(object):
                     error = "Login failed: %s" % e
                     current.log.error(error)
                     # Store status in the DB
-                    sinsert(channel_id=channel_id,
-                            status=error)
+                    sinsert(channel_id = channel_id,
+                            status = error)
                     return error
 
             mblist = p.list()[1]
@@ -1834,8 +1837,8 @@ class S3Msg(object):
                 error = "Cannot connect: %s" % e
                 current.log.error(error)
                 # Store status in the DB
-                sinsert(channel_id=channel_id,
-                        status=error)
+                sinsert(channel_id = channel_id,
+                        status = error)
                 return error
 
             try:
@@ -1844,8 +1847,8 @@ class S3Msg(object):
                 error = "Login failed: %s" % e
                 current.log.error(error)
                 # Store status in the DB
-                sinsert(channel_id=channel_id,
-                        status=error)
+                sinsert(channel_id = channel_id,
+                        status = error)
                 # Explicitly commit DB operations when running from Cron
                 db.commit()
                 return error

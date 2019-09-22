@@ -3765,6 +3765,7 @@ def config(settings):
             filter_opts = list(set(filter_opts) - set(row.branch_id for row in rows))
 
             table = s3db.hrm_experience
+            table.activity_type.default = "rdrt"
             table.organisation_id.requires = IS_ONE_OF(db, "org_organisation.id",
                                                        s3db.org_OrganisationRepresent(acronym = False,
                                                                                       parent = False),
@@ -5234,6 +5235,7 @@ def config(settings):
                         if template:
                             template_id = template[ttable.id]
                             dtablename = template[dtable.name]
+                            dtable = s3db[dtablename]
                             components = {dtablename: {"name": "answer",
                                                        "joinby": "response_id",
                                                        "multiple": False,
@@ -5249,7 +5251,6 @@ def config(settings):
                                                        ).first()
                             if respnse:
                                 response_id = respnse[rtable.id]
-                                dtable = s3db[dtablename]
                                 answer = db(dtable.response_id == response_id).select(dtable.id,
                                                                                       limitby = (0, 1)
                                                                                       )
@@ -5257,11 +5258,25 @@ def config(settings):
                                     answer_id = answer.first().id
                                 else:
                                     answer_id = dtable.insert(response_id = response_id)
+                                    putable = s3db.pr_person_user
+                                    user = db(putable.pe_id == pe_id).select(putable.user_id,
+                                                                             limitby = (0, 1)
+                                                                             ).first()
+                                    if user:
+                                        db(dtable.id == answer_id).update(owned_by_user = user.user_id)
                             else:
                                 response_id = rtable.insert(template_id = template_id,
                                                             person_id = person_id,
                                                             )
-                                answer_id = s3db[dtablename].insert(response_id = response_id)
+                                answer_id = dtable.insert(response_id = response_id)
+                                putable = s3db.pr_person_user
+                                user = db(putable.pe_id == pe_id).select(putable.user_id,
+                                                                         limitby = (0, 1)
+                                                                         ).first()
+                                if user:
+                                    user_id = user.user_id
+                                    db(rtable.id == response_id).update(owned_by_user = user_id)
+                                    db(dtable.id == answer_id).update(owned_by_user = user_id)
 
                             dynamic_widget = {"label": "Other Information",
                                               "label_create": "Update Information",
@@ -5278,7 +5293,7 @@ def config(settings):
                                               #                ],
                                               "create_controller": "dc",
                                               "create_function": "respnse",
-                                              "create_args": [response_id, "answer", answer_id,"update.popup"],
+                                              "create_args": [response_id, "answer", answer_id, "update.popup"],
                                               }
 
                             profile_widgets.insert(-2, dynamic_widget)
