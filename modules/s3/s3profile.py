@@ -1178,7 +1178,7 @@ class S3Profile(S3CRUD):
 
         # Generate form key
         import uuid
-        formkey = uuid.uuid4().get_hex()
+        formkey = uuid.uuid4().hex
 
         # Determine the formname (see also S3Organizer.formname)
         master = widget_get("master")
