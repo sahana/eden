@@ -3455,7 +3455,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // In Global scope as called from HTML (iframe onLoad)
     S3.gis.popupLoaded = function(id) {
         // Display the hidden form
-        $('#' + id + '_contentDiv iframe').contents().find('#popup form').show();
+        $('#' + id + '_contentDiv iframe').contents().find('#popup').show();
         // Iterate through all Maps (usually just 1)
         var maps = S3.gis.maps;
         var map_id, map, popup, popups, i, len;
