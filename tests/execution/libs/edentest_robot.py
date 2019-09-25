@@ -36,10 +36,10 @@ class edentest_robot(object):
         logger.info("request_url %s" % (request_url))
 
         # Create the headers
-        b64_auth_string = b64encode("%s:%s" % (self.admin_email, self.admin_password))
+        auth_string = "%s:%s" % (self.admin_email, self.admin_password)
         headers = {
             "content-type" : "application/json",
-            "Authorization" : "Basic %s" % b64_auth_string
+            "Authorization" : "Basic %s" % b64encode(auth_string.encode("utf-8")).decode("utf-8")
             }
 
         # Send the response and get the response
