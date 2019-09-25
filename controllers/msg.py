@@ -48,18 +48,19 @@ def message():
         title_display = T("Message Details"),
         title_list = T("Message Log"),
         label_list_button = T("View Message Log"),
-        msg_list_empty = T("No Messages currently in the Message Log")
-    )
+        msg_list_empty = T("No Messages currently in the Message Log"),
+        )
 
     def postp(r, output):
         if r.interactive:
             # Normal Action Buttons
             s3_action_buttons(r)
             # Custom Action Buttons
-            s3.actions += [{"label": s3_str(T("Mark Sender")),
+            s3.actions += [{"label": s3base.s3_str(T("Mark Sender")),
+                            "url": URL(f = "mark_sender",
+                                       args = ["[id]"],
+                                       ),
                             "_class": "action-btn",
-                            "url": URL(f="mark_sender",
-                                       args="[id]"),
                             },
                            ]
 

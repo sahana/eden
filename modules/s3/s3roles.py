@@ -1995,8 +1995,8 @@ class S3RolesExport(object):
         rules = sorted(self.rules,
                        key = lambda rule: (get_uid(rule.group_id),
                                            rule.controller or "zzzzzz",
-                                           rule.function,
-                                           rule.tablename,
+                                           rule.function or "",
+                                           rule.tablename or "",
                                            ))
 
         # Create the CSV
