@@ -1609,7 +1609,12 @@ class S3OptionsMenu(object):
         return M(c="org")(
                     M("Organizations", f="organisation")(
                         M("Create", m="create"),
-                        M("Import", m="import")
+                        M("Import", m="import"),
+                        M("Report", m="report")
+                    ),
+                    M("Service Mapping", f="service_location")(
+                        M("Report", m="report"),
+                        M("Import", m="import"),
                     ),
                     M("Offices", f="office")(
                         M("Create", m="create"),
@@ -1628,6 +1633,10 @@ class S3OptionsMenu(object):
                     M("Organization Types", f="organisation_type",
                       restrict=[ADMIN])(
                         M("Create", m="create"),
+                    ),
+                    M("Service Type", f="services")(
+                        M("Create", m="create"),
+                        M("Import", m="import"),
                     ),
                     M("Office Types", f="office_type",
                       restrict=[ADMIN])(
