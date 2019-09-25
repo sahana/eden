@@ -2533,11 +2533,11 @@ def config(settings):
                 approve_user(user)
 
             # Create response (so that User only needs oacl UPDATE not uacl READ|CREATE
-            record = dict(target_id = target_id,
-                          template_id = template_id,
-                          person_id = person_id,
-                          owned_by_user = user_id,
-                          )
+            record = {"target_id": target_id,
+                      "template_id": template_id,
+                      "person_id": person_id,
+                      "owned_by_user": user_id,
+                      }
             response_id = rinsert(**record)
             record["id"] = response_id
             update_super(rtable, record) # doc_entity

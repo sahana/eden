@@ -492,6 +492,26 @@ class personAdditional(S3Method):
                                                   "filterby": {"tag": "health_details"},
                                                   "multiple": False,
                                                   },
+                                                 {"name": "faith_support",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "faith_support"},
+                                                  "multiple": False,
+                                                  },
+                                                 {"name": "faith_support_other",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "faith_support_other"},
+                                                  "multiple": False,
+                                                  },
+                                                 {"name": "faith_requirements",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "faith_requirements"},
+                                                  "multiple": False,
+                                                  },
+                                                 {"name": "faith_requirements_details",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "faith_requirements_details"},
+                                                  "multiple": False,
+                                                  },
                                                  ),
                                 )
 
@@ -534,12 +554,25 @@ class personAdditional(S3Method):
                             SQLFORM.widgets.radio.widget(f, v,
                                                          style="divs")
 
+            faith_requirements = components_get("faith_requirements")
+            f = faith_requirements.table.value
+            f.requires = IS_IN_SET({"0": T("No"),
+                                    "1": T("Yes"),
+                                    })
+            f.widget = lambda f, v: \
+                            SQLFORM.widgets.radio.widget(f, v,
+                                                         style="divs")
+
             form = S3SQLCustomForm(#"where_operate.value",
                                    (T("That require significant physical activity (including lifting and carrying) and may involve being outdoors (e.g. clean up of affected properties)"), "significant_physical.value"),
                                    (T("That require some physical activity and may involve being outdoors (e.g. door knocking)"), "some_physical.value"),
                                    (T("That require little physical activity and are based indoors (e.g. preparing refreshments)"), "little_physical.value"),
                                    (T("If you wish, you can give us some further information on any fitness, medical or mobility issues that might limit the kind of activities you are able to volunteer for; this will help us to suggest suitable opportunities for you"), "health_details.value"),
                                    (T("Do you have any unspent convictions?"), "convictions.value"),
+                                   (T("Please indicate Faith support you can offer"), "faith_support.value"),
+                                   (T("What help and support can you give those from other Faiths?"), "faith_support_other.value"),
+                                   (T("Do you have any faith requirements that you would like help with if you are coming to Support Cumbria?"), "faith_requirements.value"),
+                                   (T("Please outline"), "faith_requirements_details.value"),
                                    )
 
             form = {"type": "form",

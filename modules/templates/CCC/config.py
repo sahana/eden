@@ -728,9 +728,58 @@ def config(settings):
     settings.customise_hrm_job_title_resource = customise_hrm_job_title_resource
 
     # -------------------------------------------------------------------------
+    def hrm_training_event_postprocess(form):
+        """
+            Create Site based on other fields
+        """
+
+        training_event_id = form.vars.id
+
+        db = current.db
+        s3db = current.s3db
+
+        etable = s3db.hrm_training_event
+        ettable = s3db.hrm_event_tag
+        ftable = s3db.org_facility
+
+        # Load record
+        left = ettable.on((ettable.training_event_id == training_event_id) & \
+                          (ettable.tag == "venue_name")
+                          )
+        training_event = db(etable.id == training_event_id).select(etable.location_id,
+                                                                   etable.site_id,
+                                                                   ettable.value,
+                                                                   left = left,
+                                                                   limitby = (0, 1)
+                                                                   ).first()
+        venue_name = training_event[ettable.value]
+        location_id = training_event[etable.location_id]
+        site_id = training_event[etable.site_id]
+
+        if site_id:
+            facility = db(ftable.site_id == site_id).select(ftable.id,
+                                                            limitby = (0, 1)
+                                                            ).first()
+            facility.update_record(name = venue_name,
+                                   location_id = location_id,
+                                   )
+        else:
+            record = {"name": venue_name,
+                      "location_id": location_id,
+                      }
+            facility_id = ftable.insert(**record)
+            record["id"] = facility_id
+            s3db.update_super(ftable, record)
+            db(etable.id == training_event_id).update(site_id = record["site_id"])
+
+    # -------------------------------------------------------------------------
     def customise_hrm_training_event_resource(r, tablename):
 
-        from s3 import S3LocationSelector, S3OptionsFilter, S3SQLCustomForm, S3TextFilter
+        from gluon import IS_EMAIL, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, IS_URL
+        from s3 import IS_UTC_DATETIME, \
+                       S3SQLInlineLink, S3LocationSelector, \
+                       S3OptionsFilter, S3SQLCustomForm, S3TextFilter, \
+                       s3_phone_requires
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("New Event"),
@@ -748,17 +797,80 @@ def config(settings):
 
         s3db = current.s3db
 
+        # Filtered components
+        s3db.add_components("hrm_training_event",
+                            hrm_event_tag = ({"name": "venue_name",
+                                              "joinby": "training_event_id",
+                                              "filterby": {"tag": "venue_name"},
+                                              "multiple": False,
+                                              },
+                                             {"name": "contact_name",
+                                              "joinby": "training_event_id",
+                                              "filterby": {"tag": "contact_name"},
+                                              "multiple": False,
+                                              },
+                                             {"name": "contact_tel",
+                                              "joinby": "training_event_id",
+                                              "filterby": {"tag": "contact_tel"},
+                                              "multiple": False,
+                                              },
+                                             {"name": "contact_email",
+                                              "joinby": "training_event_id",
+                                              "filterby": {"tag": "contact_email"},
+                                              "multiple": False,
+                                              },
+                                             {"name": "contact_web",
+                                              "joinby": "training_event_id",
+                                              "filterby": {"tag": "contact_web"},
+                                              "multiple": False,
+                                              },
+                                             ),
+                            )
+
+        # Individual settings for specific tag components
+        components_get = s3db.resource(tablename).components.get
+
+        venue_name = components_get("venue_name")
+        f = venue_name.table.value
+        f.requires = IS_NOT_EMPTY()
+
+        contact_tel = components_get("contact_tel")
+        f = contact_tel.table.value
+        f.requires = IS_EMPTY_OR(s3_phone_requires)
+
+        contact_email = components_get("contact_email")
+        f = contact_email.table.value
+        f.requires = IS_EMAIL()
+
+        contact_web = components_get("contact_web")
+        f = contact_web.table.value
+        f.requires = IS_EMPTY_OR(IS_URL())
+
         table = s3db.hrm_training_event
         table.name.readable = table.name.writable = True
+        table.comments.comment = None
+        table.start_date.requires = IS_UTC_DATETIME()
+        table.site_id.represent = s3db.org_SiteRepresent(show_type = False)
         f = table.location_id
         f.readable = f.writable = True
         f.widget = S3LocationSelector(levels = ("L3"),
                                       required_levels = ("L3"),
                                       show_address = True)
 
+        gtable = s3db.gis_location
+        districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
+                                                                                         gtable.name,
+                                                                                         cache = s3db.cache)
+        districts = {d.id:d.name for d in districts}
+        f = s3db.hrm_event_location.location_id
+        f.requires = IS_IN_SET(districts)
+        f.widget = None
+
         list_fields = ["start_date",
                        "name",
-                       "location_id",
+                       "site_id",
+                       "location_id$L3",
+                       "location_id$addr_street",
                        ]
 
         filter_widgets = [S3TextFilter(["name",
@@ -781,15 +893,30 @@ def config(settings):
             f.readable = f.writable = False
 
         s3db.configure("hrm_training_event",
-                       crud_form = S3SQLCustomForm("organisation_id",
-                                                   "name",
-                                                   "start_date",
-                                                   #"end_date",
+                       crud_form = S3SQLCustomForm((T("Event's name"), "name"),
+                                                   (T("Event's description"), "comments"),
+                                                   (T("Starts"), "start_date"),
+                                                   (T("Ends"), "end_date"),
+                                                   (T("Event organiser"), "organisation_id"),
+                                                   S3SQLInlineLink("location",
+                                                                   field = "location_id",
+                                                                   label = T("Tick the area(s) which this event relates to"),
+                                                                   ),
+                                                   (T("Venue name"), "venue_name.value"),
                                                    "location_id",
-                                                   "comments",
+                                                   (T("Contact Name"), "contact_name.value"),
+                                                   (T("Telephone"), "contact_tel.value"),
+                                                   (T("Email"), "contact_email.value"),
+                                                   (T("Website"), "contact_web.value"),
+                                                   postprocess = hrm_training_event_postprocess,
                                                    ),
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
+                       subheadings = {"name": T("Event Information"),
+                                      "link_defaultlocation": T("Event Coverage"),
+                                      "venue_name_value": T("Venue"),
+                                      "contact_name_value": T("Contact Information"),
+                                      },
                        )
 
     settings.customise_hrm_training_event_resource = customise_hrm_training_event_resource
