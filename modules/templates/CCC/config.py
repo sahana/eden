@@ -1299,6 +1299,10 @@ def config(settings):
                                            ),
                            (T("Details"), "items_details.value"),
                            (T("Are you able to Deliver?"), "delivery.value"),
+                           S3SQLInlineLink("location",
+                                           field = "location_id",
+                                           label = T("Where would you be willing to deliver?"),
+                                           ),
                            (T("Length of time the offer is available?"), "availability.value"),
                            "comments",
                            ]

@@ -4565,7 +4565,6 @@ class S3LocationSelector(S3Selector):
             @param represent: an S3Represent instance that can represent non-DB rows
             @param prevent_duplicate_addresses: do a check for duplicate addresses & prevent
                                                 creation of record if a dupe is found
-            @param outside: add an 'Outside' option to an Lx dropdown. Tuple of (Label, location_id)
         """
 
         settings = current.deployment_settings
@@ -4580,7 +4579,6 @@ class S3LocationSelector(S3Selector):
         self.show_address = show_address
         self.show_postcode = show_postcode
         self.prevent_duplicate_addresses = prevent_duplicate_addresses
-        self.outside = outside
 
         if show_latlon is None:
             show_latlon = settings.get_gis_latlon_selector()

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import copy
 import json
 import uuid
 
@@ -563,8 +564,7 @@ class personAdditional(S3Method):
                             SQLFORM.widgets.radio.widget(f, v,
                                                          style="divs")
 
-            form = S3SQLCustomForm(#"where_operate.value",
-                                   (T("That require significant physical activity (including lifting and carrying) and may involve being outdoors (e.g. clean up of affected properties)"), "significant_physical.value"),
+            form = S3SQLCustomForm((T("That require significant physical activity (including lifting and carrying) and may involve being outdoors (e.g. clean up of affected properties)"), "significant_physical.value"),
                                    (T("That require some physical activity and may involve being outdoors (e.g. door knocking)"), "some_physical.value"),
                                    (T("That require little physical activity and are based indoors (e.g. preparing refreshments)"), "little_physical.value"),
                                    (T("If you wish, you can give us some further information on any fitness, medical or mobility issues that might limit the kind of activities you are able to volunteer for; this will help us to suggest suitable opportunities for you"), "health_details.value"),
@@ -639,11 +639,18 @@ class register(S3CustomController):
         utable = auth_settings.table_user
         passfield = auth_settings.password_field
 
-        # Lookup Districts
+        # Lookup Districts + UK
         gtable = s3db.gis_location
         districts = db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
                                                                                  gtable.name)
         districts = {d.id:d.name for d in districts}
+
+        uk = db((gtable.level == "L0") & (gtable.name == "United Kingdom")).select(gtable.id,
+                                                                                   limitby = (0, 1)
+                                                                                   ).first()
+
+        districts_and_uk = copy.copy(districts)
+        districts_and_uk[uk.id] = "Outside Cumbria"
 
         # Check Type of Registration
         agency = donor = existing = group = False
@@ -658,8 +665,8 @@ class register(S3CustomController):
             formfields = [utable.first_name,
                           utable.last_name,
                           Field("addr_L3",
-                                label = T("District (if in Cumbria)"),
-                                requires = IS_EMPTY_OR(IS_IN_SET(districts)),
+                                label = T("Location"),
+                                requires = IS_IN_SET(districts_and_uk),
                                 ),
                           Field("addr_street",
                                 label = T("Street Address"),
@@ -764,6 +771,7 @@ class register(S3CustomController):
 
             required_fields = ["first_name",
                                "last_name",
+                               "addr_L3",
                                "addr_street",
                                "addr_postcode",
                                "mobile",
@@ -810,8 +818,8 @@ class register(S3CustomController):
                                 ),
                           s3db.org_organisation_type_id(),
                           Field("addr_L3", "reference gis_location",
-                                label = T("Where Based (District)"),
-                                requires = IS_EMPTY_OR(IS_IN_SET(districts)),
+                                label = T("Where Based"),
+                                requires = IS_IN_SET(districts_and_uk),
                                 ),
                           Field("addr_street",
                                 label = T("Street Address"),
@@ -836,6 +844,7 @@ class register(S3CustomController):
                                 ),
                           Field("mobile",
                                 label = T("Contact Number (Preferred)"),
+                                requires = s3_phone_requires,
                                 comment = DIV(_class = "tooltip",
                                               _title = "%s|%s" % (T("Contact Number (Preferred)"),
                                                                   T("Ideally a Mobile Number, so that we can send you Text Messages.")),
@@ -843,6 +852,7 @@ class register(S3CustomController):
                                 ),
                           Field("home",
                                 label = T("Contact Number (Secondary)"),
+                                requires = IS_EMPTY_OR(s3_phone_requires),
                                 ),
                           utable.email,
                           utable[passfield],
@@ -873,6 +883,7 @@ class register(S3CustomController):
                                 ),
                           Field("mobile2",
                                 label = T("Contact Number (Preferred)"),
+                                requires = IS_EMPTY_OR(s3_phone_requires),
                                 comment = DIV(_class = "tooltip",
                                               _title = "%s|%s" % (T("Contact Number (Preferred)"),
                                                                   T("Ideally a Mobile Number, so that we can send you Text Messages.")),
@@ -880,6 +891,7 @@ class register(S3CustomController):
                                 ),
                           Field("home2",
                                 label = T("Contact Number (Secondary)"),
+                                requires = IS_EMPTY_OR(s3_phone_requires),
                                 ),
                           # Consent (GDPR + FOC)
                           Field("consent",
@@ -891,9 +903,12 @@ class register(S3CustomController):
             # Generate labels (and mark required fields in the process)
             required_fields = ["first_name",
                                "last_name",
+                               "addr_L3",
                                "addr_street",
                                "addr_postcode",
                                "mobile",
+                               #"first_name2",
+                               #"last_name2",
                                ]
 
         elif get_vars_get("donor"):
@@ -923,8 +938,8 @@ class register(S3CustomController):
                                                        ])),
                                 ),
                           Field("addr_L3", "reference gis_location",
-                                label = T("District"),
-                                requires = IS_EMPTY_OR(IS_IN_SET(districts)),
+                                label = T("Location"),
+                                requires = IS_IN_SET(districts_and_uk),
                                 ),
                           Field("addr_street",
                                 label = T("Street Address"),
@@ -979,6 +994,12 @@ class register(S3CustomController):
                                     SQLFORM.widgets.radio.widget(f, v,
                                                                  style="divs"),
                                 ),
+                          Field("where_deliver", "list:reference gis_location",
+                                label = T("Where would you be willing to deliver?"),
+                                requires = IS_IN_SET(districts, multiple=True),
+                                widget = S3MultiSelectWidget(header="",
+                                                             selectedList=3),
+                                ),
                           Field("availability",
                                 label = T("Please indicate if the offer is only available for a period of time (please state) or it is an open ended offer. In many cases items such as furniture for homes affected by a Major Incident are not required for some months, or even more than a year after an incident has occurred, but very gratefully received at the right time."),
                                 ),
@@ -992,6 +1013,7 @@ class register(S3CustomController):
             # Generate labels (and mark required fields in the process)
             required_fields = ["first_name",
                                "last_name",
+                               "addr_L3",
                                "addr_street",
                                "addr_postcode",
                                "mobile",
@@ -1059,25 +1081,11 @@ class register(S3CustomController):
                                 ),
                           Field("email2",
                                 label = T("Email"),
-                                requires = IS_EMPTY_OR(IS_EMAIL()),
-                                ),
-                          Field("password2", "password", length=512,
-                                label = T("Password"),
-                                requires = IS_EMPTY_OR(
-                                            CRYPT(key=auth.settings.hmac_key,
-                                                  min_length=settings.get_auth_password_min_length(),
-                                                  digest_alg="sha512")),
-                                ),
-                          Field("password2_two", "password",
-                                label = auth_messages.verify_password,
-                                requires = IS_EMPTY_OR(
-                                            IS_EXPR("value==%s" % \
-                                                    repr(request.vars.get("password2")),
-                                                    error_message = auth_messages.mismatched_password,
-                                                    )),
+                                requires = IS_EMAIL(),
                                 ),
                           Field("mobile2",
                                 label = T("Contact Number (Preferred)"),
+                                requires = s3_phone_requires,
                                 comment = DIV(_class = "tooltip",
                                               _title = "%s|%s" % (T("Contact Number (Preferred)"),
                                                                   T("Ideally a Mobile Number, so that we can send you Text Messages.")),
@@ -1085,6 +1093,20 @@ class register(S3CustomController):
                                 ),
                           Field("home2",
                                 label = T("Contact Number (Secondary)"),
+                                requires = IS_EMPTY_OR(s3_phone_requires),
+                                ),
+                          Field("password2", "password", length=512,
+                                label = T("Password"),
+                                requires = CRYPT(key=auth.settings.hmac_key,
+                                                 min_length=settings.get_auth_password_min_length(),
+                                                 digest_alg="sha512"),
+                                ),
+                          Field("password2_two", "password",
+                                label = auth_messages.verify_password,
+                                requires = IS_EXPR("value==%s" % \
+                                                   repr(request.vars.get("password2")),
+                                                   error_message = auth_messages.mismatched_password,
+                                                   ),
                                 ),
                           Field("vols", "integer",
                                 label = T("Approximate Number of Volunteers"),
@@ -1130,6 +1152,8 @@ class register(S3CustomController):
                                "addr_street",
                                "addr_postcode",
                                "mobile",
+                               "first_name2",
+                               "last_name2",
                                ]
 
         else:
@@ -1197,7 +1221,7 @@ class register(S3CustomController):
             form[0].insert(11, DIV("Group Leader 2",
                                    _class = "subheading",
                                    ))
-            form[0].insert(19, DIV(_class = "subheading",
+            form[0].insert(21, DIV(_class = "subheading",
                                    ))
             form[0].insert(-4, DIV("Person to be contacted in case of an emergency",
                                    _class = "subheading",
@@ -1294,6 +1318,7 @@ class register(S3CustomController):
                           "item_id": form_vars.item_id or [],
                           "items_details": form_vars.items_details,
                           "delivery": form_vars.delivery,
+                          "where_deliver": form_vars.where_deliver or [],
                           "availability": form_vars.availability,
                           }
             elif group:
@@ -1953,6 +1978,14 @@ def auth_user_register_onaccept(user_id):
                   "value": "Y" if custom["delivery"] else "N",
                   }
         ttable.insert(**record)
+
+        # Where Deliver
+        ltable = s3db.pr_person_location
+        for location_id in custom["where_deliver"]:
+            record = {"person_id": person_id,
+                      "location_id": location_id,
+                      }
+            ltable.insert(**record)
 
         record = {"person_id": person_id,
                   "tag": "availability",
