@@ -19,7 +19,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "case_document_templates": False,
                "case_header_protection_themes": False,
                "case_hide_default_org": False,
-               "case_use_response_tab": False,
+               "case_use_response_tab": True,
                "case_use_address": True,
                "case_use_appointments": True,
                "case_use_education": False,
@@ -40,9 +40,9 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "appointments_staff_link": False,
                "appointments_use_organizer": False,
                "response_activity_autolink": False,
-               "response_due_date": True,
-               "response_effort_required": False,
-               "response_planning": True,
+               "response_due_date": False,
+               "response_effort_required": True,
+               "response_planning": False,
                "response_themes_details": False,
                "response_themes_sectors": False,
                "response_themes_needs": False,
@@ -2847,20 +2847,35 @@ def config(settings):
                                   (T("Themes"), "dvr_response_action_theme.id"),
                                   ]
                 else:
-                    # Show activity_id (read-only), represent by subject
+                    # Show case_activity_id
                     field = table.case_activity_id
                     field.readable = True
-                    field.writable = False
+
+                    # Adjust representation to perspective
                     if ui_options.get("activity_use_need"):
                         field.label = T("Counseling Reason")
                         show_as = "need"
                     else:
                         field.label = T("Subject")
                         show_as = "subject"
-                    field.represent = s3db.dvr_CaseActivityRepresent(
-                                                show_as=show_as,
-                                                show_link=True,
-                                                )
+
+                    represent = s3db.dvr_CaseActivityRepresent(show_as=show_as,
+                                                               show_link=True,
+                                                               )
+                    field.represent = represent
+
+                    # Make activity selectable if not auto-linking, and
+                    # filter options to case
+                    if not ui_options.get("response_activity_autolink"):
+                        field.writable = True
+                        field.requires = IS_ONE_OF(current.db,
+                                                   "dvr_case_activity.id",
+                                                   represent,
+                                                   filterby = "person_id",
+                                                   filter_opts = (person_id,),
+                                                   )
+                    else:
+                        field.writable = False
 
                     # Adapt list-fields to perspective
                     list_fields = ["case_activity_id",
