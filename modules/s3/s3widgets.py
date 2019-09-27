@@ -4527,6 +4527,7 @@ class S3LocationSelector(S3Selector):
                  error_message = None,
                  represent = None,
                  prevent_duplicate_addresses = False,
+                 outside = None,
                  ):
         """
             Constructor
@@ -4564,6 +4565,7 @@ class S3LocationSelector(S3Selector):
             @param represent: an S3Represent instance that can represent non-DB rows
             @param prevent_duplicate_addresses: do a check for duplicate addresses & prevent
                                                 creation of record if a dupe is found
+            @param outside: add an 'Outside' option to an Lx dropdown. Tuple of (Label, location_id)
         """
 
         settings = current.deployment_settings
@@ -4578,6 +4580,7 @@ class S3LocationSelector(S3Selector):
         self.show_address = show_address
         self.show_postcode = show_postcode
         self.prevent_duplicate_addresses = prevent_duplicate_addresses
+        self.outside = outside
 
         if show_latlon is None:
             show_latlon = settings.get_gis_latlon_selector()
@@ -6214,9 +6217,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                         return (values, current.auth.messages.access_denied)
 
                     # Schedule for onvalidation
-                    feature = Storage(addr_street=address,
-                                      addr_postcode=postcode,
-                                      parent=parent,
+                    feature = Storage(addr_street = address,
+                                      addr_postcode = postcode,
+                                      parent = parent,
                                       )
                     if any(detail is not None for detail in (lat, lon, wkt, radius)):
                         feature.lat = lat
@@ -6250,10 +6253,10 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                         return (values, current.T("Duplicate Address"))
 
                 # Schedule for onvalidation
-                feature = Storage(addr_street=address,
-                                  addr_postcode=postcode,
-                                  parent=parent,
-                                  inherited=True,
+                feature = Storage(addr_street = address,
+                                  addr_postcode = postcode,
+                                  parent = parent,
+                                  inherited = True,
                                   )
                 if any(detail is not None for detail in (lat, lon, wkt, radius)):
                     feature.lat = lat
@@ -6392,18 +6395,18 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             else:
                 inherited = True
 
-            feature = Storage(lat=lat,
-                              lon=lon,
-                              lat_min=lat_min,
-                              lon_min=lon_min,
-                              lat_max=lat_max,
-                              lon_max=lon_max,
-                              wkt=wkt,
-                              radius=radius,
-                              inherited=inherited,
-                              addr_street=address,
-                              addr_postcode=postcode,
-                              parent=parent,
+            feature = Storage(lat = lat,
+                              lon = lon,
+                              lat_min = lat_min,
+                              lon_min = lon_min,
+                              lat_max = lat_max,
+                              lon_max = lon_max,
+                              wkt = wkt,
+                              radius = radius,
+                              inherited = inherited,
+                              addr_street = address,
+                              addr_postcode = postcode,
+                              parent = parent,
                               )
 
             # These could have been added during validate:

@@ -34,6 +34,7 @@ __all__ = ("S3HRModel",
            #"S3HRJobModel",
            "S3HRContractModel",
            "S3HRSkillModel",
+           "S3HRTagModel",
            "S3HREventStrategyModel",
            "S3HREventProgrammeModel",
            "S3HREventProjectModel",
@@ -742,6 +743,10 @@ class S3HRModel(S3Model):
                         deploy_assignment = "human_resource_id",
                         # Hours
                         #hrm_hours = "human_resource_id",
+                        # Tags
+                        hrm_human_resource_tag = {"name": "tag",
+                                                  "joinby": "human_resource_id",
+                                                  },
                         )
 
         # Optional Components
@@ -4760,6 +4765,47 @@ class S3HRDisciplinaryActionModel(S3Model):
                            ),
                      s3_comments(),
                      *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class S3HRTagModel(S3Model):
+    """ Arbitrary Key:Value Tags for Human Resources """
+
+    names = ("hrm_human_resource_tag",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # =====================================================================
+        # Human Resource Tags
+        #
+        tablename = "hrm_human_resource_tag"
+        self.define_table(tablename,
+                          self.hrm_human_resource_id(empty = False,
+                                                     ondelete = "CASCADE",
+                                                     ),
+                          # key is a reserved word in MySQL
+                          Field("tag",
+                                label = T("Key"),
+                                ),
+                          Field("value",
+                                label = T("Value"),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("human_resource_id",
+                                                            "tag",
+                                                            ),
+                                                 ),
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

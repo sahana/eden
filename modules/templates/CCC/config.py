@@ -613,19 +613,29 @@ def config(settings):
 
         s3db = current.s3db
 
+        # Filtered components
+        s3db.add_components("hrm_human_resource",
+                            hrm_human_resource_tag = ({"name": "job_title",
+                                                       "joinby": "human_resource_id",
+                                                       "filterby": {"tag": "job_title"},
+                                                       "multiple": False,
+                                                       },
+                                                      ),
+                            )
+
         table = s3db.hrm_human_resource
-        f = table.job_title_id
-        f.label = T("Role")
-        f.comment = S3PopupLink(c = "hrm",
-                                f = "job_title",
-                                label = T("New Job Title"),
-                                title = T("Role"),
-                                tooltip = T("The volunteer's role"),
-                                )
+        #f = table.job_title_id
+        #f.label = T("Role")
+        #f.comment = S3PopupLink(c = "hrm",
+        #                        f = "job_title",
+        #                        label = T("New Job Title"),
+        #                        title = T("Role"),
+        #                        tooltip = T("The volunteer's role"),
+        #                        )
 
         if r.controller == "default":
             # Personal Profile
-            list_fields = ["job_title_id",
+            list_fields = ["job_title.value",
                            ]
             current.response.s3.crud_strings[tablename] = Storage(
                 label_create = T("New Affiliation"),
@@ -642,7 +652,7 @@ def config(settings):
             )
         else:
             list_fields = ["person_id",
-                           "job_title_id",
+                           (T("Role"), "job_title.value"),
                            (T("Skills"), "person_id$competency.skill_id"),
                            (T("Email"), "email.value"),
                            (T("Mobile Phone"), "phone.value"),
@@ -664,7 +674,7 @@ def config(settings):
         filter_fields = ["person_id$first_name",
                          "person_id$middle_name",
                          "person_id$last_name",
-                         "job_title_id$name",
+                         "job_title.value",
                          "comments",
                          "person_id$competency.skill_id$name",
                          ]
@@ -698,7 +708,7 @@ def config(settings):
                        
         s3db.configure("hrm_human_resource",
                        crud_form = S3SQLCustomForm("organisation_id",
-                                                   "job_title_id",
+                                                   (T("Role"), "job_title.value"),
                                                    "person_id",
                                                    "comments",
                                                    ),
@@ -709,23 +719,23 @@ def config(settings):
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
     # -------------------------------------------------------------------------
-    def customise_hrm_job_title_resource(r, tablename):
+    #def customise_hrm_job_title_resource(r, tablename):
 
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("New Role"),
-            title_display = T("Role Details"),
-            title_list = T("Roles"),
-            title_update = T("Edit Role"),
-            #title_upload = T("Import Roles"),
-            label_list_button = T("List Roles"),
-            label_delete_button = T("Delete Role"),
-            msg_record_created = T("Role added"),
-            msg_record_modified = T("Role updated"),
-            msg_record_deleted = T("Role deleted"),
-            msg_list_empty = T("No Roles currently registered")
-        )
+    #    current.response.s3.crud_strings[tablename] = Storage(
+    #        label_create = T("New Role"),
+    #        title_display = T("Role Details"),
+    #        title_list = T("Roles"),
+    #        title_update = T("Edit Role"),
+    #        #title_upload = T("Import Roles"),
+    #        label_list_button = T("List Roles"),
+    #        label_delete_button = T("Delete Role"),
+    #        msg_record_created = T("Role added"),
+    #        msg_record_modified = T("Role updated"),
+    #        msg_record_deleted = T("Role deleted"),
+    #        msg_list_empty = T("No Roles currently registered")
+    #    )
 
-    settings.customise_hrm_job_title_resource = customise_hrm_job_title_resource
+    #settings.customise_hrm_job_title_resource = customise_hrm_job_title_resource
 
     # -------------------------------------------------------------------------
     def hrm_training_event_postprocess(form):
