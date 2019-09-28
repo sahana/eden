@@ -1,0 +1,4 @@
+Name,Description,URL,Marker,Enabled,Visible,Folder,Image
+Fires (US),InciWeb,http://inciweb.nwcg.gov/feeds/rss/incidents/,fire,False,False,Incidents,
+Floods,Dartmouth Flood Observatory,http://www.gdacs.org/xml/rssfl.xml,flood,False,False,Incidents,gdas:gfds_image
+Volcanoes,USGS: US recent,http://volcano.wr.usgs.gov/rss/vhpcaprss.xml,volcano,False,False,Incidents,
