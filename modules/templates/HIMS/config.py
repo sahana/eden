@@ -12,6 +12,8 @@ def config(settings):
     """
 
     T = current.T
+    settings.base.system_name = T("HI Information Management System")
+    settings.base.system_name_short = T("HIMS")
 
     # Pre-Populate
     # http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/PrePopulate
