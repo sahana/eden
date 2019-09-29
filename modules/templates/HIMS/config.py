@@ -784,10 +784,12 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Organisations
+    settings.org.services = True
+    settings.org.service_locations = True
     # Uncomment to use an Autocomplete for Organisation lookup fields
-    #settings.org.autocomplete = True
+    settings.org.autocomplete = True
     # Enable the Organisation Sector field
-    #settings.org.sector = True
+    settings.org.sector = True
     # But hide it from the rheader
     #settings.org.sector_rheader = False
     # Enable the use of Organisation Branches
