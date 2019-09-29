@@ -47,9 +47,9 @@ def config(settings):
     #settings.auth.registration_welcome_email = False
 
     # Allow a new user to be linked to a record (and a new record will be created if it doesn't already exist)
-    #settings.auth.registration_link_user_to = {"staff":T("Staff"),
-    #                                           "volunteer":T("Volunteer"),
-    #                                           "member":T("Member")}
+    settings.auth.registration_link_user_to = {"staff":T("Staff"),
+                                               "volunteer":T("Volunteer")
+                                               }
 
     # Always notify the approver of a new (verified) user, even if the user is automatically approved
     #settings.auth.always_notify_approver = False
@@ -61,7 +61,7 @@ def config(settings):
     # Uncomment this to request the Home Phone when a user registers
     #settings.auth.registration_requests_home_phone = True
     # Uncomment this to request the Mobile Phone when a user registers
-    #settings.auth.registration_requests_mobile_phone = True
+    settings.auth.registration_requests_mobile_phone = True
     # Uncomment this to have the Mobile Phone selection during registration be mandatory
     #settings.auth.registration_mobile_phone_mandatory = True
     # Uncomment this to request the Organisation when a user registers
@@ -136,47 +136,13 @@ def config(settings):
     # Languages used in the deployment (used for Language Toolbar, GIS Locations, etc)
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
     settings.L10n.languages = OrderedDict([
-        ("ar", "Arabic"),
-        ("bs", "Bosnian"),
-        #("crs", "Seychellois Creole"),
-        #("dv", "Divehi"), # Maldives
-        #("dz", "Dzongkha"), # Bhutan
         ("en", "English"),
         ("fr", "French"),
-        ("de", "German"),
-        ("el", "Greek"),
         ("es", "Spanish"),
-        #("id", "Bahasa Indonesia"),
-        ("it", "Italian"),
-        ("ja", "Japanese"),
-        ("km", "Khmer"), # Cambodia
-        ("ko", "Korean"),
-        #("lo", "Lao"),
-        #("lt", "Lithuanian"),
-        #("mg", "Malagasy"),
-        ("mn", "Mongolian"),
-        #("ms", "Malaysian"),
-        ("my", "Burmese"), # Myanmar
-        ("ne", "Nepali"),
-        ("prs", "Dari"), # Afghan Persian
-        ("ps", "Pashto"), # Afghanistan, Pakistan
-        ("pt", "Portuguese"),
-        ("pt-br", "Portuguese (Brazil)"),
-        ("ru", "Russian"),
-        ("tet", "Tetum"),
-        #("si", "Sinhala"), # Sri Lanka
-        #("so", "Somali"),
-        #("ta", "Tamil"), # India, Sri Lanka
-        ("th", "Thai"),
         ("tl", "Tagalog"), # Philippines
-        ("tr", "Turkish"),
-        ("ur", "Urdu"), # Pakistan
-        ("vi", "Vietnamese"),
-        ("zh-cn", "Chinese (Simplified)"), # Mainland China
-        ("zh-tw", "Chinese (Taiwan)"),
     ])
     # Default language for Language Toolbar (& GIS Locations in future)
-    #settings.L10n.default_language = "en"
+    settings.L10n.default_language = "en"
     # Uncomment to Hide the language toolbar
     #settings.L10n.display_toolbar = False
     # Default timezone for users
@@ -190,21 +156,21 @@ def config(settings):
     # Decimal separator for numbers (defaults to ,)
     settings.L10n.decimal_separator = "."
     # Thousands separator for numbers (defaults to space)
-    #settings.L10n.thousands_separator = ","
+    settings.L10n.thousands_separator = ","
     # Default Country Code for telephone numbers
     #settings.L10n.default_country_code = 1
     # Make last name in person/user records mandatory
     #settings.L10n.mandatory_lastname = True
     # Configure the list of Religions
-    #settings.L10n.religions = {"none": T("none"),
-                            #"christian": T("Christian"),
-                            #"muslim": T("Muslim"),
-                            #"jewish": T("Jewish"),
-                            #"buddhist": T("Buddhist"),
-                            #"hindu": T("Hindu"),
+    settings.L10n.religions = {"none": T("none"),
+                            "christian": T("Christian"),
+                            "muslim": T("Muslim"),
+                            "jewish": T("Jewish"),
+                            "buddhist": T("Buddhist"),
+                            "hindu": T("Hindu"),
                             #"bahai": T("Bahai"),
-                            #"other": T("other")
-                            #}
+                            "other": T("other")
+                            }
     # Uncomment this to Translate CMS Series Names
     #settings.L10n.translate_cms_series = True
     # Uncomment this to Translate Layer Names
@@ -219,12 +185,13 @@ def config(settings):
     #settings.L10n.translate_org_site = True
 
     # Finance settings
-    #settings.fin.currencies = {
-    #    "EUR" : "Euros",
-    #    "GBP" : "Great British Pounds",
-    #    "USD" : "United States Dollars",
-    #}
-    #settings.fin.currency_default = "USD"
+    settings.fin.currencies = {
+        "EUR" : "Euros",
+        "GBP" : "Great British Pounds",
+        "USD" : "United States Dollars",
+        "BDT" : "Bangladeshi Taka",
+    }
+    settings.fin.currency_default = "USD"
     #settings.fin.currency_writable = False # False currently breaks things
 
     # PDF settings
@@ -251,13 +218,13 @@ def config(settings):
     # e.g. Activities filtered to those of parent Project
     #settings.gis.countries = ("US",)
     # Uncomment to pass Addresses imported from CSV to a Geocoder to try and automate Lat/Lon
-    #settings.gis.geocode_imported_addresses = "google"
+    settings.gis.geocode_imported_addresses = "google"
     # Hide the Map-based selection tool in the Location Selector
     #settings.gis.map_selector = False
     # Show LatLon boxes in the Location Selector
-    #settings.gis.latlon_selector = True
+    settings.gis.latlon_selector = True
     # Use Building Names as a separate field in Street Addresses?
-    #settings.gis.building_name = False
+    settings.gis.building_name = True
     # Use a non-default fillColor for Clustered points
     #settings.gis.cluster_fill = "8087ff"
     # Disable the label for clustered points
@@ -275,7 +242,7 @@ def config(settings):
     # Currently unused
     #settings.gis.display_L1 = False
     # Uncomment this to do deduplicate lookups on Imports via PCode (as alternative to Name)
-    #settings.gis.lookup_code = "PCode"
+    settings.gis.lookup_code = "PCode"
     # Set this if there will be multiple areas in which work is being done,
     # and a menu to select among them is wanted.
     #settings.gis.menu = "Maps"
@@ -341,7 +308,7 @@ def config(settings):
     # Uncomment to modify the Simplify Tolerance
     #settings.gis.simplify_tolerance = 0.001
     # Uncomment this for highly-zoomed maps showing buildings
-    #settings.gis.precision = 5
+    settings.gis.precision = 5
     # Uncomment to Hide the Toolbar from the main Map
     #settings.gis.toolbar = False
     # Uncomment to show Catalogue Layers in Map Widgets (e.g. Profile & Summary pages)
@@ -382,12 +349,12 @@ def config(settings):
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
     #
-    #settings.security.policy = 7 # Organisation-ACLs
+    settings.security.policy = 4
 
     # Ownership-rule for records without owner:
     # True = not owned by any user (strict ownership, default)
     # False = owned by any authenticated user
-    #settings.security.strict_ownership = False
+    settings.security.strict_ownership = False
 
     # Audit
     # - can be a callable for custom hooks (return True to also perform normal logging, or False otherwise)
@@ -415,9 +382,9 @@ def config(settings):
     #settings.ui.filter_auto_submit = 800
     #settings.ui.report_auto_submit = 800
     # Enable this for a UN-style deployment
-    #settings.ui.cluster = True
+    settings.ui.cluster = True
     # Enable this to use the label 'Camp' instead of 'Shelter'
-    #settings.ui.camp = True
+    settings.ui.camp = True
     # Enable this to have Open links in IFrames open a full page in a new tab
     #settings.ui.iframe_opens_full = True
     # Enable this to change the label for 'Attachments' tabs
@@ -477,7 +444,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Sync
     # Uncomment if this deployment exposes public data sets
-    #settings.sync.data_repository = True
+    settings.sync.data_repository = True
 
     # -------------------------------------------------------------------------
     # Asset
@@ -626,7 +593,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Shelters
     # Uncomment to use a dynamic population estimation by calculations based on registrations
-    #settings.cr.shelter_population_dynamic = True
+    settings.cr.shelter_population_dynamic = True
     # Uncomment to disable people registration in shelters
     #settings.cr.people_registration = False
     # Uncomment to use Tags for Shelters
