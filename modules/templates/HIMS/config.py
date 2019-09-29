@@ -7,9 +7,8 @@ from gluon.storage import Storage
 
 def config(settings):
     """
-        Template settings for a default system
-
-        @ToDo: Rename this as 'Demo'
+        Configured for Humanity & Inclusion Rohingya Response
+        by: Rommel Sotto
     """
 
     T = current.T
