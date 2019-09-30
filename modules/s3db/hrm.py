@@ -2885,7 +2885,7 @@ class S3HRSkillModel(S3Model):
 
         # =====================================================================
         # Training Event Tags
-        
+
         tablename = "hrm_event_tag"
         define_table(tablename,
                      training_event_id(empty = False,
@@ -4473,7 +4473,7 @@ class S3HRExperienceModel(S3Model):
 
         site_label = settings.get_org_site_label()
         if settings.get_org_site_autocomplete():
-            site_widget = S3SiteAutocompleteWidget(),
+            site_widget = S3SiteAutocompleteWidget()
             site_comment = DIV(_class="tooltip",
                                _title="%s|%s" % (site_label,
                                                  current.messages.AUTOCOMPLETE_HELP))
@@ -7821,7 +7821,7 @@ def hrm_human_resource_controller(extra_filter = None):
                     read_url = URL(args = ["[id]", "profile"])
                     update_url = URL(args = ["[id]", "profile"])
                 else:
-                    deletable = settings.get_hrm_deletable(),
+                    deletable = settings.get_hrm_deletable()
                     # Standard CRUD buttons
                     read_url = None
                     update_url = None
