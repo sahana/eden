@@ -14,6 +14,8 @@ def config(settings):
     T = current.T
     settings.base.system_name = T("HI Information Management System")
     settings.base.system_name_short = T("HIMS")
+    settings.base.theme_base = "default"
+    settings.ui.menu_logo = "/static/themes/HIMS/img/logo_small.png"
 
     # Pre-Populate
     # http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/PrePopulate
@@ -25,7 +27,7 @@ def config(settings):
     # ["default", "default/users"]
     # Unless doing a manual DB migration, where prepopulate = 0
     # In Production, prepopulate = 0 (to save 1x DAL hit every page)
-    settings.base.prepopulate.append("HIMS")
+    settings.base.prepopulate +=("HIMS")
 
     # Uncomment this to prefer scalability-optimized strategies globally
     #settings.base.bigtable = True
@@ -362,7 +364,7 @@ def config(settings):
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
     #
-    settings.security.policy = 4
+    settings.security.policy = 7
 
     # Ownership-rule for records without owner:
     # True = not owned by any user (strict ownership, default)
