@@ -20,6 +20,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "case_header_protection_themes": False,
                "case_hide_default_org": False,
                "case_use_response_tab": True,
+               "case_use_photos_tab": False,
                "case_use_address": True,
                "case_use_appointments": True,
                "case_use_education": False,
@@ -57,6 +58,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "case_header_protection_themes": True,
                       "case_hide_default_org": True,
                       "case_use_response_tab": True,
+                      "case_use_photos_tab": True,
                       "case_use_address": False,
                       "case_use_appointments": False,
                       "case_use_education": True,
@@ -4012,11 +4014,13 @@ def drk_dvr_rheader(r, tabs=None):
                     tabs.append((T("Appointments"), "case_appointment"))
                 if ui_opts_get("case_use_service_contacts"):
                     tabs.append((T("Service Contacts"), "service_contact"))
+                if ui_opts_get("case_use_photos_tab"):
+                    tabs.append((T("Photos"), "image"))
 
-                # Uploads, Notes etc.
-                tabs.extend([(T("Photos"), "image"),
-                             (T("Documents"), "document/"),
-                             ])
+                # Uploads
+                tabs.append((T("Documents"), "document/"))
+
+                # Notes etc.
                 if ui_opts_get("case_use_notes"):
                     tabs.append((T("Notes"), "case_note"))
 
