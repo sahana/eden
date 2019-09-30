@@ -1621,24 +1621,24 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                         M("Import", m="import", restrict=[ADMIN]),
                     ),
-                    M("Offices", f="office")(
-                        M("Create", m="create"),
+                    M("Offices", f="office", m="summary")(
+                        M("Report", m="report"),
                         M("Map", m="map"),
                         M("Import", m="import", restrict=[ADMIN]),
                     ),
-                    M("Facilities", f="facility")(
-                        M("Create", m="create"),
-                        M("Import", m="import"),
-                    ),
-                    M("Resources", f="resource", m="summary",
-                      check=stats)(
-                        M("Create", m="create"),
+                    M("Facilities", f="facility", m="summary")(
+                        M("Report", m="report"),
                         M("Import", m="import", restrict=[ADMIN]),
                     ),
+                    #M("Resources", f="resource", m="summary",
+                    #  check=stats)(
+                    #    M("Create", m="create"),
+                    #    M("Import", m="import", restrict=[ADMIN]),
+                    #),
                     M("For Admin Use Only")(
                         M("Organization Type", f="organisation_type", m="summary",restrict=[ADMIN]),
                         M("Office Type", f="office_type", m="summary", restrict=[ADMIN]),
-                        M("Facility Type", f="facility_type", m="summary", restrict=[ADMIN]),
+                        M("Facility Type", f="facility_type", m="summary"),
                         M("Resource Type", f="resource_type", m="summary", restrict=[ADMIN]),
                         M("Services", f="service", m="summary"),
                         M(SECTORS, f="sector", m="summary", check=use_sectors, restrict=[ADMIN]),

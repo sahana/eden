@@ -1,24 +1,15 @@
 Abrv,Name,SubsectorOf
-"Agriculture","Agriculture",
-"Camp","Camp Coordination/Management",
-"Recovery","Early Recovery",
-"Education","Education",
-"Shelter","Emergency Shelter",
-"Telecommunications","Emergency Telecommunications",
-"Health","Health",
-"Logistics","Logistics",
-"Nutrition","Nutrition",
-"Protection","Protection",
-"WASH","Water Sanitation Hygiene",
-"Clothing",,"Shelter"
-"Shelter",,"Shelter"
-"Cooking NFIs",,"Nutrition"
-"Food Supply",,"Nutrition"
-"Aggravating factors",,"WASH"
-"Disease vectors",,"WASH"
-"Drainage",,"WASH"
-"Excreta disposal",,"WASH"
-"Hygiene NFIs",,"WASH"
-"Hygiene practice",,"WASH"
-"Solid waste",,"WASH"
-"Water supply",,"WASH"
+CCCM,Camp Coordination/Management,
+DRR,Disaster Risk Reduction,
+EDUC,Education,
+ETC,Emergency Telecommunications,
+FS,Food Security,
+HEAL,Health,
+LEGAL,Legal Services,
+LL,Llivelihood,
+LOGS,Logistics,
+MHPSS,Mental Health & PSS,
+NUT,Nutrition,
+PROT,Protection,
+SHEL,Emergency Shelter,
+WASH,Water Sanitation Hygiene,
