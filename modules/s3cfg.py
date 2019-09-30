@@ -132,7 +132,8 @@ class S3Config(Storage):
     # defaults to ["Helvetica", "Helvetica-Bold"] if not-specified here
     # Requires installation of appropriate font - e.g. using import_font in tasks.cfg
     # Unifont can be downloaded from http://unifoundry.com/pub/unifont-7.0.06/font-builds/unifont-7.0.06.ttf
-    fonts = {"ar": ["unifont", "unifont"],
+    fonts = {"ar": ["iran_sans/fonts/ttf/IRANSansWeb", "iran_sans/fonts/ttf/IRANSansWeb_Bold"],
+             "fa": ["iran_sans/fonts/ttf/IRANSansWeb", "iran_sans/fonts/ttf/IRANSansWeb_Bold"],
              #"dv": ["unifont", "unifont"],
              #"dz": ["unifont", "unifont"],
              "km": ["unifont", "unifont"],

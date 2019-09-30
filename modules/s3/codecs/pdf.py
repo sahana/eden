@@ -79,6 +79,8 @@ except ImportError:
     biDiImported = False
     current.log.warning("PDF Codec", "BiDirectional Support not available: Install Python-BiDi")
 
+from rtl import reshaper
+
 PDF_WIDTH = 0
 PDF_HEIGHT = 1
 
@@ -124,29 +126,16 @@ def biDiText(text):
     """
 
     text = s3_unicode(text)
-
-    if biDiImported and current.deployment_settings.get_pdf_bidi():
-
-        isArabic = False
-        isBidi = False
-
-        for c in text:
-            cat = unicodedata.bidirectional(c)
-
-            if cat in ("AL", "AN"):
-                isArabic = True
-                isBidi = True
-                break
-            elif cat in ("R", "RLE", "RLO"):
-                isBidi = True
-
-        if isArabic:
-            text = arabic_reshaper.reshape(text)
-
-        if isBidi:
-            text = get_display(text)
-
-    return text
+    result = ''
+    if reshaper.has_arabic_letters(text):
+        for word in text.split(' '):
+            if reshaper.is_arabic_word(word) or reshaper.has_arabic_letters(word) or reshaper.has_digits(word):
+                result = ' ' + get_display(arabic_reshaper.reshape(word)) + result
+            else:
+                result += ' ' + word
+    else:
+        result = text
+    return result
 
 # =============================================================================
 class S3RL_PDF(S3Codec):
