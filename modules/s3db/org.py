@@ -481,14 +481,14 @@ class S3OrganisationModel(S3Model):
         # Default widget
         if settings.get_org_autocomplete():
             tooltip = messages.AUTOCOMPLETE_HELP
-            default_widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
+            default_widget = S3OrganisationAutocompleteWidget(default_from_profile = True)
         else:
             tooltip = T("If you don't see the Organization in the list, you can add a new one by clicking link 'Create Organization'.")
             default_widget = None
         org_widgets = {"default": default_widget}
 
         # Representation for foreign keys
-        org_organisation_represent = org_OrganisationRepresent(show_link=True)
+        org_organisation_represent = org_OrganisationRepresent(show_link = True)
 
         # Fields for text filter
         text_fields = ["name",
@@ -6546,7 +6546,7 @@ def org_organisation_controller():
             table = s3db.org_organisation_branch
             table.organisation_id.represent = \
                 org_OrganisationRepresent(acronym=False)
-            table.branch_id.represent = org_OrganisationRepresent(parent=False)
+            table.branch_id.represent = org_OrganisationRepresent(parent = False)
             s3db.configure("org_organisation_branch",
                            list_fields = ["organisation_id",
                                           "branch_id",
@@ -6713,8 +6713,8 @@ def org_organisation_controller():
                     if row:
                         ostable.sector_id.default = row.sector_id
                     # Represent orgs without the parent prefix as we have that context already
-                    branch_represent = org_OrganisationRepresent(parent=False,
-                                                                 skip_dt_orderby=True,
+                    branch_represent = org_OrganisationRepresent(parent = False,
+                                                                 skip_dt_orderby = True,
                                                                  )
                     s3db.org_organisation_branch.branch_id.represent = branch_represent
 
@@ -7072,6 +7072,9 @@ def org_facility_controller():
                             field.default = organisation_id
                             field.writable = False
                             field.readable = False
+
+                elif method == "report":
+                    table.organisation_id.represent = org_OrganisationRepresent() # show_link = False
 
             else:
                 cname = r.component_name
@@ -8117,8 +8120,8 @@ class org_CapacityReport(S3Method):
                         append(TD(rating))
                     rappend(row)
 
-                orepresent = org_OrganisationRepresent(parent=False,
-                                                       acronym=False)
+                orepresent = org_OrganisationRepresent(parent = False,
+                                                       acronym = False)
                 orgs = [TH(orepresent(o)) for o in orgs]
 
                 items = TABLE(THEAD(TR(TH("TOPICS", _rowspan=2),
@@ -8279,8 +8282,8 @@ class org_CapacityReport(S3Method):
         sheet1.row(1).write(4, "D", styleHeader)
         sheet1.row(1).write(5, "E", styleHeader)
         sheet1.row(1).write(6, "F", styleHeader)
-        orepresent = org_OrganisationRepresent(parent=False,
-                                               acronym=False)
+        orepresent = org_OrganisationRepresent(parent = False,
+                                               acronym = False)
         col = 7
         for o in orgs:
             sheet1.row(1).write(col, orepresent(o), styleHeader)
