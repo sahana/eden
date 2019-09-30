@@ -2968,7 +2968,7 @@ def poi():
                         form_vars = Storage(lat = float(lat),
                                             lon = float(lon),
                                             )
-                        form = Storage(vars=form_vars)
+                        form = Storage(vars = form_vars)
                         s3db.gis_location_onvalidation(form)
                         id = s3db.gis_location.insert(**form_vars)
                         field.default = id
@@ -3003,13 +3003,13 @@ def poi():
                                                          limitby=(0, 1)
                                                          ).first()
                 if layer:
-                    popup_edit_url = r.url(method="update",
-                                           representation="popup",
-                                           vars={"refresh_layer":layer.layer_id},
+                    popup_edit_url = r.url(method = "update",
+                                           representation = "popup",
+                                           vars = {"refresh_layer": layer.layer_id},
                                            )
                 else:
-                    popup_edit_url = r.url(method="update",
-                                           representation="popup",
+                    popup_edit_url = r.url(method = "update",
+                                           representation = "popup",
                                            )
 
                 s3db.configure("gis_poi",
@@ -3024,7 +3024,7 @@ def poi():
             # Normal Action Buttons
             s3_action_buttons(r, deletable=False)
             # Custom Action Buttons
-            s3.actions += [{"label": str(T("Show on Map")),
+            s3.actions += [{"label": s3base.s3_str(T("Show on Map")),
                             "_class": "action-btn",
                             "url": URL(f = "index",
                                        vars = {"poi": "[id]"},
@@ -3036,7 +3036,7 @@ def poi():
 
     dt_bulk_actions = [(T("Delete"), "delete")]
 
-    return s3_rest_controller(dtargs={"dt_bulk_actions": dt_bulk_actions})
+    return s3_rest_controller(dtargs = {"dt_bulk_actions": dt_bulk_actions})
 
 # =============================================================================
 def display_feature():

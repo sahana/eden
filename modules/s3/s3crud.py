@@ -384,20 +384,20 @@ class S3CRUD(S3Method):
                 self._default_cancel_button(r)
 
             # Get the form
-            output["form"] = self.sqlform(request=request,
-                                          resource=resource,
-                                          data=self.data,
-                                          record_id=original,
-                                          from_table=from_table,
-                                          from_record=from_record,
-                                          map_fields=map_fields,
-                                          onvalidation=onvalidation,
-                                          onaccept=onaccept,
-                                          link=link,
-                                          hierarchy=hierarchy,
-                                          message=message,
-                                          subheadings=subheadings,
-                                          format=representation,
+            output["form"] = self.sqlform(request = request,
+                                          resource = resource,
+                                          data = self.data,
+                                          record_id = original,
+                                          from_table = from_table,
+                                          from_record = from_record,
+                                          map_fields = map_fields,
+                                          onvalidation = onvalidation,
+                                          onaccept = onaccept,
+                                          link = link,
+                                          hierarchy = hierarchy,
+                                          message = message,
+                                          subheadings = subheadings,
+                                          format = representation,
                                           )
 
             # Navigate-away confirmation
@@ -429,11 +429,11 @@ class S3CRUD(S3Method):
                 if not create_next:
                     next_vars = self._remove_filters(r.get_vars)
                     if r.component:
-                        self.next = r.url(method="", vars=next_vars)
+                        self.next = r.url(method = "", vars = next_vars)
                     else:
-                        self.next = r.url(id="[id]",
-                                          method="read",
-                                          vars=next_vars)
+                        self.next = r.url(id = "[id]",
+                                          method = "read",
+                                          vars = next_vars)
                 elif callable(create_next):
                     self.next = create_next(r)
                 else:
@@ -448,15 +448,15 @@ class S3CRUD(S3Method):
             subheadings = _config("subheadings")
             output["title"] = crud_string(tablename, "label_create")
             output["details_btn"] = ""
-            output["item"] = self.sqlform(request=request,
-                                          resource=resource,
-                                          data=self.data,
-                                          onvalidation=onvalidation,
-                                          onaccept=onaccept,
-                                          #link=link,
-                                          message=message,
-                                          subheadings=subheadings,
-                                          format=representation)
+            output["item"] = self.sqlform(request = request,
+                                          resource = resource,
+                                          data = self.data,
+                                          onvalidation = onvalidation,
+                                          onaccept = onaccept,
+                                          #link = link,
+                                          message = message,
+                                          subheadings = subheadings,
+                                          format = representation)
 
         elif representation == "csv":
             import cgi
@@ -738,11 +738,11 @@ class S3CRUD(S3Method):
                         value = None
                     if value is None or value == "" or value == []:
                         field.readable = False
-                item = self.sqlform(request=request,
-                                    resource=resource,
-                                    record_id=record_id,
-                                    readonly=True,
-                                    format=representation)
+                item = self.sqlform(request = request,
+                                    resource = resource,
+                                    record_id = record_id,
+                                    readonly = True,
+                                    format = representation)
 
                 # Link to Open record
                 popup_edit_url = _config("popup_edit_url", None)
@@ -750,8 +750,8 @@ class S3CRUD(S3Method):
                    current.auth.s3_has_permission("update", table, record_id):
                     # Open edit form in iframe
                     details_btn = A(T("Edit"),
-                                    _href=popup_edit_url,
-                                    _class="btn iframe",
+                                    _href = popup_edit_url,
+                                    _class = "btn iframe",
                                     )
                     output["details_btn"] = details_btn
                 else:
