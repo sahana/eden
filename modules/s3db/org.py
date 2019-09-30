@@ -2762,6 +2762,7 @@ class S3OrganisationServiceModel(S3Model):
 
         # Report axes
         report_fields = ["organisation_id",
+                         "site_id",
                          "service_location_service.service_id",
                          ]
         add_report_field = report_fields.append
