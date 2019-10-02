@@ -2793,17 +2793,23 @@ def config(settings):
         if r.interactive or r.representation in ("aadata", "xls", "pdf"):
 
             ui_options = get_ui_options()
+            human_resource_id = current.auth.s3_logged_in_human_resource()
 
             # Use drop-down for human_resource_id
             field = table.human_resource_id
-            field.default = current.auth.s3_logged_in_human_resource()
+            field.default = human_resource_id
             field.represent = s3db.hrm_HumanResourceRepresent(show_link=False)
             field.widget = None
-            # Use field options as filter options
-            try:
-                hr_filter_opts = field.requires.options()
-            except AttributeError:
-                hr_filter_opts = False
+
+            hr_filter_opts = False
+            mine = r.get_vars.get("mine") in ("a", "r")
+            if not mine:
+                # Populate hr_filter_opts to enable filter widget
+                # - use field options as filter options
+                try:
+                    hr_filter_opts = field.requires.options()
+                except AttributeError:
+                    pass
 
             # Require explicit unit in hours-widget above 4 hours
             from s3 import S3HoursWidget
@@ -3017,10 +3023,10 @@ def config(settings):
                     if hr_filter_opts:
                         hr_filter_opts = dict(hr_filter_opts)
                         hr_filter_opts.pop('', None)
-                        filter_widgets.insert(-2,
+                        filter_widgets.insert(2,
                             S3OptionsFilter("human_resource_id",
+                                            default = human_resource_id,
                                             header = True,
-                                            hidden = True,
                                             options = dict(hr_filter_opts),
                                             ))
 
