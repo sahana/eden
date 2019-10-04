@@ -3111,10 +3111,10 @@ def config(settings):
                     return False
 
             if not r.id:
-                from .stats import ResponsePerformanceIndicators
+                from .stats import PerformanceIndicatorExport
                 s3db.set_method("dvr", "response_action",
                                 method = "indicators",
-                                action = ResponsePerformanceIndicators,
+                                action = PerformanceIndicatorExport,
                                 )
                 export_formats = list(settings.get_ui_export_formats())
                 export_formats.append(("indicators.xls",

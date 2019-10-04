@@ -7,7 +7,7 @@ from s3.codecs.xls import S3XLS
 from s3compat import BytesIO
 
 # =============================================================================
-class ResponsePerformanceIndicators(S3Method):
+class PerformanceIndicatorExport(S3Method):
     """ REST Method to produce a response statistics data sheet """
 
     def __init__(self):
@@ -15,7 +15,7 @@ class ResponsePerformanceIndicators(S3Method):
             Constructor
         """
 
-        self.styles = None
+        self.indicators = PerformanceIndicators()
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
@@ -47,28 +47,25 @@ class ResponsePerformanceIndicators(S3Method):
             @param attr: controller attributes
         """
 
-        T = current.T
-        s3db = current.s3db
-
         try:
             import xlwt
         except ImportError:
             raise HTTP(503, body="XLWT not installed")
 
-        title = s3_str(T("Performance Indicators"))
-        write = self.write
+        T = current.T
+        resource = self.resource
+        table = resource.table
+
+        # Get the statistics
+        indicators = self.indicators
 
         # Create workbook and sheet
         book = xlwt.Workbook(encoding="utf-8")
+
+        title = s3_str(T("Performance Indicators"))
         sheet = book.add_sheet(title)
 
-        # Get the statistics
-        resource = self.resource
-        table = resource.table
-        indicators = self.indicators(resource)
-
         # Title and Report Dates (from filter)
-        write(sheet, 0, 0, title, style="header")
         dates = []
         get_vars = r.get_vars
         field = table.date
@@ -83,70 +80,10 @@ class ResponsePerformanceIndicators(S3Method):
                     dates.append(field.represent(dt))
             else:
                 dates.append("...")
-        if dates:
-            write(sheet, 1, 0, " -- ".join(dates))
+        dates = " -- ".join(dates) if dates else None
 
-        # Basic performance indicators
-        rowindex = 3
-        # Total number of consultations
-        write(sheet, rowindex, 0, T("Total Number of Consultations"))
-        write(sheet, rowindex, 1, indicators.get("total_responses", ""))
-
-        rowindex += 1
-        write(sheet, rowindex, 0, T("Total Number of Clients"))
-        write(sheet, rowindex, 1, indicators.get("total_clients", ""))
-
-        rowindex += 1
-        write(sheet, rowindex, 0, T("Average Duration of Consultations (minutes)"))
-        avg_hours_per_response = indicators.get("avg_hours_per_response")
-        if avg_hours_per_response:
-            avg_minutes_per_response = int(round(avg_hours_per_response * 60))
-        else:
-            avg_minutes_per_response = ""
-        write(sheet, rowindex, 1, avg_minutes_per_response)
-
-        rowindex += 1
-        write(sheet, rowindex, 0, T("Average Number of Consultations per Client"))
-        write(sheet, rowindex, 1, indicators.get("avg_responses_per_client", ""))
-
-        # Distribution
-        rowindex = 8
-        write(sheet, rowindex, 0, T("Distribution of Clients"))
-
-        write(sheet, rowindex, 1, T("Single"))
-        write(sheet, rowindex, 2, indicators.get("singles", ""))
-
-        rowindex += 1
-        write(sheet, rowindex, 1, T("Family"))
-        write(sheet, rowindex, 2, indicators.get("families", ""))
-
-        rowindex += 1
-        write(sheet, rowindex, 1, T("Group Counseling"))
-
-        rowindex += 1
-        write(sheet, rowindex, 1, T("Individual Counseling"))
-        write(sheet, rowindex, 2, indicators.get("total_responses", ""))
-
-        # Top-5's
-        rowindex = 13
-        write(sheet, rowindex, 0, T("Top 5 Countries of Origin"))
-        top_5_nationalities = indicators.get("top_5_nationalities")
-        if top_5_nationalities:
-            dtable = s3db.pr_person_details
-            field = dtable.nationality
-            for rank, nationality in enumerate(top_5_nationalities):
-                write(sheet, rowindex, 1, "%s - %s" % (rank + 1, field.represent(nationality)))
-                rowindex += 1
-
-        rowindex += 1
-        write(sheet, rowindex, 0, T("Top 5 Counseling Reasons"))
-        top_5_needs = indicators.get("top_5_needs")
-        if top_5_needs:
-            ttable = s3db.dvr_response_theme
-            field = ttable.need_id
-            for rank, need in enumerate(top_5_needs):
-                write(sheet, rowindex, 1, "%s - %s" % (rank + 1, field.represent(need)))
-                rowindex += 1
+        # Write the performance indicators
+        indicators.export(resource, sheet, title, subtitle=dates)
 
         # Output
         output = BytesIO()
@@ -166,40 +103,20 @@ class ResponsePerformanceIndicators(S3Method):
                                request=r,
                                )
 
-    # -------------------------------------------------------------------------
-    def write(self, sheet, rowindex, colindex, label, style="odd"):
-        """
-            Write a label/value into the XLS worksheet
+# =============================================================================
+class PerformanceIndicators(object):
+    """ Default Performance Indicators Set """
 
-            @param sheet: the worksheet
-            @param rowindex: the row index
-            @param colindex: the column index
-            @param label: the label/value to write
-            @param style: style name (S3XLS styles)
+    def __init__(self):
+        """
+            Constructor
         """
 
-        styles = self.styles
-        if not styles:
-            self.styles = styles = S3XLS._styles()
-
-        style = styles.get(style)
-        if not style:
-            import xlwt
-            style = xlwt.XFStyle()
-
-        label = s3_str(label)
-
-        # Adjust column width
-        col = sheet.col(colindex)
-        curwidth = col.width or 0
-        adjwidth = max(len(label) * 240, 2480) if label else 2480
-        col.width = max(curwidth, adjwidth)
-
-        row = sheet.row(rowindex)
-        row.write(colindex, label, style)
+        self.styles = None
 
     # -------------------------------------------------------------------------
-    def indicators(self, resource):
+    @staticmethod
+    def compute(resource):
         """
             Query/compute the performance indicators
 
@@ -296,5 +213,126 @@ class ResponsePerformanceIndicators(S3Method):
                 "singles": singles,
                 "families": families,
                 }
+
+    # -------------------------------------------------------------------------
+    def export(self, resource, sheet, title, subtitle=None):
+        """
+            Export performance indicators
+
+            @param resource: the S3Resource
+            @param sheet: the XLS worksheet to write to
+            @param title: the title for the export
+            @param subtitle: an optional subtitle (e.g. start+end dates)
+        """
+
+        T = current.T
+        s3db = current.s3db
+
+        indicators = self.compute(resource)
+
+        write = self.write
+        rowindex = 0
+
+        # Title
+        write(sheet, rowindex, 0, title, style="header")
+        rowindex += 1
+
+        # Subtitle (optional)
+        if subtitle:
+            write(sheet, rowindex, 0, subtitle)
+            rowindex += 2
+        else:
+            rowindex += 1
+
+        # Basic performance indicators
+        write(sheet, rowindex, 0, T("Total Number of Consultations"))
+        write(sheet, rowindex, 1, indicators.get("total_responses", ""))
+        rowindex += 1
+
+        write(sheet, rowindex, 0, T("Total Number of Clients"))
+        write(sheet, rowindex, 1, indicators.get("total_clients", ""))
+        rowindex += 1
+
+        write(sheet, rowindex, 0, T("Average Duration of Consultations (minutes)"))
+        avg_hours_per_response = indicators.get("avg_hours_per_response")
+        if avg_hours_per_response:
+            avg_minutes_per_response = int(round(avg_hours_per_response * 60))
+        else:
+            avg_minutes_per_response = ""
+        write(sheet, rowindex, 1, avg_minutes_per_response)
+        rowindex += 1
+
+        write(sheet, rowindex, 0, T("Average Number of Consultations per Client"))
+        write(sheet, rowindex, 1, indicators.get("avg_responses_per_client", ""))
+        rowindex += 2
+
+        # Distribution
+        write(sheet, rowindex, 0, T("Distribution of Clients"))
+        write(sheet, rowindex, 1, T("Single"))
+        write(sheet, rowindex, 2, indicators.get("singles", ""))
+        rowindex += 1
+
+        write(sheet, rowindex, 1, T("Family"))
+        write(sheet, rowindex, 2, indicators.get("families", ""))
+        rowindex += 1
+
+        write(sheet, rowindex, 1, T("Group Counseling"))
+        rowindex += 1
+
+        write(sheet, rowindex, 1, T("Individual Counseling"))
+        write(sheet, rowindex, 2, indicators.get("total_responses", ""))
+        rowindex += 2
+
+        # Top-5's
+        write(sheet, rowindex, 0, T("Top 5 Countries of Origin"))
+        top_5_nationalities = indicators.get("top_5_nationalities")
+        if top_5_nationalities:
+            dtable = s3db.pr_person_details
+            field = dtable.nationality
+            for rank, nationality in enumerate(top_5_nationalities):
+                write(sheet, rowindex, 1, "%s - %s" % (rank + 1, field.represent(nationality)))
+                rowindex += 1
+
+        rowindex += 1
+        write(sheet, rowindex, 0, T("Top 5 Counseling Reasons"))
+        top_5_needs = indicators.get("top_5_needs")
+        if top_5_needs:
+            ttable = s3db.dvr_response_theme
+            field = ttable.need_id
+            for rank, need in enumerate(top_5_needs):
+                write(sheet, rowindex, 1, "%s - %s" % (rank + 1, field.represent(need)))
+                rowindex += 1
+
+    # -------------------------------------------------------------------------
+    def write(self, sheet, rowindex, colindex, label, style="odd"):
+        """
+            Write a label/value into the XLS worksheet
+
+            @param sheet: the worksheet
+            @param rowindex: the row index
+            @param colindex: the column index
+            @param label: the label/value to write
+            @param style: style name (S3XLS styles)
+        """
+
+        styles = self.styles
+        if not styles:
+            self.styles = styles = S3XLS._styles()
+
+        style = styles.get(style)
+        if not style:
+            import xlwt
+            style = xlwt.XFStyle()
+
+        label = s3_str(label)
+
+        # Adjust column width
+        col = sheet.col(colindex)
+        curwidth = col.width or 0
+        adjwidth = max(len(label) * 240, 2480) if label else 2480
+        col.width = max(curwidth, adjwidth)
+
+        row = sheet.row(rowindex)
+        row.write(colindex, label, style)
 
 # END =========================================================================
