@@ -50,6 +50,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "response_themes_optional": False,
                "response_types": True,
                "response_use_organizer": False,
+               "response_performance_indicators": None, # default
                }
 
 UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
@@ -88,6 +89,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "response_themes_optional": True,
                       "response_types": False,
                       "response_use_organizer": True,
+                      "response_performance_indicators": "lea",
                       },
               }
 
@@ -3112,9 +3114,10 @@ def config(settings):
 
             if not r.id:
                 from .stats import PerformanceIndicatorExport
+                pitype = get_ui_options().get("response_performance_indicators")
                 s3db.set_method("dvr", "response_action",
                                 method = "indicators",
-                                action = PerformanceIndicatorExport,
+                                action = PerformanceIndicatorExport(pitype),
                                 )
                 export_formats = list(settings.get_ui_export_formats())
                 export_formats.append(("indicators.xls",
