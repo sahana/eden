@@ -349,15 +349,15 @@ def config(settings):
                     # Included in Contacts tab:
                     #(T("Emergency Contacts"), "contact_emergency"),
                     ]
+            get_vars_get = r.get_vars.get
             has_role = current.auth.s3_has_role
-            if has_role("ADMIN"):
-                if not r.get_vars.get("donors"):
-                    tabs.append((T("Additional Information"), "additional"))
-            elif has_role("DONOR"):
+            if get_vars_get("donors") or \
+               has_role("DONOR", include_admin=False):
                 # Better on main form using S3SQLInlineLink
                 #tabs.append((T("Goods / Services"), "item"))
                 pass
-            elif has_role("GROUP_ADMIN"):
+            elif get_vars_get("groups") or \
+                 has_role("GROUP_ADMIN", include_admin=False):
                 # Better as menu item, to be able to access tab(s)
                 #tabs.append((T("Group"), "group"))
                 pass
@@ -365,8 +365,8 @@ def config(settings):
                 tabs.append((T("Additional Information"), "additional"))
                 # Better on main form using S3SQLInlineLink  
                 #tabs.append((T("Skills"), "competency"))
-            if has_role("ORG_ADMIN"):
-                tabs.insert(1, (T("Affiliation"), "human_resource"))
+                if has_role("ORG_ADMIN"):
+                    tabs.insert(1, (T("Affiliation"), "human_resource"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
@@ -523,7 +523,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_doc_document_resource(r, tablename):
 
-        from gluon import URL
+        from gluon import IS_IN_SET, URL
         from s3 import S3SQLCustomForm, S3TextFilter
 
         #from templates.CCC.controllers import doc_document_list_layout
@@ -544,6 +544,29 @@ def config(settings):
 
         s3db = current.s3db
 
+        # Filtered components
+        s3db.add_components("doc_document",
+                            doc_document_tag = ({"name": "document_type",
+                                                 "joinby": "document_id",
+                                                 "filterby": {"tag": "document_type"},
+                                                 "multiple": False,
+                                                 },
+                                                ),
+                            )
+
+        # Individual settings for specific tag components
+        components_get = s3db.resource(tablename).components.get
+
+        document_type = components_get("document_type")
+        f = document_type.table.value
+        f.requires = IS_IN_SET(["Emergency Plan",
+                                "Contact Information",
+                                "Risk Assessment",
+                                "Guidance Document",
+                                "Map",
+                                "Other",
+                                ])
+
         f = s3db.doc_document.organisation_id
         user = current.auth.user
         organisation_id = user and user.organisation_id
@@ -555,12 +578,14 @@ def config(settings):
         s3db.configure("doc_document",
                        create_next = URL(args="datalist"),
                        crud_form = S3SQLCustomForm("organisation_id",
+                                                   (T("Type"), "document_type.value"),
                                                    (T("Document Name"), "name"),
                                                    "file",
                                                    "date",
                                                    "comments",
                                                    ),
                        list_fields = ["organisation_id",
+                                      "document_type.value",
                                       "name",
                                       "file",
                                       "date",
@@ -1066,16 +1091,16 @@ def config(settings):
 
         s3db.configure("pr_group",
                        crud_form = S3SQLCustomForm("name",
-                                                   (T("# Volunteers"), "volunteers.value"),
+                                                   (T("Approximate Number of Volunteers"), "volunteers.value"),
                                                    (T("Mode of Transport"), "transport.value"),
                                                    S3SQLInlineLink("skill",
                                                                    field = "skill_id",
                                                                    label = T("Volunteer Offer"),
                                                                    ),
-                                                   (T("Skills Details"), "skills_details.value"),
+                                                   (T("Please specify details"), "skills_details.value"),
                                                    S3SQLInlineLink("location",
                                                                    field = "location_id",
-                                                                   label = T("Where would you be willing to operate?"),
+                                                                   label = T("Where would you be willing to volunteer?"),
                                                                    ),
                                                    (T("Emergency Contact Name"), "contact_name.value"),
                                                    (T("Emergency Contact Number"), "contact_number.value"),
@@ -1159,7 +1184,33 @@ def config(settings):
         attr["rheader"] = ccc_rheader
 
         # Allow components with components (i.e. persons) to breakout from tabs
-        attr["native"] = True
+        #attr["native"] = True
+
+        # Custom postp
+        standard_postp = s3.postp
+        def postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.component_name == "person":
+                # Include get_vars on Action Buttons to configure crud_form/crud_strings appropriately
+                from gluon import URL
+                from s3 import S3CRUD
+
+                read_url = URL(c="pr", f="person", args=["[id]", "read"],
+                               vars = {"groups": 1})
+
+                update_url = URL(c="pr", f="person", args=["[id]", "update"],
+                                 vars = {"groups": 1})
+
+                S3CRUD.action_buttons(r,
+                                      read_url = read_url,
+                                      update_url = update_url,
+                                      )
+
+            return output
+        s3.postp = postp
 
         return attr
 
@@ -1284,7 +1335,8 @@ def config(settings):
 
         get_vars_get = r.get_vars.get
         has_role = current.auth.s3_has_role
-        if get_vars_get("donors") or has_role("DONOR", include_admin=False):
+        if get_vars_get("donors") or \
+           has_role("DONOR", include_admin=False):
             # Donor
             crud_fields = ["first_name",
                            "middle_name",
@@ -1306,7 +1358,9 @@ def config(settings):
                            (T("Length of time the offer is available?"), "availability.value"),
                            "comments",
                            ]
-        elif get_vars_get("groups") or has_role("GROUP_ADMIN", include_admin=False):
+        elif get_vars_get("groups") or \
+             r.function == "group" or \
+             has_role("GROUP_ADMIN", include_admin=False):
             # Group Admin
             # Skills are recorded at the Group level
             crud_fields = ["first_name",
@@ -1382,7 +1436,8 @@ def config(settings):
 
             get_vars_get = r.get_vars.get
             has_role = current.auth.s3_has_role
-            if get_vars_get("reserves") or has_role("RESERVE", include_admin=False):
+            if get_vars_get("reserves") or \
+               has_role("RESERVE", include_admin=False):
                 # Reserve Volunteers
                 from s3 import FS, S3OptionsFilter, S3TextFilter
                 resource = r.resource
@@ -1440,7 +1495,8 @@ def config(settings):
                     msg_record_deleted = T("Reserve Volunteer deleted"),
                     msg_list_empty = T("No Reserve Volunteers currently registered")
                     )   
-            elif get_vars_get("donors") or has_role("DONOR", include_admin=False):
+            elif get_vars_get("donors") or \
+                 has_role("DONOR", include_admin=False):
                 # Donors
                 from s3 import FS, S3OptionsFilter, S3TextFilter
                 resource = r.resource
@@ -1490,7 +1546,8 @@ def config(settings):
                     msg_record_deleted = T("Donor deleted"),
                     msg_list_empty = T("No Donors currently registered")
                     ) 
-            elif has_role("GROUP_ADMIN", include_admin=False):
+            elif get_vars_get("groups") or \
+                 has_role("GROUP_ADMIN", include_admin=False):
                 # Group Members
                 s3.crud_strings[r.tablename] = Storage(
                     label_create = T("New Member"),

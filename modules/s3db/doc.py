@@ -28,6 +28,7 @@
 """
 
 __all__ = ("S3DocumentLibrary",
+           "S3DocumentTagModel",
            "S3CKEditorModel",
            "S3DataCardModel",
            "doc_image_represent",
@@ -68,6 +69,7 @@ class S3DocumentLibrary(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         # Shortcuts
+        add_components = self.add_components
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -126,10 +128,10 @@ class S3DocumentLibrary(S3Model):
 
         # Components
         doc_id = "doc_id"
-        self.add_components(tablename,
-                            doc_document = doc_id,
-                            doc_image = doc_id,
-                            )
+        add_components(tablename,
+                       doc_document = doc_id,
+                       doc_image = doc_id,
+                       )
 
         # ---------------------------------------------------------------------
         # Documents
@@ -255,6 +257,10 @@ class S3DocumentLibrary(S3Model):
                                                            "doc_document.id",
                                                            represent),
                                       )
+
+        add_components(tablename,
+                       doc_document_tag = document_id,
+                       )
 
         # ---------------------------------------------------------------------
         # Images
@@ -532,6 +538,49 @@ class S3DocumentLibrary(S3Model):
         current.s3task.async("document_delete_index",
                              args = [document],
                              )
+
+# =============================================================================
+class S3DocumentTagModel(S3Model):
+    """
+        Document Tags
+    """
+
+    names = ("doc_document_tag",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Document Tags
+        # - Key-Value extensions
+        # - can be used to provide conversions to external systems
+        # - can be a Triple Store for Semantic Web support
+        # - can be used to add a document type
+        # - can be used to add custom fields
+        #
+        tablename = "doc_document_tag"
+        self.define_table(tablename,
+                          self.doc_document_id(),
+                          # key is a reserved word in MySQL
+                          Field("tag",
+                                label = T("Key"),
+                                ),
+                          Field("value",
+                                label = T("Value"),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("document_id",
+                                                            "tag",
+                                                            ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
 
 # =============================================================================
 def doc_image_represent(filename):
