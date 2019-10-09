@@ -2026,7 +2026,7 @@ def config(settings):
                 field.requires = IS_EMPTY_OR(IS_ONE_OF(
                                                 dbset, "dvr_response_action.id",
                                                 field.represent,
-                                                orderby = ~rtable.date,
+                                                orderby = ~rtable.start_date,
                                                 sort = False,
                                                 ))
             else:
@@ -2052,7 +2052,7 @@ def config(settings):
                 response_action_fields = ["response_theme_ids",
                                           "comments",
                                           "human_resource_id",
-                                          "date", # TODO fix to use start_date
+                                          "start_date",
                                           "status_id",
                                           "hours",
                                           ]
