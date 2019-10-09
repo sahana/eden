@@ -503,6 +503,7 @@ class PerformanceIndicatorExport(S3Method):
         sheet = book.add_sheet(title)
 
         # Title and Report Dates (from filter)
+        # TODO fix for new start_date regime
         dates = []
         get_vars = r.get_vars
         field = table.date

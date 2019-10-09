@@ -1064,6 +1064,11 @@ class S3DateFilter(S3RangeFilter):
             timepicker = False if ftype == "date" or hide_time else True
             if timepicker and "datetimepicker" not in input_class:
                 input_class += " datetimepicker"
+            if ftype != "date" and hide_time:
+                # Indicate that this filter is for a datetime field but
+                # with a hidden time selector (so it shall add a suitable
+                # time fragment automatically)
+                input_class += " hide-time"
 
             for operator in operators:
 

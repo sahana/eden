@@ -482,7 +482,7 @@ class DVRCaseModel(S3Model):
 
         # CRUD Strings
         if beneficiary:
-            label = T("Beneficiary"),
+            label = T("Beneficiary")
             crud_strings[tablename] = Storage(
                 label_create = T("Create Beneficiary"),
                 title_display = T("Beneficiary Details"),
@@ -497,7 +497,7 @@ class DVRCaseModel(S3Model):
                 )
 
         else:
-            label = T("Case"),
+            label = T("Case")
             crud_strings[tablename] = Storage(
                 label_create = T("Create Case"),
                 title_display = T("Case Details"),
@@ -1668,6 +1668,9 @@ class DVRResponseModel(S3Model):
         response_themes_details = settings.get_dvr_response_themes_details()
 
         use_due_date = settings.get_dvr_response_due_date()
+        DATE = T("Date Actioned") if use_due_date else T("Date")
+
+        use_time = settings.get_dvr_response_use_time()
 
         tablename = "dvr_response_action"
         define_table(tablename,
@@ -1700,9 +1703,23 @@ class DVRResponseModel(S3Model):
                              readable = use_due_date,
                              writable = use_due_date,
                              ),
-                     s3_date(label = T("Date Actioned") if use_due_date else T("Date"),
+                     # For backwards-compatibility:
+                     s3_date(label = DATE,
                              default = None if use_due_date else "now",
+                             readable = False,
+                             writable = False,
                              ),
+                     s3_datetime("start_date",
+                                 label = DATE,
+                                 default = None if use_due_date else "now",
+                                 widget = None if use_time else "date",
+                                 ),
+                     s3_datetime("end_date",
+                                 label = T("End"),
+                                 widget = None if use_time else "date",
+                                 readable = False,
+                                 writable = False,
+                                 ),
                      self.hrm_human_resource_id(),
                      response_status_id(),
                      Field("hours", "double",
@@ -1724,10 +1741,11 @@ class DVRResponseModel(S3Model):
                        "comments",
                        "human_resource_id",
                        #"date_due",
-                       "date",
+                       "start_date",
                        "hours",
                        "status_id",
                        ]
+
         if use_due_date:
             list_fields[3:3] = ["date_due"]
         if use_response_types:
@@ -1808,7 +1826,7 @@ class DVRResponseModel(S3Model):
                                     details_field,
                                     "human_resource_id",
                                     due_field,
-                                    "date",
+                                    "start_date",
                                     "status_id",
                                     "hours",
                                     )
@@ -2009,10 +2027,10 @@ class DVRResponseModel(S3Model):
                 raise RuntimeError("Attempt to delete a theme that is referenced by a response")
         else:
             referenced_by = db(query).select(atable.id, reference)
-            for row in referenced_by:
+            for rrow in referenced_by:
                 # Clean up reference list
-                theme_ids = row[reference]
-                row.update_record(response_theme_ids = \
+                theme_ids = rrow[reference]
+                rrow.update_record(response_theme_ids = \
                     [tid for tid in theme_ids if tid != theme_id])
 
     # -------------------------------------------------------------------------
@@ -6392,7 +6410,7 @@ class dvr_ResponseActionRepresent(S3Represent):
 
         table = self.table
 
-        fields = [table.id, table.date, table.person_id]
+        fields = [table.id, table.start_date, table.person_id]
         if show_hr:
             fields.append(table.human_resource_id)
 
@@ -6415,7 +6433,7 @@ class dvr_ResponseActionRepresent(S3Represent):
         """
 
         table = self.table
-        date = table.date.represent(row.date)
+        date = table.start_date.represent(row.start_date)
 
         if self.show_hr:
             hr = table.human_resource_id.represent(row.human_resource_id,
@@ -7361,7 +7379,8 @@ class DVRManageAllowance(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    def validate(self, form):
+    @staticmethod
+    def validate(form):
         """
             Update form validation
 
@@ -8047,7 +8066,8 @@ class DVRRegisterCaseEvent(S3Method):
         return json.dumps(output)
 
     # -------------------------------------------------------------------------
-    def get_form_data(self, person, formfields, data, hidden, permitted=False):
+    @staticmethod
+    def get_form_data(person, formfields, data, hidden, permitted=False):
         """
             Helper function to extend the form
 
@@ -8959,10 +8979,7 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
                                "t": s3_str(date),
                                "h": payments,
                                }
-                if payments:
-                    output["u"] = True
-                else:
-                    output["u"] = False
+                output["u"] = True if payments else False
             else:
                 if not permitted:
                     alert = T("Payment registration not permitted")
@@ -9089,7 +9106,8 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
     # -------------------------------------------------------------------------
     # Class-specific functions
     # -------------------------------------------------------------------------
-    def get_payment_data(self, person_id):
+    @staticmethod
+    def get_payment_data(person_id):
         """
             Helper function to extract currently pending allowance
             payments for the person_id.
@@ -9132,7 +9150,8 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
         return payments
 
     # -------------------------------------------------------------------------
-    def register_payments(self, person_id, payments, date=None, comments=None):
+    @staticmethod
+    def register_payments(person_id, payments, date=None, comments=None):
         """
             Helper function to register payments
 
@@ -9195,7 +9214,8 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
         return updated, failed
 
     # -------------------------------------------------------------------------
-    def payment_data_represent(self, data):
+    @staticmethod
+    def payment_data_represent(data):
         """
             Representation method for the payment details field
 

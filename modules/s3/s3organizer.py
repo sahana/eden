@@ -822,6 +822,9 @@ class S3OrganizerWidget(object):
         tformat = settings.get_ui_organizer_time_format()
         if tformat:
             script_opts["timeFormat"] = tformat
+        snap_duration = settings.get_ui_organizer_snap_duration()
+        if snap_duration:
+            script_opts["snapDuration"] = snap_duration
 
         self.inject_script(widget_id, script_opts)
 

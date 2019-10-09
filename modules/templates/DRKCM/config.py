@@ -50,6 +50,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "response_themes_optional": False,
                "response_types": True,
                "response_use_organizer": False,
+               "response_use_time": False,
                "response_performance_indicators": None, # default
                }
 
@@ -89,6 +90,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "response_themes_optional": True,
                       "response_types": False,
                       "response_use_organizer": True,
+                      "response_use_time": True,
                       "response_performance_indicators": "lea",
                       },
               }
@@ -241,6 +243,8 @@ def config(settings):
 
     #settings.ui.auto_open_update = True
     #settings.ui.inline_cancel_edit = "submit"
+
+    #settings.ui.organizer_snap_duration = "00:10:00"
 
     # -------------------------------------------------------------------------
     # Document settings
@@ -450,6 +454,8 @@ def config(settings):
     settings.dvr.manage_response_actions = True
     # Planning response actions, or just documenting them?
     settings.dvr.response_planning = get_ui_option("response_planning")
+    # Responses use date+time
+    settings.dvr.response_use_time = get_ui_option("response_use_time")
     # Response planning uses separate due-date
     settings.dvr.response_due_date = get_ui_option("response_due_date")
     # Use response themes
@@ -2046,7 +2052,7 @@ def config(settings):
                 response_action_fields = ["response_theme_ids",
                                           "comments",
                                           "human_resource_id",
-                                          "date",
+                                          "date", # TODO fix to use start_date
                                           "status_id",
                                           "hours",
                                           ]
@@ -2707,7 +2713,7 @@ def config(settings):
         sorting = {"table": field.tablename,
                    "direction": direction,
                    }
-        orderby.append("%(table)s.date%(direction)s,%(table)s.created_on%(direction)s" % sorting)
+        orderby.append("%(table)s.start_date%(direction)s,%(table)s.created_on%(direction)s" % sorting)
 
     # -------------------------------------------------------------------------
     def customise_dvr_response_action_resource(r, tablename):
@@ -2730,6 +2736,9 @@ def config(settings):
                                             paragraph = True,
                                             details = True,
                                             )
+
+        # Use date+time in responses?
+        use_time = settings.get_dvr_response_use_time()
 
         # Using response types?
         use_response_type = settings.get_dvr_response_types()
@@ -2846,13 +2855,13 @@ def config(settings):
                 field.readable = field.writable = False
 
                 if response_themes_details:
-                    list_fields = ["date",
+                    list_fields = ["start_date",
                                    (T("Themes"), "dvr_response_action_theme.id"),
                                    "human_resource_id",
                                    "hours",
                                    "status_id",
                                    ]
-                    pdf_fields = ["date",
+                    pdf_fields = ["start_date",
                                   #"human_resource_id",
                                   (T("Themes"), "dvr_response_action_theme.id"),
                                   ]
@@ -2894,11 +2903,11 @@ def config(settings):
                                    "comments",
                                    "human_resource_id",
                                    date_due,
-                                   "date",
+                                   "start_date",
                                    "hours",
                                    "status_id",
                                    ]
-                    pdf_fields = ["date",
+                    pdf_fields = ["start_date",
                                   #"human_resource_id",
                                   "case_activity_id",
                                   response_type,
@@ -2924,7 +2933,7 @@ def config(settings):
                                response_type,
                                "human_resource_id",
                                date_due,
-                               "date",
+                               "start_date",
                                "hours",
                                "status_id",
                                ]
@@ -2990,8 +2999,9 @@ def config(settings):
                                         cols = 3,
                                         translate = True,
                                         ),
-                        S3DateFilter("date",
+                        S3DateFilter("start_date",
                                      hidden = not is_report,
+                                     hide_time = not use_time,
                                      ),
                         S3OptionsFilter(
                             "response_theme_ids",
@@ -3065,19 +3075,25 @@ def config(settings):
                            "human_resource_id",
                            "status_id",
                            ]
+
+        if r.method == "organize":
+            table.end_date.writable = True
         s3db.configure("dvr_response_action",
                        organize = {"title": "person_id",
                                    "description": description,
                                    "color": "status_id",
                                    "colors": s3db.dvr_response_status_colors,
+                                   "start": "start_date",
+                                   "end": "end_date",
+                                   "use_time": use_time,
                                    },
                        pdf_format = "list" if response_themes_details else "table",
-                       orderby = "dvr_response_action.date desc, dvr_response_action.created_on desc",
+                       orderby = "dvr_response_action.start_date desc, dvr_response_action.created_on desc",
                        )
 
         # Maintain consistent order for multiple response actions
         # on the same day (by enforcing created_on as secondary order criterion)
-        field = table.date
+        field = table.start_date
         field.represent.dt_orderby = response_date_dt_orderby
 
         # Custom onvalidation

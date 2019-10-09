@@ -474,6 +474,8 @@ def config(settings):
     #settings.ui.organizer_business_hours = {"dow": [1,2,3,4,5], "start": "08:00", "end": "18:00"}
     # Configure a time format for organizer events to override locale default
     #settings.ui.organizer_time_format = "H:mm"
+    # Configure the snap raster width in organizer (hh:mm:ss)
+    #settings.ui.organizer_snap_duration = "00:15:00"
 
     # -------------------------------------------------------------------------
     # Sync
@@ -708,6 +710,8 @@ def config(settings):
     #settings.dvr.response_planning = True
     # Uncomment this to use a separate due-date for responses
     #settings.dvr.response_due_date = True
+    # Uncomment this to use date+time for responses (instead of just date)
+    #settings.dvr.response_use_time = True
 
     # Configure a regular expression pattern for ID Codes (QR Codes)
     #settings.dvr.id_code_pattern = "(?P<label>[^,]*),(?P<first_name>[^,]*),(?P<last_name>[^,]*),(?P<date_of_birth>[^,]*)"

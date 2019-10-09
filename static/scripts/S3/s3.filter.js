@@ -523,10 +523,21 @@ S3.search = {};
                            ('0' + dt.getSeconds()).slice(-2);
                 };
             } else {
+                var timeStr = '';
+                if ($this.hasClass('hide-time')) {
+                    // Filtering a datetime field with hidden time
+                    // selector => append a suitable time fragment
+                    if (operator == 'le') {
+                        timeStr = 'T23:59:59';
+                    } else {
+                        timeStr = 'T00:00:00';
+                    }
+                }
                 isoFormat = function(dt) {
                     return dt.getFullYear() + '-' +
                            ('0' + (dt.getMonth() + 1)).slice(-2) + '-' +
-                           ('0' + dt.getDate()).slice(-2);
+                           ('0' + dt.getDate()).slice(-2) +
+                           timeStr;
                 };
             }
 
