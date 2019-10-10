@@ -2108,6 +2108,9 @@ class DVRResponseModel(S3Model):
                                   atable.case_activity_id,
                                   atable.response_theme_ids,
                                   atable.human_resource_id,
+                                  atable.start_date,
+                                  atable.end_date,
+                                  atable.hours,
                                   limitby = (0, 1),
                                   ).first()
         if not record:
@@ -2121,7 +2124,7 @@ class DVRResponseModel(S3Model):
             theme_ids = []
 
         if not record.person_id:
-            # Inherit the person_id from the case activity (if any)
+            # Inherit the person_id (beneficiary) from the case activity
             case_activity_id = record.case_activity_id
             if case_activity_id:
                 catable = s3db.dvr_case_activity
@@ -2202,6 +2205,41 @@ class DVRResponseModel(S3Model):
                 ltable.insert(action_id = record_id,
                               theme_id = theme_id,
                               )
+
+        # Calculate end_date
+        start_date = record.start_date
+        end_date = record.end_date
+        if start_date:
+
+            if "end_date" not in form_vars:
+                new_end_date = None
+                hours = record.hours
+                if hours:
+                    duration = datetime.timedelta(hours=hours)
+                else:
+                    duration = datetime.timedelta(hours=0.5)
+                orig_start_date = None
+                if hasattr(form, "record"):
+                    try:
+                        orig_start_date = form.record.start_date
+                    except AttributeError:
+                        pass
+                if not end_date or not orig_start_date:
+                    new_end_date = start_date + duration
+                else:
+                    delta = end_date - orig_start_date
+                    if hours and delta != duration:
+                        delta = duration
+                        duration_changed = True
+                    else:
+                        duration_changed = False
+                    if start_date != orig_start_date or duration_changed:
+                        new_end_date = start_date + delta
+                if new_end_date:
+                    record.update_record(end_date = new_end_date)
+
+        elif end_date:
+            record.update_record(end_date = None)
 
     # -------------------------------------------------------------------------
     @classmethod
