@@ -461,7 +461,7 @@
                     _colWidths = tableConfig.colWidths;
                 for (col in _colWidths) {
                     if (columnConfig[col] != null) {
-                        columnConfig[col]['sWidth'] = _colWidths[col];
+                        columnConfig[col].sWidth = _colWidths[col];
                     } else {
                         columnConfig[col] = {
                             'sWidth': _colWidths[col]
@@ -1774,6 +1774,45 @@
             };
         },
 
+        /**
+         * Update export URLs with initial filters:
+         * - Export URLs are initially unfiltered until the filter
+         *   form updates them for the first time; however, there
+         *   may be filter defaults which also must be respected
+         *   by exports => copy initial filters from the Ajax URL
+         */
+        _initExportFormats: function() {
+
+            var tableConfig = this._parseConfig();
+            if (tableConfig === undefined) {
+                // No table config found => abort
+                return;
+            }
+
+            var ajaxURL = tableConfig.ajaxUrl;
+            if (ajaxURL && S3.search !== undefined) {
+                var link = document.createElement('a');
+                link.href = ajaxURL;
+                if (link.search) {
+                    var items = link.search.slice(1).split('&'),
+                        queries = items.map(function(item) {
+                            return item.split('=');
+                        }).filter(function(item) {
+                            return item[0].indexOf('.') != -1;
+                        });
+                    $(this.element).closest('.dt-wrapper')
+                                   .find('.dt-export')
+                                   .each(function() {
+                        var $this = $(this);
+                        var url = $this.data('url');
+                        if (url) {
+                            $this.data('url', S3.search.filterURL(url, queries));
+                        }
+                    });
+                }
+            }
+        },
+
         // --------------------------------------------------------------------
         // EVENT HANDLING
 
@@ -1793,6 +1832,7 @@
             });
 
             // Export formats
+            this._initExportFormats();
             el.closest('.dt-wrapper').find('.dt-export')
                                      .on('click' + ns, this._exportFormat());
 
