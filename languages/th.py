@@ -28,4 +28,5 @@
 'We have 8 simple questions for you, this should not take more than 15mn of your time.': 'เรามีคำถามง่ายๆจำนวน 8 ข้อให้คุณตอบ ซึ่งใช้เวลาไม่เกิน 15 นาที',
 'yes': 'ใช่',
 'You are receiving this email as a participant of %(event_name)s held in %(location)s on %(date)s.': 'คุณได้รับอีเมล์ฉบับนี้ในฐานะผู้มีส่วนร่วมใน %(event_name)s ซึ่งจัดขึ้นที่ %(location)s ในวันที่ %(date)s.',
+
 }
