@@ -10,7 +10,7 @@ from collections import OrderedDict
 from gluon import *
 from gluon.storage import Storage
 
-from s3.s3widgets import S3HoursWidget, S3OptionsMatrixWidget
+from s3.s3widgets import S3HoursWidget, S3LocationSelector, S3OptionsMatrixWidget
 
 from unit_tests import run_suite
 
@@ -542,11 +542,26 @@ class S3HoursWidgetTests(unittest.TestCase):
                 assertEqual(round(hours, 8), s[1], "'%s' recognized as %s, expected %s" % (s[0], hours, s[1]))
 
 # =============================================================================
+class S3LocationSelectorTests(unittest.TestCase):
+    """ Tests for S3LocationSelector """
+
+    # -------------------------------------------------------------------------
+    def test_empty_labels(self):
+        """ Test _labels when there aren't any locations """
+
+        location_selector = S3LocationSelector()
+        levels = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5']
+        results = location_selector._labels(levels, country=None)
+        self.assertEqual(results[0], {'L0': current.T('Country')})
+        self.assertEqual(results[1], {})
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
         S3OptionsMatrixWidgetTests,
         S3HoursWidgetTests,
+        S3LocationSelectorTests,
     )
 
 # END ========================================================================

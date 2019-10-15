@@ -5070,11 +5070,12 @@ class S3LocationSelector(S3Selector):
                         labels[level] = d[int(level[1:])] = label
         else:
             row = rows.first()
-            d = compact["d"] = {}
-            for level in levels:
-                if level == "L0":
-                    continue
-                d[int(level[1:])] = s3_str(T(row[level]))
+            if row:
+                d = compact["d"] = {}
+                for level in levels:
+                    if level == "L0":
+                        continue
+                    d[int(level[1:])] = s3_str(T(row[level]))
 
         return labels, compact
 
