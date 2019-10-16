@@ -22,22 +22,23 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "case_use_response_tab": True,
                "case_use_photos_tab": False,
                "case_use_address": True,
-               "case_use_appointments": True,
+               "case_use_appointments": False,
                "case_use_education": False,
-               "case_use_flags": True,
+               "case_use_flags": False,
                "case_use_notes": False,
                "case_use_occupation": True,
                "case_use_place_of_birth": False,
                "case_use_residence_status": True,
                "case_use_service_contacts": False,
-               "case_lodging": "site", # "site"|"text"|None
-               "case_lodging_dates": True,
+               "case_lodging": None, # "site"|"text"|None
+               "case_lodging_dates": False,
                "activity_closure": True,
                "activity_comments": True,
                "activity_use_sector": True,
                "activity_need_details": True,
-               "activity_follow_up": True,
+               "activity_follow_up": False,
                "activity_use_need": False,
+               #"activity_tab_label": "Counseling Reasons",
                "appointments_staff_link": False,
                "appointments_use_organizer": False,
                "response_activity_autolink": False,
@@ -78,6 +79,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "activity_need_details": False,
                       "activity_follow_up": False,
                       "activity_use_need": True,
+                      #"activity_tab_label": "Counseling Reasons",
                       "appointments_staff_link": True,
                       "appointments_use_organizer": True,
                       "response_activity_autolink": True,
@@ -4020,10 +4022,11 @@ def drk_dvr_rheader(r, tabs=None):
 
             if not tabs:
                 response_tab = ui_opts_get("case_use_response_tab")
-                if response_tab and ui_opts_get("activity_use_need"):
-                    ACTIVITIES = T("Counseling Reasons")
+                activity_tab_label = ui_opts_get("activity_tab_label")
+                if activity_tab_label:
+                    ACTIVITIES = T(activity_tab_label)
                 else:
-                    ACTIVITIES = T("Activities")
+                    ACTIVITIES = T("Counseling Reasons")
 
                 # Basic Case Documentation
                 tabs = [(T("Basic Details"), None),
