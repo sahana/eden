@@ -3662,6 +3662,7 @@
 'Performance Indicators': 'Leistungskennzahlen',
 'Performance Rating': 'Leistungsbeurteilung',
 'Permanent Home Address': 'Dauerhafte Heimatadresse',
+'Persian': 'Farsi',
 'Person 1, Person 2 are the potentially duplicate records': 'Person 1 und Person 2 sind möglicherweise Duplikate',
 'Person De-duplicator': 'Dubletten in Personen auflösen',
 'Person Details': 'Details zur Person',

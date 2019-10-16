@@ -342,7 +342,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Appointment Types", f="case_appointment_type"),
                         M("Residence Status Types", f="residence_status_type"),
                         M("Residence Permit Types", f="residence_permit_type"),
-                        M("Service Contact Types", f="service_contact_type"),
+                        #M("Service Contact Types", f="service_contact_type"),
                         ),
                     )
 
