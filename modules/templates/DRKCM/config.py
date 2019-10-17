@@ -21,6 +21,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "case_hide_default_org": False,
                "case_use_response_tab": True,
                "case_use_photos_tab": False,
+               "case_use_bamf": False,
                "case_use_address": True,
                "case_use_appointments": False,
                "case_use_education": False,
@@ -62,6 +63,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "case_hide_default_org": True,
                       "case_use_response_tab": True,
                       "case_use_photos_tab": True,
+                      "case_use_bamf": True,
                       "case_use_address": False,
                       "case_use_appointments": False,
                       "case_use_education": True,
@@ -1001,6 +1003,22 @@ def config(settings):
                         else:
                             place_of_birth = None
 
+                        # Optional: BAMF No.
+                        use_bamf = ui_options.get("case_use_bamf")
+                        if use_bamf:
+                            bamf = S3SQLInlineComponent(
+                                        "bamf",
+                                        fields = [("", "value")],
+                                        filterby = {"field": "tag",
+                                                    "options": "BAMF",
+                                                    },
+                                        label = T("BAMF Reference Number"),
+                                        multiple = False,
+                                        name = "bamf",
+                                        )
+                        else:
+                            bamf = None
+
                         # Make marital status mandatory, remove "other"
                         field = dtable.marital_status
                         options = dict(s3db.pr_marital_status_opts)
@@ -1111,16 +1129,7 @@ def config(settings):
                             "person_details.nationality",
                             "date_of_birth",
                             place_of_birth,
-                            S3SQLInlineComponent(
-                                    "bamf",
-                                    fields = [("", "value")],
-                                    filterby = {"field": "tag",
-                                                "options": "BAMF",
-                                                },
-                                    label = T("BAMF Reference Number"),
-                                    multiple = False,
-                                    name = "bamf",
-                                    ),
+                            bamf,
                             "case_details.arrival_date",
                             "gender",
                             "person_details.marital_status",
@@ -1200,10 +1209,10 @@ def config(settings):
                             S3DateFilter("dvr_case.date",
                                          hidden = True,
                                          ),
-                            S3TextFilter(["bamf.value"],
-                                         label = T("BAMF Ref.No."),
-                                         hidden = True,
-                                         ),
+                            #S3TextFilter(["bamf.value"],
+                                         #label = T("BAMF Ref.No."),
+                                         #hidden = True,
+                                         #),
                             S3TextFilter(["pe_label"],
                                          label = T("IDs"),
                                          match_any = True,
@@ -1212,30 +1221,37 @@ def config(settings):
                                          ),
                             ]
 
+                        # BAMF-Ref.No.-filter if using BAMF
+                        if use_bamf:
+                            filter_widgets.insert(-1,
+                                S3TextFilter(["bamf.value"],
+                                             label = T("BAMF Ref.No."),
+                                             hidden = True,
+                                             ))
+
                         # Ref.No.-filter if using service contacts
                         if ui_options.get("case_use_service_contacts"):
-                            filter_widgets.append(S3TextFilter(
-                                                    ["service_contact.reference"],
-                                                    label = T("Ref.No."),
-                                                    hidden = True,
-                                                    comment = T("Search by service contact reference number"),
-                                                    ))
+                            filter_widgets.append(
+                                S3TextFilter(["service_contact.reference"],
+                                             label = T("Ref.No."),
+                                             hidden = True,
+                                             comment = T("Search by service contact reference number"),
+                                             ))
                         # Flag-filter if using case flags
                         if case_flags:
-                            filter_widgets.insert(2, S3OptionsFilter(
-                                                    "case_flag_case.flag_id",
-                                                    label = T("Flags"),
-                                                    options = s3_get_filter_opts("dvr_case_flag",
-                                                                                 translate = True,
-                                                                                 ),
-                                                    cols = 3,
-                                                    hidden = True,
-                                                    ))
+                            filter_widgets.insert(2,
+                                S3OptionsFilter("case_flag_case.flag_id",
+                                                label = T("Flags"),
+                                                options = s3_get_filter_opts("dvr_case_flag",
+                                                                             translate = True,
+                                                                             ),
+                                                cols = 3,
+                                                hidden = True,
+                                                ))
                         # Org-filter if user can see cases from multiple orgs/branches
                         if multiple_orgs:
                             filter_widgets.insert(1,
-                                                  S3OptionsFilter("dvr_case.organisation_id"),
-                                                  )
+                                S3OptionsFilter("dvr_case.organisation_id"))
 
                         configure(crud_form = crud_form,
                                   filter_widgets = filter_widgets,
@@ -4071,6 +4087,11 @@ def drk_dvr_rheader(r, tabs=None):
             else:
                 pob_sel = None
 
+            if ui_opts_get("case_use_bamf"):
+                bamf_sel = "bamf.value"
+            else:
+                bamf_sel = None
+
             case = resource.select(["first_name",
                                     "last_name",
                                     "dvr_case.status_id",
@@ -4078,7 +4099,7 @@ def drk_dvr_rheader(r, tabs=None):
                                     "dvr_case.household_size",
                                     "dvr_case.organisation_id",
                                     "case_details.arrival_date",
-                                    "bamf.value",
+                                    bamf_sel,
                                     "person_details.nationality",
                                     pob_sel,
                                     lodging_sel,
@@ -4122,27 +4143,30 @@ def drk_dvr_rheader(r, tabs=None):
             arrival_date_label = ui_opts_get("case_arrival_date_label")
             arrival_date_label = T(arrival_date_label) \
                                  if arrival_date_label else T("Date of Entry")
+            bamf_or_doe = (T("BAMF-Az"), bamf) \
+                          if bamf_sel else (arrival_date_label, arrival_date)
 
             rheader_fields = [[(T("ID"), "pe_label"),
                                (T("Nationality"), nationality),
                                (T("Case Status"), case_status),
                                ],
                               ["date_of_birth",
-                               (T("BAMF-Az"), bamf),
+                               bamf_or_doe,
                                lodging,
                                ],
                               ]
 
+            doe = (arrival_date_label, arrival_date) if bamf_sel else None
             if pob_sel:
                 # Show place_of_birth below date_of_birth, family size in 3rd column
                 rheader_fields.append([(T("Place of Birth"), place_of_birth),
-                                       (arrival_date_label, arrival_date),
+                                       doe,
                                        (T("Size of Family"), household_size),
                                        ])
             else:
                 # Show family size in 1st column
                 rheader_fields.append([(T("Size of Family"), household_size),
-                                       (arrival_date_label, arrival_date),
+                                       doe,
                                        ])
             colspan = 5
 
