@@ -948,7 +948,6 @@ def config(settings):
                         from s3 import S3SQLCustomForm, \
                                        S3SQLInlineComponent, \
                                        S3SQLInlineLink, \
-                                       S3SQLVerticalSubFormLayout, \
                                        S3TextFilter, \
                                        S3DateFilter, \
                                        S3OptionsFilter, \
@@ -1072,7 +1071,7 @@ def config(settings):
                             field.comment = None
                             residence_status = S3SQLInlineComponent(
                                                 "residence_status",
-                                                fields = ["status_type_id",
+                                                fields = [#"status_type_id",
                                                           "permit_type_id",
                                                           #"reference",
                                                           #"valid_from",
@@ -1081,7 +1080,6 @@ def config(settings):
                                                           ],
                                                 label = T("Residence Status"),
                                                 multiple = False,
-                                                layout = S3SQLVerticalSubFormLayout,
                                                 )
                         else:
                             residence_status = None
