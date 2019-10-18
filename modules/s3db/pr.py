@@ -1164,7 +1164,7 @@ class PRPersonModel(S3Model):
 
                        # Seized Items (owner)
                        security_seized_item = "person_id",
-                       
+
                        # Supply Items (Donor)
                        supply_item = {"link": "supply_person_item",
                                       "joinby": "person_id",
@@ -7510,6 +7510,10 @@ def pr_nationality_opts():
     # Stateless always last
     opts.append(("XX", T("Stateless")))
 
+    # Allow to explicitly specify an "unclear" nationality?
+    if current.deployment_settings.get_pr_nationality_explicit_unclear():
+        opts.append(("??", T("unclear")))
+
     return opts
 
 def pr_nationality_prepresent(code):
@@ -7523,6 +7527,8 @@ def pr_nationality_prepresent(code):
 
     if code == "XX":
         return current.T("Stateless")
+    elif code == "??":
+        return current.T("unclear")
     else:
         country_name = current.gis.get_country(code, key_type="code")
         if country_name:

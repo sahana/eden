@@ -33,6 +33,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "case_use_service_contacts": False,
                "case_lodging": None, # "site"|"text"|None
                "case_lodging_dates": False,
+               "case_nationality_mandatory": False,
                "activity_closure": True,
                "activity_comments": True,
                "activity_use_sector": True,
@@ -75,6 +76,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "case_use_service_contacts": False,
                       "case_lodging": "text",
                       "case_lodging_dates": False,
+                      "case_nationality_mandatory": True,
                       "activity_closure": False,
                       "activity_comments": False,
                       "activity_use_sector": False,
@@ -876,6 +878,9 @@ def config(settings):
                                 action = s3db.pr_Contacts,
                                 )
 
+                nationality_mandatory = ui_options.get("case_nationality_mandatory")
+                settings.pr.nationality_explicit_unclear = nationality_mandatory
+
                 # Autocomplete search-method
                 if r.function == "person_search":
                     # Autocomplete-Widget (e.g. response actions)
@@ -994,8 +999,15 @@ def config(settings):
                         else:
                             case_flags = None
 
-                        # Optional: place of birth
+                        # Optional: mandatory nationality
                         dtable = s3db.pr_person_details
+                        if nationality_mandatory:
+                            field = dtable.nationality
+                            requires = field.requires
+                            if isinstance(requires, IS_EMPTY_OR):
+                                field.requires = requires.other
+
+                        # Optional: place of birth
                         if ui_options.get("case_use_place_of_birth"):
                             field = dtable.place_of_birth
                             field.readable = field.writable = True

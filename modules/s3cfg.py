@@ -5035,6 +5035,14 @@ class S3Config(Storage):
         """
         return self.__lazy("pr", "hide_third_gender", default=True)
 
+    def get_pr_nationality_explicit_unclear(self):
+        """
+            Have an explicit "unclear" option for nationality, useful
+            when the field shall be mandatory yet allow for cases
+            where the nationality of a person is unclear
+        """
+        return self.pr.get("nationality_explicit_unclear", False)
+
     def get_pr_import_update_requires_email(self):
         """
             During imports, records are only updated if the import

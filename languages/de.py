@@ -5631,6 +5631,7 @@
 'tweepy module not available within the running Python - this needs installing for non-Tropo Twitter support!': 'Tweepy Modul nicht verfügbar in der aktuellen Python Umgebung läuft - das benötigt die Installation einer none-Tropo Twitter Unterstützung!',
 'unable to parse csv file': 'CSV Datei kann nicht analysiert werden',
 'uncheck all': 'Alles deselektieren',
+'unclear': 'ungeklärt',
 'unidentified': 'nicht identifiziert',
 'unknown': 'unbekannt',
 'unspecified': 'unspezifiziert',
