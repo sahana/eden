@@ -3128,6 +3128,7 @@
 'Names, IDs, Reference Numbers, Contact Information, Addresses': 'Namen, ID, Referenznummern, Kontaktinformationen, Addressen',
 'National ID Card': 'Nationaler Identitätsnachweis',
 'National NGO': 'Nationale NGO',
+'Nationality lacking!': 'Nationalität fehlt!',
 'Nationality of the person.': 'Nationalität der Person.',
 'Nationality': 'Nationalität',
 'Nautical Accident': 'See-Unfall',

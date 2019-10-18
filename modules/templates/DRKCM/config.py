@@ -4126,13 +4126,19 @@ def drk_dvr_rheader(r, tabs=None):
                 case = case[0]
 
                 name = s3_fullname
+                raw = case["_row"]
 
                 case_status = lambda row: case["dvr_case.status_id"]
-                archived = case["_row"]["dvr_case.archived"]
+                archived = raw["dvr_case.archived"]
                 organisation = lambda row: case["dvr_case.organisation_id"]
                 arrival_date = lambda row: case["dvr_case_details.arrival_date"]
                 household_size = lambda row: case["dvr_case.household_size"]
                 nationality = lambda row: case["pr_person_details.nationality"]
+
+                # Warn if nationality is lacking while mandatory
+                if ui_opts_get("case_nationality_mandatory") and \
+                   raw["pr_person_details.nationality"] is None:
+                    current.response.warning = T("Nationality lacking!")
 
                 bamf = lambda row: case["pr_bamf_person_tag.value"]
 
