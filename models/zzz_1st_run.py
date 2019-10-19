@@ -314,6 +314,17 @@ if len(pop_list) > 0:
                 s3_str = s3base.s3_str
                 info("\n".join(s3_str(el) for el in error))
 
+    # Check to see if the "SITE_DEFAULT" gis_hierarchy was prepopulated.
+    # Use our default gis_hierarchy if not.
+    table = s3db.gis_hierarchy
+    query = (table.uuid == "SITE_DEFAULT")
+    row = db(query).select(table.id, limitby=(0, 1)).first()
+    if not row:
+        info("\nWarning: No gis_hierarchy provided, using default.")
+        csv = path_join(request_folder, "modules", "templates", "default", "base", "gis_hierarchy.csv")
+        xsl = path_join(request_folder, "static", "formats", "s3csv", "gis", "hierarchy.xsl")
+        bi.execute_import_task([1, "gis", "hierarchy", csv, xsl, None])
+
     info("\nUpdating database...")
 
     # Restore setting for strict email-matching
