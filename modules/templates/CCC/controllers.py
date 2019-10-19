@@ -4,6 +4,8 @@ import copy
 import json
 import uuid
 
+from collections import OrderedDict
+
 from gluon import *
 from gluon.storage import Storage
 from s3 import ICON, IS_ONE_OF, S3CustomController, S3Method, S3MultiSelectWidget, \
@@ -644,13 +646,15 @@ class register(S3CustomController):
         districts = db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
                                                                                  gtable.name)
         districts = {d.id:d.name for d in districts}
+        districts = OrderedDict(sorted(districts.items(), key=lambda t: t[1]))
 
         uk = db((gtable.level == "L0") & (gtable.name == "United Kingdom")).select(gtable.id,
                                                                                    limitby = (0, 1)
                                                                                    ).first()
 
-        districts_and_uk = copy.copy(districts)
-        districts_and_uk[uk.id] = "Outside Cumbria"
+        districts_and_uk = OrderedDict([(uk.id, "Outside Cumbria")])
+        for key in districts:
+            districts_and_uk[key] = districts[key]
 
         # Check Type of Registration
         agency = donor = existing = group = False
@@ -776,6 +780,7 @@ class register(S3CustomController):
                                "addr_postcode",
                                "mobile",
                                "emergency_contact",
+                               "where_operate",
                                ]
 
             return formfields, required_fields
@@ -915,9 +920,13 @@ class register(S3CustomController):
             # Donor
             donor = True
             title = T("Register as a Donor")
-            header = P("This is to register to Donate Goods / Services. If instead you wish to Volunteer your time, please ",
-                       A("Register as a Volunteer", _href=URL(args="register", vars={})),
-                       )
+            header = DIV(P("Please use this page to register your offer to Donate Goods or Professional Services."),
+                         P("If instead you wish to Volunteer your time, please ",
+                           A("Register as a Volunteer", _href=URL(args="register", vars={})),
+                           " or ",
+                           A("Volunteer Group", _href=URL(args="register", vars={"vol_group": 1})),
+                           ),
+                         )
 
             # Instantiate Consent Tracker
             consent = s3db.auth_Consent(processing_types=["STOREPID", "FOCD"])
@@ -1001,7 +1010,7 @@ class register(S3CustomController):
                                                              selectedList=3),
                                 ),
                           Field("availability",
-                                label = T("Please indicate if the offer is only available for a period of time (please state) or it is an open ended offer. In many cases items such as furniture for homes affected by a Major Incident are not required for some months, or even more than a year after an incident has occurred, but very gratefully received at the right time."),
+                                label = T("Please indicate if the offer is only available for a period of time (please state) or it is an open ended offer. Household items, such as furniture, are normally not required for some months but very gratefully received at the right time."),
                                 ),
                           # Consent (GDPR + FOC)
                           Field("consent",
@@ -1025,9 +1034,12 @@ class register(S3CustomController):
             # Volunteer Group
             group = True
             title = T("Register as a Volunteer Group")
-            header = P("This is for an established group from outside of Cumbria. If you are a known CEP/Flood Action Group etc based within Cumbria, please use ",
-                       A("Organisation or Agency", _href=URL(args="register", vars={"agency": 1})),
-                       )
+            header = DIV(P("Please use this page if you wish to register a group of volunteers."),
+                         P("If you are registering as an individual volunteer please use ",
+                           A("Register as a Volunteer", _href=URL(args="register", vars={})),
+                           ),
+                         P("Families with children under 18 should register here to ensure you are tasked together."),
+                         )
 
             # Instantiate Consent Tracker
             consent = s3db.auth_Consent(processing_types=["STOREPID", "FOCV"])
@@ -1069,6 +1081,7 @@ class register(S3CustomController):
                           # Group Leader 2
                           Field("first_name2",
                                 label = T("First Name"),
+                                comment = T("Having two different contacts helps us make contact more easily, however if you only have one group leader please re-enter the details of Group Leader 1 again."),
                                 ),
                           Field("last_name2",
                                 label = T("Last Name"),
@@ -1159,10 +1172,16 @@ class register(S3CustomController):
         else:
             # Individual Volunteer
             title = T("Register as a Volunteer")
-            header = P("Please use ",
-                       A("Volunteer Group", _href=URL(args="register", vars={"vol_group": 1})),
-                       " if you are an established group.",
-                       )
+            header = DIV(P("Please use this page if you wish to volunteer as an individual."),
+                         P("If you are registering on behalf of a group please use ",
+                           A("Volunteer Group", _href=URL(args="register", vars={"vol_group": 1})),
+                           ".",
+                           ),
+                         P("Families with children under 18 should register as a ",
+                           A("Volunteer Group", _href=URL(args="register", vars={"vol_group": 1})),
+                           " to ensure you are tasked together.",
+                           ),
+                         )
 
             # Form Fields
             formfields, required_fields = individual_formfields()
@@ -1704,6 +1723,47 @@ class volunteer(S3CustomController):
         else:
             item3 = ""
         output["item3"] = item3
+
+        resource = "Volunteer4"
+        query = (ltable.module == module) & \
+                (ltable.resource == resource) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        item = current.db(query).select(table.body,
+                                        table.id,
+                                        limitby=(0, 1)).first()
+        if item:
+            if ADMIN:
+                item4 = DIV(XML(item.body),
+                            BR(),
+                            A(current.T("Edit"),
+                              _href = URL(c="cms", f="post",
+                                          args = [item.id, "update"],
+                                          vars = {"module": module,
+                                                  "resource": resource,
+                                                  },
+                                          ),
+                              _class="action-btn",
+                              ),
+                            )
+            else:
+                item4 = DIV(XML(item.body))
+        elif ADMIN:
+            if current.response.s3.crud.formstyle == "bootstrap":
+                _class = "btn"
+            else:
+                _class = "action-btn"
+            item4 = A(current.T("Edit"),
+                      _href = URL(c="cms", f="post", args="create",
+                                  vars = {"module": module,
+                                          "resource": resource,
+                                          },
+                                  ),
+                      _class="%s cms-edit" % _class,
+                      )
+        else:
+            item4 = ""
+        output["item4"] = item4
 
         self._view(THEME, "volunteer.html")
         return output

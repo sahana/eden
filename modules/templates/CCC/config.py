@@ -892,14 +892,14 @@ def config(settings):
                                       required_levels = ("L3"),
                                       show_address = True)
 
-        gtable = s3db.gis_location
-        districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
-                                                                                         gtable.name,
-                                                                                         cache = s3db.cache)
-        districts = {d.id:d.name for d in districts}
-        f = s3db.hrm_event_location.location_id
-        f.requires = IS_IN_SET(districts)
-        f.widget = None
+        #gtable = s3db.gis_location
+        #districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
+        #                                                                                 gtable.name,
+        #                                                                                 cache = s3db.cache)
+        #districts = {d.id:d.name for d in districts}
+        #f = s3db.hrm_event_location.location_id
+        #f.requires = IS_IN_SET(districts)
+        #f.widget = None
 
         list_fields = ["start_date",
                        "name",
@@ -928,15 +928,15 @@ def config(settings):
             f.readable = f.writable = False
 
         s3db.configure("hrm_training_event",
-                       crud_form = S3SQLCustomForm((T("Event's name"), "name"),
-                                                   (T("Event's description"), "comments"),
+                       crud_form = S3SQLCustomForm((T("Event name"), "name"),
+                                                   (T("Event description"), "comments"),
                                                    (T("Starts"), "start_date"),
                                                    (T("Ends"), "end_date"),
-                                                   (T("Event organiser"), "organisation_id"),
-                                                   S3SQLInlineLink("location",
-                                                                   field = "location_id",
-                                                                   label = T("Tick the area(s) which this event relates to"),
-                                                                   ),
+                                                   (T("Lead Organization"), "organisation_id"),
+                                                   #S3SQLInlineLink("location",
+                                                   #                field = "location_id",
+                                                   #                label = T("Tick the area(s) which this event relates to"),
+                                                   #                ),
                                                    (T("Venue name"), "venue_name.value"),
                                                    "location_id",
                                                    (T("Contact Name"), "contact_name.value"),
@@ -948,7 +948,7 @@ def config(settings):
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        subheadings = {"name": T("Event Information"),
-                                      "link_defaultlocation": T("Event Coverage"),
+                                      #"link_defaultlocation": T("Event Coverage"),
                                       "venue_name_value": T("Venue"),
                                       "contact_name_value": T("Contact Information"),
                                       },
@@ -975,12 +975,16 @@ def config(settings):
         #table = s3db.org_organisation
 
         s3db.configure("org_organisation",
-                       crud_form = S3SQLCustomForm("name",
+                       crud_form = S3SQLCustomForm((T("Name of Organization"), "name"),
                                                    S3SQLInlineLink("organisation_type",
                                                                    field = "organisation_type_id",
                                                                    label = T("Type"),
                                                                    ),
-                                                   "phone",
+                                                   #"email.value",
+                                                   #"facebook.value",
+                                                   #"twitter.value",
+                                                   #"sm_other.value",
+                                                   #"sm_details.value",
                                                    "website",
                                                    "comments",
                                                    ),
