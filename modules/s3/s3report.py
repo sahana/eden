@@ -2447,7 +2447,7 @@ class S3PivotTable(object):
                 if isinstance(requires, IS_IN_SET):
                     sortby = "text"
 
-        elif ftype[:9] == "reference":
+        elif ftype[:9] == "reference" or ftype[:8] == "list:ref":
             # Sort foreign keys by their representation
             sortby = "text"
 
