@@ -308,8 +308,9 @@ def config(settings):
         elif tablename == "org_organisation":
             T = current.T
             tabs = [(T("Basic Details"), None),
-                    (T("Offices"), "office"),
-                    (T("Locations Served"), "location"),
+                    #(T("Offices"), "office"),
+                    (T("Key Locations"), "facility"),
+                    #(T("Locations Served"), "location"),
                     (T("Volunteers"), "human_resource"),
                     ]
             rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -966,13 +967,120 @@ def config(settings):
     settings.customise_hrm_training_event_controller = customise_hrm_training_event_controller
 
     # -------------------------------------------------------------------------
-    def customise_org_organisation_resource(r, tablename):
+    def customise_org_facility_resource(r, tablename):
 
-        from s3 import S3OptionsFilter, S3SQLCustomForm, S3SQLInlineLink, S3TextFilter
+        from s3 import S3SQLCustomForm, S3SQLInlineLink
 
         s3db = current.s3db
 
-        #table = s3db.org_organisation
+        s3db.org_site_facility_type.facility_type_id.label = T("Type")
+
+        crud_form = S3SQLCustomForm("name",
+                                    "code",
+                                    S3SQLInlineLink(
+                                          "facility_type",
+                                          label = T("Type"),
+                                          field = "facility_type_id",
+                                          #widget = "groupedopts",
+                                          cols = 3,
+                                    ),
+                                    #"organisation_id",
+                                    "location_id",
+                                    "opening_times",
+                                    "contact",
+                                    "phone1",
+                                    "phone2",
+                                    "email",
+                                    "website",
+                                    #S3SQLInlineComponent(
+                                    #    "status",
+                                    #    label = T("Status"),
+                                    #    fields = ["last_contacted"],
+                                    #    multiple = False,
+                                    #),
+                                    "obsolete",
+                                    "comments",
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_org_facility_resource = customise_org_facility_resource
+
+    # -------------------------------------------------------------------------
+    def customise_org_organisation_resource(r, tablename):
+
+        from gluon import IS_EMAIL, IS_EMPTY_OR, IS_IN_SET, IS_URL
+
+        from s3 import S3OptionsFilter, S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink, S3TextFilter
+
+        s3db = current.s3db
+
+        # Filtered components
+        s3db.add_components("org_organisation",
+                            pr_contact = ({"name": "email",
+                                           "joinby": "pe_id",
+                                           "multiple": False,
+                                           "filterby": {"contact_method": "EMAIL",
+                                                        },
+                                           },
+                                          {"name": "facebook",
+                                           "joinby": "pe_id",
+                                           "multiple": False,
+                                           "filterby": {"contact_method": "FACEBOOK",
+                                                        },
+                                           },
+                                          {"name": "twitter",
+                                           "joinby": "pe_id",
+                                           "multiple": False,
+                                           "filterby": {"contact_method": "TWITTER",
+                                                        },
+                                           },
+                                          {"name": "sm_other",
+                                           "joinby": "pe_id",
+                                           "multiple": False,
+                                           "filterby": {"contact_method": "OTHER",
+                                                        },
+                                           },
+                                          ),
+                            org_organisation_tag = ({"name": "sm_other_type",
+                                                     "joinby": "organisation_id",
+                                                     "multiple": False,
+                                                     "filterby": {"tag": "sm_other_type",
+                                                                  },
+                                                     },
+                                                    ),
+                            )
+
+        # Individual settings for specific tag components
+        components_get = s3db.resource(tablename).components.get
+
+        email = components_get("email")
+        f = email.table.value
+        f.requires = IS_EMPTY_OR(IS_EMAIL())
+
+        facebook = components_get("facebook")
+        f = facebook.table.value
+        f.requires = IS_EMPTY_OR(IS_URL())
+
+        #twitter = components_get("twitter")
+        #f = twitter.table.value
+        #f.requires = IS_EMPTY_OR(None)
+
+        #sm_other = components_get("sm_other")
+        #f = sm_other.table.value
+        #f.requires = IS_EMPTY_OR(None)
+
+        gtable = s3db.gis_location
+        districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
+                                                                                         gtable.name,
+                                                                                         cache = s3db.cache)
+        districts = {d.id:d.name for d in districts}
+
+        f = s3db.org_organisation_location.location_id
+        f.requires = IS_EMPTY_OR(IS_IN_SET(districts))
+        f.widget = None
 
         s3db.configure("org_organisation",
                        crud_form = S3SQLCustomForm((T("Name of Organization"), "name"),
@@ -980,11 +1088,51 @@ def config(settings):
                                                                    field = "organisation_type_id",
                                                                    label = T("Type"),
                                                                    ),
-                                                   #"email.value",
-                                                   #"facebook.value",
-                                                   #"twitter.value",
-                                                   #"sm_other.value",
-                                                   #"sm_details.value",
+                                                   S3SQLInlineLink("location",
+                                                                   field = "location_id",
+                                                                   label = T("District"),
+                                                                   ),
+                                                   S3SQLInlineComponent(
+                                                        "email",
+                                                        name = "email",
+                                                        label = T("Email"),
+                                                        multiple = False,
+                                                        fields = [("", "value")],
+                                                        #filterby = {"field": "contact_method",
+                                                        #            "options": "EMAIL",
+                                                        #            },
+                                                        ),
+                                                   S3SQLInlineComponent(
+                                                        "facebook",
+                                                        name = "facebook",
+                                                        label = T("Facebook"),
+                                                        multiple = False,
+                                                        fields = [("", "value")],
+                                                        #filterby = {"field": "contact_method",
+                                                        #            "options": "FACEBOOK",
+                                                        #            },
+                                                        ),
+                                                   S3SQLInlineComponent(
+                                                        "twitter",
+                                                        name = "twitter",
+                                                        label = T("Twitter"),
+                                                        multiple = False,
+                                                        fields = [("", "value")],
+                                                        #filterby = {"field": "contact_method",
+                                                        #            "options": "TWITTER",
+                                                        #            },
+                                                        ),
+                                                   S3SQLInlineComponent(
+                                                        "sm_other",
+                                                        name = "sm_other",
+                                                        label = T("SM Other"),
+                                                        multiple = False,
+                                                        fields = [("", "value")],
+                                                        #filterby = {"field": "contact_method",
+                                                        #            "options": "OTHER",
+                                                        #            },
+                                                        ),
+                                                   (T("Please Specify"), "sm_other_type.value"),
                                                    "website",
                                                    "comments",
                                                    ),
