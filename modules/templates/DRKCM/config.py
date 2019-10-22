@@ -28,6 +28,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "case_use_flags": False,
                "case_use_notes": False,
                "case_use_occupation": True,
+               "case_use_pe_label": False,
                "case_use_place_of_birth": False,
                "case_use_residence_status": True,
                "case_use_service_contacts": False,
@@ -71,6 +72,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "case_use_flags": False,
                       "case_use_notes": False,
                       "case_use_occupation": False,
+                      "case_use_pe_label": True,
                       "case_use_place_of_birth": True,
                       "case_use_residence_status": False,
                       "case_use_service_contacts": False,
@@ -847,7 +849,9 @@ def config(settings):
 
         auth = current.auth
         s3db = current.s3db
+
         ui_options = get_ui_options()
+        ui_options_get = ui_options.get
 
         settings.base.bigtable = True
 
@@ -878,7 +882,10 @@ def config(settings):
                                 action = s3db.pr_Contacts,
                                 )
 
-                nationality_mandatory = ui_options.get("case_nationality_mandatory")
+                # Add explicit unclear-option for nationality if mandatory,
+                # so that cases can be registered even if their nationality
+                # is not at hand
+                nationality_mandatory = ui_options_get("case_nationality_mandatory")
                 settings.pr.nationality_explicit_unclear = nationality_mandatory
 
                 # Autocomplete search-method
@@ -913,8 +920,14 @@ def config(settings):
                     # Can the user see cases from more than one org?
                     multiple_orgs = case_read_multiple_orgs()[0]
 
+                    # Optional: pe_label (ID)
+                    if ui_options_get("case_use_pe_label"):
+                        pe_label = (T("ID"), "pe_label")
+                    else:
+                        pe_label = None
+
                     # Alternatives: site_id or simple text field
-                    lodging_opt = ui_options.get("case_lodging")
+                    lodging_opt = ui_options_get("case_lodging")
                     if lodging_opt == "site":
                         lodging = "dvr_case.site_id"
                     elif lodging_opt == "text":
@@ -966,7 +979,7 @@ def config(settings):
                         field = ctable.organisation_id
                         default_org, selectable = case_default_org()
                         if default_org:
-                            if ui_options.get("case_hide_default_org"):
+                            if ui_options_get("case_hide_default_org"):
                                 field.writable = selectable
                                 field.readable = selectable or multiple_orgs
                         if field.readable and not field.writable:
@@ -989,7 +1002,7 @@ def config(settings):
                         field.widget = None
 
                         # Optional: Case Flags
-                        if ui_options.get("case_use_flags"):
+                        if ui_options_get("case_use_flags"):
                             case_flags = S3SQLInlineLink("case_flag",
                                                          label = T("Flags"),
                                                          field = "flag_id",
@@ -998,6 +1011,10 @@ def config(settings):
                                                          )
                         else:
                             case_flags = None
+
+                        # No comment for pe_label
+                        field = table.pe_label
+                        field.comment = None
 
                         # Optional: mandatory nationality
                         dtable = s3db.pr_person_details
@@ -1008,7 +1025,7 @@ def config(settings):
                                 field.requires = requires.other
 
                         # Optional: place of birth
-                        if ui_options.get("case_use_place_of_birth"):
+                        if ui_options_get("case_use_place_of_birth"):
                             field = dtable.place_of_birth
                             field.readable = field.writable = True
                             place_of_birth = "person_details.place_of_birth"
@@ -1016,7 +1033,7 @@ def config(settings):
                             place_of_birth = None
 
                         # Optional: BAMF No.
-                        use_bamf = ui_options.get("case_use_bamf")
+                        use_bamf = ui_options_get("case_use_bamf")
                         if use_bamf:
                             bamf = S3SQLInlineComponent(
                                         "bamf",
@@ -1044,16 +1061,12 @@ def config(settings):
                         del options[1] # Remove "unknown"
                         field.requires = IS_PERSON_GENDER(options, sort = True)
 
-                        # No comment for pe_label
-                        field = table.pe_label
-                        field.comment = None
-
                         # Last name is required
                         field = table.last_name
                         field.requires = [IS_NOT_EMPTY(), IS_LENGTH(512, minsize=1)]
 
                         # Optional: site dates
-                        if ui_options.get("case_lodging_dates"):
+                        if ui_options_get("case_lodging_dates"):
                             on_site_from = (T("Moving-in Date"),
                                             "case_details.on_site_from",
                                             )
@@ -1065,7 +1078,7 @@ def config(settings):
                             on_site_until = None
 
                         # Optional: Address
-                        if ui_options.get("case_use_address"):
+                        if ui_options_get("case_use_address"):
                             address = S3SQLInlineComponent(
                                             "address",
                                             label = T("Current Address"),
@@ -1082,7 +1095,7 @@ def config(settings):
                         # Date of Entry (alternative labels)
                         dtable = s3db.dvr_case_details
                         field = dtable.arrival_date
-                        label = ui_options.get("case_arrival_date_label")
+                        label = ui_options_get("case_arrival_date_label")
                         label = T(label) if label else T("Date of Entry")
                         field.label = label
                         field.comment = DIV(_class = "tooltip",
@@ -1092,7 +1105,7 @@ def config(settings):
                                             )
 
                         # Optional: Residence Status
-                        if ui_options.get("case_use_residence_status"):
+                        if ui_options_get("case_use_residence_status"):
                             # Remove Add-links
                             rtable = s3db.dvr_residence_status
                             field = rtable.status_type_id
@@ -1115,11 +1128,11 @@ def config(settings):
                             residence_status = None
 
                         # Optional: Occupation/Educational Background
-                        if ui_options.get("case_use_occupation"):
+                        if ui_options_get("case_use_occupation"):
                             occupation = "person_details.occupation"
                         else:
                             occupation = None
-                        if ui_options.get("case_use_education"):
+                        if ui_options_get("case_use_education"):
                             education = "person_details.education"
                         else:
                             education = None
@@ -1135,7 +1148,7 @@ def config(settings):
                             case_flags,
 
                             # Person Details --------------------------
-                            (T("ID"), "pe_label"),
+                            pe_label,
                             "last_name",
                             "first_name",
                             "person_details.nationality",
@@ -1225,30 +1238,41 @@ def config(settings):
                                          #label = T("BAMF Ref.No."),
                                          #hidden = True,
                                          #),
-                            S3TextFilter(["pe_label"],
-                                         label = T("IDs"),
-                                         match_any = True,
-                                         hidden = True,
-                                         comment = T("Search for multiple IDs (separated by blanks)"),
-                                         ),
+                            #S3TextFilter(["pe_label"],
+                                         #label = T("IDs"),
+                                         #match_any = True,
+                                         #hidden = True,
+                                         #comment = T("Search for multiple IDs (separated by blanks)"),
+                                         #),
                             ]
 
                         # BAMF-Ref.No.-filter if using BAMF
                         if use_bamf:
-                            filter_widgets.insert(-1,
+                            filter_widgets.append(
                                 S3TextFilter(["bamf.value"],
                                              label = T("BAMF Ref.No."),
                                              hidden = True,
                                              ))
 
+                        # Multi-ID filter if using ID
+                        if pe_label is not None:
+                            filter_widgets.append(
+                                S3TextFilter(["pe_label"],
+                                             label = T("IDs"),
+                                             match_any = True,
+                                             hidden = True,
+                                             comment = T("Search for multiple IDs (separated by blanks)"),
+                                             ))
+
                         # Ref.No.-filter if using service contacts
-                        if ui_options.get("case_use_service_contacts"):
+                        if ui_options_get("case_use_service_contacts"):
                             filter_widgets.append(
                                 S3TextFilter(["service_contact.reference"],
                                              label = T("Ref.No."),
                                              hidden = True,
                                              comment = T("Search by service contact reference number"),
                                              ))
+
                         # Flag-filter if using case flags
                         if case_flags:
                             filter_widgets.insert(2,
@@ -1270,7 +1294,7 @@ def config(settings):
                                   )
 
                     # Custom list fields (must be outside of r.interactive)
-                    list_fields = [(T("ID"), "pe_label"),
+                    list_fields = [pe_label,
                                    "last_name",
                                    "first_name",
                                    "date_of_birth",
@@ -1287,7 +1311,7 @@ def config(settings):
 
                 elif r.component_name == "case_appointment":
 
-                    if ui_options.get("appointments_use_organizer") and \
+                    if ui_options_get("appointments_use_organizer") and \
                        r.interactive and r.method is None and not r.component_id:
                         r.method = "organize"
 
@@ -1338,7 +1362,7 @@ def config(settings):
                                          _class="action-btn anonymize-btn")
 
                 # Doc-From-Template-button
-                if ui_options.get("case_document_templates") and \
+                if ui_options_get("case_document_templates") and \
                    auth.s3_has_role("CASE_MANAGEMENT"):
                     doc_from_template = A(T("Document from Template"),
                                           _class = "action-btn s3_modal",
@@ -1430,6 +1454,8 @@ def config(settings):
         s3db = current.s3db
         s3 = current.response.s3
 
+        ui_options = get_ui_options()
+
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
@@ -1458,12 +1484,16 @@ def config(settings):
 
                     from s3 import S3AddPersonWidget
 
+                    if ui_options.get("case_use_pe_label"):
+                        pe_label = (T("ID"), "person_id$pe_label")
+                    else:
+                        pe_label = None
                     s3db.pr_person.pe_label.label = T("ID")
 
                     field = table.person_id
                     field.represent = s3db.pr_PersonRepresent(show_link=True)
                     field.widget = S3AddPersonWidget(controller = "dvr",
-                                                     pe_label = True,
+                                                     pe_label = bool(pe_label),
                                                      )
 
                     field = table.role_id
@@ -1497,7 +1527,7 @@ def config(settings):
                         msg_list_empty = T("No Family Members currently registered")
                         )
 
-                list_fields = [(T("ID"), "person_id$pe_label"),
+                list_fields = [pe_label,
                                "person_id",
                                "person_id$date_of_birth",
                                "person_id$gender",
@@ -2326,9 +2356,15 @@ def config(settings):
                 else:
                     subject_field = "subject"
 
+                # Optional: pe_label (ID)
+                if ui_options.get("case_use_pe_label"):
+                    pe_label = (T("ID"), "person_id$pe_label")
+                else:
+                    pe_label = None
+
                 # Custom list fields
                 list_fields = ["priority",
-                               (T("ID"), "person_id$pe_label"),
+                               pe_label,
                                (T("Case"), "person_id"),
                                #"sector_id",
                                subject_field,
@@ -2956,8 +2992,13 @@ def config(settings):
             else:
                 # Primary dvr/response_action controller
 
+                if ui_options.get("case_use_pe_label"):
+                    pe_label = (T("ID"), "person_id$pe_label")
+                else:
+                    pe_label = None
+
                 # Adapt list-fields to perspective
-                list_fields = [(T("ID"), "person_id$pe_label"),
+                list_fields = [pe_label,
                                response_type,
                                "human_resource_id",
                                date_due,
@@ -4038,16 +4079,12 @@ def drk_dvr_rheader(r, tabs=None):
 
         if tablename == "pr_person":
 
-            # "Case Archived" hint
-            hint = lambda record: SPAN(T("Invalid Case"), _class="invalid-case")
-
             # UI Options and ability to read cases from multiple orgs
             ui_opts = get_ui_options()
             ui_opts_get = ui_opts.get
             multiple_orgs = case_read_multiple_orgs()[0]
 
             if not tabs:
-                response_tab = ui_opts_get("case_use_response_tab")
                 activity_tab_label = ui_opts_get("activity_tab_label")
                 if activity_tab_label:
                     ACTIVITIES = T(activity_tab_label)
@@ -4062,7 +4099,7 @@ def drk_dvr_rheader(r, tabs=None):
                         ]
 
                 # Optional Case Documentation
-                if response_tab:
+                if ui_opts_get("case_use_response_tab"):
                     tabs.append((T("Actions"), "response_action"))
                 if ui_opts_get("case_use_appointments"):
                     tabs.append((T("Appointments"), "case_appointment"))
@@ -4078,6 +4115,7 @@ def drk_dvr_rheader(r, tabs=None):
                 if ui_opts_get("case_use_notes"):
                     tabs.append((T("Notes"), "case_note"))
 
+            # Get the record data
             lodging_opt = ui_opts_get("case_lodging")
             if lodging_opt == "site":
                 lodging_sel = "dvr_case.site_id"
@@ -4161,31 +4199,45 @@ def drk_dvr_rheader(r, tabs=None):
             arrival_date_label = ui_opts_get("case_arrival_date_label")
             arrival_date_label = T(arrival_date_label) \
                                  if arrival_date_label else T("Date of Entry")
-            bamf_or_doe = (T("BAMF-Az"), bamf) \
-                          if bamf_sel else (arrival_date_label, arrival_date)
 
-            rheader_fields = [[(T("ID"), "pe_label"),
+            # Adaptive rheader-fields
+            rheader_fields = [[None,
                                (T("Nationality"), nationality),
-                               (T("Case Status"), case_status),
-                               ],
-                              ["date_of_birth",
-                               bamf_or_doe,
-                               lodging,
-                               ],
+                               (T("Case Status"), case_status)],
+                              [None, None, None],
+                              [None, None, None],
                               ]
 
-            doe = (arrival_date_label, arrival_date) if bamf_sel else None
-            if pob_sel:
-                # Show place_of_birth below date_of_birth, family size in 3rd column
-                rheader_fields.append([(T("Place of Birth"), place_of_birth),
-                                       doe,
-                                       (T("Size of Family"), household_size),
-                                       ])
+            if ui_opts_get("case_use_pe_label"):
+                rheader_fields[0][0] = (T("ID"), "pe_label")
+                rheader_fields[1][0] = "date_of_birth"
             else:
-                # Show family size in 1st column
-                rheader_fields.append([(T("Size of Family"), household_size),
-                                       doe,
-                                       ])
+                rheader_fields[0][0] = "date_of_birth"
+
+            if pob_sel:
+                pob_row = 1 if rheader_fields[1][0] is None else 2
+                rheader_fields[pob_row][0] = (T("Place of Birth"), place_of_birth)
+
+            if bamf_sel:
+                doe_row = 2
+                rheader_fields[1][1] = (T("BAMF-Az"), bamf)
+            else:
+                doe_row = 1
+            rheader_fields[doe_row][1] = (arrival_date_label, arrival_date)
+
+            if lodging:
+                rheader_fields[1][2] = lodging
+
+            hhsize = (T("Size of Family"), household_size)
+            if rheader_fields[1][0] is None:
+                rheader_fields[1][0] = hhsize
+            elif rheader_fields[2][0] is None:
+                rheader_fields[2][0] = hhsize
+            elif rheader_fields[1][2] is None:
+                rheader_fields[1][2] = hhsize
+            else:
+                rheader_fields[2][2] = hhsize
+
             colspan = 5
 
             if multiple_orgs:
@@ -4199,6 +4251,8 @@ def drk_dvr_rheader(r, tabs=None):
                                         colspan,
                                         )])
             if archived:
+                # "Case Archived" hint
+                hint = lambda record: SPAN(T("Invalid Case"), _class="invalid-case")
                 rheader_fields.insert(0, [(None, hint)])
 
             # Generate rheader XML
