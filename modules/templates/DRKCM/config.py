@@ -2398,6 +2398,8 @@ def config(settings):
 
         s3db = current.s3db
 
+        ui_options = get_ui_options()
+
         # Organizer popups
         if r.tablename == "pr_person":
             title = "type_id"
@@ -2406,11 +2408,12 @@ def config(settings):
                            ]
         elif r.tablename == "dvr_case_appointment":
             title = "person_id"
-            description = [(T("ID"), "person_id$pe_label"),
-                           "type_id",
+            description = ["type_id",
                            "status",
                            "comments",
                            ]
+            if ui_options.get("case_use_pe_label"):
+                description.insert(0, (T("ID"), "person_id$pe_label"))
         else:
             title = description = None
 
@@ -2431,7 +2434,6 @@ def config(settings):
                                    zero = None,
                                    )
 
-        ui_options = get_ui_options()
         if ui_options.get("appointments_staff_link"):
             # Enable staff link and default to logged-in user
             field = table.human_resource_id
@@ -2460,6 +2462,8 @@ def config(settings):
         s3 = current.response.s3
         s3db = current.s3db
 
+        ui_options = get_ui_options()
+
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
@@ -2481,6 +2485,7 @@ def config(settings):
             if not r.component:
 
                 configure_person_tags()
+                use_pe_label = ui_options.get("case_use_pe_label")
 
                 if r.interactive and not r.id:
 
@@ -2514,13 +2519,16 @@ def config(settings):
                                                    False: T("No"),
                                                    },
                                         ),
-                        S3TextFilter(["person_id$pe_label"],
-                                     label = T("IDs"),
-                                     match_any = True,
-                                     hidden = True,
-                                     comment = T("Search for multiple IDs (separated by blanks)"),
-                                     ),
                         ]
+
+                    if use_pe_label:
+                        filter_widgets.append(
+                            S3TextFilter(["person_id$pe_label"],
+                                         label = T("IDs"),
+                                         match_any = True,
+                                         hidden = True,
+                                         comment = T("Search for multiple IDs (separated by blanks)"),
+                                         ))
 
                     resource.configure(filter_widgets = filter_widgets)
 
@@ -2539,8 +2547,14 @@ def config(settings):
                 field = table.case_id
                 field.readable = field.writable = False
 
+                # Optional: ID
+                if use_pe_label:
+                    pe_label = (T("ID"), "person_id$pe_label")
+                else:
+                    pe_label = None
+
                 # Custom list fields
-                list_fields = [(T("ID"), "person_id$pe_label"),
+                list_fields = [pe_label,
                                "person_id$first_name",
                                "person_id$last_name",
                                "type_id",
