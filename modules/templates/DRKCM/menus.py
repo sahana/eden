@@ -246,7 +246,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 # In case collaboration, use HR filter widget with default
                 # rather than mine-parameter, so that the user can choose
                 # to see other team member's response actions
-                get_vars = {} if case_collaboration else {"mine": "a"}
+                get_vars = {"mine": "f"} if case_collaboration else {"mine": "a"}
                 my_actions = M("My Actions", c="dvr", f="response_action",
                                t="dvr_response_action", vars = get_vars)(
                                 M("Calendar", m="organize", vars = get_vars),

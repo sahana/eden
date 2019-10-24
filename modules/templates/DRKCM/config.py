@@ -2891,14 +2891,17 @@ def config(settings):
             field.widget = None
 
             hr_filter_opts = False
-            mine = r.get_vars.get("mine") in ("a", "r")
-            if not mine:
+            hr_filter_default = None
+            mine = r.get_vars.get("mine")
+            if mine not in ("a", "r"):
                 # Populate hr_filter_opts to enable filter widget
                 # - use field options as filter options
                 try:
                     hr_filter_opts = field.requires.options()
                 except AttributeError:
                     pass
+                if mine == "f":
+                    hr_filter_default = human_resource_id
 
             # Require explicit unit in hours-widget above 4 hours
             from s3 import S3HoursWidget
@@ -3120,7 +3123,7 @@ def config(settings):
                         hr_filter_opts.pop('', None)
                         filter_widgets.insert(2,
                             S3OptionsFilter("human_resource_id",
-                                            default = human_resource_id,
+                                            default = hr_filter_default,
                                             header = True,
                                             options = dict(hr_filter_opts),
                                             ))
