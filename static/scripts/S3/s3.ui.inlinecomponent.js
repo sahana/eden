@@ -1539,8 +1539,8 @@
                 var row = $(this),
                     empty = true;
 
-                if (row.hasClass('required')) {
-                    // Treat required rows as non-empty
+                if (row.hasClass('required') || row.hasClass('edit-row')) {
+                    // Treat required rows and edit-rows as non-empty
                     empty = false;
 
                 } else {
