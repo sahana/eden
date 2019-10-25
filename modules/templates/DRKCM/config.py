@@ -48,6 +48,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "response_due_date": False,
                "response_effort_required": True,
                "response_planning": False,
+               "response_tab_need_filter": False,
                "response_themes_details": False,
                "response_themes_sectors": False,
                "response_themes_needs": False,
@@ -92,6 +93,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "response_due_date": False,
                       "response_effort_required": True,
                       "response_planning": False,
+                      "response_tab_need_filter": True,
                       "response_themes_details": True,
                       "response_themes_sectors": True,
                       "response_themes_needs": True,
@@ -852,6 +854,7 @@ def config(settings):
 
         ui_options = get_ui_options()
         ui_options_get = ui_options.get
+        response_tab_need_filter = ui_options_get("response_tab_need_filter")
 
         settings.base.bigtable = True
 
@@ -1234,16 +1237,6 @@ def config(settings):
                             S3DateFilter("dvr_case.date",
                                          hidden = True,
                                          ),
-                            #S3TextFilter(["bamf.value"],
-                                         #label = T("BAMF Ref.No."),
-                                         #hidden = True,
-                                         #),
-                            #S3TextFilter(["pe_label"],
-                                         #label = T("IDs"),
-                                         #match_any = True,
-                                         #hidden = True,
-                                         #comment = T("Search for multiple IDs (separated by blanks)"),
-                                         #),
                             ]
 
                         # BAMF-Ref.No.-filter if using BAMF
@@ -1315,6 +1308,30 @@ def config(settings):
                        r.interactive and r.method is None and not r.component_id:
                         r.method = "organize"
 
+                elif r.component_name == "response_action":
+
+                    if response_tab_need_filter:
+                        # Configure filter widgets for response tab
+                        from s3 import S3DateFilter, S3OptionsFilter, S3TextFilter
+                        r.component.configure(
+                            filter_widgets = [
+                               S3TextFilter(["response_action_theme.theme_id$name",
+                                             "response_action_theme.comments",
+                                             ],
+                                            label = T("Search"),
+                                            ),
+                               S3OptionsFilter("response_action_theme.theme_id$need_id",
+                                               label = T("Counseling Reason"),
+                                               hidden = True,
+                                               ),
+                               S3DateFilter("start_date",
+                                            hidden = True,
+                                            hide_time = not ui_options_get("response_use_time"),
+                                            ),
+                               ],
+                            )
+                        settings.search.filter_manager = False
+
             elif r.controller == "default":
 
                 # Personal Profile
@@ -1380,10 +1397,13 @@ def config(settings):
             return output
         s3.postp = custom_postp
 
-        # Custom rheader tabs
         if current.request.controller == "dvr":
             attr = dict(attr)
+            # Custom rheader
             attr["rheader"] = drk_dvr_rheader
+            # Activate filters on component tabs
+            if response_tab_need_filter:
+                attr["hide_filter"] = {"response_action": False}
 
         return attr
 
