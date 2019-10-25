@@ -56,6 +56,7 @@ CASE_MANAGEMENT,Case Manager,,dvr,response_type,,NONE,,,,,Case Managers can not 
 CASE_MANAGEMENT,Case Manager,,dvr,service_contact_type,,NONE,,,,,Case Managers can not manage DVR taxonomies
 CASE_MANAGEMENT,Case Manager,,dvr,,,READ,,,,,Default rule for DVR module
 CASE_MANAGEMENT,Case Manager,,msg,,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can send messages
+CASE_MANAGEMENT,Case Manager,,pr,contact,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can manage contact information via contact-tab
 CASE_MANAGEMENT,Case Manager,,project,comment,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can comment on tasks
 CASE_MANAGEMENT,Case Manager,,project,comments,,CREATE|READ|UPDATE|DELETE,,,,,Case Managers can read task comments
 CASE_MANAGEMENT,Case Manager,,project,project,,NONE,,,,,Case Managers have no access to projects
