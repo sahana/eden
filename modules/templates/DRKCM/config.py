@@ -31,6 +31,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "case_use_pe_label": False,
                "case_use_place_of_birth": False,
                "case_use_residence_status": True,
+               "case_use_referral": True,
                "case_use_service_contacts": False,
                "case_lodging": None, # "site"|"text"|None
                "case_lodging_dates": False,
@@ -77,6 +78,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "case_use_pe_label": True,
                       "case_use_place_of_birth": True,
                       "case_use_residence_status": False,
+                      "case_use_referral": False,
                       "case_use_service_contacts": False,
                       "case_lodging": "text",
                       "case_lodging_dates": False,
@@ -1053,6 +1055,14 @@ def config(settings):
                         else:
                             bamf = None
 
+                        # Optional: referred by/to
+                        use_referral = ui_options_get("case_use_referral")
+                        if use_referral:
+                            referred_by = "case_details.referred_by"
+                            referred_to = "case_details.referred_to"
+                        else:
+                            referred_by = referred_to = None
+
                         # Make marital status mandatory, remove "other"
                         field = dtable.marital_status
                         options = dict(s3db.pr_marital_status_opts)
@@ -1165,6 +1175,8 @@ def config(settings):
                             "person_details.marital_status",
 
                             # Process Data ----------------------------
+                            referred_by,
+                            referred_to,
                             lodging,
                             on_site_from,
                             on_site_until,
@@ -3113,8 +3125,13 @@ def config(settings):
                                      ),
                         S3OptionsFilter("status_id",
                                         options = lambda: \
-                                                  s3_get_filter_opts("dvr_response_status"),
+                                                  s3_get_filter_opts("dvr_response_status",
+                                                                     orderby = "workflow_position",
+                                                                     ),
                                         cols = 3,
+                                        orientation = "rows",
+                                        sort = False,
+                                        size = None,
                                         translate = True,
                                         ),
                         S3DateFilter("start_date",
