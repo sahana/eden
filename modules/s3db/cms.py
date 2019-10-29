@@ -47,6 +47,7 @@ __all__ = ("S3ContentModel",
 import datetime
 import json
 import os
+import re
 
 from gluon import *
 from gluon.storage import Storage
@@ -224,7 +225,12 @@ class S3ContentModel(S3Model):
             body_represent = XML
             body_widget = s3_richtext_widget
         else:
-            body_represent = lambda body: XML(s3_URLise(body))
+
+            def body_represent(body):
+                if not re.search(r"<a[^>]* href=", body):
+                    body = s3_URLise(body)
+                return XML(body)
+
             body_widget = None
 
         # WACOP Priorities
