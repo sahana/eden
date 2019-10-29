@@ -774,10 +774,36 @@ class S3LocationTreeTests(unittest.TestCase):
         current.db.rollback()
 
 # =============================================================================
+class S3NoGisConfigTests(unittest.TestCase):
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+        table = current.s3db.gis_config
+        table.truncate()
+        current.response.s3.gis.config = None
+
+    # -------------------------------------------------------------------------
+    def testMapSetup(self):
+        map = MAP()
+        setup_result = map._setup()
+        self.assertIsNone(setup_result)
+        self.assertIsNotNone(map.error_message)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+        current.auth.override = False
+        current.db.rollback()
+
+        # Re-cache the config
+        current.gis.get_config()
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
         S3LocationTreeTests,
+        S3NoGisConfigTests,
     )
 
 # END ========================================================================

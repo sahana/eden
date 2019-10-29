@@ -6387,6 +6387,8 @@ class MAP(DIV):
         # We haven't yet run _setup()
         self.setup = False
         self.callback = None
+        self.error_message = None
+        self.components = []
 
         # Options for server-side processing
         self.opts = opts
@@ -6395,16 +6397,6 @@ class MAP(DIV):
 
         # Options for client-side processing
         self.options = {}
-
-        # Components
-        # Map (Embedded not Window)
-        components = [DIV(DIV(_class="map_loader"),
-                              _id="%s_panel" % map_id)
-                      ]
-
-        self.components = components
-        for c in components:
-            self._setnode(c)
 
         # Adapt CSS to size of Map
         _class = "map_wrapper"
@@ -6437,16 +6429,36 @@ class MAP(DIV):
               into scripts (callback or otherwise)
         """
 
+        # Fresh _setup() call, reset error message
+        self.error_message = None
+
+        T = current.T
+        auth = current.auth
+
         # Read configuration
         config = GIS.get_config()
         if not config:
             # No prepop - Bail
-            current.session.error = current.T("Map cannot display without prepop data!")
-            redirect(URL(c="default", f="index"))
+            if auth.s3_has_permission("create", "gis_hierarchy"):
+                error_message = DIV()
+                error_message.append(SPAN(
+                    T("Map cannot display without GIS config!"),
+                    _class="mapError"
+                    ))
+                error_message.append(XML(T(
+                    " (You can can create one <a href='%(url)s'>here</a>)" %
+                    {"url": URL(c="gis", f="config")}
+                    )))
+                self.error_message = error_message
+            else:
+                self.error_message = DIV(
+                    T("Map cannot display without GIS config!"),
+                    _class="mapError"
+                    )
+            return None
 
         T = current.T
         db = current.db
-        auth = current.auth
         s3db = current.s3db
         request = current.request
         response = current.response
@@ -6480,6 +6492,12 @@ class MAP(DIV):
                 "gis_too_many_features": T("There are too many features, please Zoom In or Filter"),
                 "gis_zoomin": T("Zoom In"),
                 }
+
+        ##########
+        # Loader
+        ##########
+
+        self.append(DIV(DIV(_class="map_loader"), _id="%s_panel" % self.id))
 
         ##########
         # Viewport
@@ -7125,6 +7143,9 @@ class MAP(DIV):
         if not self.setup:
             result = self._setup()
             if result is None:
+                if self.error_message:
+                    self.append(self.error_message)
+                    return super(MAP, self).xml()
                 return ""
 
         # Add ExtJS

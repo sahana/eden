@@ -4624,7 +4624,6 @@
 'Manual synchronization started in the background.': 'Ručna sinhronizacija započeta u pozadini.',
 'Many': 'Mnogo',
 'Map': 'Karta',
-'Map cannot display without prepop data!': 'Mapa se ne može prikazati bez pripremljenih podataka',
 'Map Center Latitude': 'Geografska širina središta mape',
 'Map Center Longitude': 'Geografska dužina centra mape',
 'Map Profile': 'Konfiguracija karte',

@@ -3224,7 +3224,6 @@
 'Manual Synchronization': 'Sincronizzazione manuale',
 'Many': 'Molti',
 'Map': 'Mappa',
-'Map cannot display without prepop data!': 'La mappa non può essere visualizzata senza dati prepop!',
 'Map Center Latitude': 'Latitudine del centro della mappa',
 'Map Center Longitude': 'Longitudine del centro della mappa',
 'Map Configuration': 'Configurazione della mappa  ',

@@ -1444,7 +1444,6 @@
 'Map Styles': '‌ေျမပံု ပံုစံမ်ား',
 'Map Viewing Client': 'လက္ေအာက္ခံမ်ားကိုၾကည့္သည့္ေျမပံု',
 'Map Zoom': '‌ေျမပံုကို အနီးကပ္ဆြဲယူၾကည္‌့ရႈျခင္း',
-'Map cannot display without prepop data!': 'prepop အခ်က္အလက္မပါဘဲ ေျမပံုဖြင့္ မရပါ',
 'Map has been copied and set as Default': '‌ေျမပံုကို ပံုေသအေနအထားျဖင့္ေကာ္ပီကူးယူသည္',
 'Map has been set as Default': '‌ေျမပံုကို ပံုေသအေနအထားထားသည္',
 'Map is already your Default': 'ေျမပံုကို ပံုေသအေျခအေနသုိ႔ထားၿပီးျဖစ္သည္',
