@@ -31,6 +31,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "case_use_pe_label": False,
                "case_use_place_of_birth": False,
                "case_use_residence_status": True,
+               "case_use_referral": True,
                "case_use_service_contacts": False,
                "case_lodging": None, # "site"|"text"|None
                "case_lodging_dates": False,
@@ -40,6 +41,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "activity_use_sector": True,
                "activity_need_details": True,
                "activity_follow_up": False,
+               "activity_priority": False,
                "activity_use_need": False,
                #"activity_tab_label": "Counseling Reasons",
                "appointments_staff_link": False,
@@ -48,6 +50,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "response_due_date": False,
                "response_effort_required": True,
                "response_planning": False,
+               "response_tab_need_filter": False,
                "response_themes_details": False,
                "response_themes_sectors": False,
                "response_themes_needs": False,
@@ -75,6 +78,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "case_use_pe_label": True,
                       "case_use_place_of_birth": True,
                       "case_use_residence_status": False,
+                      "case_use_referral": False,
                       "case_use_service_contacts": False,
                       "case_lodging": "text",
                       "case_lodging_dates": False,
@@ -84,6 +88,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "activity_use_sector": False,
                       "activity_need_details": False,
                       "activity_follow_up": False,
+                      "activity_priority": True,
                       "activity_use_need": True,
                       #"activity_tab_label": "Counseling Reasons",
                       "appointments_staff_link": True,
@@ -92,6 +97,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "response_due_date": False,
                       "response_effort_required": True,
                       "response_planning": False,
+                      "response_tab_need_filter": True,
                       "response_themes_details": True,
                       "response_themes_sectors": True,
                       "response_themes_needs": True,
@@ -852,6 +858,7 @@ def config(settings):
 
         ui_options = get_ui_options()
         ui_options_get = ui_options.get
+        response_tab_need_filter = ui_options_get("response_tab_need_filter")
 
         settings.base.bigtable = True
 
@@ -1048,6 +1055,14 @@ def config(settings):
                         else:
                             bamf = None
 
+                        # Optional: referred by/to
+                        use_referral = ui_options_get("case_use_referral")
+                        if use_referral:
+                            referred_by = "case_details.referred_by"
+                            referred_to = "case_details.referred_to"
+                        else:
+                            referred_by = referred_to = None
+
                         # Make marital status mandatory, remove "other"
                         field = dtable.marital_status
                         options = dict(s3db.pr_marital_status_opts)
@@ -1160,6 +1175,8 @@ def config(settings):
                             "person_details.marital_status",
 
                             # Process Data ----------------------------
+                            referred_by,
+                            referred_to,
                             lodging,
                             on_site_from,
                             on_site_until,
@@ -1234,16 +1251,6 @@ def config(settings):
                             S3DateFilter("dvr_case.date",
                                          hidden = True,
                                          ),
-                            #S3TextFilter(["bamf.value"],
-                                         #label = T("BAMF Ref.No."),
-                                         #hidden = True,
-                                         #),
-                            #S3TextFilter(["pe_label"],
-                                         #label = T("IDs"),
-                                         #match_any = True,
-                                         #hidden = True,
-                                         #comment = T("Search for multiple IDs (separated by blanks)"),
-                                         #),
                             ]
 
                         # BAMF-Ref.No.-filter if using BAMF
@@ -1315,6 +1322,30 @@ def config(settings):
                        r.interactive and r.method is None and not r.component_id:
                         r.method = "organize"
 
+                elif r.component_name == "response_action":
+
+                    if response_tab_need_filter:
+                        # Configure filter widgets for response tab
+                        from s3 import S3DateFilter, S3OptionsFilter, S3TextFilter
+                        r.component.configure(
+                            filter_widgets = [
+                               S3TextFilter(["response_action_theme.theme_id$name",
+                                             "response_action_theme.comments",
+                                             ],
+                                            label = T("Search"),
+                                            ),
+                               S3OptionsFilter("response_action_theme.theme_id$need_id",
+                                               label = T("Counseling Reason"),
+                                               hidden = True,
+                                               ),
+                               S3DateFilter("start_date",
+                                            hidden = True,
+                                            hide_time = not ui_options_get("response_use_time"),
+                                            ),
+                               ],
+                            )
+                        settings.search.filter_manager = False
+
             elif r.controller == "default":
 
                 # Personal Profile
@@ -1380,10 +1411,13 @@ def config(settings):
             return output
         s3.postp = custom_postp
 
-        # Custom rheader tabs
         if current.request.controller == "dvr":
             attr = dict(attr)
+            # Custom rheader
             attr["rheader"] = drk_dvr_rheader
+            # Activate filters on component tabs
+            if response_tab_need_filter:
+                attr["hide_filter"] = {"response_action": False}
 
         return attr
 
@@ -1806,10 +1840,14 @@ def config(settings):
             return
 
         human_resource_id = auth.s3_logged_in_human_resource()
+
         ui_options = get_ui_options()
+        ui_options_get = ui_options.get
+
+        use_priority = ui_options_get("activity_priority")
 
         # Optional: closure details
-        if ui_options.get("activity_closure"):
+        if ui_options_get("activity_closure"):
             # Activities can be closed
             status_id = "status_id"
             end_date = "end_date"
@@ -1822,7 +1860,7 @@ def config(settings):
             outcome = None
 
         # Activity subject
-        if ui_options.get("activity_use_need"):
+        if ui_options_get("activity_use_need"):
             # Use need type
             subject_field = "need_id"
             subject_list_field = (T("Counseling Reason"), "need_id")
@@ -1831,7 +1869,7 @@ def config(settings):
             subject_list_field = subject_field = "subject"
 
         # Using sectors?
-        activity_use_sector = ui_options.get("activity_use_sector")
+        activity_use_sector = ui_options_get("activity_use_sector")
 
         if r.method == "report":
 
@@ -1842,9 +1880,10 @@ def config(settings):
             axes = ["person_id$gender",
                     "person_id$person_details.nationality",
                     "person_id$person_details.marital_status",
-                    "priority",
                     (T("Theme"), "response_action.response_theme_ids"),
                     ]
+            if use_priority:
+                axes.insert(-1, "priority")
 
             default_rows = "response_action.response_theme_ids"
             default_cols = "person_id$person_details.nationality"
@@ -1912,7 +1951,7 @@ def config(settings):
             # Configure sector_id
             field = table.sector_id
             field.comment = None
-            if ui_options.get("activity_use_sector"):
+            if ui_options_get("activity_use_sector"):
 
                 # Get the root org for sector selection
                 if case_root_org:
@@ -1972,7 +2011,7 @@ def config(settings):
                     activity_id = r.id
 
                 # Shall we automatically link responses to activities?
-                autolink = ui_options.get("response_activity_autolink")
+                autolink = ui_options_get("response_activity_autolink")
 
                 # Expose need_id
                 field = table.need_id
@@ -2017,7 +2056,7 @@ def config(settings):
 
             # Show need details (optional)
             field = table.need_details
-            field.readable = field.writable = ui_options.get("activity_need_details")
+            field.readable = field.writable = ui_options_get("activity_need_details")
 
             # Customise Priority
             field = table.priority
@@ -2026,7 +2065,7 @@ def config(settings):
                              (2, T("Normal")),
                              (3, T("Low")),
                              ]
-            field.readable = field.writable = True
+            field.readable = field.writable = use_priority
             field.label = T("Priority")
             field.default = 2
             field.requires = IS_IN_SET(priority_opts, sort=False, zero=None)
@@ -2036,6 +2075,7 @@ def config(settings):
                                                  2: "lightblue",
                                                  3: "grey",
                                                  }).represent
+            priority_field = "priority" if use_priority else None
 
             # Show human_resource_id
             hr_represent = s3db.hrm_HumanResourceRepresent(show_link=False)
@@ -2055,7 +2095,7 @@ def config(settings):
 
             # Show comments
             field = table.comments
-            field.readable = field.writable = ui_options.get("activity_comments")
+            field.readable = field.writable = ui_options_get("activity_comments")
 
             # Inline-responses
             rtable = s3db.dvr_response_action
@@ -2150,7 +2190,7 @@ def config(settings):
                             (T("Initial Situation Details"), ("need_details")),
 
                             "start_date",
-                            "priority",
+                            priority_field,
                             "human_resource_id",
 
                             inline_responses,
@@ -2197,12 +2237,13 @@ def config(settings):
             s3db.configure("dvr_case_activity",
                            crud_form = crud_form,
                            #filter_widgets = filter_widgets,
-                           orderby = "dvr_case_activity.priority",
+                           orderby = "dvr_case_activity.priority" \
+                                     if use_priority else "dvr_case_activity.start_date desc",
                            )
 
         # Custom list fields for case activity component tab
         if r.tablename != "dvr_case_activity":
-            list_fields = ["priority",
+            list_fields = ["priority" if use_priority else None,
                            #"sector_id",
                            subject_list_field,
                            #"followup",
@@ -2256,6 +2297,9 @@ def config(settings):
 
             # Get UI options
             ui_options = get_ui_options()
+            ui_options_get = ui_options.get
+
+            use_priority = ui_options.get("activity_priority")
 
             # Adapt list title when filtering for priority 0 (Emergency)
             if r.get_vars.get("~.priority") == "0":
@@ -2283,7 +2327,7 @@ def config(settings):
                 sector_options = {k:v for k, v in sector_id.requires.options() if k}
 
                 # Status filter options + defaults, status list field
-                if ui_options.get("activity_closure"):
+                if ui_options_get("activity_closure"):
                     stable = s3db.dvr_case_activity_status
                     query = (stable.deleted == False)
                     rows = db(query).select(stable.id,
@@ -2332,7 +2376,7 @@ def config(settings):
                     filter_widgets.insert(1, status_filter)
 
                 # Priority filter (unless pre-filtered to emergencies anyway)
-                if not emergencies:
+                if use_priority and not emergencies:
                     field = resource.table.priority
                     priority_opts = OrderedDict(field.requires.options())
                     priority_filter = S3OptionsFilter("priority",
@@ -2351,19 +2395,19 @@ def config(settings):
                                           )
 
                 # Subject field (alternatives)
-                if ui_options.get("activity_use_need"):
+                if ui_options_get("activity_use_need"):
                     subject_field = "need_id"
                 else:
                     subject_field = "subject"
 
                 # Optional: pe_label (ID)
-                if ui_options.get("case_use_pe_label"):
+                if ui_options_get("case_use_pe_label"):
                     pe_label = (T("ID"), "person_id$pe_label")
                 else:
                     pe_label = None
 
                 # Custom list fields
-                list_fields = ["priority",
+                list_fields = ["priority" if use_priority else None,
                                pe_label,
                                (T("Case"), "person_id"),
                                #"sector_id",
@@ -3081,8 +3125,13 @@ def config(settings):
                                      ),
                         S3OptionsFilter("status_id",
                                         options = lambda: \
-                                                  s3_get_filter_opts("dvr_response_status"),
+                                                  s3_get_filter_opts("dvr_response_status",
+                                                                     orderby = "workflow_position",
+                                                                     ),
                                         cols = 3,
+                                        orientation = "rows",
+                                        sort = False,
+                                        size = None,
                                         translate = True,
                                         ),
                         S3DateFilter("start_date",

@@ -206,12 +206,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ORG_GROUP_ADMIN = sysroles.ORG_GROUP_ADMIN
 
         ui_options = get_ui_options()
+        ui_options_get = ui_options.get
 
         due_followups_label = T("Due Follow-ups")
-        followups = ui_options.get("activity_follow_up")
+        followups = ui_options_get("activity_follow_up")
         if followups:
             due_followups = current.s3db.dvr_due_followups
             all_due_followups = due_followups() or "0"
+
+        use_priority = ui_options_get("activity_priority")
 
         human_resource_id = auth.s3_logged_in_human_resource()
         if human_resource_id and auth.s3_has_role("CASE_MANAGEMENT"):
@@ -229,7 +232,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 my_due_followups_label = all_due_followups_label = due_followups_label
 
             # Cases sub-menu
-            case_collaboration = ui_options.get("case_collaboration")
+            case_collaboration = ui_options_get("case_collaboration")
             if case_collaboration:
                 # Current Cases as lead item
                 case_menu = M("Current Cases", c=("dvr", "pr"), f="person", t="dvr_case",
@@ -242,7 +245,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                               )
 
             # Actions sub-menu
-            if ui_options.get("response_use_organizer"):
+            if ui_options_get("response_use_organizer"):
                 # In case collaboration, use HR filter widget with default
                 # rather than mine-parameter, so that the user can choose
                 # to see other team member's response actions
@@ -279,8 +282,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           ),
                         M("All Cases", f="person", t="dvr_case"),
                         M("All Activities", f="case_activity", t="dvr_case_activity"),
-                        M(all_due_followups_label, f="due_followups", check=followups),
-                        M("Emergencies", f="case_activity", vars = {"~.priority": "0"}),
+                        M(all_due_followups_label, f="due_followups",
+                          check = followups,
+                          ),
+                        M("Emergencies", f="case_activity",
+                          vars = {"~.priority": "0"},
+                          check = use_priority,
+                          ),
                         M("All Actions", f="response_action"),
                         ),
                     )
@@ -299,23 +307,28 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Actions", f="response_action"),
                         ),
                     M("Activities", f="case_activity")(
-                        M("Emergencies", f="case_activity", vars = {"~.priority": "0"}),
-                        M(due_followups_label, f="due_followups", check=followups),
+                        M("Emergencies", f="case_activity",
+                          vars = {"~.priority": "0"},
+                          check = use_priority,
+                          ),
+                        M(due_followups_label, f="due_followups",
+                          check = followups,
+                          ),
                         M("All Activities"),
                         ),
                     )
 
         # Appointments sub-menu (optional)
-        if ui_options.get("case_use_appointments"):
+        if ui_options_get("case_use_appointments"):
             appointments_menu = M("Appointments", f="case_appointment")(
                                     M("Overview"),
                                     )
             # Show personal calendar if using staff link and organizer
-            if ui_options.get("appointments_staff_link") and \
-               ui_options.get("appointments_use_organizer"):
+            if ui_options_get("appointments_staff_link") and \
+               ui_options_get("appointments_use_organizer"):
                 appointments_menu(M("My Appointments", m="organize", p="read",
                                     vars = {"mine": "1"},
-                                    check = ui_options.get("appointments_staff_link"),
+                                    check = ui_options_get("appointments_staff_link"),
                                     )
                                   )
 
