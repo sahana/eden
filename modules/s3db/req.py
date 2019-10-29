@@ -1247,7 +1247,7 @@ $.filterOptionsS3({
             if items:
                 insert = ritable.insert
                 for item in items:
-                    insert(req_id=new_req_id,
+                    insert(req_id = new_req_id,
                            item_entity_id = item.item_entity_id,
                            item_id = item.item_id,
                            item_pack_id = item.item_pack_id,

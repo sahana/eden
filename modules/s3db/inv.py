@@ -724,11 +724,11 @@ $.filterOptionsS3({
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(inv_item_id = inv_item_id,
-                    inv_item_represent = inv_item_represent,
-                    inv_remove = self.inv_remove,
-                    inv_prep = self.inv_prep,
-                    )
+        return {"inv_item_id": inv_item_id,
+                "inv_item_represent": inv_item_represent,
+                "inv_remove": self.inv_remove,
+                "inv_prep": self.inv_prep,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod

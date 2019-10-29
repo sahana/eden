@@ -723,7 +723,7 @@ def do_template(minimize, warnings):
         os.system("terser ol5.js -c --source-map -o ol5.min.js")
         theme_dir = os.path.join("..", request.application, "static", "themes", "UCCE", "JS")
         move_to("ol5.min.js", theme_dir)
-        move_to("ol5.min.js.map", theme_dir)
+        #move_to("ol5.min.js.map", theme_dir)
         os.chdir(theme_dir)
         os.system("terser s3.ui.template.js -c  -o s3.ui.template.min.js")
         os.system("terser s3.ui.heatmap.js -c  -o s3.ui.heatmap.min.js")
@@ -748,6 +748,18 @@ def main(argv):
         if "template" in argv:
             # Build Template only
             pass
+        elif "ol6" in argv:
+            # Build OpenLayers 6 only
+            cwd = os.getcwd()
+            # Assume ol6-rollup at same level as eden
+            rollup_dir = os.path.join("..", "..", "..", "..", "ol6-rollup")
+            os.chdir(rollup_dir)
+            #os.system("npm run-script build") # Commented due to __extends()
+            os.system("terser ol6.js -c --source-map -o ol6.min.js")
+            gis_dir = os.path.join("..", request.application, "static", "scripts", "gis")
+            move_to("ol6.min.js", gis_dir)
+            # Restore CWD
+            os.chdir(cwd)
         else:
             # Do All
             # Rebuild GIS JS?

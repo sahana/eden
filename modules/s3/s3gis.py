@@ -32,6 +32,7 @@
 """
 
 __all__ = ("GIS",
+           "MAP2",
            "S3Map",
            "S3ExportPOI",
            "S3ImportPOI",
@@ -6389,7 +6390,8 @@ class MAP(DIV):
 
         # Options for server-side processing
         self.opts = opts
-        self.id = map_id = opts.get("id", "default_map")
+        opts_get = opts.get
+        self.id = map_id = opts_get("id", "default_map")
 
         # Options for client-side processing
         self.options = {}
@@ -6406,9 +6408,9 @@ class MAP(DIV):
 
         # Adapt CSS to size of Map
         _class = "map_wrapper"
-        if opts.get("window"):
+        if opts_get("window"):
             _class = "%s fullscreen" % _class
-        if opts.get("print_mode"):
+        if opts_get("print_mode"):
             _class = "%s print" % _class
         self.attributes = {"_class": _class,
                            "_id": map_id,
@@ -6416,7 +6418,7 @@ class MAP(DIV):
         self.parent = None
 
         # Show Color Picker?
-        if opts.get("color_picker"):
+        if opts_get("color_picker"):
             # Can't be done in _setup() as usually run from xml() and hence we've already passed this part of the layout.html
             s3 = current.response.s3
             if s3.debug:
@@ -7222,6 +7224,60 @@ class MAP(DIV):
 
         # Return the HTML
         return super(MAP, self).xml()
+
+# =============================================================================
+class MAP2(DIV):
+    """
+        HTML Helper to render a Map
+        - allows the Map to be generated only when being rendered
+
+        This is the Work-in-Progress update of MAP() to OpenLayers 6
+    """
+
+    def __init__(self, **opts):
+        """
+            :param **opts: options to pass to the Map for server-side processing
+        """
+
+        # Options for server-side processing
+        #self.opts = opts
+        opts_get = opts.get
+        self.id = map_id = opts_get("id", "default_map")
+        height = opts_get("height", 400)
+        self.attributes = {"_id": map_id,
+                           "_style": "height:%spx" % height,
+                           }
+        self.components = []
+
+        # Load CSS now as too late in xml()
+        stylesheets = current.response.s3.stylesheets
+        stylesheet = "gis/ol6.css"
+        if stylesheet not in stylesheets:
+            stylesheets.append(stylesheet)
+
+    # -------------------------------------------------------------------------
+    def xml(self):
+        """
+            Render the Map
+            - this is primarily done by inserting a lot of JavaScript
+            - CSS loaded as-standard to avoid delays in page loading
+            - HTML added in init() as a component
+        """
+
+        # Insert the JavaScript
+        s3 = current.response.s3
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.ui.gis.js" % current.request.application
+        else:
+            script = "/%s/static/scripts/S3/s3.ui.gis.min.js" % current.request.application
+        if script not in s3.scripts_modules:
+            s3.scripts_modules.append(script)
+
+        script = '''$('#%s').showMap()''' % self.id
+        s3.jquery_ready.append(script)
+
+        # Return the HTML
+        return super(MAP2, self).xml()
 
 # =============================================================================
 def addFeatures(features):
@@ -9068,7 +9124,7 @@ class Style(object):
 
         if style:
             if style.marker_id:
-                style.marker = Marker(marker_id=style.marker_id)
+                style.marker = Marker(marker_id = style.marker_id)
             if aggregate is True:
                 # Use gis/location controller in all reports
                 style.url_format = "%s/{id}.plain" % URL(c="gis", f="location")

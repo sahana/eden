@@ -277,6 +277,16 @@ def define_map(height = None,
     return map
 
 # =============================================================================
+def map2():
+    """
+        Work-in-Progress update of map_viewing_client to OpenLayers 6
+    """
+
+    from s3.s3gis import MAP2
+
+    return {"map": MAP2()}
+
+# =============================================================================
 def location():
     """ RESTful CRUD controller for Locations """
 
