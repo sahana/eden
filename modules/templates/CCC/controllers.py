@@ -341,7 +341,7 @@ class personAdditional(S3Method):
                                    (T("Please indicate Faith support you can offer"), "faith_support.value"),
                                    (T("What help and support can you give those from other Faiths?"), "faith_support_other.value"),
                                    (T("Do you have any faith requirements that you would like help with if you are coming to Support Cumbria?"), "faith_requirements.value"),
-                                   (T("Please outline"), "faith_requirements_details.value"),
+                                   (T("If Yes please outline"), "faith_requirements_details.value"),
                                    )
 
             form = {"type": "form",
@@ -510,6 +510,18 @@ class register(S3CustomController):
                                 ),
                           Field("health_details",
                                 label = T("If you wish, you can give us some further information on any fitness, medical or mobility issues that might limit the kind of activities you are able to volunteer for; this will help us to suggest suitable opportunities for you"),
+                                ),
+                          Field("faith_requirements", "integer",
+                                label = T("Do you have any faith requirements that you would like help with if you are coming to Support Cumbria?"),
+                                requires = IS_IN_SET({0: T("No"),
+                                                      1: T("Yes"),
+                                                      }),
+                                widget = lambda f, v: \
+                                    SQLFORM.widgets.radio.widget(f, v,
+                                                                 style="divs"),
+                                ),
+                          Field("faith_requirements_details",
+                                label = T("If Yes please outline"),
                                 ),
                           Field("emergency_contact_name",
                                 label = T("Contact Name"),
@@ -911,6 +923,18 @@ class register(S3CustomController):
                                 widget = S3MultiSelectWidget(header="",
                                                              selectedList=3),
                                 ),
+                          Field("faith_requirements", "integer",
+                                label = T("Do you have any faith requirements that you would like help with if you are coming to Support Cumbria?"),
+                                requires = IS_IN_SET({0: T("No"),
+                                                      1: T("Yes"),
+                                                      }),
+                                widget = lambda f, v: \
+                                    SQLFORM.widgets.radio.widget(f, v,
+                                                                 style="divs"),
+                                ),
+                          Field("faith_requirements_details",
+                                label = T("If Yes please outline"),
+                                ),
                           Field("emergency_contact_name",
                                 label = T("Contact Name"),
                                 comment = T("Contact must not be listed as a leader above"),
@@ -1125,6 +1149,8 @@ class register(S3CustomController):
                           "home2": form_vars.home2,
                           "skill_id": form_vars.skill_id or [],
                           "skills_details": form_vars.skills_details,
+                          "faith_requirements": form_vars.faith_requirements,
+                          "faith_requirements_details": form_vars.faith_requirements_details,
                           "emergency_contact_name": form_vars.emergency_contact_name,
                           "emergency_contact_number": form_vars.emergency_contact_number,
                           }
@@ -1141,6 +1167,8 @@ class register(S3CustomController):
                           "some_physical": form_vars.some_physical,
                           "little_physical": form_vars.little_physical,
                           "health_details": form_vars.health_details,
+                          "faith_requirements": form_vars.faith_requirements,
+                          "faith_requirements_details": form_vars.faith_requirements_details,
                           "emergency_contact_name": form_vars.emergency_contact_name,
                           "emergency_contact_number": form_vars.emergency_contact_number,
                           "emergency_contact_relationship": form_vars.emergency_contact_relationship,
@@ -1152,7 +1180,7 @@ class register(S3CustomController):
 
             record["custom"] = json.dumps(custom)
 
-            temptable.update_or_insert(**record)
+            temptable.insert(**record)
 
             # Post-process the new user record
             users = db(utable.id > 0).select(utable.id, limitby=(0, 2))
@@ -1861,6 +1889,18 @@ def auth_user_register_onaccept(user_id):
                   }
         ttable.insert(**record)
 
+        # Faith Requirements
+        record = {"group_id": group_id,
+                  "tag": "faith_requirements",
+                  "value": custom["faith_requirements"],
+                  }
+        ttable.insert(**record)
+        record = {"group_id": group_id,
+                  "tag": "faith_requirements_details",
+                  "value": custom["faith_requirements_details"],
+                  }
+        ttable.insert(**record)
+
         # Emergency Contact
         record = {"group_id": group_id,
                   "tag": "contact_name",
@@ -1963,6 +2003,18 @@ def auth_user_register_onaccept(user_id):
         record = {"person_id": person_id,
                   "tag": "health_details",
                   "value": custom["health_details"],
+                  }
+        ttable.insert(**record)
+
+        record = {"person_id": person_id,
+                  "tag": "faith_requirements",
+                  "value": custom["faith_requirements"],
+                  }
+        ttable.insert(**record)
+
+        record = {"person_id": person_id,
+                  "tag": "faith_requirements_details",
+                  "value": custom["faith_requirements_details"],
                   }
         ttable.insert(**record)
 

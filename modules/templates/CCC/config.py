@@ -1187,8 +1187,10 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_group_resource(r, tablename):
 
-        from gluon import IS_EMPTY_OR, IS_INT_IN_RANGE, IS_NOT_EMPTY
-        from s3 import IS_INT_AMOUNT, S3OptionsFilter, S3SQLCustomForm, S3SQLInlineLink, S3TextFilter, s3_phone_requires
+        from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_NOT_EMPTY, \
+                          SQLFORM
+        from s3 import IS_INT_AMOUNT, S3OptionsFilter, S3SQLCustomForm, \
+                       S3SQLInlineLink, S3TextFilter, s3_phone_requires
 
         s3db = current.s3db
 
@@ -1207,6 +1209,16 @@ def config(settings):
                                             {"name": "skills_details",
                                              "joinby": "group_id",
                                              "filterby": {"tag": "skills_details"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "faith_requirements",
+                                             "joinby": "group_id",
+                                             "filterby": {"tag": "faith_requirements"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "faith_requirements_details",
+                                             "joinby": "group_id",
+                                             "filterby": {"tag": "faith_requirements_details"},
                                              "multiple": False,
                                              },
                                             {"name": "contact_name",
@@ -1232,6 +1244,15 @@ def config(settings):
         f.represent = integer_represent
         f.requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None))
 
+        faith_requirements = components_get("faith_requirements")
+        f = faith_requirements.table.value
+        f.requires = IS_IN_SET({"0": T("No"),
+                                "1": T("Yes"),
+                                })
+        f.widget = lambda f, v: \
+                        SQLFORM.widgets.radio.widget(f, v,
+                                                     style="divs")
+
         contact_name = components_get("contact_name")
         f = contact_name.table.value
         f.requires = IS_NOT_EMPTY()
@@ -1254,6 +1275,8 @@ def config(settings):
                                                                    field = "location_id",
                                                                    label = T("Where would you be willing to volunteer?"),
                                                                    ),
+                                                   (T("Do you have any faith requirements that you would like help with if you are coming to Support Cumbria?"), "faith_requirements.value"),
+                                                   (T("If Yes please outline"), "faith_requirements_details.value"),
                                                    (T("Emergency Contact Name"), "contact_name.value"),
                                                    (T("Emergency Contact Number"), "contact_number.value"),
                                                    "comments",

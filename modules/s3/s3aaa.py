@@ -338,6 +338,9 @@ Thank you"""
         # Temporary User Table
         # for storing User Data that will be used to create records for
         # the user once they are approved
+        #
+        # @ToDo: Move to modules/s3db/auth.py, so that it doesn't need to be loaded every request
+        #
         define_table("auth_user_temp",
                      Field("user_id", utable),
                      Field("home"),
