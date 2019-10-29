@@ -275,6 +275,7 @@ def config(settings):
                                      "AKN-Datum": "case_details.arrival_date",
                                      "Falldatum": "dvr_case.date",
                                      "BAMF-Az": "bamf.value",
+                                     "Benutzername": "current_user.name",
                                      }
 
     # -------------------------------------------------------------------------

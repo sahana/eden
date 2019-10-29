@@ -8414,12 +8414,21 @@ class pr_Template(S3Method):
 
                 doc_data = {}
                 for key, selector in mailmerge_fields.items():
-                    rfield = rfields.get(prefix(selector))
-                    if rfield:
-                        value = record[rfield.colname]
-                        doc_data[key] = s3_unicode(value)
+                    if selector == "current_user.name":
+                        user = current.auth.user
+                        if user:
+                            doc_data[key] = s3_format_fullname(fname=user.first_name,
+                                                               lname=user.last_name,
+                                                               )
+                        else:
+                            doc_data[key] = current.T("Unknown User")
                     else:
-                        doc_data[key] = NONE
+                        rfield = rfields.get(prefix(selector))
+                        if rfield:
+                            value = record[rfield.colname]
+                            doc_data[key] = s3_unicode(value)
+                        else:
+                            doc_data[key] = NONE
 
                 # Merge
                 filename = "%s_%s.docx" % (template.name, person_id)
