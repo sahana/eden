@@ -1484,6 +1484,7 @@ def config(settings):
         from s3 import S3TagCheckboxWidget
         f.widget = S3TagCheckboxWidget(on="Y", off="N")
         f.default = "N"
+        f.comment = T("Please indicate if you can deliver the item/s at no cost?")
 
         get_vars_get = r.get_vars.get
         has_role = current.auth.s3_has_role
@@ -1507,7 +1508,7 @@ def config(settings):
                                            field = "location_id",
                                            label = T("Where would you be willing to deliver?"),
                                            ),
-                           (T("Length of time the offer is available?"), "availability.value"),
+                           (T("Please indicate if the offer is only available for a period of time (please state) or an open ended offer. Household items, such as furniture, are normally not required for some months but very gratefully received at the right time."), "availability.value"),
                            "comments",
                            ]
         elif get_vars_get("groups") or \
