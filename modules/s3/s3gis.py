@@ -7239,14 +7239,16 @@ class MAP2(DIV):
             :param **opts: options to pass to the Map for server-side processing
         """
 
-        # Options for server-side processing
-        #self.opts = opts
+        self.opts = opts
+
+        # Pass options to DIV()
         opts_get = opts.get
-        self.id = map_id = opts_get("id", "default_map")
-        height = opts_get("height", 400)
+        map_id = opts_get("id", "default_map")
+        height = opts_get("height", current.deployment_settings.get_gis_map_height())
         self.attributes = {"_id": map_id,
                            "_style": "height:%spx" % height,
                            }
+        # @ToDo: Add HTML Controls (Toolbar, etc)
         self.components = []
 
         # Load CSS now as too late in xml()
@@ -7256,24 +7258,162 @@ class MAP2(DIV):
             stylesheets.append(stylesheet)
 
     # -------------------------------------------------------------------------
+    def add_layers(self, config):
+        """
+            Add Layers to the Map
+        """
+
+        layers = {"vector": [],
+                  }
+        vappend = layers["vector"].append
+
+        db = current.db
+        s3db = current.s3db
+        settings = current.deployment_settings
+
+        # 1st lookup all layers in the Catalog
+        ctable = db.gis_config
+        ltable = db.gis_layer_config
+        etable = db.gis_layer_entity
+        query = (ltable.deleted == False)
+        join = [etable.on(etable.layer_id == ltable.layer_id)]
+        fields = [etable.instance_type,
+                  ltable.layer_id,
+                  ltable.enabled,
+                  ltable.visible,
+                  ltable.base,
+                  ltable.dir,
+                  ]
+        stable = db.gis_style
+        mtable = db.gis_marker
+        query &= (ltable.config_id.belongs(config.ids))
+        join.append(ctable.on(ctable.id == ltable.config_id))
+        fields.extend((stable.style,
+                       stable.cluster_distance,
+                       stable.cluster_threshold,
+                       stable.opacity,
+                       stable.popup_format,
+                       mtable.image,
+                       mtable.height,
+                       mtable.width,
+                       ctable.pe_type))
+        left = [stable.on((stable.layer_id == etable.layer_id) & \
+                          (stable.record_id == None) & \
+                          ((stable.config_id == ctable.id) | \
+                           (stable.config_id == None))),
+                mtable.on(mtable.id == stable.marker_id),
+                ]
+        limitby = None
+        # @ToDo: Need to fix this?: make the style lookup a different call
+        if settings.get_database_type() == "postgres":
+            # None is last
+            orderby = [ctable.pe_type, stable.config_id]
+        else:
+            # None is 1st
+            orderby = [ctable.pe_type, ~stable.config_id]
+        #if settings.get_gis_layer_metadata():
+        #    cptable = s3db.cms_post_layer
+        #    left.append(cptable.on(cptable.layer_id == etable.layer_id))
+        #    fields.append(cptable.post_id)
+
+        layer_types = []
+        lappend = layer_types.append
+        catalog_layers = db(query).select(join = join,
+                                          left = left,
+                                          limitby = limitby,
+                                          orderby = orderby,
+                                          *fields)
+        for layer in catalog_layers:
+            layer_type = layer["gis_layer_entity.instance_type"]
+            if layer_type == "gis_layer_feature":
+                lappend("gis_layer_feature")
+
+        # Make unique
+        layer_types = set(layer_types)
+
+        # Lookup details for each layer type
+        for layer_type in layer_types:
+            if layer_type == "gis_layer_feature":
+                # Feature Layers
+                has_permission = current.auth.permission.has_permission
+                table = s3db[layer_type]
+                fields = table.fields
+                metafields = s3_all_meta_field_names()
+                fields = [table[f] for f in fields if f not in metafields]
+                layer_ids = [row["gis_layer_config.layer_id"] for row in catalog_layers if \
+                             row["gis_layer_entity.instance_type"] == layer_type]
+                query = (table.layer_id.belongs(set(layer_ids)))
+                rows = db(query).select(*fields)
+                for row in rows:
+                    controller = row.controller
+                    if controller not in settings.modules:
+                        # Module not enabled => Skip
+                        continue
+                    function = row.function
+                    if not has_permission("read",
+                                          c = controller,
+                                          f = function):
+                        # User doesn't have permission to access this function => Skip
+                        continue
+                    if row.use_site:
+                        maxdepth = 1
+                    else:
+                        maxdepth = 0
+                    url = URL(controller, function)
+                    # Strip off the appname as we can add this client-side to save a little bandwidth
+                    url = url.split("/%s" % current.request.application)[1]
+                    feature_layer = {"url": "%s.geojson?layer=%i&components=None&maxdepth=%i&show_ids=true" % \
+                                        (url,
+                                         row.layer_id,
+                                         maxdepth),
+                                     }
+                    vappend(feature_layer)
+
+        return layers
+
+    # -------------------------------------------------------------------------
     def xml(self):
         """
             Render the Map
-            - this is primarily done by inserting a lot of JavaScript
-            - CSS loaded as-standard to avoid delays in page loading
-            - HTML added in init() as a component
+            - this is primarily done by inserting JavaScript
         """
 
+        #settings = current.deployment_settings
+
+        # Read Map Config
+        config = GIS.get_config()
+
+        # Read options for this Map
+        opts_get = self.opts.get
+        map_id = opts_get("id", "default_map")
+        options = {}
+        #height = 
+        #options["height"] = opts_get("height", settings.get_gis_map_height())
+        #options["width"] = opts_get("width", settings.get_gis_map_width())
+        options["lat"] = opts_get("lat", config.lat)
+        options["lon"] = opts_get("lon", config.lon)
+        options["zoom"] = opts_get("zoom", config.zoom)
+        options["projection"] = opts_get("projection", config.projection)
+        options["layers"] = opts_get("layers", self.add_layers(config))
+
         # Insert the JavaScript
+        appname = current.request.application
         s3 = current.response.s3
+
+        script = "/%s/static/scripts/gis/ol.js" % appname
+        if script not in s3.scripts:
+            s3.scripts.append(script)
+
         if s3.debug:
-            script = "/%s/static/scripts/S3/s3.ui.gis.js" % current.request.application
+            script = "/%s/static/scripts/S3/s3.ui.gis.js" % appname
         else:
-            script = "/%s/static/scripts/S3/s3.ui.gis.min.js" % current.request.application
+            script = "/%s/static/scripts/S3/s3.ui.gis.min.js" % appname
         if script not in s3.scripts_modules:
             s3.scripts_modules.append(script)
 
-        script = '''$('#%s').showMap()''' % self.id
+        script = '''$('#%(map_id)s').showMap(%(options)s)''' % {"map_id": map_id,
+                                                                "options": json.dumps(options, separators=SEPARATORS),
+                                                                }
         s3.jquery_ready.append(script)
 
         # Return the HTML

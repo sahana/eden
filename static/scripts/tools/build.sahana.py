@@ -748,18 +748,18 @@ def main(argv):
         if "template" in argv:
             # Build Template only
             pass
-        elif "ol6" in argv:
-            # Build OpenLayers 6 only
-            cwd = os.getcwd()
-            # Assume ol6-rollup at same level as eden
-            rollup_dir = os.path.join("..", "..", "..", "..", "ol6-rollup")
-            os.chdir(rollup_dir)
-            #os.system("npm run-script build") # Commented due to __extends()
-            os.system("terser ol6.js -c --source-map -o ol6.min.js")
-            gis_dir = os.path.join("..", request.application, "static", "scripts", "gis")
-            move_to("ol6.min.js", gis_dir)
-            # Restore CWD
-            os.chdir(cwd)
+        #elif "ol6" in argv:
+        #    # Build OpenLayers 6 only
+        #    cwd = os.getcwd()
+        #    # Assume ol6-rollup at same level as eden
+        #    rollup_dir = os.path.join("..", "..", "..", "..", "ol6-rollup")
+        #    os.chdir(rollup_dir)
+        #    #os.system("npm run-script build") # Commented due to __extends()
+        #    os.system("terser ol6.js -c -o ol6.min.js")
+        #    gis_dir = os.path.join("..", request.application, "static", "scripts", "gis")
+        #    move_to("ol6.min.js", gis_dir)
+        #    # Restore CWD
+        #    os.chdir(cwd)
         else:
             # Do All
             # Rebuild GIS JS?
