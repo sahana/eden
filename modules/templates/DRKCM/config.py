@@ -36,6 +36,7 @@ UI_DEFAULTS = {#"case_arrival_date_label": "Date of Entry",
                "case_lodging": None, # "site"|"text"|None
                "case_lodging_dates": False,
                "case_nationality_mandatory": False,
+               "case_show_total_consultations": True,
                "activity_closure": True,
                "activity_comments": True,
                "activity_use_sector": True,
@@ -84,6 +85,7 @@ UI_OPTIONS = {"LEA": {"case_arrival_date_label": "Date of AKN",
                       "case_lodging": "text",
                       "case_lodging_dates": False,
                       "case_nationality_mandatory": True,
+                      "case_show_total_consultations": False,
                       "activity_closure": False,
                       "activity_comments": False,
                       "activity_use_sector": False,
@@ -4161,6 +4163,37 @@ def get_protection_themes(person):
     return represent(theme_list)
 
 # =============================================================================
+def get_total_consultations(person):
+    """
+        Get number of consultations for person
+
+        @param person: the beneficiary record (pr_person Row)
+
+        @returns: number of consultations
+    """
+
+    s3db = current.s3db
+
+    rtable = s3db.dvr_response_action
+
+    ui_options = get_ui_options()
+    if ui_options.get("response_types"):
+        # Filter by response type
+        ttable = s3db.dvr_response_type
+        join = ttable.on((ttable.id == rtable.response_type_id) & \
+                         (ttable.is_consultation == True))
+    else:
+        # Count all responses as consultations
+        join = None
+
+    query = (rtable.person_id == person.id) & \
+            (rtable.deleted == False)
+    count = rtable.id.count()
+
+    row = current.db(query).select(count, join=join).first()
+    return row[count]
+
+# =============================================================================
 def drk_dvr_rheader(r, tabs=None):
     """ DVR custom resource headers """
 
@@ -4335,6 +4368,13 @@ def drk_dvr_rheader(r, tabs=None):
 
             if lodging:
                 rheader_fields[1][2] = lodging
+
+            if ui_opts_get("case_show_total_consultations"):
+                total_consultations = (T("Number of Consultations"), get_total_consultations)
+                if rheader_fields[1][2] is None:
+                    rheader_fields[1][2] = total_consultations
+                else:
+                    rheader_fields[0].append(total_consultations)
 
             hhsize = (T("Size of Family"), household_size)
             if rheader_fields[1][0] is None:

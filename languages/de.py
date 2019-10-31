@@ -3444,6 +3444,7 @@
 'Number of Children': 'Anzahl Kinder',
 'Number of Clients': 'Anzahl Klienten',
 'Number of Columns': 'Anzahl der Spalten',
+'Number of Consultations': 'Anzahl Beratungsgespräche',
 'Number of Families': 'Anzahl Familien',
 'Number of Patients': 'Anzahl Patienten',
 'Number of People Required': 'Anzahl der benötigten Personen',
