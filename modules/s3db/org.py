@@ -2379,7 +2379,9 @@ class S3OrganisationSectorModel(S3Model):
         tablename = "org_sector_organisation"
         define_table(tablename,
                      sector_id(),
-                     self.org_organisation_id(),
+                     self.org_organisation_id(
+                         ondelete = "CASCADE",
+                         ),
                      Field("lead", "boolean",
                            label = T("Lead Organization?"),
                            represent = s3_yes_no_represent,
