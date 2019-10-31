@@ -38,83 +38,35 @@ class PerformanceIndicators(object):
         record_ids = set(row.id for row in rows)
         master_query = table._id.belongs(record_ids)
 
-        # Total responses
-        total_responses = len(record_ids)
-
-        # Total clients, average effort per response
+        # Total clients
         num_clients = table.person_id.count(distinct=True)
-        avg_hours = table.hours.avg()
-
-        row = db(master_query).select(num_clients,
-                                      avg_hours,
-                                      ).first()
+        row = db(master_query).select(num_clients).first()
         total_clients = row[num_clients]
+
+        # Total number of consultations, average effort per consultation
+        ttable = s3db.dvr_response_type
+        join = ttable.on((ttable.id == table.response_type_id) & \
+                         (ttable.is_consultation == True))
+        num_responses = table._id.count()
+        avg_hours = table.hours.avg()
+        row = db(master_query).select(num_responses,
+                                      avg_hours,
+                                      join = join,
+                                      ).first()
+        total_responses = row[num_responses]
         avg_hours_per_response = row[avg_hours]
 
-        # Average number of responses per client
+        # Average number of consultations per client
         if total_clients:
             avg_responses_per_client = total_responses / total_clients
         else:
             avg_responses_per_client = 0
-
-        # Number of clients without family members in case group
-        ctable = s3db.dvr_case
-        join = ctable.on((ctable.person_id == table.person_id) & \
-                         (ctable.household_size == 1))
-
-        num_clients = table.person_id.count(distinct=True)
-
-        row = db(master_query).select(num_clients,
-                                      join = join,
-                                      ).first()
-        singles = row[num_clients]
-        families = total_clients - singles
-
-        # Top 5 Nationalities
-        dtable = s3db.pr_person_details
-        left = dtable.on(dtable.person_id == table.person_id)
-
-        nationality = dtable.nationality
-        num_clients = table.person_id.count(distinct=True)
-
-        rows = db(master_query).select(nationality,
-                                       groupby = nationality,
-                                       orderby = ~num_clients,
-                                       left = left,
-                                       limitby = (0, 5),
-                                       )
-        top_5_nationalities = [row[nationality] for row in rows]
-
-        # Top 5 Needs (only possible if using themes+needs)
-        if current.deployment_settings.get_dvr_response_themes_needs():
-
-            ltable = s3db.dvr_response_action_theme
-            ttable = s3db.dvr_response_theme
-            left = ttable.on(ttable.id == ltable.theme_id)
-
-            num_responses = ltable.action_id.count(distinct=True)
-            need = ttable.need_id
-
-            query = ltable.action_id.belongs(record_ids)
-            rows = db(query).select(need,
-                                    groupby = need,
-                                    orderby = ~num_responses,
-                                    left = left,
-                                    limitby = (0, 5),
-                                    )
-            top_5_needs = [row[need] for row in rows]
-        else:
-            top_5_needs = None
 
         # Return indicators
         return {"total_responses": total_responses,
                 "total_clients": total_clients,
                 "avg_hours_per_response": avg_hours_per_response,
                 "avg_responses_per_client": avg_responses_per_client,
-                "top_5_nationalities": top_5_nationalities,
-                "top_5_needs": top_5_needs,
-                "singles": singles,
-                "families": families,
                 }
 
     # -------------------------------------------------------------------------
@@ -129,7 +81,6 @@ class PerformanceIndicators(object):
         """
 
         T = current.T
-        s3db = current.s3db
 
         indicators = self.compute(resource)
 
@@ -168,43 +119,6 @@ class PerformanceIndicators(object):
         write(sheet, rowindex, 0, T("Average Number of Consultations per Client"))
         write(sheet, rowindex, 1, indicators.get("avg_responses_per_client", ""))
         rowindex += 2
-
-        # Distribution
-        write(sheet, rowindex, 0, T("Distribution of Clients"))
-        write(sheet, rowindex, 1, T("Single"))
-        write(sheet, rowindex, 2, indicators.get("singles", ""))
-        rowindex += 1
-
-        write(sheet, rowindex, 1, T("Family"))
-        write(sheet, rowindex, 2, indicators.get("families", ""))
-        rowindex += 1
-
-        write(sheet, rowindex, 1, T("Group Counseling"))
-        rowindex += 1
-
-        write(sheet, rowindex, 1, T("Individual Counseling"))
-        write(sheet, rowindex, 2, indicators.get("total_responses", ""))
-        rowindex += 2
-
-        # Top-5's
-        write(sheet, rowindex, 0, T("Top 5 Countries of Origin"))
-        top_5_nationalities = indicators.get("top_5_nationalities")
-        if top_5_nationalities:
-            dtable = s3db.pr_person_details
-            field = dtable.nationality
-            for rank, nationality in enumerate(top_5_nationalities):
-                write(sheet, rowindex, 1, "%s - %s" % (rank + 1, field.represent(nationality)))
-                rowindex += 1
-
-        rowindex += 1
-        write(sheet, rowindex, 0, T("Top 5 Counseling Reasons"))
-        top_5_needs = indicators.get("top_5_needs")
-        if top_5_needs:
-            ttable = s3db.dvr_response_theme
-            field = ttable.need_id
-            for rank, need in enumerate(top_5_needs):
-                write(sheet, rowindex, 1, "%s - %s" % (rank + 1, field.represent(need)))
-                rowindex += 1
 
     # -------------------------------------------------------------------------
     def write(self, sheet, rowindex, colindex, label, style="odd"):

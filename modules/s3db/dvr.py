@@ -1546,6 +1546,11 @@ class DVRResponseModel(S3Model):
                            default = False,
                            represent = s3_yes_no_represent,
                            ),
+                     Field("is_consultation", "boolean",
+                           label = T("Consultation"),
+                           default = False,
+                           represent = s3_yes_no_represent,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 

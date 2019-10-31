@@ -1,7 +1,7 @@
-Type,SubType,Default,Comments
-Persönliches Gespräch,Erstgespräch,false,Initial Consultation
-Persönliches Gespräch,Erstgespräch mit Dolmetscher,false,Initial Consultation with Interpreter
-Persönliches Gespräch,Folgegespräch,true,Follow-up Consultation
-Persönliches Gespräch,Folgegespräch mit Dolmetscher,false,Follow-up Consultation with Interpreter
-Sonstiger Kontakt,Sonstiger Kontakt mit Klient,false,Other Contact with Client
-Sonstiger Kontakt,Sonstiger Kontakt mit Umfeld,false,Other Contact
+Type,SubType,Default,Consultation,Comments
+Persönliches Gespräch,Erstgespräch,false,true,Initial Consultation
+Persönliches Gespräch,Erstgespräch mit Dolmetscher,false,true,Initial Consultation with Interpreter
+Persönliches Gespräch,Folgegespräch,true,true,Follow-up Consultation
+Persönliches Gespräch,Folgegespräch mit Dolmetscher,false,true,Follow-up Consultation with Interpreter
+Sonstiger Kontakt,Sonstiger Kontakt mit Klient,false,false,Other Contact with Client
+Sonstiger Kontakt,Sonstiger Kontakt mit Umfeld,false,false,Other Contact

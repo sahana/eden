@@ -11,6 +11,8 @@
          SubType.....................string..........Sub Type Name
          SubSubType... (indefinite depth)
 
+         Default.....................true|false......is default type
+         Consultation................true|false......is consultation
          Comments....................string..........Comments
 
     *********************************************************************** -->
@@ -143,6 +145,20 @@
                 <xsl:attribute name="value">
                     <xsl:choose>
                         <xsl:when test="col[@field='Default']/text()='true'">
+                            <xsl:value-of select="'true'"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="'false'"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:attribute>
+            </data>
+
+            <!-- Is Consultation? -->
+            <data field="is_consultation">
+                <xsl:attribute name="value">
+                    <xsl:choose>
+                        <xsl:when test="col[@field='Consultation']/text()='true'">
                             <xsl:value-of select="'true'"/>
                         </xsl:when>
                         <xsl:otherwise>
