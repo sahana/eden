@@ -56,11 +56,11 @@ class S3MainMenu(default.S3MainMenu):
                     MM("Messages", c="project", f="task"),
                     ]
         elif has_role("AGENCY"):
-            menu = [#MM("General Information and Advice", c="cms", f="post", m="datalist"),
+            menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
                     MM("Documents", c="doc", f="document", m="datalist"),
-                    #MM("Events", c="hrm", f="training_event"),
-                    #MM("Opportunities", c="req", f="need"),
-                    #MM("Contact Organisation Admins", c="project", f="task", m="create"),
+                    MM("Events", c="hrm", f="training_event"),
+                    MM("Opportunities", c="req", f="need"),
+                    MM("Contact Organisation Admins", c="project", f="task", m="create"),
                     ]
         elif has_role("VOLUNTEER"):
             menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),

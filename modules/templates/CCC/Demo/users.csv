@@ -7,3 +7,4 @@ Eden,OrgAdmin,eden_admin@example.com,eden,ORG_ADMIN,Eden Community Organisation,
 Reserve,Volunteer,reserve@example.com,eden,"RESERVE/pr_forum.name=Reserves",,
 Corporate,Donor,donor@example.com,eden,"DONOR/pr_forum.name=Donors",,
 Group,Leader,group@example.com,eden,"GROUP_ADMIN/pr_group.name=Helpers",,
+Police,Liaison,police@example.com,eden,AGENCY,Agency Group,staff

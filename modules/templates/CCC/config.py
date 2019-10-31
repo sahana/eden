@@ -288,9 +288,12 @@ def config(settings):
 
         if tablename == "hrm_training_event":
             T = current.T
-            tabs = [(T("Basic Details"), None),
-                    (T("Participants"), "participant"),
-                    ]
+            if current.auth.s3_has_role("ORG_ADMIN"):
+                tabs = [(T("Basic Details"), None),
+                        (T("Participants"), "participant"),
+                        ]
+            else:
+                tabs = []
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
