@@ -959,6 +959,7 @@ class register(S3CustomController):
                                "mobile",
                                "first_name2",
                                "last_name2",
+                               "where_operate",
                                ]
 
         else:
