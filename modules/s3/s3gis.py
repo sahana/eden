@@ -6444,8 +6444,6 @@ class MAP(DIV):
             current.session.error = current.T("Map cannot display without prepop data!")
             redirect(URL(c="default", f="index"))
 
-        opts = self.opts
-
         T = current.T
         db = current.db
         auth = current.auth
@@ -6459,9 +6457,11 @@ class MAP(DIV):
         settings = current.deployment_settings
         MAP_ADMIN = auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
 
+        opts_get = self.opts.get
+
         # Support bookmarks (such as from the control)
         # - these over-ride the arguments
-        get_vars = request.get_vars
+        get_vars_get = request.get_vars.get
 
         # JS Globals
         js_globals = {}
@@ -6485,30 +6485,30 @@ class MAP(DIV):
         # Viewport
         ##########
 
-        height = opts.get("height", None)
+        height = opts_get("height", None)
         if height:
             map_height = height
         else:
             map_height = settings.get_gis_map_height()
         options["map_height"] = map_height
-        width = opts.get("width", None)
+        width = opts_get("width", None)
         if width:
             map_width = width
         else:
             map_width = settings.get_gis_map_width()
         options["map_width"] = map_width
 
-        zoom = get_vars.get("zoom", None)
+        zoom = get_vars_get("zoom", None)
         if zoom is not None:
             zoom = int(zoom)
         else:
-            zoom = opts.get("zoom", None)
+            zoom = opts_get("zoom", None)
         if not zoom:
             zoom = config.zoom
         options["zoom"] = zoom or 1
 
         # Bounding Box or Center/Zoom
-        bbox = opts.get("bbox", None)
+        bbox = opts_get("bbox", None)
         if (bbox
             and (-90 <= bbox["lat_max"] <= 90)
             and (-90 <= bbox["lat_min"] <= 90)
@@ -6524,18 +6524,18 @@ class MAP(DIV):
             # No bounds or we've been passed bounds which aren't sane
             bbox = None
             # Use Lat/Lon/Zoom to center instead
-            lat = get_vars.get("lat", None)
+            lat = get_vars_get("lat", None)
             if lat is not None:
                 lat = float(lat)
             else:
-                lat = opts.get("lat", None)
+                lat = opts_get("lat", None)
             if lat is None or lat == "":
                 lat = config.lat
-            lon = get_vars.get("lon", None)
+            lon = get_vars_get("lon", None)
             if lon is not None:
                 lon = float(lon)
             else:
-                lon = opts.get("lon", None)
+                lon = opts_get("lon", None)
             if lon is None or lon == "":
                 lon = config.lon
 
@@ -6562,7 +6562,7 @@ class MAP(DIV):
         # Projection
         ############
 
-        projection = opts.get("projection", None)
+        projection = opts_get("projection", None)
         if not projection:
             projection = config.epsg
         options["projection"] = projection
@@ -6643,20 +6643,20 @@ class MAP(DIV):
         # Layout
         ########
 
-        if not opts.get("closable", False):
+        if not opts_get("closable", False):
             options["windowNotClosable"] = True
-        if opts.get("window", False):
+        if opts_get("window", False):
             options["window"] = True
-            if opts.get("window_hide", False):
+            if opts_get("window_hide", False):
                 options["windowHide"] = True
 
-        if opts.get("maximizable", False):
+        if opts_get("maximizable", False):
             options["maximizable"] = True
         else:
             options["maximizable"] = False
 
         # Collapsed
-        if opts.get("collapsed", False):
+        if opts_get("collapsed", False):
             options["west_collapsed"] = True
 
         # LayerTree
@@ -6674,7 +6674,7 @@ class MAP(DIV):
         #######
 
         # Toolbar
-        if opts.get("toolbar", False):
+        if opts_get("toolbar", False):
             options["toolbar"] = True
 
             i18n["gis_length_message"] = T("The length is")
@@ -6687,7 +6687,7 @@ class MAP(DIV):
                 i18n["gis_geoLocate"] = T("Zoom to Current Location")
 
             # Search
-            if opts.get("search", False):
+            if opts_get("search", False):
                 geonames_username = settings.get_gis_geonames_username()
                 if geonames_username:
                     # Presence of username turns feature on in s3.gis.js
@@ -6698,7 +6698,7 @@ class MAP(DIV):
 
             # Show NAV controls?
             # e.g. removed within S3LocationSelector[Widget]
-            nav = opts.get("nav", None)
+            nav = opts_get("nav", None)
             if nav is None:
                 nav = settings.get_gis_nav_controls()
             if nav:
@@ -6711,13 +6711,13 @@ class MAP(DIV):
                 options["nav"] = False
 
             # Show Area control?
-            if opts.get("area", False):
+            if opts_get("area", False):
                 options["area"] = True
                 i18n["gis_area_message"] = T("The area is")
                 i18n["gis_area_tooltip"] = T("Measure Area: Click the points around the polygon & end with a double-click")
 
             # Show Color Picker?
-            color_picker = opts.get("color_picker", False)
+            color_picker = opts_get("color_picker", False)
             if color_picker:
                 options["color_picker"] = True
                 if color_picker is not True:
@@ -6731,7 +6731,7 @@ class MAP(DIV):
                 i18n["gis_noColorSelectedText"] = T("No Color Selected")
 
             # Show Print control?
-            print_control = opts.get("print_control") is not False and settings.get_gis_print()
+            print_control = opts_get("print_control") is not False and settings.get_gis_print()
             if print_control:
                 # @ToDo: Use internal Printing or External Service
                 # http://eden.sahanafoundation.org/wiki/BluePrint/GIS/Printing
@@ -6748,7 +6748,7 @@ class MAP(DIV):
 
             # Show Save control?
             # e.g. removed within S3LocationSelector[Widget]
-            if opts.get("save") is True and auth.s3_logged_in():
+            if opts_get("save") is True and auth.s3_logged_in():
                 options["save"] = True
                 i18n["gis_save"] = T("Save: Default Lat, Lon & Zoom for the Viewport")
                 if MAP_ADMIN or (config.pe_id == auth.user.pe_id):
@@ -6764,18 +6764,18 @@ class MAP(DIV):
                 i18n["gis_osm_zoom_closer"] = T("Zoom in closer to Edit OpenStreetMap layer")
 
             # MGRS PDF Browser
-            mgrs = opts.get("mgrs", None)
+            mgrs = opts_get("mgrs", None)
             if mgrs:
                 options["mgrs_name"] = mgrs["name"]
                 options["mgrs_url"] = mgrs["url"]
         else:
             # No toolbar
-            if opts.get("save") is True:
-                opts["save"] = "float"
+            if opts_get("save") is True:
+                self.opts["save"] = "float"
 
         # Show Save control?
         # e.g. removed within S3LocationSelector[Widget]
-        if opts.get("save") == "float" and auth.s3_logged_in():
+        if opts_get("save") == "float" and auth.s3_logged_in():
             permit = auth.s3_has_permission
             if permit("create", ctable):
                 options["save"] = "float"
@@ -6801,7 +6801,7 @@ class MAP(DIV):
                     options["config_name"] = _config.name
 
         # Legend panel
-        legend = opts.get("legend", False)
+        legend = opts_get("legend", False)
         if legend:
             i18n["gis_legend"] = T("Legend")
             if legend == "float":
@@ -6819,37 +6819,37 @@ class MAP(DIV):
                 options["legend"] = True
 
         # Draw Feature Controls
-        if opts.get("add_feature", False):
+        if opts_get("add_feature", False):
             i18n["gis_draw_feature"] = T("Add Point")
-            if opts.get("add_feature_active", False):
+            if opts_get("add_feature_active", False):
                 options["draw_feature"] = "active"
             else:
                 options["draw_feature"] = "inactive"
 
-        if opts.get("add_line", False):
+        if opts_get("add_line", False):
             i18n["gis_draw_line"] = T("Add Line")
-            if opts.get("add_line_active", False):
+            if opts_get("add_line_active", False):
                 options["draw_line"] = "active"
             else:
                 options["draw_line"] = "inactive"
 
-        if opts.get("add_polygon", False):
+        if opts_get("add_polygon", False):
             i18n["gis_draw_polygon"] = T("Add Polygon")
             i18n["gis_draw_polygon_clear"] = T("Clear Polygon")
-            if opts.get("add_polygon_active", False):
+            if opts_get("add_polygon_active", False):
                 options["draw_polygon"] = "active"
             else:
                 options["draw_polygon"] = "inactive"
 
-        if opts.get("add_circle", False):
+        if opts_get("add_circle", False):
             i18n["gis_draw_circle"] = T("Add Circle")
-            if opts.get("add_circle_active", False):
+            if opts_get("add_circle_active", False):
                 options["draw_circle"] = "active"
             else:
                 options["draw_circle"] = "inactive"
 
         # Clear Layers
-        clear_layers = opts.get("clear_layers") is not False and settings.get_gis_clear_layers()
+        clear_layers = opts_get("clear_layers") is not False and settings.get_gis_clear_layers()
         if clear_layers:
             options["clear_layers"] = clear_layers
             i18n["gis_clearlayers"] = T("Clear all Layers")
@@ -6866,7 +6866,7 @@ class MAP(DIV):
             i18n["gis_uploadlayer"] = T("Upload Shapefile")
 
         # WMS Browser
-        wms_browser = opts.get("wms_browser", None)
+        wms_browser = opts_get("wms_browser", None)
         if wms_browser:
             options["wms_browser_name"] = wms_browser["name"]
             # urlencode the URL
@@ -6874,7 +6874,7 @@ class MAP(DIV):
 
         # Mouse Position
         # 'normal', 'mgrs' or 'off'
-        mouse_position = opts.get("mouse_position", None)
+        mouse_position = opts_get("mouse_position", None)
         if mouse_position is None:
             mouse_position = settings.get_gis_mouse_position()
         if mouse_position == "mgrs":
@@ -6885,34 +6885,34 @@ class MAP(DIV):
             options["mouse_position"] = True
 
         # Overview Map
-        overview = opts.get("overview", None)
+        overview = opts_get("overview", None)
         if overview is None:
             overview = settings.get_gis_overview()
         if not overview:
             options["overview"] = False
 
         # Permalink
-        permalink = opts.get("permalink", None)
+        permalink = opts_get("permalink", None)
         if permalink is None:
             permalink = settings.get_gis_permalink()
         if not permalink:
             options["permalink"] = False
 
         # ScaleLine
-        scaleline = opts.get("scaleline", None)
+        scaleline = opts_get("scaleline", None)
         if scaleline is None:
             scaleline = settings.get_gis_scaleline()
         if not scaleline:
             options["scaleline"] = False
 
         # Zoom control
-        zoomcontrol = opts.get("zoomcontrol", None)
+        zoomcontrol = opts_get("zoomcontrol", None)
         if zoomcontrol is None:
             zoomcontrol = settings.get_gis_zoomcontrol()
         if not zoomcontrol:
             options["zoomcontrol"] = False
 
-        zoomWheelEnabled = opts.get("zoomWheelEnabled", True)
+        zoomWheelEnabled = opts_get("zoomWheelEnabled", True)
         if not zoomWheelEnabled:
             options["no_zoom_wheel"] = True
 
@@ -6926,17 +6926,17 @@ class MAP(DIV):
             options["duplicate_features"] = True
 
         # Features
-        features = opts.get("features", None)
+        features = opts_get("features", None)
         if features:
             options["features"] = addFeatures(features)
 
         # Feature Queries
-        feature_queries = opts.get("feature_queries", None)
+        feature_queries = opts_get("feature_queries", None)
         if feature_queries:
             options["feature_queries"] = addFeatureQueries(feature_queries)
 
         # Feature Resources
-        feature_resources = opts.get("feature_resources", None)
+        feature_resources = opts_get("feature_resources", None)
         if feature_resources:
             options["feature_resources"] = addFeatureResources(feature_resources)
 
@@ -6954,7 +6954,7 @@ class MAP(DIV):
                   ltable.dir,
                   ]
 
-        if opts.get("catalogue_layers", False):
+        if opts_get("catalogue_layers", False):
             # Add all enabled Layers from the Catalogue
             stable = db.gis_style
             mtable = db.gis_marker
@@ -7066,7 +7066,7 @@ class MAP(DIV):
         for LayerType in layer_types:
             try:
                 # Instantiate the Class
-                layer = LayerType(layers)
+                layer = LayerType(layers, openlayers=2)
                 layer.as_dict(options)
                 for script in layer.scripts:
                     scripts_append(script)
@@ -7089,7 +7089,7 @@ class MAP(DIV):
 
         # Callback can be set before _setup()
         if not self.callback:
-            self.callback = opts.get("callback", "DEFAULT")
+            self.callback = opts_get("callback", "DEFAULT")
         # These can be read/modified after _setup() & before xml()
         self.options = options
 
@@ -7103,7 +7103,7 @@ class MAP(DIV):
         # This, and any code it generates, is done last
         # However, map plugin should not assume this.
         self.plugin_callbacks = []
-        plugins = opts.get("plugins", None)
+        plugins = opts_get("plugins", None)
         if plugins:
             for plugin in plugins:
                 plugin.extend_gis_map(self)
@@ -7248,7 +7248,7 @@ class MAP2(DIV):
         self.attributes = {"_id": map_id,
                            "_style": "height:%spx" % height,
                            }
-        # @ToDo: Add HTML Controls (Toolbar, etc)
+        # @ToDo: Add HTML Controls (Toolbar, LayerTree, etc)
         self.components = []
 
         # Load CSS now as too late in xml()
@@ -7258,20 +7258,170 @@ class MAP2(DIV):
             stylesheets.append(stylesheet)
 
     # -------------------------------------------------------------------------
-    def add_layers(self, config):
+    def _options(self):
         """
-            Add Layers to the Map
+            Configuration for the Map
         """
 
-        layers = {"vector": [],
-                  }
-        vappend = layers["vector"].append
+        # Read Map Config
+        config = GIS.get_config()
+        if not config:
+            # No prepop => Bail
+            return None
 
-        db = current.db
-        s3db = current.s3db
+        options = {}
+
+        # Read options for this Map
+        get_vars_get = current.request.get_vars.get
+        opts_get = self.opts.get
         settings = current.deployment_settings
 
-        # 1st lookup all layers in the Catalog
+        ##########
+        # Viewport
+        ##########
+
+        #options["height"] = opts_get("height", settings.get_gis_map_height())
+        #options["width"] = opts_get("width", settings.get_gis_map_width())
+
+        zoom = get_vars_get("zoom", None)
+        if zoom is not None:
+            zoom = int(zoom)
+        else:
+            zoom = opts_get("zoom", None)
+        if not zoom:
+            zoom = config.zoom
+        options["zoom"] = zoom or 0
+
+        # Bounding Box or Center/Zoom
+        bbox = opts_get("bbox", None)
+        if (bbox
+            and (-90 <= bbox["lat_max"] <= 90)
+            and (-90 <= bbox["lat_min"] <= 90)
+            and (-180 <= bbox["lon_max"] <= 180)
+            and (-180 <= bbox["lon_min"] <= 180)
+            ):
+            # We have sane Bounds provided, so we should use them
+            pass
+        elif zoom is None:
+            # Build Bounds from Config
+            bbox = config
+        else:
+            # No bounds or we've been passed bounds which aren't sane
+            bbox = None
+            # Use Lat/Lon/Zoom to center instead
+            lat = get_vars_get("lat", None)
+            if lat is not None:
+                lat = float(lat)
+            else:
+                lat = opts_get("lat", None)
+            if lat is None or lat == "":
+                lat = config.lat
+            lon = get_vars_get("lon", None)
+            if lon is not None:
+                lon = float(lon)
+            else:
+                lon = opts_get("lon", None)
+            if lon is None or lon == "":
+                lon = config.lon
+
+        if bbox:
+            # Calculate from Bounds
+            options["bbox"] = [bbox["lon_min"], # left
+                               bbox["lat_min"], # bottom
+                               bbox["lon_max"], # right
+                               bbox["lat_max"], # top
+                               ]
+        else:
+            options["lat"] = lat
+            options["lon"] = lon
+
+        #options["numZoomLevels"] = config.zoom_levels
+
+        #options["restrictedExtent"] = (config.lon_min,
+        #                               config.lat_min,
+        #                               config.lon_max,
+        #                               config.lat_max,
+        #                               )
+
+
+        ############
+        # Projection
+        ############
+
+        #projection = opts_get("projection", config.epsg)
+        #if projection == 90013:
+        #    # New EPSG for Spherical Mercator
+        #    projection = 3857
+        #options["projection"] = projection
+
+        #if projection not in (3857, 4326):
+        #    # Test for Valid Projection file in Proj4JS library
+        #    projpath = os.path.join(
+        #        request.folder, "static", "scripts", "gis", "proj4js", \
+        #        "lib", "defs", "EPSG%s.js" % projection
+        #    )
+        #    try:
+        #        f = open(projpath, "r")
+        #        f.close()
+        #    except:
+        #        if projection:
+        #            proj4js = config.proj4js
+        #            if proj4js:
+        #                # Create it
+        #                try:
+        #                    f = open(projpath, "w")
+        #                except IOError as e:
+        #                    response.error =  \
+        #                T("Map not available: Cannot write projection file - %s") % e
+        #                else:
+        #                    f.write('''Proj4js.defs["EPSG:4326"]="%s"''' % proj4js)
+        #                    f.close()
+        #            else:
+        #                response.warning =  \
+        #T("Map not available: Projection %(projection)s not supported - please add definition to %(path)s") % \
+        #{"projection": "'%s'" % projection,
+        # "path": "/static/scripts/gis/proj4js/lib/defs",
+        # }
+        #        else:
+        #            response.error =  \
+        #                T("Map not available: No Projection configured")
+        #        return None
+        #    options["maxExtent"] = config.maxExtent
+        #    options["units"] = config.units
+
+        ##################
+        # Marker (Default)
+        ##################
+
+        if config.marker_image:
+            options["marker"] = config.marker_image
+
+        ########
+        # Layers
+        ########
+
+        # Duplicate Features to go across the dateline?
+        # @ToDo: Action this again (e.g. for DRRPP)
+        #if settings.get_gis_duplicate_features():
+        #    options["duplicate_features"] = True
+
+        # Features
+        features = opts_get("features", None)
+        if features:
+            options["features"] = addFeatures(features)
+
+        # Feature Queries
+        feature_queries = opts_get("feature_queries", None)
+        if feature_queries:
+            options["feature_queries"] = addFeatureQueries(feature_queries)
+
+        # Feature Resources
+        feature_resources = opts_get("feature_resources", None)
+        if feature_resources:
+            options["feature_resources"] = addFeatureResources(feature_resources)
+
+        # Layers
+        db = current.db
         ctable = db.gis_config
         ltable = db.gis_layer_config
         etable = db.gis_layer_entity
@@ -7284,92 +7434,133 @@ class MAP2(DIV):
                   ltable.base,
                   ltable.dir,
                   ]
-        stable = db.gis_style
-        mtable = db.gis_marker
-        query &= (ltable.config_id.belongs(config.ids))
-        join.append(ctable.on(ctable.id == ltable.config_id))
-        fields.extend((stable.style,
-                       stable.cluster_distance,
-                       stable.cluster_threshold,
-                       stable.opacity,
-                       stable.popup_format,
-                       mtable.image,
-                       mtable.height,
-                       mtable.width,
-                       ctable.pe_type))
-        left = [stable.on((stable.layer_id == etable.layer_id) & \
-                          (stable.record_id == None) & \
-                          ((stable.config_id == ctable.id) | \
-                           (stable.config_id == None))),
-                mtable.on(mtable.id == stable.marker_id),
-                ]
-        limitby = None
-        # @ToDo: Need to fix this?: make the style lookup a different call
-        if settings.get_database_type() == "postgres":
-            # None is last
-            orderby = [ctable.pe_type, stable.config_id]
+
+        if opts_get("catalogue_layers", False):
+            # Add all enabled Layers from the Catalogue
+            stable = db.gis_style
+            mtable = db.gis_marker
+            query &= (ltable.config_id.belongs(config.ids))
+            join.append(ctable.on(ctable.id == ltable.config_id))
+            fields.extend((stable.style,
+                           stable.cluster_distance,
+                           stable.cluster_threshold,
+                           stable.opacity,
+                           stable.popup_format,
+                           mtable.image,
+                           mtable.height,
+                           mtable.width,
+                           ctable.pe_type))
+            left = [stable.on((stable.layer_id == etable.layer_id) & \
+                              (stable.record_id == None) & \
+                              ((stable.config_id == ctable.id) | \
+                               (stable.config_id == None))),
+                    mtable.on(mtable.id == stable.marker_id),
+                    ]
+            limitby = None
+            # @ToDo: Need to fix this?: make the style lookup a different call
+            if settings.get_database_type() == "postgres":
+                # None is last
+                orderby = [ctable.pe_type, stable.config_id]
+            else:
+                # None is 1st
+                orderby = [ctable.pe_type, ~stable.config_id]
+            if settings.get_gis_layer_metadata():
+                cptable = current.s3db.cms_post_layer
+                left.append(cptable.on(cptable.layer_id == etable.layer_id))
+                fields.append(cptable.post_id)
         else:
-            # None is 1st
-            orderby = [ctable.pe_type, ~stable.config_id]
-        #if settings.get_gis_layer_metadata():
-        #    cptable = s3db.cms_post_layer
-        #    left.append(cptable.on(cptable.layer_id == etable.layer_id))
-        #    fields.append(cptable.post_id)
+            # Add just the default Base Layer
+            query &= (ltable.base == True) & \
+                     (ltable.config_id == config.id)
+            # Base layer doesn't need a style
+            left = None
+            limitby = (0, 1)
+            orderby = None
 
         layer_types = []
         lappend = layer_types.append
-        catalog_layers = db(query).select(join = join,
-                                          left = left,
-                                          limitby = limitby,
-                                          orderby = orderby,
-                                          *fields)
-        for layer in catalog_layers:
+        layers = db(query).select(join=join,
+                                  left=left,
+                                  limitby=limitby,
+                                  orderby=orderby,
+                                  *fields)
+        if not layers:
+            # Use Site Default base layer
+            # (Base layer doesn't need a style)
+            query = (etable.id == ltable.layer_id) & \
+                    (ltable.config_id == ctable.id) & \
+                    (ctable.uuid == "SITE_DEFAULT") & \
+                    (ltable.base == True) & \
+                    (ltable.enabled == True)
+            layers = db(query).select(*fields,
+                                      limitby=(0, 1))
+            if not layers:
+                # Just show EmptyLayer
+                layer_types = [LayerEmpty]
+
+        for layer in layers:
             layer_type = layer["gis_layer_entity.instance_type"]
-            if layer_type == "gis_layer_feature":
-                lappend("gis_layer_feature")
+            if layer_type == "gis_layer_openstreetmap":
+                lappend(LayerOSM)
+            elif layer_type == "gis_layer_google":
+                # NB v3 doesn't work when initially hidden
+                lappend(LayerGoogle)
+            elif layer_type == "gis_layer_arcrest":
+                lappend(LayerArcREST)
+            elif layer_type == "gis_layer_bing":
+                lappend(LayerBing)
+            elif layer_type == "gis_layer_tms":
+                lappend(LayerTMS)
+            elif layer_type == "gis_layer_wms":
+                lappend(LayerWMS)
+            elif layer_type == "gis_layer_xyz":
+                lappend(LayerXYZ)
+            elif layer_type == "gis_layer_empty":
+                lappend(LayerEmpty)
+            elif layer_type == "gis_layer_js":
+                lappend(LayerJS)
+            elif layer_type == "gis_layer_theme":
+                lappend(LayerTheme)
+            elif layer_type == "gis_layer_geojson":
+                lappend(LayerGeoJSON)
+            elif layer_type == "gis_layer_gpx":
+                lappend(LayerGPX)
+            elif layer_type == "gis_layer_coordinate":
+                lappend(LayerCoordinate)
+            elif layer_type == "gis_layer_georss":
+                lappend(LayerGeoRSS)
+            elif layer_type == "gis_layer_kml":
+                lappend(LayerKML)
+            elif layer_type == "gis_layer_openweathermap":
+                lappend(LayerOpenWeatherMap)
+            elif layer_type == "gis_layer_shapefile":
+                lappend(LayerShapefile)
+            elif layer_type == "gis_layer_wfs":
+                lappend(LayerWFS)
+            elif layer_type == "gis_layer_feature":
+                lappend(LayerFeature)
 
         # Make unique
         layer_types = set(layer_types)
+        scripts = []
+        scripts_append = scripts.append
+        for LayerType in layer_types:
+            try:
+                # Instantiate the Class
+                layer = LayerType(layers)
+                layer.as_dict(options)
+                for script in layer.scripts:
+                    scripts_append(script)
+            except Exception as exception:
+                error = "%s not shown: %s" % (LayerType.__name__, exception)
+                current.log.error(error)
+                response = current.response
+                if response.s3.debug:
+                    raise HTTP(500, error)
+                else:
+                    response.warning += error
 
-        # Lookup details for each layer type
-        for layer_type in layer_types:
-            if layer_type == "gis_layer_feature":
-                # Feature Layers
-                has_permission = current.auth.permission.has_permission
-                table = s3db[layer_type]
-                fields = table.fields
-                metafields = s3_all_meta_field_names()
-                fields = [table[f] for f in fields if f not in metafields]
-                layer_ids = [row["gis_layer_config.layer_id"] for row in catalog_layers if \
-                             row["gis_layer_entity.instance_type"] == layer_type]
-                query = (table.layer_id.belongs(set(layer_ids)))
-                rows = db(query).select(*fields)
-                for row in rows:
-                    controller = row.controller
-                    if controller not in settings.modules:
-                        # Module not enabled => Skip
-                        continue
-                    function = row.function
-                    if not has_permission("read",
-                                          c = controller,
-                                          f = function):
-                        # User doesn't have permission to access this function => Skip
-                        continue
-                    if row.use_site:
-                        maxdepth = 1
-                    else:
-                        maxdepth = 0
-                    url = URL(controller, function)
-                    # Strip off the appname as we can add this client-side to save a little bandwidth
-                    url = url.split("/%s" % current.request.application)[1]
-                    feature_layer = {"url": "%s.geojson?layer=%i&components=None&maxdepth=%i&show_ids=true" % \
-                                        (url,
-                                         row.layer_id,
-                                         maxdepth),
-                                     }
-                    vappend(feature_layer)
-
-        return layers
+        return options
 
     # -------------------------------------------------------------------------
     def xml(self):
@@ -7378,32 +7569,31 @@ class MAP2(DIV):
             - this is primarily done by inserting JavaScript
         """
 
-        #settings = current.deployment_settings
-
         # Read Map Config
-        config = GIS.get_config()
+        options = self._options()
 
-        # Read options for this Map
-        opts_get = self.opts.get
-        map_id = opts_get("id", "default_map")
-        options = {}
-        #height = 
-        #options["height"] = opts_get("height", settings.get_gis_map_height())
-        #options["width"] = opts_get("width", settings.get_gis_map_width())
-        options["lat"] = opts_get("lat", config.lat)
-        options["lon"] = opts_get("lon", config.lon)
-        options["zoom"] = opts_get("zoom", config.zoom)
-        options["projection"] = opts_get("projection", config.projection)
-        options["layers"] = opts_get("layers", self.add_layers(config))
+        if options is None:
+            # No Map Config: Just show error in the DIV
+            self.components = [DIV(current.T("Map cannot display without prepop data!"),
+                                   _class="error")]
+            return super(MAP2, self).xml()
+
+        map_id = self.opts.get("id", "default_map")
+        options = json.dumps(options, separators=SEPARATORS)
 
         # Insert the JavaScript
         appname = current.request.application
         s3 = current.response.s3
 
+        # Underscore for Popup Templates
+        s3_include_underscore()
+
+        # OpenLayers
         script = "/%s/static/scripts/gis/ol.js" % appname
         if script not in s3.scripts:
             s3.scripts.append(script)
 
+        # S3 GIS
         if s3.debug:
             script = "/%s/static/scripts/S3/s3.ui.gis.js" % appname
         else:
@@ -7412,7 +7602,7 @@ class MAP2(DIV):
             s3.scripts_modules.append(script)
 
         script = '''$('#%(map_id)s').showMap(%(options)s)''' % {"map_id": map_id,
-                                                                "options": json.dumps(options, separators=SEPARATORS),
+                                                                "options": options,
                                                                 }
         s3.jquery_ready.append(script)
 
@@ -7817,7 +8007,9 @@ class Layer(object):
         Abstract base class for Layers from Catalogue
     """
 
-    def __init__(self, all_layers):
+    def __init__(self, all_layers, openlayers=6):
+
+        self.openlayers = openlayers
 
         sublayers = []
         append = sublayers.append
@@ -7928,7 +8120,7 @@ class Layer(object):
                 # SubLayers handled differently
                 append(record)
             else:
-                append(SubLayer(record))
+                append(SubLayer(record, openlayers))
 
         # Alphasort layers
         # - client will only sort within their type: s3.gis.layers.js
@@ -7982,7 +8174,7 @@ class Layer(object):
 
     # -------------------------------------------------------------------------
     class SubLayer(object):
-        def __init__(self, record):
+        def __init__(self, record, openlayers):
             # Ensure all attributes available (even if Null)
             self.__dict__.update(record)
             del record
@@ -7990,6 +8182,8 @@ class Layer(object):
                 self.safe_name = re.sub('[\\"]', "", s3_str(current.T(self.name)))
             else:
                 self.safe_name = re.sub('[\\"]', "", self.name)
+
+            self.openlayers = openlayers
 
             if hasattr(self, "projection_id"):
                 self.projection = Projection(self.projection_id)
@@ -8183,7 +8377,7 @@ class LayerFeature(Layer):
 
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
-        def __init__(self, record):
+        def __init__(self, record, openlayers):
             controller = record.controller
             self.skip = False
             if controller is not None:
@@ -8199,7 +8393,7 @@ class LayerFeature(Layer):
                 error = "Feature Layer Record '%s' has no controller" % \
                     record.name
                 raise Exception(error)
-            super(LayerFeature.SubLayer, self).__init__(record)
+            super(LayerFeature.SubLayer, self).__init__(record, openlayers)
 
         def as_dict(self):
             if self.skip:
@@ -8338,8 +8532,8 @@ class LayerGeoRSS(Layer):
     dictname = "layers_georss"
     style = True
 
-    def __init__(self, all_layers):
-        super(LayerGeoRSS, self).__init__(all_layers)
+    def __init__(self, all_layers, openlayers=6):
+        super(LayerGeoRSS, self).__init__(all_layers, openlayers)
         LayerGeoRSS.SubLayer.cachetable = current.s3db.gis_cache
 
     # -------------------------------------------------------------------------
@@ -8596,10 +8790,10 @@ class LayerKML(Layer):
     style = True
 
     # -------------------------------------------------------------------------
-    def __init__(self, all_layers, init=True):
+    def __init__(self, all_layers, openlayers=6, init=True):
         "Set up the KML cache, should be done once per request"
 
-        super(LayerKML, self).__init__(all_layers)
+        super(LayerKML, self).__init__(all_layers, openlayers)
 
         # Can we cache downloaded KML feeds?
         # Needed for unzipping & filtering as well
@@ -8715,27 +8909,53 @@ class LayerOSM(Layer):
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
 
-            if Projection().epsg != 900913:
+            if Projection().epsg not in (3857, 900913):
                 # Cannot display OpenStreetMap layers unless we're using the Spherical Mercator Projection
                 return {}
 
-            # Mandatory attributes
-            output = {"id": self.layer_id,
-                      "name": self.safe_name,
-                      "url1": self.url1,
-                      }
+            if self.openlayers == 6:
+                # Mandatory attributes
+                output = {#"id": self.layer_id,
+                          #"name": self.safe_name,
+                          #"url": self.url1,
+                          }
 
-            # Attributes which are defaulted client-side if not set
-            self.add_attributes_if_not_default(
-                output,
-                base = (self.base, (True,)),
-                _base = (self._base, (False,)),
-                url2 = (self.url2, ("",)),
-                url3 = (self.url3, ("",)),
-                zoomLevels = (self.zoom_levels, (9,)),
-                attribution = (self.attribution, (None,)),
-            )
+                # Attributes which are defaulted client-side if not set
+                url = self.url1
+                if not url.endswith("png"):
+                    # Convert legacy URL format
+                    url = "%s{z}/{x}/{y}.png" % url
+                    if self.url2:
+                        url = url.replace("/a.", "/{a-c}.")
+
+                self.add_attributes_if_not_default(
+                    output,
+                    base = (self.base, (True,)),
+                    _base = (self._base, (False,)),
+                    url = (url, ("https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png",)),
+                    maxZoom = (self.zoom_levels, (19,)),
+                    attribution = (self.attribution, (None,)),
+                )
+            else:
+                # OpenLayers 2.13
+                output = {"id": self.layer_id,
+                          "name": self.safe_name,
+                          "url1": self.url1,
+                          }
+
+                # Attributes which are defaulted client-side if not set
+                self.add_attributes_if_not_default(
+                    output,
+                    base = (self.base, (True,)),
+                    _base = (self._base, (False,)),
+                    url2 = (self.url2, ("",)),
+                    url3 = (self.url3, ("",)),
+                    zoomLevels = (self.zoom_levels, (19,)),
+                    attribution = (self.attribution, (None,)),
+                )
+
             self.setup_folder_and_visibility(output)
+
             return output
 
 # -----------------------------------------------------------------------------
@@ -8947,8 +9167,8 @@ class LayerWMS(Layer):
     style = False
 
     # -------------------------------------------------------------------------
-    def __init__(self, all_layers):
-        super(LayerWMS, self).__init__(all_layers)
+    def __init__(self, all_layers, openlayers=6):
+        super(LayerWMS, self).__init__(all_layers, openlayers)
         if self.sublayers:
             if current.response.s3.debug:
                 self.scripts.append("gis/gxp/plugins/WMSGetFeatureInfo.js")

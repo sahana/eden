@@ -284,7 +284,7 @@ def map2():
 
     from s3.s3gis import MAP2
 
-    return {"map": MAP2()}
+    return {"map": MAP2(catalogue_layers = True)}
 
 # =============================================================================
 def location():
