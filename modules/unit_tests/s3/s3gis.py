@@ -778,8 +778,9 @@ class S3NoGisConfigTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     @classmethod
     def setUpClass(cls):
-        table = current.s3db.gis_config
-        table.truncate()
+        current.s3db.event_config.truncate()
+        current.s3db.gis_menu.truncate()
+        current.s3db.gis_config.truncate()
         current.response.s3.gis.config = None
 
     # -------------------------------------------------------------------------
