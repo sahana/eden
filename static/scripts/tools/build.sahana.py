@@ -459,6 +459,7 @@ def do_js(minimize, do_gis = False, warnings = True):
                      "ui.contacts",
                      "ui.dashboard",
                      "ui.embeddedcomponent",
+                     "ui.gis",
                      "ui.locationselector",
                      "ui.organizer",
                      "ui.permissions",

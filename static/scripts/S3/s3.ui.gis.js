@@ -4,8 +4,8 @@
 (function(factory) {
     'use strict';
     // Use window. for Browser globals (not AMD or Node):
-    factory(window.jQuery, window.ol);
-})(function($, ol) {
+    factory(window.jQuery, window._, window.ol);
+})(function($, _, ol) {
 
     'use strict';
     var mapID = 0;
@@ -43,6 +43,9 @@
         _init: function(options) {
 
             //var el = $(this.element);
+
+            // Flag for whether a tooltip is showing
+            //self.tooltip = false;
 
             this.refresh();
 
@@ -82,8 +85,21 @@
                 })
             });
 
+            // Tooltip
+            var tooltip = $('#' + this.options.id + ' .s3-gis-tooltip');
+            this.tooltip = tooltip;
+
+            var tooltip_ol = new ol.Overlay({
+                element: tooltip[0],
+                positioning: 'bottom-center',
+                stopEvent: false,
+                offset: [0, -50]
+            });
+            map.addOverlay(tooltip_ol);
+            this.tooltip_ol = tooltip_ol;
+
             //this._serialize();
-            //this._bindEvents();
+            this._bindEvents(map);
         },
 
         /**
@@ -169,8 +185,10 @@
                 layers_georss = options.layers_georss || [],
                 layers_shapefile = options.layers_shapefile || [],
                 layers_theme = options.layers_theme || [],
+                s3_popup_format,
                 style,
                 url,
+                vectorLayer,
                 vectorLayers = [],
                 vectorSource;
 
@@ -206,11 +224,18 @@
                     format: format
                 });
 
-                layer = new ol.layer.Vector({
+                vectorLayer = new ol.layer.Vector({
                     source: vectorSource,
                     style: style
                 });
-                layers.push(layer);
+
+                // Set the popup_format, even if empty
+                // - leave if not set (e.g. Feature Queries)
+                if (undefined != layer.popup_format) {
+                    vectorLayer.s3_popup_format = layer.popup_format;
+                }
+
+                layers.push(vectorLayer);
             }
         },
 
@@ -235,7 +260,6 @@
                 style = layer.style;
             } else {
                 // Default Style
-                // @ToDo: Switch to default marker for Points (this.options.marker)
                 var fill = new ol.style.Fill({
                     color: 'rgba(255,255,255,0.4)'
                 });
@@ -243,15 +267,43 @@
                     color: '#3399CC',
                     width: 1.25
                 });
-                style = new ol.style.Style({
-                    image: new ol.style.Circle({
-                        fill: fill,
-                        stroke: stroke,
-                        radius: 5
+                var image = new ol.style.Icon({
+                    src: S3.Ap.concat('/static/img/markers/' + this.options.marker)
+                })
+                var styles = {
+                    'Point': new ol.style.Style({
+                        image: image
                     }),
-                    fill: fill,
-                    stroke: stroke
-                });
+                    'LineString': new ol.style.Style({
+                        stroke: stroke
+                    }),
+                    'MultiLineString': new ol.style.Style({
+                        stroke: stroke
+                    }),
+                    'MultiPoint': new ol.style.Style({
+                        image: image
+                    }),
+                    'MultiPolygon': new ol.style.Style({
+                        stroke: stroke,
+                        fill: fill
+                    }),
+                    'Polygon': new ol.style.Style({
+                        stroke: stroke,
+                        fill: fill
+                    }),
+                    'GeometryCollection': new ol.style.Style({
+                        stroke: stroke,
+                        fill: fill,
+                        image: image
+                    }),
+                    'Circle': new ol.style.Style({
+                        stroke: stroke,
+                        fill: fill
+                    })
+                };
+                style = function(feature) {
+                    return styles[feature.getGeometry().getType()];
+                };
             }
             return style;
 
@@ -289,14 +341,79 @@
         /**
          * Bind event handlers (after refresh)
          *
-         * (unused)
-         *
          */
-        _bindEvents: function() {
+        _bindEvents: function(map) {
 
-            //var self = this,
-            //    ns = this.eventNamespace;
+            var self = this,
+                //ns = this.eventNamespace,
+                attributes,
+                content,
+                coordinates,
+                defaults,
+                feature,
+                key,
+                keys,
+                layer,
+                popup_format,
+                results,
+                template;
 
+            // Show Tooltip when hovering over marker
+            map.on('pointermove', function(e) {
+                if (e.dragging) {
+                    self.tooltip.hide();
+                    return;
+                }
+                results = map.forEachFeatureAtPixel(e.pixel, function(feature, layer) {
+                    return {feature: feature,
+                            layer: layer
+                            };
+                });
+                if (results) {
+                    feature = results.feature;
+                    layer = results.layer;
+                    coordinates = feature.getGeometry().getCoordinates();
+                    self.tooltip_ol.setPosition(coordinates);
+
+                    if (undefined != layer.s3_popup_format) {
+                        // GeoJSON Feature Layers
+                        _.templateSettings = {interpolate: /\{(.+?)\}/g};
+                        popup_format = layer.s3_popup_format;
+                        template = _.template(popup_format);
+                        // Ensure we have all keys (we don't transmit empty attr)
+                        attributes = {};//= feature.getProperties()
+                        defaults = {};
+                        keys = popup_format.split('{');
+                        for (var i = 0; i < keys.length; i++) {
+                            key = keys[i].split('}')[0];
+                            attributes[key] = feature.get(key);
+                            defaults[key] = '';
+                        }
+                        _.defaults(attributes, defaults);
+                        content = template(attributes);
+                    } else if (undefined != attributes.popup) {
+                        // Feature Queries or Theme Layers
+                        content = feature.get('popup');
+                    } else if (undefined != feature.get('name')) {
+                        // GeoJSON, GeoRSS or Legacy Features
+                        content = feature.get('name');
+                    } else if (undefined != layer.title) {
+                        // KML or WFS
+                        var a = feature.get(layer.title);
+                        var type = typeof a;
+                        if ('object' == type) {
+                            content = a.value;
+                        } else {
+                            content = a;
+                        }
+                    }
+
+                    self.tooltip.html(content).show();
+
+                } else {
+                    self.tooltip.hide();
+                }
+            });
         },
 
         /**

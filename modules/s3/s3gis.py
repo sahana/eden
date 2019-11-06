@@ -7246,14 +7246,21 @@ class MAP2(DIV):
         map_id = opts_get("id", "default_map")
         height = opts_get("height", current.deployment_settings.get_gis_map_height())
         self.attributes = {"_id": map_id,
-                           "_style": "height:%spx" % height,
+                           "_style": "height:%ipx;width:100%s" % (height,
+                                                                  "%",
+                                                                  ),
                            }
         # @ToDo: Add HTML Controls (Toolbar, LayerTree, etc)
-        self.components = []
+        self.components = [DIV(_class="s3-gis-tooltip"),
+                           ]
 
         # Load CSS now as too late in xml()
         stylesheets = current.response.s3.stylesheets
         stylesheet = "gis/ol6.css"
+        if stylesheet not in stylesheets:
+            stylesheets.append(stylesheet)
+        # @ToDo: Move this to Theme
+        stylesheet = "gis/ol6_popup.css"
         if stylesheet not in stylesheets:
             stylesheets.append(stylesheet)
 
@@ -7574,8 +7581,9 @@ class MAP2(DIV):
 
         if options is None:
             # No Map Config: Just show error in the DIV
-            self.components = [DIV(current.T("Map cannot display without prepop data!"),
-                                   _class="error")]
+            self.components = [DIV("Map cannot display without prepop data!", # Deliberately not T() to save unneccessary load on translators
+                                   _class="error"),
+                               ]
             return super(MAP2, self).xml()
 
         map_id = self.opts.get("id", "default_map")
@@ -8934,7 +8942,7 @@ class LayerOSM(Layer):
                     _base = (self._base, (False,)),
                     url = (url, ("https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png",)),
                     maxZoom = (self.zoom_levels, (19,)),
-                    attribution = (self.attribution, (None,)),
+                    attribution = (self.attribution and self.attribution.replace("\"", "'"), (None,)),
                 )
             else:
                 # OpenLayers 2.13
