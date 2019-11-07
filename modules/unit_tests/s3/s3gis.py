@@ -788,6 +788,11 @@ class S3NoGisConfigTests(unittest.TestCase):
         self.assertIsNone(setup_result)
         self.assertIsNotNone(map.error_message)
 
+    def testMap2Xml(self):
+        map = MAP2()
+        xml = map.xml()
+        self.assertTrue("Map cannot display without GIS config!" in xml)
+
     # -------------------------------------------------------------------------
     @classmethod
     def tearDownClass(cls):

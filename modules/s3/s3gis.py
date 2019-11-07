@@ -6440,6 +6440,7 @@ class MAP(DIV):
             # No prepop - Bail
             if auth.s3_has_permission("create", "gis_hierarchy"):
                 error_message = DIV(_class="mapError")
+                # Deliberately not T() to save unneccessary load on translators
                 error_message.append("Map cannot display without GIS config!")
                 error_message.append(XML(" (You can can create one "))
                 error_message.append(A("here", _href=URL(c="gis", f="config")))
@@ -6447,7 +6448,7 @@ class MAP(DIV):
                 self.error_message = error_message
             else:
                 self.error_message = DIV(
-                    "Map cannot display without GIS config!",
+                    "Map cannot display without GIS config!",  # Deliberately not T() to save unneccessary load on translators
                     _class="mapError"
                     )
             return None
@@ -7597,9 +7598,22 @@ class MAP2(DIV):
 
         if options is None:
             # No Map Config: Just show error in the DIV
-            self.components = [DIV("Map cannot display without prepop data!", # Deliberately not T() to save unneccessary load on translators
-                                   _class="error"),
-                               ]
+            auth = current.auth
+
+            if auth.s3_has_permission("create", "gis_hierarchy"):
+                error_message = DIV(_class="mapError")
+                # Deliberately not T() to save unneccessary load on translators
+                error_message.append("Map cannot display without GIS config!")
+                error_message.append(XML(" (You can can create one "))
+                error_message.append(A("here", _href=URL(c="gis", f="config")))
+                error_message.append(")")
+            else:
+                error_message = DIV(
+                    "Map cannot display without GIS config!",  # Deliberately not T() to save unneccessary load on translators
+                    _class="mapError"
+                    )
+
+            self.components = [error_message]
             return super(MAP2, self).xml()
 
         map_id = self.opts.get("id", "default_map")
