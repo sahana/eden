@@ -6432,7 +6432,6 @@ class MAP(DIV):
         # Fresh _setup() call, reset error message
         self.error_message = None
 
-        T = current.T
         auth = current.auth
 
         # Read configuration
@@ -6440,19 +6439,15 @@ class MAP(DIV):
         if not config:
             # No prepop - Bail
             if auth.s3_has_permission("create", "gis_hierarchy"):
-                error_message = DIV()
-                error_message.append(SPAN(
-                    T("Map cannot display without GIS config!"),
-                    _class="mapError"
-                    ))
-                error_message.append(XML(T(
-                    " (You can can create one <a href='%(url)s'>here</a>)" %
-                    {"url": URL(c="gis", f="config")}
-                    )))
+                error_message = DIV(_class="mapError")
+                error_message.append("Map cannot display without GIS config!")
+                error_message.append(XML(" (You can can create one "))
+                error_message.append(A("here", _href=URL(c="gis", f="config")))
+                error_message.append(")")
                 self.error_message = error_message
             else:
                 self.error_message = DIV(
-                    T("Map cannot display without GIS config!"),
+                    "Map cannot display without GIS config!",
                     _class="mapError"
                     )
             return None
