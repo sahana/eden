@@ -778,10 +778,8 @@ class S3NoGisConfigTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     @classmethod
     def setUpClass(cls):
-        current.s3db.event_config.truncate()
-        current.s3db.gis_menu.truncate()
-        current.s3db.gis_config.truncate()
-        current.response.s3.gis.config = None
+        cls.original_get_config = current.gis.get_config
+        current.gis.get_config = lambda: None
 
     # -------------------------------------------------------------------------
     def testMapSetup(self):
@@ -793,11 +791,7 @@ class S3NoGisConfigTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     @classmethod
     def tearDownClass(cls):
-        current.auth.override = False
-        current.db.rollback()
-
-        # Re-cache the config
-        current.gis.get_config()
+        current.gis.get_config = cls.original_get_config
 
 # =============================================================================
 if __name__ == "__main__":
