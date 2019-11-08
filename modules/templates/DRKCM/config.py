@@ -2864,6 +2864,9 @@ def config(settings):
 
         table = s3db.dvr_response_action
 
+        ui_options = get_ui_options()
+        ui_options_get = ui_options.get
+
         # Can the user see cases from more than one org?
         multiple_orgs, org_ids = case_read_multiple_orgs()
 
@@ -2904,6 +2907,14 @@ def config(settings):
             else:
                 need = None
 
+            # Vulnerability Axis
+            if ui_options_get("activity_pss_vulnerability"):
+                diagnosis = (T("Diagnosis / Suspected"),
+                             "case_activity_id$vulnerability_type__link.vulnerability_type_id",
+                             )
+            else:
+                diagnosis = None
+
             # Custom Report Options
             facts = ((T("Number of Actions"), "count(id)"),
                      (T("Number of Clients"), "count(person_id)"),
@@ -2914,6 +2925,7 @@ def config(settings):
                     "person_id$person_details.nationality",
                     "person_id$person_details.marital_status",
                     (T("Size of Family"), "person_id$dvr_case.household_size"),
+                    diagnosis,
                     response_type,
                     (T("Theme"), "response_theme_ids"),
                     need,
@@ -2944,7 +2956,6 @@ def config(settings):
 
         if r.interactive or r.representation in ("aadata", "xls", "pdf"):
 
-            ui_options = get_ui_options()
             human_resource_id = current.auth.s3_logged_in_human_resource()
 
             # Use drop-down for human_resource_id
@@ -3015,7 +3026,7 @@ def config(settings):
                     field.readable = True
 
                     # Adjust representation to perspective
-                    if ui_options.get("activity_use_need"):
+                    if ui_options_get("activity_use_need"):
                         field.label = T("Counseling Reason")
                         show_as = "need"
                     else:
@@ -3029,7 +3040,7 @@ def config(settings):
 
                     # Make activity selectable if not auto-linking, and
                     # filter options to case
-                    if not ui_options.get("response_activity_autolink"):
+                    if not ui_options_get("response_activity_autolink"):
                         field.writable = True
                         field.requires = IS_ONE_OF(current.db,
                                                    "dvr_case_activity.id",
@@ -3072,7 +3083,7 @@ def config(settings):
             else:
                 # Primary dvr/response_action controller
 
-                if ui_options.get("case_use_pe_label"):
+                if ui_options_get("case_use_pe_label"):
                     pe_label = (T("ID"), "person_id$pe_label")
                 else:
                     pe_label = None
@@ -3092,7 +3103,7 @@ def config(settings):
                 else:
                     list_fields[2:2] = ["response_theme_ids", "comments"]
 
-                if ui_options.get("response_themes_optional"):
+                if ui_options_get("response_themes_optional"):
                     # Show person_id (read-only)
                     field = table.person_id
                     field.represent =  s3db.pr_PersonRepresent(show_link = True)
