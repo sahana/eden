@@ -107,25 +107,6 @@ $side_bar_divider_color: $side_bar_border_color !default;
         display: inline-block;
         padding: 0.4rem 0.8rem 0.3rem 0;
     }
-    .system-title {
-        display: inline-block;
-        margin-left: 4rem;
-        padding-top: 1rem;
-        .system-name {
-            color: $primary-color;
-            font-size: 1.3rem;
-            font-weight: bold;
-            line-height: 1.0;
-        }
-        .org-name {
-            color: #999999;
-            line-height: 1rem;
-            font-size: 0.8rem;
-        }
-        h5:first-child, h6:first-child {
-            margin: 0.3rem 0 0.125rem;
-        }
-    }
     .personal-menu-area {
         text-align: right;
     }

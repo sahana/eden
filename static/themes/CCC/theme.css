@@ -117,7 +117,7 @@ meta.foundation-data-attribute-namespace {
 .expired,
 .req,
 .req_key {
-  color: #c60f13;
+  color: #a3182d;
   font-weight: bold;
 }
 
@@ -183,7 +183,7 @@ body.rtl .username i.icon, body.rtl .username i.fa {
 
 /* line 129, ../scss/theme/_page.scss */
 .row.main-navigation {
-  background-color: #0082aa;
+  background-color: #902283;
 }
 
 /* Global Main Content Styles */
@@ -230,7 +230,7 @@ main.main {
 #footer {
   background: transparent;
   padding-top: 20px;
-  border-top: 4px solid #0082aa;
+  border-top: 4px solid #902283;
   margin-top: 20px;
   margin-bottom: 1rem;
 }
@@ -693,7 +693,7 @@ div.tabs {
   padding: 0;
   line-height: 1.3rem;
   text-align: left;
-  border-bottom: 1px solid #0082aa;
+  border-bottom: 1px solid #902283;
 }
 /* line 82, ../../default/scss/theme/_rheader.scss */
 div.tabs span {
@@ -721,7 +721,7 @@ div.tabs span.tab_here {
   margin: 0.2rem 0.35rem 0 0;
   padding: 0.1rem 0.4rem 0.12rem;
   background: #ffffff;
-  border-color: #0082aa;
+  border-color: #902283;
   border-style: solid;
   border-width: 0.125rem 2px 0.0625rem 3px;
   border-bottom-style: solid;
@@ -744,15 +744,15 @@ div.tabs span.tab_last, div.tabs span.tab_other {
   font-size: 0.9rem;
   margin: 0.35rem 0.2rem 0 0;
   padding: 0.1rem 0.3rem 0;
-  background-color: #0082aa;
-  border-color: #0082aa;
+  background-color: #902283;
+  border-color: #902283;
   border-width: 0.0625rem 1px 0.0625rem 2px;
   border-style: solid;
 }
 /* line 147, ../../default/scss/theme/_rheader.scss */
 div.tabs span.tab_last:hover, div.tabs span.tab_other:hover {
-  background-color: #006888;
-  border-color: #006888;
+  background-color: #731b69;
+  border-color: #731b69;
 }
 /* line 151, ../../default/scss/theme/_rheader.scss */
 div.tabs span.tab_last a, div.tabs span.tab_other a {
@@ -794,13 +794,13 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 /* line 58, ../../default/scss/theme/_buttons.scss */
 .action-btn,
 .selected-action {
-  background-color: #0082aa;
+  background-color: #902283;
   color: white !important;
 }
 /* line 62, ../../default/scss/theme/_buttons.scss */
 .action-btn:hover,
 .selected-action:hover {
-  background-color: #006888;
+  background-color: #731b69;
   color: white !important;
 }
 
@@ -808,13 +808,13 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 /* line 69, ../../default/scss/theme/_buttons.scss */
 .delete-btn-ajax,
 .delete-btn {
-  background-color: #c60f13;
+  background-color: #a3182d;
   color: white !important;
 }
 /* line 73, ../../default/scss/theme/_buttons.scss */
 .delete-btn-ajax:hover,
 .delete-btn:hover {
-  background-color: #9e0c0f !important;
+  background-color: #821324 !important;
   color: white !important;
 }
 
@@ -827,7 +827,7 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 /* line 83, ../../default/scss/theme/_buttons.scss */
 .cancel-form-btn:hover {
   color: white;
-  background-color: #0082aa;
+  background-color: #902283;
 }
 
 /* Full screen map button */
@@ -993,7 +993,7 @@ body.rtl .action-lnk:first-child {
 /* line 94, ../scss/theme/_menus.scss */
 .side-nav li.active > a:first-child:not(.button):hover {
   color: #FFFFFF;
-  background-color: #0082aa;
+  background-color: #902283;
 }
 
 /* Page Header */
@@ -1004,33 +1004,10 @@ body.rtl .action-lnk:first-child {
   padding: 0.4rem 0.8rem 0.3rem 0;
 }
 /* line 110, ../scss/theme/_menus.scss */
-.main-title .system-title {
-  display: inline-block;
-  margin-left: 4rem;
-  padding-top: 1rem;
-}
-/* line 114, ../scss/theme/_menus.scss */
-.main-title .system-title .system-name {
-  color: #0082aa;
-  font-size: 1.3rem;
-  font-weight: bold;
-  line-height: 1.0;
-}
-/* line 120, ../scss/theme/_menus.scss */
-.main-title .system-title .org-name {
-  color: #999999;
-  line-height: 1rem;
-  font-size: 0.8rem;
-}
-/* line 125, ../scss/theme/_menus.scss */
-.main-title .system-title h5:first-child, .main-title .system-title h6:first-child {
-  margin: 0.3rem 0 0.125rem;
-}
-/* line 129, ../scss/theme/_menus.scss */
 .main-title .personal-menu-area {
   text-align: right;
 }
-/* line 132, ../scss/theme/_menus.scss */
+/* line 113, ../scss/theme/_menus.scss */
 .main-title .personal-menu {
   float: right;
   clear: right;
@@ -1038,11 +1015,11 @@ body.rtl .action-lnk:first-child {
   margin-bottom: 0.125rem;
   margin-right: 0.2rem;
 }
-/* line 138, ../scss/theme/_menus.scss */
+/* line 119, ../scss/theme/_menus.scss */
 .main-title .personal-menu li a {
   padding: 0 0.375rem;
 }
-/* line 142, ../scss/theme/_menus.scss */
+/* line 123, ../scss/theme/_menus.scss */
 .main-title .language-selector {
   float: right;
   display: block;
@@ -1050,12 +1027,12 @@ body.rtl .action-lnk:first-child {
   margin-bottom: 0.125rem;
 }
 
-/* line 151, ../scss/theme/_menus.scss */
+/* line 132, ../scss/theme/_menus.scss */
 body.rtl .main-title .personal-menu {
   float: left;
   clear: left;
 }
-/* line 155, ../scss/theme/_menus.scss */
+/* line 136, ../scss/theme/_menus.scss */
 body.rtl .main-title .language-selector {
   float: left;
 }
@@ -1142,12 +1119,12 @@ table.dataTable .group .group-expand {
 /* line 101, ../../default/scss/theme/_tables.scss */
 table.dataTable.dtr-inline.collapsed tbody td:first-child::before, table.dataTable.dtr-inline.collapsed tbody th:first-child::before {
   top: 6px;
-  background-color: #0082aa;
+  background-color: #902283;
 }
 /* line 106, ../../default/scss/theme/_tables.scss */
 table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child::before, table.dataTable.dtr-inline.collapsed tbody tr.parent th:first-child::before {
   top: 6px;
-  background-color: #c60f13;
+  background-color: #a3182d;
 }
 
 /* line 113, ../../default/scss/theme/_tables.scss */
@@ -1638,11 +1615,11 @@ form.anonymize-form,
 
 /* line 273, ../../default/scss/theme/_widgets.scss */
 .anonymize-btn {
-  background-color: #c60f13;
+  background-color: #a3182d;
 }
 /* line 275, ../../default/scss/theme/_widgets.scss */
 .anonymize-btn:hover {
-  background-color: #9e0c0f;
+  background-color: #821324;
 }
 
 /* line 279, ../../default/scss/theme/_widgets.scss */
@@ -1660,7 +1637,7 @@ form.anonymize-form,
 .rm-form .rm-assign .action-lnk,
 .rm-form .rm-rules .action-lnk {
   display: inline-block;
-  color: #0082aa;
+  color: #902283;
   font-style: normal;
 }
 /* line 295, ../../default/scss/theme/_widgets.scss */
@@ -1917,12 +1894,19 @@ body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   font-size: 1.2rem;
 }
 
-/* line 16, ../scss/theme/_misc.scss */
+@font-face {
+  /* https://www.download-free-fonts.com/details/88194/century-schoolbook-bold-italic */
+  font-family: "font88194";
+  src: url("https://www.fontify.me/cm/a4b84f604dd6701a32126758d16808bb/century-schoolbook-grassetto-corsivo.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+/* line 24, ../scss/theme/_misc.scss */
 #strapline {
   text-align: right;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #0082aa;
+  font-family: "font88194";
+  font-size: 1.1rem;
+  color: #902283;
 }
 
 /* Over-ride widgets.css to remove alternate row styling */

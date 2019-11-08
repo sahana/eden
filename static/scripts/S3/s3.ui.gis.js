@@ -180,6 +180,7 @@
                 feature_resources = options.feature_resources || [],
                 format,
                 layer,
+                layerType,
                 layers_feature = options.layers_feature || [],
                 layers_geojson = options.layers_geojson || [],
                 layers_georss = options.layers_georss || [],
@@ -234,6 +235,14 @@
                 if (undefined != layer.popup_format) {
                     vectorLayer.s3_popup_format = layer.popup_format;
                 }
+
+                if (undefined != layer.type) {
+                    layerType = layer.type;
+                } else {
+                    // Feature Layers
+                    layerType = 'feature';
+                }
+                vectorLayer.s3_layer_type = layerType;
 
                 layers.push(vectorLayer);
             }
@@ -414,6 +423,24 @@
                     self.tooltip.hide();
                 }
             });
+
+            // Show Popup when clicking on a marker
+            map.on('click', function(e) {
+                results = map.forEachFeatureAtPixel(e.pixel, function(feature, layer) {
+                    return {feature: feature,
+                            layer: layer
+                            };
+                });
+                if (results) {
+                    // Close the tooltip
+                    self.tooltip.hide();
+
+                    feature = results.feature;
+                    layer = results.layer;
+
+                }
+            });
+
         },
 
         /**

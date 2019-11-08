@@ -114,30 +114,38 @@ $tuatara        : #444444;
 $oil            : #333333;
 // $jet         : #222222;
 // $black       : #000000;
-$blood          : #c60f13;
+//$blood          : #c60f13;
 
 // Primary color
-$cccblue        : #0082aa;  // pantone 7468
-$cccdarkblue    : #00588d;  // pantone 301
-$ccclightblue   : #00b4e4;  // pantone 306
+//$cccblue        : #0082aa;  // pantone 7468
+//$cccdarkblue    : #00588d;  // pantone 301
+//$ccclightblue   : #00b4e4;  // pantone 306
 
 // Secondary colors
-$cccred         : #c31f41;  // pantone 193
-$cccpink        : #f27eb1;  // pantone 211
+//$cccred         : #c31f41;  // pantone 193
+//$cccpink        : #f27eb1;  // pantone 211
 
-$cccpurple      : #802064;  // pantone 2425
-$ccclightpurple : #c61a82;  // pantone 233
+//$cccpurple      : #802064;  // pantone 2425
+//$ccclightpurple : #c61a82;  // pantone 233
 
-$cccgreen       : #008044;  // pantone 348
-$ccclightgreen  : #b7d233;  // pantone 382
+//$cccgreen       : #008044;  // pantone 348
+//$ccclightgreen  : #b7d233;  // pantone 382
 
-$cccamber       : #e47225;  // pantone 152
-$cccyellow      : #f4b11c;  // pantone 7408
+//$cccamber       : #e47225;  // pantone 152
+//$cccyellow      : #f4b11c;  // pantone 7408
+
+// Support Cumbria Colours - names from https://www.color-blindness.com/color-name-hue/
+$HarleyDavidsonOrange   : #e85211; // Pantone 1665
+$SherpaBlue             : #01514f; // Pantone 7721
+$DarkPurple             : #902283; // Pantone 513
+$FireBrick              : #a3182d; // Pantone 7427
+$DarkCyan               : #008984; // Pantone 7717
+$JazzberryJam           : #8c1350; // Pantone 228
 
 // We use these as default colors throughout
-$primary-color: $cccblue;
-$secondary-color: $cccgreen;
-$alert-color: $blood;
+$primary-color: $DarkPurple;
+$secondary-color: $DarkCyan;
+$alert-color: $FireBrick;
 // $success-color: #43AC6A;
 // $warning-color: #f08a24;
 // $info-color: #a0d3e8;
@@ -1197,7 +1205,7 @@ $side-nav-list-margin: rem-calc(0 0 3 0);
 $side-nav-link-color: $tuatara;
 $side-nav-link-color-active: $tuatara;
 $side-nav-link-color-hover: $white;
-$side-nav-link-bg-hover: $cccblue;
+$side-nav-link-bg-hover: $primary-color;
 // $side-nav-link-margin: 0;
 $side-nav-link-padding: rem-calc(4 8);
 // $side-nav-font-size: rem-calc(14);
@@ -1424,7 +1432,7 @@ $sub-nav-item-divider-margin: rem-calc(6);
 // $include-html-top-bar-classes: $include-html-classes;
 
 // Background color for the top bar
-$topbar-bg-color: $cccblue;
+$topbar-bg-color: $primary-color;
 // $topbar-bg: $topbar-bg-color;
 
 // Height and margin
@@ -1446,7 +1454,7 @@ $topbar-link-font-size: rem-calc(15);
 // $topbar-link-bg: $topbar-bg;
 $topbar-link-bg-hover: scale-color($topbar-bg-color, $lightness: -14%);
 // $topbar-link-bg-color-hover: $charcoal;
-$topbar-link-bg-active: $ccclightblue;
+$topbar-link-bg-active: $HarleyDavidsonOrange;
 $topbar-link-bg-active-hover: scale-color($topbar-link-bg-active, $lightness: -14%);
 // $topbar-link-font-family: $body-font-family;
 // $topbar-link-text-transform: none;
@@ -1457,7 +1465,7 @@ $topbar-link-bg-active-hover: scale-color($topbar-link-bg-active, $lightness: -1
 // $topbar-button-top: 7px;
 
 // Style the top bar dropdown elements
-$topbar-dropdown-bg: $cccblue;
+$topbar-dropdown-bg: $primary-color;
 // $topbar-dropdown-link-color: $white;
 // $topbar-dropdown-link-color-hover: $topbar-link-color-hover;
 $topbar-dropdown-link-bg: $topbar-dropdown-bg;

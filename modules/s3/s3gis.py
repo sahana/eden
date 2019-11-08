@@ -7246,9 +7246,7 @@ class MAP2(DIV):
         map_id = opts_get("id", "default_map")
         height = opts_get("height", current.deployment_settings.get_gis_map_height())
         self.attributes = {"_id": map_id,
-                           "_style": "height:%ipx;width:100%s" % (height,
-                                                                  "%",
-                                                                  ),
+                           "_style": "height:%ipx;width:100%%" % height,
                            }
         # @ToDo: Add HTML Controls (Toolbar, LayerTree, etc)
         self.components = [DIV(_class="s3-gis-tooltip"),

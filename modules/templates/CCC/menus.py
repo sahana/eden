@@ -27,7 +27,6 @@ class S3MainMenu(default.S3MainMenu):
         current.menu.personal = cls.menu_personal()
         current.menu.lang = cls.menu_lang()
         current.menu.about = cls.menu_about()
-        current.menu.org = cls.menu_org()
 
         return main_menu
 
@@ -99,14 +98,6 @@ class S3MainMenu(default.S3MainMenu):
                     ]
 
         return menu
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def menu_org(cls):
-        """ Organisation Logo and Name """
-
-        OM = S3OrgMenuLayout
-        return OM()
 
     # -------------------------------------------------------------------------
     @classmethod

@@ -55,12 +55,7 @@
    <div class='row main-title'>
     <div class='large-5 medium-12 columns'>
      <a href='{{=URL(c="default", f="index")}}'>
-      {{org_menu = current.menu.org.render() if current.menu.org else ("", "")}}
-      <div class="org-logo">{{=org_menu[1]}}</div>
-      <div class="system-title">
-       <h5 class="system-name">{{=settings.get_system_name()}}</h5>
-       <h6 class="org-name subheader">{{=org_menu[0]}}</h6>
-      </div>
+      <div class="org-logo"><img src='/{{=appname}}/static/themes/CCC/img/logo.svg'></div>
      </a>
     </div>
     {{ml=current.menu.lang}}{{if ml.check_enabled():}}
