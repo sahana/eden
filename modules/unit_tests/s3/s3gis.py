@@ -778,8 +778,7 @@ class S3NoGisConfigTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     @classmethod
     def setUpClass(cls):
-        from s3.s3gis import GIS
-        cls.original_get_config = GIS.get_config
+        cls.original_get_config = staticmethod(GIS.get_config)
         GIS.get_config = staticmethod(lambda: None)
 
     # -------------------------------------------------------------------------
@@ -797,7 +796,7 @@ class S3NoGisConfigTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     @classmethod
     def tearDownClass(cls):
-        GIS.get_config = cls.original_get_config
+        GIS.get_config = staticmethod(cls.original_get_config)
 
 # =============================================================================
 if __name__ == "__main__":
