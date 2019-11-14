@@ -791,7 +791,7 @@ class S3NoGisConfigTests(unittest.TestCase):
     def testMap2Xml(self):
         map = MAP2()
         xml = map.xml()
-        self.assertTrue("Map cannot display without GIS config!" in xml)
+        self.assertTrue(b"Map cannot display without GIS config!" in xml)
 
     # -------------------------------------------------------------------------
     @classmethod
