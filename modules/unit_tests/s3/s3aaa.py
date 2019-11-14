@@ -4543,7 +4543,9 @@ class S3UserRegisterOnAcceptTests(unittest.TestCase):
         mobile = "(333) 333-3333"
         consent = "yes"
 
-        table = s3db.auth_user_temp
+        db = current.db
+
+        table = current.s3db.auth_user_temp
         query = (table.user_id == user_id)
         row = db(query).select(table.id, limitby=(0, 1)).first()
         self.assertIsNone(row)
