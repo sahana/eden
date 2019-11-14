@@ -1081,11 +1081,11 @@ class register(S3CustomController):
             user_id = utable.insert(**utable._filter_fields(form_vars, id=False))
             form_vars.id = user_id
 
-            # Save temporary user fields in db.auth_user_temp
+            # Save temporary user fields in s3db.auth_user_temp
             # Default just handles mobile, home, consent
             #auth.s3_user_register_onaccept(form)
 
-            temptable = db.auth_user_temp
+            temptable = s3db.auth_user_temp
             record  = {"user_id": user_id}
 
             # Store the mobile_phone ready to go to pr_contact
@@ -1265,6 +1265,7 @@ class verify_email(S3CustomController):
     def __call__(self):
 
         db = current.db
+        s3db = current.s3db
         auth = current.auth
         auth_settings = auth.settings
 
@@ -1283,7 +1284,7 @@ class verify_email(S3CustomController):
         user_id = user.id
 
         # Read custom fields to determine registration type
-        temptable = db.auth_user_temp
+        temptable = s3db.auth_user_temp
         record = db(temptable.user_id == user_id).select(temptable.custom,
                                                          limitby = (0, 1),
                                                          ).first()
@@ -1299,10 +1300,10 @@ class verify_email(S3CustomController):
         if not agency and not organisation_id:
             # Donor/Individual/Group, so doesn't need approval
             # Add hook to process custom fields
-            current.s3db.configure("auth_user",
-                                   register_onaccept = auth_user_register_onaccept,
-                                   )
-            # Calls s3_link_user() which calls s3_link_to_person() which applies 'normal' data from db.auth_user_temp (home_phone, mobile_phone, consent)
+            s3db.configure("auth_user",
+                           register_onaccept = auth_user_register_onaccept,
+                           )
+            # Calls s3_link_user() which calls s3_link_to_person() which applies 'normal' data from s3db.auth_user_temp (home_phone, mobile_phone, consent)
             # Calls s3_auth_user_register_onaccept() which calls our custom auth_user_register_onaccept
             auth.s3_approve_user(user)
 
@@ -1449,9 +1450,10 @@ def auth_user_register_onaccept(user_id):
     """
 
     db = current.db
+    s3db = current.s3db
 
     # Read custom fields & determine registration type
-    temptable = db.auth_user_temp
+    temptable = s3db.auth_user_temp
     record = db(temptable.user_id == user_id).select(temptable.custom,
                                                      limitby = (0, 1),
                                                      ).first()
@@ -1460,7 +1462,6 @@ def auth_user_register_onaccept(user_id):
         return
 
     auth = current.auth
-    s3db = current.s3db
     get_config = s3db.get_config
 
     custom = json.loads(record.custom)
