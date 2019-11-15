@@ -1581,7 +1581,6 @@
 'Map Settings': 'ការ​កំណត់ផែនទី',
 'Map Viewing Client': 'កម្មវិធី​មើល​ផែនទី',
 'Map Zoom': 'ពង្រីកផែនទី',
-'Map cannot display without prepop data!': 'ផែនទី​មិន​អាចបង្ហាញ​ដោយ​គ្មានទិន្នន័យ prepop បានឡើយ!',
 'Map has been copied and set as Default': 'ផែនទី​ត្រូវ​បាន​ចម្លង និង​កំណត់​ជា​លំនាំដើម',
 'Map has been set as Default': 'ផែនទី​ត្រូវ​បាន​កំណត់​ជា​លំនាំដើម',
 'Map is already your Default': 'ផែនទី​របស់អ្នក​ត្រឡប់ទៅ​លំនាំដើម​រួចហើយ',

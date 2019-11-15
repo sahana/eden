@@ -1677,7 +1677,6 @@
 'Map Settings': 'د نقشه تنظیمات',
 'Map Viewing Client': 'د نقشه د ښکاریدو مشتری',
 'Map Zoom': 'د نقشه نزدیوالی',
-'Map cannot display without prepop data!': 'نقشه نه شوی کولای بی له ( prepop ) معلوماتو څخه ښکاره کړی',
 'Map has been copied and set as Default': 'کاپی نقشه شوی او په قراردادی توګه تعین شوی',
 'Map has been set as Default': 'نقشه په قراردادی توګه تعین شوی',
 'Map is already your Default': 'نقشه مخکی د مخکی ستاسو قراردادی دی',
