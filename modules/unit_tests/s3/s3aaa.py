@@ -4533,6 +4533,43 @@ class EntityRoleManagerTests(unittest.TestCase):
         pass
 
 # =============================================================================
+class S3UserRegisterOnAcceptTests(unittest.TestCase):
+    """ Test AuthS3.s3_auth_user_register_onaccept """
+
+    # -------------------------------------------------------------------------
+    def testInsert(self):
+        user_id = 1
+        home = "(555) 555-5555"
+        mobile = "(333) 333-3333"
+        consent = "yes"
+
+        db = current.db
+
+        table = current.s3db.auth_user_temp
+        query = (table.user_id == user_id)
+        row = db(query).select(table.id, limitby=(0, 1)).first()
+        self.assertIsNone(row)
+
+        form = Storage(
+            vars=Storage(
+                id=user_id,
+                home=home,
+                mobile=mobile,
+                consent=consent,
+        ))
+        current.auth.s3_user_register_onaccept(form)
+
+        row = db(query).select(limitby=(0, 1)).first()
+        self.assertIsNotNone(row)
+        self.assertEqual(row.home, home)
+        self.assertEqual(row.mobile, mobile)
+        self.assertEqual(row.consent, consent)
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+        current.db.rollback()
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
@@ -4548,6 +4585,7 @@ if __name__ == "__main__":
         RealmEntityTests,
         LinkToPersonTests,
         EntityRoleManagerTests,
+        S3UserRegisterOnAcceptTests,
     )
 
 # END ========================================================================

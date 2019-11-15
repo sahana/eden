@@ -333,30 +333,6 @@ Thank you"""
                          *utable_fields)
             utable = settings.table_user = db[uname]
 
-        # Fields configured in configure_user_fields
-
-        # Temporary User Table
-        # for storing User Data that will be used to create records for
-        # the user once they are approved
-        #
-        # @ToDo: Move to modules/s3db/auth.py, so that it doesn't need to be loaded every request
-        #
-        define_table("auth_user_temp",
-                     Field("user_id", utable),
-                     Field("home"),
-                     Field("mobile"),
-                     Field("image", "upload",
-                           length = current.MAX_FILENAME_LENGTH,
-                           ),
-                     Field("consent"),
-                     Field("custom", "json",
-                           requires = IS_EMPTY_OR(IS_JSONS3()),
-                           ),
-                     S3MetaFields.uuid(),
-                     S3MetaFields.created_on(),
-                     S3MetaFields.modified_on(),
-                     )
-
         # Group table (roles)
         gtable = settings.table_group
         gname = settings.table_group_name
@@ -2329,8 +2305,7 @@ $.filterOptionsS3({
             @ToDo: If these fields are implemented with the InlineForms functionality,
             this function may become redundant
         """
-
-        temptable = current.db.auth_user_temp
+        temptable = current.s3db.auth_user_temp
 
         form_vars = form.vars
         user_id = form_vars.id
@@ -2726,7 +2701,7 @@ $.filterOptionsS3({
 
         utable = self.settings.table_user
 
-        ttable = db.auth_user_temp
+        ttable = s3db.auth_user_temp
         ptable = s3db.pr_person
         ctable = s3db.pr_contact
         ltable = s3db.pr_person_user
