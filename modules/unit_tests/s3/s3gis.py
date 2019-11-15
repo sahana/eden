@@ -774,10 +774,36 @@ class S3LocationTreeTests(unittest.TestCase):
         current.db.rollback()
 
 # =============================================================================
+class S3NoGisConfigTests(unittest.TestCase):
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+        cls.original_get_config = staticmethod(GIS.get_config)
+        GIS.get_config = staticmethod(lambda: None)
+
+    # -------------------------------------------------------------------------
+    def testMapSetup(self):
+        map = MAP()
+        setup_result = map._setup()
+        self.assertIsNone(setup_result)
+        self.assertIsNotNone(map.error_message)
+
+    def testMap2Xml(self):
+        map = MAP2()
+        xml = map.xml()
+        self.assertTrue(b"Map cannot display without GIS config!" in xml)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+        GIS.get_config = staticmethod(cls.original_get_config)
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
         S3LocationTreeTests,
+        S3NoGisConfigTests,
     )
 
 # END ========================================================================

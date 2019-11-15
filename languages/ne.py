@@ -1727,7 +1727,6 @@
 'Mandatory. The base URL to access the service. e.g. http://host.domain/geoserver/wfs?': 'आवश्यक.  सेवामा पहुँचको निम्ति आधारभुत यू.आर.एल. जस्तै, http://host.domain/geoserver/wfs?',
 'Mandatory. The base URL to access the service. e.g. http://host.domain/geoserver/wms?': 'आवश्यक.  सेवामा पहुँचको निम्ति आधारभुत यू.आर.एल. जस्तै, http://host.domain/geoserver/wms?',
 'Map': 'नक्सा',
-'Map cannot display without prepop data!': 'आँकडाबिना नक्सा देखाउन सकिँदैन !',
 'Map Center Latitude': 'नक्सा केन्द्रिय अक्षांश',
 'Map Center Longitude': 'नक्सा केन्द्रिय देशान्तर',
 'Map Profile': 'नक्सा बनावट',

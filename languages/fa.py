@@ -1648,7 +1648,6 @@
 'Mandatory. The base URL to access the service. e.g. http://host.domain/geoserver/wfs?': 'اجباری. URL اساسی برای دسترسی یافتن به خدمات. مثلاً http://host.domain/geoserver/wfs?',
 'Mandatory. The base URL to access the service. e.g. http://host.domain/geoserver/wms?': 'اجباری. URL اساسی برای دسترسی یافتن به خدمات. مثلاً http://host.domain/geoserver/wms?',
 'Map': 'نقشه',
-'Map cannot display without prepop data!': 'نقشه بدون معلومات prepop نمایش داده نمی تواند',
 'Map Center Latitude': 'عرض جغرافیایی مرکز نقشه',
 'Map Center Longitude': 'طول جغرافیایی مرکز نقشه',
 'Map Profile': 'تنظیمات نقشه',

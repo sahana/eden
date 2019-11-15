@@ -571,6 +571,10 @@ ul.ui-autocomplete {
     font-weight: bold;
 }
 
+.mapError {
+  border: solid 1px red;
+}
+
 /* Help Popup */
 .tooltip,
 .tooltipbody,
