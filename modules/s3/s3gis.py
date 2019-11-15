@@ -7276,6 +7276,13 @@ class MAP2(DIV):
 
         options = {}
 
+        # i18n
+        if current.session.s3.language != "en":
+            T = current.T
+            options["i18n"] = {"loading": s3_str(T("Loading")),
+                               "requires_login": s3_str(T("Requires Login")),
+                               }
+
         # Read options for this Map
         get_vars_get = current.request.get_vars.get
         opts_get = self.opts.get

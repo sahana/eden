@@ -17,6 +17,9 @@
          */
         options: {
             id: 'default_map',  // Map ID (Div)
+            i18n: {'loading': 'Loading',
+                   'requires_login': 'Requires Login'
+                   },
             //height: 400,        // Map Height (pixels)
             //width: 400,         // Map Width (pixels)
             lat: 0,             // Center Lat
@@ -34,6 +37,7 @@
             this.id = mapID;
             mapID += 1;
             this.eventNamespace = '.s3Map';
+            this.proxyHost = S3.Ap.concat('/gis/proxy?url=');
 
         },
 
@@ -43,9 +47,6 @@
         _init: function(options) {
 
             //var el = $(this.element);
-
-            // Flag for whether a tooltip is showing
-            //self.tooltip = false;
 
             this.refresh();
 
@@ -84,6 +85,7 @@
                     zoom: options.zoom
                 })
             });
+            this.map = map;
 
             // Tooltip
             var tooltip = $('#' + this.options.id + ' .s3-gis-tooltip');
@@ -93,7 +95,7 @@
                 element: tooltip[0],
                 positioning: 'bottom-center',
                 stopEvent: false,
-                offset: [0, -50]
+                offset: [0, -15]
             });
             map.addOverlay(tooltip_ol);
             this.tooltip_ol = tooltip_ol;
@@ -317,6 +319,113 @@
             return style;
 
         },
+
+        /**
+         * Add a Popup to map
+         */
+        addPopup: function(feature, layer, url, content, iframe) {
+            var map = this.map,
+                id = this.id + '_' + layer.ol_uid + '_' + feature.get('id') + '_popup';
+            if (iframe && url) {
+                if (url.indexOf('http://') === 0 ) {
+                    // Use Proxy for remote popups
+                    url = this.proxyHost + encodeURIComponent(url);
+                }
+                content = '<iframe src="' + url + '" onload="S3.gis.popupLoaded(\'' + id + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0"></iframe>';
+            } else if (undefined == content) {
+                content = this.options.i18n.loading + '...<div class="throbber"></div>';
+            }
+            $('#' + this.options.id).append('<div id="' + id + '" class="s3-gis-popup"><div class="s3-gis-popup-close"></div><div class="s3-gis-popup-content"></div></div>')
+            var popup = $('#' + id),
+                popup_ol = new ol.Overlay({
+                element: popup[0],
+                positioning: 'bottom-center',
+                //stopEvent: false,
+                offset: [0, -12]
+            });
+            map.addOverlay(popup_ol);
+            var coordinates = feature.getGeometry().getCoordinates();
+            popup_ol.setPosition(coordinates);
+            $('#' + id + ' .s3-gis-popup-content').html(content);
+            popup.show();
+            $('#' + id + ' .s3-gis-popup-close').on('click', {id: id, map: map, overlay: popup_ol}, this.removePopup);
+            if (!iframe && undefined != url) {
+                // use AJAX to get the contentHTML
+                this._loadDetails(url, id, popup);
+            }
+            //return popup;
+        },
+
+        /**
+         * Remove a Popup
+         */
+        removePopup: function(e) {
+            e.data.map.removeOverlay(e.data.overlay);
+            $('#' + e.data.id).remove();
+            e.preventDefault();
+        },
+
+        /**
+         * Load the Popup Details via AJAX
+         * - used by addPopup and map.on('click')
+         */
+        _loadDetails: function(url, id, popup) {
+            var self = this;
+            if (url.indexOf('http://') === 0) {
+                // Use Proxy for remote popups
+                url = this.proxyHost + encodeURIComponent(url);
+            }
+            // @ToDo: Support option to load just a section of the page
+            // e.g. USGS would just load '#main'
+            /*
+            url_parts = url.split('?', 1);
+            url = url_parts[0];
+            url = url + ' #main';
+            $('#' + id).load(url, url_parts[1], function() {
+                popup.updateSize();
+            });*/
+            $.ajaxS3({
+                url: url,
+                dataType: 'html',
+                // gets moved to 'done' inside AjaxS3
+                success: function(data) {
+                    try {
+                        // Load response into div
+                        $('#' + id + ' .s3-gis-popup-content').html(data);
+                        //popup.updateSize();
+                        // Resize when images are loaded
+                        //popup.registerImageListeners();
+                        // Check for links to load in iframe
+                        $('#' + id + ' a.btn.iframe').click(function() {
+                            var url = $(this).attr('href');
+                            if (url.indexOf('http://') === 0) {
+                                // Use Proxy for remote popups
+                                url = self.proxyHost + encodeURIComponent(url);
+                            }
+                            var content = '<iframe src="' + url + '" onload="S3.gis.popupLoaded(\'' + id + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0"></iframe>';
+                            $('#' + id + ' .s3-gis-popup-content').html(content);
+                            // Prevent default
+                            return false;
+                        });
+                    } catch(e) {
+                        // Page is probably trying to load 'local' resources from us
+                        // @ToDo: Load in iframe instead...
+                    }
+                },
+                // gets moved to 'fail' inside AjaxS3
+                error: function(jqXHR, textStatus, errorThrown) {
+                    if (errorThrown == 'UNAUTHORIZED') {
+                        msg = self.options.i18n.requires_login;
+                    } else {
+                        msg = jqXHR.responseText;
+                    }
+                    $('#' + id + ' .s3-gis-popup-content').html(msg);
+                    //popup.updateSize();
+                }
+            });
+        },
+
+
         /**
          * Encode this.data as JSON and write into real input
          *
@@ -438,6 +547,176 @@
                     feature = results.feature;
                     layer = results.layer;
 
+                    // @ToDo: Style the feature as highlighted
+                    // irrevant for icon-based styles?
+                    // easy to apply a default here, but how to action based on custom styles? Just reduce Opacity?
+
+                    // @ToDo: Handle Clusters
+
+                    // Single Feature
+                    var attributes = feature.getProperties(),
+                        content,
+                        data_link,
+                        layerType = layer.s3_layer_type,
+                        popup_url;
+
+                    if (layerType == 'kml') {
+                        var titleField;
+                        if (undefined != layer.title) {
+                            titleField = layer.title;
+                        } else {
+                            titleField = 'name';
+                        }
+                        if (undefined != feature.style.balloonStyle) {
+                            // Use the provided BalloonStyle
+                            var balloonStyle = feature.style.balloonStyle;
+                            // "<strong>{name}</strong><br /><br />{description}"
+                            content = balloonStyle.replace(/{([^{}]*)}/g,
+                                function (a, b) {
+                                    var r = attributes[b];
+                                    return typeof r === 'string' || typeof r === 'number' ? r : a;
+                                }
+                            );
+                        } else {
+                            // Build the Popup contents manually
+                            var type = typeof attributes[titleField];
+                            var title;
+                            if ('object' == type) {
+                                title = attributes[titleField].value;
+                            } else {
+                                title = attributes[titleField];
+                            }
+                            content = '<h3>' + title + '</h3>';
+                            var body = layer.body.split(' ');
+                            var label, row, value;
+                            for (var j = 0; j < body.length; j++) {
+                                type = typeof attributes[body[j]];
+                                if ('object' == type) {
+                                    // Geocommons style
+                                    label = attributes[body[j]].displayName;
+                                    if (label === '') {
+                                        label = body[j];
+                                    }
+                                    value = attributes[body[j]].value;
+                                    row = '<div class="gis_popup_row"><div class="gis_popup_label">' + label +
+                                          ':</div><div class="gis_popup_cell">' + value + '</div></div>';
+                                } else if (undefined != attributes[body[j]]) {
+                                    row = '<div class="gis_popup_row">' + attributes[body[j]] + '</div>';
+                                } else {
+                                    // How would we get here?
+                                    row = '';
+                                }
+                                content += row;
+                            }
+                        }
+                        // Protect the content against JavaScript attacks
+                        if (content.search('<script') != -1) {
+                            content = 'Content contained Javascript! Escaped content below.<br />' + content.replace(/</g, '<');
+                        }
+                    } else if (layerType == 'gpx') {
+                        // @ToDo: display as many attributes as we can: Description (Points), Date, Author?, Lat, Lon
+                    } else if ((layerType == 'shapefile') || (layerType == 'geojson')) {
+                        // We don't have control of attributes, so simply display all
+                        // @ToDo: have an optional style.popup (like KML's balloonStyle)
+                        content = '<div>';
+                        var label, prop, row, value;
+                        $.each(attributes, function(label, value) {
+                            if (label == 'id_orig') {
+                                label = 'id';
+                            }
+                            row = '<div class="gis_popup_row"><div class="gis_popup_label">' + label +
+                                  ':</div><div class="gis_popup_cell">' + value + '</div></div>';
+                            content += row;
+                        });
+                        content += '</div>';
+                    } else if (layerType == 'wfs') {
+                        var titleField;
+                        if (undefined != layer.title) {
+                            titleField = layer.title;
+                        } else {
+                            titleField = 'name';
+                        }
+                        var title = attributes[titleField];
+                        content = '<h3>' + title + '</h3>';
+                        var row;
+                        $.each(attributes, function(label, value) {
+                            row = '<div class="gis_popup_row"><div class="gis_popup_label">' + label +
+                                  ':</div><div class="gis_popup_val">' + value + '</div></div>';
+                            content += row;
+                        });
+                    } else {
+                        // @ToDo: disambiguate these by type
+                        if (undefined != attributes.url) {
+                            // Feature Query with Popup contents pulled via AJAX
+                            popup_url = attributes.url;
+                            // Defaulted within addPopup()
+                            //content = i18n.loading + "...<div class='throbber'></div>";
+                        } else if (undefined != layer.s3_url_format) {
+                            // Feature Layer or Feature Resource
+                            // Popup contents are pulled via AJAX
+                            _.templateSettings = {interpolate: /\{(.+?)\}/g};
+                            //var s3_url_format = layer.s3_url_format;
+                            var template = _.template(layer.s3_url_format);
+                            // Ensure we have all keys (we don't transmit empty attr)
+                            /* Only needed once we start getting non-id formats
+                            var defaults = {},
+                                key,
+                                keys = s3_popup_format.split('{');
+                            for (var j = 0; j < keys.length; j++) {
+                                key = keys[j].split('}')[0];
+                                defaults[key] = '';
+                            }
+                            _.defaults(attributes, defaults);*/
+                            // Since this is single feature case, feature should have single id
+                            if (attributes.id.constructor === Array) {
+                                attributes.id = attributes.id[0];
+                            }
+                            popup_url = template(attributes);
+                        } else {
+                            // Popup contents are built from the attributes
+                            if (undefined == attributes.name) {
+                                name = '';
+                            } else {
+                                name = '<h3>' + attributes.name + '</h3>';
+                            }
+                            var description;
+                            if (undefined == attributes.description) {
+                                description = '';
+                            } else {
+                                description = '<p>' + attributes.description + '</p>';
+                            }
+                            var link;
+                            if (undefined == attributes.link) {
+                                link = '';
+                            } else {
+                                link = '<a href="' + attributes.link + '" target="_blank">' + attributes.link + '</a>';
+                            }
+                            var data;
+                            if (undefined == attributes.data) {
+                                data = '';
+                            } else if (attributes.data.indexOf('http://') === 0) {
+                                data_link = true;
+                                var data_id = S3.uid();
+                                data = '<div id="' + data_id + '">' + self.options.i18n.loading + "...<div class='throbber'></div>" + '</div>';
+                            } else {
+                                data = '<p>' + attributes.data + '</p>';
+                            }
+                            var image;
+                            if (undefined == attributes.image) {
+                                image = '';
+                            } else if (attributes.image.indexOf('http://') === 0) {
+                                image = '<img src="' + attributes.image + '" height=300 width=300>';
+                            } else {
+                                image = '';
+                            }
+                            content = name + description + link + data + image;
+                        }
+                    }
+                    var popup = self.addPopup(feature, layer, popup_url, content);
+                    if (data_link) {
+                        // call AJAX to get the linked data
+                        self._loadDetails(attributes.data, data_id, popup);
+                    }
                 }
             });
 
