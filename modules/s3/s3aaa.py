@@ -63,7 +63,7 @@ from .s3fields import S3MetaFields, S3Represent, s3_comments
 from .s3rest import S3Method, S3Request
 from .s3track import S3Tracker
 from .s3utils import s3_addrow, s3_get_extension, s3_mark_required, s3_str
-from .s3validators import IS_ISO639_2_LANGUAGE_CODE, IS_JSONS3
+from .s3validators import IS_ISO639_2_LANGUAGE_CODE
 
 # =============================================================================
 class AuthS3(Auth):
@@ -2291,7 +2291,8 @@ $.filterOptionsS3({
         self.s3_approve_user(user)
 
     # -------------------------------------------------------------------------
-    def s3_user_register_onaccept(self, form):
+    @staticmethod
+    def s3_user_register_onaccept(form):
         """
             S3 framework function
 

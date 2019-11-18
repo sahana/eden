@@ -38,7 +38,7 @@ __all__ = ("AuthDomainApproverModel",
 
 import datetime
 
-from gluon import *
+from gluon import current
 from gluon.storage import Storage
 
 from ..s3 import *
@@ -1141,31 +1141,39 @@ def auth_user_options_get_osm(pe_id):
 
 # =============================================================================
 class AuthUserTempModel(S3Model):
+    """
+        Model to store complementary data for pending user accounts
+        after self-registration
+    """
 
-    names = ("auth_user_temp",)
+    names = ("auth_user_temp",
+             )
 
     def model(self):
-        # Temporary User Table
-        # for storing User Data that will be used to create records for
-        # the user once they are approved
-        #
+
         utable = current.auth.settings.table_user
 
+        # ---------------------------------------------------------------------
+        # Temporary User Table
+        # - interim storage of registration data that can be used to
+        #   create complementary records about a user once their account
+        #   is approved
+        #
         self.define_table("auth_user_temp",
-                     Field("user_id", utable),
-                     Field("home"),
-                     Field("mobile"),
-                     Field("image", "upload",
-                           length = current.MAX_FILENAME_LENGTH,
-                           ),
-                     Field("consent"),
-                     Field("custom", "json",
-                           requires = IS_EMPTY_OR(IS_JSONS3()),
-                           ),
-                     S3MetaFields.uuid(),
-                     S3MetaFields.created_on(),
-                     S3MetaFields.modified_on(),
-                     )
+                          Field("user_id", utable),
+                          Field("home"),
+                          Field("mobile"),
+                          Field("image", "upload",
+                                length = current.MAX_FILENAME_LENGTH,
+                                ),
+                          Field("consent"),
+                          Field("custom", "json",
+                                requires = IS_EMPTY_OR(IS_JSONS3()),
+                                ),
+                          S3MetaFields.uuid(),
+                          S3MetaFields.created_on(),
+                          S3MetaFields.modified_on(),
+                          )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

@@ -775,28 +775,40 @@ class S3LocationTreeTests(unittest.TestCase):
 
 # =============================================================================
 class S3NoGisConfigTests(unittest.TestCase):
+    """
+        Tests for handling of missing GIS config
+    """
+
     # -------------------------------------------------------------------------
     @classmethod
     def setUpClass(cls):
+
+        # Replace get_config with dummy that always returns None
         cls.original_get_config = staticmethod(GIS.get_config)
         GIS.get_config = staticmethod(lambda: None)
 
     # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
+        # Restore original get_config method
+        GIS.get_config = staticmethod(cls.original_get_config)
+
+    # -------------------------------------------------------------------------
     def testMapSetup(self):
+        """ Verify that MAP setup without config produces an error message """
+
         map = MAP()
         setup_result = map._setup()
         self.assertIsNone(setup_result)
         self.assertIsNotNone(map.error_message)
 
     def testMap2Xml(self):
+        """ Verify that MAP2 rendering without config produces an error message """
+
         map = MAP2()
         xml = map.xml()
         self.assertTrue(b"Map cannot display without GIS config!" in xml)
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def tearDownClass(cls):
-        GIS.get_config = staticmethod(cls.original_get_config)
 
 # =============================================================================
 if __name__ == "__main__":
@@ -804,6 +816,6 @@ if __name__ == "__main__":
     run_suite(
         S3LocationTreeTests,
         S3NoGisConfigTests,
-    )
+        )
 
 # END ========================================================================
