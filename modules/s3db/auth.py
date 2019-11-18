@@ -38,7 +38,7 @@ __all__ = ("AuthDomainApproverModel",
 
 import datetime
 
-from gluon import current
+from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
