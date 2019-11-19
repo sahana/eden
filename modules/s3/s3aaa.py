@@ -749,7 +749,7 @@ Thank you"""
             else:
                 # We need to pass through login again before going on
                 if next is DEFAULT:
-                    next = request.vars._next or settings.login_next
+                    next = request.vars._next or deployment_settings.get_auth_login_next()
                 next = "%s?_next=%s" % (URL(r=request), next)
                 redirect(cas.login_url(next))
 
@@ -762,7 +762,9 @@ Thank you"""
 
         # How to continue
         if next is DEFAULT:
-            if deployment_settings.has_module("setup") and deployment_settings.get_setup_wizard_questions() and self.s3_has_role("ADMIN"):
+            if deployment_settings.has_module("setup") and \
+               deployment_settings.get_setup_wizard_questions() and \
+               self.s3_has_role("ADMIN"):
                 itable = current.s3db.setup_instance
                 instance = db(itable.url == "https://%s" % request.env.HTTP_HOST).select(itable.id,
                                                                                          itable.deployment_id,
@@ -774,13 +776,22 @@ Thank you"""
                     next = URL(c="setup", f="deployment",
                                args = [instance.deployment_id, "instance", instance.id, "wizard"])
             if next is DEFAULT:
-                next = request.vars._next or settings.login_next
+                if deployment_settings.get_auth_login_next_always():
+                    next = deployment_settings.get_auth_login_next()
+                    if callable(next):
+                        next = next()
+                else:
+                    next = request.vars.get("_next")
+                    if not next:
+                        next = deployment_settings.get_auth_login_next()
+                        if callable(next):
+                            next = next()
         if settings.login_form == self:
             if accepted_form:
                 if onaccept:
                     onaccept(form)
                 if isinstance(next, (list, tuple)):
-                    # fix issue with 2.6
+                    # fix issue with 2.6/2.7
                     next = next[0]
                 if next and not next[0] == "/" and next[:4] != "http":
                     next = self.url(next.replace("[id]", str(form.vars.id)))

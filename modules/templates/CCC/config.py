@@ -64,6 +64,27 @@ def config(settings):
     # Consent Tracking
     settings.auth.consent_tracking = True
 
+    # Which page to go to after login?
+    def login_next():
+        """
+            @ToDo: This function won't work once we update s3aaa.py login to 2-factor auth
+                   since roles not yet assigned when this function is called
+        """
+        from gluon import URL
+        has_role = current.auth.s3_has_role
+        if has_role("ADMIN"):
+            next = URL(c="default", f="index")
+        elif has_role("VOLUNTEER") or has_role("RESERVE"):
+            next = URL(c="cms", f="post", args="datalist")
+        elif has_role("DONOR"):
+            next = URL(c="default", f="index", args="donor")
+        else:
+            next = URL(c="default", f="index")
+        return next
+
+    settings.auth.login_next = login_next
+    settings.auth.login_next_always = True
+
     # Record Approval
     settings.auth.record_approval = True
     settings.auth.record_approval_required_for = ("org_organisation",
@@ -513,6 +534,9 @@ def config(settings):
                 # Filter out system posts
                 from s3 import FS
                 r.resource.add_filter(FS("post_module.module") == None)
+
+            # Twitter script
+            s3.scripts.append("https://platform.twitter.com/widgets.js")
 
             return result
         s3.prep = prep
@@ -1141,6 +1165,7 @@ def config(settings):
                                                    ),
                        list_fields = ["name",
                                       (T("Type"), "organisation_organisation_type.organisation_type_id"),
+                                      (T("Locations Served"), "organisation_location.location_id"),
                                       ],
                        filter_widgets = [S3TextFilter(["name",
                                                        "comments",

@@ -207,6 +207,8 @@ class donor(S3CustomController):
             item = ""
         output["item"] = item
 
+        current.response.s3.scripts.append("https://platform.twitter.com/widgets.js")
+
         self._view(THEME, "donor.html")
         return output
 

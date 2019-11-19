@@ -708,8 +708,17 @@ class S3Config(Storage):
         return self.auth.get("always_notify_approver", True)
 
     def get_auth_login_next(self):
-        """ Which page to go to after login """
+        """
+            Which page to go to after login
+            - can be a callable
+        """
         return self.auth.get("login_next", URL(c="default", f="index"))
+
+    def get_auth_login_next_always(self):
+        """
+            Whether the login_next overrides the _next variable
+        """
+        return self.auth.get("login_next_always", False)
 
     def get_auth_show_link(self):
         return self.auth.get("show_link", True)
