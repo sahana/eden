@@ -731,7 +731,7 @@
             source: function(request, response) {
                 // Patch the source so that we can handle No Matches
                 $.ajax({
-                    url: real_input.data('url'),
+                    url: url,
                     data: {
                         term: request.term
                     }
