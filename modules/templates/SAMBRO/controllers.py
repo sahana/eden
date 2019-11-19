@@ -51,7 +51,7 @@ class index(S3CustomController):
             current.log.error("Cannot find Layer for Map")
             layer_id = None
             output["_map"] = DIV(
-                "Cannot find Layer for Map",  # Deliberately not T() to save unneccessary load on translators
+                T("Cannot find Layer for Map"),
                 _class="mapError"
                 )
         else:
