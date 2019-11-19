@@ -806,8 +806,6 @@ class S3RoleManager(S3Method):
             if not row:
                 r.unauthorised()
 
-        s3 = current.response.s3
-
         # Which roles can the current user manage for this user?
         managed_roles = self.get_managed_roles(r.id)
 
@@ -835,7 +833,7 @@ class S3RoleManager(S3Method):
             # The form field
             field = mtable.user_id
             field.readable = field.writable = True
-            field.widget = S3RolesWidget(mode="roles",
+            field.widget = S3RolesWidget(mode = "roles",
                                          items = managed_roles,
                                          use_realms = use_realms,
                                          realm_types = realm_types,
@@ -844,6 +842,7 @@ class S3RoleManager(S3Method):
                                          )
 
             # Render form
+            s3 = current.response.s3
             tablename = str(mtable)
             form = SQLFORM.factory(field,
                                    record = {"id": None, "user_id": r.id},

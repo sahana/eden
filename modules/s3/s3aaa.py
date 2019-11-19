@@ -32,6 +32,7 @@
 __all__ = ("AuthS3",
            "S3Permission",
            "S3Audit",
+           #"S3EntityRoleManager",
            "S3OrgRoleManager",
            "S3PersonRoleManager",
            )
@@ -7954,7 +7955,7 @@ class S3EntityRoleManager(S3Method):
             import math
             pagination_pages = int(math.ceil(len(self.assigned_roles) / float(pagination_size)))
             # the list of objects to show on this page sorted by name
-            pagination_list = [(self.objects[id], id) for id in self.assigned_roles]
+            pagination_list = [(self.objects[gid], gid) for gid in self.assigned_roles]
             pagination_list = sorted(pagination_list)[pagination_offset * pagination_size:pagination_offset * pagination_size + pagination_size]
 
             context.update({"assigned_roles": self.assigned_roles,

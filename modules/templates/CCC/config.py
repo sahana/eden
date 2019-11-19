@@ -37,6 +37,11 @@ def config(settings):
     # Required for access to default realm permissions
     settings.auth.registration_link_user_to = ["staff"]
     settings.auth.registration_link_user_to_default = ["staff"]
+    settings.auth.realm_entity_types = ("org_organisation",
+                                        #"org_office",
+                                        "pr_forum",
+                                        "pr_group",
+                                        )
 
     # -------------------------------------------------------------------------
     # L10n (Localization) settings

@@ -161,7 +161,7 @@ def user():
     set_method = s3db.set_method
     set_method("auth", "user",
                method = "roles",
-               action = s3base.S3RoleManager)
+               action = s3base.S3RoleManager)   # s3roles.py
 
     set_method("auth", "user",
                method = "disable",
