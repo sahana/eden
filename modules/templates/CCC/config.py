@@ -73,13 +73,13 @@ def config(settings):
         from gluon import URL
         has_role = current.auth.s3_has_role
         if has_role("ADMIN"):
-            next = URL(c="default", f="index")
+            next = current.request.vars._next or URL(c="default", f="index")
         elif has_role("VOLUNTEER") or has_role("RESERVE"):
             next = URL(c="cms", f="post", args="datalist")
         elif has_role("DONOR"):
             next = URL(c="default", f="index", args="donor")
         else:
-            next = URL(c="default", f="index")
+            next = current.request.vars._next or URL(c="default", f="index")
         return next
 
     settings.auth.login_next = login_next
