@@ -1605,6 +1605,52 @@ def config(settings):
     settings.customise_pr_person_resource = customise_pr_person_resource
 
     # -----------------------------------------------------------------------------
+    def affiliation_create_onaccept(form):
+        """
+            If a RESERVE Volunteer is affiliated to an Organisation, update their user/roles accordingly
+        """
+
+        auth = current.auth
+        db = current.db
+        s3db = current.s3db
+        human_resource_id = form.vars.get("id")
+
+        hrtable = s3db.hrm_human_resource
+        hr = db(hrtable.id == human_resource_id).select(hrtable.person_id,
+                                                        hrtable.organisation_id,
+                                                        limitby = (0, 1)
+                                                        ).first()
+        
+        ptable = s3db.pr_person
+        putable = s3db.pr_person_user
+        query = (ptable.id == hr.person_id) & \
+                (ptable.pe_id == putable.pe_id)
+        link = db(query).select(putable.user_id,
+                                limitby = (0, 1)
+                                ).first()
+        user_id = link.user_id
+
+        utable = db.auth_user
+        user = db(utable.id == user_id).select(utable.id,
+                                               utable.organisation_id,
+                                               limitby = (0, 1)
+                                               ).first()
+        if not user.organisation_id:
+            user.update_record(organisation_id = hr.organisation_id)
+
+        gtable = db.auth_group
+        mtable = db.auth_membership
+        query = (mtable.user_id == user_id) & \
+                (mtable.group_id == gtable.id)
+        roles = db(query).select(gtable.uuid)
+        roles = [r.uuid for r in roles]
+
+        if "RESERVE" in roles:
+            auth.s3_withdraw_role(user_id, "RESERVE", for_pe=[])
+
+        auth.s3_assign_role(user_id, "VOLUNTEER")
+
+    # -----------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
         s3db = current.s3db
@@ -1636,7 +1682,26 @@ def config(settings):
             else:
                 result = True
 
-            if r.component_name == "group_membership":
+            if r.component_name == "human_resource":
+                s3.crud_strings["hrm_human_resource"] = Storage(
+                    label_create = T("New Affiliation"),
+                    #title_display = T("Affiliation Details"),
+                    #title_list = T("Affiliations"),
+                    title_update = T("Edit Affiliation"),
+                    #title_upload = T("Import Affiliations"),
+                    #label_list_button = T("List Affiliations"),
+                    label_delete_button = T("Delete Affiliation"),
+                    msg_record_created = T("Affiliation added"),
+                    msg_record_modified = T("Affiliation updated"),
+                    msg_record_deleted = T("Affiliation deleted"),
+                    #msg_list_empty = T("No Affiliations currently registered")
+                    )
+                s3db.add_custom_callback("hrm_human_resource",
+                                         "onaccept",
+                                         affiliation_create_onaccept,
+                                         method = "create",
+                                         )
+            elif r.component_name == "group_membership":
                 r.resource.components._components["group_membership"].configure(listadd = False,
                                                                                 list_fields = [(T("Name"), "group_id$name"),
                                                                                                "group_id$comments",
@@ -1703,7 +1768,7 @@ def config(settings):
                     msg_record_modified = T("Reserve Volunteer updated"),
                     msg_record_deleted = T("Reserve Volunteer deleted"),
                     msg_list_empty = T("No Reserve Volunteers currently registered")
-                    )   
+                    )
             elif get_vars_get("donors") or \
                  has_role("DONOR", include_admin=False):
                 # Donors
