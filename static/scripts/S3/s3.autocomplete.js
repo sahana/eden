@@ -721,17 +721,19 @@
         if (min_length == undefined) {
             min_length = 2;
         }
-        if (types) {
-            url += '?types=' + types;
-        }
 
         dummy_input.autocomplete({
             delay: delay,
             minLength: min_length,
             source: function(request, response) {
+                url = real_input.data('url')
+                if (types) {
+                    url += '?types=' + types;
+                }
+
                 // Patch the source so that we can handle No Matches
                 $.ajax({
-                    url: real_input.data('url'),
+                    url: url,
                     data: {
                         term: request.term
                     }

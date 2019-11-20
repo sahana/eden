@@ -7490,7 +7490,7 @@ class S3PentityAutocompleteWidget(FormWidget):
         self.post_process = post_process
         self.c = controller
         self.f = function
-        self.types = None
+        self.types = types
         self.hideerror = hideerror
 
     def __call__(self, field, value, **attributes):
