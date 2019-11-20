@@ -48,12 +48,13 @@ class index(S3CustomController):
         try:
             layer_id = layer.layer_id
         except:
-            current.log.error("Cannot find Layer for Map")
+            error = "Cannot find CAP Alerts Layer for Map"
+            current.log.error(error)
             layer_id = None
-            output["_map"] = DIV(
-                T("Cannot find Layer for Map"),
-                _class="mapError"
-                )
+            output["_map"] = DIV(T(error),
+                                 error,
+                                 _class="mapError"
+                                 )
         else:
             feature_resources = [{"name"      : T("Alerts"),
                                   "id"        : "search_results",
