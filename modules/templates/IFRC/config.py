@@ -7016,10 +7016,11 @@ def config(settings):
         root_org = current.auth.root_org_name()
         if root_org == ARCS:
             # Name isn't required
-            r.table.name.requires = None
+            current.s3db.pr_contact_emergency.name.requires = None
         elif root_org == VNRC:
-            address = r.table.address
-            address.readable = address.writable = True
+            # Enable the Address field
+            field = current.s3db.pr_contact_emergency.address
+            field.readable = field.writable = True
 
     settings.customise_pr_contact_emergency_resource = customise_pr_contact_emergency_resource
 

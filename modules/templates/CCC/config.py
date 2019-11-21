@@ -1499,11 +1499,11 @@ def config(settings):
                                               "filterby": {"tag": "organisation_type"},
                                               "multiple": False,
                                               },
-                                             {"name": "items_details",
-                                              "joinby": "person_id",
-                                              "filterby": {"tag": "items_details"},
-                                              "multiple": False,
-                                              },
+                                             #{"name": "items_details",
+                                             # "joinby": "person_id",
+                                             # "filterby": {"tag": "items_details"},
+                                             # "multiple": False,
+                                             # },
                                              {"name": "skills_details",
                                               "joinby": "person_id",
                                               "filterby": {"tag": "skills_details"},
@@ -1520,6 +1520,9 @@ def config(settings):
                                               "multiple": False,
                                               },
                                              ),
+                            supply_person_item = {"joinby": "person_id",
+                                                  "multiple": False,
+                                                  },
                             )
 
         # Individual settings for specific tag components
@@ -1558,15 +1561,20 @@ def config(settings):
                                            field = "item_id",
                                            label = T("Goods / Services"),
                                            ),
-                           (T("Details"), "items_details.value"),
+                           #(T("Details"), "items_details.value"),
+                           (T("Goods / Services"), "person_item.item_id"),
+                           (T("Details"), "person_item.comments"),
+                           (T("Status"), "person_item.status_id"),
+                           (T("Requested By"), "person_item.organisation_id"),
                            (T("Are you able to Deliver?"), "delivery.value"),
                            S3SQLInlineLink("location",
                                            field = "location_id",
                                            label = T("Where would you be willing to deliver?"),
                                            ),
-                           (T("Please indicate if the offer is only available for a period of time (please state) or an open ended offer. Household items, such as furniture, are normally not required for some months but very gratefully received at the right time."), "availability.value"),
+                           (T("Please indicate if the offer is only available for a period of time (please state) or an open ended offer. Household items, such as furniture, are normally not required for some months but very gratefully received at the right time"), "availability.value"),
                            "comments",
                            ]
+                           
         elif get_vars_get("groups") or \
              r.function == "group" or \
              has_role("GROUP_ADMIN", include_admin=False):

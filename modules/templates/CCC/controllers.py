@@ -792,7 +792,7 @@ class register(S3CustomController):
                                                              selectedList=3),
                                 ),
                           Field("availability",
-                                label = T("Please indicate if the offer is only available for a period of time (please state) or it is an open ended offer. Household items, such as furniture, are normally not required for some months but very gratefully received at the right time."),
+                                label = T("Please indicate if the offer is only available for a period of time (please state) or it is an open ended offer. Household items, such as furniture, are normally not required for some months but very gratefully received at the right time"),
                                 ),
                           # Consent (GDPR + FOC)
                           Field("consent",

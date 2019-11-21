@@ -1749,29 +1749,80 @@ class S3SupplyDistributionDVRActivityModel(S3Model):
 class S3DonorPersonModel(S3Model):
     """
         Link table between People & Items
+        - e.g. Donations
     """
 
-    names = ("supply_person_item",)
+    names = ("supply_person_item",
+             "supply_person_item_status",
+             )
 
     def model(self):
 
         T = current.T
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Person Item Status
+        #
+        tablename = "supply_person_item_status"
+        define_table(tablename,
+                     Field("name", length=128, notnull=True, unique=True,
+                           label = T("Name"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128),
+                                       ],
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Status"),
+            title_display = T("Status Details"),
+            title_list = T("Statuses"),
+            title_update = T("Edit Status"),
+            #title_upload = T("Import Statuses"),
+            label_list_button = T("List Statuses"),
+            label_delete_button = T("Remove Status"),
+            msg_record_created = T("Status added"),
+            msg_record_modified = T("Status updated"),
+            msg_record_deleted = T("Status removed"),
+            msg_list_empty = T("No Statuses currently defined")
+        )
+
+        # Reusable Field
+        represent = S3Represent(lookup = tablename)
+        status_id = S3ReusableField("status_id", "reference %s" % tablename,
+                                    ondelete = "SET NULL",
+                                    represent = represent,
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(current.db,
+                                                          "%s.id" % tablename,
+                                                          represent,
+                                                          )),
+                                    )
 
         # ---------------------------------------------------------------------
         # Link table between People & Items
         #
         tablename = "supply_person_item"
-        self.define_table(tablename,
-                          self.supply_item_id(empty = False,
-                                              ondelete = "CASCADE",
+        define_table(tablename,
+                     self.supply_item_id(comment = None,
+                                         empty = False,
+                                         ondelete = "CASCADE",
+                                         widget = S3MultiSelectWidget(),
+                                         ),
+                     self.pr_person_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     s3_comments(comment = None),
+                     status_id(),
+                     # Requested By / Taken By
+                     self.org_organisation_id(ondelete = "SET NULL",
                                               ),
-                          self.pr_person_id(empty = False,
-                                            ondelete = "CASCADE",
-                                            ),
-                          s3_comments(),
-                          *s3_meta_fields())
+                     *s3_meta_fields())
 
-        current.response.s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             label_create = T("Add Item"),
             title_display = T("Item Details"),
             title_list = T("Items"),
