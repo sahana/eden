@@ -30,7 +30,7 @@
 __all__ = ("S3SupplyModel",
            "S3SupplyDistributionModel",
            "S3SupplyDistributionDVRActivityModel",
-           "S3DonorPersonModel",
+           "S3SupplyPersonModel",
            "supply_item_rheader",
            "supply_item_controller",
            "supply_item_entity_controller",
@@ -1746,7 +1746,7 @@ class S3SupplyDistributionDVRActivityModel(S3Model):
         return {}
 
 # =============================================================================
-class S3DonorPersonModel(S3Model):
+class S3SupplyPersonModel(S3Model):
     """
         Link table between People & Items
         - e.g. Donations
@@ -1793,6 +1793,7 @@ class S3DonorPersonModel(S3Model):
         # Reusable Field
         represent = S3Represent(lookup = tablename)
         status_id = S3ReusableField("status_id", "reference %s" % tablename,
+                                    label = T("Status"),
                                     ondelete = "SET NULL",
                                     represent = represent,
                                     requires = IS_EMPTY_OR(
@@ -1810,16 +1811,16 @@ class S3DonorPersonModel(S3Model):
                      self.supply_item_id(comment = None,
                                          empty = False,
                                          ondelete = "CASCADE",
-                                         widget = S3MultiSelectWidget(),
+                                         widget = None, # Dropdown not AC
                                          ),
                      self.pr_person_id(empty = False,
                                        ondelete = "CASCADE",
                                        ),
-                     s3_comments(comment = None),
-                     status_id(),
+                     status_id(empty = False),
                      # Requested By / Taken By
                      self.org_organisation_id(ondelete = "SET NULL",
                                               ),
+                     s3_comments(comment = None),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(

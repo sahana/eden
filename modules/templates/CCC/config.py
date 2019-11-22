@@ -1483,7 +1483,7 @@ def config(settings):
     def customise_pr_person_resource(r, tablename):
 
         from gluon import IS_EMPTY_OR, IS_IN_SET
-        from s3 import S3SQLCustomForm, S3SQLInlineLink
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
         s3db = current.s3db
 
@@ -1494,11 +1494,11 @@ def config(settings):
                                               "filterby": {"tag": "organisation"},
                                               "multiple": False,
                                               },
-                                             {"name": "organisation_type",
-                                              "joinby": "person_id",
-                                              "filterby": {"tag": "organisation_type"},
-                                              "multiple": False,
-                                              },
+                                             #{"name": "organisation_type",
+                                             # "joinby": "person_id",
+                                             # "filterby": {"tag": "organisation_type"},
+                                             # "multiple": False,
+                                             # },
                                              #{"name": "items_details",
                                              # "joinby": "person_id",
                                              # "filterby": {"tag": "items_details"},
@@ -1520,21 +1520,18 @@ def config(settings):
                                               "multiple": False,
                                               },
                                              ),
-                            supply_person_item = {"joinby": "person_id",
-                                                  "multiple": False,
-                                                  },
                             )
 
         # Individual settings for specific tag components
         components_get = s3db.resource(tablename).components.get
 
-        organisation_type = components_get("organisation_type")
-        f = organisation_type.table.value
-        f.requires = IS_EMPTY_OR(IS_IN_SET([T("Business Donor"),
-                                            T("Individual Donor"),
-                                            T("Public Sector Organization"),
-                                            T("Voluntary Sector Organization"),
-                                            ]))
+        #organisation_type = components_get("organisation_type")
+        #f = organisation_type.table.value
+        #f.requires = IS_EMPTY_OR(IS_IN_SET([T("Business Donor"),
+        #                                    T("Individual Donor"),
+        #                                    T("Public Sector Organization"),
+        #                                    T("Voluntary Sector Organization"),
+        #                                    ]))
 
         delivery = components_get("delivery")
         f = delivery.table.value
@@ -1550,22 +1547,32 @@ def config(settings):
         if get_vars_get("donors") or \
            has_role("DONOR", include_admin=False):
             # Donor
+            stable = s3db.supply_person_item_status
+            status = current.db(stable.name == "Available").select(stable.id,
+                                                                   limitby = (0, 1)
+                                                                   ).first()
+            if status:
+                s3db.supply_person_item.status_id.default = status.id
             crud_fields = ["first_name",
                            "middle_name",
                            "last_name",
                            "date_of_birth",
                            (T("Gender"), "gender"),
                            (T("Name of Organization"), "organisation.value"),
-                           (T("Type of Organization"), "organisation_type.value"),
-                           S3SQLInlineLink("item",
-                                           field = "item_id",
-                                           label = T("Goods / Services"),
-                                           ),
+                           #(T("Type of Organization"), "organisation_type.value"),
+                           #S3SQLInlineLink("item",
+                           #                field = "item_id",
+                           #                label = T("Goods / Services"),
+                           #                ),
                            #(T("Details"), "items_details.value"),
-                           (T("Goods / Services"), "person_item.item_id"),
-                           (T("Details"), "person_item.comments"),
-                           (T("Status"), "person_item.status_id"),
-                           (T("Requested By"), "person_item.organisation_id"),
+                           S3SQLInlineComponent("person_item",
+                                                label = "",
+                                                fields = [(T("Goods / Services"), "item_id"),
+                                                          (T("Details"), "comments"),
+                                                          (T("Status"), "status_id"),
+                                                          (T("Requested By"), "organisation_id"),
+                                                          ],
+                                                ),
                            (T("Are you able to Deliver?"), "delivery.value"),
                            S3SQLInlineLink("location",
                                            field = "location_id",
@@ -2269,7 +2276,9 @@ def config(settings):
                                                    "need_contact.person_id",
                                                    S3SQLInlineComponent("need_skill",
                                                                         label = "",
-                                                                        fields = ["skill_id", "quantity"],
+                                                                        fields = ["skill_id",
+                                                                                  "quantity",
+                                                                                  ],
                                                                         multiple = False,
                                                                         ),
                                                    (T("Age Restrictions"), "age_restrictions.value"),
@@ -2341,13 +2350,110 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_supply_person_item_resource(r, tablename):
 
+        from s3 import S3SQLCustomForm, S3OptionsFilter, S3TextFilter
+
         s3db = current.s3db
-        f = s3db.supply_person_item.item_id
+
+        # Filtered components
+        s3db.add_components("pr_person",
+                            pr_person_tag = ({"name": "organisation",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "organisation"},
+                                              "multiple": False,
+                                              },
+                                              {"name": "delivery",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "delivery"},
+                                              "multiple": False,
+                                              },
+                                             {"name": "availability",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "availability"},
+                                              "multiple": False,
+                                              },
+                                             ),
+                            )
+
         # No Hyperlink for Items (don't have permissions anyway)
-        f.represent = s3db.supply_ItemRepresent()
-        # Dropdown, not Autocomplete
-        f.widget = None
+        s3db.supply_person_item.item_id.represent = s3db.supply_ItemRepresent()
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_display = T("Donation Details"),
+            title_list = T("Donations"),
+            title_update = T("Edit Donation"),
+            label_list_button = T("List Donations"),
+            msg_record_modified = T("Donation updated"),
+            msg_list_empty = T("No Donations currently registered")
+        )
+
+        crud_form = S3SQLCustomForm((T("Goods / Service"), "item_id"),
+                                    (T("Details"), "comments"),
+                                    (T("Donor"), "person_id"),
+                                    "status_id",
+                                    (T("Requested By"), "organisation_id"),
+                                    )
+
+        filter_widgets = [S3TextFilter(["item_id$name",
+                                        "comments",
+                                        # Not working:
+                                        #"person_id$first_name",
+                                        #"person_id$last_name",
+                                        ],
+                                       #formstyle = text_filter_formstyle,
+                                       label = "",
+                                       _placeholder = T("Search"),
+                                       ),
+                          S3OptionsFilter("status_id",
+                                          ),
+                          ]
+
+        list_fields = [(T("Goods / Service"), "item_id"),
+                       (T("Details"), "comments"),
+                       (T("Donor"), "person_id"),
+                       (T("Donor Organization"), "person_id$organisation.value"),
+                       (T("Delivery"), "person_id$delivery.value"),
+                       (T("Availability"), "person_id$availability.value"),
+                       "status_id",
+                       (T("Requested By"), "organisation_id"),
+                       ]
+
+        s3db.configure("supply_person_item",
+                       crud_form = crud_form,
+                       deletable = False,
+                       insertable = False,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
 
     settings.customise_supply_person_item_resource = customise_supply_person_item_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_supply_person_item_controller(**attr):
+
+        s3db = current.s3db
+
+        stable = s3db.supply_person_item_status
+        status = current.db(stable.name == "Available").select(stable.id,
+                                                               limitby = (0, 1)
+                                                               ).first()
+        if status:
+            # Default Filter
+            from s3 import s3_set_default_filter
+            s3_set_default_filter("~.status_id",
+                                  status.id,
+                                  tablename = "supply_person_item")
+
+        if current.auth.s3_has_role("ORG_ADMIN"):
+            # Add Hyperlink for Donors
+            from gluon import URL
+            s3db.supply_person_item.person_id.represent = \
+                s3db.pr_PersonRepresentContact(linkto = URL(c="pr", f="person",
+                                                            args = ["[id]"],
+                                                            vars = {"donors": 1},
+                                                            extension=""))
+
+        return attr
+
+    settings.customise_supply_person_item_controller = customise_supply_person_item_controller
 
 # END =========================================================================

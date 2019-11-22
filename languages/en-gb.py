@@ -57,6 +57,7 @@
 'Delete Program': 'Delete Programme',
 'Department Catalog': 'Department Catalogue',
 'Donating Organization': 'Donating Organisation',
+'Donor Organization': 'Donor Organisation',
 'Edit Catalog': 'Edit Catalogue',
 'Edit Catalog Item': 'Edit Catalogue Item',
 'Edit Organization': 'Edit Organisation',

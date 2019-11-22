@@ -718,15 +718,15 @@ class register(S3CustomController):
                           Field("organisation",
                                 label = T("Name of Organization"),
                                 ),
-                          Field("organisation_type",
-                                label = T("Type of Organization"),
-                                requires = IS_EMPTY_OR(
-                                            IS_IN_SET([T("Business Donor"),
-                                                       T("Individual Donor"),
-                                                       T("Public Sector Organization"),
-                                                       T("Voluntary Sector Organization"),
-                                                       ])),
-                                ),
+                          #Field("organisation_type",
+                          #      label = T("Type of Organization"),
+                          #      requires = IS_EMPTY_OR(
+                          #                  IS_IN_SET([T("Business Donor"),
+                          #                             T("Individual Donor"),
+                          #                             T("Public Sector Organization"),
+                          #                             T("Voluntary Sector Organization"),
+                          #                             ])),
+                          #      ),
                           Field("addr_L3", "reference gis_location",
                                 label = T("Location"),
                                 requires = IS_IN_SET(districts_and_uk),
@@ -1684,19 +1684,30 @@ def auth_user_register_onaccept(user_id):
         person_id = person.id
 
         # Create Items
+        items_details = custom["items_details"]
+        stable = s3db.supply_person_item_status
+        status = db(stable.name == "Available").select(stable.id,
+                                                       limitby = (0, 1)
+                                                       ).first()
+        if status:
+            status_id = status.id
+        else:
+            raise HTTP(500, "'Available' Status for Donations not found")
         itable = s3db.supply_person_item
         for item_id in custom["item_id"]:
             record = {"person_id": person_id,
                       "item_id": item_id,
+                      "comments": items_details,
+                      "status_id": status_id,
                       }
             itable.insert(**record)
 
         ttable = s3db.pr_person_tag
-        record = {"person_id": person_id,
-                  "tag": "items_details",
-                  "value": custom["items_details"],
-                  }
-        ttable.insert(**record)
+        #record = {"person_id": person_id,
+        #          "tag": "items_details",
+        #          "value": custom["items_details"],
+        #          }
+        #ttable.insert(**record)
 
         record = {"person_id": person_id,
                   "tag": "organisation",

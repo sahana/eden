@@ -129,6 +129,12 @@ def kit_item():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def person_item():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def person_item_status():
     """ RESTful CRUD controller """
 
