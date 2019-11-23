@@ -613,10 +613,10 @@ class S3StatsDemographicModel(S3Model):
                                    )
 
         # Fire off a rebuild task
-        current.s3task.async("stats_demographic_update_aggregates",
-                             vars = {"records": records.json()},
-                             timeout = 21600 # 6 hours
-                             )
+        current.s3task.run_async("stats_demographic_update_aggregates",
+                                 vars = {"records": records.json()},
+                                 timeout = 21600 # 6 hours
+                                 )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1031,7 +1031,7 @@ class S3StatsDemographicModel(S3Model):
 
         # Now that the time aggregate types have been set up correctly,
         # fire off requests for the location aggregates to be calculated
-        run_async = current.s3task.async
+        run_async = current.s3task.run_async
         for (param_id, loc_dict) in parents_data.items():
             total_id = param_total_dict[param_id]
             for (loc_id, (changed_periods, loc_level)) in loc_dict.items():

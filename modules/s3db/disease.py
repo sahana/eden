@@ -1429,10 +1429,12 @@ class DiseaseStatsModel(S3Model):
                                    )
 
         # Fire off a rebuild task
-        current.s3task.async("disease_stats_update_aggregates",
-                             vars = dict(records=records.json(), all=True),
-                             timeout = 21600 # 6 hours
-                             )
+        current.s3task.run_async("disease_stats_update_aggregates",
+                                 vars = {"records": records.json(),
+                                         "all": True,
+                                         },
+                                 timeout = 21600 # 6 hours
+                                 )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1602,7 +1604,7 @@ class DiseaseStatsModel(S3Model):
             elif row.level == "L4":
                 L4_append(row.id)
 
-        run_async = current.s3task.async
+        run_async = current.s3task.run_async
         from gluon.serializers import json as jsons
         dates = jsons(dates)
         # Build the lowest level first

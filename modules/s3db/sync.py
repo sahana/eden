@@ -1503,12 +1503,12 @@ def sync_now(r, **attr):
                         _class="sync-now-form",
                         )
             if form.accepts(r.post_vars, current.session):
-                task_id = s3task.async("sync_synchronize",
-                                       args = [repository.id],
-                                       vars = {"user_id": auth.user.id,
-                                               "manual": True,
-                                               },
-                                       )
+                task_id = s3task.run_async("sync_synchronize",
+                                           args = [repository.id],
+                                           vars = {"user_id": auth.user.id,
+                                                   "manual": True,
+                                                   },
+                                           )
                 if task_id is False:
                     response.error = T("Could not initiate manual synchronization.")
                 elif task_id is None:

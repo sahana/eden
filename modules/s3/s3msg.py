@@ -458,8 +458,8 @@ class S3Msg(object):
                 return False
 
         # Process OutBox async
-        current.s3task.async("msg_process_outbox",
-                             args = [contact_method])
+        current.s3task.run_async("msg_process_outbox",
+                                 args = [contact_method])
 
         # Perform post process after message sending
         postp = current.deployment_settings.get_msg_send_postprocess()

@@ -515,9 +515,9 @@ class S3DocumentLibrary(S3Model):
                                "id": form_vars.id,
                                })
 
-        current.s3task.async("document_create_index",
-                             args = [document],
-                             )
+        current.s3task.run_async("document_create_index",
+                                 args = [document],
+                                 )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -535,9 +535,9 @@ class S3DocumentLibrary(S3Model):
                                "id": row.id,
                                })
 
-        current.s3task.async("document_delete_index",
-                             args = [document],
-                             )
+        current.s3task.run_async("document_delete_index",
+                                 args = [document],
+                                 )
 
 # =============================================================================
 class S3DocumentTagModel(S3Model):

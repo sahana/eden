@@ -335,7 +335,8 @@ class S3ChannelModel(S3Model):
         """
 
         tablename = r.tablename
-        current.s3task.async("msg_poll", args=[tablename, r.record.channel_id])
+        current.s3task.run_async("msg_poll",
+                                 args = [tablename, r.record.channel_id])
         current.session.confirmation = \
             current.T("The poll request has been submitted, so new messages should appear shortly - refresh to see them")
         if tablename == "msg_email_channel":
@@ -1273,7 +1274,9 @@ class S3ParsingModel(S3Model):
         """
 
         record = r.record
-        current.s3task.async("msg_parse", args=[record.channel_id, record.function_name])
+        current.s3task.run_async("msg_parse",
+                                 args = [record.channel_id,
+                                         record.function_name])
         current.session.confirmation = \
             current.T("The parse request has been submitted")
         redirect(URL(f="parser"))
@@ -2389,7 +2392,7 @@ class S3TwitterSearchModel(S3ChannelModel):
 
         id = r.id
         tablename = r.tablename
-        current.s3task.async("msg_twitter_search", args=[id])
+        current.s3task.run_async("msg_twitter_search", args=[id])
         current.session.confirmation = \
             current.T("The search request has been submitted, so new messages should appear shortly - refresh to see them")
         # Filter results to this Search
@@ -2406,7 +2409,7 @@ class S3TwitterSearchModel(S3ChannelModel):
         """
 
         tablename = r.tablename
-        current.s3task.async("msg_process_keygraph", args=[r.id])
+        current.s3task.run_async("msg_process_keygraph", args=[r.id])
         current.session.confirmation = \
             current.T("The search results are now being processed with KeyGraph")
         # @ToDo: Link to KeyGraph results

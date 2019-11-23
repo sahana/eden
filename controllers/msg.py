@@ -1488,7 +1488,7 @@ def action_after_save(form):
     """
 
     if request.post_vars.get("search_after_save"):
-        s3task.async("msg_twitter_search", args=[form.vars.id])
+        s3task.run_async("msg_twitter_search", args=[form.vars.id])
         session.information = T("The search results should appear shortly - refresh to see them")
 
 # -----------------------------------------------------------------------------

@@ -5725,10 +5725,10 @@ def req_job_run(r, **attr):
 
     if r.interactive:
         if r.id:
-            current.s3task.async("req_add_from_template",
-                                 [r.id], # args
-                                 {"user_id":current.auth.user.id} # vars
-                                 )
+            current.s3task.run_async("req_add_from_template",
+                                     [r.id], # args
+                                     {"user_id":current.auth.user.id} # vars
+                                     )
             current.session.confirmation = current.T("Request added")
 
     redirect(r.url(method="", component_id=0))

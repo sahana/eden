@@ -595,7 +595,7 @@ def config(settings):
             _id = table.insert(channel_id=channel_id, function_name="parse_tweet", enabled=True)
             s3db.msg_parser_enable(_id)
 
-            run_async = current.s3task.async
+            run_async = current.s3task.run_async
             # Poll
             run_async("msg_poll", args=["msg_twitter_channel", channel_id])
 
@@ -1657,7 +1657,8 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
                 # No, this is not open for everybody
                 r.unauthorized()
             else:
-                current.s3task.async("settings_task", args=["homepage_stats_update"])
+                current.s3task.run_async("settings_task",
+                                         args = ["homepage_stats_update"])
                 current.session.confirmation = T("Statistics data update started")
 
                 from gluon import redirect

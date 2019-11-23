@@ -468,9 +468,9 @@ class S3LocationModel(S3Model):
             feature = json.dumps({"id": location_id,
                                   "level": form_vars_get("level", False),
                                   })
-            current.s3task.async("gis_update_location_tree",
-                                 args = [feature],
-                                 )
+            current.s3task.run_async("gis_update_location_tree",
+                                     args = [feature],
+                                     )
 
     # -------------------------------------------------------------------------
     @staticmethod

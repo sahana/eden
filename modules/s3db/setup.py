@@ -1711,7 +1711,7 @@ class S3SetupMonitorModel(S3Model):
         """
 
         task_id = r.id
-        current.s3task.async("setup_monitor_task_run", args=[task_id])
+        current.s3task.run_async("setup_monitor_task_run", args=[task_id])
         current.session.confirmation = \
             current.T("The check request has been submitted, so results should appear shortly - refresh to see them")
 
@@ -1851,8 +1851,9 @@ def setup_monitor_server_check(r, **attr):
             (table.enabled == True) & \
             (table.deleted == False)
     tasks = current.db(query).select(table.id)
+    run_async = current.s3task.run_async
     for task in tasks:
-        current.s3task.async("setup_monitor_run_task", args=[task.id])
+        run_async("setup_monitor_run_task", args=[task.id])
     current.session.confirmation = \
         current.T("The check requests have been submitted, so results should appear shortly - refresh to see them")
 

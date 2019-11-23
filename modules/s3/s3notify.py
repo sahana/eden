@@ -59,10 +59,10 @@ class S3Notifications(object):
 
         subscriptions = cls._subscriptions(now)
         if subscriptions:
-            run_async = current.s3task.async
+            run_async = current.s3task.run_async
             for row in subscriptions:
                 # Create asynchronous notification task.
-                row.update_record(locked=True)
+                row.update_record(locked = True)
                 run_async("notify_notify", args=[row.id])
             message = "%s notifications scheduled." % len(subscriptions)
         else:

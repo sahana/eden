@@ -54,7 +54,7 @@ def index():
             server_id = s3db.setup_server.insert(deployment_id = deployment_id,
                                                  )
             s3db.setup_monitor_server.insert(server_id = server_id)
-            task_id = current.s3task.async("dummy")
+            task_id = current.s3task.run_async("dummy")
             instance_id = s3db.setup_instance.insert(deployment_id = deployment_id,
                                                      url = settings.get_base_public_url(),
                                                      sender = settings.get_mail_sender(),

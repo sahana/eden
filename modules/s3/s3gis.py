@@ -267,7 +267,7 @@ class GIS(object):
             Save the file to the /uploads folder
 
             Designed to be called asynchronously using:
-                current.s3task.async("download_kml", [record_id, filename])
+                current.s3task.run_async("download_kml", [record_id, filename])
 
             @param record_id: id of the record in db.gis_layer_kml
             @param filename: name to save the file as
@@ -8898,8 +8898,12 @@ class LayerKML(Layer):
                     response = current.response
                     session_id_name = response.session_id_name
                     session_id = response.session_id
-                    current.s3task.async("gis_download_kml",
-                                         args=[self.id, filename, session_id_name, session_id])
+                    current.s3task.run_async("gis_download_kml",
+                                             args = [self.id,
+                                                     filename,
+                                                     session_id_name,
+                                                     session_id,
+                                                     ])
                     if cached:
                         db(query).update(modified_on=request.utcnow)
                     else:

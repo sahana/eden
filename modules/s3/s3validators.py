@@ -1283,8 +1283,9 @@ class IS_PROCESSED_IMAGE(Validator):
             else:
                 path = os.path.join(self.upload_path, uploaded_image)
 
-            current.s3task.async("crop_image",
-                args=[path] + points + [self.image_bounds[0]])
+            
+            current.s3task.run_async("crop_image",
+                            args = [path] + points + [self.image_bounds[0]])
 
         return (None, None)
 

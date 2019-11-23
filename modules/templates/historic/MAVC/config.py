@@ -1701,9 +1701,9 @@ def pr_contact_postprocess(form):
     s3db.msg_parser_enable(_id)
 
     # Check Now
-    async = current.s3task.async
-    async("msg_poll", args=["msg_rss_channel", channel_id])
-    async("msg_parse", args=[channel_id, "parse_rss"])
+    run_async = current.s3task.run_async
+    run_async("msg_poll", args=["msg_rss_channel", channel_id])
+    run_async("msg_parse", args=[channel_id, "parse_rss"])
 
 # =============================================================================
 def mavc_rheader(r, tabs=None):

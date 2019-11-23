@@ -162,12 +162,12 @@ def config(settings):
             parser_id = table.insert(channel_id=channel_id, function_name=fn, enabled=True)
             s3db.msg_parser_enable(parser_id)
 
-            async = current.s3task.async
+            run_async = current.s3task.run_async
             # Poll
-            async("msg_poll", args=["msg_rss_channel", channel_id])
+            run_async("msg_poll", args=["msg_rss_channel", channel_id])
 
             # Parse
-            async("msg_parse", args=[channel_id, fn])
+            run_async("msg_parse", args=[channel_id, fn])
 
         s3db.configure(tablename,
                        create_onaccept = onaccept,
@@ -282,12 +282,12 @@ def config(settings):
             _id = table.insert(channel_id=channel_id, function_name="parse_tweet", enabled=True)
             s3db.msg_parser_enable(_id)
 
-            async = current.s3task.async
+            run_async = current.s3task.run_async
             # Poll
-            async("msg_poll", args=["msg_twitter_channel", channel_id])
+            run_async("msg_poll", args=["msg_twitter_channel", channel_id])
 
             # Parse
-            async("msg_parse", args=[channel_id, "parse_tweet"])
+            run_async("msg_parse", args=[channel_id, "parse_tweet"])
 
         s3db.configure(tablename,
                        create_onaccept = onaccept,
@@ -394,10 +394,10 @@ def config(settings):
             # Normal onapprove
             s3db.cap_alert_onapprove(record)
 
-            async_task = current.s3task.async
+            run_async = current.s3task.run_async
 
             # Sync FTP Repository
-            async_task("cap_ftp_sync")
+            run_async("cap_ftp_sync")
 
             # @ToDo: Check for LEFT join when required
             # this is ok for now since every Alert should have an Info & an Area
@@ -438,12 +438,12 @@ def config(settings):
                 if len(rows):
                     registration_ids = [s3_str(row.value) for row in rows]
                     title = get_email_subject(arow, system=False)
-                    async_task("msg_gcm", args=[title,
-                                                "%s/%s" % (s3_str(arow["cap_info.web"]), "profile"),
-                                                s3_str(get_formatted_value(arow["cap_info.headline"],
-                                                                           system=False)),
-                                                json.dumps(registration_ids),
-                                                ])
+                    run_async("msg_gcm", args=[title,
+                                               "%s/%s" % (s3_str(arow["cap_info.web"]), "profile"),
+                                               s3_str(get_formatted_value(arow["cap_info.headline"],
+                                                                          system=False)),
+                                               json.dumps(registration_ids),
+                                               ])
                 # Twitter Post
                 if settings.get_cap_post_to_twitter():
                     try:
