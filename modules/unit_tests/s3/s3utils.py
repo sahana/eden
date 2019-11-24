@@ -194,11 +194,24 @@ class S3FKWrappersTests(unittest.TestCase):
         #self.assertEqual(multiple, None)
 
 # =============================================================================
+class S3MarkupStripperTests(unittest.TestCase):
+    """ Test for S3MarkupStripper """
+
+    def testConstructor(self):
+        """ Verify Python-2 compatibility of constructor """
+
+        # Base class of S3MarkupStripper is a Python-2 old-style class,
+        # so super() call in constructor could raise a TypeError unless
+        # multiple inheritance with object enforces a new-style class
+        stripper = S3MarkupStripper()
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
         S3TypeConverterTests,
         S3FKWrappersTests,
-    )
+        S3MarkupStripperTests,
+        )
 
 # END ========================================================================
