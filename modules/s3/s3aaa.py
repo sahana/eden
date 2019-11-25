@@ -427,8 +427,8 @@ Thank you"""
         # Records Logins & ?
         # @ToDo: Move to s3db.auth to prevent it from being defined every request
         #        (lazy tables means no big issue for Production but helps Devs)
-        # - date of most recent login is the most useful thing recorded
-        # - would that be better in the main auth_user table? Or can we make this a component of that with a new 'last' option?
+        # Deprecate?
+        # - date of most recent login is the most useful thing recorded, which we already record in the main auth_user table
         if not settings.table_event:
             request = current.request
             define_table(
