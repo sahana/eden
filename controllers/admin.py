@@ -110,9 +110,11 @@ def user():
         lappend("link_user_to")
         table.link_user_to.represent = lambda v: ", ".join([s3_str(link_user_to[opt]) for opt in v]) \
                                                  if v else current.messages["NONE"]
-    lappend((T("Registration"), "created_on"))
-    table.created_on.represent = s3base.S3DateTime.date_represent
-    lappend((T("Roles"), "membership.group_id"))
+    date_represent = s3base.S3DateTime.date_represent
+    table.created_on.represent = date_represent
+    list_fields += [(T("Registration"), "created_on"),
+                    (T("Roles"), "membership.group_id"),
+                    ]
 
     s3db.configure("auth_user",
                    create_next = URL(c="admin", f="user", args=["[id]", "roles"]),
@@ -251,6 +253,26 @@ def user():
 
         elif r.representation == "xls":
             lappend((T("Status"), "registration_key"))
+
+            # Virtual Field for Last Login
+            etable = db.auth_event
+            logins = db(etable.id > 0).select(etable.user_id,
+                                              etable.time_stamp,
+                                              orderby = ~etable.time_stamp,
+                                              groupby = etable.user_id)
+            logins = {row.user_id: row.time_stamp for row in logins}
+            s3.login_timestamps = logins
+            def last_login(row):
+                user_id = row["auth_user.id"]
+                login_time = s3.login_timestamps.get(user_id)
+                return date_represent(login_time)
+
+            table.last_login = s3base.s3_fieldmethod("last_login",
+                                                     last_login,
+                                                     # over-ride the default represent of s3_unicode to prevent HTML being rendered too early
+                                                     #represent = lambda v: v,
+                                                     )
+            lappend((T("Last Login"), "last_login"))
 
         if r.method == "delete" and r.http == "GET":
             if r.id == session.auth.user.id: # we're trying to delete ourself
