@@ -69,13 +69,11 @@ class S3Task(object):
         # Instantiate Scheduler
         try:
             from gluon.scheduler import Scheduler
-        except:
+        except ImportError:
             # Warning should already have been given by eden_update_check.py
             self.scheduler = None
         else:
-            self.scheduler = Scheduler(current.db,
-                                       tasks,
-                                       migrate=migrate)
+            self.scheduler = Scheduler(current.db, tasks, migrate=migrate)
 
     # -------------------------------------------------------------------------
     def configure_tasktable_crud(self,
@@ -397,7 +395,8 @@ class S3Task(object):
         return task_id
 
     # -------------------------------------------------------------------------
-    def _duplicate_task_exists(self, task, args, vars):
+    @staticmethod
+    def _duplicate_task_exists(task, args, vars):
         """
             Checks if given task already exists in the Scheduler and both coincide
             with their execution time
@@ -410,10 +409,10 @@ class S3Task(object):
         db = current.db
         ttable = db.scheduler_task
 
-        _args = json.dumps(args)
+        args_json = json.dumps(args)
 
         query = ((ttable.function_name == task) & \
-                 (ttable.args == _args) & \
+                 (ttable.args == args_json) & \
                  (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
         jobs = db(query).select(ttable.vars)
         for job in jobs:
@@ -423,7 +422,8 @@ class S3Task(object):
         return False
 
     # -------------------------------------------------------------------------
-    def _is_alive(self):
+    @staticmethod
+    def _is_alive():
         """
             Returns True if there is at least 1 active worker to run scheduled tasks
             - run from the main request
@@ -438,19 +438,19 @@ class S3Task(object):
         #    return False
 
         db = current.db
-        cache = current.response.s3.cache
-        now = datetime.datetime.now()
-
-        offset = datetime.timedelta(minutes=1)
         table = db.scheduler_worker
+
+        now = datetime.datetime.now()
+        offset = datetime.timedelta(minutes=1)
+
         query = (table.last_heartbeat > (now - offset))
+        cache = current.response.s3.cache
         worker_alive = db(query).select(table.id,
-                                        limitby=(0, 1),
-                                        cache=cache).first()
-        if worker_alive:
-            return True
-        else:
-            return False
+                                        limitby = (0, 1),
+                                        cache = cache,
+                                        ).first()
+
+        return True if worker_alive else False
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -473,7 +473,8 @@ class S3Task(object):
     # =========================================================================
     # Functions run within the Task itself
     # =========================================================================
-    def authenticate(self, user_id):
+    @staticmethod
+    def authenticate(user_id):
         """
             Activate the authentication passed from the caller to this new request
             - run from within the task
