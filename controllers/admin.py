@@ -259,7 +259,7 @@ def user():
             logins = db(etable.id > 0).select(etable.user_id,
                                               etable.time_stamp,
                                               orderby = ~etable.time_stamp,
-                                              groupby = etable.user_id)
+                                              groupby = [etable.user_id, etable.time_stamp]))
             logins = {row.user_id: row.time_stamp for row in logins}
             s3.login_timestamps = logins
             def last_login(row):
