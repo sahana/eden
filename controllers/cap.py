@@ -1134,6 +1134,7 @@ def template():
         r.resource.add_filter(FS("is_template") == True)
 
         table = r.table
+        tablename = "cap_alert"
 
         if r.representation == "xls":
 
