@@ -1238,16 +1238,17 @@ class IS_PROCESSED_IMAGE(Validator):
             return (value, None)
 
         r = current.request
-        post_vars = r.post_vars
 
         if r.env.request_method == "GET":
             return (value, None)
+
+        post_vars = r.post_vars
 
         # If there's a newly uploaded file, accept it. It'll be processed in
         # the update form.
         # NOTE: A FieldStorage with data evaluates as False (odd!)
         uploaded_image = post_vars.get(self.field_name)
-        if uploaded_image not in ("", None):
+        if uploaded_image not in ("", b"", None): # Py 3.x it's b""
             return (uploaded_image, None)
 
         cropped_image = post_vars.get("imagecrop-data")

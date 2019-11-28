@@ -3644,6 +3644,7 @@ class S3ImageCropWidget(FormWidget):
         Cropping & Scaling (if necessary) done client-side
         - currently using JCrop (https://jcrop.com)
         - @ToDo: Replace with https://blueimp.github.io/jQuery-File-Upload/ ?
+        Uses the IS_PROCESSED_IMAGE validator
 
         @ToDo: Doesn't currently work with Inline Component Forms
     """
@@ -3670,7 +3671,6 @@ class S3ImageCropWidget(FormWidget):
         s3 = current.response.s3
         debug = s3.debug
         scripts = s3.scripts
-        settings = current.deployment_settings
 
         if debug:
             script = "%s/jquery.color.js" % script_dir
@@ -3730,7 +3730,7 @@ i18n.upload_image='%s' ''' % (T("Please select a valid image!"),
         append(canvas)
 
         btn_class = "imagecrop-btn button"
-        if settings.ui.formstyle == "bootstrap":
+        if current.deployment_settings.ui.formstyle == "bootstrap":
             btn_class = "imagecrop-btn"
 
         buttons = [ A(T("Enable Crop"),
