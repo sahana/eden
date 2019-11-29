@@ -1274,7 +1274,7 @@ class S3OptionsMenu(object):
                     M("Volunteer Role Catalog", f="job_title")(
                         M("Create", m="create"),
                     ),
-                    M("Skill Catalog", f="skill")(
+                    M("Skill Catalog", f="skill", check=skills)(
                         M("Create", m="create"),
                         #M("Skill Provisions", f="skill_provision"),
                     ),
@@ -1643,6 +1643,7 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                     ),
                     M("Resource Types", f="resource_type",
+                      check=stats,
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),

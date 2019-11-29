@@ -4440,6 +4440,17 @@ class S3Config(Storage):
         """
         return self.__lazy("hrm", "vol_availability_tab", default=None)
 
+    def get_hrm_vol_unavailability(self):
+        """
+            Whether to use Unavailability for Volunteers
+            - shows tab
+            - adds filter
+            Options:
+                None
+                True
+        """
+        return self.__lazy("hrm", "vol_unavailability", default=None)
+
     def get_hrm_vol_experience(self):
         """
             Whether to use Experience for Volunteers &, if so, which table to use
@@ -4810,9 +4821,15 @@ class S3Config(Storage):
 
     def get_org_facilities_tab(self):
         """
-            Whether to show a Tab for Facilities
+            Whether to show a Tab for Facilities on Organisations
         """
         return self.org.get("facilities_tab", True)
+
+    def get_org_facility_shifts(self):
+        """
+            Whether to show a Tab for Shifts on Offices & Facilities
+        """
+        return self.org.get("facility_shifts", True)
 
     def get_org_groups(self):
         """

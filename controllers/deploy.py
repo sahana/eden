@@ -176,6 +176,11 @@ def person():
     settings.hrm.use_skills = True
     settings.search.filter_manager = True
 
+    # Use Legacy table for unavailability
+    s3db.add_components("pr_person",
+                        deploy_unavailability = "person_id",
+                        )
+
     return s3db.hrm_person_controller(replace_option = None,
                                       csv_extra_fields = [
                                             # CSV column headers, so no T()

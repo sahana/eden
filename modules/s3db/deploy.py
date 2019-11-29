@@ -402,6 +402,8 @@ class S3DeploymentModel(S3Model):
         # Unavailability
         # - periods where an HR is not available for deployments
         #
+        # @ToDo: Replace with pr_unavailability with "use_time": False
+        #
         tablename = "deploy_unavailability"
         define_table(tablename,
                      self.pr_person_id(ondelete="CASCADE"),

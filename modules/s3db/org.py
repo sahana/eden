@@ -45,6 +45,7 @@ __all__ = ("S3OrganisationModel",
            "S3SiteModel",
            "S3SiteDetailsModel",
            "S3SiteNameModel",
+           "S3SiteShiftModel",
            "S3SiteTagModel",
            "S3SiteLocationModel",
            "S3FacilityModel",
@@ -3307,6 +3308,14 @@ class S3SiteModel(S3Model):
                        req_req = "site_id",
                        req_commit = "site_id",
 
+                       # Shifts
+                       #org_site_shift = "site_id",
+                       hrm_shift = {"link": "org_site_shift",
+                                    "joinby": "site_id",
+                                    "key": "shift_id",
+                                    "actuate": "replace",
+                                    },
+
                        # Procurement Plans
                        proc_plan = "site_id",
                        )
@@ -3700,6 +3709,48 @@ class S3SiteNameModel(S3Model):
                                                             ),
                                                  ),
                        )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3SiteShiftModel(S3Model):
+    """
+        Site Shifts model
+    """
+
+    names = ("org_site_shift",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Shifts for a Site
+        #
+        tablename = "org_site_shift"
+        self.define_table(tablename,
+                          # Component not instance
+                          self.super_link("site_id", "org_site"),
+                          self.hrm_shift_id(ondelete = "CASCADE"),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD Strings
+        #site_label = current.deployment_settings.get_org_site_label()
+        #current.response.s3.crud_strings[tablename] = Storage(
+        #    label_create = T("New Shift"),
+        #    title_display = T("Shift Details"),
+        #    title_list = T("Shifts"),
+        #    title_update = T("Edit Shift"),
+        #    #title_upload = T("Import Shift data"),
+        #    label_list_button = T("List Shifts"),
+        #    msg_record_created = T("Shift added to %(site_label)s") % {"site_label": site_label},
+        #    msg_record_modified = T("Shift updated"),
+        #    msg_record_deleted = T("Shift removed from %(site_label)s") % {"site_label": site_label},
+        #    msg_list_empty = T("No Shifts found for this %(site_label)s") % {"site_label": site_label},
+        #    )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -6422,6 +6473,7 @@ def org_rheader(r, tabs=None):
                 ]
         append_tab = tabs.append
 
+        SHIFTS = settings.get_org_facility_shifts()
         if settings.get_L10n_translate_org_site():
             append_tab((T("Local Names"), "name"))
         if settings.get_org_tags():
@@ -6430,10 +6482,13 @@ def org_rheader(r, tabs=None):
            (r.controller != "inv" or settings.get_inv_facility_manage_staff()):
             STAFF = settings.get_hrm_staff_label()
             append_tab((STAFF, "human_resource"))
-            permitted = current.auth.s3_has_permission
-            if permitted("update", tablename, r.id) and \
-               permitted("create", "hrm_human_resource_site"):
-                append_tab((T("Assign %(staff)s") % {"staff": STAFF}, "assign"))
+            if not SHIFTS:
+                permitted = current.auth.s3_has_permission
+                if permitted("update", tablename, r.id) and \
+                   permitted("create", "hrm_human_resource_site"):
+                    append_tab((T("Assign %(staff)s") % {"staff": STAFF}, "assign"))
+        if SHIFTS:
+            append_tab((T("Shifts"), "shift"))
         if settings.has_module("inv"):
             tabs = tabs + s3db.inv_tabs(r)
         if settings.get_org_needs_tab():
@@ -7124,10 +7179,23 @@ def org_facility_controller():
     s3.prep = prep
 
     def postp(r, output):
-        record = r.record
-        if r.representation == "plain" and record:
+        if r.interactive and r.component_name == "shift":
+            # Normal Action Buttons
+            S3CRUD.action_buttons(r)
+            # Custom Action Buttons
+            s3.actions += [{"label": s3_str(current.T("Assign")),
+                            "url": URL(c = "hrm",
+                                       f = "shift",
+                                       args = ["[id]", "assign"],
+                                       ),
+                            "_class": "action-btn",
+                            },
+                           ]
+
+        elif r.representation == "plain" and r.record:
             # Custom Map Popup
             T = current.T
+            record = r.record
             output = TABLE()
             append = output.append
             # Edit button

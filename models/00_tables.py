@@ -45,13 +45,13 @@ import s3db.patient
 import s3db.po
 import s3db.police
 import s3db.pr
-import s3db.sit
 import s3db.proc
 import s3db.project
 import s3db.req
 import s3db.s3
 import s3db.security
 import s3db.setup
+import s3db.sit
 import s3db.stats
 import s3db.stdm
 import s3db.supply

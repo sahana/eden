@@ -329,8 +329,9 @@ class S3DataTable(object):
                                     after the group title.
         """
 
+        attr_get = attr.get
         flist = self.colnames
-        action_col = attr.get("dt_action_col", 0)
+        action_col = attr_get("dt_action_col", 0)
         if action_col != 0:
             if action_col == -1 or action_col >= len(flist):
                 action_col = len(flist) - 1
@@ -338,8 +339,8 @@ class S3DataTable(object):
         # Get the details for any bulk actions. If we have at least one bulk
         # action then a column will be added, either at the start or in the
         # column identified by dt_bulk_col
-        bulkActions = attr.get("dt_bulk_actions", None)
-        bulkCol = attr.get("dt_bulk_col", 0)
+        bulkActions = attr_get("dt_bulk_actions", None)
+        bulkCol = attr_get("dt_bulk_col", 0)
         if bulkActions:
             if bulkCol > len(flist):
                 bulkCol = len(flist)
@@ -352,8 +353,8 @@ class S3DataTable(object):
                            id,
                            draw,
                            flist,
-                           action_col=action_col,
-                           stringify=stringify,
+                           action_col = action_col,
+                           stringify = stringify,
                            **attr)
 
     # -------------------------------------------------------------------------
@@ -648,6 +649,7 @@ class S3DataTable(object):
                    dt_bulk_col: The column in which the checkboxes will appear,
                                 by default it will be the column immediately
                                 before the first data item
+                   dt_bulk_single: only allow a single row to be selected
                    dt_group: The column(s) that is(are) used to group the data
                    dt_group_totals: The number of record in each group.
                                     This will be displayed in parenthesis
@@ -745,6 +747,8 @@ class S3DataTable(object):
             bulkActions = [bulkActions]
         config.bulkActions = bulkActions
         config.bulkCol = bulkCol = attr_get("dt_bulk_col", 0)
+        if attr_get("dt_bulk_single"):
+            config.bulkSingle = 1
         action_col = attr_get("dt_action_col", 0)
         if bulkActions and bulkCol <= action_col:
             action_col += 1

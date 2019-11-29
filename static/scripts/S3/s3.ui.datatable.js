@@ -1259,16 +1259,23 @@
                 } else {
                     deselected.remove();
                 }
+                var bulkSingle = tableConfig.bulkSingle;
                 if (index == -1) {
                     // Row is not currently selected
                     $(row).removeClass('row_selected');
                     $('.bulkcheckbox', row).prop('checked', false);
                 } else {
                     // Row is currently selected
+                    if (bulkSingle) {
+                        // Deselect all other rows
+                        $(row).closest('table').find('tr').removeClass('row_selected')
+                                               .find('.bulkcheckbox').prop('checked', false);
+                    }
                     $(row).addClass('row_selected');
                     $('.bulkcheckbox', row).prop('checked', true);
+                    
                 }
-                if (numSelected == totalRecords) {
+                if (!bulkSingle && (numSelected == totalRecords)) {
                     // All rows have been selected => switch to exclusive mode
                     selectAll.prop('checked', true);
                     this.selectionMode = 'Exclusive';
@@ -1343,7 +1350,11 @@
 
                 var posn = inList(id, rows);
                 if (posn == -1) {
-                    rows.push(id);
+                    if (self.tableConfig.bulkSingle){
+                        self.selectedRows = [id];
+                    } else {
+                        rows.push(id);
+                    }
                     posn = 0; // toggle selection class
                 } else {
                     rows.splice(posn, 1);
@@ -1855,11 +1866,16 @@
             // Bulk selection
             if (this.tableConfig.bulkActions) {
 
+                if (this.tableConfig.bulkSingle) {
+                    // Hide Select All if only 1 can be selected
+                    $('.bulk-select-options').hide();
+                } else {
+                    // Bulk action select-all handler
+                    el.on('click' + ns, '.bulk-select-all', this._bulkSelectAll());
+                }
+
                 // Bulk action checkbox handler
                 el.on('click' + ns, '.bulkcheckbox', this._bulkSelectRow());
-
-                // Bulk action select-all handler
-                el.on('click' + ns, '.bulk-select-all', this._bulkSelectAll());
             }
 
             return true;

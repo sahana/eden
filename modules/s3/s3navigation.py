@@ -1475,9 +1475,15 @@ class S3ComponentTabs(object):
             # Complete the tab URL with args, deal with "viewing"
             if component:
                 if record_id:
-                    args = [record_id, component]
+                    if tab.method:
+                        args = [record_id, component, tab.method]
+                    else:
+                        args = [record_id, component]
                 else:
-                    args = [component]
+                    if tab.method:
+                        args = [tab.method]
+                    else:
+                        args = [component]
                 if "viewing" in _vars:
                     del _vars["viewing"]
                 _href = URL(function, args=args, vars=_vars)
@@ -1592,14 +1598,13 @@ class S3ComponentTab(object):
         # @todo: use component hook label/plural as fallback for title
         #        (see S3Model.add_components)
         title, component = tab[:2]
+
+        self.title = title
+
         if component and component.find("/") > 0:
             function, component = component.split("/", 1)
         else:
             function = None
-
-        self.title = title
-
-        self.native = False
 
         if function:
             self.function = function
@@ -1611,11 +1616,16 @@ class S3ComponentTab(object):
         else:
             self.component = None
 
+        self.native = False
+        self.method = None
+
         if len(tab) > 2:
             tab_vars = self.vars = Storage(tab[2])
             if "native" in tab_vars:
                 self.native = True if tab_vars["native"] else False
                 del tab_vars["native"]
+            if len(tab) > 3:
+                self.method = tab[3]
         else:
             self.vars = None
 

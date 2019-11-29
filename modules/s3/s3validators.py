@@ -1248,7 +1248,7 @@ class IS_PROCESSED_IMAGE(Validator):
         # the update form.
         # NOTE: A FieldStorage with data evaluates as False (odd!)
         uploaded_image = post_vars.get(self.field_name)
-        if uploaded_image not in ("", b"", None): # Py 3.x it's b""
+        if uploaded_image not in (b"", None): # Py 3.x it's b"", which is equivalent to "" in Py 2.x
             return (uploaded_image, None)
 
         cropped_image = post_vars.get("imagecrop-data")

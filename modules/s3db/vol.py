@@ -1327,6 +1327,10 @@ def vol_volunteer_controller():
         table = r.table
         table.type.default = 2
 
+        if settings.get_hrm_vol_unavailability():
+            # Apply availability filter
+            s3db.pr_availability_filter(r)
+
         # Configure list_fields
         if r.representation == "xls":
             s3db.hrm_xls_list_fields(r, staff=False)

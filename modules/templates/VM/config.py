@@ -63,6 +63,10 @@ def config(settings):
     #
     #settings.security.policy = 7 # Organisation-ACLs
 
+    # Options: @ToDo: make these configurable via Setup Wizard
+    settings.hrm.vol_unavailability = True
+    settings.org.facility_shifts = True
+
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py

@@ -41,6 +41,7 @@ __all__ = (# PR Base Entities
 
            # Person Components
            "PRAvailabilityModel",
+           "PRUnavailabilityModel",
            "PRDescriptionModel",
            "PREducationModel",
            "PRIdentityModel",
@@ -110,6 +111,7 @@ __all__ = (# PR Base Entities
            "pr_image_modify",
 
            # Other functions
+           "pr_availability_filter",
            "pr_import_prep",
 
            # Data List Default Layouts
@@ -1051,7 +1053,6 @@ class PRPersonModel(S3Model):
                                                   "multiple": False,
                                                   },
                        cr_shelter_registration_history = "person_id",
-                       deploy_unavailability = "person_id",
                        project_activity_person = "person_id",
                        supply_distribution_person = "person_id",
                        event_incident = {"link": "event_human_resource",
@@ -1094,6 +1095,7 @@ class PRPersonModel(S3Model):
                        # Appraisals
                        hrm_appraisal = "person_id",
                        # Availability
+                       pr_unavailability = "person_id",
                        pr_person_availability = {"name": "availability",
                                                  "joinby": "person_id",
                                                  # Will need tochange in future
@@ -4847,6 +4849,64 @@ class PRAvailabilityModel(S3Model):
         configure(tablename,
                   deduplicate = S3Duplicate(primary=("availability_id", "slot_id")),
                   )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class PRUnavailabilityModel(S3Model):
+    """
+        Allow people to mark times when they are unavailable
+        - this is generally easier for longer-term volunteers than marking times
+          when they are available
+        - usually defined using the Organiser method
+    """
+
+    names = ("pr_unavailability",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        tablename = "pr_unavailability"
+        self.define_table(tablename,
+                          self.pr_person_id(ondelete = "CASCADE"),
+                          s3_datetime("start_date",
+                                      label = T("Start Date"),
+                                      set_min = "#pr_unavailability_end_date",
+                                      ),
+                          s3_datetime("end_date",
+                                      label = T("End Date"),
+                                      set_max = "#pr_unavailability_start_date",
+                                      ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       organize = {"start": "start_date",
+                                   "end": "end_date",
+                                   "title": "comments",
+                                   "description": ["start_date",
+                                                   "end_date",
+                                                   ],
+                                   },
+                       )
+
+        # CRUD Strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Period of Unavailability"),
+            title_display = T("Unavailability"),
+            title_list = T("Periods of Unavailability"),
+            title_update = T("Edit Unavailability"),
+            label_list_button = T("List Periods of Unavailability"),
+            label_delete_button = T("Delete Unavailability"),
+            msg_record_created = T("Unavailability added"),
+            msg_record_modified = T("Unavailability updated"),
+            msg_record_deleted = T("Unavailability deleted"),
+            msg_list_empty = T("No Unavailability currently registered"))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -9626,6 +9686,57 @@ def pr_image_modify(image_file,
         return True
     else:
         return False
+
+# =============================================================================
+def pr_availability_filter(r):
+    """
+        Filter requested resource (hrm_human_resource or pr_person) for
+        availability during a selected interval
+            - uses special filter selector "available" from GET vars
+            - called from prep of the respective controller
+            - adds resource filter for r.resource
+
+        @param r: the S3Request
+    """
+
+    get_vars = r.get_vars
+
+    # Parse start/end date
+    calendar = current.calendar
+    start = get_vars.pop("available__ge", None)
+    if start:
+        start = calendar.parse_datetime(start)
+    end = get_vars.pop("available__le", None)
+    if end:
+        end = calendar.parse_datetime(end)
+
+    utable = current.s3db.pr_unavailability
+
+    # Construct query for unavailability
+    query = (utable.deleted == False)
+    if start and end:
+        query &= ((utable.start_date >= start) & (utable.start_date <= end)) | \
+                 ((utable.end_date >= start) & (utable.end_date <= end)) | \
+                 ((utable.start_date < start) & (utable.end_date > end))
+    elif start:
+        query &= (utable.end_date >= start) | (utable.start_date >= start)
+    elif end:
+        query &= (utable.start_date <= end) | (utable.end_date <= end)
+    else:
+        return
+
+    # Get person_ids of unavailability-entries
+    rows = current.db(query).select(utable.person_id,
+                                    groupby = utable.person_id,
+                                    )
+    if rows:
+        person_ids = set(row.person_id for row in rows)
+
+        # Filter r.resource for non-match
+        if r.tablename == "hrm_human_resource":
+            r.resource.add_filter(~(FS("person_id").belongs(person_ids)))
+        elif r.tablename == "pr_person":
+            r.resource.add_filter(~(FS("id").belongs(person_ids)))
 
 # =============================================================================
 def pr_import_prep(data):
