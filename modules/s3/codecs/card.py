@@ -47,7 +47,7 @@ except ImportError:
 
 from gluon import current, HTTP
 
-from s3compat import StringIO
+from s3compat import BytesIO
 from ..s3codec import S3Codec
 from ..s3resource import S3Resource
 from ..s3utils import s3_str
@@ -178,7 +178,7 @@ class S3PDFCard(S3Codec):
                                        )
 
         # Build the doc
-        output_stream = StringIO()
+        output_stream = BytesIO()
         doc.build(flowables,
                   output_stream,
                   #canvasmaker=canvas.Canvas,   # is default
@@ -715,7 +715,7 @@ class S3PDFCardLayout(Flowable):
             Helper function to draw an image
             - requires PIL (required for ReportLab image handling anyway)
 
-            @param img: the image (filename or StringIO buffer)
+            @param img: the image (filename or BytesIO buffer)
             @param x: drawing position
             @param y: drawing position
             @param width: the target width of the image (in points)

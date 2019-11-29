@@ -1,6 +1,6 @@
 ﻿{{if "page" in request.vars:}}
  {{try:}}
-  {{if totalpages <> 1:}}{{=pagenav(page=page, totalpages=totalpages)}}<br />
+  {{if totalpages != 1:}}{{=pagenav(page=page, totalpages=totalpages)}}<br />
   {{pass}}
  {{except:}}
   {{try:}}{{=pagenav(page=page)}}<br />

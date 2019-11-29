@@ -1,6 +1,6 @@
 ﻿{{if "page" in request.vars:}}
   {{try:}}
-    {{if totalpages <> 1:}}
+    {{if totalpages != 1:}}
       {{=search_btn}}
       <p>&nbsp;</p>
     {{pass}}

@@ -9,7 +9,7 @@ try:
         worksheet = workbook.add_worksheet(pagename)
         for (r,row) in enumerate(content):
             for (c,element) in enumerate(row):
-                print '%s%s' % (chr(ord('A')+c),(r+1)), element
+                print("%s%s %s" % (chr(ord('A')+c),(r+1), element))
                 worksheet.write('%s%s' % (chr(ord('A')+c),(r+1)), str(element))
             pass
         pass
