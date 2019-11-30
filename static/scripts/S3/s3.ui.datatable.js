@@ -1273,7 +1273,7 @@
                     }
                     $(row).addClass('row_selected');
                     $('.bulkcheckbox', row).prop('checked', true);
-                    
+
                 }
                 if (!bulkSingle && (numSelected == totalRecords)) {
                     // All rows have been selected => switch to exclusive mode
@@ -1868,7 +1868,7 @@
 
                 if (this.tableConfig.bulkSingle) {
                     // Hide Select All if only 1 can be selected
-                    $('.bulk-select-options').hide();
+                    $('.bulk-select-options', el).hide();
                 } else {
                     // Bulk action select-all handler
                     el.on('click' + ns, '.bulk-select-all', this._bulkSelectAll());
