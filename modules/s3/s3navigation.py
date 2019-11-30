@@ -1474,16 +1474,9 @@ class S3ComponentTabs(object):
 
             # Complete the tab URL with args, deal with "viewing"
             if component:
-                if record_id:
-                    if tab.method:
-                        args = [record_id, component, tab.method]
-                    else:
-                        args = [record_id, component]
-                else:
-                    if tab.method:
-                        args = [tab.method]
-                    else:
-                        args = [component]
+                args = [record_id, component] if record_id else [component]
+                if tab.method:
+                    args.append(tab.method)
                 if "viewing" in _vars:
                     del _vars["viewing"]
                 _href = URL(function, args=args, vars=_vars)
