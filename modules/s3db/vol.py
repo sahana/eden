@@ -1327,7 +1327,7 @@ def vol_volunteer_controller():
         table = r.table
         table.type.default = 2
 
-        if settings.get_hrm_vol_unavailability():
+        if settings.get_hrm_unavailability():
             # Apply availability filter
             s3db.pr_availability_filter(r)
 
@@ -1384,8 +1384,8 @@ def vol_volunteer_controller():
 
             # Update filter widgets
             filter_widgets = \
-                s3db.hrm_human_resource_filters(resource_type="volunteer",
-                                                hrm_type_opts=s3db.hrm_type_opts)
+                s3db.hrm_human_resource_filters(resource_type = "volunteer",
+                                                hrm_type_opts = s3db.hrm_type_opts)
 
             # Reconfigure
             resource.configure(list_fields = list_fields,
