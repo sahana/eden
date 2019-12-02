@@ -186,7 +186,6 @@ def deployment():
                 restrict_d = [str(row.id) for row in rows if row.task_id is None]
                 restrict_s = [str(row.id) for row in rows if row.task_id is not None]
                 restrict_c = [str(row.id) for row in rows if row.type in (3, 4)]
-                s3_str = s3base.s3_str
                 s3.actions += [{"url": URL(c = module,
                                            f = "deployment",
                                            args = [deployment_id, "instance", "[id]", "deploy"],
@@ -278,7 +277,6 @@ def server():
                                                      )
             restrict_e = [str(row.server_id) for row in rows if row.enabled is False]
             restrict_d = [str(row.server_id) for row in rows if row.enabled is True]
-            s3_str = s3base.s3_str
             s3.actions += [{"url": URL(args = ["[id]", "enable"]),
                             "_class": "action-btn",
                             "label": s3_str(T("Enable")),
@@ -363,7 +361,6 @@ def monitor_task():
                                     )
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
-            s3_str = s3base.s3_str
             s3.actions += [{"url": URL(args=["[id]", "enable"]),
                             "_class": "action-btn",
                             "label": s3_str(T("Enable")),

@@ -3034,7 +3034,7 @@ def poi():
             # Normal Action Buttons
             s3_action_buttons(r, deletable=False)
             # Custom Action Buttons
-            s3.actions += [{"label": s3base.s3_str(T("Show on Map")),
+            s3.actions += [{"label": s3_str(T("Show on Map")),
                             "_class": "action-btn",
                             "url": URL(f = "index",
                                        vars = {"poi": "[id]"},

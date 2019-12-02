@@ -87,8 +87,6 @@ def user():
     #                    auth_membership = "user_id",
     #                    )
 
-    s3_str = s3base.s3_str
-
     list_fields = ["first_name",
                    "last_name",
                    "email",

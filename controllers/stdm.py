@@ -174,10 +174,12 @@ def parcel():
             # Normal Action Buttons
             s3_action_buttons(r)
             # Custom Action Buttons
-            s3.actions += [dict(label=s3base.s3_str(T("Certificate")),
-                                _class="action-btn",
-                                url=URL(f="tenure",
-                                        args=["[id]", "certificate"])),
+            s3.actions += [{"label": s3_str(T("Certificate")),
+                            "_class": "action-btn",
+                            "url": URL(f = "tenure",
+                                       args = ["[id]", "certificate"],
+                                       ),
+                            },
                            ]
 
         return output
@@ -258,10 +260,12 @@ def structure():
             # Normal Action Buttons
             s3_action_buttons(r)
             # Custom Action Buttons
-            s3.actions += [dict(label=s3base.s3_str(T("Certificate")),
-                                _class="action-btn",
-                                url=URL(f="tenure",
-                                        args=["[id]", "certificate"])),
+            s3.actions += [{"label": s3_str(T("Certificate")),
+                            "_class": "action-btn",
+                            "url": URL(f = "tenure",
+                                       args = ["[id]", "certificate"],
+                                       ),
+                            },
                            ]
 
         return output
@@ -279,10 +283,12 @@ def garden():
             # Normal Action Buttons
             s3_action_buttons(r)
             # Custom Action Buttons
-            s3.actions += [dict(label=s3base.s3_str(T("Certificate")),
-                                _class="action-btn",
-                                url=URL(f="tenure",
-                                        args=["[id]", "certificate"])),
+            s3.actions += [{"label": s3_str(T("Certificate")),
+                            "_class": "action-btn",
+                            "url": URL(f = "tenure",
+                                       args = ["[id]", "certificate"],
+                                       ),
+                            },
                            ]
 
         return output

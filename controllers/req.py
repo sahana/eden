@@ -732,7 +732,6 @@ $.filterOptionsS3({
                                 r.next = URL(args=[form_vars.id, "req_skill"])
                     else:
                         s3_action_buttons(r, deletable =False)
-                        s3_str = s3base.s3_str
                         # Add delete button for those records which are not completed
                         # @ToDo: Handle icons
                         table = r.table
@@ -770,7 +769,7 @@ $.filterOptionsS3({
                         #rows = db(query).select(table.id)
                         #restrict = [str(row.id) for row in rows]
                         #s3.actions.append(
-                        #    {"label": s3_str(T("View Items")),
+                        ##    {"label": s3_str(T("View Items")),
                         #     "url": URL(c = "req",
                         #                f = "req",
                         #                args = ["[id]", "req_item"],

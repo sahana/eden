@@ -311,7 +311,6 @@ if len(pop_list) > 0:
             try:
                 info(error)
             except:
-                s3_str = s3base.s3_str
                 info("\n".join(s3_str(el) for el in error))
 
     # Check to see if the "SITE_DEFAULT" gis_hierarchy was prepopulated.

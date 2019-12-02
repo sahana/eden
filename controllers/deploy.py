@@ -950,22 +950,24 @@ def twitter_channel():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            from s3 import s3_str
-            s3.actions += [dict(label=s3_str(T("Enable")),
-                                _class="action-btn",
-                                url=URL(args=["[id]", "enable"]),
-                                restrict = restrict_e),
-                           dict(label=s3_str(T("Disable")),
-                                _class="action-btn",
-                                url = URL(args = ["[id]", "disable"]),
-                                restrict = restrict_d),
+            s3.actions += [{"label": s3_str(T("Enable")),
+                            "_class": "action-btn",
+                            "url": URL(args=["[id]", "enable"]),
+                            "restrict": restrict_e,
+                            },
+                           {"label": s3_str(T("Disable")),
+                            "_class": "action-btn",
+                            "url": URL(args = ["[id]", "disable"]),
+                            "restrict": restrict_d,
+                            },
                            ]
             if not s3task._is_alive():
                 # No Scheduler Running
-                s3.actions += [dict(label=s3_str(T("Poll")),
-                                    _class="action-btn",
-                                    url = URL(args = ["[id]", "poll"]),
-                                    restrict = restrict_d)
+                s3.actions += [{"label": s3_str(T("Poll")),
+                                "_class": "action-btn",
+                                "url": URL(args = ["[id]", "poll"]),
+                                "restrict": restrict_d,
+                                },
                                ]
         return output
     s3.postp = postp

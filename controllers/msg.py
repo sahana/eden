@@ -56,7 +56,7 @@ def message():
             # Normal Action Buttons
             s3_action_buttons(r)
             # Custom Action Buttons
-            s3.actions += [{"label": s3base.s3_str(T("Mark Sender")),
+            s3.actions += [{"label": s3_str(T("Mark Sender")),
                             "url": URL(f = "mark_sender",
                                        args = ["[id]"],
                                        ),
@@ -765,7 +765,6 @@ def email_channel():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            from s3 import s3_str
             s3.actions += [{"label": s3_str(T("Enable")),
                             "_class": "action-btn",
                             "url": URL(args=["[id]", "enable"]),
@@ -829,7 +828,6 @@ def facebook_channel():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            from s3 import s3_str
             s3.actions += [{"label": s3_str(T("Enable")),
                             "_class": "action-btn",
                             "url": URL(args=["[id]", "enable"]),
@@ -910,7 +908,6 @@ def mcommons_channel():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            from s3 import s3_str
             s3.actions += [{"label": s3_str(T("Enable")),
                             "_class": "action-btn",
                             "url": URL(args=["[id]", "enable"]),
@@ -981,7 +978,6 @@ def gcm_channel():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            from s3 import s3_str
             s3.actions += [{"label": s3_str(T("Enable")),
                             "_class": "action-btn",
                             "url": URL(args=["[id]", "enable"]),
@@ -1064,7 +1060,6 @@ def rss_channel():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            from s3 import s3_str
             s3.actions += [{"label": s3_str(T("Subscribe")),
                             "_class": "action-btn",
                             "url": URL(args=["[id]", "enable"]),
@@ -1140,7 +1135,6 @@ def twilio_channel():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            from s3 import s3_str
             s3.actions += [{"label": s3_str(T("Enable")),
                             "_class": "action-btn",
                             "url": URL(args=["[id]", "enable"]),
@@ -1416,7 +1410,6 @@ def twitter_channel():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            from s3 import s3_str
             s3.actions += [{"label": s3_str(T("Enable")),
                             "_class": "action-btn",
                             "url": URL(args=["[id]", "enable"]),
@@ -1612,7 +1605,6 @@ def twitter_search():
             restrict_k = [str(record.id) for record in records]
 
             # @ToDo: Make these S3Methods rather than additional controllers
-            from s3 import s3_str
             s3.actions += [{"label": s3_str(T("Search")),
                             "_class": "action-btn",
                             "url": URL(args=["[id]", "poll"]),
@@ -1836,7 +1828,6 @@ def parser():
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
 
-            from s3 import s3_str
             s3.actions += [{"label": s3_str(T("Enable")),
                             "_class": "action-btn",
                             "url": URL(args=["[id]", "enable"]),

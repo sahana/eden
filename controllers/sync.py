@@ -187,7 +187,7 @@ def repository():
     def postp(r, output):
         if r.interactive and r.id:
             if r.component and r.component.alias == "job":
-                s3.actions = [{"label": s3base.s3_str(T("Reset")),
+                s3.actions = [{"label": s3_str(T("Reset")),
                                "url": URL(c = "sync",
                                           f = "repository",
                                           args = [str(r.id),

@@ -654,21 +654,18 @@ class S3SetupModel(S3Model):
         join = p.join
         isdir = p.isdir
         listdir = os.listdir
-        templates = [basename(t) for t in listdir(path) \
-                        if basename(t) not in ("historic",
-                                               "locations",
-                                               "mobile",
-                                               "skeleton",
-                                               "skeletontheme",
-                                               "__init__.py",
-                                               "__init__.pyc",
-                                               "000_config.py",
-                                               )
-                     ]
+
+        # All subdirectories in the path that contain a config.py are
+        # templates - except skeleton/skeletontheme
+        dirs = next(os.walk(path))[1]
+        templates = [d for d in dirs
+                         if d[:8] != "skeleton" and
+                         os.path.isfile(os.path.join(path, d, "config.py"))
+                         ]
+
         subtemplates = []
         sappend = subtemplates.append
-        for i in range(0, len(templates)):
-            template = templates[i]
+        for template in templates:
             tpath = join(path, template)
             for d in listdir(tpath):
                 if isdir(join(tpath, d)):

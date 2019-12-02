@@ -256,7 +256,7 @@ def series():
             return output["item"]
         if not r.component and method != "summary":
             # Replace the Action buttons
-            s3.actions = [{"label": s3base.s3_str(messages.UPDATE),
+            s3.actions = [{"label": s3_str(messages.UPDATE),
                            "_class": "action-btn edit",
                            "url": URL(c="survey",
                                       f="series",
