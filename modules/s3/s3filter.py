@@ -744,6 +744,63 @@ class S3DateFilter(S3RangeFilter):
     input_labels = {"ge": "From", "le": "To"}
 
     # -------------------------------------------------------------------------
+    def __call__(self, resource, get_vars=None, alias=None):
+        """
+            Entry point for the form builder
+            - subclassed from S3FilterWidget to handle 'available' selector
+
+            @param resource: the S3Resource to render the widget for
+            @param get_vars: the GET vars (URL query vars) to prepopulate
+                             the widget
+            @param alias: the resource alias to use
+        """
+
+        self.alias = alias
+
+        # Initialize the widget attributes
+        self._attr(resource)
+
+        # Extract the URL values to populate the widget
+        variable = self.variable(resource, get_vars)
+
+        defaults = {}
+        for k, v in self.values.items():
+            if k.startswith("available"):
+                selector = k
+            else:
+                selector = self._prefix(k)
+            defaults[selector] = v
+
+        if type(variable) is list:
+            values = Storage()
+            for k in variable:
+                if k in defaults:
+                    values[k] = defaults[k]
+                else:
+                    values[k] = self._values(get_vars, k)
+        else:
+            if variable in defaults:
+                values = defaults[variable]
+            else:
+                values = self._values(get_vars, variable)
+
+        # Construct and populate the widget
+        widget = self.widget(resource, values)
+
+        # Recompute variable in case operator got changed in widget()
+        if self.alternatives:
+            variable = self._variable(self.selector, self.operator)
+
+        # Construct the hidden data element
+        data = self.data_element(variable)
+
+        if type(data) is list:
+            data.append(widget)
+        else:
+            data = [data, widget]
+        return TAG[""](*data)
+
+    # -------------------------------------------------------------------------
     def data_element(self, variables):
         """
             Overrides S3FilterWidget.data_element(), constructs multiple

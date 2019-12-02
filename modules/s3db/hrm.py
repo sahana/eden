@@ -5074,7 +5074,7 @@ class S3HRShiftModel(S3Model):
         Shifts
     """
 
-    names = (#"hrm_shift_template",
+    names = (#"hrm_shift_slot",
              "hrm_shift",
              "hrm_shift_id",
              "hrm_human_resource_shift",
@@ -5161,7 +5161,7 @@ class S3HRShiftModel(S3Model):
         # ---------------------------------------------------------------------
         # Slots
         #
-        #tablename = "hrm_slot"
+        #tablename = "hrm_shift_slot"
         #define_table(tablename,
         #             Field("name",
         #                   label = T("Name"),
@@ -5180,10 +5180,10 @@ class S3HRShiftModel(S3Model):
         #                          ondelete = "RESTRICT",
         #                          represent = represent,
         #                          requires = IS_EMPTY_OR(
-        #                                        IS_ONE_OF(db, "hrm_slot.id",
+        #                                        IS_ONE_OF(db, "hrm_shift_slot.id",
         #                                                  represent)),
         #                          #comment=S3PopupLink(c = "hrm",
-        #                          #                    f = "slot",
+        #                          #                    f = "shift_slot",
         #                          #                    label = ADD_SLOT,
         #                          #                    ),
         #                          )
@@ -5297,6 +5297,7 @@ class S3HRShiftModel(S3Model):
                                                   next_tab = "facility",
                                                   filter_widgets = filter_widgets,
                                                   list_fields = list_fields,
+                                                  rheader = hrm_rheader,
                                                   ))
 
         def facility_redirect(r, **attr):
@@ -5462,12 +5463,14 @@ class hrm_AssignMethod(S3Method):
         @ToDo: be able to filter by deployable status for the role
     """
 
+    # -------------------------------------------------------------------------
     def __init__(self,
                  component,
                  next_tab = "human_resource",
                  types = None,
                  filter_widgets = None,
                  list_fields = None,
+                 rheader = None,
                  ):
         """
             @param component: the Component in which to create records
@@ -5475,6 +5478,7 @@ class hrm_AssignMethod(S3Method):
             @param types: a list of types to pick from: Staff, Volunteers, Deployables
             @param filter_widgets: a custom list of FilterWidgets to show
             @param list_fields: a custom list of Fields to show
+            @param rheader: an rheader to show
         """
 
         self.component = component
@@ -5482,7 +5486,9 @@ class hrm_AssignMethod(S3Method):
         self.types = types
         self.filter_widgets = filter_widgets
         self.list_fields = list_fields
+        self.rheader = rheader
 
+    # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
             Apply method.
@@ -5556,10 +5562,11 @@ class hrm_AssignMethod(S3Method):
                     else:
                         filters = None
                     query = ~(FS("id").belongs(selected))
-                    hresource = s3db.resource("hrm_human_resource",
-                                              alias = self.component,
-                                              filter=query, vars=filters)
-                    rows = hresource.select(["id"], as_rows=True)
+                    resource = s3db.resource("hrm_human_resource",
+                                             alias = self.component,
+                                             filter = query,
+                                             vars = filters)
+                    rows = resource.select(["id"], as_rows=True)
                     selected = [str(row.id) for row in rows]
 
                 if component.multiple:
@@ -5628,6 +5635,8 @@ class hrm_AssignMethod(S3Method):
 
         elif r.http == "GET":
 
+            representation = r.representation
+
             # Filter widgets
             if self.filter_widgets is not None:
                 filter_widgets = self.filter_widgets
@@ -5694,12 +5703,39 @@ class hrm_AssignMethod(S3Method):
             filter_ = (~db.hrm_human_resource.id.belongs(already))
             resource.add_filter(filter_)
 
+            ajax_vars = dict(get_vars)
+            if settings.get_hrm_unavailability():
+                apply_availability_filter = False
+                if get_vars.get("available__ge") or \
+                   get_vars.get("available__le"):
+                    apply_availability_filter = True
+                elif representation != "aadata":
+                    available_defaults = response.s3.filter_defaults["hrm_human_resource"]["available"]
+                    if available_defaults:
+                        apply_availability_filter = True
+                        ge = available_defaults.get("ge")
+                        if ge is not None:
+                            ajax_vars["available__ge"] = s3_format_datetime(ge) # Used by dt_ajax_url
+                            get_vars["available__ge"] = s3_format_datetime(ge)  # Popped in pr_availability_filter
+                        le = available_defaults.get("le")
+                        if le is not None:
+                            ajax_vars["available__le"] = s3_format_datetime(le) # Used by dt_ajax_url
+                            get_vars["available__le"] = s3_format_datetime(le)  # Popped in pr_availability_filter
+
+                if apply_availability_filter:
+                    # Apply availability filter
+                    request = Storage(get_vars = get_vars,
+                                      resource = resource,
+                                      tablename = "hrm_human_resource",
+                                      )
+                    s3db.pr_availability_filter(request)
+
             dt_id = "datatable"
 
             # Bulk actions
             dt_bulk_actions = [(T("Assign"), "assign")]
 
-            if r.representation in ("html", "popup"):
+            if representation in ("html", "popup"):
                 # Page load
                 resource.configure(deletable = False)
 
@@ -5762,11 +5798,11 @@ class hrm_AssignMethod(S3Method):
                                        represent = True)
                 filteredrows = data["numrows"]
                 dt = S3DataTable(data["rfields"], data["rows"])
-
                 items = dt.html(totalrows,
                                 filteredrows,
                                 dt_id,
-                                dt_ajax_url = r.url(representation="aadata"),
+                                dt_ajax_url = r.url(representation = "aadata",
+                                                    vars = ajax_vars),
                                 dt_bulk_actions = dt_bulk_actions,
                                 dt_bulk_single = not component.multiple,
                                 dt_pageLength = display_length,
@@ -5778,12 +5814,17 @@ class hrm_AssignMethod(S3Method):
 
                 response.view = "list_filter.html"
 
+                rheader = self.rheader
+                if callable(rheader):
+                    rheader = rheader(r)
+
                 output = {"items": items,
                           "title": T("Assign %(staff)s") % {"staff": STAFF},
                           "list_filter_form": ff,
+                          "rheader": rheader,
                           }
 
-            elif r.representation == "aadata":
+            elif representation == "aadata":
                 # Ajax refresh
                 if "draw" in get_vars:
                     echo = int(get_vars.draw)
@@ -5799,12 +5840,12 @@ class hrm_AssignMethod(S3Method):
                                        represent = True)
                 filteredrows = data["numrows"]
                 dt = S3DataTable(data["rfields"], data["rows"])
-
                 items = dt.json(totalrows,
                                 filteredrows,
                                 dt_id,
                                 echo,
                                 dt_bulk_actions = dt_bulk_actions)
+
                 response.headers["Content-Type"] = "application/json"
                 output = items
 
@@ -7034,7 +7075,7 @@ def hrm_rheader(r, tabs=None, profile=False):
         else:
             availability_tab = None
 
-        if settings.get_hrm_vol_unavailability():
+        if settings.get_hrm_unavailability():
             unavailability_tab = (T("Availability"), "unavailability", {}, "organize")
         else:
             unavailability_tab = None
@@ -7386,6 +7427,46 @@ def hrm_rheader(r, tabs=None, profile=False):
                                record.name),
                             ),
                       rheader_tabs)
+    elif resourcename == "shift":
+        db = current.db
+        s3db = current.s3db
+        record_id = r.id
+        # Look up Site
+        stable = s3db.org_site_shift
+        link = db(stable.shift_id == record_id).select(stable.site_id,
+                                                       limitby = (0, 1),
+                                                       ).first()
+        if link:
+            site_id = link.site_id
+        else:
+            site_id = None
+        # Look up Assigned
+        htable = s3db.hrm_human_resource_shift
+        link = db(htable.shift_id == record_id).select(htable.human_resource_id,
+                                                       limitby = (0, 1),
+                                                       ).first()
+        if link:
+            human_resource_id = link.human_resource_id
+        else:
+            human_resource_id = None
+        rheader = DIV(TABLE(TR(TH("%s: " % stable.site_id.label),
+                               stable.site_id.represent(site_id),
+                               ),
+                            TR(TH("%s: " % table.skill_id.label),
+                               table.skill_id.represent(record.skill_id),
+                               TH("%s: " % table.job_title_id.label),
+                               table.job_title_id.represent(record.job_title_id),
+                               ),
+                            TR(TH("%s: " % table.start_date.label),
+                               table.start_date.represent(record.start_date),
+                               TH("%s: " % table.end_date.label),
+                               table.end_date.represent(record.end_date),
+                               ),
+                            TR(TH("%s: " % htable.human_resource_id.label),
+                               htable.human_resource_id.represent(human_resource_id),
+                               ),
+                            ),
+                      )
     else:
         rheader = None
 
@@ -7773,6 +7854,9 @@ def hrm_human_resource_controller(extra_filter = None):
         if deploy:
             # Apply availability filter
             s3db.deploy_availability_filter(r)
+        elif settings.get_hrm_unavailability():
+            # Apply availability filter
+            s3db.pr_availability_filter(r)
 
         if s3.rtl:
             # Ensure that + appears at the beginning of the number
@@ -7880,20 +7964,6 @@ def hrm_human_resource_controller(extra_filter = None):
                               #"create_function": "person",
                               #"create_component": "address",
                               }
-            credentials_widget = {# @ToDo: deployment_setting for Labels
-                                  "label": "Sectors",
-                                  "label_create": "Add Sector",
-                                  "type": "datalist",
-                                  "tablename": "hrm_credential",
-                                  "filter": FS("person_id") == person_id,
-                                  "icon": "tags",
-                                  # Default renderer:
-                                  #"list_layout": hrm_credential_list_layout,
-                                  "create_controller": c,
-                                  # Can't do this as this is the HR perspective, not Person perspective
-                                  #"create_function": "person",
-                                  #"create_component": "credential",
-                                  }
             skills_widget = {"label": "Skills",
                              "label_create": "Add Skill",
                              "type": "datalist",
@@ -7942,17 +8012,7 @@ def hrm_human_resource_controller(extra_filter = None):
                            # Default renderer:
                            #"list_layout": s3db.doc_document_list_layout,
                            }
-            education_widget = {"label": "Education",
-                                "label_create": "Add Education",
-                                "type": "datalist",
-                                "tablename": "pr_education",
-                                "filter": FS("person_id") == person_id,
-                                "icon": "book",
-                                # Can't do this as this is the HR perspective, not Person perspective
-                                #"create_controller": c,
-                                #"create_function": "person",
-                                #"create_component": "education",
-                                }
+
             profile_widgets = [contacts_widget,
                                address_widget,
                                skills_widget,
@@ -7961,11 +8021,36 @@ def hrm_human_resource_controller(extra_filter = None):
                                docs_widget,
                                ]
 
-            if deploy:
-                profile_widgets.insert(2, credentials_widget)
-                if settings.get_hrm_use_education():
-                    profile_widgets.insert(-1, education_widget)
+            if settings.get_hrm_use_education():
+                education_widget = {"label": "Education",
+                                    "label_create": "Add Education",
+                                    "type": "datalist",
+                                    "tablename": "pr_education",
+                                    "filter": FS("person_id") == person_id,
+                                    "icon": "book",
+                                    # Can't do this as this is the HR perspective, not Person perspective
+                                    #"create_controller": c,
+                                    #"create_function": "person",
+                                    #"create_component": "education",
+                                    }
+                profile_widgets.insert(-1, education_widget)
 
+            if deploy:
+                credentials_widget = {# @ToDo: deployment_setting for Labels
+                                      "label": "Sectors",
+                                      "label_create": "Add Sector",
+                                      "type": "datalist",
+                                      "tablename": "hrm_credential",
+                                      "filter": FS("person_id") == person_id,
+                                      "icon": "tags",
+                                      # Default renderer:
+                                      #"list_layout": hrm_credential_list_layout,
+                                      "create_controller": c,
+                                      # Can't do this as this is the HR perspective, not Person perspective
+                                      #"create_function": "person",
+                                      #"create_component": "credential",
+                                      }
+                profile_widgets.insert(2, credentials_widget)
                 # Organizer-widget to record periods of unavailability:
                 #profile_widgets.append({"label": "Unavailability",
                 #                        "type": "organizer",
@@ -7977,6 +8062,19 @@ def hrm_human_resource_controller(extra_filter = None):
                 #                                   args = [person_id, "unavailability"],
                 #                                   ),
                 #                        })
+
+            if settings.get_hrm_unavailability():
+                unavailability_widget = {"label": "Unavailability",
+                                         "type": "organizer",
+                                         "tablename": "pr_unavailability",
+                                         "master": "pr_person/%s" % person_id,
+                                         "component": "unavailability",
+                                         "icon": "calendar",
+                                         "url": URL(c="pr", f="person",
+                                                    args = [person_id, "unavailability"],
+                                                    ),
+                                         }
+                profile_widgets.insert(-1, unavailability_widget)
 
             # Configure resource
             s3db.configure("hrm_human_resource",
@@ -10323,7 +10421,7 @@ def hrm_human_resource_filters(resource_type = None,
                                           hidden = True,
                                           ))
 
-        if settings.get_hrm_vol_unavailability():
+        if settings.get_hrm_unavailability():
             # Availability Filter
             append_filter(S3DateFilter("available",
                                        label = T("Available"),

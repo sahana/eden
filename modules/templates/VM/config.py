@@ -64,7 +64,7 @@ def config(settings):
     #settings.security.policy = 7 # Organisation-ACLs
 
     # Options: @ToDo: make these configurable via Setup Wizard
-    settings.hrm.vol_unavailability = True
+    settings.hrm.unavailability = True
     settings.org.facility_shifts = True
 
     # -------------------------------------------------------------------------
@@ -256,7 +256,14 @@ def config(settings):
                 result = standard_prep(r)
 
             if r.method == "assign":
-                # Default Filter
+
+                s3db = current.s3db
+                f = s3db.org_site_shift.site_id
+                f.label = T("Site")
+                f.represent = s3db.org_site_represent
+                s3db.hrm_human_resource_shift.human_resource_id.label = T("Currently Assigned")
+
+                # Default Filters
                 tablename = "hrm_human_resource"
                 from s3 import s3_set_default_filter
                 record = r.record
@@ -270,9 +277,13 @@ def config(settings):
                     s3_set_default_filter("competency.skill_id",
                                           skill_id,
                                           tablename = tablename)
-                #s3_set_default_filter("",
-                #                      unavailability_default_filter,
-                #                      tablename = tablename)
+                # NB Availability Filter is custom,
+                # so needs the pr_availability_filter applying manually to take effect
+                s3_set_default_filter("available",
+                                      {"ge": record.start_date,
+                                       "le": record.end_date,
+                                       },
+                                      tablename = tablename)
 
             return True
 

@@ -4433,6 +4433,7 @@ class S3Config(Storage):
 
     def get_hrm_vol_availability_tab(self):
         """
+            @ToDo: Deprecate
             Whether to use Availability Tab for Volunteers
             Options:
                 None
@@ -4440,16 +4441,16 @@ class S3Config(Storage):
         """
         return self.__lazy("hrm", "vol_availability_tab", default=None)
 
-    def get_hrm_vol_unavailability(self):
+    def get_hrm_unavailability(self):
         """
-            Whether to use Unavailability for Volunteers
-            - shows tab
+            Whether to use Unavailability for Staff/Volunteers
+            - shows tab/profile widget
             - adds filter
             Options:
                 None
                 True
         """
-        return self.__lazy("hrm", "vol_unavailability", default=None)
+        return self.__lazy("hrm", "unavailability", default=None)
 
     def get_hrm_vol_experience(self):
         """
