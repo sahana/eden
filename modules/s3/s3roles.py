@@ -387,9 +387,9 @@ class S3RoleManager(S3Method):
             permissions.readable = permissions.writable = False
         elif not current.auth.permission.use_cacls:
             # Security policy does not use configurable permissions
-            record.permissions = None
-            permissions.represent = self.policy_hint
-            permissions.writable = False
+            if record:
+                record.permissions = None
+            permissions.widget = self.policy_hint
         elif readonly:
             # Read-only view (dummy) - just hide permissions
             permissions.readable = permissions.writable = False
@@ -482,21 +482,27 @@ class S3RoleManager(S3Method):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def policy_hint(value):
+    def policy_hint(field, value, **attr):
         """
             Show a hint if permissions cannot be edited due to security policy
 
-            @param value: ignored (dummy, function is used as Field.represent)
+            @param field: the Field instance
+            @param value: the current field value (ignored)
+            @param attr: DOM attributes for the widget (ignored)
         """
 
         T = current.T
 
         warn = T("The current system configuration uses hard-coded access rules (security policy %(policy)s).") % \
-               {"policy": current.deployment_settings.get_security_policy()}
+                {"policy": current.deployment_settings.get_security_policy()}
         hint = T("Change to security policy 3 or higher if you want to define permissions for roles.")
 
         return DIV(SPAN(warn, _class="rm-fixed"),
                    SPAN(hint, _class="rm-hint"),
+                   INPUT(_type = "hidden",
+                         _name = field.name,
+                         _value= "",
+                         ),
                    )
 
     # -------------------------------------------------------------------------
