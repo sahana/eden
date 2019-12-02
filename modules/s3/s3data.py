@@ -1192,7 +1192,7 @@ class S3DataList(object):
         while group:
             yield group
             group = list(islice(iterable, length))
-        raise StopIteration
+        return
 
 # =============================================================================
 class S3DataListLayout(object):

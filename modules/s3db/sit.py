@@ -33,7 +33,7 @@ __all__ = ("S3SituationModel",
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-from s3layouts import S3PopupLink
+#from s3layouts import S3PopupLink
 
 # =============================================================================
 class S3SituationModel(S3Model):

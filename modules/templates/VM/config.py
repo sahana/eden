@@ -243,4 +243,43 @@ def config(settings):
         #)),
     ])
 
+    # -----------------------------------------------------------------------------
+    def customise_hrm_shift_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+
+            if r.method == "assign":
+                # Default Filter
+                tablename = "hrm_human_resource"
+                from s3 import s3_set_default_filter
+                record = r.record
+                job_title_id = record.job_title_id
+                if job_title_id:
+                    s3_set_default_filter("~.job_title_id",
+                                          job_title_id,
+                                          tablename = tablename)
+                skill_id = record.skill_id
+                if skill_id:
+                    s3_set_default_filter("competency.skill_id",
+                                          skill_id,
+                                          tablename = tablename)
+                #s3_set_default_filter("",
+                #                      unavailability_default_filter,
+                #                      tablename = tablename)
+
+            return True
+
+        s3.prep = prep
+
+        return attr
+
+    settings.customise_hrm_shift_controller = customise_hrm_shift_controller
+
 # END =========================================================================
