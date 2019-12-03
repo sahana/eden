@@ -8477,11 +8477,12 @@ class pr_Template(S3Method):
                     if selector == "current_user.name":
                         user = current.auth.user
                         if user:
-                            doc_data[key] = s3_format_fullname(fname=user.first_name,
-                                                               lname=user.last_name,
-                                                               )
+                            username = s3_format_fullname(fname = user.first_name,
+                                                          lname = user.last_name,
+                                                          )
                         else:
-                            doc_data[key] = current.T("Unknown User")
+                            username = current.T("Unknown User")
+                        doc_data[key] = s3_unicode(username)
                     else:
                         rfield = rfields.get(prefix(selector))
                         if rfield:
