@@ -110,16 +110,20 @@ if len(pop_list) > 0:
                 protected = True,
                 )
 
-    if settings.get_org_groups():
-        # OrgGroupAdmin (policies 6, 7 and 8)
-        create_role("OrgGroupAdmin",
-                    "OrgGroupAdmin - allowed to manage organisation group realms",
-                    uid = sysroles.ORG_GROUP_ADMIN,
-                    system = True,
-                    protected = True,
-                    )
+    # OrgGroupAdmin (policies 6, 7 and 8)
+    create_role("OrgGroupAdmin",
+                "OrgGroupAdmin - allowed to manage organisation group realms",
+                uid = sysroles.ORG_GROUP_ADMIN,
+                system = True,
+                protected = True,
+                hidden = not settings.get_org_groups()
+                )
 
-    # Enable shortcuts (needed by default.py)
+    # Enable shortcuts
+    # => Commented since rarely used, but controllers should still call
+    #    auth.get_system_roles() rather than using role UIDs for s3_has_role,
+    #    as the former is cached in session whereas the latter requires an
+    #    extra DB lookup
     #system_roles = auth.get_system_roles()
     #ADMIN = system_roles.ADMIN
     #AUTHENTICATED = system_roles.AUTHENTICATED

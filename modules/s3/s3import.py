@@ -4514,15 +4514,16 @@ class S3BulkImporter(object):
                         except ValueError:
                             entity = self._lookup_pe(entity)
                     rules["entity"] = entity
+                flag = lambda s: bool(s) and s.lower() in ("1", "true", "yes")
                 hidden = row_get("hidden")
                 if hidden:
-                    extra_param["hidden"] = hidden
+                    extra_param["hidden"] = flag(hidden)
                 system = row_get("system")
                 if system:
-                    extra_param["system"] = system
+                    extra_param["system"] = flag(system)
                 protected = row_get("protected")
                 if protected:
-                    extra_param["protected"] = protected
+                    extra_param["protected"] = flag(protected)
                 uid = row_get("uid")
                 if uid:
                     extra_param["uid"] = uid

@@ -120,7 +120,7 @@ ORG_ADMIN,Organisation Admin,,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,,OrgAdmin
 ORG_ADMIN,Organisation Admin,,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,,OrgAdmin can manage staff data
 ORG_ADMIN,Organisation Admin,,,,project_project,NONE,,,,,OrgAdmin cannot see projects
 ORG_ADMIN,Organisation Admin,,,,project_task,CREATE|READ|UPDATE|DELETE,,,,,OrgAdmin can manage tasks
-ORG_GROUP_ADMIN,Organisation Group Admin,,br,assistance_measure,,NONE,,,,,OrgGroupAdmin cannot see case data
+ORG_GROUP_ADMIN,Organisation Group Admin,,br,assistance_measure,,NONE,,false,,,OrgGroupAdmin cannot see case data
 ORG_GROUP_ADMIN,Organisation Group Admin,,br,assistance_status,,CREATE|READ|UPDATE|DELETE,,,,,OrgGroupAdmin can manage global taxonomies
 ORG_GROUP_ADMIN,Organisation Group Admin,,br,assistance_type,,CREATE|READ|UPDATE|DELETE,,,,,OrgGroupAdmin can manage global taxonomies
 ORG_GROUP_ADMIN,Organisation Group Admin,,br,case,,NONE,,,,,OrgGroupAdmin cannot see case data
