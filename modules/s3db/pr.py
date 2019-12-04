@@ -7606,13 +7606,22 @@ class pr_AssignMethod(S3Method):
         e.g. Team, Forum
     """
 
-    def __init__(self, component, next_tab=None#, types=None
+    def __init__(self,
+                 component,
+                 next_tab = None,
+                 #types = None,
+                 filter_widgets = None,
+                 list_fields = None,
+                 #rheader = None,
                  ):
         """
             @param component: the Component in which to create records
             @param next_tab: the component/method to redirect to after assigning
             @param types: a list of types to pick from: Users
                           (Staff/Vols/Members to come as-required)
+            @param filter_widgets: a custom list of FilterWidgets to show
+            @param list_fields: a custom list of Fields to show
+            @param rheader: an rheader to show
         """
 
         self.component = component
@@ -7621,6 +7630,9 @@ class pr_AssignMethod(S3Method):
         else:
             self.next_tab = component
         #self.types = types
+        self.filter_widgets = filter_widgets
+        self.list_fields = list_fields
+        #self.rheader = rheader
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
@@ -7721,18 +7733,18 @@ class pr_AssignMethod(S3Method):
                         _id = table.insert(**link)
                         if onaccept:
                             link["id"] = _id
-                            form = Storage(vars=link)
+                            form = Storage(vars = link)
                             onaccept(form)
                         added += 1
 
             if r.representation == "popup":
                 # Don't redirect, so we retain popup extension & so close popup
                 response.confirmation = T("%(number)s assigned") % \
-                                            dict(number=added)
+                                            {"number": added}
                 return {}
             else:
                 current.session.confirmation = T("%(number)s assigned") % \
-                                                    dict(number=added)
+                                                    {"number": added}
                 if added > 0:
                     redirect(URL(args=[r.id, self.next_tab], vars={}))
                 else:
@@ -7740,48 +7752,37 @@ class pr_AssignMethod(S3Method):
 
         elif r.http == "GET":
 
-            # @ToDo: be able to configure Filter widgets
-            #if controller == "vol":
-            #    resource_type = "volunteer"
-            #elif len(types) == 1:
-            #    resource_type = "staff"
-            #else:
-            #    # Both
-            #    resource_type = None
-            #if r.controller == "req":
-            #    module = "req"
-            #else:
-            #    module = controller
-            #filter_widgets = hrm_human_resource_filters(resource_type=resource_type,
-            #                                            module=module)
-            filter_widgets = None
+            filter_widgets = self.filter_widgets
+            #if filter_widgets is None: # provide a default
 
             # List fields
-            list_fields = ["id",
-                           "first_name",
-                           "middle_name",
-                           "last_name",
-                           ]
-            if USERS:
-                db.auth_user.organisation_id.represent = s3db.org_OrganisationRepresent()
-                list_fields.append((current.messages.ORGANISATION, "user.organisation_id"))
-            elif tablename == "event_human_resource":
-                list_fields.append((current.messages.ORGANISATION, "human_resource.organisation_id"))
-            # @ToDo: be able to configure additional fields here, like:
-            #if len(types) == 2:
-            #    list_fields.append((T("Type"), "human_resource.type"))
-            #list_fields.append("human_resource.job_title_id")
-            #if settings.get_hrm_use_certificates():
-            #    list_fields.append((T("Certificates"), "certification.certificate_id"))
-            #if settings.get_hrm_use_skills():
-            #    list_fields.append((T("Skills"), "competency.skill_id"))
-            #if settings.get_hrm_use_trainings():
-            #    list_fields.append((T("Trainings"), "training.course_id"))
+            list_fields = self.list_fields
+            if list_fields is None:
+                list_fields = ["id",
+                               "first_name",
+                               "middle_name",
+                               "last_name",
+                               ]
+                if USERS:
+                    db.auth_user.organisation_id.represent = s3db.org_OrganisationRepresent()
+                    list_fields.append((current.messages.ORGANISATION, "user.organisation_id"))
+                elif tablename == "event_human_resource":
+                    list_fields.append((current.messages.ORGANISATION, "human_resource.organisation_id"))
+                # @ToDo: be able to configure additional fields here, like:
+                #if len(types) == 2:
+                #    list_fields.append((T("Type"), "human_resource.type"))
+                #list_fields.append("human_resource.job_title_id")
+                #if settings.get_hrm_use_certificates():
+                #    list_fields.append((T("Certificates"), "certification.certificate_id"))
+                #if settings.get_hrm_use_skills():
+                #    list_fields.append((T("Skills"), "competency.skill_id"))
+                #if settings.get_hrm_use_trainings():
+                #    list_fields.append((T("Trainings"), "training.course_id"))
 
             # Data table
             resource = s3db.resource("pr_person",
-                                     alias=r.component.alias if r.component else None,
-                                     vars=get_vars)
+                                     alias = r.component.alias if r.component else None,
+                                     vars = get_vars)
             totalrows = resource.count()
             if "pageLength" in get_vars:
                 display_length = get_vars["pageLength"]
@@ -7821,7 +7822,8 @@ class pr_AssignMethod(S3Method):
             dt_id = "datatable"
 
             # Bulk actions
-            dt_bulk_actions = [(T("Assign"), "assign")]
+            label = s3.crud.get("assign_button", "Assign")
+            dt_bulk_actions = [(T(label), "assign")]
 
             if r.representation in ("html", "popup"):
                 # Page load
@@ -7841,59 +7843,58 @@ class pr_AssignMethod(S3Method):
 
                     # Where to retrieve filtered data from:
                     submit_url_vars = resource.crud._remove_filters(r.get_vars)
-                    filter_submit_url = r.url(vars=submit_url_vars)
+                    filter_submit_url = r.url(vars = submit_url_vars)
 
                     # Default Filters (before selecting data!)
-                    resource.configure(filter_widgets=filter_widgets)
+                    resource.configure(filter_widgets = filter_widgets)
                     S3FilterForm.apply_filter_defaults(r, resource)
 
                     # Where to retrieve updated filter options from:
                     filter_ajax_url = URL(f="person",
-                                          args=["filter.options"],
-                                          vars={})
+                                          args = ["filter.options"],
+                                          vars = {})
 
                     get_config = resource.get_config
                     filter_clear = get_config("filter_clear", True)
                     filter_formstyle = get_config("filter_formstyle", None)
                     filter_submit = get_config("filter_submit", True)
                     filter_form = S3FilterForm(filter_widgets,
-                                               clear=filter_clear,
-                                               formstyle=filter_formstyle,
-                                               submit=filter_submit,
-                                               ajax=True,
-                                               url=filter_submit_url,
-                                               ajaxurl=filter_ajax_url,
-                                               _class="filter-form",
-                                               _id="datatable-filter-form",
+                                               clear = filter_clear,
+                                               formstyle = filter_formstyle,
+                                               submit = filter_submit,
+                                               ajax = True,
+                                               url = filter_submit_url,
+                                               ajaxurl = filter_ajax_url,
+                                               _class = "filter-form",
+                                               _id = "datatable-filter-form",
                                                )
                     fresource = current.s3db.resource(resource.tablename)
                     alias = r.component.alias if r.component else None
                     ff = filter_form.html(fresource,
                                           r.get_vars,
-                                          target="datatable",
-                                          alias=alias)
+                                          target = "datatable",
+                                          alias = alias)
                 else:
                     ff = ""
 
                 # Data table (items)
                 data = resource.select(list_fields,
-                                       start=0,
-                                       limit=limit,
-                                       orderby=orderby,
-                                       left=left,
-                                       count=True,
-                                       represent=True)
+                                       start = 0,
+                                       limit = limit,
+                                       orderby = orderby,
+                                       left = left,
+                                       count = True,
+                                       represent = True)
                 filteredrows = data["numrows"]
                 dt = S3DataTable(data["rfields"], data["rows"])
-
                 items = dt.html(totalrows,
                                 filteredrows,
                                 dt_id,
-                                dt_ajax_url=r.url(representation="aadata"),
-                                dt_bulk_actions=dt_bulk_actions,
-                                dt_pageLength=display_length,
-                                dt_pagination="true",
-                                dt_searching="false",
+                                dt_ajax_url = r.url(representation="aadata"),
+                                dt_bulk_actions = dt_bulk_actions,
+                                dt_pageLength = display_length,
+                                dt_pagination = "true",
+                                dt_searching = "false",
                                 )
 
                 response.view = "list_filter.html"
@@ -7911,20 +7912,19 @@ class pr_AssignMethod(S3Method):
                     echo = None
 
                 data = resource.select(list_fields,
-                                       start=0,
-                                       limit=limit,
-                                       orderby=orderby,
-                                       left=left,
-                                       count=True,
-                                       represent=True)
+                                       start = 0,
+                                       limit = limit,
+                                       orderby = orderby,
+                                       left = left,
+                                       count = True,
+                                       represent = True)
                 filteredrows = data["numrows"]
                 dt = S3DataTable(data["rfields"], data["rows"])
-
                 items = dt.json(totalrows,
                                 filteredrows,
                                 dt_id,
                                 echo,
-                                dt_bulk_actions=dt_bulk_actions)
+                                dt_bulk_actions = dt_bulk_actions)
                 response.headers["Content-Type"] = "application/json"
                 return items
 

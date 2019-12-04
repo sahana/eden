@@ -4838,6 +4838,9 @@ class S3Config(Storage):
             & what their name is:
             'Coalition'
             'Network'
+
+            NB If changing this after 1st_run then need to
+               create the OrgGroupAdmin role manually if-needed
         """
         return self.org.get("groups", False)
 

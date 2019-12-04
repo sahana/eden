@@ -7266,7 +7266,7 @@ class S3Permission(object):
             roles = []
             if current.session.s3 is not None:
                 roles = current.session.s3.roles or []
-            if sr.ADMIN in roles or sr.EDITOR in roles:
+            if sr.ADMIN in roles:   # or sr.EDITOR in roles:
                 return []
             if not roles:
                 hidden_modules = restricted_modules

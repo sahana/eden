@@ -9,7 +9,11 @@ from s3 import S3ReportRepresent
 
 def config(settings):
     """
-        Settings for the SHARE Teamplate
+        Settings for the SHARE Template
+
+        Migration Issues:
+            req_need.name is now length=64
+            (SHARE can use req_need.description instead if the notnull=True removed)
     """
 
     T = current.T

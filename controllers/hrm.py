@@ -780,6 +780,11 @@ def shift():
 
     return s3_rest_controller()
 
+def shift_template():
+    """ Shift Templates Controller """
+
+    return s3_rest_controller()
+
 # =============================================================================
 # Messaging
 # =============================================================================

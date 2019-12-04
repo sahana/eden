@@ -47,74 +47,87 @@ if len(pop_list) > 0:
     # Do not remove or change order of these role definitions (System Roles):
     create_role("Administrator",
                 "System Administrator - can access & make changes to any data",
-                uid=sysroles.ADMIN,
-                system=True,
-                protected=True,
+                uid = sysroles.ADMIN,
+                system = True,
+                protected = True,
                 )
 
     create_role("Authenticated",
                 "Authenticated - all logged-in users",
-                uid=sysroles.AUTHENTICATED,
-                system=True,
-                protected=True,
+                uid = sysroles.AUTHENTICATED,
+                system = True,
+                protected = True,
                 )
 
     create_role("Anonymous",
                 "Unauthenticated users",
                 # Allow unauthenticated users to view the list of organisations
                 # so they can select an organisation when registering
-                dict(t="org_organisation", uacl=acl.READ),
+                {"t": "org_organisation",
+                 "uacl": acl.READ,
+                 },
                 # Allow unauthenticated users to see the list of sites for an
                 # org when registering
-                dict(c="org", f="sites_for_org", uacl=acl.READ),
-                uid=sysroles.ANONYMOUS,
-                system=True,
-                protected=True,
+                {"c": "org",
+                 "f": "sites_for_org",
+                 "uacl": acl.READ,
+                 },
+                uid = sysroles.ANONYMOUS,
+                system = True,
+                protected = True,
                 )
 
-    # Primarily for Security Policy 2
-    create_role("Editor",
-                "Editor - can access & make changes to any unprotected data",
-                uid=sysroles.EDITOR,
-                system=True,
-                protected=True,
-                )
+    if settings.get_security_policy() == 2:
+        create_role("Editor",
+                    "Editor - can access & make changes to any unprotected data",
+                    uid = sysroles.EDITOR,
+                    system = True,
+                    protected = True,
+                    )
 
     # MapAdmin
     map_admin = create_role("MapAdmin",
                             "MapAdmin - allowed access to edit the MapService Catalogue",
-                            dict(c="gis", uacl=acl.ALL, oacl=acl.ALL),
-                            dict(c="gis", f="location", uacl=acl.ALL, oacl=acl.ALL),
-                            uid=sysroles.MAP_ADMIN,
-                            system=True,
-                            protected=True,
+                            {"c": "gis",
+                             "uacl": acl.ALL,
+                             "oacl": acl.ALL,
+                             },
+                            {"c": "gis",
+                             "f": "location",
+                             "uacl": acl.ALL,
+                             "oacl": acl.ALL,
+                             },
+                            uid = sysroles.MAP_ADMIN,
+                            system = True,
+                            protected = True,
                             )
 
     # OrgAdmin (policies 6, 7 and 8)
     create_role("OrgAdmin",
                 "OrgAdmin - allowed to manage user roles for organisation realms",
-                uid=sysroles.ORG_ADMIN,
-                system=True,
-                protected=True,
+                uid = sysroles.ORG_ADMIN,
+                system = True,
+                protected = True,
                 )
 
-    # OrgGroupAdmin (policies 6, 7 and 8)
-    create_role("OrgGroupAdmin",
-                "OrgGroupAdmin - allowed to manage organisation group realms",
-                uid=sysroles.ORG_GROUP_ADMIN,
-                system=True,
-                protected=True,
-                )
+    if settings.get_org_groups():
+        # OrgGroupAdmin (policies 6, 7 and 8)
+        create_role("OrgGroupAdmin",
+                    "OrgGroupAdmin - allowed to manage organisation group realms",
+                    uid = sysroles.ORG_GROUP_ADMIN,
+                    system = True,
+                    protected = True,
+                    )
 
     # Enable shortcuts (needed by default.py)
-    system_roles = auth.get_system_roles()
-    ADMIN = system_roles.ADMIN
-    AUTHENTICATED = system_roles.AUTHENTICATED
-    ANONYMOUS = system_roles.ANONYMOUS
-    EDITOR = system_roles.EDITOR
-    MAP_ADMIN = system_roles.MAP_ADMIN
-    ORG_ADMIN = system_roles.ORG_ADMIN
-    ORG_GROUP_ADMIN = system_roles.ORG_GROUP_ADMIN
+    #system_roles = auth.get_system_roles()
+    #ADMIN = system_roles.ADMIN
+    #AUTHENTICATED = system_roles.AUTHENTICATED
+    #ANONYMOUS = system_roles.ANONYMOUS
+    #EDITOR = system_roles.EDITOR
+    #MAP_ADMIN = system_roles.MAP_ADMIN
+    #ORG_ADMIN = system_roles.ORG_ADMIN
+    #ORG_GROUP_ADMIN = system_roles.ORG_GROUP_ADMIN
 
     # =========================================================================
     # Configure Scheduled Tasks
@@ -126,38 +139,38 @@ if len(pop_list) > 0:
         # Send Messages from Outbox
         # SMS every minute
         s3task.schedule_task("msg_process_outbox",
-                             vars={"contact_method":"SMS"},
-                             period=120,  # seconds
-                             timeout=120, # seconds
-                             repeats=0    # unlimited
+                             vars = {"contact_method":"SMS"},
+                             period = 120,  # seconds
+                             timeout = 120, # seconds
+                             repeats = 0    # unlimited
                              )
         # Emails every 5 minutes
         s3task.schedule_task("msg_process_outbox",
-                             vars={"contact_method":"EMAIL"},
-                             period=300,  # seconds
-                             timeout=300, # seconds
-                             repeats=0    # unlimited
+                             vars = {"contact_method":"EMAIL"},
+                             period = 300,  # seconds
+                             timeout = 300, # seconds
+                             repeats = 0    # unlimited
                              )
         # Tweets every minute
         #s3task.schedule_task("msg_process_outbox",
-        #                     vars={"contact_method":"TWITTER"},
-        #                     period=120,  # seconds
-        #                     timeout=120, # seconds
-        #                     repeats=0    # unlimited
+        #                     vars = {"contact_method":"TWITTER"},
+        #                     period = 120,  # seconds
+        #                     timeout = 120, # seconds
+        #                     repeats = 0    # unlimited
         #                     )
 
         # Subscription notifications
         s3task.schedule_task("notify_check_subscriptions",
-                             period=300,
-                             timeout=300,
-                             repeats=0)
+                             period = 300,
+                             timeout = 300,
+                             repeats = 0)
 
     # Daily maintenance
     s3task.schedule_task("maintenance",
-                         vars={"period":"daily"},
-                         period=86400, # seconds, so 1/day
-                         timeout=600,  # seconds
-                         repeats=0     # unlimited
+                         vars = {"period":"daily"},
+                         period = 86400, # seconds, so 1/day
+                         timeout = 600,  # seconds
+                         repeats = 0     # unlimited
                          )
 
     # =========================================================================

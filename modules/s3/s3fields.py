@@ -34,7 +34,8 @@ import sys
 from itertools import chain
 from uuid import uuid4
 
-from gluon import current, A, DIV, Field, IS_EMPTY_OR, IS_IN_SET, TAG, URL, XML
+from gluon import current, A, DIV, Field, IS_EMPTY_OR, IS_IN_SET, IS_TIME, TAG, URL, XML
+from gluon.sqlhtml import TimeWidget
 from gluon.storage import Storage
 from gluon.languages import lazyT
 
@@ -1759,5 +1760,31 @@ def s3_datetime(name="date", **attr):
             attributes["requires"] = IS_EMPTY_OR(requires)
 
     return Field(name, "datetime", **attributes)
+
+# =============================================================================
+def s3_time(name="time_of_day", **attr):
+    """
+        Return a standard time field
+
+        @param name: the field name
+
+        @ToDo: Support minTime/maxTime options for fgtimepicker
+    """
+
+    attributes = dict(attr)
+
+    if "widget" not in attributes:
+        # adds .time class which launches fgtimepicker from s3.datepicker.js
+        attributes["widget"] = TimeWidget.widget
+
+    if "requires" not in attributes:
+        requires = IS_TIME()
+        empty = attributes.pop("empty", None)
+        if empty is False:
+            attributes["requires"] = requires
+        else:
+            attributes["requires"] = IS_EMPTY_OR(requires)
+
+    return Field(name, "time", **attributes)
 
 # END =========================================================================

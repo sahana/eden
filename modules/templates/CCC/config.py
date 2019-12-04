@@ -317,6 +317,7 @@ def config(settings):
             if current.auth.s3_has_role("ORG_ADMIN"):
                 tabs = [(T("Basic Details"), None),
                         (T("Participants"), "participant"),
+                        (T("Invite"), "assign"),
                         ]
             else:
                 tabs = []
@@ -326,7 +327,10 @@ def config(settings):
             table = r.table
             location_id = table.location_id
             date_field = table.start_date
-            rheader = DIV(TABLE(TR(TH("%s: " % T("Date")),
+            rheader = DIV(TABLE(TR(TH("%s: " % T("Event name")),
+                                   record.name,
+                                   ),
+                                TR(TH("%s: " % T("Date")),
                                    date_field.represent(record.start_date),
                                    ),
                                 TR(TH("%s: " % location_id.label),
@@ -416,7 +420,7 @@ def config(settings):
             tabs = [(T("Basic Details"), None),
                     #(T("Items"), "need_item"),
                     #(T("Skills"), "need_skill"),
-                    (T("People"), "need_person"),
+                    (T("Participants"), "need_person"),
                     (T("Invite"), "assign"),
                     ]
 
@@ -425,7 +429,10 @@ def config(settings):
             table = r.table
             location_id = table.location_id
             date_field = table.date
-            rheader = DIV(TABLE(TR(TH("%s: " % date_field.label),
+            rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+                                   record.name,
+                                   ),
+                                TR(TH("%s: " % date_field.label),
                                    date_field.represent(record.date),
                                    ),
                                 TR(TH("%s: " % location_id.label),
@@ -682,6 +689,7 @@ def config(settings):
                             )
 
         table = s3db.hrm_human_resource
+        # We use job_title tag instead for freetext rather than dropdown
         #f = table.job_title_id
         #f.label = T("Role")
         #f.comment = S3PopupLink(c = "hrm",
@@ -841,6 +849,37 @@ def config(settings):
             db(etable.id == training_event_id).update(site_id = record["site_id"])
 
     # -------------------------------------------------------------------------
+    def customise_hrm_training_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm
+
+        s3db = current.s3db
+
+        table = s3db.hrm_training
+
+        table.status.readable = table.status.writable = True
+        table.person_id.represent = s3db.pr_PersonRepresent(show_link=True)
+
+        s3db.configure("req_need_person",
+                       )
+
+        s3db.configure("hrm_training",
+                       crud_form = S3SQLCustomForm("person_id",
+                                                   "status",
+                                                   "comments",
+                                                   ),
+                       list_fields = ["person_id",
+                                      "person_id$human_resource.organisation_id",
+                                      "status",
+                                      "comments",
+                                      ],
+                       # Don't add people here (they are either invited or apply)
+                       listadd = False,
+                       )
+
+    settings.customise_hrm_training_resource = customise_hrm_training_resource
+
+    # -------------------------------------------------------------------------
     def customise_hrm_training_event_resource(r, tablename):
 
         from gluon import IS_EMAIL, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY, IS_URL
@@ -925,15 +964,6 @@ def config(settings):
                                       required_levels = ("L3"),
                                       show_address = True)
 
-        #gtable = s3db.gis_location
-        #districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
-        #                                                                                 gtable.name,
-        #                                                                                 cache = s3db.cache)
-        #districts = {d.id:d.name for d in districts}
-        #f = s3db.hrm_event_location.location_id
-        #f.requires = IS_IN_SET(districts)
-        #f.widget = None
-
         list_fields = ["start_date",
                        "name",
                        "site_id",
@@ -948,6 +978,9 @@ def config(settings):
                                        label = "",
                                        _placeholder = T("Search"),
                                        ),
+                          S3OptionsFilter("location_id$L3",
+                                          label = T("District"),
+                                          ),
                           ]
 
         auth = current.auth
@@ -991,6 +1024,85 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     def customise_hrm_training_event_controller(**attr):
+
+        s3db = current.s3db
+
+        s3 = current.response.s3
+        s3.crud.assign_button = "Invite"
+
+        # Ensure Tab is shown
+        s3db.set_method("hrm", "training_event",
+                        method = "assign",
+                        action = s3db.pr_AssignMethod(component = "participant"))
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            auth = current.auth
+            if auth.s3_has_role("RESERVE", include_admin=False):
+                # Filter to just those they are invited to
+                from s3 import FS
+                #table = s3db.hrm_training
+                #trainings = db(table.person_id == auth.s3_logged_in_person()).select(table.training_event_id)
+                #events_invited = [t.training_event_id for t in trainings]
+                r.resource.add_filter(FS("participant.id") == auth.s3_logged_in_person())
+
+            if not r.component:
+                from gluon import URL
+                r.resource.configure(create_next = URL(c="hrm", f="training_event",
+                                                       args = ["[id]", "assign"]))
+
+            if r.method == "assign":
+
+                from s3 import S3OptionsFilter
+
+                # Filtered components
+                s3db.add_components("hrm_human_resource",
+                                    hrm_human_resource_tag = ({"name": "job_title",
+                                                               "joinby": "human_resource_id",
+                                                               "filterby": {"tag": "job_title"},
+                                                               "multiple": False,
+                                                               },
+                                                              ),
+                                    )
+
+                gtable = s3db.gis_location
+                districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
+                                                                                                 gtable.name,
+                                                                                                 cache = s3db.cache)
+                districts = {d.id:d.name for d in districts}
+
+                filter_widgets = [S3OptionsFilter("human_resource.organisation_id"),
+                                  S3OptionsFilter("person_location.location_id",
+                                                  label = T("Location"),
+                                                  options = districts,
+                                                  ),
+                                  #S3OptionsFilter("competency.skill_id"),
+                                  ]
+
+                list_fields = ["id",
+                               "first_name",
+                               "last_name",
+                               "human_resource.organisation_id",
+                               (T("Role"), "human_resource.job_title.value"),
+                               (T("Skills"), "competency.skill_id"),
+                               ]
+
+                s3db.set_method("hrm", "training_event",
+                                method = "assign",
+                                action = s3db.pr_AssignMethod(component = "participant",
+                                                              filter_widgets = filter_widgets,
+                                                              list_fields = list_fields,
+                                                              ))
+
+            return result
+        s3.prep = prep
 
         attr["rheader"] = ccc_rheader
 
@@ -1672,6 +1784,9 @@ def config(settings):
 
         # Custom Component
         s3db.add_components("pr_person",
+                            hrm_human_resource = {"joinby": "person_id",
+                                                  "multiple": False,
+                                                  },
                             pr_group = {"link": "pr_group_membership",
                                         "joinby": "person_id",
                                         "key": "group_id",
@@ -1716,6 +1831,12 @@ def config(settings):
                                          affiliation_create_onaccept,
                                          method = "create",
                                          )
+                # Only needed if multiple=True
+                #list_fields = ["organisation_id",
+                #               (T("Role"), "job_title.value"),
+                #               "comments",
+                #               ]
+                #r.component.configure(list_fields = list_fields)
             elif r.component_name == "group_membership":
                 r.resource.components._components["group_membership"].configure(listadd = False,
                                                                                 list_fields = [(T("Name"), "group_id$name"),
@@ -1878,20 +1999,21 @@ def config(settings):
             if callable(standard_postp):
                 output = standard_postp(r, output)
 
-            # Include get_vars on Action Buttons to configure crud_form/crud_strings appropriately
-            from gluon import URL
-            from s3 import S3CRUD
+            if not r.component:
+                # Include get_vars on Action Buttons to configure crud_form/crud_strings appropriately
+                from gluon import URL
+                from s3 import S3CRUD
 
-            read_url = URL(c="pr", f="person", args=["[id]", "read"],
-                           vars = r.get_vars)
+                read_url = URL(c="pr", f="person", args=["[id]", "read"],
+                               vars = r.get_vars)
 
-            update_url = URL(c="pr", f="person", args=["[id]", "update"],
-                             vars = r.get_vars)
+                update_url = URL(c="pr", f="person", args=["[id]", "update"],
+                                 vars = r.get_vars)
 
-            S3CRUD.action_buttons(r,
-                                  read_url = read_url,
-                                  update_url = update_url,
-                                  )
+                S3CRUD.action_buttons(r,
+                                      read_url = read_url,
+                                      update_url = update_url,
+                                      )
 
             return output
         s3.postp = postp
@@ -2065,8 +2187,10 @@ def config(settings):
     def customise_project_task_controller(**attr):
 
         if current.auth.s3_has_role("ORG_ADMIN"):
-            # @ToDo: Default filter to hide Closed messages
-            pass
+            # @ToDo: Default filter to hide Closed messages (if we add Closed status)
+            table = current.s3db.project_task
+            table.name.writable = False
+            table.description.writable = False
         else:
             s3 = current.response.s3
 
@@ -2083,6 +2207,7 @@ def config(settings):
                     from gluon import redirect
                     redirect(r.url(method="create"))
                 else:
+                    s3.crud.submit_button = "Send" # T() Happens in s3forms.py
                     current.messages.UPDATE = "Edit"
                     # Don't attempt to load comments
                     s3.rfooter = None
@@ -2184,7 +2309,7 @@ def config(settings):
             s3_comments_widget(f, v, _placeholder = "including directions to location of the opportunity")
 
         table = s3db.req_need
-        table.name.label = T("Description")
+        table.name.label = T("Title")
         f = table.date
         f.label = T("Start Date")
         f.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
@@ -2213,6 +2338,7 @@ def config(settings):
         person_id.comment = None # No Create
 
         filter_widgets = [S3TextFilter(["name",
+                                        "description",
                                         "comments",
                                         ],
                                        #formstyle = text_filter_formstyle,
@@ -2225,11 +2351,11 @@ def config(settings):
                           S3OptionsFilter("need_skill.skill_id"),
                           ]
                        
-        list_fields = ["date",
+        list_fields = ["name",
+                       "date",
                        "end_date",
                        "location_id",
-                       #(T("Opportunity"), "name"),
-                       "name",
+                       "description",
                        "need_contact.person_id",
                        #(T("Phone"), "need_contact.person_id$phone.value"),
                        #(T("Email"), "need_contact.person_id$email.value"),
@@ -2239,7 +2365,7 @@ def config(settings):
 
         auth = current.auth
         if auth.s3_has_role("ADMIN"):
-            filter_widgets.insert(-2, S3OptionsFilter("need_organisation.organisation_id"))
+            filter_widgets.insert(-1, S3OptionsFilter("need_organisation.organisation_id"))
             list_fields.insert(0, "need_organisation.organisation_id")
         else:
             organisation_id = auth.user.organisation_id
@@ -2268,11 +2394,12 @@ def config(settings):
         s3db.configure("req_need",
                        # Needs a custom handler as default handler only supports default forms
                        #copyable = True,
-                       crud_form = S3SQLCustomForm("need_organisation.organisation_id",
+                       crud_form = S3SQLCustomForm("name",
+                                                   "need_organisation.organisation_id",
                                                    "date",
                                                    "end_date",
                                                    "location_id",
-                                                   "name",
+                                                   "description",
                                                    "need_contact.person_id",
                                                    S3SQLInlineComponent("need_skill",
                                                                         label = "",
@@ -2300,30 +2427,90 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_req_need_controller(**attr):
 
-        #s3 = current.response.s3
+        s3 = current.response.s3
+        s3.crud.assign_button = "Invite"
 
         # Custom prep
-        #standard_prep = s3.prep
-        #def prep(r):
-        #    # Call standard prep
-        #    if callable(standard_prep):
-        #        result = standard_prep(r)
-        #    else:
-        #        result = True
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
 
-        #    if r.method == "read":
-        #        # Show the Contact's Phone & Email
-        #        # @ToDo: Do this only for Vols whose Application has been succesful
-        #        # @ToDo: Create custom version of this which bypasses ACLs since
-        #        #        - Will fail for normal Vols as they can't see other Vols anyway
-        #        #        - Also failing for OrgAdmin as the user-added Phone is in the Personal PE not the Org's
-        #        s3db = current.s3db
-        #        s3db.req_need_contact.person_id.represent = s3db.pr_PersonRepresentContact(show_email = True,
-        #                                                                                   show_link = False,
-        #                                                                                   )
+            #if r.method == "read":
+            #    # Show the Contact's Phone & Email
+            #    # @ToDo: Do this only for Vols whose Application has been succesful
+            #    # @ToDo: Create custom version of this which bypasses ACLs since
+            #    #        - Will fail for normal Vols as they can't see other Vols anyway
+            #    #        - Also failing for OrgAdmin as the user-added Phone is in the Personal PE not the Org's
+            #    s3db = current.s3db
+            #    s3db.req_need_contact.person_id.represent = s3db.pr_PersonRepresentContact(show_email = True,
+            #                                                                               show_link = False,
+            #                                                                               )
 
-        #    return result
-        #s3.prep = prep
+            auth = current.auth
+            if auth.s3_has_role("RESERVE", include_admin=False):
+                # Filter to just those they are invited to
+                from s3 import FS
+                #table = s3db.req_need_person
+                #links = db(table.person_id == auth.s3_logged_in_person()).select(table.need_id)
+                #needs_invited = [l.need_id for l in links]
+                r.resource.add_filter(FS("need_person.person_id") == auth.s3_logged_in_person())
+
+            if not r.component:
+                from gluon import URL
+                r.resource.configure(create_next = URL(c="req", f="need",
+                                                       args = ["[id]", "assign"]))
+
+            if r.method == "assign":
+
+                from s3 import S3OptionsFilter
+
+                s3db = current.s3db
+
+                # Filtered components
+                s3db.add_components("hrm_human_resource",
+                                    hrm_human_resource_tag = ({"name": "job_title",
+                                                               "joinby": "human_resource_id",
+                                                               "filterby": {"tag": "job_title"},
+                                                               "multiple": False,
+                                                               },
+                                                              ),
+                                    )
+
+                gtable = s3db.gis_location
+                districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
+                                                                                                 gtable.name,
+                                                                                                 cache = s3db.cache)
+                districts = {d.id:d.name for d in districts}
+
+                filter_widgets = [S3OptionsFilter("human_resource.organisation_id"),
+                                  S3OptionsFilter("person_location.location_id",
+                                                  label = T("Location"),
+                                                  options = districts,
+                                                  ),
+                                  S3OptionsFilter("competency.skill_id"),
+                                  ]
+
+                list_fields = ["id",
+                               "first_name",
+                               "last_name",
+                               "human_resource.organisation_id",
+                               (T("Role"), "human_resource.job_title.value"),
+                               (T("Skills"), "competency.skill_id"),
+                               ]
+
+                s3db.set_method("req", "need",
+                                method = "assign",
+                                action = s3db.pr_AssignMethod(component = "need_person",
+                                                              filter_widgets = filter_widgets,
+                                                              list_fields = list_fields,
+                                                              ))
+
+            return result
+        s3.prep = prep
         
         attr["rheader"] = ccc_rheader
 
@@ -2341,6 +2528,11 @@ def config(settings):
         s3db.req_need_person.person_id.represent = s3db.pr_PersonRepresent(show_link=True)
 
         s3db.configure("req_need_person",
+                       list_fields = ["person_id",
+                                      "person_id$human_resource.organisation_id",
+                                      "status",
+                                      "comments",
+                                      ],
                        # Don't add people here (they are either invited or apply)
                        listadd = False,
                        )

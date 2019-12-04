@@ -2392,8 +2392,15 @@ class RequestNeedsModel(S3Model):
                                       writable = False,
                                       ),
                           self.req_priority(),
-                          s3_comments("name",
-                                      label = T("Summary of Needs"),
+                          Field("name", notnull = True,
+                                length = 64,
+                                label = T("Summary of Needs"),
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_LENGTH(64),
+                                            ],
+                                ),
+                          s3_comments("description",
+                                      label = T("Description"),
                                       comment = None,
                                       ),
                           self.req_status("status",
@@ -3094,6 +3101,7 @@ class RequestNeedsPersonModel(S3Model):
         # ---------------------------------------------------------------------
         # Needs <=> Persons
         #
+        # @ToDo: configuration setting once-required
         status_opts = {1: T("Applied"),
                        2: T("Approved"),
                        3: T("Rejected"),

@@ -48,11 +48,12 @@ class S3MainMenu(default.S3MainMenu):
                     MM("All Documents", c="doc", f="document", m="datalist"),
                     MM("Donors", c="pr", f="person", vars={"donors": 1})(
                         MM("Donations", c="supply", f="person_item"),                    
-                        MM("Update General Information", c="cms", f="post", vars={"~.name": "Donor"}, m="update"),
+                        MM("Edit General Information", c="cms", f="post", vars={"~.name": "Donor"}, m="update"),
                         ),
+                    MM("Organisations", c="org", f="organisation"),
                     MM("Volunteers", c="hrm", f="human_resource")(
                         MM("Reserves", c="pr", f="person", vars={"reserves": 1}),
-                        MM("Groups", c="pr", f="group"),
+                        MM("Reserve Groups", c="pr", f="group"),
                         ),
                     MM("Events", c="hrm", f="training_event"),
                     MM("Opportunities", c="req", f="need"),
@@ -64,6 +65,7 @@ class S3MainMenu(default.S3MainMenu):
                     #MM("Donors", c="pr", f="person", vars={"donors": 1})(
                     MM("Donations", c="supply", f="person_item"),                    
                     #    ),
+                    MM("Organisations", c="org", f="organisation"),
                     MM("Events", c="hrm", f="training_event"),
                     MM("Opportunities", c="req", f="need"),
                     MM("Contact Organisation Admins", c="project", f="task", m="create"),
@@ -81,8 +83,9 @@ class S3MainMenu(default.S3MainMenu):
                     MM("Donors", c="pr", f="person", vars={"donors": 1})(
                         MM("Donations", c="supply", f="person_item"),                    
                         ),
+                    MM("Organisations", c="org", f="organisation"),
                     MM("Volunteers", c="hrm", f="human_resource")(MM("Reserves", c="pr", f="person", vars={"reserves": 1}),
-                                                                  MM("Groups", c="pr", f="group"),
+                                                                  MM("Reserve Groups", c="pr", f="group"),
                                                                   ),
                     MM("Events", c="hrm", f="training_event"),
                     MM("Opportunities", c="req", f="need"),
@@ -104,6 +107,8 @@ class S3MainMenu(default.S3MainMenu):
             menu = [#MM("Volunteer Your Time", c="default", f="index", args="volunteer"),
                     #MM("Donate Items", c="default", f="index", args="donate"),
                     MM("General Information and Advice", c="cms", f="post", m="datalist"),
+                    MM("Events", c="hrm", f="training_event"), # They can only see ones they're invited to
+                    MM("Opportunities", c="req", f="need"),    # They can only see ones they're invited to
                     ]
 
         return menu

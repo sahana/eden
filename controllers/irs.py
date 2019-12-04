@@ -45,7 +45,7 @@ def ireport():
                               (table.expiry > request.utcnow))
 
     # Non-Editors should only see a limited set of options
-    if not s3_has_role(EDITOR):
+    if not s3_has_role("EDITOR"):
         irs_incident_type_opts = response.s3.irs_incident_type_opts
         ctable = s3db.irs_icategory
         allowed_opts = [irs_incident_type_opts.get(opt.code, opt.code) for opt in db().select(ctable.code)]

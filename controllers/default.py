@@ -210,6 +210,7 @@ def index():
     roles = session.s3.roles
     table = s3db.org_organisation
     has_permission = auth.s3_has_permission
+    AUTHENTICATED = auth.get_system_roles().AUTHENTICATED
     if AUTHENTICATED in roles and has_permission("read", table):
 
         org_items = organisation()
@@ -1405,7 +1406,7 @@ def contact():
                 # Only Admins should be able to update ticket status
                 status = table.status
                 actions = table.actions
-                if not auth.s3_has_role(ADMIN):
+                if not auth.s3_has_role("ADMIN"):
                     status.writable = False
                     actions.writable = False
                 if r.method != "update":
