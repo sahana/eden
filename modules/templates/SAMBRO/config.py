@@ -19,9 +19,12 @@ def config(settings):
 
     T = current.T
 
-    settings.base.system_name = T("Sahana Alerting and Messaging Broker")
-    settings.base.system_name_short = T("SAMBRO")
-
+## Deprecated because such edits to the title should happen in the 000_config.py file
+## specific to the demo deployment and not here because if you change here it affect any
+## developments and commits to git etc - nuwan at sahanafoundation dot org
+    #settings.base.system_name = T("Sahana Alerting and Messaging Broker")
+    #settings.base.system_name_short = T("SAMBRO")
+##
     # Pre-Populate
     settings.base.prepopulate += ("SAMBRO",)
     settings.base.prepopulate_demo += ("SAMBRO/Demo",)
@@ -104,6 +107,8 @@ def config(settings):
         ("en-US", "English"),
         #("es", "Spanish"),
         #("fr", "French"),
+        ("fj", "Fijian"),
+        ("hi", "Hindi"),
         #("km", "Khmer"), # Cambodia
         #("mn", "Mongolian"),
         ("my", "Burmese"), # Myanmar
