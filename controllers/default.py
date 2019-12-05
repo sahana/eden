@@ -1533,7 +1533,7 @@ def get_settings():
     """
 
     # Check if the request has a valid authorization header with admin cred.
-    if not auth.s3_has_role("ADMIN"):
+    if not auth.s3_has_role(auth.get_system_roles().ADMIN):
         auth.permission.format = None
         auth.permission.fail()
 

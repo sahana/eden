@@ -576,8 +576,8 @@
             el.addClass('disabled');
             var method = el.is('input') ? 'val' : 'html';
             //method = el.attr('name') ? 'html' : 'val';
-            var disable_with_message = (!web2py.isUndefined(w2p_ajax_disable_with_message)) ?
-                w2p_ajax_disable_with_message : 'Working...';
+            /*var disable_with_message = (!web2py.isUndefined(w2p_ajax_disable_with_message)) ?
+                w2p_ajax_disable_with_message : 'Working...';*/
             /*store enabled state if not already disabled */
             if (web2py.isUndefined(el.data('w2p_enable_with'))) {
                 el.data('w2p_enable_with', el[method]());
@@ -588,7 +588,7 @@
              */
             if ((el.data('w2p_disable_with') == 'default') || (web2py.isUndefined(el.data(
                     'w2p_disable_with')))) {
-                el.data('w2p_disable_with', disable_with_message);
+                el.data('w2p_disable_with', i18n.disable_with_message);
             }
 
             /* set to disabled state*/

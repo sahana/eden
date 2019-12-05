@@ -928,13 +928,13 @@ class S3Msg(object):
                    to,
                    subject,
                    message,
-                   attachments=None,
-                   cc=None,
-                   bcc=None,
-                   reply_to=None,
-                   sender=None,
-                   encoding="utf-8",
-                   #from_address=None,
+                   attachments = None,
+                   cc = None,
+                   bcc = None,
+                   reply_to = None,
+                   sender = None,
+                   encoding = "utf-8",
+                   #from_address = None,
                    ):
         """
             Function to send Email
@@ -969,19 +969,19 @@ class S3Msg(object):
             table.insert()
 
         result = current.mail.send(to,
-                                   subject=subject,
-                                   message=message,
-                                   attachments=attachments,
-                                   cc=cc,
-                                   bcc=bcc,
-                                   reply_to=reply_to,
-                                   sender=sender,
-                                   encoding=encoding,
+                                   subject = subject,
+                                   message = message,
+                                   attachments = attachments,
+                                   cc = cc,
+                                   bcc = bcc,
+                                   reply_to = reply_to,
+                                   sender = sender,
+                                   encoding = encoding,
                                    # e.g. Return-Receipt-To:<user@domain>
-                                   headers={},
+                                   headers = {},
                                    # Added to Web2Py 2014-03-04
                                    # - defaults to sender
-                                   #from_address=from_address,
+                                   #from_address = from_address,
                                    )
         if not result:
             current.session.error = current.mail.error

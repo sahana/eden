@@ -7,10 +7,10 @@ from gluon.storage import Storage
 
 def config(settings):
     """
-        Cumbria County Council extensions to the Volunteer Management template
-        - branding
-        - support Donations
-        - support Assessments
+        Support Cumbria 
+        - supported by Cumbria County Council
+        - manage Volunteers
+        - manage Donations
     """
 
     T = current.T
@@ -78,14 +78,14 @@ def config(settings):
         from gluon import URL
         has_role = current.auth.s3_has_role
         if has_role("ADMIN"):
-            next = current.request.vars._next or URL(c="default", f="index")
+            _next = current.request.vars._next or URL(c="default", f="index")
         elif has_role("VOLUNTEER") or has_role("RESERVE"):
-            next = URL(c="cms", f="post", args="datalist")
+            _next = URL(c="cms", f="post", args="datalist")
         elif has_role("DONOR"):
-            next = URL(c="default", f="index", args="donor")
+            _next = URL(c="default", f="index", args="donor")
         else:
-            next = current.request.vars._next or URL(c="default", f="index")
-        return next
+            _next = current.request.vars._next or URL(c="default", f="index")
+        return _next
 
     settings.auth.login_next = login_next
     settings.auth.login_next_always = True
@@ -263,9 +263,9 @@ def config(settings):
 
         tablename = table._tablename
 
-        if tablename in (#"hrm_training_event",
+        if tablename in (#"hrm_training_event", # Default is fine
                          "project_task",
-                         #"req_need",
+                         #"req_need",           # Default is fine
                          ):
             # Use the Org of the Creator
             db = current.db
@@ -320,7 +320,9 @@ def config(settings):
                         (T("Invite"), "assign"),
                         ]
             else:
-                tabs = []
+                tabs = [(T("Basic Details"), None),
+                        (T("Participation"), "participant"),
+                        ]
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
@@ -413,16 +415,19 @@ def config(settings):
                           rheader_tabs)
 
         elif tablename == "req_need":
-            if not current.auth.s3_has_role("ORG_ADMIN"):
-                # @ToDo: Button to Apply (rheader or rfooter)
-                return None
             T = current.T
-            tabs = [(T("Basic Details"), None),
-                    #(T("Items"), "need_item"),
-                    #(T("Skills"), "need_skill"),
-                    (T("Participants"), "need_person"),
-                    (T("Invite"), "assign"),
-                    ]
+            if current.auth.s3_has_role("ORG_ADMIN"):
+                tabs = [(T("Basic Details"), None),
+                        #(T("Items"), "need_item"),
+                        #(T("Skills"), "need_skill"),
+                        (T("Participants"), "need_person"),
+                        (T("Invite"), "assign"),
+                        ]
+            else:
+                # @ToDo: Button to Apply? (rheader or rfooter)
+                tabs = [(T("Basic Details"), None),
+                        (T("Participation"), "need_person"),
+                        ]
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
@@ -763,7 +768,8 @@ def config(settings):
                           S3OptionsFilter("person_id$competency.skill_id"),
                           ]
 
-        if current.auth.s3_has_role("ADMIN"):
+        auth = current.auth
+        if auth.s3_has_role(auth.get_system_roles().ADMIN):
             filter_fields.insert(0, "organisation_id$name")
             filter_widgets.append(S3OptionsFilter("organisation_id"))
             list_fields.insert(0, "organisation_id")
@@ -802,6 +808,146 @@ def config(settings):
     #    )
 
     #settings.customise_hrm_job_title_resource = customise_hrm_job_title_resource
+
+    # -------------------------------------------------------------------------
+    def hrm_training_create_onaccept(form):
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.hrm_training
+        record = db(table.id == form.vars.get("id")).select(table.id,
+                                                            table.person_id,
+                                                            limitby = (0, 1),
+                                                            ).first()
+        ptable = s3db.pr_person
+        ltable = s3db.pr_person_user
+        query = (ptable.id == record.person_id) & \
+                (ptable.pe_id == ltable.pe_id)
+        link = db(query).select(ltable.user_id,
+                                limitby = (0, 1)
+                                ).first()
+        try:
+            record.update_record(owned_by_user = link.user_id)
+        except AttributeError:
+            pass
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_training_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm
+
+        s3db = current.s3db
+
+        table = s3db.hrm_training
+
+        table.status.readable = table.status.writable = True
+        table.person_id.writable = False
+        table.person_id.represent = s3db.pr_PersonRepresent(show_link = True)
+
+        if not current.auth.s3_has_role("ORG_ADMIN"):
+            if r.component_id:
+                record = current.db(table.person_id == r.component_id).select(table.status,
+                                                                              limitby = (0, 1)
+                                                                              ).first()
+                if record.status in (4, 5, 6):
+                    from gluon import IS_IN_SET
+                    table.status.requires = IS_IN_SET({4: T("Invited"),
+                                                       5: T("Accepted"),
+                                                       6: T("Declined"),
+                                                       })
+                else:
+                    table.status.writable = False
+
+        s3db.configure("hrm_training",
+                       crud_form = S3SQLCustomForm("person_id",
+                                                   "status",
+                                                   "comments",
+                                                   ),
+                       list_fields = ["person_id",
+                                      "person_id$human_resource.organisation_id",
+                                      "status",
+                                      "comments",
+                                      ],
+                       # Don't add people here (they are either invited or apply)
+                       listadd = False,
+                       )
+
+    settings.customise_hrm_training_resource = customise_hrm_training_resource
+
+    # -------------------------------------------------------------------------
+    def hrm_training_event_assign_postprocess(record, selected):
+        """
+            Send notification to Invitees
+        """
+
+        import json
+        from gluon import URL
+        from s3 import s3_parse_datetime
+
+        # Deserialize the args from s3task
+        record = json.loads(record)
+        selected = json.loads(selected)
+
+        record_id = record.get("id")
+
+        # Construct Email message
+        event_name = record.get("name")
+        system_name = settings.get_system_name_short()
+        subject = "%s: You have been invited to an Event: %s" % \
+            (system_name,
+             event_name,
+             )
+
+        db = current.db
+        s3db = current.s3db
+        etable = s3db.hrm_training_event
+        gtable = s3db.gis_location
+        location = db(gtable.id == record.get("location_id")).select(gtable.L3,
+                                                                     gtable.addr_street,
+                                                                     gtable.addr_postcode,
+                                                                     limitby = (0, 1)
+                                                                     ).first()
+        ttable = s3db.hrm_event_tag
+        tags = db(ttable.training_event_id == record_id).select(ttable.tag,
+                                                                ttable.value,
+                                                                ).as_dict(key = "tag")
+
+        base_url = "%s%s" % (settings.get_base_public_url(),
+            URL(c="hrm", f="training_event", args=[record_id, "participant"]))
+        message = "You have been invited to an Event:\n\nEvent name: %s\nEvent description: %s\nStarts: %s\nLead Organisation: %s\nVenue name: %s\nDistrict: %s\nStreet Address: %s\nPostcode: %s\nContact Name: %s\nTelephone: %s\nEmail: %s\nWebsite: %s\n\nYou can respond to the invite here: %s" % \
+            (event_name,
+             record.get("comment") or "",
+             etable.start_date.represent(s3_parse_datetime(record.get("start_date"), "%Y-%m-%d %H:%M:%S")),
+             etable.organisation_id.represent(record.get("organisation_id"), show_link=False),
+             tags.get("venue_name")["value"],
+             location.L3,
+             location.addr_street or "",
+             location.addr_postcode or "",
+             tags.get("contact_name")["value"] or "",
+             tags.get("contact_tel")["value"] or "",
+             tags.get("contact_email")["value"],
+             tags.get("contact_web")["value"] or "",
+             base_url,
+             )
+
+        # Send message to each
+        ctable = s3db.pr_contact
+        ptable = s3db.pr_person
+        query = (ptable.id.belongs(selected)) & \
+                (ptable.pe_id == ctable.pe_id) & \
+                (ctable.contact_method == "EMAIL") & \
+                (ctable.deleted == False)
+        contacts = db(query).select(ptable.id,
+                                    ctable.value,
+                                    )
+        contacts = {c["pr_person.id"]: c["pr_contact.value"] for c in contacts}
+
+        send_email = current.msg.send_email
+        for person_id in selected:
+            send_email(to = contacts.get(int(person_id)),
+                       subject = subject,
+                       message = "%s/%s" % (message, person_id),
+                       )
 
     # -------------------------------------------------------------------------
     def hrm_training_event_postprocess(form):
@@ -847,37 +993,6 @@ def config(settings):
             record["id"] = facility_id
             s3db.update_super(ftable, record)
             db(etable.id == training_event_id).update(site_id = record["site_id"])
-
-    # -------------------------------------------------------------------------
-    def customise_hrm_training_resource(r, tablename):
-
-        from s3 import S3SQLCustomForm
-
-        s3db = current.s3db
-
-        table = s3db.hrm_training
-
-        table.status.readable = table.status.writable = True
-        table.person_id.represent = s3db.pr_PersonRepresent(show_link=True)
-
-        s3db.configure("req_need_person",
-                       )
-
-        s3db.configure("hrm_training",
-                       crud_form = S3SQLCustomForm("person_id",
-                                                   "status",
-                                                   "comments",
-                                                   ),
-                       list_fields = ["person_id",
-                                      "person_id$human_resource.organisation_id",
-                                      "status",
-                                      "comments",
-                                      ],
-                       # Don't add people here (they are either invited or apply)
-                       listadd = False,
-                       )
-
-    settings.customise_hrm_training_resource = customise_hrm_training_resource
 
     # -------------------------------------------------------------------------
     def customise_hrm_training_event_resource(r, tablename):
@@ -984,10 +1099,13 @@ def config(settings):
                           ]
 
         auth = current.auth
-        if auth.s3_has_role("ADMIN"):
+        if auth.s3_has_role(auth.get_system_roles().ADMIN):
             filter_widgets.append(S3OptionsFilter("organisation_id",
                                                   label = T("Organization")))
             list_fields.insert(0, (T("Organization"), "organisation_id"))
+            requires = table.organisation_id.requires
+            if hasattr(requires, "other"):
+                table.organisation_id.requires = requires.other
         else:
             f = table.organisation_id
             f.default = auth.user.organisation_id
@@ -1048,10 +1166,11 @@ def config(settings):
             if auth.s3_has_role("RESERVE", include_admin=False):
                 # Filter to just those they are invited to
                 from s3 import FS
-                #table = s3db.hrm_training
-                #trainings = db(table.person_id == auth.s3_logged_in_person()).select(table.training_event_id)
-                #events_invited = [t.training_event_id for t in trainings]
-                r.resource.add_filter(FS("participant.id") == auth.s3_logged_in_person())
+                #r.resource.add_filter(FS("participant.id") == auth.s3_logged_in_person())
+                table = s3db.hrm_training
+                trainings = current.db(table.person_id == auth.s3_logged_in_person()).select(table.training_event_id)
+                events_invited = [t.training_event_id for t in trainings]
+                r.resource.add_filter(FS("id").belongs(events_invited))
 
             if not r.component:
                 from gluon import URL
@@ -1099,7 +1218,14 @@ def config(settings):
                                 action = s3db.pr_AssignMethod(component = "participant",
                                                               filter_widgets = filter_widgets,
                                                               list_fields = list_fields,
+                                                              postprocess = hrm_training_event_assign_postprocess,
                                                               ))
+
+                s3db.add_custom_callback("hrm_training",
+                                         "onaccept",
+                                         hrm_training_create_onaccept,
+                                         method = "create",
+                                         )
 
             return result
         s3.prep = prep
@@ -1813,6 +1939,7 @@ def config(settings):
                 result = True
 
             if r.component_name == "human_resource":
+
                 s3.crud_strings["hrm_human_resource"] = Storage(
                     label_create = T("New Affiliation"),
                     #title_display = T("Affiliation Details"),
@@ -1826,17 +1953,20 @@ def config(settings):
                     msg_record_deleted = T("Affiliation deleted"),
                     #msg_list_empty = T("No Affiliations currently registered")
                     )
+
                 s3db.add_custom_callback("hrm_human_resource",
                                          "onaccept",
                                          affiliation_create_onaccept,
                                          method = "create",
                                          )
+
                 # Only needed if multiple=True
                 #list_fields = ["organisation_id",
                 #               (T("Role"), "job_title.value"),
                 #               "comments",
                 #               ]
                 #r.component.configure(list_fields = list_fields)
+
             elif r.component_name == "group_membership":
                 r.resource.components._components["group_membership"].configure(listadd = False,
                                                                                 list_fields = [(T("Name"), "group_id$name"),
@@ -2090,9 +2220,9 @@ def config(settings):
             (system_name,
              fullname,
              )
+
         url = "%s%s" % (settings.get_base_public_url(),
                         URL(c="project", f="task", args=[task_id]))
-
         message = "%s has sent you a Message on %s\n\nSubject: %s\nMessage: %s\n\nYou can view the message here: %s" % \
             (fullname,
              system_name,
@@ -2267,6 +2397,112 @@ def config(settings):
         db(rntable.id == need_id).update(realm_entity = realm_entity)
 
     # -------------------------------------------------------------------------
+    def req_need_assign_postprocess(record, selected):
+        """
+            Send notification to Invitees
+        """
+
+        import json
+        from gluon import URL
+        from s3 import s3_parse_datetime
+
+        # Deserialize the args from s3task
+        record = json.loads(record)
+        selected = json.loads(selected)
+
+        record_id = record.get("id")
+
+        # Construct Email message
+        event_name = record.get("name")
+        system_name = settings.get_system_name_short()
+        subject = "%s: You have been invited to an Opportunity: %s" % \
+            (system_name,
+             event_name,
+             )
+
+        db = current.db
+        s3db = current.s3db
+        ntable = s3db.req_need
+        notable = s3db.req_need_organisation
+        otable = s3db.org_organisation
+        query = (notable.need_id == record_id) & \
+                (notable.organisation_id == otable.id)
+        organisation = db(query).select(otable.name,
+                                        limitby = (0, 1)
+                                        ).first().name
+        gtable = s3db.gis_location
+        location = db(gtable.id == record.get("location_id")).select(gtable.L3,
+                                                                     gtable.addr_street,
+                                                                     gtable.addr_postcode,
+                                                                     limitby = (0, 1)
+                                                                     ).first()
+        nctable = s3db.req_need_contact
+        contact = db(nctable.need_id == record_id).select(nctable.person_id,
+                                                          limitby = (0, 1)
+                                                          ).first()
+        contact = s3db.pr_PersonRepresentContact(show_email = True,
+                                                 show_link = False)(contact.person_id)
+        stable = s3db.hrm_skill
+        nstable = s3db.req_need_skill
+        query = (nstable.need_id == record_id) & \
+                (nstable.skill_id == stable.id)
+        skill = db(query).select(stable.name,
+                                 limitby = (0, 1)
+                                 ).first()
+        if skill:
+            skill = skill.name
+        else:
+            skill = ""
+        ttable = s3db.req_need_tag
+        tags = db(ttable.need_id == record_id).select(ttable.tag,
+                                                      ttable.value,
+                                                      ).as_dict(key = "tag")
+
+        base_url = "%s%s" % (settings.get_base_public_url(),
+            URL(c="req", f="need", args=[record_id, "need_person"]))
+        message = "You have been invited to an Opportunity:\n\nTitle: %s\nOrganisation: %s\nStart Date: %s\nDistrict: %s\nStreet Address: %s\nPostcode: %s\nDescription: %s\nContact: %s\nSkill: %s\nAge Restrictions: %s\nPractical Information: %s\nParking Options: %s\nWhat to Bring: %s\n\nYou can respond to the invite here: %s" % \
+            (event_name,
+             organisation,
+             ntable.date.represent(s3_parse_datetime(record.get("date"), "%Y-%m-%d %H:%M:%S")),
+             location.L3,
+             location.addr_street or "",
+             location.addr_postcode or "",
+             record.get("description") or "",
+             contact,
+             skill,
+             tags.get("age_restrictions")["value"] or "",
+             tags.get("practical_info")["value"] or "",
+             tags.get("parking")["value"] or "",
+             tags.get("bring")["value"] or "",
+             base_url,
+             )
+
+        # Send message to each
+        ctable = s3db.pr_contact
+        ptable = s3db.pr_person
+        query = (ptable.id.belongs(selected)) & \
+                (ptable.pe_id == ctable.pe_id) & \
+                (ctable.contact_method == "EMAIL") & \
+                (ctable.deleted == False)
+        contacts = db(query).select(ptable.id,
+                                    ctable.value,
+                                    )
+        contacts = {c["pr_person.id"]: c["pr_contact.value"] for c in contacts}
+        nptable = s3db.req_need_person
+        links = db(nptable.person_id.belongs(selected)).select(nptable.person_id,
+                                                               nptable.id,
+                                                               )
+        links = {l.person_id: l.id for l in links}
+
+        send_email = current.msg.send_email
+        for person_id in selected:
+            person_id = int(person_id)
+            send_email(to = contacts.get(person_id),
+                       subject = subject,
+                       message = "%s/%s" % (message, links.get(person_id)),
+                       )
+
+    # -------------------------------------------------------------------------
     def customise_req_need_resource(r, tablename):
 
         from s3 import IS_ONE_OF, IS_UTC_DATETIME, S3CalendarWidget, S3DateTime, \
@@ -2364,7 +2600,7 @@ def config(settings):
                        ]
 
         auth = current.auth
-        if auth.s3_has_role("ADMIN"):
+        if auth.s3_has_role(auth.get_system_roles().ADMIN):
             filter_widgets.insert(-1, S3OptionsFilter("need_organisation.organisation_id"))
             list_fields.insert(0, "need_organisation.organisation_id")
         else:
@@ -2439,13 +2675,14 @@ def config(settings):
             else:
                 result = True
 
+            s3db = current.s3db
+
             #if r.method == "read":
             #    # Show the Contact's Phone & Email
             #    # @ToDo: Do this only for Vols whose Application has been succesful
             #    # @ToDo: Create custom version of this which bypasses ACLs since
             #    #        - Will fail for normal Vols as they can't see other Vols anyway
             #    #        - Also failing for OrgAdmin as the user-added Phone is in the Personal PE not the Org's
-            #    s3db = current.s3db
             #    s3db.req_need_contact.person_id.represent = s3db.pr_PersonRepresentContact(show_email = True,
             #                                                                               show_link = False,
             #                                                                               )
@@ -2454,10 +2691,11 @@ def config(settings):
             if auth.s3_has_role("RESERVE", include_admin=False):
                 # Filter to just those they are invited to
                 from s3 import FS
-                #table = s3db.req_need_person
-                #links = db(table.person_id == auth.s3_logged_in_person()).select(table.need_id)
-                #needs_invited = [l.need_id for l in links]
-                r.resource.add_filter(FS("need_person.person_id") == auth.s3_logged_in_person())
+                #r.resource.add_filter(FS("need_person.person_id") == auth.s3_logged_in_person())
+                table = s3db.req_need_person
+                links = current.db(table.person_id == auth.s3_logged_in_person()).select(table.need_id)
+                needs_invited = [l.need_id for l in links]
+                r.resource.add_filter(FS("id").belongs(needs_invited))
 
             if not r.component:
                 from gluon import URL
@@ -2467,8 +2705,6 @@ def config(settings):
             if r.method == "assign":
 
                 from s3 import S3OptionsFilter
-
-                s3db = current.s3db
 
                 # Filtered components
                 s3db.add_components("hrm_human_resource",
@@ -2507,7 +2743,14 @@ def config(settings):
                                 action = s3db.pr_AssignMethod(component = "need_person",
                                                               filter_widgets = filter_widgets,
                                                               list_fields = list_fields,
+                                                              postprocess = req_need_assign_postprocess,
                                                               ))
+
+                s3db.add_custom_callback("req_need_person",
+                                         "onaccept",
+                                         req_need_person_create_onaccept,
+                                         method = "create",
+                                         )
 
             return result
         s3.prep = prep
@@ -2519,13 +2762,51 @@ def config(settings):
     settings.customise_req_need_controller = customise_req_need_controller
 
     # -------------------------------------------------------------------------
+    def req_need_person_create_onaccept(form):
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.req_need_person
+        record = db(table.id == form.vars.get("id")).select(table.id,
+                                                            table.person_id,
+                                                            limitby = (0, 1),
+                                                            ).first()
+        ptable = s3db.pr_person
+        ltable = s3db.pr_person_user
+        query = (ptable.id == record.person_id) & \
+                (ptable.pe_id == ltable.pe_id)
+        link = db(query).select(ltable.user_id,
+                                limitby = (0, 1)
+                                ).first()
+        try:
+            record.update_record(owned_by_user = link.user_id)
+        except AttributeError:
+            pass
+
+    # -------------------------------------------------------------------------
     def customise_req_need_person_resource(r, tablename):
 
         current.response.s3.crud_labels["DELETE"] = "Remove"
 
         s3db = current.s3db
 
-        s3db.req_need_person.person_id.represent = s3db.pr_PersonRepresent(show_link=True)
+        table = s3db.req_need_person
+        table.person_id.represent = s3db.pr_PersonRepresent(show_link = True)
+        table.person_id.writable = False
+
+        if not current.auth.s3_has_role("ORG_ADMIN"):
+            if r.component_id:
+                record = current.db(table.id == r.component_id).select(table.status,
+                                                                       limitby = (0, 1)
+                                                                       ).first()
+                if record.status in (4, 5, 6):
+                    from gluon import IS_IN_SET
+                    table.status.requires = IS_IN_SET({4: T("Invited"),
+                                                       5: T("Accepted"),
+                                                       6: T("Declined"),
+                                                       })
+                else:
+                    table.status.writable = False
 
         s3db.configure("req_need_person",
                        list_fields = ["person_id",

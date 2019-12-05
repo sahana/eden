@@ -3336,7 +3336,7 @@ class PRForumModel(S3Model):
         # Custom Methods
         set_method("pr", "forum",
                    method = "assign",
-                   action = pr_AssignMethod(component="forum_membership"))
+                   action = pr_AssignMethod(component = "forum_membership"))
 
         set_method("pr", "forum",
                    method = "join",
@@ -7059,12 +7059,12 @@ class pr_PersonRepresentContact(pr_PersonRepresent):
     """
 
     def __init__(self,
-                 labels=None,
-                 linkto=None,
-                 show_email=False,
-                 show_phone=True,
-                 access=None,
-                 show_link=True,
+                 labels = None,
+                 linkto = None,
+                 show_email = False,
+                 show_phone = True,
+                 access = None,
+                 show_link = True,
                  ):
         """
             Constructor
@@ -7612,6 +7612,7 @@ class pr_AssignMethod(S3Method):
                  #types = None,
                  filter_widgets = None,
                  list_fields = None,
+                 postprocess = None,
                  #rheader = None,
                  ):
         """
@@ -7621,6 +7622,7 @@ class pr_AssignMethod(S3Method):
                           (Staff/Vols/Members to come as-required)
             @param filter_widgets: a custom list of FilterWidgets to show
             @param list_fields: a custom list of Fields to show
+            @param postprocess: a postprocess function to act on all assigned person_ids at once 
             @param rheader: an rheader to show
         """
 
@@ -7632,6 +7634,7 @@ class pr_AssignMethod(S3Method):
         #self.types = types
         self.filter_widgets = filter_widgets
         self.list_fields = list_fields
+        self.postprocess = postprocess
         #self.rheader = rheader
 
     # -------------------------------------------------------------------------
@@ -7734,8 +7737,18 @@ class pr_AssignMethod(S3Method):
                         if onaccept:
                             link["id"] = _id
                             form = Storage(vars = link)
-                            onaccept(form)
+                            if not isinstance(onaccept, list):
+                                onaccept = [onaccept]
+                            for callback in onaccept:
+                                callback(form)
                         added += 1
+                if self.postprocess is not None:
+                    # Run postprocess async as it may take some time to run
+                    current.response.s3.tasks["pr_assign_postprocess"] = self.postprocess
+                    current.s3task.run_async("pr_assign_postprocess",
+                                             args = [record.as_json(),
+                                                     json.dumps(selected),
+                                                     ])
 
             if r.representation == "popup":
                 # Don't redirect, so we retain popup extension & so close popup

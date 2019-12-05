@@ -77,10 +77,10 @@ class S3Task(object):
 
     # -------------------------------------------------------------------------
     def configure_tasktable_crud(self,
-                                 task=None,
-                                 function=None,
-                                 args=None,
-                                 vars=None,
+                                 task = None,
+                                 function = None,
+                                 args = None,
+                                 vars = None,
                                  period = 3600, # seconds, so 1 hour
                                  ):
         """
@@ -294,19 +294,19 @@ class S3Task(object):
     # -------------------------------------------------------------------------
     def schedule_task(self,
                       task,
-                      args=None, # args to pass to the task
-                      vars=None, # vars to pass to the task
-                      function_name=None,
-                      start_time=None,
-                      next_run_time=None,
-                      stop_time=None,
-                      repeats=None,
-                      period=None,
-                      timeout=None,
-                      enabled=None, # None = Enabled
-                      group_name=None,
-                      ignore_duplicate=False,
-                      sync_output=0):
+                      args = None, # args to pass to the task
+                      vars = None, # vars to pass to the task
+                      function_name = None,
+                      start_time = None,
+                      next_run_time = None,
+                      stop_time = None,
+                      repeats = None,
+                      period = None,
+                      timeout = None,
+                      enabled = None, # None = Enabled
+                      group_name = None,
+                      ignore_duplicate = False,
+                      sync_output = 0):
         """
             Schedule a task in web2py Scheduler
 

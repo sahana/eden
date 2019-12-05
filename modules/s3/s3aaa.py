@@ -3312,9 +3312,9 @@ $.filterOptionsS3({
         if row:
             member_id = row.id
         else:
-            record = Storage(person_id=person_ids[0],
-                             organisation_id=organisation_id,
-                             owned_by_user=user_id,
+            record = Storage(person_id = person_ids[0],
+                             organisation_id = organisation_id,
+                             owned_by_user = user_id,
                              )
             member_id = mtable.insert(**record)
             if member_id:
@@ -3324,7 +3324,7 @@ $.filterOptionsS3({
                 if customise:
                     request = S3Request("member", "membership",
                                         current.request,
-                                        args=[str(member_id)])
+                                        args = [str(member_id)])
                     customise(request, mtablename)
 
                 self.s3_set_record_owner(mtable, member_id)
@@ -3428,7 +3428,7 @@ $.filterOptionsS3({
         message = s3_str(messages.welcome_email % \
                         {"system_name": system_name,
                          "url": settings.get_base_public_url(),
-                         "profile": URL("default", "user", args=["profile"]),
+                         "profile": URL("default", "person"),
                          "password": password,
                          })
 
@@ -8236,7 +8236,9 @@ class S3OrgRoleManager(S3EntityRoleManager):
 
         user = self.request.get_vars.get("edit", None)
         if user:
-            user = dict(id=int(user), name=self.objects.get(int(user), None))
+            user = {"id": int(user),
+                    "name": self.objects.get(int(user), None),
+                    }
         return user
 
     # -------------------------------------------------------------------------
@@ -8339,8 +8341,9 @@ class S3PersonRoleManager(S3EntityRoleManager):
 
         entity = self.request.get_vars.get("edit", None)
         if entity:
-            entity = dict(id=int(entity),
-                          name=self.objects.get(int(entity), None))
+            entity = {"id": int(entity),
+                      "name": self.objects.get(int(entity), None),
+                      }
         return entity
 
     # -------------------------------------------------------------------------
@@ -8366,8 +8369,9 @@ class S3PersonRoleManager(S3EntityRoleManager):
                                           utable[userfield],
                                           limitby=(0, 1)).first()
 
-        return dict(id=record.id,
-                    name=record[utable[userfield]]) if record else None
+        return {"id": record.id,
+                "name": record[utable[userfield]],
+                } if record else None
 
     # -------------------------------------------------------------------------
     def get_foreign_object(self):
