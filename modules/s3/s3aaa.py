@@ -238,6 +238,10 @@ Thank you"""
         self.PROTECTED = ("admin",)
 
     # -------------------------------------------------------------------------
+    def table_event(self):
+        return current.s3db[self.settings.table_event_name]
+
+    # -------------------------------------------------------------------------
     def define_tables(self, migrate=True, fake_migrate=False):
         """
             to be called unless tables are defined manually
@@ -422,45 +426,6 @@ Thank you"""
         #              label=messages.label_record_id),
         #        migrate = migrate,
         #        fake_migrate=fake_migrate)
-
-        # Event table (auth_event)
-        # Records Logins & ?
-        # @ToDo: Move to s3db.auth to prevent it from being defined every request
-        #        (lazy tables means no big issue for Production but helps Devs)
-        # Deprecate?
-        # - date of most recent login is the most useful thing recorded, which we already record in the main auth_user table
-        if not settings.table_event:
-            request = current.request
-            define_table(
-                settings.table_event_name,
-                Field("time_stamp", "datetime",
-                      default = request.utcnow,
-                      #label = messages.label_time_stamp
-                      ),
-                Field("client_ip",
-                      default = request.client,
-                      #label=messages.label_client_ip
-                      ),
-                Field("user_id", utable,
-                      default = None,
-                      requires = IS_IN_DB(db, "%s.id" % uname,
-                                          "%(id)s: %(first_name)s %(last_name)s"),
-                      #label=messages.label_user_id
-                      ),
-                Field("origin", length=512,
-                      default = "auth",
-                      #label = messages.label_origin,
-                      requires = IS_NOT_EMPTY(),
-                      ),
-                Field("description", "text",
-                      default = "",
-                      #label = messages.label_description,
-                      requires = IS_NOT_EMPTY(),
-                      ),
-                migrate = migrate,
-                fake_migrate=fake_migrate,
-                *S3MetaFields.sync_meta_fields())
-            settings.table_event = db[settings.table_event_name]
 
     # -------------------------------------------------------------------------
     def login_bare(self, username, password):
