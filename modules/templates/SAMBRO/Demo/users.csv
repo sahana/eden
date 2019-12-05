@@ -1,13 +1,11 @@
 First Name,Last Name,Email,Password,Role,Organisation
-Myanmar,Map Admin,mm_mapadmin@example.com,eden,MAP_ADMIN,Department of Meteorology and Hydrology
-Philippines,Map Admin,ph_mapadmin@example.com,eden,MAP_ADMIN,Philippine Institute of Volcanology and Seismology
-Maldives,Map Admin,mv_mapadmin@example.com,eden,MAP_ADMIN,National Disaster Management Center
-Nepal,Map Admin,np_mapadmin@example.com,eden,MAP_ADMIN,Department of Hydrology and Meteorology
-Myanmar,Alert Editor,mm_editor@example.com,eden,ALERT_EDITOR,Department of Meteorology and Hydrology
-Philippines,Alert Editor,ph_editor@example.com,eden,ALERT_EDITOR,Philippine Institute of Volcanology and Seismology
-Maldives,Alert Editor,mv_editor@example.com,eden,ALERT_EDITOR,National Disaster Management Center
-Nepal,Alert Editor,np_editor@example.com,eden,ALERT_EDITOR,Department of Hydrology and Meteorology
-Myanmar,Alert Approver,mm_approver@example.com,eden,ALERT_APPROVER,Department of Meteorology and Hydrology
-Philippines,Alert Approver,ph_approver@example.com,eden,ALERT_APPROVER,Philippine Institute of Volcanology and Seismology
-Maldives,Alert Approver,mv_approver@example.com,eden,ALERT_APPROVER,National Disaster Management Center
-Nepal,Alert Approver,np_approver@example.com,eden,ALERT_APPROVER,Department of Hydrology and Meteorology
+Map Admin,Fiji MRD,fj_mapadmin@example.com,testing,MAP_ADMIN,Mineral Resource Department
+Alert Editor,Suva WW,sww_editor@example.com,testing,ALERT_EDITOR,Suva Water Works
+Alert Approver,Suva WW,sww_approver@example.com,testing,ALERT_APPROVER,Suva Water Works
+Alert Editor,FSM,fsm_editor@example.com,testing,ALERT_EDITOR,Fiji Meteorological Service
+Alert Approver,FSM,fsm_approver@example.com,testing,ALERT_APPROVER,Fiji Meteorological service
+Alert Editor,MRD,mrd_editor@example.com,testing,ALERT_EDITOR,Suva Water Works
+Alert Approver,MRD,mrd_approver@example.com,testing,ALERT_APPROVER,Suva Water Works
+Normal,User,normal_user@example.com,testing,ANONYMOUS,
+Admin,User,admin@exampl.com,testing,ADMIN,Sahana Software Foundation
+Authenticated,Red Cross,rc_user@example.com,testing,AUTHENTICATED,Fiji Red Cross Society

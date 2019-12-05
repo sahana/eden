@@ -1,7 +1,7 @@
 Organisation,KV:cap_oid,Acronym,Type,Country,Website,Twitter,Comments
-Abteilung Wasserhaushal,2.49.0.0.40.1,Acronym,Type,Country,Website,Twitter,Comments
-Department of Hydrology and Meteorology,2.49.0.0.524.0,DHM,Government,NP,www.dhm.gov.np,,
-Department of Meteorology and Hydrology,2.49.0.0.428.0,DMH,Government,MM,www.dmh.gov.mm,,
-National Disaster Management Center,2.49.0.0.462.1,NDMC,Government,MV,ndmc.gov.mv,,
-Philippine Institute of Volcanology and Seismology,2.49.0.0.608.1,PHIVOLCS,Government,PH,www.phivolcs.dost.gov.ph,PHIVOLCS,
-Philippine Atmospheric Geophysical and Astronomical Services Administration,2.49.0.0.608.0,PAGASA,Government,PH,www.pagasa.dost.gov.ph,,
+Fiji Meteorological Service,2.49.0.0.242.0,FMS,Government,FJ,www.fsm.fj,,
+National Disaster Management Office,2.49.0.0.242.3,NDMO,Government,FJ,www.ndmo.gov.fj,,
+Suva Water Works,2.49.0.0.242.1,SWW,Government,FJ,,,
+Sahana Software Foundation,,SSF,Supplier,US,www.sahanafoundation.org,,
+Fiji Red Cross Society,2.49.0.0.242.4,FRCS,NGO,FJ,www.fijiredcross.org/,FijiRedCros,
+Mineral Resource Department,2.49.0.0.242.2,MRD,Government,FJ,www.mrd.gov.fj,,

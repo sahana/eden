@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='utf-8'?>
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
+  <identifier>urn:oid:.2019.12.03.021</identifier>
+  <sender>admin@example.com</sender>
+  <sent>2019-12-03T09:45:32+00:00</sent>
+  <status>Test</status>
+  <msgType>Alert</msgType>
+  <source>localhost@http://localhost:8000</source>
+  <scope>Public</scope>
+  <note>CAP v1.2 message prepared by the Government of Fiji for use in alerting of the water shortage crisis</note>
+  <reference>fsm_editor@example.com,urn:oid:2.49.0.0.242.2.1.2019.12.02.015,2019-12-02T09:23:17+00:00</reference>
+  <incidents>Drought "Infectious Disease" "Urban Fire" "Wild Fire"</incidents>
+  <info>
+    <language>en-US</language>
+    <category>Met</category>
+    <event>Drought</event>
+    <responseType>Prepare</responseType>
+    <urgency>Immediate</urgency>
+    <severity>Extreme</severity>
+    <certainty>Observed</certainty>
+    <effective>2019-12-02T09:11:14+00:00</effective>
+    <onset>2019-12-02T09:06:46+00:00</onset>
+    <expires>2019-12-04T09:11:14+00:00</expires>
+    <senderName>admin@example.com</senderName>
+    <headline>Water Shortage in SUVA.</headline>
+    <description>The drought weather over the past 15 days has caused a water shortage in Suva Fiji. As of today 2019-Dec-02 the Suva Water Works (SWW) has estimated an immediate need of 2000 Tons for drinking for cooking, drinking, washing, and sanitation. According to the Fiji Meteorological Services (FSM) forecasts NO RAIN for the next 10 of days. Therefore, these Suva will need WASH assistance。</description>
+    <instruction>Recipients of this message are requested to respond to the crisis by providing direct WASH assistance or relay the alert to other relevant relief services.</instruction>
+    <web>http://localhost:8000/eden/cap/public/15/profile/profile</web>
+    <parameter>
+      <valueName>sahana:event type</valueName>
+      <value>Drought</value>
+    </parameter>
+    <parameter>
+      <valueName>sahana:warning priority</valueName>
+      <value>Warning</value>
+    </parameter>
+    <parameter>
+      <valueName>layer:sms</valueName>
+      <value>Test Alert for Suva with Advisory priority: Drought! issued by admin@example.com at 2019-12-02T09:23:17 (ID:urn:oid:.2019.12.02.015)</value>
+    </parameter>
+    <parameter>
+      <valueName>layer:tweet</valueName>
+      <value>Test Alert: Water Shortage in @AREA.! Sender: admin@example.com Website: http://localhost:8000/eden/cap/public/15/profile</value>
+    </parameter>
+    <parameter>
+      <valueName>sahana:warning priority</valueName>
+      <value>Advisory</value>
+    </parameter>
+    <parameter>
+      <valueName>layer:tweet</valueName>
+      <value>Test Alert: Water Shortage in SUVA.!
+Sender: admin@example.com
+Website: http://localhost:8000/eden/cap/public/15/profile/profile</value>
+    </parameter>
+    <parameter>
+      <valueName>layer:sms</valueName>
+      <value>Test Alert for Suva with Warning priority: Drought! issued by admin@example.com at 2019-12-03T09:45:32 (ID:urn:oid:.2019.12.03.021)</value>
+    </parameter>
+    <resource>
+      <resourceDesc>CAP XML File</resourceDesc>
+      <mimeType>text/xml</mimeType>
+    </resource>
+  </info>
+  <info>
+    <language>hi</language>
+    <category>Met</category>
+    <event>Drought</event>
+    <responseType>Prepare</responseType>
+    <urgency>Immediate</urgency>
+    <severity>Extreme</severity>
+    <certainty>Observed</certainty>
+    <effective>2019-12-02T09:11:14+00:00</effective>
+    <onset>2019-12-02T09:06:46+00:00</onset>
+    <expires>2019-12-04T09:11:14+00:00</expires>
+    <senderName>admin@example.com</senderName>
+    <headline>SUVA में सूखे से जल की कमी हुई है।</headline>
+    <description>पिछले 2000 के दिनों में सूखे के कारण फिजी में SUVA में पानी की कमी हो गई है। 2019-Nov-15 के अनुसार राष्ट्रीय आपदा प्रबंधन केंद्र (NDMC) ने खाना पकाने के लिए पीने के लिए 10 टन की तत्काल आवश्यकता का अनुमान लगाया है। फिजी मौसम विज्ञान सेवा (FSM) के अनुसार इन Suva में 10 दिनों के लिए NO RAIN का पूर्वानुमान नहीं है और इसे सहायता की आवश्यकता होगी</description>
+    <instruction>इस संदेश के प्राप्तकर्ता से अनुरोध है कि वे राहत सेवाओं तक पहुंचने के लिए अलर्ट को पुनः जारी करने की प्रत्यक्ष सहायता प्रदान करके संकट का जवाब दें</instruction>
+    <web>http://localhost:8000/eden/cap/public/15/profile/profile</web>
+    <parameter>
+      <valueName>sahana:event type</valueName>
+      <value>Drought</value>
+    </parameter>
+    <parameter>
+      <valueName>sahana:warning priority</valueName>
+      <value>Warning</value>
+    </parameter>
+    <parameter>
+      <valueName>layer:sms</valueName>
+      <value>Test Alert for Suva with Advisory priority: Drought! issued by admin@example.com at 2019-12-02T09:23:17 (ID:urn:oid:.2019.12.02.015)</value>
+    </parameter>
+    <parameter>
+      <valueName>layer:tweet</valueName>
+      <value>Test Alert: SUVA में सूखे से जल की कमी हुई है।! Sender: admin@example.com Website: http://localhost:8000/eden/cap/public/15/profile</value>
+    </parameter>
+    <parameter>
+      <valueName>sahana:warning priority</valueName>
+      <value>Advisory</value>
+    </parameter>
+    <parameter>
+      <valueName>layer:tweet</valueName>
+      <value>Test Alert: SUVA में सूखे से जल की कमी हुई है।!
+Sender: admin@example.com
+Website: http://localhost:8000/eden/cap/public/15/profile/profile</value>
+    </parameter>
+    <parameter>
+      <valueName>layer:sms</valueName>
+      <value>Test Alert for Suva with Warning priority: Drought! issued by admin@example.com at 2019-12-03T09:45:32 (ID:urn:oid:.2019.12.03.021)</value>
+    </parameter>
+    <resource>
+      <resourceDesc>CAP XML File</resourceDesc>
+      <mimeType>text/xml</mimeType>
+    </resource>
+  </info>
+</alert>

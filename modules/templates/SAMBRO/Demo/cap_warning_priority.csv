@@ -1,4 +1,16 @@
 Priority Rank,Event Code,Name,Event Type,Urgency,Severity,Certainty,Color Code
 1,2099,Urgent,others,Immediate,Extreme,Observed,FF0000
 2,2099,High,others,Expected,Severe,Observed,FFA500
-3,2099,Low,others,Expected,Moderate,Observed,FFFF00
+3,2099,Low,others,Expected,Moderate,Observed,00E0E0
+4,,Flood Warning Falling,Flood,Past,Minor,Unlikely,00E0E0
+3,,Flood Warning in Effect,Flood,Past ,Minor,Unlikely,E81100
+2,,Flood Warning Rising,Flood,Past ,Minor,Unlikely,E8C900
+1,,Flood Advisory,Flood,Past ,Minor,Unlikely,00E0E0
+1,,Tsunami Level 0,Tsunami,Past ,Minor,Unlikely,00E0E0
+2,,Tsunami Level 1,Tsunami,Expected,Severe,Unlikely,E8C900
+3,,Tsunami Level 2,Tsunami,Immediate,Extreme,Unlikely,E81100
+1,,Public Health Cat 01,Epidemic,Future,Minor,Observed,00E0E0
+2,,Public Health Cat 02,Epidemic,Expected,Severe,Observed,E8C900
+3,,Public Health Cat 03,Epidemic,Immediate,Extreme,Observed,E81100
+1,,Advisory,Drought,Expected,Moderate,Observed,00E0E0
+2,,Warning,Drought,Immediate,Extreme,Observed,E81100
