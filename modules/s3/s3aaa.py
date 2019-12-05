@@ -4161,6 +4161,8 @@ $.filterOptionsS3({
         if isinstance(role, str):
             if role.isdigit():
                 role = int(role)
+            elif role in system_roles:
+                role = system_roles[role]
             else:
                 gtable = self.settings.table_group
                 query = (gtable.uuid == role) & \
