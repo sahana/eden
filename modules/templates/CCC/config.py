@@ -257,32 +257,33 @@ def config(settings):
             Assign a Realm Entity to records
         """
 
-        if current.auth.s3_has_role("ADMIN"):
-            # Use default rules
-            return 0
-
-        tablename = table._tablename
-
-        if tablename in (#"hrm_training_event", # Default is fine
-                         "project_task",
-                         #"req_need",           # Default is fine
-                         ):
-            # Use the Org of the Creator
+        if table._tablename in (#"hrm_training_event", # Default is fine
+                                "project_task",
+                                #"req_need",           # Default is fine
+                                ):
             db = current.db
-            new_row = db(table.id == row.id).select(table.created_by,
-                                                    limitby = (0, 1),
-                                                    ).first()
-            user_id = new_row.created_by
-
-            utable = db.auth_user
             otable = current.s3db.org_organisation
-            query = (utable.id == user_id) & \
-                    (utable.organisation_id == otable.id)
+            organisation_id = current.request.get_vars.get("organisation_id")
+            if organisation_id:
+                # Use this Org
+                query = (otable.id == organisation_id)
+            else:
+                # Use the Org of the Creator
+                new_row = db(table.id == row.id).select(table.created_by,
+                                                        limitby = (0, 1),
+                                                        ).first()
+                user_id = new_row.created_by
+
+                utable = db.auth_user
+                query = (utable.id == user_id) & \
+                        (utable.organisation_id == otable.id)
             org = db(query).select(otable.pe_id,
                                    limitby = (0, 1),
                                    ).first()
-            if org:
+            try:
                 return org.pe_id
+            except AttributeError:
+                pass
 
         # Use default rules
         return 0
@@ -1431,6 +1432,37 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_org_organisation_controller(**attr):
 
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_postp = s3.postp
+        def postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.interactive and not r.component:
+
+                from gluon import URL
+                from s3 import s3_str, S3CRUD
+
+                # Normal Action Buttons
+                S3CRUD.action_buttons(r)
+
+                # Custom Action Buttons
+                s3.actions += [{"label": s3_str(T("Message")),
+                                "url": URL(c = "project",
+                                           f = "task",
+                                           args = "create",
+                                           vars = {"organisation_id": "[id]"}
+                                           ),
+                                "_class": "action-btn",
+                                },
+                               ]
+
+            return output
+        s3.postp = postp
+
         attr["rheader"] = ccc_rheader
 
         return attr
@@ -2243,6 +2275,7 @@ def config(settings):
     def customise_project_task_resource(r, tablename):
 
         from s3 import S3OptionsFilter, S3SQLCustomForm, S3TextFilter
+                       
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("New Message"),
@@ -2264,8 +2297,20 @@ def config(settings):
         table.name.label = T("Subject")
         table.description.label = T("Message")
         if current.auth.s3_has_role("ORG_ADMIN"):
-            # @ToDo: Filter Assigned To to just OrgAdmins?
-            pass
+            # @ToDo: Filter Assigned To to just OrgAdmins? (if we use assigned)
+            #        - for now, realms works fine
+            if r.method == "create":
+                table.comments.readable = table.comments.writable = False
+            else:
+                table.created_by.readable = True
+                table.created_by.label = T("Sent By")
+                table.created_by.represent = s3db.auth_UserRepresent(show_phone = True,
+                                                                     show_link = False)
+                table.created_on.readable = True
+                table.created_on.label = T("Sent On")
+                table.name.writable = False
+                table.description.writable = False
+                table.description.comment = None
         else:
         #    f = table.priority
         #    f.default = 1
@@ -2279,16 +2324,20 @@ def config(settings):
         s3db.configure("project_task",
                        # Can simply replace the default one
                        create_onaccept = project_task_create_onaccept,
-                       crud_form = S3SQLCustomForm("name",
+                       crud_form = S3SQLCustomForm("created_by",
+                                                   "created_on",
+                                                   "name",
                                                    "description",
                                                    #"priority",
                                                    #"status",
                                                    #"pe_id",
                                                    "comments",
                                                    ),
+                       listadd = False,
                        list_fields = [#"priority",
                                       #"status",
                                       #"pe_id",
+                                      "created_on",
                                       "created_by",
                                       "name",
                                       ],
@@ -2316,23 +2365,23 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_project_task_controller(**attr):
 
-        if current.auth.s3_has_role("ORG_ADMIN"):
-            # @ToDo: Default filter to hide Closed messages (if we add Closed status)
-            table = current.s3db.project_task
-            table.name.writable = False
-            table.description.writable = False
-        else:
-            s3 = current.response.s3
+        s3 = current.response.s3
+        ORG_ADMIN = current.auth.s3_has_role("ORG_ADMIN")
 
-            # Custom prep
-            standard_prep = s3.prep
-            def prep(r):
-                # Call standard prep
-                if callable(standard_prep):
-                    result = standard_prep(r)
-                else:
-                    result = True
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
 
+            if ORG_ADMIN:
+                # @ToDo: Default filter to hide Closed messages (if we use statuses)
+                if r.method == "create":
+                    s3.crud.submit_button = "Send" # T() Happens in s3forms.py
+            else:
                 if r.method not in ("create", "read", "update"):
                     from gluon import redirect
                     redirect(r.url(method="create"))
@@ -2342,9 +2391,10 @@ def config(settings):
                     # Don't attempt to load comments
                     s3.rfooter = None
 
-                return result
-            s3.prep = prep
+            return result
+        s3.prep = prep
 
+        if not ORG_ADMIN:
             # Custom postp
             standard_postp = s3.postp
             def postp(r, output):

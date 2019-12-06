@@ -33,6 +33,7 @@ __all__ = ("AuthDomainApproverModel",
            "AuthMasterKeyModel",
            "auth_Consent",
            "auth_user_options_get_osm",
+           "auth_UserRepresent",
            "AuthUserTempModel",
            )
 
@@ -1179,5 +1180,177 @@ class AuthUserTempModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {}
+
+
+# =============================================================================
+class auth_UserRepresent(S3Represent):
+    """
+        Representation of User IDs to include 1 or more of
+            * Name
+            * Phone Number
+            * Email address
+        using the highest-priority contact info   available (and permitted)
+    """
+
+    def __init__(self,
+                 labels = None,
+                 linkto = None,
+                 show_name = True,
+                 show_email = True,
+                 show_phone = False,
+                 access = None,
+                 show_link = True,
+                 ):
+        """
+            Constructor
+
+            @param labels: callable to render the name part
+                           (defaults to s3_fullname)
+            @param linkto: a URL (as string) to link representations to,
+                           with "[id]" as placeholder for the key
+                           (defaults see pr_PersonRepresent)
+
+            @param show_name: include name in representation
+            @param show_email: include email address in representation
+            @param show_phone: include phone number in representation
+
+            @param access: access level for contact details,
+                           None = ignore access level
+                           1 = show private only
+                           2 = show public only
+
+            @param show_link: render as HTML hyperlink
+        """
+
+        if labels is None:
+            labels = s3_fullname
+
+        super(auth_UserRepresent, self).__init__(lookup = "auth_user",
+                                                 fields = ["id"],
+                                                 labels = labels,
+                                                 linkto = linkto,
+                                                 show_link = show_link,
+                                                 )
+
+        self.show_name = show_name
+        self.show_email = show_email
+        self.show_phone = show_phone
+        self.access = access
+
+        self._phone = {}
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        if self.show_name:
+            repr_str = self.labels(row.get("pr_person"))
+            if repr_str == "":
+                # Fallback to using auth_user name
+                # (Need to extra elements as otherwise the pr_person LazySet in the row is queried by s3_fullname)
+                user_row = row.get("auth_user")
+                repr_str = self.labels(Storage(first_name = user_row.first_name,
+                                               last_name = user_row.last_name,
+                                               ))
+        else:
+            repr_str = ""
+
+        if self.show_email:
+            email = row.get("auth_user.email")
+            if email:
+                repr_str = "%s <%s>" % (repr_str, email)
+
+        if self.show_phone:
+            phone = self._phone.get(row.get("pr_person.pe_id"))
+            if phone:
+                repr_str = "%s %s" % (repr_str, s3_phone_represent(phone))
+
+        return repr_str
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        # Lookup pe_ids and name fields
+        db = current.db
+        s3db = current.s3db
+
+        table = self.table
+
+        show_name = self.show_name
+        show_phone = self.show_phone
+
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+
+        if show_name or show_phone:
+            ptable = s3db.pr_person
+            ltable = s3db.pr_person_user
+            left = ptable.on((table.id == ltable.user_id) & \
+                             (ltable.pe_id == ptable.pe_id))
+        else:
+            left = None
+
+        fields = [table.id]
+        if self.show_email:
+            fields.append(table.email)
+        if show_phone:
+            fields.append(ptable.pe_id)
+        if show_name:
+            fields += [table.first_name,
+                       table.last_name,
+                       ptable.first_name,
+                       ptable.middle_name,
+                       ptable.last_name,
+                       ]
+
+        rows = db(query).select(*fields,
+                                left = left,
+                                limitby = (0, count),
+                                )
+        self.queries += 1
+
+        if show_phone:
+            lookup_phone = set()
+            phone = self._phone
+            for row in rows:
+                pe_id = row["pr_person.pe_id"]
+                if pe_id not in phone:
+                    lookup_phone.add(pe_id)
+
+            if lookup_phone:
+                ctable = s3db.pr_contact
+                base = current.auth.s3_accessible_query("read", ctable)
+                query = base & \
+                          (ctable.pe_id.belongs(lookup_phone)) & \
+                          (ctable.contact_method == "SMS") & \
+                          (ctable.deleted == False)
+                access = self.access
+                if access:
+                    query &= (ctable.access == access)
+                contacts = db(query).select(ctable.pe_id,
+                                            ctable.value,
+                                            orderby = ctable.priority,
+                                            )
+                self.queries += 1
+                for contact in contacts:
+                    pe_id = contact.pe_id
+                    if not phone.get(pe_id):
+                        phone[pe_id] = contact.value
+
+        return rows
 
 # END =========================================================================
