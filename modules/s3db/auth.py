@@ -1317,9 +1317,9 @@ class auth_UserRepresent(S3Represent):
                        ptable.last_name,
                        ]
 
-        rows = db(query).select(left = left,
-                                limitby = (0, count),
-                                *fields)
+        rows = db(query).select(*fields,
+                                left = left,
+                                limitby = (0, count))
         self.queries += 1
 
         if show_phone:
