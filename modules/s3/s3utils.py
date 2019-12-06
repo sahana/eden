@@ -881,6 +881,8 @@ def s3_avatar_represent(user_id, tablename="auth_user", gravatar=False, **attr):
 def s3_auth_user_represent(user_id, row=None):
     """
         Represent a user as their email address
+
+        @ToDo: Deprecate (replace with auth_UserRepresent)
     """
 
     if row:
@@ -903,6 +905,8 @@ def s3_auth_user_represent(user_id, row=None):
 def s3_auth_user_represent_name(user_id, row=None):
     """
         Represent users by their names
+
+        @ToDo: Deprecate (replace with auth_UserRepresent)
     """
 
     if not row:

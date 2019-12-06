@@ -6999,17 +6999,17 @@ class pr_PersonRepresent(S3Represent):
     """
 
     def __init__(self,
-                 lookup="pr_person",
-                 key=None,
-                 fields=None,
-                 labels=None,
-                 options=None,
-                 translate=False,
-                 linkto=None,
-                 show_link=False,
-                 multiple=False,
-                 default=None,
-                 none=None):
+                 lookup = "pr_person",
+                 key = None,
+                 fields = None,
+                 labels = None,
+                 options = None,
+                 translate = False,
+                 linkto = None,
+                 show_link = False,
+                 multiple = False,
+                 default = None,
+                 none = None):
 
         if show_link and not linkto:
             request = current.request
