@@ -6,6 +6,6 @@ Alert Editor,FSM,fsm_editor@example.com,testing,ALERT_EDITOR,Fiji Meteorological
 Alert Approver,FSM,fsm_approver@example.com,testing,ALERT_APPROVER,Fiji Meteorological service
 Alert Editor,MRD,mrd_editor@example.com,testing,ALERT_EDITOR,Suva Water Works
 Alert Approver,MRD,mrd_approver@example.com,testing,ALERT_APPROVER,Suva Water Works
-Normal,User,normal_user@example.com,testing,ANONYMOUS,
+Normal,User,normal_user@example.com,testing,,
 Admin,User,admin@exampl.com,testing,ADMIN,Sahana Software Foundation
-Authenticated,Red Cross,rc_user@example.com,testing,AUTHENTICATED,Fiji Red Cross Society
+Authenticated,Red Cross,rc_user@example.com,testing,,Fiji Red Cross Society
