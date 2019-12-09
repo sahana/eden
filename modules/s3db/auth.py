@@ -1319,7 +1319,7 @@ class auth_UserRepresent(S3Represent):
 
         rows = db(query).select(*fields,
                                 left = left,
-                                limitby = (0, count),
+                                limitby = (0, count)
                                 )
         self.queries += 1
 

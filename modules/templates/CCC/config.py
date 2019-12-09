@@ -864,11 +864,12 @@ def config(settings):
                                                    "status",
                                                    "comments",
                                                    ),
-                       list_fields = ["person_id",
-                                      "person_id$human_resource.organisation_id",
-                                      "status",
-                                      "comments",
-                                      ],
+                       # Done in customise_hrm_training_event_controller prep
+                       #list_fields = ["person_id",
+                       #               "person_id$human_resource.organisation_id",
+                       #               "status",
+                       #               "comments",
+                       #               ],
                        # Don't add people here (they are either invited or apply)
                        listadd = False,
                        )
@@ -1177,6 +1178,14 @@ def config(settings):
                 from gluon import URL
                 r.resource.configure(create_next = URL(c="hrm", f="training_event",
                                                        args = ["[id]", "assign"]))
+            elif r.component_name == "participant":
+                s3db.configure("hrm_training",
+                               list_fields = ["person_id",
+                                              "person_id$human_resource.organisation_id",
+                                              "status",
+                                              "comments",
+                                              ],
+                               )
 
             if r.method == "assign":
 
