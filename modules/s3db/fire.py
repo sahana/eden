@@ -108,6 +108,7 @@ class S3FireModel(S3Model):
                            comment = S3PopupLink(c = "fire",
                                                  f = "zone_type",
                                                  label = ADD_ZONE_TYPE,
+                                                 title = T("Zone Type"),
                                                  tooltip = T("Select a Zone Type from the list or click 'Add Zone Type'"),
                                                  ),
                            label=T("Type")),
@@ -198,7 +199,7 @@ class S3FireStationModel(S3Model):
                            ),
                      Field("code", length=10,   # Mayon compatibility
                            label = T("Code"),
-                           represent = lambda v: v or NONE,
+                           represent = lambda v: v or current.messages["NONE"],
                            requires = code_requires,
                            ),
                      Field("facility_type", "integer",
@@ -364,10 +365,10 @@ class S3FireStationModel(S3Model):
             msg_no_match = T("No Vehicles could be found"),
             msg_list_empty = T("No Vehicles currently registered"))
 
-        self.set_method("fire", "station",
-                        method = "vehicle_report",
-                        action = self.vehicle_report,
-                        )
+        #self.set_method("fire", "station",
+        #                method = "vehicle_report",
+        #                action = self.vehicle_report,
+        #                )
 
         # =====================================================================
         # Water Sources
@@ -572,7 +573,7 @@ class S3FireStationModel(S3Model):
     def vehicle_report(r, **attr):
         """
             Custom method to provide a report on Vehicle Deployment Times
-            - this is one of the main tools currently used to manage an Incident
+            @ToDo: Currently unused, requires deprecated irs module. Reimplement based on event module.
         """
 
         rheader = attr.get("rheader", None)

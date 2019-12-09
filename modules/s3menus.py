@@ -1043,13 +1043,12 @@ class S3OptionsMenu(object):
                     ),
                     M("Fire Zones", f="zone")(
                         M("Create", m="create"),
-                        #M("Map", m="map"),
-                        #M("Import", m="import"),
+                        M("Map", m="map"),
+                        M("Import", m="import"),
                     ),
                     M("Zone Types", f="zone_type")(
                         M("Create", m="create"),
-                        #M("Map", m="map"),
-                        #M("Import", m="import"),
+                        M("Import", m="import"),
                     ),
                     M("Water Sources", f="water_source")(
                         M("Create", m="create"),

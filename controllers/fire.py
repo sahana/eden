@@ -10,50 +10,16 @@ if not settings.has_module(module):
 def index():
     """ Module Homepage """
 
-    module_name = settings.modules[module].name_nice
-    response.title = module_name
+    return s3db.cms_index(module, alt_function="index_alt")
 
-    htable = s3db.fire_shift_staff
-    stable = s3db.fire_station
-    station_id = None
-    station_name = None
+# -----------------------------------------------------------------------------
+def index_alt():
+    """
+        Module homepage for non-Admin users when no CMS content found
+    """
 
-    human_resource_id = auth.s3_logged_in_human_resource()
-    query = htable.human_resource_id == human_resource_id
-
-    left = htable.on(htable.station_id == stable.id)
-
-    row = db(query).select(htable.station_id,
-                           stable.name,
-                           left = left,
-                           limitby = (0, 1),
-                           ).first()
-    if row:
-        station_id = row.fire_shift_staff.station_id
-        station_name = row.fire_station.name
-
-    # Note that this requires setting the Porto Incident Types in modules/s3db/irs.py
-    incidents = DIV(A(DIV(T("Fire"),
-                          _style="background-color:red;",
-                          _class="question-container fleft"),
-                      _href=URL(c="irs", f="ireport", args=["create"],
-                                vars={"type":"fire"})),
-                    A(DIV(T("Rescue"),
-                          _style="background-color:green;",
-                          _class="question-container fleft"),
-                      _href=URL(c="irs", f="ireport", args=["create"],
-                                vars={"type":"rescue"})),
-                    A(DIV(T("Hazmat"),
-                          _style="background-color:yellow;",
-                          _class="question-container fleft"),
-                      _href=URL(c="irs", f="ireport", args=["create"],
-                                vars={"type":"hazmat"})))
-
-    return dict(incidents = incidents,
-                station_id = station_id,
-                station_name = station_name,
-                module_name = module_name,
-                )
+    # Just redirect to the list of Fire stations
+    s3_redirect_default(URL(f="station"))
 
 # -----------------------------------------------------------------------------
 def zone():
@@ -155,7 +121,7 @@ def fire_rheader(r, tabs=[]):
                     (T("Staff"), "human_resource"),
                     #(T("Shifts"), "shift"),
                     (T("Roster"), "shift_staff"),
-                    (T("Vehicle Deployments"), "vehicle_report"),
+                    #(T("Vehicle Deployments"), "vehicle_report"),
                 ]
                 rheader_tabs = s3_rheader_tabs(r, tabs)
 
