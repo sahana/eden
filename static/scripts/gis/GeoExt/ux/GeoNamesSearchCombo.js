@@ -41,13 +41,13 @@ GeoExt.ux.GeoNamesSearchCombo = Ext.extend(Ext.form.ComboBox, {
      *  See http://www.dev.sencha.com/deploy/dev/docs/source/Combo.html#cfg-Ext.form.ComboBox-loadingText,
      *  default value is "Search in Geonames...".
      */
-    loadingText: 'Search in Geonames...',
+    loadingText: 'Searching locations...',
 
     /** api: config[emptyText]
      *  See http://www.dev.sencha.com/deploy/dev/docs/source/TextField.html#cfg-Ext.form.TextField-emptyText,
-     *  default value is "Search location in Geonames".
+     *  default value is "Search locations".
      */
-    emptyText: 'Search location in Geonames',
+    emptyText: 'Search locations',
 
     /** api: config[username]
      *  ``String`` Username to send with API requests. Mandatory.
@@ -217,7 +217,8 @@ GeoExt.ux.GeoNamesSearchCombo = Ext.extend(Ext.form.ComboBox, {
     /** private: property[url]
      *  Url of the GeoNames service: http://www.GeoNames.org/export/GeoNames-search.html
      */
-    url: 'http://ws.geonames.org/searchJSON?',
+    /*url: 'http://ws.geonames.org/searchJSON?',*/
+    url: 'http://'+window.location.hostname+':8000/eden/gis/search_gis_locations.html/',
 
     /** private: constructor
      */
@@ -238,9 +239,40 @@ GeoExt.ux.GeoNamesSearchCombo = Ext.extend(Ext.form.ComboBox, {
             urlAppendString = urlAppendString + this.featureCodeString;
         }
         
+	//Query internal locations first
+	this.store = new Ext.data.Store({
+            proxy: new Ext.data.ScriptTagProxy({
+	        url: this.url,
+                method: 'GET'
+            }),
+            reader: new Ext.data.JsonReader({
+                idProperty: 'id',
+                root: "gislocations",
+                totalProperty: "totalResultsCount",
+                fields: [
+		    {
+			name:'id'
+		    },
+		    {
+			name:'fcode'
+		     },
+                    {
+                        name: 'name'
+                    },
+                    {
+                        name: 'lng'
+                    },
+                    {
+                        name: 'lat'
+                    }
+                ]
+            }) //End reader
+	}); //End store
+
+	/*if(this.store.reader.totalProperty==0){ //No internal matches
         this.store = new Ext.data.Store({
             proxy: new Ext.data.ScriptTagProxy({
-                url: this.url + urlAppendString,
+                url: 'http://ws.geonames.org/searchJSON?' + urlAppendString,
                 method: 'GET'
             }),
             baseParams: {
@@ -298,8 +330,9 @@ GeoExt.ux.GeoNamesSearchCombo = Ext.extend(Ext.form.ComboBox, {
                         name: 'adminName1'
                     }
                 ]
-            })
-        });
+	     }) //End reader
+	   });//end store
+	 }//end if*/
 
         if (this.zoom > 0) {
             this.on("select", function(combo, record, index) {
