@@ -13,21 +13,6 @@
 {{try:}}{{=form}}{{except:}}{{pass}}
 </div>
 </div>
-<div>
-    {{=H3("%s: %s" % (T("Total Persons"), total and total or "?"))}}
-    <div id='charts'>
-        <table>
-            <tr>
-                <td>
-                    <div id='chart1' style='width:260px; height:200px;'></div>
-                </td>
-                <td>
-                    <div id='chart2' style='width:260px; height:200px;'></div>
-                </td>
-            </tr>
-        </table>
-    </div>
-</div>
 <div id='rheader'>
 {{try:}}{{=XML(rheader)}}
 </div>
@@ -67,37 +52,3 @@ $('#show-add-btn').hide()'''}}
 {{script = '''$('#show-add-btn').click(function(){$('#list-add').show()
  $('#show-add-btn').hide()})'''}}
 {{pass}}{{s3.jquery_ready.append(script)}}
-{{if s3.debug:}}
-<link href="/{{=appname}}/static/styles/plugins/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jquery.jqplot.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.pieRenderer.js"></script>
-<!-- @ToDo: Replace with https://github.com/SlexAxton/yepnope.js -->
-<!--[if IE]><script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/excanvas.js"></script><![endif]-->
-{{else:}}
-<link href="/{{=appname}}/static/styles/plugins/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jquery.jqplot.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.pieRenderer.min.js"></script>
-<!--[if IE]><script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/excanvas.min.js"></script><![endif]-->
-{{pass}}
-<script type="text/javascript" language="javascript">//<![CDATA[
-$(document).ready(function(){
-    var gender = {{try:}}{{=XML(gender)}}{{except:}}0{{pass}};
-    var age = {{try:}}{{=XML(age)}}{{except:}}0{{pass}};
-
-    if ( gender ) {
-        var plot1 = $.jqplot('chart1', [gender], {
-          title: 'Persons by Gender',
-          seriesDefaults:{renderer:$.jqplot.PieRenderer, rendererOptions:{diameter:100}},
-          legend:{show:true, escapeHtml:true}
-        });
-    }
-
-    if ( age ) {
-        var plot2 = $.jqplot('chart2', [age], {
-          title: 'Persons by Age Group',
-          seriesDefaults:{renderer:$.jqplot.PieRenderer, rendererOptions:{diameter:100}},
-          legend:{show:true, escapeHtml:true}
-        });
-    }
-});
-//]]></script>
