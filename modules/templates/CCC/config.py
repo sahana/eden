@@ -315,31 +315,58 @@ def config(settings):
 
         if tablename == "hrm_training_event":
             T = current.T
-            if current.auth.s3_has_role("ORG_ADMIN"):
+            auth = current.auth
+            has_role = auth.s3_has_role
+            if has_role("ORG_ADMIN"):
                 tabs = [(T("Basic Details"), None),
-                        (T("Participants"), "participant"),
+                        (T("Participants"), "training"),
                         (T("Invite"), "assign"),
                         ]
-            else:
+            elif has_role("RESERVE"):
+                # Reserves can only see Events that they have been invited to
                 tabs = [(T("Basic Details"), None),
-                        (T("Participation"), "participant"),
+                        (T("Participation"), "training"),
                         ]
+            else:
+                record_id = r.id
+                ltable = current.s3db.hrm_training
+                query = (ltable.training_event_id == record_id) & \
+                        (ltable.person_id == auth.s3_logged_in_person())
+                training = current.db(query).select(ltable.id,
+                                                    limitby = (0, 1)
+                                                    ).first()
+                if training:
+                    tabs = [(T("Basic Details"), None),
+                            (T("Participation"), "training"),
+                            ]
+                else:
+                    from gluon import A, URL
+                    apply_btn = DIV(A(T("Apply"),
+                                      _class="action-btn",
+                                      _href = URL(args = [record_id, "apply"]),
+                                      ),
+                                    )
+                    tabs = None
 
-            rheader_tabs = s3_rheader_tabs(r, tabs)
+            if tabs is None:
+                rheader = DIV(apply_btn)
+            else:
+                rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            table = r.table
-            location_id = table.location_id
-            date_field = table.start_date
-            rheader = DIV(TABLE(TR(TH("%s: " % T("Event name")),
-                                   record.name,
-                                   ),
-                                TR(TH("%s: " % T("Date")),
-                                   date_field.represent(record.start_date),
-                                   ),
-                                TR(TH("%s: " % location_id.label),
-                                   location_id.represent(record.location_id),
-                                   )),
-                          rheader_tabs)
+                table = r.table
+                location_id = table.location_id
+                date_field = table.start_date
+                rheader = DIV(TABLE(TR(TH("%s: " % T("Event name")),
+                                       record.name,
+                                       ),
+                                    TR(TH("%s: " % T("Date")),
+                                       date_field.represent(record.start_date),
+                                       ),
+                                    TR(TH("%s: " % location_id.label),
+                                       location_id.represent(record.location_id),
+                                       ),
+                                    ),
+                              rheader_tabs)
 
         elif tablename == "org_organisation":
             T = current.T
@@ -417,34 +444,60 @@ def config(settings):
 
         elif tablename == "req_need":
             T = current.T
-            if current.auth.s3_has_role("ORG_ADMIN"):
+            auth = current.auth
+            has_role = auth.s3_has_role
+            if has_role("ORG_ADMIN"):
                 tabs = [(T("Basic Details"), None),
                         #(T("Items"), "need_item"),
                         #(T("Skills"), "need_skill"),
                         (T("Participants"), "need_person"),
                         (T("Invite"), "assign"),
                         ]
-            else:
-                # @ToDo: Button to Apply? (rheader or rfooter)
+            elif has_role("RESERVE"):
+                # Reserves can only see Opportunities that they have been invited to
                 tabs = [(T("Basic Details"), None),
                         (T("Participation"), "need_person"),
                         ]
+            else:
+                record_id = r.id
+                ltable = current.s3db.req_need_person
+                query = (ltable.need_id == record_id) & \
+                        (ltable.person_id == auth.s3_logged_in_person())
+                need_person = current.db(query).select(ltable.id,
+                                                       limitby = (0, 1)
+                                                       ).first()
+                if need_person:
+                    tabs = [(T("Basic Details"), None),
+                            (T("Participation"), "need_person"),
+                            ]
+                else:
+                    from gluon import A, URL
+                    apply_btn = DIV(A(T("Apply"),
+                                      _class="action-btn",
+                                      _href = URL(args = [record_id, "apply"]),
+                                      ),
+                                    )
+                    tabs = None
 
-            rheader_tabs = s3_rheader_tabs(r, tabs)
+            if tabs is None:
+                rheader = DIV(apply_btn)
+            else:
+                rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            table = r.table
-            location_id = table.location_id
-            date_field = table.date
-            rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
-                                   record.name,
-                                   ),
-                                TR(TH("%s: " % date_field.label),
-                                   date_field.represent(record.date),
-                                   ),
-                                TR(TH("%s: " % location_id.label),
-                                   location_id.represent(record.location_id),
-                                   )),
-                          rheader_tabs)
+                table = r.table
+                location_id = table.location_id
+                date_field = table.date
+                rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+                                       record.name,
+                                       ),
+                                    TR(TH("%s: " % date_field.label),
+                                       date_field.represent(record.date),
+                                       ),
+                                    TR(TH("%s: " % location_id.label),
+                                       location_id.represent(record.location_id),
+                                       ),
+                                    ),
+                              rheader_tabs)
 
         return rheader
 
@@ -812,6 +865,9 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def hrm_training_create_onaccept(form):
+        """
+            Ensure record owned by the invitee
+        """
 
         db = current.db
         s3db = current.s3db
@@ -833,6 +889,68 @@ def config(settings):
             pass
 
     # -------------------------------------------------------------------------
+    def hrm_training_update_onaccept(form):
+        """
+            Inform applicant if they have been Approved/Declined
+            tbc?: Inform OrgAdmins if they have been Accepted/Rejected
+        """
+
+        form_vars_get = form.vars.get
+        if form.record.status in (1, 2) and \
+           form_vars_get("status") == "3":
+            # Rejected
+            approved_or_rejected = "rejected"
+        elif form.record.status in (1, 3) and \
+             form_vars_get("status") == "2":
+            # Approved
+            approved_or_rejected = "approved"
+        else:
+            return
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.hrm_training
+        training_id = form_vars_get("id")
+
+        record = db(table.id == training_id).select(table.person_id,
+                                                    table.training_event_id,
+                                                    limitby = (0, 1)
+                                                    ).first()
+
+        # Message
+        utable = db.auth_user
+        ltable = s3db.pr_person_user
+        ptable = s3db.pr_person
+        query = (ptable.id == record.person_id) & \
+                (ptable.pe_id == ltable.pe_id) & \
+                (ltable.user_id == utable.id)
+        user = db(query).select(utable.email,
+                                limitby = (0, 1)
+                                ).first()
+
+        # Construct Email message
+        subject = "%s: You have been %s to participate in an Event" % \
+            (settings.get_system_name_short(),
+             approved_or_rejected,
+             )
+
+        etable = s3db.hrm_training_event
+        training_event = db(etable.id == record.training_event_id).select(etable.name,
+                                                                          limitby = (0, 1)
+                                                                          ).first().name
+
+        message = "You have been %s to participate in an Event:\n%s" % \
+            (approved_or_rejected,
+             training_event,
+             )
+
+        # Send message to each
+        current.msg.send_email(to = user.email,
+                               subject = subject,
+                               message = message,
+                               )
+
+    # -------------------------------------------------------------------------
     def customise_hrm_training_resource(r, tablename):
 
         from s3 import S3SQLCustomForm
@@ -842,28 +960,71 @@ def config(settings):
         table = s3db.hrm_training
 
         table.status.readable = table.status.writable = True
-        table.person_id.writable = False
-        table.person_id.represent = s3db.pr_PersonRepresent(show_link = True)
+        f = table.person_id
+        f.comment = None
+        f.writable = False
+        f.represent = s3db.pr_PersonRepresent(show_link = True)
 
-        if not current.auth.s3_has_role("ORG_ADMIN"):
-            if r.component_id:
-                record = current.db(table.person_id == r.component_id).select(table.status,
-                                                                              limitby = (0, 1)
-                                                                              ).first()
-                if record.status in (4, 5, 6):
-                    from gluon import IS_IN_SET
+        current.response.s3.crud_strings.hrm_training = Storage(
+            label_create = T("Add Participant"),
+            title_display = T("Participant Details"),
+            title_list = T("Participants"),
+            title_update = T("Edit Participant"),
+            title_upload = T("Import Participants"),
+            label_list_button = T("List Participants"),
+            label_delete_button = T("Remove Participant"),
+            msg_record_created = T("Participant added"),
+            msg_record_modified = T("Participant updated"),
+            msg_record_deleted = T("Participant removed"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("Currently no Participants registered"))
+
+        deletable = True
+        if r.component_id:
+            record = current.db(table.id == r.component_id).select(table.status,
+                                                                   limitby = (0, 1)
+                                                                   ).first()
+            if current.auth.s3_has_role("ORG_ADMIN"):
+                from gluon import IS_IN_SET
+                if record.status in (1, 2, 3):
+                    deletable = False
+                    table.status.requires = IS_IN_SET({1: T("Applied"),
+                                                       2: T("Approved"),
+                                                       3: T("Rejected"),
+                                                       })
+                else:
                     table.status.requires = IS_IN_SET({4: T("Invited"),
                                                        5: T("Accepted"),
                                                        6: T("Declined"),
                                                        })
+            else:
+                if record.status in (4, 5, 6):
+                    deletable = False
+                    from gluon import IS_IN_SET
+                    if r.method == "update":
+                        table.status.requires = IS_IN_SET({5: T("Accepted"),
+                                                           6: T("Declined"),
+                                                           })
+                    else:
+                        table.status.requires = IS_IN_SET({4: T("Invited"),
+                                                           5: T("Accepted"),
+                                                           6: T("Declined"),
+                                                           })
                 else:
+                    current.response.s3.crud_strings.hrm_training.label_delete_button = T("Withdraw Application")
                     table.status.writable = False
+        elif r.component:
+            if current.auth.s3_has_role("ORG_ADMIN"):
+                current.response.s3.crud_labels["DELETE"] = "Remove"
+            else:
+                current.response.s3.crud_labels["DELETE"] = "Withdraw"
 
         s3db.configure("hrm_training",
                        crud_form = S3SQLCustomForm("person_id",
                                                    "status",
                                                    "comments",
                                                    ),
+                       deletable = deletable,
                        # Done in customise_hrm_training_event_controller prep
                        #list_fields = ["person_id",
                        #               "person_id$human_resource.organisation_id",
@@ -872,9 +1033,76 @@ def config(settings):
                        #               ],
                        # Don't add people here (they are either invited or apply)
                        listadd = False,
+                       update_onaccept = hrm_training_update_onaccept,
                        )
 
     settings.customise_hrm_training_resource = customise_hrm_training_resource
+
+    # -------------------------------------------------------------------------
+    def hrm_training_event_apply(r, **attr):
+        """
+            Custom S3Method to Apply to an Event
+        """
+
+        db = current.db
+
+        record_id = r.id
+        auth = current.auth
+        user_id = auth.user.id
+
+        training_id = current.s3db.hrm_training.insert(training_event_id = record_id,
+                                                       person_id = auth.s3_logged_in_person(),
+                                                       status = 1,
+                                                       owned_by_user = user_id,
+                                                       )
+        # NB This is just an Application so do NOT call onaccept
+
+        # Message OrgAdmins
+        from gluon import redirect, URL
+        from s3 import s3_fullname
+
+        # Lookup the Author details
+        utable = db.auth_user
+        user = db(utable.id == user_id).select(utable.first_name,
+                                               utable.last_name,
+                                               utable.organisation_id,
+                                               limitby = (0, 1)
+                                               ).first()
+        fullname = s3_fullname(user)
+
+        # Lookup the ORG_ADMINs
+        gtable = db.auth_group
+        mtable = db.auth_membership
+        query = (gtable.uuid == "ORG_ADMIN") & \
+                (gtable.id == mtable.group_id) & \
+                (mtable.user_id == utable.id) & \
+                (utable.organisation_id == user.organisation_id)
+        org_admins = db(query).select(utable.email)
+
+        # Construct Email message
+        subject = "%s: %s has applied to participate in your Event" % \
+            (settings.get_system_name_short(),
+             fullname,
+             )
+
+        url = "%s%s" % (settings.get_base_public_url(),
+                        URL(c="hrm", f="training_event", args=[record_id, "training", training_id]))
+        message = "%s has applied to participate in your Event: %s\n\nYou can approve or decline this here: %s" % \
+            (fullname,
+             r.record.name,
+             url,
+             )
+
+        # Send message to each
+        send_email = current.msg.send_email
+        for admin in org_admins:
+            send_email(to = admin.email,
+                       subject = subject,
+                       message = message,
+                       )
+
+        # Redirect
+        redirect(URL(args = [record_id, "training", training_id]))
 
     # -------------------------------------------------------------------------
     def hrm_training_event_assign_postprocess(record, selected):
@@ -915,7 +1143,7 @@ def config(settings):
                                                                 ).as_dict(key = "tag")
 
         base_url = "%s%s" % (settings.get_base_public_url(),
-            URL(c="hrm", f="training_event", args=[record_id, "participant"]))
+            URL(c="hrm", f="training_event", args=[record_id, "training"]))
         message = "You have been invited to an Event:\n\nEvent name: %s\nEvent description: %s\nStarts: %s\nLead Organisation: %s\nVenue name: %s\nDistrict: %s\nStreet Address: %s\nPostcode: %s\nContact Name: %s\nTelephone: %s\nEmail: %s\nWebsite: %s\n\nYou can respond to the invite here: %s" % \
             (event_name,
              record.get("comment") or "",
@@ -971,6 +1199,7 @@ def config(settings):
                           (ettable.tag == "venue_name")
                           )
         training_event = db(etable.id == training_event_id).select(etable.location_id,
+                                                                   etable.organisation_id,
                                                                    etable.site_id,
                                                                    ettable.value,
                                                                    left = left,
@@ -990,11 +1219,20 @@ def config(settings):
         else:
             record = {"name": venue_name,
                       "location_id": location_id,
+                      "organisation_id": training_event[etable.organisation_id],
                       }
             facility_id = ftable.insert(**record)
             record["id"] = facility_id
             s3db.update_super(ftable, record)
+            callback = s3db.get_config("org_facility", "create_onaccept")
+            if callback is None:
+                callback = s3db.get_config("org_facility", "onaccept")
+            if callable(callback):
+                callback(Storage(vars = record))
+            set_realm_entity = current.auth.set_realm_entity
+            set_realm_entity(ftable, facility_id, force_update=True)
             db(etable.id == training_event_id).update(site_id = record["site_id"])
+            set_realm_entity(etable, training_event_id, force_update=True)
 
     # -------------------------------------------------------------------------
     def customise_hrm_training_event_resource(r, tablename):
@@ -1101,7 +1339,7 @@ def config(settings):
                           ]
 
         auth = current.auth
-        if auth.s3_has_role(auth.get_system_roles().ADMIN):
+        if auth.s3_has_role("ADMIN"):
             filter_widgets.append(S3OptionsFilter("organisation_id",
                                                   label = T("Organization")))
             list_fields.insert(0, (T("Organization"), "organisation_id"))
@@ -1150,10 +1388,12 @@ def config(settings):
         s3 = current.response.s3
         s3.crud.assign_button = "Invite"
 
+        set_method = s3db.set_method
+
         # Ensure Tab is shown
-        s3db.set_method("hrm", "training_event",
-                        method = "assign",
-                        action = s3db.pr_AssignMethod(component = "participant"))
+        set_method("hrm", "training_event",
+                   method = "assign",
+                   action = s3db.pr_AssignMethod(component = "training"))
 
         # Custom prep
         standard_prep = s3.prep
@@ -1173,12 +1413,17 @@ def config(settings):
                 trainings = current.db(table.person_id == auth.s3_logged_in_person()).select(table.training_event_id)
                 events_invited = [t.training_event_id for t in trainings]
                 r.resource.add_filter(FS("id").belongs(events_invited))
+            else:
+                set_method("hrm", "training_event",
+                           method = "apply",
+                           action = hrm_training_event_apply)
 
             if not r.component:
                 from gluon import URL
                 r.resource.configure(create_next = URL(c="hrm", f="training_event",
                                                        args = ["[id]", "assign"]))
-            elif r.component_name == "participant":
+            elif r.component_name == "training":
+
                 s3db.configure("hrm_training",
                                list_fields = ["person_id",
                                               "person_id$human_resource.organisation_id",
@@ -1223,19 +1468,23 @@ def config(settings):
                                (T("Skills"), "competency.skill_id"),
                                ]
 
-                s3db.set_method("hrm", "training_event",
-                                method = "assign",
-                                action = s3db.pr_AssignMethod(component = "participant",
-                                                              filter_widgets = filter_widgets,
-                                                              list_fields = list_fields,
-                                                              postprocess = hrm_training_event_assign_postprocess,
-                                                              ))
+                set_method("hrm", "training_event",
+                           method = "assign",
+                           action = s3db.pr_AssignMethod(component = "training",
+                                                         filter_widgets = filter_widgets,
+                                                         list_fields = list_fields,
+                                                         postprocess = hrm_training_event_assign_postprocess,
+                                                         ))
 
-                s3db.add_custom_callback("hrm_training",
-                                         "onaccept",
-                                         hrm_training_create_onaccept,
-                                         method = "create",
-                                         )
+                # Replace Callback rather than extend
+                #s3db.add_custom_callback("hrm_training",
+                #                         "onaccept",
+                #                         hrm_training_create_onaccept,
+                #                         method = "create",
+                #                         )
+                s3db.configure("hrm_training",
+                               create_onaccept = hrm_training_create_onaccept,
+                               )
 
             return result
         s3.prep = prep
@@ -2456,6 +2705,72 @@ def config(settings):
         db(rntable.id == need_id).update(realm_entity = realm_entity)
 
     # -------------------------------------------------------------------------
+    def req_need_apply(r, **attr):
+        """
+            Custom S3Method to Apply to an Opportunity
+        """
+
+        db = current.db
+
+        record_id = r.id
+        auth = current.auth
+        user_id = auth.user.id
+
+        need_person_id = current.s3db.req_need_person.insert(need_id = record_id,
+                                                             person_id = auth.s3_logged_in_person(),
+                                                             status = 1,
+                                                             owned_by_user = user_id,
+                                                             )
+        # No onaccept needed
+
+        # Message OrgAdmins
+        from gluon import redirect, URL
+        from s3 import s3_fullname
+
+        # Lookup the Author details
+        utable = db.auth_user
+        user = db(utable.id == user_id).select(utable.first_name,
+                                               utable.last_name,
+                                               utable.organisation_id,
+                                               limitby = (0, 1)
+                                               ).first()
+        fullname = s3_fullname(user)
+
+        # Lookup the ORG_ADMINs
+        gtable = db.auth_group
+        mtable = db.auth_membership
+        query = (gtable.uuid == "ORG_ADMIN") & \
+                (gtable.id == mtable.group_id) & \
+                (mtable.user_id == utable.id) & \
+                (utable.organisation_id == user.organisation_id)
+        org_admins = db(query).select(utable.email)
+
+        # Construct Email message
+        subject = "%s: %s has applied to participate in your Opportunity" % \
+            (settings.get_system_name_short(),
+             fullname,
+             )
+
+        url = "%s%s" % (settings.get_base_public_url(),
+                        URL(c="req", f="need", args=[record_id, "need_person", need_person_id]))
+        message = "%s has applied to participate in your Opportunity: %s\n\nYou can approve or decline this here: %s" % \
+            (fullname,
+             r.record.name,
+             url,
+             )
+
+        # Send message to each
+        send_email = current.msg.send_email
+        for admin in org_admins:
+            send_email(to = admin.email,
+                       subject = subject,
+                       message = message,
+                       )
+
+        # Redirect
+        redirect(URL(args = [record_id, "need_person", need_person_id]))
+
+    # -------------------------------------------------------------------------
     def req_need_assign_postprocess(record, selected):
         """
             Send notification to Invitees
@@ -2736,6 +3051,8 @@ def config(settings):
 
             s3db = current.s3db
 
+            set_method = s3db.set_method
+
             #if r.method == "read":
             #    # Show the Contact's Phone & Email
             #    # @ToDo: Do this only for Vols whose Application has been succesful
@@ -2755,6 +3072,10 @@ def config(settings):
                 links = current.db(table.person_id == auth.s3_logged_in_person()).select(table.need_id)
                 needs_invited = [l.need_id for l in links]
                 r.resource.add_filter(FS("id").belongs(needs_invited))
+            else:
+                set_method("req", "need",
+                           method = "apply",
+                           action = req_need_apply)
 
             if not r.component:
                 from gluon import URL
@@ -2797,13 +3118,13 @@ def config(settings):
                                (T("Skills"), "competency.skill_id"),
                                ]
 
-                s3db.set_method("req", "need",
-                                method = "assign",
-                                action = s3db.pr_AssignMethod(component = "need_person",
-                                                              filter_widgets = filter_widgets,
-                                                              list_fields = list_fields,
-                                                              postprocess = req_need_assign_postprocess,
-                                                              ))
+                set_method("req", "need",
+                           method = "assign",
+                           action = s3db.pr_AssignMethod(component = "need_person",
+                                                         filter_widgets = filter_widgets,
+                                                         list_fields = list_fields,
+                                                         postprocess = req_need_assign_postprocess,
+                                                         ))
 
                 s3db.add_custom_callback("req_need_person",
                                          "onaccept",
@@ -2843,31 +3164,134 @@ def config(settings):
             pass
 
     # -------------------------------------------------------------------------
-    def customise_req_need_person_resource(r, tablename):
+    def req_need_person_update_onaccept(form):
+        """
+            Inform applicant if they have been Approved/Declined
+            tbc?: Inform OrgAdmins if they have been Accepted/Rejected
+        """
 
-        current.response.s3.crud_labels["DELETE"] = "Remove"
+        form_vars_get = form.vars.get
+        if form.record.status in (1, 2) and \
+           form_vars_get("status") == "3":
+            # Rejected
+            approved_or_rejected = "rejected"
+        elif form.record.status in (1, 3) and \
+             form_vars_get("status") == "2":
+            # Approved
+            approved_or_rejected = "approved"
+        else:
+            return
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.req_need_person
+        need_person_id = form_vars_get("id")
+
+        record = db(table.id == need_person_id).select(table.need_id,
+                                                       table.person_id,
+                                                       limitby = (0, 1)
+                                                       ).first()
+
+        # Message
+        utable = db.auth_user
+        ltable = s3db.pr_person_user
+        ptable = s3db.pr_person
+        query = (ptable.id == record.person_id) & \
+                (ptable.pe_id == ltable.pe_id) & \
+                (ltable.user_id == utable.id)
+        user = db(query).select(utable.email,
+                                limitby = (0, 1)
+                                ).first()
+
+        # Construct Email message
+        subject = "%s: You have been %s to participate in an Opportunity" % \
+            (settings.get_system_name_short(),
+             approved_or_rejected,
+             )
+
+        ntable = s3db.req_need
+        need = db(ntable.id == record.need_id).select(ntable.name,
+                                                      limitby = (0, 1)
+                                                      ).first().name
+
+        message = "You have been %s to participate in an Opportunity:\n%s" % \
+            (approved_or_rejected,
+             need,
+             )
+
+        # Send message to each
+        current.msg.send_email(to = user.email,
+                               subject = subject,
+                               message = message,
+                               )
+
+    # -------------------------------------------------------------------------
+    def customise_req_need_person_resource(r, tablename):
 
         s3db = current.s3db
 
         table = s3db.req_need_person
-        table.person_id.represent = s3db.pr_PersonRepresent(show_link = True)
-        table.person_id.writable = False
+        f = table.person_id
+        f.comment = None
+        f.writable = False
+        f.represent = s3db.pr_PersonRepresent(show_link = True)
 
-        if not current.auth.s3_has_role("ORG_ADMIN"):
-            if r.component_id:
-                record = current.db(table.id == r.component_id).select(table.status,
-                                                                       limitby = (0, 1)
-                                                                       ).first()
-                if record.status in (4, 5, 6):
-                    from gluon import IS_IN_SET
+        current.response.s3.crud_strings.req_need_person = Storage(
+            label_create = T("Add Participant"),
+            title_display = T("Participant Details"),
+            title_list = T("Participants"),
+            title_update = T("Edit Participant"),
+            title_upload = T("Import Participants"),
+            label_list_button = T("List Participants"),
+            label_delete_button = T("Remove Participant"),
+            msg_record_created = T("Participant added"),
+            msg_record_modified = T("Participant updated"),
+            msg_record_deleted = T("Participant removed"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("Currently no Participants registered"))
+
+        deletable = True
+        if r.component_id:
+            record = current.db(table.id == r.component_id).select(table.status,
+                                                                   limitby = (0, 1)
+                                                                   ).first()
+            if current.auth.s3_has_role("ORG_ADMIN"):
+                from gluon import IS_IN_SET
+                if record.status in (1, 2, 3):
+                    deletable = False
+                    table.status.requires = IS_IN_SET({1: T("Applied"),
+                                                       2: T("Approved"),
+                                                       3: T("Rejected"),
+                                                       })
+                else:
                     table.status.requires = IS_IN_SET({4: T("Invited"),
                                                        5: T("Accepted"),
                                                        6: T("Declined"),
                                                        })
+            else:
+                if record.status in (4, 5, 6):
+                    deletable = False
+                    from gluon import IS_IN_SET
+                    if r.method == "update":
+                        table.status.requires = IS_IN_SET({5: T("Accepted"),
+                                                           6: T("Declined"),
+                                                           })
+                    else:
+                        table.status.requires = IS_IN_SET({4: T("Invited"),
+                                                           5: T("Accepted"),
+                                                           6: T("Declined"),
+                                                           })
                 else:
+                    current.response.s3.crud_strings.req_need_person.label_delete_button = T("Withdraw Application")
                     table.status.writable = False
+        elif r.component:
+            if current.auth.s3_has_role("ORG_ADMIN"):
+                current.response.s3.crud_labels["DELETE"] = "Remove"
+            else:
+                current.response.s3.crud_labels["DELETE"] = "Withdraw"
 
         s3db.configure("req_need_person",
+                       deletable = deletable,
                        list_fields = ["person_id",
                                       "person_id$human_resource.organisation_id",
                                       "status",
@@ -2875,6 +3299,7 @@ def config(settings):
                                       ],
                        # Don't add people here (they are either invited or apply)
                        listadd = False,
+                       update_onaccept = req_need_person_update_onaccept,
                        )
 
     settings.customise_req_need_person_resource = customise_req_need_person_resource

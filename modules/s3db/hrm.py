@@ -2843,6 +2843,8 @@ class S3HRSkillModel(S3Model):
                                     },
                                     ],
                        hrm_event_tag = "training_event_id",
+                       # This format is better for permissions on the link table
+                       hrm_training = "training_event_id",
                        # Format for list_fields
                        hrm_training_event_instructor = "training_event_id",
 
@@ -3031,7 +3033,8 @@ class S3HRSkillModel(S3Model):
                                ondelete = "CASCADE",
                                ),
                      # Just used when created from participation in an Event
-                     training_event_id(readable = False,
+                     training_event_id(ondelete = "SET NULL",
+                                       readable = False,
                                        writable = False,
                                        ),
                      course_id(empty = not course_mandatory,
@@ -3907,7 +3910,10 @@ class S3HRSkillModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def hrm_training_event_realm_entity(table, record):
-        """ Set the training_event realm entity to the root Org of the Site """
+        """
+            Set the training_event realm entity
+            - to the root Org of the Site
+        """
 
         db = current.db
         stable = db.org_site
@@ -8812,10 +8818,10 @@ def hrm_training_event_controller():
                 title_update = T("Edit Participant"),
                 title_upload = T("Import Participants"),
                 label_list_button = T("List Participants"),
-                label_delete_button = T("Delete Participant"),
+                label_delete_button = T("Remove Participant"),
                 msg_record_created = T("Participant added"),
                 msg_record_modified = T("Participant updated"),
-                msg_record_deleted = T("Participant deleted"),
+                msg_record_deleted = T("Participant removed"),
                 msg_no_match = T("No entries found"),
                 msg_list_empty = T("Currently no Participants registered"))
 
