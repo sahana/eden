@@ -251,44 +251,45 @@ def config(settings):
     # Now using req_need, so unused:
     #settings.req.req_type = ("People",)
 
+    # Now done in project_task_create_onaccept:
     # -------------------------------------------------------------------------
-    def ccc_realm_entity(table, row):
-        """
-            Assign a Realm Entity to records
-        """
+    #def ccc_realm_entity(table, row):
+    #    """
+    #        Assign a Realm Entity to records
+    #    """
 
-        if table._tablename in (#"hrm_training_event", # Default is fine
-                                "project_task",
-                                #"req_need",           # Default is fine
-                                ):
-            db = current.db
-            otable = current.s3db.org_organisation
-            organisation_id = current.request.get_vars.get("organisation_id")
-            if organisation_id:
-                # Use this Org
-                query = (otable.id == organisation_id)
-            else:
-                # Use the Org of the Creator
-                new_row = db(table.id == row.id).select(table.created_by,
-                                                        limitby = (0, 1),
-                                                        ).first()
-                user_id = new_row.created_by
+    #    if table._tablename in (#"hrm_training_event", # Default is fine
+    #                            "project_task",
+    #                            #"req_need",           # Default is fine
+    #                            ):
+    #        db = current.db
+    #        otable = current.s3db.org_organisation
+    #        organisation_id = current.request.get_vars.get("organisation_id")
+    #        if organisation_id:
+    #            # Use this Org
+    #            query = (otable.id == organisation_id)
+    #        else:
+    #            # Use the Org of the Creator
+    #            new_row = db(table.id == row.id).select(table.created_by,
+    #                                                    limitby = (0, 1),
+    #                                                    ).first()
+    #            user_id = new_row.created_by
 
-                utable = db.auth_user
-                query = (utable.id == user_id) & \
-                        (utable.organisation_id == otable.id)
-            org = db(query).select(otable.pe_id,
-                                   limitby = (0, 1),
-                                   ).first()
-            try:
-                return org.pe_id
-            except AttributeError:
-                pass
+    #            utable = db.auth_user
+    #            query = (utable.id == user_id) & \
+    #                    (utable.organisation_id == otable.id)
+    #        org = db(query).select(otable.pe_id,
+    #                               limitby = (0, 1),
+    #                               ).first()
+    #        try:
+    #            return org.pe_id
+    #        except AttributeError:
+    #            pass
 
-        # Use default rules
-        return 0
+    #    # Use default rules
+    #    return 0
 
-    settings.auth.realm_entity = ccc_realm_entity
+    #settings.auth.realm_entity = ccc_realm_entity
 
     # -------------------------------------------------------------------------
     def ccc_rheader(r):
@@ -1474,6 +1475,7 @@ def config(settings):
                                                          filter_widgets = filter_widgets,
                                                          list_fields = list_fields,
                                                          postprocess = hrm_training_event_assign_postprocess,
+                                                         title = T("Invite People"),
                                                          ))
 
                 # Replace Callback rather than extend
@@ -1692,6 +1694,53 @@ def config(settings):
 
         s3 = current.response.s3
 
+        #current.s3db.set_method("org", "organisation",
+        #                        method = "message",
+        #                        action = org_organisation_message)
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if not r.id and r.http == "POST":
+                # Bulk Action 'Message' has been selected
+                post_vars = r.post_vars
+                selected = post_vars.selected
+                if selected:
+                    selected = selected.split(",")
+                else:
+                    selected = []
+
+                # Handle exclusion filter
+                if post_vars.mode == "Exclusive":
+                    if "filterURL" in post_vars:
+                        from s3 import S3URLQuery
+                        filters = S3URLQuery.parse_url(post_vars.filterURL)
+                    else:
+                        filters = None
+                    from s3 import FS
+                    query = ~(FS("id").belongs(selected))
+                    resource = current.s3db.resource("org_organisation",
+                                                     filter = query,
+                                                     vars = filters)
+                    rows = resource.select(["id"], as_rows=True)
+                    selected = [str(row.id) for row in rows]
+
+                # NB This method of passing selected to the next page is limited by GET URL lengths
+                #    but this should be OK for this usecase
+                from gluon import redirect, URL
+                redirect(URL(c="project", f="task",
+                             args = "create",
+                             vars = {"o": ",".join(selected)}))
+
+            return result
+        s3.prep = prep
+
         # Custom postp
         standard_postp = s3.postp
         def postp(r, output):
@@ -1721,6 +1770,8 @@ def config(settings):
             return output
         s3.postp = postp
 
+        attr["dtargs"] = {"dt_bulk_actions": [(T("Message"), "message")],
+                          }
         attr["rheader"] = ccc_rheader
 
         return attr
@@ -2471,6 +2522,8 @@ def config(settings):
     def project_task_create_onaccept(form):
         """
             When a Task is created:
+                * Duplicate Message if sending to multiple Organisations
+                * Set Realm Entity
                 * Notify OrgAdmins
         """
 
@@ -2483,8 +2536,8 @@ def config(settings):
         # Lookup the Author details
         db = current.db
         s3db = current.s3db
-        ttable = s3db.project_task
         otable = s3db.org_organisation
+        ttable = s3db.project_task
         utable = db.auth_user
         query = (ttable.id == task_id) & \
                 (ttable.created_by == utable.id)
@@ -2495,15 +2548,6 @@ def config(settings):
                                 ).first()
         fullname = s3_fullname(user)
 
-        # Lookup the ORG_ADMINs
-        gtable = db.auth_group
-        mtable = db.auth_membership
-        query = (gtable.uuid == "ORG_ADMIN") & \
-                (gtable.id == mtable.group_id) & \
-                (mtable.user_id == utable.id) & \
-                (utable.organisation_id == user.organisation_id)
-        org_admins = db(query).select(utable.email)
-
         # Construct Email message
         system_name = settings.get_system_name_short()
         subject = "%s: Message sent from %s" % \
@@ -2512,7 +2556,7 @@ def config(settings):
              )
 
         url = "%s%s" % (settings.get_base_public_url(),
-                        URL(c="project", f="task", args=[task_id]))
+                        URL(c="project", f="task"))
         message = "%s has sent you a Message on %s\n\nSubject: %s\nMessage: %s\n\nYou can view the message here: %s" % \
             (fullname,
              system_name,
@@ -2521,13 +2565,104 @@ def config(settings):
              url,
              )
 
-        # Send message to each
-        send_email = current.msg.send_email
-        for admin in org_admins:
-            send_email(to = admin.email,
-                       subject = subject,
-                       message = message,
-                       )
+        get_vars_get = current.request.get_vars.get
+        organisation_ids = get_vars_get("o")
+        if organisation_ids is not None:
+            # Sending to a list of Organisations from the Bulk Action
+
+            organisation_ids = organisation_ids.split(",")
+
+            # Lookup the ORG_ADMINs
+            gtable = db.auth_group
+            mtable = db.auth_membership
+            query = (gtable.uuid == "ORG_ADMIN") & \
+                    (gtable.id == mtable.group_id) & \
+                    (mtable.user_id == utable.id) & \
+                    (utable.organisation_id.belongs(organisation_ids))
+            org_admins = db(query).select(utable.organisation_id,
+                                          utable.email)
+            orgs = {organisation_id: {"emails": []} for organisation_id in organisation_ids}
+            for admin in org_admins:
+                orgs[str(admin.organisation_id)]["emails"].append(admin.email)
+
+            # Create a clone of Message (Task) per Org
+            task = db(ttable.id == task_id).select(ttable.name,
+                                                   ttable.description,
+                                                   #ttable.created_by,
+                                                   limitby = (0, 1)
+                                                   ).first()
+            name = task.name
+            description = task.description
+            #created_by = task.created_by
+
+            first = True
+            for organisation_id in organisation_ids:
+                if first:
+                    orgs[organisation_id]["task_id"] = task_id
+                    first = False
+                    continue
+                task_id = ttable.insert(name = name,
+                                        description = description,
+                                        #created_by = created_by,
+                                        )
+                orgs[organisation_id]["task_id"] = task_id
+
+            # Set Realm Entities
+            # Send email to each OrgAdmin
+            send_email = current.msg.send_email
+            for organisation_id in orgs:
+                task_id = orgs[organisation_id]["task_id"]
+
+                # Set the Realm Entity
+                org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                              limitby = (0, 1)
+                                                              ).first()
+                try:
+                    db(ttable.id == task_id).update(realm_entity = org.pe_id)
+                except AttributeError:
+                    pass
+                
+                # Send Emails
+                this_message = "%s/%s" % (message, task_id)
+                org_admins = orgs[organisation_id]["emails"]
+                for email in org_admins:
+                    send_email(to = email,
+                               subject = subject,
+                               message = this_message,
+                               )
+
+        else:
+            # Use the Organisation we request or fallback to the User's Organisation
+            organisation_id = get_vars_get("organisation_id", user.organisation_id)
+
+            # Set the Realm Entity
+            org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                          limitby = (0, 1)
+                                                          ).first()
+            try:
+                db(ttable.id == task_id).update(realm_entity = org.pe_id)
+            except AttributeError:
+                pass
+
+            # Append the task_id to the URL
+            message = "%s/%s" % (message, task_id)
+
+            # Lookup the ORG_ADMINs
+            gtable = db.auth_group
+            mtable = db.auth_membership
+            query = (gtable.uuid == "ORG_ADMIN") & \
+                    (gtable.id == mtable.group_id) & \
+                    (mtable.user_id == utable.id) & \
+                    (utable.organisation_id == organisation_id)
+            org_admins = db(query).select(utable.email)
+
+            # Send message to each
+            send_email = current.msg.send_email
+            for admin in org_admins:
+                send_email(to = admin.email,
+                           subject = subject,
+                           message = message,
+                           )
 
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
@@ -3124,6 +3259,7 @@ def config(settings):
                                                          filter_widgets = filter_widgets,
                                                          list_fields = list_fields,
                                                          postprocess = req_need_assign_postprocess,
+                                                         title = T("Invite People"),
                                                          ))
 
                 s3db.add_custom_callback("req_need_person",
@@ -3407,7 +3543,7 @@ def config(settings):
                 s3db.pr_PersonRepresentContact(linkto = URL(c="pr", f="person",
                                                             args = ["[id]"],
                                                             vars = {"donors": 1},
-                                                            extension=""))
+                                                            extension = ""))
 
         return attr
 

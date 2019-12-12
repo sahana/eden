@@ -7614,6 +7614,7 @@ class pr_AssignMethod(S3Method):
                  list_fields = None,
                  postprocess = None,
                  #rheader = None,
+                 title = None,
                  ):
         """
             @param component: the Component in which to create records
@@ -7624,6 +7625,7 @@ class pr_AssignMethod(S3Method):
             @param list_fields: a custom list of Fields to show
             @param postprocess: a postprocess function to act on all assigned person_ids at once 
             @param rheader: an rheader to show
+            @param title: an alternative page title
         """
 
         self.component = component
@@ -7636,6 +7638,7 @@ class pr_AssignMethod(S3Method):
         self.list_fields = list_fields
         self.postprocess = postprocess
         #self.rheader = rheader
+        self.title = title
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
@@ -7913,7 +7916,7 @@ class pr_AssignMethod(S3Method):
                 response.view = "list_filter.html"
 
                 return {"items": items,
-                        "title": T("Assign People"),
+                        "title": self.title or T("Assign People"),
                         "list_filter_form": ff,
                         }
 
