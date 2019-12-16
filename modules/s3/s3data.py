@@ -387,7 +387,7 @@ class S3DataTable(object):
                                 by default it will be the column immediately
                                 before the first data item
                    dt_bulk_selected: A list of selected items
-                   dt_actions: dictionary of actions
+                   #dt_row_actions: a list of actions (each is a dict)
                    dt_styles: dictionary of styles to be applied to a list of ids
                               for example:
                               {"warning" : [1,3,6,7,9],
@@ -399,8 +399,9 @@ class S3DataTable(object):
         attr = Storage()
         if s3.datatable_ajax_source:
             attr.dt_ajax_url = s3.datatable_ajax_source
-        if s3.actions:
-            attr.dt_actions = s3.actions
+        # Defaults in htmlConfig() anyway:
+        #if s3.actions:
+        #    attr.dt_row_actions = s3.actions
         if s3.dataTableBulkActions:
             attr.dt_bulk_actions = s3.dataTableBulkActions
         if s3.dataTable_pageLength:
@@ -661,7 +662,7 @@ class S3DataTable(object):
                                     the actual number of groups (giving an empty group).
                    dt_group_space: Insert a space between the group heading and the next group
                    dt_bulk_selected: A list of selected items
-                   dt_actions: dictionary of actions
+                   dt_row_actions: list of actions (each is a dict)
                    dt_styles: dictionary of styles to be applied to a list of ids
                               for example:
                               {"warning" : [1,3,6,7,9],
@@ -720,10 +721,10 @@ class S3DataTable(object):
 
         ajaxUrl = attr_get("dt_ajax_url", None)
         if not ajaxUrl:
-            url = URL(c=request.controller,
-                      f=request.function,
-                      args=request.args,
-                      vars=request.get_vars,
+            url = URL(c = request.controller,
+                      f = request.function,
+                      args = request.args,
+                      vars = request.get_vars,
                       )
             ajaxUrl = s3_set_extension(url, "aadata")
         config.ajaxUrl = ajaxUrl
@@ -782,7 +783,7 @@ class S3DataTable(object):
 
         # Activate double scroll and inject jQuery plugin
         if not settings.get_ui_datatables_responsive():
-            double_scroll = attr.get("dt_double_scroll")
+            double_scroll = attr_get("dt_double_scroll")
             if double_scroll is None:
                 double_scroll = settings.get_ui_datatables_double_scroll()
             if double_scroll:

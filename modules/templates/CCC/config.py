@@ -523,8 +523,8 @@ def config(settings):
             # Not easy to tweak the URL in the login form's buttons
             from gluon import redirect, URL
             redirect(URL(c="default", f="index",
-                         args="register",
-                         vars=current.request.get_vars))
+                         args = "register",
+                         vars = current.request.get_vars))
 
         return attr
 
@@ -1435,7 +1435,7 @@ def config(settings):
 
             if r.method == "assign":
 
-                from s3 import S3OptionsFilter
+                from s3 import S3OptionsFilter, S3Represent, s3_str
 
                 # Filtered components
                 s3db.add_components("hrm_human_resource",
@@ -1452,6 +1452,18 @@ def config(settings):
                                                                                                  gtable.name,
                                                                                                  cache = s3db.cache)
                 districts = {d.id:d.name for d in districts}
+
+                s3db.pr_group_membership.group_id.represent = S3Represent(lookup = "pr_group",
+                                                                          show_link = True)
+
+                actions = [{"label": s3_str(T("Open")),
+                            "url": URL(c = "pr",
+                                       f = "person",
+                                       args = ["[id]", "redirect"],
+                                       ),
+                            "_class": "action-btn",
+                            },
+                           ]
 
                 filter_widgets = [S3OptionsFilter("human_resource.organisation_id"),
                                   S3OptionsFilter("person_location.location_id",
@@ -1473,6 +1485,7 @@ def config(settings):
                 set_method("hrm", "training_event",
                            method = "assign",
                            action = s3db.pr_AssignMethod(component = "training",
+                                                         actions = actions,
                                                          filter_widgets = filter_widgets,
                                                          list_fields = list_fields,
                                                          postprocess = hrm_training_event_assign_postprocess,
@@ -2093,7 +2106,7 @@ def config(settings):
         s3db = current.s3db
 
         table = s3db.pr_group_membership
-        table.person_id.widget = S3AddPersonWidget(controller="pr")
+        table.person_id.widget = S3AddPersonWidget(controller = "pr")
 
         s3db.configure("pr_group_membership",
                        crud_form = S3SQLCustomForm("person_id",
@@ -2295,6 +2308,57 @@ def config(settings):
         auth.s3_assign_role(user_id, "VOLUNTEER")
 
     # -----------------------------------------------------------------------------
+    def pr_person_redirect(r, **attr):
+        """
+            Redirect to the person page with the relevant get_vars active
+        """
+
+        from gluon import redirect, URL
+
+        person_id = r.id
+
+        db = current.db
+        s3db = current.s3db
+
+        # Is this person a member of a Group?
+        mtable = s3db.pr_group_membership
+        member = db(mtable.person_id == person_id).select(mtable.id,
+                                                          limitby = (0, 1)
+                                                          ).first()
+        if member:
+            redirect(URL(c="pr", f="person", args=[person_id], vars={"groups": 1}))
+
+        pe_id = r.record.pe_id
+
+        # Is this person a Reserve Volunteer?
+        gtable = db.auth_group
+        mtable = db.auth_membership
+        ltable = s3db.pr_person_user
+        query = (ltable.pe_id == pe_id) & \
+                (ltable.user_id == mtable.user_id) & \
+                (mtable.group_id == gtable.id) & \
+                (gtable.uuid == "RESERVE")
+        reserve = db(query).select(ltable.id,
+                                   limitby = (0, 1)
+                                   ).first()
+        if reserve:
+            redirect(URL(c="pr", f="person", args=[person_id], vars={"reserves": 1}))
+
+        # Is this person a Donor?
+        query = (ltable.pe_id == pe_id) & \
+                (ltable.user_id == mtable.user_id) & \
+                (mtable.group_id == gtable.id) & \
+                (gtable.uuid == "DONOR")
+        donor = db(query).select(ltable.id,
+                                 limitby = (0, 1)
+                                 ).first()
+        if donor:
+            redirect(URL(c="pr", f="person", args=[person_id], vars={"donors": 1}))
+
+        # Redirect to Normal person profile
+        redirect(URL(c="pr", f="person", args=[person_id]))
+
+    # -----------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
         s3db = current.s3db
@@ -2312,11 +2376,15 @@ def config(settings):
                                         },
                             )
 
-        # Custom Method
+        # Custom Methods
         from templates.CCC.controllers import personAdditional
-        s3db.set_method("pr", "person",
-                        method = "additional",
-                        action = personAdditional)
+        set_method = s3db.set_method
+        set_method("pr", "person",
+                   method = "additional",
+                   action = personAdditional)
+        set_method("pr", "person",
+                   method = "redirect",
+                   action = pr_person_redirect)
 
         s3 = current.response.s3
 
@@ -3269,7 +3337,9 @@ def config(settings):
 
             if r.method == "assign":
 
-                from s3 import S3OptionsFilter
+                from gluon import URL
+
+                from s3 import S3OptionsFilter, S3Represent, s3_str
 
                 # Filtered components
                 s3db.add_components("hrm_human_resource",
@@ -3286,6 +3356,18 @@ def config(settings):
                                                                                                  gtable.name,
                                                                                                  cache = s3db.cache)
                 districts = {d.id:d.name for d in districts}
+
+                s3db.pr_group_membership.group_id.represent = S3Represent(lookup = "pr_group",
+                                                                          show_link = True)
+
+                actions = [{"label": s3_str(T("Open")),
+                            "url": URL(c = "pr",
+                                       f = "person",
+                                       args = ["[id]", "redirect"],
+                                       ),
+                            "_class": "action-btn",
+                            },
+                           ]
 
                 filter_widgets = [S3OptionsFilter("human_resource.organisation_id"),
                                   S3OptionsFilter("person_location.location_id",
@@ -3307,6 +3389,7 @@ def config(settings):
                 set_method("req", "need",
                            method = "assign",
                            action = s3db.pr_AssignMethod(component = "need_person",
+                                                         actions = actions,
                                                          filter_widgets = filter_widgets,
                                                          list_fields = list_fields,
                                                          postprocess = req_need_assign_postprocess,

@@ -7610,6 +7610,7 @@ class pr_AssignMethod(S3Method):
                  component,
                  next_tab = None,
                  #types = None,
+                 actions = None,
                  filter_widgets = None,
                  list_fields = None,
                  postprocess = None,
@@ -7621,6 +7622,7 @@ class pr_AssignMethod(S3Method):
             @param next_tab: the component/method to redirect to after assigning
             @param types: a list of types to pick from: Users
                           (Staff/Vols/Members to come as-required)
+            @param actions: a custom list of Actions for the dataTable
             @param filter_widgets: a custom list of FilterWidgets to show
             @param list_fields: a custom list of Fields to show
             @param postprocess: a postprocess function to act on all assigned person_ids at once 
@@ -7634,6 +7636,7 @@ class pr_AssignMethod(S3Method):
         else:
             self.next_tab = component
         #self.types = types
+        self.actions = actions
         self.filter_widgets = filter_widgets
         self.list_fields = list_fields
         self.postprocess = postprocess
@@ -7845,13 +7848,18 @@ class pr_AssignMethod(S3Method):
                 # Page load
                 resource.configure(deletable = False)
 
-                profile_url = URL(c = controller,
-                                  f = "person",
-                                  args = ["[id]", "profile"])
-                S3CRUD.action_buttons(r,
-                                      deletable = False,
-                                      read_url = profile_url,
-                                      update_url = profile_url)
+                # Actions
+                actions = self.actions
+                if actions is None:
+                    profile_url = URL(c = controller,
+                                      f = "person",
+                                      args = ["[id]", "profile"])
+                    S3CRUD.action_buttons(r,
+                                          deletable = False,
+                                          read_url = profile_url,
+                                          update_url = profile_url)
+                    actions = s3.actions
+
                 s3.no_formats = True
 
                 # Filter form
@@ -7910,6 +7918,7 @@ class pr_AssignMethod(S3Method):
                                 dt_bulk_actions = dt_bulk_actions,
                                 dt_pageLength = display_length,
                                 dt_pagination = "true",
+                                dt_row_actions = actions,
                                 dt_searching = "false",
                                 )
 
