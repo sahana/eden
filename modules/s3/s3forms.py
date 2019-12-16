@@ -4092,7 +4092,9 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             result = represent.bulk([value])
 
         # Sort them
-        labels = sorted(result.values())
+        labels = result.values()
+        labels = [s3_str(label) for label in labels] # We can't sort lazyT
+        labels = sorted(labels)
 
         if self.options.get("render_list"):
             if value is None or value == [None]:

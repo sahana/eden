@@ -1465,6 +1465,7 @@ def config(settings):
                                "first_name",
                                "last_name",
                                "human_resource.organisation_id",
+                               "group_membership.group_id",
                                (T("Role"), "human_resource.job_title.value"),
                                (T("Skills"), "competency.skill_id"),
                                ]
@@ -1544,7 +1545,8 @@ def config(settings):
 
         from gluon import IS_EMAIL, IS_EMPTY_OR, IS_IN_SET, IS_URL
 
-        from s3 import S3OptionsFilter, S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink, S3TextFilter
+        from s3 import S3OptionsFilter, S3Represent, S3SQLCustomForm, \
+                       S3SQLInlineComponent, S3SQLInlineLink, S3TextFilter
 
         s3db = current.s3db
 
@@ -1610,6 +1612,7 @@ def config(settings):
         districts = {d.id:d.name for d in districts}
 
         f = s3db.org_organisation_location.location_id
+        f.represent = S3Represent(lookup = "gis_location")
         f.requires = IS_EMPTY_OR(IS_IN_SET(districts))
         f.widget = None
 
@@ -1797,12 +1800,56 @@ def config(settings):
     settings.customise_org_organisation_location_resource = customise_org_organisation_location_resource
 
     # -------------------------------------------------------------------------
+    def pr_group_postprocess(form):
+        """
+            Sync Location & Skills to Leaders
+        """
+
+        group_id = form.vars.id
+
+        db = current.db
+        s3db = current.s3db
+
+        # Lookup Leaders
+        mtable = s3db.pr_group_membership
+        members = db(mtable.group_id == group_id).select(mtable.person_id)
+        members = [m.person_id for m in members]
+
+        # Read Group's current Values
+        ltable = s3db.pr_group_location
+        stable = s3db.pr_group_competency
+        locations = db(ltable.group_id == group_id).select(ltable.location_id)
+        locations = [l.location_id for l in locations]
+        skills = db(stable.group_id == group_id).select(stable.skill_id)
+        skills = [s.skill_id for s in skills]
+
+        # Clear old Values from Leaders
+        ltable = s3db.pr_person_location
+        stable = s3db.hrm_competency
+        db(ltable.person_id.belongs(members)).delete()
+        db(stable.person_id.belongs(members)).delete()
+
+        # Add new Values to Leaders
+        linsert = ltable.insert
+        sinsert = stable.insert
+        for person_id in members:
+            for location_id in locations:
+                linsert(person_id = person_id,
+                        location_id = location_id,
+                        )
+            for skill_id in skills:
+                sinsert(person_id = person_id,
+                        skill_id = skill_id,
+                        )
+
+    # -------------------------------------------------------------------------
     def customise_pr_group_resource(r, tablename):
 
         from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_NOT_EMPTY, \
                           SQLFORM
-        from s3 import IS_INT_AMOUNT, S3OptionsFilter, S3SQLCustomForm, \
-                       S3SQLInlineLink, S3TextFilter, s3_phone_requires
+        from s3 import IS_INT_AMOUNT, S3OptionsFilter, S3Represent, \
+                       S3SQLCustomForm, S3SQLInlineLink, S3TextFilter, \
+                       s3_phone_requires
 
         s3db = current.s3db
 
@@ -1874,6 +1921,8 @@ def config(settings):
         f = contact_number.table.value
         f.requires = s3_phone_requires
 
+        s3db.pr_group_location.location_id.represent = S3Represent(lookup = "gis_location")
+
         s3db.configure("pr_group",
                        crud_form = S3SQLCustomForm("name",
                                                    (T("Approximate Number of Volunteers"), "volunteers.value"),
@@ -1892,6 +1941,7 @@ def config(settings):
                                                    (T("Emergency Contact Name"), "contact_name.value"),
                                                    (T("Emergency Contact Number"), "contact_number.value"),
                                                    "comments",
+                                                   postprocess = pr_group_postprocess,
                                                    ),
                        list_fields = ["name",
                                       (T("# Volunteers"), "volunteers.value"),
@@ -3249,6 +3299,7 @@ def config(settings):
                                "first_name",
                                "last_name",
                                "human_resource.organisation_id",
+                               "group_membership.group_id",
                                (T("Role"), "human_resource.job_title.value"),
                                (T("Skills"), "competency.skill_id"),
                                ]
