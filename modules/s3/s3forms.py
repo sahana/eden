@@ -4092,7 +4092,18 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             result = represent.bulk([value])
 
         # Sort them
-        labels = sorted(result.values())
+        def labels_sorted(labels):
+
+            try:
+                s = sorted(labels)
+            except TypeError:
+                if any(isinstance(l, DIV) for l in labels):
+                    # Don't sort labels if they contain markup
+                    s = labels
+                else:
+                    s = sorted(s3_str(l) if l is not None else "-" for l in labels)
+            return s
+        labels = labels_sorted(result.values())
 
         if self.options.get("render_list"):
             if value is None or value == [None]:

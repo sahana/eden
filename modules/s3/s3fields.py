@@ -391,7 +391,7 @@ class S3Represent(object):
                 v = self.none
 
         if not translated and self.translate and not type(v) is lazyT:
-            output = s3_str(current.T(v))
+            output = current.T(v)
         else:
             output = v
 
