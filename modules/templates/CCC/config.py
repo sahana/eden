@@ -318,7 +318,10 @@ def config(settings):
             T = current.T
             auth = current.auth
             has_role = auth.s3_has_role
-            if has_role("ORG_ADMIN"):
+            if has_role("ADMIN") or \
+               (record.organisation_id == auth.user.organisation_id and \
+                (has_role("ORG_ADMIN") or \
+                 has_role("AGENCY"))):
                 tabs = [(T("Basic Details"), None),
                         (T("Participants"), "training"),
                         (T("Invite"), "assign"),
@@ -484,8 +487,19 @@ $('.copy-link').click(function(e){
         elif tablename == "req_need":
             T = current.T
             auth = current.auth
+            db = current.db
+            s3db = current.s3db
             has_role = auth.s3_has_role
-            if has_role("ORG_ADMIN"):
+            record_id = r.id
+            ltable = s3db.req_need_organisation
+            query = (ltable.need_id == record_id)
+            need_org = db(query).select(ltable.organisation_id,
+                                        limitby = (0, 1)
+                                        ).first()
+            if has_role("ADMIN") or \
+               (need_org.organisation_id == auth.user.organisation_id and \
+                (has_role("ORG_ADMIN") or \
+                 has_role("AGENCY"))):
                 tabs = [(T("Basic Details"), None),
                         #(T("Items"), "need_item"),
                         #(T("Skills"), "need_skill"),
@@ -498,13 +512,12 @@ $('.copy-link').click(function(e){
                         (T("Participation"), "need_person"),
                         ]
             else:
-                record_id = r.id
-                ltable = current.s3db.req_need_person
+                ltable = s3db.req_need_person
                 query = (ltable.need_id == record_id) & \
                         (ltable.person_id == auth.s3_logged_in_person())
-                need_person = current.db(query).select(ltable.id,
-                                                       limitby = (0, 1)
-                                                       ).first()
+                need_person = db(query).select(ltable.id,
+                                               limitby = (0, 1)
+                                               ).first()
                 if need_person:
                     tabs = [(T("Basic Details"), None),
                             (T("Participation"), "need_person"),
@@ -1514,6 +1527,25 @@ $('.copy-link').click(function(e){
 
                 from s3 import S3OptionsFilter, S3Represent, s3_str
 
+                db = current.db
+
+                # Filter out Donors
+                gtable = db.auth_group
+                #DONOR = db(gtable.uuid == "DONOR").select(gtable.id,
+                #                                          limitby = (0, 1)
+                #                                          ).first().id
+                #s3.filter = ~(FS("user.membership.group_id") == DONOR)
+                mtable = db.auth_membership
+                ltable = s3db.pr_person_user
+                ptable = s3db.pr_person
+                query = (gtable.uuid == "DONOR") & \
+                        (gtable.id == mtable.group_id) & \
+                        (mtable.user_id == ltable.user_id) & \
+                        (ltable.pe_id == ptable.pe_id)
+                donors = db(query).select(ptable.id)
+                donors = [p.id for p in donors]
+                s3.filter = ~(ptable.id.belongs(donors))
+
                 # Filtered components
                 s3db.add_components("hrm_human_resource",
                                     hrm_human_resource_tag = ({"name": "job_title",
@@ -1525,9 +1557,9 @@ $('.copy-link').click(function(e){
                                     )
 
                 gtable = s3db.gis_location
-                districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
-                                                                                                 gtable.name,
-                                                                                                 cache = s3db.cache)
+                districts = db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
+                                                                                         gtable.name,
+                                                                                         cache = s3db.cache)
                 districts = {d.id:d.name for d in districts}
 
                 s3db.pr_group_membership.group_id.represent = S3Represent(lookup = "pr_group",
@@ -2422,15 +2454,15 @@ $('.copy-link').click(function(e){
             redirect(URL(c="pr", f="person", args=[person_id], vars={"reserves": 1}))
 
         # Is this person a Donor?
-        query = (ltable.pe_id == pe_id) & \
-                (ltable.user_id == mtable.user_id) & \
-                (mtable.group_id == gtable.id) & \
-                (gtable.uuid == "DONOR")
-        donor = db(query).select(ltable.id,
-                                 limitby = (0, 1)
-                                 ).first()
-        if donor:
-            redirect(URL(c="pr", f="person", args=[person_id], vars={"donors": 1}))
+        #query = (ltable.pe_id == pe_id) & \
+        #        (ltable.user_id == mtable.user_id) & \
+        #        (mtable.group_id == gtable.id) & \
+        #        (gtable.uuid == "DONOR")
+        #donor = db(query).select(ltable.id,
+        #                         limitby = (0, 1)
+        #                         ).first()
+        #if donor:
+        #    redirect(URL(c="pr", f="person", args=[person_id], vars={"donors": 1}))
 
         # Redirect to Normal person profile
         redirect(URL(c="pr", f="person", args=[person_id]))
@@ -3304,7 +3336,7 @@ $('.copy-link').click(function(e){
                        ]
 
         auth = current.auth
-        if auth.s3_has_role(auth.get_system_roles().ADMIN):
+        if auth.s3_has_role("ADMIN"):
             filter_widgets.insert(-1, S3OptionsFilter("need_organisation.organisation_id"))
             list_fields.insert(0, "need_organisation.organisation_id")
         else:
@@ -3313,7 +3345,9 @@ $('.copy-link').click(function(e){
             f.default = organisation_id
             # Needs to be in the form
             #f.readable = f.writable = False
-            f.requires = s3db.org_organisation_requires(updateable=True)
+            #f.requires = s3db.org_organisation_requires(updateable = True)
+            from gluon import IS_IN_SET
+            f.requires = IS_IN_SET({organisation_id: s3db.org_organisation[organisation_id].name}, zero=None)
             f.comment = None # No Create
 
             # Dropdown, not Autocomplete
@@ -3415,8 +3449,27 @@ $('.copy-link').click(function(e){
             if r.method == "assign":
 
                 from gluon import URL
-
+                #from s3 import FS, S3OptionsFilter, S3Represent, s3_str
                 from s3 import S3OptionsFilter, S3Represent, s3_str
+
+                db = current.db
+
+                # Filter out Donors
+                gtable = db.auth_group
+                #DONOR = db(gtable.uuid == "DONOR").select(gtable.id,
+                #                                          limitby = (0, 1)
+                #                                          ).first().id
+                #s3.filter = ~(FS("user.membership.group_id") == DONOR)
+                mtable = db.auth_membership
+                ltable = s3db.pr_person_user
+                ptable = s3db.pr_person
+                query = (gtable.uuid == "DONOR") & \
+                        (gtable.id == mtable.group_id) & \
+                        (mtable.user_id == ltable.user_id) & \
+                        (ltable.pe_id == ptable.pe_id)
+                donors = db(query).select(ptable.id)
+                donors = [p.id for p in donors]
+                s3.filter = ~(ptable.id.belongs(donors))
 
                 # Filtered components
                 s3db.add_components("hrm_human_resource",
@@ -3429,9 +3482,9 @@ $('.copy-link').click(function(e){
                                     )
 
                 gtable = s3db.gis_location
-                districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
-                                                                                                 gtable.name,
-                                                                                                 cache = s3db.cache)
+                districts = db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
+                                                                                         gtable.name,
+                                                                                         cache = s3db.cache)
                 districts = {d.id:d.name for d in districts}
 
                 s3db.pr_group_membership.group_id.represent = S3Represent(lookup = "pr_group",
