@@ -1226,7 +1226,6 @@ $('.copy-link').click(function(e){
         """
 
         from gluon import URL
-        from s3 import s3_parse_datetime
 
         if isinstance(selected, basestring):
             # Deserialize the vars from s3task
@@ -1260,10 +1259,16 @@ $('.copy-link').click(function(e){
 
         base_url = "%s%s" % (settings.get_base_public_url(),
             URL(c="hrm", f="training_event", args=[record_id, "training"]))
+
+        date = record.get("start_date")
+        if isinstance(date, basestring):
+            from s3 import s3_parse_datetime
+            date = s3_parse_datetime(date, "%Y-%m-%d %H:%M:%S")
+
         message = "You have been invited to an Event:\n\nEvent name: %s\nEvent description: %s\nStarts: %s\nLead Organisation: %s\nVenue name: %s\nDistrict: %s\nStreet Address: %s\nPostcode: %s\nContact Name: %s\nTelephone: %s\nEmail: %s\nWebsite: %s\n\nYou can respond to the invite here: %s" % \
             (event_name,
              record.get("comments") or "",
-             etable.start_date.represent(s3_parse_datetime(record.get("start_date"), "%Y-%m-%d %H:%M:%S")),
+             etable.start_date.represent(date),
              etable.organisation_id.represent(record.get("organisation_id"), show_link=False),
              tags.get("venue_name")["value"],
              location.L3,
@@ -1301,6 +1306,7 @@ $('.copy-link').click(function(e){
     def hrm_training_event_reminder(r, **attr):
         """
             Send reminder notification to Invitees
+            - interactive
         """
 
         import json
@@ -1323,12 +1329,48 @@ $('.copy-link').click(function(e){
         redirect(URL(args=None))
 
     # -------------------------------------------------------------------------
-    def hrm_training_event_postprocess(form):
+    def hrm_training_event_reminder_day(record_id):
         """
-            Create Site based on other fields
+            Send reminder notification to Invitees
+            - automated 1 day before Opportunity
         """
 
-        training_event_id = form.vars.id
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.hrm_training_event
+        record = db(table.id == record_id).select(table.id,
+                                                  table.name,
+                                                  table.start_date,
+                                                  table.comments,
+                                                  table.location_id,
+                                                  table.organisation_id,
+                                                  limitby = (0, 1)
+                                                  ).first()
+
+        ttable = s3db.hrm_training
+        query = (ttable.training_event_id == record_id) & \
+                (ttable.deleted == False)
+        trainings = db(query).select(ttable.person_id)
+        selected = [t.person_id for t in trainings]
+
+        req_need_notification(record, selected)
+
+    settings.tasks.hrm_training_event_reminder_day = hrm_training_event_reminder_day
+
+    # -------------------------------------------------------------------------
+    def hrm_training_event_postprocess(form):
+        """
+            * Create Site based on other fields
+            * Schedule Reminder
+        """
+
+        form_vars_get = form.vars.get
+
+        training_event_id = form_vars_get("id")
+
+
+        # Create Site based on other fields
 
         db = current.db
         s3db = current.s3db
@@ -1376,6 +1418,38 @@ $('.copy-link').click(function(e){
             set_realm_entity(ftable, facility_id, force_update=True)
             db(etable.id == training_event_id).update(site_id = record["site_id"])
             set_realm_entity(etable, training_event_id, force_update=True)
+
+        # Schedule Reminder
+
+        from dateutil.relativedelta import relativedelta
+        start_time = form_vars_get("start_date") - relativedelta(days = 1)
+        if start_time < current.request.utcnow:
+             return
+
+        import json
+        ttable = s3db.scheduler_task
+        task_name = "settings_task"
+        args = ["hrm_training_event_reminder_day"]
+        vars = {"record_id": training_event_id}
+        query = (ttable.task_name == task_name) & \
+                (ttable.args == json.dumps(args)) & \
+                (ttable.vars == json.dumps(vars))
+        exists = db(query).select(ttable.id,
+                                  ttable.start_time,
+                                  limitby = (0, 1)
+                                  ).first()
+        if exists:
+            if exists.start_time != start_time:
+                exists.update_record(start_time = start_time)
+        else:
+            current.s3task.schedule_task("settings_task",
+                                 args = ["hrm_training_event_reminder_day"],
+                                 vars = {"record_id": training_event_id},
+                                 start_time = start_time,
+                                 #period = 300,  # seconds
+                                 timeout = 300, # seconds
+                                 repeats = 1    # run once
+                                 )
 
     # -------------------------------------------------------------------------
     def customise_hrm_training_event_resource(r, tablename):
@@ -2951,7 +3025,6 @@ $('.copy-link').click(function(e){
     def customise_project_task_resource(r, tablename):
 
         from s3 import S3OptionsFilter, S3SQLCustomForm, S3TextFilter
-                       
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("New Message"),
@@ -3091,6 +3164,47 @@ $('.copy-link').click(function(e){
     settings.customise_project_task_controller = customise_project_task_controller
 
     # -------------------------------------------------------------------------
+    def req_need_onaccept(form):
+        """
+            Schedule Reminder
+        """
+
+        form_vars_get = form.vars.get
+
+        from dateutil.relativedelta import relativedelta
+        start_time = form_vars_get("date") - relativedelta(days = 1)
+        if start_time < current.request.utcnow:
+             return
+
+        need_id = form_vars_get("id")
+
+        import json
+        ttable = current.s3db.scheduler_task
+        task_name = "settings_task"
+        start_time = form_vars_get("date") - relativedelta(days = 1)
+        args = ["req_need_reminder_day"]
+        vars = {"record_id": need_id}
+        query = (ttable.task_name == task_name) & \
+                (ttable.args == json.dumps(args)) & \
+                (ttable.vars == json.dumps(vars))
+        exists = current.db(query).select(ttable.id,
+                                          ttable.start_time,
+                                          limitby = (0, 1)
+                                          ).first()
+        if exists:
+            if exists.start_time != start_time:
+                exists.update_record(start_time = start_time)
+        else:
+            current.s3task.schedule_task("settings_task",
+                                 args = ["req_need_reminder_day"],
+                                 vars = {"record_id": need_id},
+                                 start_time = start_time,
+                                 #period = 300,  # seconds
+                                 timeout = 300, # seconds
+                                 repeats = 1    # run once
+                                 )
+
+    # -------------------------------------------------------------------------
     def req_need_organisation_onaccept(form):
         """
             Set the realm of the parent req_need to that of the organisation
@@ -3195,7 +3309,6 @@ $('.copy-link').click(function(e){
         """
 
         from gluon import URL
-        from s3 import s3_parse_datetime
 
         if isinstance(selected, basestring):
             # Deserialize the vars from s3task
@@ -3253,10 +3366,16 @@ $('.copy-link').click(function(e){
 
         base_url = "%s%s" % (settings.get_base_public_url(),
             URL(c="req", f="need", args=[record_id, "need_person"]))
+
+        date = record.get("date")
+        if isinstance(date, basestring):
+            from s3 import s3_parse_datetime
+            date = s3_parse_datetime(date, "%Y-%m-%d %H:%M:%S")
+
         message = "You have been invited to an Opportunity:\n\nTitle: %s\nOrganisation: %s\nStart Date: %s\nDistrict: %s\nStreet Address: %s\nPostcode: %s\nDescription: %s\nContact: %s\nSkill: %s\nAge Restrictions: %s\nPractical Information: %s\nParking Options: %s\nWhat to Bring: %s\n\nYou can respond to the invite here: %s" % \
             (event_name,
              organisation,
-             ntable.date.represent(s3_parse_datetime(record.get("date"), "%Y-%m-%d %H:%M:%S")),
+             ntable.date.represent(date),
              location.L3,
              location.addr_street or "",
              location.addr_postcode or "",
@@ -3301,6 +3420,7 @@ $('.copy-link').click(function(e){
     def req_need_reminder(r, **attr):
         """
             Send reminder notification to Invitees
+            - interactive
         """
 
         import json
@@ -3321,6 +3441,35 @@ $('.copy-link').click(function(e){
 
         current.session.confirmation = T("Reminder sent")
         redirect(URL(args=None))
+
+    # -------------------------------------------------------------------------
+    def req_need_reminder_day(record_id):
+        """
+            Send reminder notification to Invitees
+            - automated 1 day before Opportunity
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.req_need
+        record = db(table.id == record_id).select(table.id,
+                                                  table.name,
+                                                  table.date,
+                                                  table.description,
+                                                  table.location_id,
+                                                  limitby = (0, 1)
+                                                  ).first()
+
+        nptable = s3db.req_need_person
+        query = (nptable.need_id == record_id) & \
+                (nptable.deleted == False)
+        links = db(query).select(nptable.person_id)
+        selected = [l.person_id for l in links]
+
+        req_need_notification(record, selected)
+
+    settings.tasks.req_need_reminder_day = req_need_reminder_day
 
     # -------------------------------------------------------------------------
     def customise_req_need_resource(r, tablename):
@@ -3474,6 +3623,7 @@ $('.copy-link').click(function(e){
                                                    ),
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
+                       onaccept = req_need_onaccept,
                        )
 
         s3db.configure("req_need_organisation",
