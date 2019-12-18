@@ -1225,13 +1225,14 @@ $('.copy-link').click(function(e){
             Send notification to selected Invitees
         """
 
-        #import json
         from gluon import URL
         from s3 import s3_parse_datetime
 
-        # Deserialize the vars from s3task
-        #record = json.loads(record)
-        #selected = json.loads(selected)
+        if isinstance(selected, basestring):
+            # Deserialize the vars from s3task
+            import json
+            record = json.loads(record)
+            selected = json.loads(selected)
 
         record_id = record.get("id")
 
@@ -3193,13 +3194,14 @@ $('.copy-link').click(function(e){
             Send notification to selected Invitees
         """
 
-        #import json
         from gluon import URL
         from s3 import s3_parse_datetime
 
-        # Deserialize the vars from s3task
-        #record = json.loads(record)
-        #selected = json.loads(selected)
+        if isinstance(selected, basestring):
+            # Deserialize the vars from s3task
+            import json
+            record = json.loads(record)
+            selected = json.loads(selected)
 
         record_id = record.get("id")
 
