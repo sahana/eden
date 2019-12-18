@@ -488,7 +488,7 @@ def rss():
        RESTful CRUD controller for RSS feed posts
     """
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         auth.permission.fail()
 
     tablename = "msg_rss"
@@ -719,7 +719,7 @@ def email_channel():
             - appears in the administration menu
     """
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         auth.permission.fail()
 
     tablename = "msg_email_channel"
@@ -796,7 +796,7 @@ def facebook_channel():
             - appears in the administration menu
     """
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         auth.permission.fail()
 
     tablename = "msg_facebook_channel"
@@ -859,7 +859,7 @@ def mcommons_channel():
             - appears in the administration menu
     """
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         auth.permission.fail()
 
     tablename = "msg_mcommons_channel"
@@ -939,7 +939,7 @@ def gcm_channel():
             - appears in the administration menu
     """
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         auth.permission.fail()
 
     tablename = "msg_gcm_channel"
@@ -1009,7 +1009,7 @@ def rss_channel():
        - appears in the administration menu
     """
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         auth.permission.fail()
 
     tablename = "msg_rss_channel"
@@ -1091,7 +1091,7 @@ def twilio_channel():
             - appears in the administration menu
     """
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         auth.permission.fail()
 
     tablename = "msg_twilio_channel"
@@ -1766,7 +1766,7 @@ def parser():
             - appears in the administration menu
     """
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         auth.permission.fail()
 
     def prep(r):

@@ -92,7 +92,7 @@ def assess_tables():
                  organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile=True)),
                  person_id("assessor_person_id",
                            label = T("Assessor"),
-                           default = s3_logged_in_person()),
+                           default = auth.s3_logged_in_person()),
                  s3_comments(),
                  ireport_id(),      # Assessment can be linked to an Incident Report
                  *s3_meta_fields())

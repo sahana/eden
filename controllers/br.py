@@ -21,7 +21,7 @@ def index_alt():
     """ Default Module Homepage """
 
     from gluon import current
-    if current.auth.s3_has_permission("read", "pr_person", c="br", f="person"):
+    if auth.s3_has_permission("read", "pr_person", c="br", f="person"):
         # Just redirect to list of current cases
         s3_redirect_default(URL(f="person", vars={"closed": "0"}))
 

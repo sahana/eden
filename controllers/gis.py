@@ -395,7 +395,7 @@ def location():
         if r.interactive and not r.component:
 
             # Restrict access to Polygons to just MapAdmins
-            if settings.get_security_map() and not s3_has_role(MAP_ADMIN):
+            if settings.get_security_map() and not auth.s3_has_role("MAP_ADMIN"):
                 table.gis_feature_type.writable = table.gis_feature_type.readable = False
                 table.wkt.writable = table.wkt.readable = False
             else:
@@ -881,7 +881,7 @@ def s3_gis_location_parents(r, **attr):
     table = r.resource.table
 
     # Check permission
-    if not s3_has_permission("read", table):
+    if not auth.s3_has_permission("read", table):
         r.unauthorised()
 
     if r.representation == "html":
@@ -1125,7 +1125,7 @@ def config():
             if not r.component:
                 s3db.gis_config_form_setup()
                 list_fields = s3db.get_config("gis_config", "list_fields")
-                if auth.s3_has_role(MAP_ADMIN):
+                if auth.s3_has_role("MAP_ADMIN"):
                     list_fields += ["region_location_id",
                                     "default_location_id",
                                     ]
@@ -1291,7 +1291,7 @@ def config():
                         "label": str(T("Show")),
                         "_class": "action-btn",
                         }
-                if auth.s3_has_role(MAP_ADMIN):
+                if auth.s3_has_role("MAP_ADMIN"):
                     s3_action_buttons(r, copyable=True)
                     s3.actions.append(show)
                 else:
@@ -1459,7 +1459,7 @@ def marker():
 def projection():
     """ RESTful CRUD controller """
 
-    if settings.get_security_map() and not s3_has_role(MAP_ADMIN):
+    if settings.get_security_map() and not auth.s3_has_role("MAP_ADMIN"):
         auth.permission.fail()
 
     return s3_rest_controller()
@@ -1540,7 +1540,7 @@ def inject_enable(output):
 def layer_config():
     """ RESTful CRUD controller """
 
-    if settings.get_security_map() and not s3_has_role(MAP_ADMIN):
+    if settings.get_security_map() and not auth.s3_has_role("MAP_ADMIN"):
         auth.permission.fail()
 
     layer = get_vars.get("layer", None)
@@ -1557,7 +1557,7 @@ def layer_config():
 def layer_entity():
     """ RESTful CRUD controller """
 
-    if settings.get_security_map() and not s3_has_role(MAP_ADMIN):
+    if settings.get_security_map() and not auth.s3_has_role("MAP_ADMIN"):
         auth.permission.fail()
 
     # Custom Method
@@ -2803,7 +2803,7 @@ def layer_xyz():
 def layer_js():
     """ RESTful CRUD controller """
 
-    if settings.get_security_map() and not s3_has_role(MAP_ADMIN):
+    if settings.get_security_map() and not auth.s3_has_role("MAP_ADMIN"):
         auth.permission.fail()
 
     tablename = "%s_%s" % (module, resourcename)
@@ -3065,7 +3065,7 @@ def display_feature():
     gtable = s3db.gis_config
 
     # Check user is authorised to access record
-    if not s3_has_permission("read", table, location_id):
+    if not auth.s3_has_permission("read", table, location_id):
         session.error = T("No access to this record!")
         raise HTTP(401, body=current.xml.json_message(False, 401, session.error))
 

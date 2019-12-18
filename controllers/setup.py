@@ -11,7 +11,7 @@ module = request.controller
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
-if not s3_has_role("ADMIN"):
+if not auth.s3_has_role("ADMIN"):
         auth.permission.fail()
 
 # -----------------------------------------------------------------------------

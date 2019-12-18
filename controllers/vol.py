@@ -155,7 +155,7 @@ def group_membership():
 def department():
     """ Departments Controller """
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         s3.filter = auth.filter_by_root_org(s3db.hrm_department)
 
     return s3_rest_controller("hrm", resourcename)
@@ -182,7 +182,7 @@ def job_title():
 
     s3.filter = FS("human_resource.type").belongs((2, 3))
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         s3.filter &= auth.filter_by_root_org(s3db.hrm_job_title)
 
     return s3_rest_controller("hrm", resourcename,
@@ -226,7 +226,7 @@ def skill_provision():
 def course():
     """ Courses Controller """
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         s3.filter = auth.filter_by_root_org(s3db.hrm_course)
 
     return s3_rest_controller("hrm", resourcename,
@@ -246,7 +246,7 @@ def certificate():
     """ Certificates Controller """
 
     if settings.get_hrm_filter_certificates() and \
-       not auth.s3_has_role(ADMIN):
+       not auth.s3_has_role("ADMIN"):
         s3.filter = auth.filter_by_root_org(s3db.hrm_certificate)
 
     return s3_rest_controller("hrm", resourcename,
@@ -425,7 +425,7 @@ def facility():
 def programme():
     """ Volunteer Programmes controller """
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         s3.filter = auth.filter_by_root_org(s3db.hrm_programme)
 
     def prep(r):

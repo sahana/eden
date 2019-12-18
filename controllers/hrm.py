@@ -214,7 +214,7 @@ def profile():
         - includes components relevant to HRM
     """
 
-    request.args = [str(s3_logged_in_person())]
+    request.args = [str(auth.s3_logged_in_person())]
 
     # Custom Method for Contacts
     s3db.set_method("pr", resourcename,
@@ -373,7 +373,7 @@ def group_membership():
 def department():
     """ Departments Controller """
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         s3.filter = auth.filter_by_root_org(s3db.hrm_department)
 
     return s3_rest_controller()
@@ -404,7 +404,7 @@ def job_title():
 
     s3.filter = FS("type").belongs((1, 3))
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         s3.filter &= auth.filter_by_root_org(s3db.hrm_job_title)
 
     return s3_rest_controller()
@@ -445,7 +445,7 @@ def course():
         return True
     s3.prep = prep
 
-    if not auth.s3_has_role(ADMIN) and not s3.filter:
+    if not auth.s3_has_role("ADMIN") and not s3.filter:
         s3.filter = auth.filter_by_root_org(s3db.hrm_course)
 
     return s3_rest_controller(rheader = s3db.hrm_rheader,
@@ -462,7 +462,7 @@ def certificate():
     """ Certificates Controller """
 
     if settings.get_hrm_filter_certificates() and \
-       not auth.s3_has_role(ADMIN):
+       not auth.s3_has_role("ADMIN"):
         s3.filter = auth.filter_by_root_org(s3db.hrm_certificate)
 
     return s3_rest_controller(rheader = s3db.hrm_rheader,
@@ -486,7 +486,7 @@ def certification():
                    )
 
     if settings.get_hrm_filter_certificates() and \
-       not auth.s3_has_role(ADMIN):
+       not auth.s3_has_role("ADMIN"):
         s3.filter = auth.filter_by_root_org(s3db.hrm_certificate)
 
     return s3_rest_controller(rheader = s3db.hrm_rheader,

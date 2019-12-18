@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 
+#
+# S3 Auth
+#
+if not auth.s3_has_role("ADMIN"):
+    auth.permission.fail()
+
 # ##########################################################
 # ## make sure administrator is on localhost
 # ###########################################################
@@ -44,12 +50,6 @@ global_env['datetime'] = datetime
 #        (request.application != 'admin' and not gluon.fileutils.check_credentials(request)):
 #    redirect(URL('admin', 'default', 'index',
 #                 vars=dict(send=URL(args=request.args, vars=request.vars))))
-
-#
-# S3 Auth
-#
-if not s3_has_role(ADMIN):
-    auth.permission.fail()
 
 # Load all models
 s3db.load_all_models()

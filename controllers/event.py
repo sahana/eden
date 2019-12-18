@@ -321,7 +321,7 @@ def job_title():
 
     s3.filter = FS("type").belongs((4,))
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         s3.filter &= auth.filter_by_root_org(table)
 
     return s3_rest_controller("hrm")

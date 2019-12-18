@@ -13,7 +13,7 @@
   <li><a href='{{=URL(c="supply", f="catalog")}}'>{{=T("List All Catalogs & Add Items to Catalogs")}}</a>
 </ul>
 </div>
-{{if s3_has_role(ADMIN):}}
+{{if auth.s3_has_role("ADMIN"):}}
 <div class='col2right'>
 <h3>{{=T("Item Categories")}}:</h3>
 <ul>

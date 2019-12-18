@@ -255,7 +255,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
 
             # Add default action buttons
             prefix, name, table, tablename = r.target()
-            authorised = s3_has_permission("update", tablename)
+            authorised = auth.s3_has_permission("update", tablename)
 
             # If a component has components itself, then action buttons
             # can be forwarded to the native controller by setting native=True
@@ -307,7 +307,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
             # Override Add-button, link to native controller and put
             # the primary key into get_vars for automatic linking
             if native and not listadd and \
-               s3_has_permission("create", tablename):
+               auth.s3_has_permission("create", tablename):
                 label = s3base.S3CRUD.crud_string(tablename,
                                                   "label_create")
                 component = r.resource.components[name]

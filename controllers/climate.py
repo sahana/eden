@@ -305,13 +305,16 @@ def purchase():
                      vars = {"_next":URL(c="climate",
                                          f="purchase")}))
 
-    if not s3_has_role(ADMIN):
+    if auth.s3_has_role("ADMIN"):
+        ADMIN = True
+    else:
+        ADMIN = False
         table.paid.writable = False
         table.price.writable = False
         s3.filter = (table.created_by == auth.user.id)
 
     def prep(r):
-        if not s3_has_role(ADMIN) and r.record and r.record.paid:
+        if not ADMIN and r.record and r.record.paid:
             for f in table.fields:
                 table[f].writable = False
 
@@ -363,7 +366,7 @@ def prices():
                     )
                 )
     else:
-        if s3_has_role(ADMIN):
+        if auth.s3_has_role("ADMIN"):
             return s3_rest_controller()
 
 

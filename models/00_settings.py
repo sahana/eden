@@ -245,14 +245,14 @@ session.information = []
 session.warning = []
 
 # Shortcuts for system role IDs, see modules/s3aaa.py/AuthS3
-system_roles = auth.get_system_roles()
-ADMIN = system_roles.ADMIN
-AUTHENTICATED = system_roles.AUTHENTICATED
-ANONYMOUS = system_roles.ANONYMOUS
-EDITOR = system_roles.EDITOR
-MAP_ADMIN = system_roles.MAP_ADMIN
-ORG_ADMIN = system_roles.ORG_ADMIN
-ORG_GROUP_ADMIN = system_roles.ORG_GROUP_ADMIN
+#system_roles = auth.get_system_roles()
+#ADMIN = system_roles.ADMIN
+#AUTHENTICATED = system_roles.AUTHENTICATED
+#ANONYMOUS = system_roles.ANONYMOUS
+#EDITOR = system_roles.EDITOR
+#MAP_ADMIN = system_roles.MAP_ADMIN
+#ORG_ADMIN = system_roles.ORG_ADMIN
+#ORG_GROUP_ADMIN = system_roles.ORG_GROUP_ADMIN
 
 if s3.debug:
     # Add the developer toolbar from modules/s3/s3utils.py

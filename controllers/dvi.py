@@ -85,7 +85,7 @@ def recreq():
     """ Recovery Requests List """
 
     table = s3db.dvi_recreq
-    table.person_id.default = s3_logged_in_person()
+    table.person_id.default = auth.s3_logged_in_person()
 
     def prep(r):
         if r.interactive and not r.record:

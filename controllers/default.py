@@ -679,7 +679,7 @@ def person():
     """
 
     # Set to current user
-    user_person_id = str(s3_logged_in_person())
+    user_person_id = str(auth.s3_logged_in_person())
 
     # When request.args = [], set it as user_person_id.
     # When it is not an ajax request and the first argument is not user_person_id, set it.
@@ -1061,7 +1061,7 @@ def about():
 
     # Allow editing of page content from browser using CMS module
     if settings.has_module("cms"):
-        ADMIN = auth.get_system_roles().ADMIN in session.s3.roles
+        ADMIN = auth.s3_has_role("ADMIN")
         table = s3db.cms_post
         ltable = s3db.cms_post_module
         module = "default"
@@ -1289,7 +1289,7 @@ def help():
 
     # Allow editing of page content from browser using CMS module
     if settings.has_module("cms"):
-        ADMIN = auth.get_system_roles().ADMIN in session.s3.roles
+        ADMIN = auth.s3_has_role("ADMIN")
         table = s3db.cms_post
         ltable = s3db.cms_post_module
         module = "default"
@@ -1533,7 +1533,7 @@ def get_settings():
     """
 
     # Check if the request has a valid authorization header with admin cred.
-    if not auth.s3_has_role(auth.get_system_roles().ADMIN):
+    if not auth.s3_has_role("ADMIN"):
         auth.permission.format = None
         auth.permission.fail()
 

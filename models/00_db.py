@@ -114,9 +114,11 @@ auth.define_tables(migrate=migrate, fake_migrate=fake_migrate)
 current.audit = audit = s3base.S3Audit(migrate=migrate, fake_migrate=fake_migrate)
 
 # Shortcuts for models/controllers/views
-s3_has_role = auth.s3_has_role
-s3_has_permission = auth.s3_has_permission
-s3_logged_in_person = auth.s3_logged_in_person
+# - removed to reduce per-request overheads & harmonise the environment in
+#   models/controllers with that of Template controllers.py & customise() functions
+#s3_has_role = auth.s3_has_role
+#s3_has_permission = auth.s3_has_permission
+#s3_logged_in_person = auth.s3_logged_in_person
 
 # Calendar
 current.calendar = s3base.S3Calendar()

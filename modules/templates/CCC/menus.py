@@ -218,7 +218,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def admin(self):
         """ ADMIN menu """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        if not current.auth.s3_has_role("ADMIN"):
+            # OrgAdmin: No Side-menu
+            return None
+
         settings_messaging = self.settings_messaging()
 
         settings = current.deployment_settings
@@ -228,7 +231,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         # NB: Do not specify a controller for the main menu to allow
         #     re-use of this menu by other controllers
-        return M(restrict=[ADMIN])(
+        return M()(
                     #M("Setup", c="setup", f="deployment")(
                     #    #M("Create", m="create"),
                     #    #M("Servers", f="server")(

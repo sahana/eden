@@ -97,7 +97,10 @@ def group_rheader(r, tabs = []):
 def group():
     """ Problem Group REST Controller """
 
-    if not s3_has_role("DelphiAdmin"):
+    if auth.s3_has_role("DelphiAdmin"):
+        ADMIN = True
+   else:
+        ADMIN = False
         s3db.configure("delphi_group",
                        deletable = False,
                        # Remove ability to create new Groups
@@ -116,7 +119,7 @@ def group():
                 except:
                     pass
                 s3db.configure(tablename,
-                               deletable = s3_has_role("DelphiAdmin"),
+                               deletable = ADMIN,
                                list_fields = list_fields)
         return True
     s3.prep = prep
@@ -222,7 +225,7 @@ def problem():
     # Filter to just Active Problems
     s3.filter = (table.active == True)
 
-    if not s3_has_role("DelphiAdmin"):
+    if not auth.s3_has_role("DelphiAdmin"):
         s3db.configure(tablename,
                        deletable = False,
                        # Remove ability to create new Problems

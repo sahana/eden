@@ -60,7 +60,7 @@ def demographic_aggregate():
     """ REST Controller """
 
     def clear_aggregates(r, **attr):
-        if not s3_has_role(ADMIN):
+        if not auth.s3_has_role("ADMIN"):
             auth.permission.fail()
         s3db.stats_demographic_rebuild_all_aggregates()
         redirect(URL(c="stats",

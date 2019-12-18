@@ -381,10 +381,48 @@ def config(settings):
 
             from s3 import s3_fullname
 
+            if current.auth.s3_has_role("ADMIN"):
+
+                from gluon import A, URL
+                from s3 import ICON
+
+                script = """
+$('.copy-link').click(function(e){
+ var t = document.createElement('textarea');
+ document.body.appendChild(t);
+ t.value = '%s' + $(this).attr('href');
+ t.focus();
+ t.select();
+ try{
+  document.execCommand('copy');
+ }catch(e){
+  console.log('Copy failed');
+ }
+ document.body.removeChild(t);
+ e.preventDefault();
+})""" % settings.get_base_public_url()
+                current.response.s3.jquery_ready.append(script)
+
+                registration_link = DIV(A(ICON("copy"),
+                                          " ",
+                                          T("Registration Link"),
+                                          _class="action-btn copy-link",
+                                          _href = URL(c = "default",
+                                                      f = "index",
+                                                      args = ["register"],
+                                                      vars = {"org": record.id},
+                                                      ),
+                                          ),
+                                        )
+            else:
+                registration_link = ""
+
             table = r.table
             rheader = DIV(TABLE(TR(TH("%s: " % T("Name")),
                                    record.name,
-                                   )),
+                                   ),
+                                registration_link,
+                                ),
                           rheader_tabs)
 
         elif tablename == "pr_group":
@@ -519,7 +557,46 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_auth_user_controller(**attr):
 
-        if current.request.args(0) == "register":
+        args = current.request.args
+        if not len(args):
+            auth = current.auth
+            if not auth.s3_has_role("ADMIN"):
+                # ORG_ADMIN
+                # - show link to allow users to register for this Org
+
+                from gluon import A, DIV, URL
+                from s3 import ICON
+
+                s3 = current.response.s3
+                script = """
+$('.copy-link').click(function(e){
+ var t = document.createElement('textarea');
+ document.body.appendChild(t);
+ t.value = '%s' + $(this).attr('href');
+ t.focus();
+ t.select();
+ try{
+  document.execCommand('copy');
+ }catch(e){
+  console.log('Copy failed');
+ }
+ document.body.removeChild(t);
+ e.preventDefault();
+})""" % settings.get_base_public_url()
+                s3.jquery_ready.append(script)
+
+                s3.rfooter = DIV(A(ICON("copy"),
+                                   " ",
+                                   T("Registration Link"),
+                                   _class="action-btn copy-link",
+                                   _href = URL(c = "default",
+                                               f = "index",
+                                               args = ["register"],
+                                               vars = {"org": auth.user.organisation_id},
+                                               ),
+                                   ),
+                                 )
+        elif args(0) == "register":
             # Not easy to tweak the URL in the login form's buttons
             from gluon import redirect, URL
             redirect(URL(c="default", f="index",
