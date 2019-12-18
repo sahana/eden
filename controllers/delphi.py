@@ -99,7 +99,7 @@ def group():
 
     if auth.s3_has_role("DelphiAdmin"):
         ADMIN = True
-   else:
+    else:
         ADMIN = False
         s3db.configure("delphi_group",
                        deletable = False,
