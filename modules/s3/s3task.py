@@ -268,7 +268,9 @@ class S3Task(object):
             else:
                 statement = "tasks['%s'](%s)" % (task, _vars)
             # Handle JSON
+            false = False
             null = None
+            true = True
             exec(statement)
             return None
 

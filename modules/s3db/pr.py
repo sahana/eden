@@ -7625,7 +7625,7 @@ class pr_AssignMethod(S3Method):
             @param actions: a custom list of Actions for the dataTable
             @param filter_widgets: a custom list of FilterWidgets to show
             @param list_fields: a custom list of Fields to show
-            @param postprocess: a postprocess function to act on all assigned person_ids at once 
+            @param postprocess: name of a settings.tasks.<function> postprocess function to act on all assigned person_ids at once 
             @param rheader: an rheader to show
             @param title: an alternative page title
         """
@@ -7750,11 +7750,11 @@ class pr_AssignMethod(S3Method):
                         added += 1
                 if self.postprocess is not None:
                     # Run postprocess async as it may take some time to run
-                    current.response.s3.tasks["pr_assign_postprocess"] = self.postprocess
-                    current.s3task.run_async("pr_assign_postprocess",
-                                             args = [record.as_json(),
-                                                     json.dumps(selected),
-                                                     ])
+                    current.s3task.run_async("settings_task",
+                                             args = [self.postprocess],
+                                             vars = {"record": record.as_json(),
+                                                     "selected": json.dumps(selected),
+                                                     })
 
             if r.representation == "popup":
                 # Don't redirect, so we retain popup extension & so close popup

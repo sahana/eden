@@ -326,13 +326,23 @@ def config(settings):
                         (T("Participants"), "training"),
                         (T("Invite"), "assign"),
                         ]
+                from gluon import A, URL
+                from s3 import ICON
+                reminder_btn = DIV(A(ICON("mail"),
+                                     " ",
+                                     T("Send Reminder"),
+                                     _class="action-btn",
+                                     _href = URL(args = [record.id, "remind"]),
+                                     ),
+                                   )
             elif has_role("RESERVE"):
                 # Reserves can only see Events that they have been invited to
                 tabs = [(T("Basic Details"), None),
                         (T("Participation"), "training"),
                         ]
+                reminder_btn = ""
             else:
-                record_id = r.id
+                record_id = record.id
                 ltable = current.s3db.hrm_training
                 query = (ltable.training_event_id == record_id) & \
                         (ltable.person_id == auth.s3_logged_in_person())
@@ -343,6 +353,7 @@ def config(settings):
                     tabs = [(T("Basic Details"), None),
                             (T("Participation"), "training"),
                             ]
+                    reminder_btn = ""
                 else:
                     from gluon import A, URL
                     apply_btn = DIV(A(T("Apply"),
@@ -369,6 +380,7 @@ def config(settings):
                                     TR(TH("%s: " % location_id.label),
                                        location_id.represent(record.location_id),
                                        ),
+                                    reminder_btn,
                                     ),
                               rheader_tabs)
 
@@ -506,11 +518,21 @@ $('.copy-link').click(function(e){
                         (T("Participants"), "need_person"),
                         (T("Invite"), "assign"),
                         ]
+                from gluon import A, URL
+                from s3 import ICON
+                reminder_btn = DIV(A(ICON("mail"),
+                                     " ",
+                                     T("Send Reminder"),
+                                     _class="action-btn",
+                                     _href = URL(args = [record_id, "remind"]),
+                                     ),
+                                   )
             elif has_role("RESERVE"):
                 # Reserves can only see Opportunities that they have been invited to
                 tabs = [(T("Basic Details"), None),
                         (T("Participation"), "need_person"),
                         ]
+                reminder_btn = ""
             else:
                 ltable = s3db.req_need_person
                 query = (ltable.need_id == record_id) & \
@@ -522,6 +544,7 @@ $('.copy-link').click(function(e){
                     tabs = [(T("Basic Details"), None),
                             (T("Participation"), "need_person"),
                             ]
+                    reminder_btn = ""
                 else:
                     from gluon import A, URL
                     apply_btn = DIV(A(T("Apply"),
@@ -548,6 +571,7 @@ $('.copy-link').click(function(e){
                                     TR(TH("%s: " % location_id.label),
                                        location_id.represent(record.location_id),
                                        ),
+                                    reminder_btn,
                                     ),
                               rheader_tabs)
 
@@ -1196,18 +1220,18 @@ $('.copy-link').click(function(e){
         redirect(URL(args = [record_id, "training", training_id]))
 
     # -------------------------------------------------------------------------
-    def hrm_training_event_assign_postprocess(record, selected):
+    def hrm_training_event_notification(record, selected):
         """
-            Send notification to Invitees
+            Send notification to selected Invitees
         """
 
-        import json
+        #import json
         from gluon import URL
         from s3 import s3_parse_datetime
 
-        # Deserialize the args from s3task
-        record = json.loads(record)
-        selected = json.loads(selected)
+        # Deserialize the vars from s3task
+        #record = json.loads(record)
+        #selected = json.loads(selected)
 
         record_id = record.get("id")
 
@@ -1237,7 +1261,7 @@ $('.copy-link').click(function(e){
             URL(c="hrm", f="training_event", args=[record_id, "training"]))
         message = "You have been invited to an Event:\n\nEvent name: %s\nEvent description: %s\nStarts: %s\nLead Organisation: %s\nVenue name: %s\nDistrict: %s\nStreet Address: %s\nPostcode: %s\nContact Name: %s\nTelephone: %s\nEmail: %s\nWebsite: %s\n\nYou can respond to the invite here: %s" % \
             (event_name,
-             record.get("comment") or "",
+             record.get("comments") or "",
              etable.start_date.represent(s3_parse_datetime(record.get("start_date"), "%Y-%m-%d %H:%M:%S")),
              etable.organisation_id.represent(record.get("organisation_id"), show_link=False),
              tags.get("venue_name")["value"],
@@ -1269,6 +1293,33 @@ $('.copy-link').click(function(e){
                        subject = subject,
                        message = "%s/%s" % (message, person_id),
                        )
+
+    settings.tasks.hrm_training_event_notification = hrm_training_event_notification
+
+    # -------------------------------------------------------------------------
+    def hrm_training_event_reminder(r, **attr):
+        """
+            Send reminder notification to Invitees
+        """
+
+        import json
+        from gluon import redirect, URL
+
+        ttable = current.s3db.hrm_training
+        query = (ttable.training_event_id == r.id) & \
+                (ttable.deleted == False)
+        trainings = current.db(query).select(ttable.person_id)
+        selected = [t.person_id for t in trainings]
+
+        # Sent Reminders async as it may take some time to run
+        current.s3task.run_async("settings_task",
+                                 args = ["hrm_training_event_notification"],
+                                 vars = {"record": r.record.as_json(),
+                                         "selected": json.dumps(selected),
+                                         })
+
+        current.session.confirmation = T("Reminder sent")
+        redirect(URL(args=None))
 
     # -------------------------------------------------------------------------
     def hrm_training_event_postprocess(form):
@@ -1486,6 +1537,10 @@ $('.copy-link').click(function(e){
                    method = "assign",
                    action = s3db.pr_AssignMethod(component = "training"))
 
+        set_method("hrm", "training_event",
+                   method = "remind",
+                   action = hrm_training_event_reminder)
+
         # Custom prep
         standard_prep = s3.prep
         def prep(r):
@@ -1597,7 +1652,7 @@ $('.copy-link').click(function(e){
                                                          actions = actions,
                                                          filter_widgets = filter_widgets,
                                                          list_fields = list_fields,
-                                                         postprocess = hrm_training_event_assign_postprocess,
+                                                         postprocess = "hrm_training_event_notification",
                                                          title = T("Invite People"),
                                                          ))
 
@@ -3133,18 +3188,18 @@ $('.copy-link').click(function(e){
         redirect(URL(args = [record_id, "need_person", need_person_id]))
 
     # -------------------------------------------------------------------------
-    def req_need_assign_postprocess(record, selected):
+    def req_need_notification(record, selected):
         """
-            Send notification to Invitees
+            Send notification to selected Invitees
         """
 
-        import json
+        #import json
         from gluon import URL
         from s3 import s3_parse_datetime
 
-        # Deserialize the args from s3task
-        record = json.loads(record)
-        selected = json.loads(selected)
+        # Deserialize the vars from s3task
+        #record = json.loads(record)
+        #selected = json.loads(selected)
 
         record_id = record.get("id")
 
@@ -3237,6 +3292,33 @@ $('.copy-link').click(function(e){
                        subject = subject,
                        message = "%s/%s" % (message, links.get(person_id)),
                        )
+
+    settings.tasks.req_need_notification = req_need_notification
+
+    # -------------------------------------------------------------------------
+    def req_need_reminder(r, **attr):
+        """
+            Send reminder notification to Invitees
+        """
+
+        import json
+        from gluon import redirect, URL
+
+        nptable = current.s3db.req_need_person
+        query = (nptable.need_id == r.id) & \
+                (nptable.deleted == False)
+        links = current.db(query).select(nptable.person_id)
+        selected = [l.person_id for l in links]
+
+        # Sent Reminders async as it may take some time to run
+        current.s3task.run_async("settings_task",
+                                 args = ["req_need_notification"],
+                                 vars = {"record": r.record.as_json(),
+                                         "selected": json.dumps(selected),
+                                         })
+
+        current.session.confirmation = T("Reminder sent")
+        redirect(URL(args=None))
 
     # -------------------------------------------------------------------------
     def customise_req_need_resource(r, tablename):
@@ -3441,6 +3523,10 @@ $('.copy-link').click(function(e){
                            method = "apply",
                            action = req_need_apply)
 
+                set_method("req", "need",
+                           method = "remind",
+                           action = req_need_reminder)
+
             if not r.component:
                 from gluon import URL
                 r.resource.configure(create_next = URL(c="req", f="need",
@@ -3522,7 +3608,7 @@ $('.copy-link').click(function(e){
                                                          actions = actions,
                                                          filter_widgets = filter_widgets,
                                                          list_fields = list_fields,
-                                                         postprocess = req_need_assign_postprocess,
+                                                         postprocess = "req_need_notification",
                                                          title = T("Invite People"),
                                                          ))
 
