@@ -5,8 +5,6 @@ from collections import OrderedDict
 from gluon import current
 from gluon.storage import Storage
 
-from s3compat import basestring
-
 def config(settings):
     """
         Support Cumbria
