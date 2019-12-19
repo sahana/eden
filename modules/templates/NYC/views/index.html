@@ -1,6 +1,7 @@
 {{extend "layout.html"}}
 <div class='row home-top' style='margin-top:20px'>
  <div class='large-12 columns end'>
+  {{AUTHENTICATED = auth.get_system_roles().AUTHENTICATED}}
   <div id='intro' class='callout panel'>
     {{=item}}
     {{if AUTHENTICATED not in session.s3.roles:}}
