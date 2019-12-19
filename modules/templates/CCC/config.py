@@ -1226,6 +1226,7 @@ $('.copy-link').click(function(e){
         """
 
         from gluon import URL
+        from s3compat import basestring
 
         if isinstance(selected, basestring):
             # Deserialize the vars from s3task
@@ -1305,7 +1306,7 @@ $('.copy-link').click(function(e){
     # -------------------------------------------------------------------------
     def hrm_training_event_reminder(r, **attr):
         """
-            Send reminder notification to Invitees
+            Send reminder notification to Invitees who are Invited, Accepted or Approved
             - interactive
         """
 
@@ -1314,6 +1315,7 @@ $('.copy-link').click(function(e){
 
         ttable = current.s3db.hrm_training
         query = (ttable.training_event_id == r.id) & \
+                (ttable.status.belongs(2, 4, 5)) & \
                 (ttable.deleted == False)
         trainings = current.db(query).select(ttable.person_id)
         selected = [t.person_id for t in trainings]
@@ -1331,7 +1333,7 @@ $('.copy-link').click(function(e){
     # -------------------------------------------------------------------------
     def hrm_training_event_reminder_day(record_id):
         """
-            Send reminder notification to Invitees
+            Send reminder notification to Invitees who are Invited, Accepted or Approved
             - automated 1 day before Opportunity
         """
 
@@ -1350,6 +1352,7 @@ $('.copy-link').click(function(e){
 
         ttable = s3db.hrm_training
         query = (ttable.training_event_id == record_id) & \
+                (ttable.status.belongs(2, 4, 5)) & \
                 (ttable.deleted == False)
         trainings = db(query).select(ttable.person_id)
         selected = [t.person_id for t in trainings]
@@ -3284,7 +3287,10 @@ $('.copy-link').click(function(e){
              )
 
         url = "%s%s" % (settings.get_base_public_url(),
-                        URL(c="req", f="need", args=[record_id, "need_person", need_person_id]))
+                        URL(c="req", f="need",
+                            args=[record_id, "need_person", need_person_id],
+                            )
+                        )
         message = "%s has applied to participate in your Opportunity: %s\n\nYou can approve or decline this here: %s" % \
             (fullname,
              r.record.name,
@@ -3309,6 +3315,7 @@ $('.copy-link').click(function(e){
         """
 
         from gluon import URL
+        from s3compat import basestring
 
         if isinstance(selected, basestring):
             # Deserialize the vars from s3task
@@ -3419,7 +3426,7 @@ $('.copy-link').click(function(e){
     # -------------------------------------------------------------------------
     def req_need_reminder(r, **attr):
         """
-            Send reminder notification to Invitees
+            Send reminder notification to Invitees who are Invited, Accepted or Approved
             - interactive
         """
 
@@ -3428,6 +3435,7 @@ $('.copy-link').click(function(e){
 
         nptable = current.s3db.req_need_person
         query = (nptable.need_id == r.id) & \
+                (nptable.status.belongs(2, 4, 5)) & \
                 (nptable.deleted == False)
         links = current.db(query).select(nptable.person_id)
         selected = [l.person_id for l in links]
@@ -3445,7 +3453,7 @@ $('.copy-link').click(function(e){
     # -------------------------------------------------------------------------
     def req_need_reminder_day(record_id):
         """
-            Send reminder notification to Invitees
+            Send reminder notification to Invitees who are Invited, Accepted or Approved
             - automated 1 day before Opportunity
         """
 
@@ -3463,6 +3471,7 @@ $('.copy-link').click(function(e){
 
         nptable = s3db.req_need_person
         query = (nptable.need_id == record_id) & \
+                (nptable.status.belongs(2, 4, 5)) & \
                 (nptable.deleted == False)
         links = db(query).select(nptable.person_id)
         selected = [l.person_id for l in links]
