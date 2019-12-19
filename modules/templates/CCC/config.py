@@ -5,9 +5,11 @@ from collections import OrderedDict
 from gluon import current
 from gluon.storage import Storage
 
+from s3compat import basestring
+
 def config(settings):
     """
-        Support Cumbria 
+        Support Cumbria
         - supported by Cumbria County Council
         - manage Volunteers
         - manage Donations
@@ -481,7 +483,7 @@ $('.copy-link').click(function(e){
                 pass
             else:
                 tabs.append((T("Additional Information"), "additional"))
-                # Better on main form using S3SQLInlineLink  
+                # Better on main form using S3SQLInlineLink
                 #tabs.append((T("Skills"), "competency"))
                 if has_role("ORG_ADMIN"):
                     tabs.insert(1, (T("Affiliation"), "human_resource"))
@@ -848,7 +850,7 @@ $('.copy-link').click(function(e){
     def customise_hrm_human_resource_resource(r, tablename):
 
         from s3 import S3OptionsFilter, S3SQLCustomForm, S3TextFilter
-        from s3layouts import S3PopupLink
+        #from s3layouts import S3PopupLink
 
         s3db = current.s3db
 
@@ -946,7 +948,7 @@ $('.copy-link').click(function(e){
             f = table.organisation_id
             f.readable = f.writable = False
             f.comment = None # No Create
-                       
+
         s3db.configure("hrm_human_resource",
                        crud_form = S3SQLCustomForm("organisation_id",
                                                    (T("Role"), "job_title.value"),
@@ -1424,7 +1426,7 @@ $('.copy-link').click(function(e){
         from dateutil.relativedelta import relativedelta
         start_time = form_vars_get("start_date") - relativedelta(days = 1)
         if start_time < current.request.utcnow:
-             return
+            return
 
         import json
         ttable = s3db.scheduler_task
@@ -2462,7 +2464,7 @@ $('.copy-link').click(function(e){
                            (T("Please indicate if the offer is only available for a period of time (please state) or an open ended offer. Household items, such as furniture, are normally not required for some months but very gratefully received at the right time"), "availability.value"),
                            "comments",
                            ]
-                           
+
         elif get_vars_get("groups") or \
              r.function == "group" or \
              has_role("GROUP_ADMIN", include_admin=False):
@@ -2516,7 +2518,7 @@ $('.copy-link').click(function(e){
                                                         hrtable.organisation_id,
                                                         limitby = (0, 1)
                                                         ).first()
-        
+
         ptable = s3db.pr_person
         putable = s3db.pr_person_user
         query = (ptable.id == hr.person_id) & \
@@ -2783,7 +2785,7 @@ $('.copy-link').click(function(e){
                     msg_record_modified = T("Donor updated"),
                     msg_record_deleted = T("Donor deleted"),
                     msg_list_empty = T("No Donors currently registered")
-                    ) 
+                    )
             elif get_vars_get("groups") or \
                  has_role("GROUP_ADMIN", include_admin=False):
                 # Group Members
@@ -2845,7 +2847,7 @@ $('.copy-link').click(function(e){
 
             return output
         s3.postp = postp
-        
+
         # Hide the search box on component tabs, as confusing & not useful
         attr["dtargs"] = {"dt_searching": False,
                           }
@@ -2978,7 +2980,7 @@ $('.copy-link').click(function(e){
                     db(ttable.id == task_id).update(realm_entity = org.pe_id)
                 except AttributeError:
                     pass
-                
+
                 # Send Emails
                 this_message = "%s/%s" % (message, task_id)
                 org_admins = orgs[organisation_id]["emails"]
@@ -3174,7 +3176,7 @@ $('.copy-link').click(function(e){
         from dateutil.relativedelta import relativedelta
         start_time = form_vars_get("date") - relativedelta(days = 1)
         if start_time < current.request.utcnow:
-             return
+            return
 
         need_id = form_vars_get("id")
 
@@ -3555,7 +3557,7 @@ $('.copy-link').click(function(e){
                                           ),
                           S3OptionsFilter("need_skill.skill_id"),
                           ]
-                       
+
         list_fields = ["name",
                        "date",
                        "end_date",
@@ -3772,7 +3774,7 @@ $('.copy-link').click(function(e){
 
             return result
         s3.prep = prep
-        
+
         attr["rheader"] = ccc_rheader
 
         return attr
