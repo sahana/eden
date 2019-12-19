@@ -253,19 +253,42 @@ body.rtl #poweredby {
   text-align: left;
 }
 
-/* line 202, ../scss/theme/_page.scss */
+/* line 201, ../scss/theme/_page.scss */
+.medium5 {
+  width: 20%;
+}
+
+@media only screen {
+  /* line 205, ../scss/theme/_page.scss */
+  .padc {
+    padding: 2px 5px 6px;
+  }
+}
+@media only screen and (min-width: 40.0625em) {
+  /* line 211, ../scss/theme/_page.scss */
+  .padc {
+    padding: 5px 10px 12px;
+  }
+}
+@media only screen and (min-width: 64.0625em) {
+  /* line 217, ../scss/theme/_page.scss */
+  .padc {
+    padding: 10px 20px 25px;
+  }
+}
+/* line 223, ../scss/theme/_page.scss */
 .sub-nav.about-menu {
   color: #999;
   text-align: left;
   margin-left: 0;
   margin-right: 0;
 }
-/* line 204, ../scss/theme/_page.scss */
+/* line 225, ../scss/theme/_page.scss */
 .sub-nav.about-menu a {
   color: #999;
 }
 
-/* line 212, ../scss/theme/_page.scss */
+/* line 233, ../scss/theme/_page.scss */
 body.rtl .about-menu {
   text-align: right;
 }

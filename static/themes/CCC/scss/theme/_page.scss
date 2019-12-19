@@ -197,6 +197,26 @@ body.rtl {
         text-align: left;
     }
 }
+// This simple custom grid doesn't become columns
+.medium5 {
+    width: 20%;
+}
+// Carlisle logo includes no padding of it's own, so add in via CSS to stop it standing out from the rest so much
+@media #{$small-up} {
+    .padc {
+        padding: 2px 5px 6px;
+    }
+}
+@media #{$medium-up} {
+    .padc {
+        padding: 5px 10px 12px;
+    }
+}
+@media #{$large-up} {
+    .padc {
+        padding: 10px 20px 25px;
+    }
+}
 
 // About Menu (in footer)
 .sub-nav.about-menu {
