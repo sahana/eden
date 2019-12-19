@@ -7625,7 +7625,7 @@ class pr_AssignMethod(S3Method):
             @param actions: a custom list of Actions for the dataTable
             @param filter_widgets: a custom list of FilterWidgets to show
             @param list_fields: a custom list of Fields to show
-            @param postprocess: name of a settings.tasks.<function> postprocess function to act on all assigned person_ids at once 
+            @param postprocess: name of a settings.tasks.<function> postprocess function to act on all assigned person_ids at once
             @param rheader: an rheader to show
             @param title: an alternative page title
         """

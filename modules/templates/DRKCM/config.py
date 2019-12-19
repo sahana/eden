@@ -1520,16 +1520,16 @@ def config(settings):
 
                 configure_person_tags()
 
+                if ui_options.get("case_use_pe_label"):
+                    pe_label = (T("ID"), "person_id$pe_label")
+                else:
+                    pe_label = None
+                s3db.pr_person.pe_label.label = T("ID")
+
                 if r.interactive:
                     table = resource.table
 
                     from s3 import S3AddPersonWidget
-
-                    if ui_options.get("case_use_pe_label"):
-                        pe_label = (T("ID"), "person_id$pe_label")
-                    else:
-                        pe_label = None
-                    s3db.pr_person.pe_label.label = T("ID")
 
                     field = table.person_id
                     field.represent = s3db.pr_PersonRepresent(show_link=True)
