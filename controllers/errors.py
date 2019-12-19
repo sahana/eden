@@ -56,28 +56,22 @@ error_messages = {
 }
 
 def index():
-    ''' default generic error page '''
+    """
+        Default generic error page
+    """
 
     try:
         code = int(request.vars["code"])
         description = defined_status[code]
-    except KeyError:
-        description = "unknown error"
+    except (ValueError, TypeError, KeyError):
         code = "NA"
+        description = "unknown error"
 
     # Send a JSON message if non-interactive request
-    request_url = request.vars["request_url"]
-    path = request_url.split("/")
-    ext = [a for a in path if "." in a]
-    if ext:
-        fmt = ext[-1].rsplit(".", 1)[1].lower()
-        if fmt not in ("html", "iframe", "popup"):
-            xml = current.xml
-            code = request.vars["code"]
-            headers = {"Content-Type":"application/json"}
-            raise HTTP(int(code),
-                       body=xml.json_message(False, code, description),
-                       **headers)
+    if s3base.s3_get_extension() not in ("html", "iframe", "popup"):
+        message = current.xml.json_message(False, code, description)
+        headers = {"Content-Type":"application/json"}
+        raise HTTP(code, body=message, **headers)
 
     details = " %s, %s " % (code, description)
     try:
@@ -86,5 +80,10 @@ def index():
         message, suggestions = error_messages["NA"]
 
     # Retain the HTTP status code on error pages
-    response.status = int(code)
-    return dict(res=request.vars, message=message, details=details, suggestions=suggestions, app=appname)
+    response.status = 400 if code == "NA" else code
+    return {"res": request.vars,
+            "message": message,
+            "details": details,
+            "suggestions": suggestions,
+            "app": appname,
+            }
