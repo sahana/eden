@@ -2060,7 +2060,13 @@ class S3Msg(object):
             return "No Such RSS Channel: %s" % channel_id
 
         # http://pythonhosted.org/feedparser
-        import feedparser
+        if PY2:
+            # Use Stable v5.2.1
+            # - current known reason is to prevent SSL: CERTIFICATE_VERIFY_FAILED
+            import feedparser521 as feedparser
+        else:
+            # Use 6.0.0b1 which is required for Python 3.x
+            import feedparser
         # Basic Authentication
         username = channel.username
         password = channel.password
@@ -2083,33 +2089,34 @@ class S3Msg(object):
             # http://pythonhosted.org/feedparser/http-etag.html
             # NB This won't help for a server like Drupal 7 set to not allow caching & hence generating a new ETag/Last Modified each request!
             d = feedparser.parse(channel.url,
-                                 etag=channel.etag,
-                                 request_headers=request_headers,
-                                 response_headers=response_headers,
+                                 etag = channel.etag,
+                                 request_headers = request_headers,
+                                 response_headers = response_headers,
                                  )
         elif channel.date:
             d = feedparser.parse(channel.url,
-                                 modified=channel.date.utctimetuple(),
-                                 request_headers=request_headers,
-                                 response_headers=response_headers,
+                                 modified = channel.date.utctimetuple(),
+                                 request_headers = request_headers,
+                                 response_headers = response_headers,
                                  )
         else:
             # We've not polled this feed before
             d = feedparser.parse(channel.url,
-                                 request_headers=request_headers,
-                                 response_headers=response_headers,
+                                 request_headers = request_headers,
+                                 response_headers = response_headers,
                                  )
         if d.bozo:
             # Something doesn't seem right
             S3Msg.update_channel_status(channel_id,
-                                        status = "ERROR: %s" % d.bozo_exception.message,
+                                        #status = "ERROR: %s" % d.bozo_exception.message,
+                                        status = "ERROR: %s" % d.bozo_exception,
                                         period = (300, 3600),
                                         )
             return
 
         # Update ETag/Last-polled
         now = current.request.utcnow
-        data = dict(date=now)
+        data = {"date": now}
         etag = d.get("etag", None)
         if etag:
             data["etag"] = etag
