@@ -2179,9 +2179,9 @@ class CAPAreaModel(S3Model):
               happens via a tag match (cap_area_tag <=> gis_location_tag)
         """
 
-        form_vars = form.vars
+        form_vars_get = form.vars.get
 
-        area_id = form_vars.get("area_id")
+        area_id = form_vars_get("area_id")
         if not area_id:
             # Coming from assign method => no action
             return
@@ -2189,7 +2189,7 @@ class CAPAreaModel(S3Model):
         db = current.db
 
         # Look up the alert_id
-        alert_id = form_vars.get("alert_id")
+        alert_id = form_vars_get("alert_id")
         if not alert_id:
             atable = db.cap_area
             row = db(atable.id == area_id).select(atable.alert_id,
@@ -2200,6 +2200,7 @@ class CAPAreaModel(S3Model):
 
         if alert_id:
             # Not a template area (template areas have no alert_id)
+            area_location_id = form_vars_get("id")
 
             # Remove the record if the alert is imported and polygon import
             # is not configured (=>a link to a geocode location is created in
@@ -2211,11 +2212,11 @@ class CAPAreaModel(S3Model):
                                                       limitby = (0, 1),
                                                       ).first()
                 if row.external:
-                    db(db.cap_area_location.id == form_vars["id"]).delete()
+                    db(db.cap_area_location.id == area_location_id).delete()
                     return
 
             # Inherit the alert_id from area
-            db(db.cap_area_location.id == form_vars["id"]).update(alert_id=alert_id)
+            db(db.cap_area_location.id == area_location_id).update(alert_id = alert_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
