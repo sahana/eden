@@ -2065,8 +2065,14 @@ class S3Msg(object):
             # - current known reason is to prevent SSL: CERTIFICATE_VERIFY_FAILED
             import feedparser521 as feedparser
         else:
-            # Use 6.0.0b1 which is required for Python 3.x
-            import feedparser
+            # Python 3.x: Requires pip install sgmllib3k
+            if sys.version_info[1] >= 7:
+                # Use 6.0.0b1 which is required for Python 3.7
+                import feedparser
+            else:
+                # Python 3.6 requires 5.2.1 with 2to3 run on it to prevent SSL: CERTIFICATE_VERIFY_FAILED
+                import feedparser5213 as feedparser
+
         # Basic Authentication
         username = channel.username
         password = channel.password
@@ -2107,9 +2113,12 @@ class S3Msg(object):
                                  )
         if d.bozo:
             # Something doesn't seem right
+            if PY2:
+                status = "ERROR: %s" % d.bozo_exception.message
+            else:
+                status = "ERROR: %s" % d.bozo_exception
             S3Msg.update_channel_status(channel_id,
-                                        #status = "ERROR: %s" % d.bozo_exception.message,
-                                        status = "ERROR: %s" % d.bozo_exception,
+                                        status = status,
                                         period = (300, 3600),
                                         )
             return
