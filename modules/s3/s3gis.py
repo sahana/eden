@@ -5856,14 +5856,17 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     try:
                         shape = wkt_loads(wkt)
                     except:
+                        # Perhaps this is really a LINESTRING (e.g. OSM import of an unclosed Way, some CAP areas)
+                        linestring = "LINESTRING%s" % wkt[8:-1]
                         try:
-                            # Perhaps this is really a LINESTRING (e.g. OSM import of an unclosed Way)
-                            linestring = "LINESTRING%s" % wkt[8:-1]
                             shape = wkt_loads(linestring)
-                            form_vars.wkt = linestring
                         except:
                             form.errors["wkt"] = current.messages.invalid_wkt
                             return
+                        else:
+                            warning = s3_str(current.T("Source WKT has been converted from POLYGON to LINESTRING"))
+                            current.log.warning(warning)
+                            form_vars.wkt = linestring
                     else:
                         if shape.wkt != form_vars.wkt: # If this is too heavy a check for some deployments, add a deployment_setting to disable the check & just do it silently
                             # Use Shapely to clean up the defective WKT (e.g. trailing chars)

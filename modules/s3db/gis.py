@@ -459,7 +459,7 @@ class S3LocationModel(S3Model):
         if form_vars_get("path") and current.response.s3.bulk:
             # Don't import path from foreign sources as IDs won't match
             db = current.db
-            db(db.gis_location.id == location_id).update(path=None)
+            db(db.gis_location.id == location_id).update(path = None)
 
         if not auth.override and \
            not auth.rollback:
@@ -623,19 +623,19 @@ class S3LocationModel(S3Model):
                                         gis.get_parent_bounds(parent=parent)
                         if (lat > lat_max) or (lat < lat_min):
                             lat_error = T("Latitude %(lat)s is invalid, should be between %(lat_min)s & %(lat_max)s") % \
-                                dict(lat=lat, lat_min=lat_min, lat_max=lat_max)
+                                {"lat": lat, "lat_min": lat_min, "lat_max": lat_max}
                             form.errors["lat"] = lat_error
                         if (lon > lon_max) or (lon < lon_min):
                             lon_error = T("Longitude %(lon)s is invalid, should be between %(lon_min)s & %(lon_max)s") % \
-                                dict(lon=lon, lon_min=lon_min, lon_max=lon_max)
+                                {"lon": lon, "lon_min": lon_min, "lon_max": lon_max}
                             form.errors["lon"] = lon_error
                         if form.errors:
                             if name:
                                 error = T("Sorry location %(location)s appears to be outside the area of parent %(parent)s.") % \
-                                    dict(location=name, parent=parent_name)
+                                    {"location": name, "parent": parent_name}
                             else:
                                 error = T("Sorry location appears to be outside the area of parent %(parent)s.") % \
-                                    dict(parent=parent_name)
+                                    {"parent": parent_name}
                             response.error = error
                             current.log.error(error)
                             return
@@ -665,26 +665,26 @@ class S3LocationModel(S3Model):
                         if (lat > lat_max) or (lat < lat_min):
                             if name:
                                 error = T("Sorry location %(location)s appears to be outside the area supported by this deployment.") % \
-                                    dict(location=name)
+                                    {"location": name}
                             else:
                                 error = T("Sorry location appears to be outside the area supported by this deployment.")
                             response.error = error
                             current.log.error(error)
                             lat_error =  T("Latitude %(lat)s is invalid, should be between %(lat_min)s & %(lat_max)s") % \
-                                dict(lat=lat, lat_min=lat_min, lat_max=lat_max)
+                                {"lat": lat, "lat_min": lat_min, "lat_max": lat_max}
                             form.errors["lat"] = lat_error
                             current.log.error(lat_error)
                             return
                         elif (lon > lon_max) or (lon < lon_min):
                             if name:
                                 error = T("Sorry location %(location)s appears to be outside the area supported by this deployment.") % \
-                                    dict(location=name)
+                                    {"location": name}
                             else:
                                 error = T("Sorry location appears to be outside the area supported by this deployment.")
                             response.error = error
                             current.log.error(error)
                             lon_error = T("Longitude %(lon)s is invalid, should be between %(lon_min)s & %(lon_max)s") % \
-                                dict(lon=lon, lon_min=lon_min, lon_max=lon_max)
+                                {"lon": lon, "lon_min": lon_min, "lon_max": lon_max}
                             form.errors["lon"] = lon_error
                             current.log.error(lon_error)
                             return
@@ -1739,7 +1739,7 @@ class S3GISConfigModel(S3Model):
         # =====================================================================
         # GIS Projections
         tablename = "gis_projection"
-        proj4js = T("%(proj4js)s definition") % dict(proj4js="Proj4js")
+        proj4js = T("%(proj4js)s definition") % {"proj4js": "Proj4js"}
         define_table(tablename,
                      Field("name", length=64, notnull=True, unique=True,
                            label = T("Name"),
@@ -1765,9 +1765,9 @@ class S3GISConfigModel(S3Model):
                            label = proj4js,
                            comment = DIV(_class="stickytip",
                                          _title="%s|%s" % (proj4js,
-                                                           T("String used to configure Proj4js. Can be found from %(url)s") % dict(url=A("http://spatialreference.org",
-                                                                                                                                            _href="http://spatialreference.org",
-                                                                                                                                            _target="_blank")))),
+                                                           T("String used to configure Proj4js. Can be found from %(url)s") % {"url": A("http://spatialreference.org",
+                                                                                                                                        _href="http://spatialreference.org",
+                                                                                                                                        _target="_blank")})),
                            ),
                      Field("units", notnull=True,
                            label = T("Units"),
@@ -2809,7 +2809,7 @@ class S3LayerEntityModel(S3Model):
             return
 
         fill = rgb2hex(int(parts[0]), int(parts[1]), int(parts[2]))
-        style = dict(fill = fill)
+        style = {"fill": fill}
         if len(parts) == 4:
             opacity = float(parts[3])
             style["fillOpacity"] = opacity
@@ -4826,7 +4826,7 @@ class S3PoIModel(S3Model):
                                  attr_fields = ["name", "poi_type_id"],
                                  name = "PoIs",
                                  )
-            record = dict(id=f_id)
+            record = {"id": f_id}
             s3db.update_super(ltable, record)
             layer_id = record["layer_id"]
 
@@ -4858,10 +4858,10 @@ class S3PoIModel(S3Model):
 
         elif len(styles) == 0:
             # Create It
-            data = dict(layer_id = layer_id,
-                        popup_format = "{name} ({poi_type_id})",
-                        style = style,
-                        )
+            data = {"layer_id": layer_id,
+                    "popup_format": "{name} ({poi_type_id})",
+                    "style": style,
+                    }
             if none_excluded:
                 data["config_id"] = config_id
             stable.insert(**data)
