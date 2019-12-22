@@ -4962,7 +4962,7 @@ class S3BulkImporter(object):
         resourcename = resourcename.strip('" ')
 
         try:
-            source = open(filepath, "r")
+            source = open(filepath, "rb")
         except IOError:
             error_string = "prepopulate error: file %s missing"
             self.errorList.append(error_string % filepath)
