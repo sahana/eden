@@ -4961,10 +4961,10 @@ class S3BulkImporter(object):
         prefix = prefix.strip('" ')
         resourcename = resourcename.strip('" ')
 
-        error_string = "prepopulate error: file %s missing"
         try:
             source = open(filepath, "rb")
         except IOError:
+            error_string = "prepopulate error: file %s missing"
             self.errorList.append(error_string % filepath)
             return
 
@@ -4976,6 +4976,7 @@ class S3BulkImporter(object):
         try:
             xslt_file = open(stylesheet, "r")
         except IOError:
+            error_string = "prepopulate error: file %s missing"
             self.errorList.append(error_string % stylesheet)
             return
         else:
