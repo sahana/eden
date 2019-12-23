@@ -83,12 +83,7 @@ ERROR = Messages(T)
 current.ERROR = ERROR
 
 # Import the S3 Framework
-if update_check_needed:
-    # Reload the Field definitions
-    from s3compat import reload
-    reload(s3base.s3fields)
-else:
-    import s3 as s3base
+import s3 as s3base
 
 # Set up logger (before any module attempts to use it!)
 import s3log
