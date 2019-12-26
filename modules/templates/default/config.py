@@ -191,7 +191,7 @@ def config(settings):
     # Decimal separator for numbers (defaults to ,)
     settings.L10n.decimal_separator = "."
     # Thousands separator for numbers (defaults to space)
-    #settings.L10n.thousands_separator = ","
+    settings.L10n.thousands_separator = ","
     # Default Country Code for telephone numbers
     #settings.L10n.default_country_code = 1
     # Make last name in person/user records mandatory
@@ -220,12 +220,13 @@ def config(settings):
     #settings.L10n.translate_org_site = True
 
     # Finance settings
-    #settings.fin.currencies = {
-    #    "EUR" : "Euros",
-    #    "GBP" : "Great British Pounds",
-    #    "USD" : "United States Dollars",
-    #}
-    #settings.fin.currency_default = "USD"
+    settings.fin.currencies = {
+        "EUR" : "Euros",
+        "GBP" : "Great British Pounds",
+        "USD" : "United States Dollars",
+        "BDT" : "Bangladeshi Taka",
+    }
+    settings.fin.currency_default = "BDT"
     #settings.fin.currency_writable = False # False currently breaks things
 
     # PDF settings
@@ -252,13 +253,13 @@ def config(settings):
     # e.g. Activities filtered to those of parent Project
     #settings.gis.countries = ("US",)
     # Uncomment to pass Addresses imported from CSV to a Geocoder to try and automate Lat/Lon
-    #settings.gis.geocode_imported_addresses = "google"
+    settings.gis.geocode_imported_addresses = "google"
     # Hide the Map-based selection tool in the Location Selector
     #settings.gis.map_selector = False
     # Show LatLon boxes in the Location Selector
-    #settings.gis.latlon_selector = True
+    settings.gis.latlon_selector = True
     # Use Building Names as a separate field in Street Addresses?
-    #settings.gis.building_name = False
+    settings.gis.building_name = True
     # Use a non-default fillColor for Clustered points
     #settings.gis.cluster_fill = "8087ff"
     # Disable the label for clustered points
@@ -416,9 +417,9 @@ def config(settings):
     #settings.ui.filter_auto_submit = 800
     #settings.ui.report_auto_submit = 800
     # Enable this for a UN-style deployment
-    #settings.ui.cluster = True
+    settings.ui.cluster = True
     # Enable this to use the label 'Camp' instead of 'Shelter'
-    #settings.ui.camp = True
+    settings.ui.camp = True
     # Enable this to have Open links in IFrames open a full page in a new tab
     #settings.ui.iframe_opens_full = True
     # Enable this to change the label for 'Attachments' tabs
@@ -629,9 +630,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Shelters
     # Uncomment to use a dynamic population estimation by calculations based on registrations
-    #settings.cr.shelter_population_dynamic = True
+    settings.cr.shelter_population_dynamic = True
     # Uncomment to disable people registration in shelters
-    #settings.cr.people_registration = False
+    settings.cr.people_registration = False
     # Uncomment to use Tags for Shelters
     #settings.cr.tags = True
     # Uncomment to generate tasks from shelter inspections (requires project module)
@@ -723,16 +724,16 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Events
     # Uncomment to use the term Disaster instead of Event
-    #settings.event.label = "Disaster"
+    settings.event.label = "Disaster"
     # Uncomment to not use Incidents under Events
     #settings.event.incident = False
     # Uncomment to preserve linked Incidents when an Event is deleted
     # NB Changing this setting requires a DB migration
     #settings.event.cascade_delete_incidents = False
     # Make Event Types Hierarchical
-    #settings.event.types_hierarchical = True
+    settings.event.types_hierarchical = True
     # Make Incident Types Hierarchical
-    #settings.event.incident_types_hierarchical = True
+    settings.event.incident_types_hierarchical = True
     # Uncomment to allow the use of Exercise Events
     #settings.event.exercise = True
     # Show tab for Event Dispatch
@@ -788,10 +789,13 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Organisations
+    settings.org.service_locations = True
+    #settings.org.service_locations_heirarchical = True
+    settings.org.services = True
     # Uncomment to use an Autocomplete for Organisation lookup fields
     #settings.org.autocomplete = True
     # Enable the Organisation Sector field
-    #settings.org.sector = True
+    settings.org.sector = True
     # But hide it from the rheader
     #settings.org.sector_rheader = False
     # Enable the use of Organisation Branches
@@ -802,7 +806,7 @@ def config(settings):
     #settings.org.facility_types_hierarchical = True
     # Enable the use of Organisation Groups & what their name is
     #settings.org.groups = "Coalition"
-    #settings.org.groups = "Network"
+    settings.org.groups = "Network"
     # Organisation Location context
     #settings.org.organisation_location_context = "organisation_location.location_id"
     # Make Organisation Types Hierarchical
@@ -810,7 +814,7 @@ def config(settings):
     # Make Organisation Types Multiple
     #settings.org.organisation_types_multiple = True
     # Show Organisation Types in the rheader
-    #settings.org.organisation_type_rheader = True
+    settings.org.organisation_type_rheader = True
     # Enable the use of Organisation Regions
     #settings.org.regions = True
     # Make Organisation Regions Hierarchical
@@ -820,7 +824,7 @@ def config(settings):
     # Uncomment to show a Tab for Organisation Resources
     #settings.org.resources_tab = True
     # Make Services Hierarchical
-    #settings.org.services_hierarchical = True
+    settings.org.services_hierarchical = True
     # Set the length of the auto-generated org/site code the default is 10
     #settings.org.site_code_len = 3
     # Set the label for Sites
@@ -1257,7 +1261,7 @@ def config(settings):
             #description = "Central point to record details on People",
             restricted = True,
             access = "|1|",     # Only Administrators can see this module in the default menu (access to controller is possible to all still)
-            module_type = 10
+            module_type = None
         )),
         ("org", Storage(
             name_nice = T("Organizations"),
@@ -1282,7 +1286,7 @@ def config(settings):
             name_nice = T("Content Management"),
             #description = "Content Management System",
             restricted = True,
-            module_type = 10,
+            module_type = None,
         )),
         ("doc", Storage(
             name_nice = T("Documents"),
@@ -1319,7 +1323,7 @@ def config(settings):
             name_nice = T("Assets"),
             #description = "Recording and Assigning Assets",
             restricted = True,
-            module_type = 5,
+            module_type = 10,
         )),
         # Vehicle depends on Assets
         ("vehicle", Storage(
@@ -1332,7 +1336,7 @@ def config(settings):
             name_nice = T("Requests"),
             #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
             restricted = True,
-            module_type = 10,
+            module_type = None,
         )),
         ("project", Storage(
             name_nice = T("Projects"),
@@ -1350,19 +1354,19 @@ def config(settings):
            name_nice = T("Assessments"),
            #description = "Data collection tool",
            restricted = True,
-           module_type = 5
+           module_type = 10
         )),
         ("cr", Storage(
-            name_nice = T("Shelters"),
+            name_nice = T("Camps"),
             #description = "Tracks the location, capacity and breakdown of victims in Shelters",
             restricted = True,
-            module_type = 10
+            module_type = 4
         )),
         ("hms", Storage(
             name_nice = T("Hospitals"),
             #description = "Helps to monitor status of hospitals",
             restricted = True,
-            module_type = 10
+            module_type = None
         )),
         #("disease", Storage(
         #    name_nice = T("Disease Tracking"),
@@ -1377,21 +1381,21 @@ def config(settings):
         #    module_type = 10,
         #)),
         ("dvr", Storage(
-            name_nice = T("Disaster Victim Registry"),
+            name_nice = T("Case Management"),
             #description = "Allow affected individuals & households to register to receive compensation and distributions",
             restricted = True,
-            module_type = 10,
+            module_type = 4,
         )),
         ("event", Storage(
             name_nice = T("Events"),
             #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
             restricted = True,
-            module_type = 10,
+            module_type = None,
         )),
         ("transport", Storage(
             name_nice = T("Transport"),
             restricted = True,
-            module_type = 10,
+            module_type = None,
         )),
         ("stats", Storage(
             name_nice = T("Statistics"),
@@ -1403,13 +1407,13 @@ def config(settings):
             name_nice = T("Members"),
             #description = "Membership Management System",
             restricted = True,
-            module_type = 10,
+            module_type = None,
         )),
         ("budget", Storage(
             name_nice = T("Budgeting Module"),
             #description = "Allows a Budget to be drawn up",
             restricted = True,
-            module_type = 10
+            module_type = None
         )),
         #("deploy", Storage(
         #    name_nice = T("Deployments"),
@@ -1473,12 +1477,12 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10
         #)),
-        #("security", Storage(
-        #   name_nice = T("Security"),
-        #   #description = "Security Management System",
-        #   restricted = True,
-        #   module_type = 10,
-        #)),
+        ("security", Storage(
+           name_nice = T("Security"),
+           #description = "Security Management System",
+           restricted = True,
+           module_type = 4,
+        )),
         # These are specialist modules
         #("cap", Storage(
         #    name_nice = T("CAP"),
