@@ -22,3 +22,5 @@ WN,Tracing,wn_tracing@example.com,eden,TRACING,DRK Kreisverband Rems-Murr,de
 WN,Admin,wn_admin@example.com,eden,ORG_ADMIN,DRK Kreisverband Rems-Murr,de
 LEA,Case Manager,lea_case_manager@example.com,eden,CASE_MANAGEMENT,LEA Ellwangen,de
 LEA,Admin,lea_admin@example.com,eden,ORG_ADMIN,LEA Ellwangen,de
+AZHD,Case Manager,azhd_case_manager@example.com,eden,CASE_MANAGEMENT,Ankunftszentrum Heidelberg,de
+AZHD,Admin,azhd_admin@example.com,eden,ORG_ADMIN,Ankunftszentrum Heidelberg,de
