@@ -1,48 +1,58 @@
-# ============================================================================
-# GeoJSON. Copyright (C) 2007 Sean C. Gillies
-#
-# See ../LICENSE.txt
-#
-# Contact: Sean Gillies, sgillies@frii.com
-# ============================================================================
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
-import factory
-import json
+import geojson
+import geojson.factory
+from geojson.mapping import to_mapping
 
-from mapping import Mapping, to_mapping
 
 class GeoJSONEncoder(json.JSONEncoder):
 
     def default(self, obj):
-        if isinstance(obj, Mapping):
-            mapping = obj
-        else:
-            mapping = to_mapping(obj)
-        d = dict(mapping)
-        type_str = d.pop("type", None)
-        if type_str:
-            geojson_factory = getattr(factory, type_str, factory.GeoJSON)
-            d = geojson_factory(**d).__geo_interface__
-        return d
+        return geojson.factory.GeoJSON.to_instance(obj) # NOQA
 
 
-# Wrap the functions from simplejson, providing encoder, decoders, and
-# object creation hooks
+# Wrap the functions from json, providing encoder, decoders, and
+# object creation hooks.
+# Here the defaults are set to only permit valid JSON as per RFC 4267
 
-def dump(obj, fp, cls=GeoJSONEncoder, **kwargs):
-    return json.dump(to_mapping(obj), fp, cls=cls, **kwargs)
-
-
-def dumps(obj, cls=GeoJSONEncoder, **kwargs):
-    return json.dumps(to_mapping(obj), cls=cls, **kwargs)
+def _enforce_strict_numbers(obj):
+    raise ValueError("Number %r is not JSON compliant" % obj)
 
 
-def load(fp, cls=json.JSONDecoder, object_hook=None, **kwargs):
-    return json.load(fp, cls=cls, object_hook=object_hook, **kwargs)
+def dump(obj, fp, cls=GeoJSONEncoder, allow_nan=False, **kwargs):
+    return json.dump(to_mapping(obj),
+                     fp, cls=cls, allow_nan=allow_nan, **kwargs)
 
 
-def loads(s, cls=json.JSONDecoder, object_hook=None, **kwargs):
-    return json.loads(s, cls=cls, object_hook=object_hook, **kwargs)
+def dumps(obj, cls=GeoJSONEncoder, allow_nan=False, **kwargs):
+    return json.dumps(to_mapping(obj),
+                      cls=cls, allow_nan=allow_nan, **kwargs)
+
+
+def load(fp,
+         cls=json.JSONDecoder,
+         parse_constant=_enforce_strict_numbers,
+         object_hook=geojson.base.GeoJSON.to_instance,
+         **kwargs):
+    return json.load(fp,
+                     cls=cls, object_hook=object_hook,
+                     parse_constant=parse_constant,
+                     **kwargs)
+
+
+def loads(s,
+          cls=json.JSONDecoder,
+          parse_constant=_enforce_strict_numbers,
+          object_hook=geojson.base.GeoJSON.to_instance,
+          **kwargs):
+    return json.loads(s,
+                      cls=cls, object_hook=object_hook,
+                      parse_constant=parse_constant,
+                      **kwargs)
+
 
 # Backwards compatibility
 PyGFPEncoder = GeoJSONEncoder

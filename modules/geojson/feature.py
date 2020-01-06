@@ -1,54 +1,61 @@
-# ============================================================================
-# GeoJSON. Copyright (C) 2007 Sean C. Gillies
-#
-# See ../LICENSE.txt
-# 
-# Contact: Sean Gillies, sgillies@frii.com
-# ============================================================================
-
 """
 SimpleWebFeature is a working example of a class that satisfies the Python geo
 interface.
 """
 
-from base import GeoJSON
-import geometry 
+from geojson.base import GeoJSON
+
 
 class Feature(GeoJSON):
-
-    """A (WGS84) GIS Feature."""
+    """
+    Represents a WGS84 GIS feature.
+    """
 
     def __init__(self, id=None, geometry=None, properties=None, **extra):
-        super(Feature, self).__init__(**extra)
-        self.id = id
-        self.geometry = self.to_instance(geometry,
-                                         default=geojson.geometry.Default, 
-                                         strict=True
-                                         )
-        self.properties = properties or {}
+        """
+        Initialises a Feature object with the given parameters.
 
-    @property
-    def __geo_interface__(self):
-        d = super(Feature, self).__geo_interface__
-        d.update(id=self.id,
-                 geometry=getattr(self.geometry, '__geo_interface__', None), 
-                 properties=self.properties)
-        return d
+        :param id: Feature identifier, such as a sequential number.
+        :type id: str, int
+        :param geometry: Geometry corresponding to the feature.
+        :param properties: Dict containing properties of the feature.
+        :type properties: dict
+        :return: Feature object
+        :rtype: Feature
+        """
+        super(Feature, self).__init__(**extra)
+        if id is not None:
+            self["id"] = id
+        self["geometry"] = (self.to_instance(geometry, strict=True)
+                            if geometry else None)
+        self["properties"] = properties or {}
+
+    def errors(self):
+        geo = self.get('geometry')
+        return geo.errors() if geo else None
 
 
 class FeatureCollection(GeoJSON):
-
-    """A collection of Features."""
+    """
+    Represents a FeatureCollection, a set of multiple Feature objects.
+    """
 
     def __init__(self, features, **extra):
+        """
+        Initialises a FeatureCollection object from the
+        :param features: List of features to constitute the FeatureCollection.
+        :type features: list
+        :return: FeatureCollection object
+        :rtype: FeatureCollection
+        """
         super(FeatureCollection, self).__init__(**extra)
-        self.features = features
+        self["features"] = features
 
-    @property
-    def __geo_interface__(self):
-        d = super(FeatureCollection, self).__geo_interface__
-        d.update(features=self.features)
-        return d
-    
-   
+    def errors(self):
+        return self.check_list_errors(lambda x: x.errors(), self.features)
 
+    def __getitem__(self, key):
+        try:
+            return self.get("features", ())[key]
+        except (KeyError, TypeError, IndexError):
+            return super(GeoJSON, self).__getitem__(key)

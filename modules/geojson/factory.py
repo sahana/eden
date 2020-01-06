@@ -1,9 +1,11 @@
-from geometry import Point, LineString, Polygon
-from geometry import MultiLineString, MultiPoint, MultiPolygon
-from geometry import GeometryCollection
-from feature import Feature, FeatureCollection
-from base import GeoJSON
-from crs import Named, Linked
+from geojson.geometry import Point, LineString, Polygon
+from geojson.geometry import MultiLineString, MultiPoint, MultiPolygon
+from geojson.geometry import GeometryCollection
+from geojson.feature import Feature, FeatureCollection
+from geojson.base import GeoJSON
 
-name = Named
-link = Linked
+__all__ = ([Point, LineString, Polygon] +
+           [MultiLineString, MultiPoint, MultiPolygon] +
+           [GeometryCollection] +
+           [Feature, FeatureCollection] +
+           [GeoJSON])

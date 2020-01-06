@@ -894,7 +894,7 @@ class S3XML(S3Codec):
                         # NB Ensure we don't double-encode unicode!
                         _attr = json.dumps(attrs, separators=(",,", "::"),
                                            ensure_ascii=False)
-                        attr[ATTRIBUTE.attributes] = "{%s}" % _attr.replace('"', "||")
+                        attr[ATTRIBUTE.attributes] = "{%s}" % s3_unicode(_attr).replace('"', "||")
 
                 if tablename in markers:
                     _markers = markers[tablename]
