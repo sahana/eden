@@ -10,7 +10,7 @@
  </div>
  <div class='row' id='homepage-main'>
   <div class='small-12 medium-12 large-push-6 large-5 columns'>
-   {{if AUTHENTICATED not in session.s3.roles:}}
+   {{if auth.get_system_roles().AUTHENTICATED not in session.s3.roles:}}
    <div id='login_box'>
     <div id='login_form' {{if self_registration and not registered and not login_form.errors:}}class='hide'{{pass}}>
      {{=login_div}}
