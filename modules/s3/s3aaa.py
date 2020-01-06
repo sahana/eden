@@ -1977,10 +1977,11 @@ $.filterOptionsS3({
         TRANSLATE = current.deployment_settings.get_L10n_translate_org_organisation()
         if TRANSLATE:
             ltable = s3db.org_organisation_name
+
         def add_org(name, parent=None):
             """ Helper to add a New Organisation """
-            organisation_id = otable.insert(name=name)
-            record = Storage(id=organisation_id)
+            organisation_id = otable.insert(name = name)
+            record = Storage(id = organisation_id)
             update_super(otable, record)
             set_record_owner(otable, organisation_id)
             # @ToDo: Call onaccept?
@@ -1991,21 +1992,21 @@ $.filterOptionsS3({
                     link_id = btable.insert(organisation_id = records.first().id,
                                             branch_id = organisation_id)
                     onaccept = s3db.get_config("org_organisation_branch", "onaccept")
-                    callback(onaccept, Storage(vars=Storage(id=link_id)))
+                    callback(onaccept, Storage(vars = Storage(id = link_id)))
                 elif len(records) > 1:
                     # Ambiguous
                     current.log.debug("Cannot set branch link for new Organisation %s as there are multiple matches for parent %s" % (name, parent))
                 else:
                     # Create Parent
-                    parent_id = otable.insert(name=parent)
-                    update_super(otable, Storage(id=parent_id))
+                    parent_id = otable.insert(name = parent)
+                    update_super(otable, Storage(id = parent_id))
                     set_record_owner(otable, parent_id)
                     # @ToDo: Call onaccept?
                     # Create link
                     link_id = btable.insert(organisation_id = parent_id,
                                             branch_id = organisation_id)
                     onaccept = s3db.get_config("org_organisation_branch", "onaccept")
-                    callback(onaccept, Storage(vars=Storage(id=link_id)))
+                    callback(onaccept, Storage(vars = Storage(id = link_id)))
             return (organisation_id, record.pe_id)
 
         def org_lookup(org_full):
@@ -2074,9 +2075,51 @@ $.filterOptionsS3({
 
             return (organisation_id, pe_id)
 
+        def person_lookup(details):
+            """ Helper to lookup a Person """
+            first_name, last_name, email = details.split("+")
+
+            # Rare edge case to set realm as individuals so not defining in top-scope
+            ctable = s3db.pr_contact
+            ptable = s3db.pr_person
+            query = (ptable.first_name.lower() == first_name.lower()) & \
+                    (ptable.last_name.lower() == last_name.lower()) & \
+                    (ptable.deleted != True) & \
+                    (ctable.pe_id == ptable.pe_id) & \
+                    (ctable.contact_method == "EMAIL") & \
+                    (ctable.value == email)
+
+            records = db(query).select(ptable.id,
+                                       ptable.pe_id,
+                                       limitby = (0, 2))
+            if len(records) == 1:
+                record = records.first()
+                person_id = record.id
+                pe_id = record.pe_id
+            elif len(records) > 1:
+                # Ambiguous
+                current.log.debug("Cannot set Person %s for user as there are multiple matches" % details)
+                person_id = ""
+                pe_id = ""
+            else:
+                # Add a new Person
+                person_id = ptable.insert(first_name = first_name,
+                                          last_name = last_name,
+                                          )
+                record = Storage(id = person_id)
+                update_super(ptable, record)
+                pe_id = record.pe_id
+                # Persons need Email defining otherwise they won't match in s3_link_to_person
+                ctable.insert(pe_id = pe_id,
+                              contact_method = "EMAIL",
+                              value = email,
+                              )
+
+            return (person_id, pe_id)
+
         # Memberships
         elements = tree.getroot().xpath("/s3xml//resource[@name='auth_membership']/data[@field='pe_id']")
-        looked_up = dict(org_organisation = {})
+        looked_up = {"org_organisation": {}} # Most common, so added outside loop
         for element in elements:
             pe_string = element.text
 
@@ -2093,20 +2136,26 @@ $.filterOptionsS3({
                 if pe_tablename == "org_organisation" and pe_field == "name":
                     # This is a non-integer, so must be 1st or only phase
                     (record_id, pe_id) = org_lookup(pe_value)
+                elif pe_tablename == "pr_person" and pe_field == "details":
+                    # This is a non-integer, so must be 1st or only phase
+                    if pe_tablename not in looked_up:
+                        looked_up[pe_tablename] = {}
+                    # Persons need Email defining otherwise they won't match in s3_link_to_person
+                    (record_id, pe_id) = person_lookup(pe_value)
                 else:
                     table = s3db[pe_tablename]
                     if pe_tablename not in looked_up:
                         looked_up[pe_tablename] = {}
                     record = db(table[pe_field] == pe_value).select(table.id, # Stored for Org/Groups later
                                                                     table.pe_id,
-                                                                    limitby=(0, 1)
+                                                                    limitby = (0, 1)
                                                                     ).first()
                     if record:
                         record_id = record.id
                     else:
                         # Add a new record
                         record_id = table.insert(**{pe_field: pe_value})
-                        record = Storage(id=record_id)
+                        record = Storage(id = record_id)
                         update_super(table, record)
                         set_record_owner(table, record_id)
                     pe_id = record.pe_id
@@ -2142,10 +2191,10 @@ $.filterOptionsS3({
         #            organisation_id = str(organisation_id)
         #            element.text = organisation_id
         #            # Store in case we get called again with same value
-        #            orgs[org_full] = dict(id=organisation_id)
+        #            orgs[org_full] = {"id": organisation_id}
         #        else:
         #            # Store in case we get called again with same value
-        #            orgs[org_full] = dict(id=org_full)
+        #            orgs[org_full] = {"id": org_full}
 
         # Organisation Groups
         #elements = tree.getroot().xpath("/s3xml//resource[@name='auth_user']/data[@field='org_group_id']")
@@ -2166,22 +2215,22 @@ $.filterOptionsS3({
         #        except ValueError:
         #            # This is a non-integer, so must be 1st or only phase
         #            record = db(gtable.name == name).select(gtable.id,
-        #                                                    limitby=(0, 1)
+        #                                                    limitby = (0, 1)
         #                                                    ).first()
         #            if record:
         #                org_group_id = record.id
         #            else:
         #                # Add a new record
-        #                org_group_id = gtable.insert(name=name)
-        #                update_super(gtable, Storage(id=org_group_id))
+        #                org_group_id = gtable.insert(name = name)
+        #                update_super(gtable, Storage(id = org_group_id))
         #            # Replace string with id
         #            org_group_id = str(org_group_id)
         #            element.text = org_group_id
         #            # Store in case we get called again with same value
-        #            org_groups[name] = dict(id=org_group_id)
+        #            org_groups[name] = {"id": org_group_id}
         #        else:
         #            # Store in case we get called again with same value
-        #            org_groups[name] = dict(id=name)
+        #            org_groups[name] = {"id": name}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2691,8 +2740,9 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     def s3_link_to_person(self,
-                          user=None,
-                          organisation_id=None):
+                          user = None,
+                          organisation_id = None
+                          ):
         """
             Links user accounts to person registry entries
 
@@ -2858,7 +2908,8 @@ $.filterOptionsS3({
                             (ctable.value.lower() == email)
                     person = db(query).select(ptable.id,
                                               ptable.pe_id,
-                                              limitby=(0, 1)).first()
+                                              limitby = (0, 1)
+                                              ).first()
                 else:
                     # Can't find a match without an email address
                     person = None
@@ -2870,6 +2921,7 @@ $.filterOptionsS3({
                     other = db(ltable.pe_id == person.pe_id).select(ltable.id,
                                                                     limitby=(0, 1),
                                                                     ).first()
+
                 if person and not other:
                     # Match found, and it isn't linked to another user account
                     # => link to this person record (+update it)
@@ -2884,7 +2936,9 @@ $.filterOptionsS3({
                     owner.realm_entity = realm_entity
 
                     # Insert a link
-                    ltable.insert(user_id=user.id, pe_id=pe_id)
+                    ltable.insert(user_id = user.id,
+                                  pe_id = pe_id,
+                                  )
 
                     # Assign ownership of the Person record
                     person.update_record(**owner)

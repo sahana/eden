@@ -1320,7 +1320,7 @@ def comment_parse(comment, comments, task_id=None):
             person = row.pr_person
             user = row[utable._tablename]
             username = s3_fullname(person)
-            email = user.email.strip().lower()
+            email = user.email.strip().lower().encode("utf-8")
             import hashlib
             hash = hashlib.md5(email).hexdigest()
             url = "http://www.gravatar.com/%s" % hash

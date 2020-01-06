@@ -6483,6 +6483,8 @@ def hrm_human_resource_onaccept(form):
 def hrm_compose():
     """
         Send message to people/teams/participants
+
+        @ToDo: Better rewritten as an S3Method
     """
 
     s3db = current.s3db
@@ -7785,7 +7787,7 @@ def hrm_group_controller():
                         "url": URL(f="compose",
                                    vars = {"group_id": "[id]"}),
                         "_class": "action-btn send",
-                        "label": str(T("Send Message"))})
+                        "label": s3_str(T("Send Message"))})
 
         return output
     s3.postp = postp

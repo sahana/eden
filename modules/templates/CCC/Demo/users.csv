@@ -5,6 +5,6 @@ Allerdale,OrgAdmin,allerdale_admin@example.com,eden,ORG_ADMIN,Allerdale Communit
 Eden,Volunteer,eden_vol@example.com,eden,VOLUNTEER,Eden Community Organisation,staff
 Eden,OrgAdmin,eden_admin@example.com,eden,ORG_ADMIN,Eden Community Organisation,staff
 Reserve,Volunteer,reserve@example.com,eden,"RESERVE/pr_forum.name=Reserves",,
-Corporate,Donor,donor@example.com,eden,"DONOR/pr_forum.name=Donors",,
+Corporate,Donor,donor@example.com,eden,"DONOR/pr_person.details=Corporate+Donor+donor@example.com",,
 Group,Leader,group@example.com,eden,"GROUP_ADMIN/pr_group.name=Helpers",,
 Police,Liaison,police@example.com,eden,AGENCY,Agency Group,staff

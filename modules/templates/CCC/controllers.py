@@ -1742,13 +1742,14 @@ def auth_user_register_onaccept(user_id):
         ttable.insert(**record)
 
         # Assign correct Role
-        ftable = s3db.pr_forum
-        forum = db(ftable.name == "Donors").select(ftable.pe_id,
-                                                   limitby = (0, 1)
-                                                   ).first()
+        #ftable = s3db.pr_forum
+        #forum = db(ftable.name == "Donors").select(ftable.pe_id,
+        #                                           limitby = (0, 1)
+        #                                           ).first()
+        #pe_id = form.pe_id
         auth.add_membership(user_id = user_id,
                             role = "Donor",
-                            entity = forum.pe_id,
+                            entity = pe_id,
                             )
 
     elif registration_type == "group":

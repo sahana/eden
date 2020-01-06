@@ -1299,8 +1299,9 @@ class auth_UserRepresent(S3Represent):
         if show_name or show_phone:
             ptable = s3db.pr_person
             ltable = s3db.pr_person_user
-            left = ptable.on((table.id == ltable.user_id) & \
-                             (ltable.pe_id == ptable.pe_id))
+            left = [ltable.on(table.id == ltable.user_id),
+                    ptable.on(ltable.pe_id == ptable.pe_id),
+                    ]
         else:
             left = None
 

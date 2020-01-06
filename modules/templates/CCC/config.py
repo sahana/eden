@@ -39,8 +39,9 @@ def config(settings):
     settings.auth.registration_link_user_to_default = ["staff"]
     settings.auth.realm_entity_types = ("org_organisation",
                                         #"org_office",
-                                        "pr_forum",
-                                        "pr_group",
+                                        "pr_forum", # Donors & Reserves
+                                        "pr_group", # Volunteer Groups
+                                        "pr_person", # Donors
                                         )
 
     # -------------------------------------------------------------------------
@@ -1603,6 +1604,9 @@ $('.copy-link').click(function(e){
     # -----------------------------------------------------------------------------
     def customise_hrm_training_event_controller(**attr):
 
+        from gluon import URL
+
+        auth = current.auth
         s3db = current.s3db
 
         s3 = current.response.s3
@@ -1628,7 +1632,6 @@ $('.copy-link').click(function(e){
             else:
                 result = True
 
-            auth = current.auth
             if auth.s3_has_role("RESERVE", include_admin=False):
                 # Filter to just those they are invited to
                 from s3 import FS
@@ -1643,7 +1646,6 @@ $('.copy-link').click(function(e){
                            action = hrm_training_event_apply)
 
             if not r.component:
-                from gluon import URL
                 r.resource.configure(create_next = URL(c="hrm", f="training_event",
                                                        args = ["[id]", "assign"]))
             elif r.component_name == "training":
@@ -1746,6 +1748,43 @@ $('.copy-link').click(function(e){
 
             return result
         s3.prep = prep
+
+        # Custom postp
+        standard_postp = s3.postp
+        def postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.component_name == "training" and \
+               not auth.s3_has_role("ORG_ADMIN"):
+
+                #from gluon import URL
+                from s3 import s3_str, S3CRUD
+
+                # Normal Action Buttons
+                S3CRUD.action_buttons(r, deletable = False)
+
+                # Custom Action Buttons
+                table = s3db.hrm_training
+                rows = current.db(table.status.belongs((1, 2))).select(table.id)
+                restrict = [str(row.id) for row in rows]
+                s3.actions += [{"label": s3_str(T("Withdraw")),
+                                "url": URL(c = "hrm",
+                                           f = "training_event",
+                                           args = [r.id,
+                                                   "training",
+                                                   "[id]",
+                                                   "delete",
+                                                   ],
+                                           ),
+                                "restrict": restrict,
+                                "_class": "delete-btn",
+                                },
+                               ]
+
+            return output
+        s3.postp = postp
 
         attr["rheader"] = ccc_rheader
 
@@ -2992,37 +3031,87 @@ $('.copy-link').click(function(e){
                                )
 
         else:
-            # Use the Organisation we request or fallback to the User's Organisation
-            organisation_id = get_vars_get("organisation_id", user.organisation_id)
+            person_item_id = current.request.get_vars.get("person_item_id")
+            if person_item_id:
+                # Sending to a Donor
 
-            # Set the Realm Entity
-            org = db(otable.id == organisation_id).select(otable.pe_id,
-                                                          limitby = (0, 1)
-                                                          ).first()
-            try:
-                db(ttable.id == task_id).update(realm_entity = org.pe_id)
-            except AttributeError:
-                pass
+                # Lookup the person_id
+                stable = s3db.supply_person_item
+                person_item = db(stable.id == person_item_id).select(stable.person_id,
+                                                                     limitby = (0, 1)
+                                                                     ).first()
+                try:
+                    person_id = person_item.person_id
+                except AttributeError:
+                    return
 
-            # Append the task_id to the URL
-            message = "%s/%s" % (message, task_id)
+                # Lookup the pe_id
+                ptable = s3db.pr_person
+                person = db(ptable.id == person_id).select(ptable.pe_id,
+                                                           limitby = (0, 1)
+                                                           ).first()
+                try:
+                    pe_id = person.pe_id
+                except AttributeError:
+                    return
 
-            # Lookup the ORG_ADMINs
-            gtable = db.auth_group
-            mtable = db.auth_membership
-            query = (gtable.uuid == "ORG_ADMIN") & \
-                    (gtable.id == mtable.group_id) & \
-                    (mtable.user_id == utable.id) & \
-                    (utable.organisation_id == organisation_id)
-            org_admins = db(query).select(utable.email)
+                # Set the Realm Entity
+                db(ttable.id == task_id).update(realm_entity = pe_id)
 
-            # Send message to each
-            send_email = current.msg.send_email
-            for admin in org_admins:
-                send_email(to = admin.email,
-                           subject = subject,
-                           message = message,
-                           )
+                # Append the task_id to the URL
+                message = "%s/%s" % (message, task_id)
+
+                # Lookup the Donor's Email
+                ctable = s3db.pr_contact
+                query = (ctable.pe_id == pe_id) & \
+                        (ctable.contact_method == "EMAIL") & \
+                        (ctable.deleted == False)
+                donor = db(query).select(ctable.value,
+                                         limitby = (0, 1)
+                                         ).first()
+                try:
+                    email = donor.value
+                except AttributeError:
+                    return
+
+                # Send message
+                current.msg.send_email(to = email,
+                                       subject = subject,
+                                       message = message,
+                                       )
+                
+            else:
+                # Use the Organisation we request or fallback to the User's Organisation
+                organisation_id = get_vars_get("organisation_id", user.organisation_id)
+
+                # Set the Realm Entity
+                org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                              limitby = (0, 1)
+                                                              ).first()
+                try:
+                    db(ttable.id == task_id).update(realm_entity = org.pe_id)
+                except AttributeError:
+                    pass
+
+                # Append the task_id to the URL
+                message = "%s/%s" % (message, task_id)
+
+                # Lookup the ORG_ADMINs
+                gtable = db.auth_group
+                mtable = db.auth_membership
+                query = (gtable.uuid == "ORG_ADMIN") & \
+                        (gtable.id == mtable.group_id) & \
+                        (mtable.user_id == utable.id) & \
+                        (utable.organisation_id == organisation_id)
+                org_admins = db(query).select(utable.email)
+
+                # Send message to each
+                send_email = current.msg.send_email
+                for admin in org_admins:
+                    send_email(to = admin.email,
+                               subject = subject,
+                               message = message,
+                               )
 
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
@@ -3048,36 +3137,32 @@ $('.copy-link').click(function(e){
         table = s3db.project_task
         table.name.label = T("Subject")
         table.description.label = T("Message")
-        if current.auth.s3_has_role("ORG_ADMIN"):
-            # @ToDo: Filter Assigned To to just OrgAdmins? (if we use assigned)
-            #        - for now, realms works fine
-            if r.method == "create":
-                table.comments.readable = table.comments.writable = False
-            else:
+        if r.method == "create":
+            table.comments.readable = table.comments.writable = False
+        else:
+            has_role = current.auth.s3_has_role
+            if has_role("ORG_ADMIN") or \
+               has_role("DONOR"):
                 table.created_by.readable = True
-                table.created_by.label = T("Sent By")
+                table.created_by.label = T("From")
                 table.created_by.represent = s3db.auth_UserRepresent(show_phone = True,
                                                                      show_link = False)
                 table.created_on.readable = True
-                table.created_on.label = T("Sent On")
+                table.created_on.label = T("Date Sent")
+                table.realm_entity.readable = True
+                table.realm_entity.label = T("To")
+                table.realm_entity.represent = s3db.pr_PersonEntityRepresent(show_label = False,
+                                                                             show_type = False)
                 table.name.writable = False
                 table.description.writable = False
                 table.description.comment = None
-        else:
-        #    f = table.priority
-        #    f.default = 1
-        #    f.readable = f.writable = False
-        #    f = table.status
-        #    f.default = 1
-        #    f.readable = f.writable = False
-        #    table.pe_id.readable = table.pe_id.writable = False
-            table.comments.readable = table.comments.writable = False
 
         s3db.configure("project_task",
                        # Can simply replace the default one
                        create_onaccept = project_task_create_onaccept,
                        crud_form = S3SQLCustomForm("created_by",
                                                    "created_on",
+                                                   "realm_entity",
                                                    "name",
                                                    "description",
                                                    #"priority",
@@ -3091,6 +3176,7 @@ $('.copy-link').click(function(e){
                                       #"pe_id",
                                       "created_on",
                                       "created_by",
+                                      "realm_entity",
                                       "name",
                                       ],
                        filter_widgets = [S3TextFilter(["name",
@@ -3109,7 +3195,7 @@ $('.copy-link').click(function(e){
                                          #                options = settings.get_project_task_status_opts(),
                                          #                cols = 3,
                                          #                ),
-                                        ],
+                                         ],
                        )
 
     settings.customise_project_task_resource = customise_project_task_resource
@@ -3118,7 +3204,15 @@ $('.copy-link').click(function(e){
     def customise_project_task_controller(**attr):
 
         s3 = current.response.s3
-        ORG_ADMIN = current.auth.s3_has_role("ORG_ADMIN")
+
+        auth = current.auth
+        has_role = auth.s3_has_role
+        if has_role("ORG_ADMIN") or \
+           has_role("DONOR"):
+            READER = True
+        else:
+            # Can only send messages
+            READER = False
 
         # Custom prep
         standard_prep = s3.prep
@@ -3129,16 +3223,53 @@ $('.copy-link').click(function(e){
             else:
                 result = True
 
-            if ORG_ADMIN:
-                # @ToDo: Default filter to hide Closed messages (if we use statuses)
-                if r.method == "create":
-                    s3.crud.submit_button = "Send" # T() Happens in s3forms.py
-            else:
-                if r.method not in ("create", "read", "update"):
-                    from gluon import redirect
-                    redirect(r.url(method="create"))
+            person_item_id = r.get_vars.get("person_item_id")
+            if person_item_id:
+                # Donor being messaged about an Item
+                db = current.db
+                s3db = current.s3db
+                pitable = s3db.supply_person_item
+                if r.http == "POST":
+                    pistable = s3db.supply_person_item_status
+                    query = (pitable.id == person_item_id) & \
+                            (pistable.id == pitable.status_id)
+                    status = db(query).select(pistable.name,
+                                              limitby = (0, 1)
+                                              ).first()
+                    if status.name == "Available":
+                        status = db(pistable.name == "Requested").select(pistable.id,
+                                                                         limitby = (0, 1)
+                                                                         ).first()
+                        try:
+                            REQUESTED = status.id
+                        except:
+                            # Status has been deleted or not prepopped
+                            pass
+                        else:
+                            db(pitable.id == person_item_id).update(status_id = REQUESTED,
+                                                                    organisation_id = auth.user.organisation_id,
+                                                                    )
                 else:
-                    s3.crud.submit_button = "Send" # T() Happens in s3forms.py
+                    itable = s3db.supply_item
+                    query = (pitable.id == person_item_id) & \
+                            (itable.id == pitable.item_id)
+                    item = db(query).select(itable.name,
+                                            limitby = (0, 1)
+                                            ).first()
+                    try:
+                        s3db.project_task.name.default = "re: %s" % item.name
+                    except:
+                        pass
+
+            if r.method == "create":
+                s3.crud.submit_button = "Send" # T() Happens in s3forms.py
+            elif not READER:
+                #if r.method not in ("create", "read", "update"):
+                if r.method not in ("read", "update"):
+                    from gluon import redirect
+                    redirect(r.url(method = "create"))
+                else:
+                    #s3.crud.submit_button = "Send" # T() Happens in s3forms.py
                     current.messages.UPDATE = "Edit"
                     # Don't attempt to load comments
                     s3.rfooter = None
@@ -3146,7 +3277,7 @@ $('.copy-link').click(function(e){
             return result
         s3.prep = prep
 
-        if not ORG_ADMIN:
+        if not READER:
             # Custom postp
             standard_postp = s3.postp
             def postp(r, output):
@@ -3644,7 +3775,10 @@ $('.copy-link').click(function(e){
     # -----------------------------------------------------------------------------
     def customise_req_need_controller(**attr):
 
+        auth = current.auth
+        s3db = current.s3db
         s3 = current.response.s3
+
         s3.crud.assign_button = "Invite"
 
         # Custom prep
@@ -3655,8 +3789,6 @@ $('.copy-link').click(function(e){
                 result = standard_prep(r)
             else:
                 result = True
-
-            s3db = current.s3db
 
             set_method = s3db.set_method
 
@@ -3670,7 +3802,6 @@ $('.copy-link').click(function(e){
             #                                                                               show_link = False,
             #                                                                               )
 
-            auth = current.auth
             if auth.s3_has_role("RESERVE", include_admin=False):
                 # Filter to just those they are invited to
                 from s3 import FS
@@ -3781,6 +3912,43 @@ $('.copy-link').click(function(e){
 
             return result
         s3.prep = prep
+
+        # Custom postp
+        standard_postp = s3.postp
+        def postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.component_name == "need_person" and \
+               not auth.s3_has_role("ORG_ADMIN"):
+
+                from gluon import URL
+                from s3 import s3_str, S3CRUD
+
+                # Normal Action Buttons
+                S3CRUD.action_buttons(r, deletable = False)
+
+                # Custom Action Buttons
+                table = s3db.req_need_person
+                rows = current.db(table.status.belongs((1, 2))).select(table.id)
+                restrict = [str(row.id) for row in rows]
+                s3.actions += [{"label": s3_str(T("Withdraw")),
+                                "url": URL(c = "req",
+                                           f = "need",
+                                           args = [r.id,
+                                                   "need_person",
+                                                   "[id]",
+                                                   "delete",
+                                                   ],
+                                           ),
+                                "restrict": restrict,
+                                "_class": "delete-btn",
+                                },
+                               ]
+
+            return output
+        s3.postp = postp
 
         attr["rheader"] = ccc_rheader
 
@@ -4035,6 +4203,7 @@ $('.copy-link').click(function(e){
     def customise_supply_person_item_controller(**attr):
 
         s3db = current.s3db
+        s3 = current.response.s3
 
         stable = s3db.supply_person_item_status
         status = current.db(stable.name == "Available").select(stable.id,
@@ -4055,6 +4224,25 @@ $('.copy-link').click(function(e){
                                                             args = ["[id]"],
                                                             vars = {"donors": 1},
                                                             extension = ""))
+
+        # Post-process
+        # (no need to call default one as not defined)
+        def postp(r, output):
+
+            if r.interactive:
+                #if not r.component:
+                from s3 import s3_str, S3CRUD
+                S3CRUD.action_buttons(r)
+                s3.actions.append({"url": URL(c="project", f="task",
+                                              args = "create",
+                                              vars = {"person_item_id": "[id]"},
+                                              ),
+                                   "_class": "action-btn send",
+                                   "label": s3_str(T("Send Message"))
+                                   })
+
+            return output
+        s3.postp = postp
 
         return attr
 

@@ -7962,13 +7962,26 @@ class pr_AssignMethod(S3Method):
 def pr_compose():
     """
         Send message to people/teams/forums
+
+        @ToDo: Better rewritten as an S3Method
     """
 
-    #s3db = current.s3db
     get_vars = current.request.get_vars
     #pe_id = None
 
+    #if "person.id" in get_vars:
+    #    # CCC uses a custom version for messaging Donors re: Donations
+    #    fieldname = "person.id"
+    #    record_id = get_vars.get(fieldname)
+    #    table = current.s3db.pr_person
+    #    title = current.T("Message Person")
+    #    query = (table.id == record_id)
+    #    # URL to redirect to after message sent
+    #    url = URL(f="person", args=record_id)
+
+    #elif "forum.id" in get_vars:
     if "forum.id" in get_vars:
+        # Used by? WACOP?
         fieldname = "forum.id"
         record_id = get_vars.get(fieldname)
         pe_id = get_vars.pe_id
@@ -7992,11 +8005,11 @@ def pr_compose():
     #    db = current.db
     #    pe = db(query).select(table.pe_id,
     #                          limitby=(0, 1)).first()
-    #    if not pe:
+    #    try:
+    #        pe_id = pe.pe_id
+    #    except:
     #        current.session.error = current.T("Record not found")
     #        redirect(URL(f="index"))
-
-    #    pe_id = pe.pe_id
 
     # Create the form
     output = current.msg.compose(recipient = pe_id,

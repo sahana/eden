@@ -112,6 +112,7 @@ class S3MainMenu(default.S3MainMenu):
             menu = [#MM("Volunteer Your Time", c="default", f="index", args="volunteer"),
                     #MM("Donate Items", c="default", f="index", args="donate"),
                     MM("General Information", c="default", f="index", m="donor"),
+                    MM("Messages", c="project", f="task"),
                     ]
         else:
             # Reserve Volunteer

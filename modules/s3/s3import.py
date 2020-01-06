@@ -325,11 +325,11 @@ class S3Importer(S3Method):
         output = None
         if self.ajax:
             sfilename = ofilename = r.post_vars["file"].filename
-            upload_id = table.insert(controller=self.controller,
-                                     function=self.function,
-                                     filename=ofilename,
+            upload_id = table.insert(controller = self.controller,
+                                     function = self.function,
+                                     filename = ofilename,
                                      file = sfilename,
-                                     user_id=current.session.auth.user.id
+                                     user_id = current.session.auth.user.id
                                      )
         else:
             title = self.uploadTitle
