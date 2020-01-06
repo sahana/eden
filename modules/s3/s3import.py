@@ -4717,7 +4717,8 @@ class S3BulkImporter(object):
                         current.log.error("error importing logo %s: %s %s" % (image, key, error))
 
     # -------------------------------------------------------------------------
-    def import_font(self, url):
+    @staticmethod
+    def import_font(url):
         """
             Install a Font
         """
