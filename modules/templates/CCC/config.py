@@ -4202,6 +4202,8 @@ $('.copy-link').click(function(e){
     # -----------------------------------------------------------------------------
     def customise_supply_person_item_controller(**attr):
 
+        from gluon import URL
+
         s3db = current.s3db
         s3 = current.response.s3
 
@@ -4218,7 +4220,6 @@ $('.copy-link').click(function(e){
 
         if current.auth.s3_has_role("ORG_ADMIN"):
             # Add Hyperlink for Donors
-            from gluon import URL
             s3db.supply_person_item.person_id.represent = \
                 s3db.pr_PersonRepresentContact(linkto = URL(c="pr", f="person",
                                                             args = ["[id]"],
