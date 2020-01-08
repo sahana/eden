@@ -4313,7 +4313,7 @@ class S3BulkImporter(object):
                     csv = f
             else:
                 try:
-                    csv = open(filename, "r")
+                    csv = open(filename, "rb")
                 except IOError:
                     self.errorList.append(error_string % filename)
                     return

@@ -224,7 +224,7 @@ def main(argv):
     except:
         xslpath = None
 
-    with open(csvpath, "r") as csvfile:
+    with open(csvpath, "rb") as csvfile:
         tree = csv2tree(csvfile)
 
     if xslpath is not None:
