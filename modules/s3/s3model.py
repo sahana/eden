@@ -387,6 +387,12 @@ class S3Model(object):
         S3ImportJob.define_job_table()
         S3ImportJob.define_item_table()
 
+        # Define Scheduler tables
+        # - already done during Scheduler().init() run during S3Task().init() in models/tasks.py
+        #settings = current.deployment_settings
+        #current.s3task.scheduler.define_tables(current.db,
+        #                                       migrate = settings.get_base_migrate())
+
         # Define sessions table
         if current.deployment_settings.get_base_session_db():
             # Copied from https://github.com/web2py/web2py/blob/master/gluon/globals.py#L895
