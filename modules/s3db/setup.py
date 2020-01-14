@@ -60,6 +60,7 @@ MSG_FORMAT = "%(now)s - %(category)s - %(data)s\n\n"
 
 WEB_SERVERS = {#1: "apache",
                2: "cherokee",
+               3: "nginx",
                }
 
 DB_SERVERS = {#1: "mysql",
@@ -139,13 +140,13 @@ class S3SetupModel(S3Model):
                                                      ),
                            ),
                      Field("webserver_type", "integer",
-                           default = 2,
+                           default = 3,
                            label = T("Web Server"),
                            represent = S3Represent(options = WEB_SERVERS),
                            requires = IS_IN_SET(WEB_SERVERS),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Web Server"),
-                                                           T("Currently only Cherokee is supported by this tool, although Apache should be possible with a little work.")
+                                                           T("Currently only Nginx and Cherokee is supported by this tool, although Apache should be possible with a little work.")
                                                            )
                                          ),
                            ),
