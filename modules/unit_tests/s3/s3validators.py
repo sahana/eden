@@ -444,6 +444,7 @@ class IS_PHONE_NUMBER_Tests(unittest.TestCase):
         number = "(021) 36374589"
         value, error = validate(number)
         assertNotEqual(error, None)
+        assertEqual(error, "Enter phone number in international format like +46783754957")
 
         number = "Test"
         value, error = validate(number)

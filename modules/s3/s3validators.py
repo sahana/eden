@@ -1964,43 +1964,42 @@ class IS_PHONE_NUMBER(Validator):
                      is valid. With international=True, the value returned
                      is converted into E.123 international notation.
         """
+        # All non-strings are errors
+        if not isinstance(value, basestring):
+            error_message = self.error_message
+            if not error_message:
+                # default fallback message
+                error_message = current.T("Enter a valid phone number")
 
-        if isinstance(value, basestring):
-            value = value.strip()
-            if value and value[0] == unichr(8206):
-                # Strip the LRM character
-                value = value[1:]
-            number = s3_str(value)
-            number, error = s3_single_phone_requires(number)
-        else:
-            error = True
+            return (value, error_message)
 
-        if not error:
-            if self.international and \
-               current.deployment_settings \
-                      .get_msg_require_international_phone_numbers():
+        value = value.strip()
+        if value and value[0] == unichr(8206):
+            # Strip the LRM character
+            value = value[1:]
+        number = s3_str(value)
+        number, error_message = s3_single_phone_requires(number)
 
-                # Configure alternative error message
-                error_message = self.error_message
+        # Check if we need the international format if no error
+        if not error_message and self.international and \
+           current.deployment_settings \
+                  .get_msg_require_international_phone_numbers():
+
+
+            # Require E.123 international format
+            number = "".join(re.findall(r"[\d+]+", number))
+            match = re.match(r"(\+)([1-9]\d+)$", number)
+            #match = re.match("(\+|00|\+00)([1-9]\d+)$", number)
+
+            if match:
+                number = "+%s" % match.groups()[1]
+            else:
+                # set new error message if no class error message
                 if not error_message:
                     error_message = current.T("Enter phone number in international format like +46783754957")
 
-                # Require E.123 international format
-                number = "".join(re.findall(r"[\d+]+", number))
-                match = re.match(r"(\+)([1-9]\d+)$", number)
-                #match = re.match("(\+|00|\+00)([1-9]\d+)$", number)
+        return (number, error_message)
 
-                if match:
-                    number = "+%s" % match.groups()[1]
-                    return (number, None)
-            else:
-                return (number, None)
-
-        error_message = self.error_message
-        if not error_message:
-            error_message = current.T("Enter a valid phone number")
-
-        return (value, error_message)
 
 # =============================================================================
 class IS_PHONE_NUMBER_MULTI(Validator):
