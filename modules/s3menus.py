@@ -456,11 +456,8 @@ class S3OptionsMenu(object):
         #     re-use of this menu by other controllers
         return M()(
                     M("Setup", c="setup", f="deployment")(
-                        #M("Create", m="create"),
-                        #M("Servers", f="server")(
-                        #),
-                        #M("Instances", f="instance")(
-                        #),
+                        M("AWS Clouds", f="aws_cloud")(),
+                        M("Deployments", f="deployment")(),
                     ),
                     M("Settings", c="admin", f="setting")(
                         settings_messaging,

@@ -2176,11 +2176,6 @@ def setup_run_playbook(playbook, hosts, tags=None, private_key=None):
     """
         Run an Ansible Playbook & return the result
         - designed to be run as a Scheduled Task
-            - 'deploy' a deployment
-            - 'apply' a setting
-            - 'start' an instance
-            - 'stop' an instance
-            @ToDo: Clean an instance, Upgrade an Instance
 
         http://docs.ansible.com/ansible/latest/dev_guide/developing_api.html
         https://serversforhackers.com/c/running-ansible-2-programmatically
