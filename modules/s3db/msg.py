@@ -2,7 +2,7 @@
 
 """ Sahana Eden Messaging Model
 
-    @copyright: 2009-2019 (c) Sahana Software Foundation
+    @copyright: 2009-2020 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -125,9 +125,9 @@ class S3ChannelModel(S3Model):
         channel_id = S3ReusableField("channel_id", "reference %s" % tablename,
                                      label = T("Channel"),
                                      ondelete = "SET NULL",
-                                     represent = S3Represent(lookup=tablename),
+                                     represent = S3Represent(lookup = tablename),
                                      requires = IS_EMPTY_OR(
-                                        IS_ONE_OF_EMPTY(db, "msg_channel.id")),
+                                        IS_ONE_OF_EMPTY(db, "msg_channel.channel_id")),
                                      )
 
         self.add_components(tablename,
@@ -162,6 +162,7 @@ class S3ChannelModel(S3Model):
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
         return {"msg_channel_id": channel_id,
                 "msg_channel_enable": self.channel_enable,
                 "msg_channel_disable": self.channel_disable,
@@ -374,7 +375,6 @@ class S3MessageModel(S3Model):
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         configure = self.configure
-        define_table = self.define_table
 
         # Message priority
         msg_priority_opts = {3 : T("High"),
@@ -437,12 +437,12 @@ class S3MessageModel(S3Model):
                   )
 
         # Reusable Field
-        message_represent = S3Represent(lookup=tablename, fields=["body"])
+        message_represent = S3Represent(lookup = tablename, fields = ["body"])
         message_id = S3ReusableField("message_id", "reference %s" % tablename,
                                      ondelete = "RESTRICT",
                                      represent = message_represent,
                                      requires = IS_EMPTY_OR(
-                                        IS_ONE_OF_EMPTY(db, "msg_message.id")),
+                                        IS_ONE_OF_EMPTY(db, "msg_message.message_id")),
                                      )
 
         self.add_components(tablename,
@@ -472,43 +472,44 @@ class S3MessageModel(S3Model):
         opt_msg_status = S3ReusableField("status", "integer",
                                          notnull=True,
                                          requires = IS_IN_SET(MSG_STATUS_OPTS,
-                                                              zero=None),
+                                                              zero = None),
                                          default = 1,
                                          label = T("Status"),
                                          represent = lambda opt: \
                                                      MSG_STATUS_OPTS.get(opt,
-                                                                 UNKNOWN_OPT))
+                                                                 UNKNOWN_OPT)
+                                         )
 
         # Outbox - needs to be separate to Message since a single message
         # sent needs different outbox entries for each recipient
         tablename = "msg_outbox"
-        define_table(tablename,
-                     # FK not instance
-                     message_id(),
-                     # Person/Group to send the message out to:
-                     self.super_link("pe_id", "pr_pentity"),
-                     # If set used instead of picking up from pe_id:
-                     Field("address"),
-                     Field("contact_method", length=32,
-                           default = "EMAIL",
-                           label = T("Contact Method"),
-                           represent = lambda opt: \
-                                       MSG_CONTACT_OPTS.get(opt, UNKNOWN_OPT),
-                           requires = IS_IN_SET(MSG_CONTACT_OPTS,
-                                                zero=None),
-                           ),
-                     opt_msg_status(),
-                     # Used to loop through a PE to get it's members
-                     Field("system_generated", "boolean",
-                           default = False,
-                           ),
-                     # Give up if we can't send after MAX_RETRIES
-                     Field("retries", "integer",
-                           default = MAX_SEND_RETRIES,
-                           readable = False,
-                           writable = False,
-                           ),
-                     *s3_meta_fields())
+        self.define_table(tablename,
+                          # FK not instance
+                          message_id(),
+                          # Person/Group to send the message out to:
+                          self.super_link("pe_id", "pr_pentity"),
+                          # If set used instead of picking up from pe_id:
+                          Field("address"),
+                          Field("contact_method", length=32,
+                                default = "EMAIL",
+                                label = T("Contact Method"),
+                                represent = lambda opt: \
+                                            MSG_CONTACT_OPTS.get(opt, UNKNOWN_OPT),
+                                requires = IS_IN_SET(MSG_CONTACT_OPTS,
+                                                     zero=None),
+                                ),
+                          opt_msg_status(),
+                          # Used to loop through a PE to get it's members
+                          Field("system_generated", "boolean",
+                                default = False,
+                                ),
+                          # Give up if we can't send after MAX_RETRIES
+                          Field("retries", "integer",
+                                default = MAX_SEND_RETRIES,
+                                readable = False,
+                                writable = False,
+                                ),
+                          *s3_meta_fields())
 
         configure(tablename,
                   list_fields = ["id",
@@ -997,43 +998,42 @@ class S3MCommonsModel(S3ChannelModel):
 
         #T = current.T
 
-        define_table = self.define_table
         set_method = self.set_method
 
         # ---------------------------------------------------------------------
         tablename = "msg_mcommons_channel"
-        define_table(tablename,
-                     self.super_link("channel_id", "msg_channel"),
-                     Field("name"),
-                     Field("description"),
-                     Field("enabled", "boolean",
-                           default = True,
-                           #label = T("Enabled?"),
-                           represent = s3_yes_no_represent,
-                           ),
-                     Field("campaign_id", length=128, unique=True,
-                           requires = [IS_NOT_EMPTY(),
-                                       IS_LENGTH(128),
-                                       ],
-                           ),
-                     Field("url",
-                           default = \
-                              "https://secure.mcommons.com/api/messages",
-                           requires = IS_URL()
-                           ),
-                     Field("username",
-                           requires = IS_NOT_EMPTY(),
-                           ),
-                     Field("password", "password",
-                           readable = False,
-                           requires = IS_NOT_EMPTY(),
-                           widget = S3PasswordWidget(),
-                           ),
-                     Field("query"),
-                     Field("timestmp", "datetime",
-                           writable = False,
-                           ),
-                     *s3_meta_fields())
+        self.define_table(tablename,
+                          self.super_link("channel_id", "msg_channel"),
+                          Field("name"),
+                          Field("description"),
+                          Field("enabled", "boolean",
+                                default = True,
+                                #label = T("Enabled?"),
+                                represent = s3_yes_no_represent,
+                                ),
+                          Field("campaign_id", length=128, unique=True,
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_LENGTH(128),
+                                            ],
+                                ),
+                          Field("url",
+                                default = \
+                                    "https://secure.mcommons.com/api/messages",
+                                requires = IS_URL()
+                                ),
+                          Field("username",
+                                requires = IS_NOT_EMPTY(),
+                                ),
+                          Field("password", "password",
+                                readable = False,
+                                requires = IS_NOT_EMPTY(),
+                                widget = S3PasswordWidget(),
+                                ),
+                          Field("query"),
+                          Field("timestmp", "datetime",
+                                writable = False,
+                                ),
+                          *s3_meta_fields())
 
         self.configure(tablename,
                        onaccept = self.msg_channel_onaccept,

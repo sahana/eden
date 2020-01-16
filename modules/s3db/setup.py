@@ -7,7 +7,7 @@
         * Monitoring of a Deployment
         * Upgrading a Deployment (tbc)
 
-    @copyright: 2015-2019 (c) Sahana Software Foundation
+    @copyright: 2015-2020 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -32,7 +32,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3SetupModel",
+__all__ = ("S3DNSModel",
+           "S3GandiDNSModel",
+           "S3CloudModel",
+           "S3AWSCloudModel",
+           "S3SetupModel",
            "S3SetupMonitorModel",
            #"Storage2",
            #"setup_DeploymentRepresent",
@@ -75,6 +79,212 @@ INSTANCE_TYPES = {1: "prod",
                   }
 
 # =============================================================================
+class S3DNSModel(S3Model):
+    """
+        Domain Name System (DNS) Providers
+        - super-entity
+    """
+
+    names = ("setup_dns",
+             "setup_dns_id",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        #----------------------------------------------------------------------
+        # Super entity
+        #
+        dns_types = Storage(setup_gandi_dns = T("Gandi LiveDNS"),
+                            )
+
+        tablename = "setup_dns"
+        self.super_entity(tablename, "dns_id",
+                          dns_types,
+                          Field("name",
+                                #label = T("Name"),
+                                ),
+                          Field("description",
+                                #label = T("Description"),
+                                ),
+                          Field("enabled", "boolean",
+                                default = True,
+                                #label = T("Enabled?")
+                                #represent = s3_yes_no_represent,
+                                ),
+                          #on_define = lambda table: \
+                          #  [table.instance_type.set_attributes(readable = True),
+                          #   ],
+                          )
+
+        # Reusable Field
+        represent = S3Represent(lookup = tablename)
+        dns_id = S3ReusableField("dns_id", "reference %s" % tablename,
+                                 label = T("DNS Provider"),
+                                 ondelete = "SET NULL",
+                                 represent = represent,
+                                 requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(db, "setup_dns.id",
+                                              represent,
+                                              sort = True
+                                              ),
+                                    ),
+                                 )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        return {"setup_dns_id": dns_id,
+                }
+
+# =============================================================================
+class S3GandiDNSModel(S3DNSModel):
+    """
+        Gandi LiveDNS
+        - DNS Provider Instance
+
+        https://doc.livedns.gandi.net/
+    """
+
+    names = ("setup_gandi_dns",)
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        tablename = "setup_gandi_dns"
+        self.define_table(tablename,
+                          self.super_link("dns_id", "setup_dns"),
+                          Field("name"),
+                          Field("description"),
+                          Field("enabled", "boolean",
+                                default = True,
+                                #label = T("Enabled?"),
+                                represent = s3_yes_no_represent,
+                                ),
+                          Field("api_key", "password",
+                                readable = False,
+                                requires = IS_NOT_EMPTY(),
+                                widget = S3PasswordWidget(),
+                                ),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       super_entity = "setup_dns",
+                       )
+
+        # ---------------------------------------------------------------------
+        return {}
+
+# =============================================================================
+class S3CloudModel(S3Model):
+    """
+        Clouds
+        - super-entity
+    """
+
+    names = ("setup_cloud",
+             "setup_cloud_id",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        #----------------------------------------------------------------------
+        # Super entity
+        #
+        cloud_types = Storage(setup_aws_cloud = T("Amazon Web Services"),
+                              )
+
+        tablename = "setup_cloud"
+        self.super_entity(tablename, "cloud_id",
+                          cloud_types,
+                          Field("name",
+                                #label = T("Name"),
+                                ),
+                          Field("description",
+                                #label = T("Description"),
+                                ),
+                          Field("enabled", "boolean",
+                                default = True,
+                                #label = T("Enabled?")
+                                #represent = s3_yes_no_represent,
+                                ),
+                          #on_define = lambda table: \
+                          #  [table.instance_type.set_attributes(readable = True),
+                          #   ],
+                          )
+
+        # Reusable Field
+        represent = S3Represent(lookup = tablename)
+        cloud_id = S3ReusableField("cloud_id", "reference %s" % tablename,
+                                   label = T("Cloud"),
+                                   ondelete = "SET NULL",
+                                   represent = represent,
+                                   requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(db, "setup_cloud.cloud_id",
+                                              represent,
+                                              sort = True
+                                              ),
+                                    ),
+                                   )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        return {"setup_cloud_id": cloud_id,
+                }
+
+# =============================================================================
+class S3AWSCloudModel(S3CloudModel):
+    """
+        Amazon Web Services
+        - Cloud Instance
+
+        https://docs.ansible.com/ansible/latest/scenario_guides/guide_aws.html
+        https://docs.ansible.com/ansible/latest/modules/ec2_module.html
+    """
+
+    names = ("setup_aws_cloud",)
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        tablename = "setup_aws_cloud"
+        self.define_table(tablename,
+                          self.super_link("cloud_id", "setup_cloud"),
+                          Field("name"),
+                          Field("description"),
+                          Field("enabled", "boolean",
+                                default = True,
+                                #label = T("Enabled?"),
+                                represent = s3_yes_no_represent,
+                                ),
+                          Field("secret_key", "password",
+                                readable = False,
+                                requires = IS_NOT_EMPTY(),
+                                widget = S3PasswordWidget(),
+                                ),
+                          Field("access_key", "password",
+                                readable = False,
+                                requires = IS_NOT_EMPTY(),
+                                widget = S3PasswordWidget(),
+                                ),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       super_entity = "setup_cloud",
+                       )
+
+        # ---------------------------------------------------------------------
+        return {}
+
+# =============================================================================
 class S3SetupModel(S3Model):
 
     names = ("setup_deployment",
@@ -105,6 +315,7 @@ class S3SetupModel(S3Model):
         #
         tablename = "setup_deployment"
         define_table(tablename,
+                     self.setup_cloud_id(),
                      # @ToDo: Allow use of Custom repo
                      # @ToDo: Add ability to get a specific hash/tag
                      Field("repo_url",
@@ -166,31 +377,6 @@ class S3SetupModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
-                     #Field("secret_key",
-                     #      label = T("AWS Secret Key"),
-                     #      comment = DIV(_class="tooltip",
-                     #                    _title="%s|%s" % (T("AWS Secret Key"),
-                     #                                      T("If you wish to add additional servers on AWS then you need this")
-                     #                                      )
-                     #                    ),
-                     #      ),
-                     #Field("access_key",
-                     #      label = T("AWS Access Key"),
-                     #      comment = DIV(_class="tooltip",
-                     #                    _title="%s|%s" % (T("AWS Access Key"),
-                     #                                      T("If you wish to add additional servers on AWS then you need this")
-                     #                                      )
-                     #                    ),
-                     #      ),
-                     #Field("refresh_lock", "integer",
-                     #      default = 0,
-                     #      readable = False,
-                     #      writable = False,
-                     #      ),
-                     #Field("last_refreshed", "datetime",
-                     #      readable = False,
-                     #      writable = False,
-                     #      ),
                      *s3_meta_fields()
                      )
 
@@ -420,6 +606,7 @@ class S3SetupModel(S3Model):
                                                            )
                                          ),
                            ),
+                     # @ToDo: Allow upload of SSL as well as auto-generated Let's Encrypt
                      #Field("ssl_cert", "upload",
                      #      label = T("SSL Certificate"),
                      #      length = current.MAX_FILENAME_LENGTH,
@@ -588,6 +775,8 @@ class S3SetupModel(S3Model):
                    action = self.setup_setting_apply,
                    )
 
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
         return {"setup_deployment_id": deployment_id,
                 "setup_server_id": server_id,
                 }

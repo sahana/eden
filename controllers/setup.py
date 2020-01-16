@@ -66,6 +66,18 @@ def index():
             redirect(URL(c="setup", f="deployment"))
 
 # -----------------------------------------------------------------------------
+def aws_cloud():
+
+    return s3_rest_controller(#rheader = s3db.setup_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def gandi_dns():
+
+    return s3_rest_controller(#rheader = s3db.setup_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
 def deployment():
 
     def prep(r):
