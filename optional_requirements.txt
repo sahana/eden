@@ -3,13 +3,14 @@ xlwt>=0.7.2
 # Warning: S3GIS unresolved dependency: shapely required for GIS support
 Shapely>=1.2.14 #shapely
 # Warning: S3PDF unresolved dependency: Python Imaging required for PDF export
-PIL>=1.1.7 #from PIL import Image
+Pillow>=6.2.2 #from PIL import Image
 # Warning: S3GIS unresolved dependency: GDAL required for Shapefile support
 GDAL>=1.9.0 #from osgeo import ogr
 # Warning: S3GIS unresolved dependency: geopy required for Geocoder support
 geopy>=1.18.1 #from geopy import geocoders
 # Warning: S3PDF unresolved dependency: reportlab required for PDF export
 reportlab>=2.5
+# Warning: S3Msg unresolved dependency pyserial required for Serial port modem usage
 pyserial>=2.6
 # Warning: S3Msg unresolved dependency tweepy required for non-Tropo Twitter support
 tweepy>=1.9
@@ -34,7 +35,7 @@ TwitterSearch>=1.0
 # Warning: Messaging unresolved dependency: requests required for posting to Facebook
 requests>=2.3.0
 # Warning: Setup unresolved dependency: ansible required for Setup Module
-ansible>=2.7.11
+ansible~=2.7.16
 # Warning: Setup unresolved dependency: PyYAML required for Setup Module
 PyYAML>=3.12 #yaml
 # Warning: Setup unresolved dependency: ruamel.yaml required for Setup Module
