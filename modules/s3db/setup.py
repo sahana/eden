@@ -2229,11 +2229,14 @@ def setup_run_playbook(playbook, hosts, tags=None, private_key=None):
     else:
         sources = ",".join(hosts)
 
-    inventory = InventoryManager(loader=loader, sources='localhost,')
-    variable_manager = VariableManager(loader=loader, inventory=inventory)
+    inventory = InventoryManager(loader = loader,
+                                 sources = sources)
+    variable_manager = VariableManager(loader = loader,
+                                       inventory = inventory)
 
     # Load Playbook
-    play_source = yaml.load(playbook)
+    with open(playbook, "r") as yaml_file:
+        play_source = yaml.load(yaml_file)[0]
 
     # Create play object, playbook objects use .load instead of init or new methods,
     # this will also automatically create the task objects from the info provided in play_source
