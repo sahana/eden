@@ -1047,7 +1047,7 @@ dropdown.change(function() {
                          "connection": "local", # @ToDo: Don't assume this
                          "remote_user": server.remote_user,
                          "become_method": "sudo",
-                         "become_user": "root",
+                         #"become_user": "root",
                          "vars": {"appname": appname,
                                   "all_sites": ",".join(all_sites),
                                   "db_ip": host_ip,
@@ -1084,7 +1084,7 @@ dropdown.change(function() {
             playbook = [{"hosts": db_ip,
                          "remote_user": remote_user,
                          "become_method": "sudo",
-                         "become_user": "root",
+                         #"become_user": "root",
                          "vars": {"db_type": db_type,
                                   "password": db_password,
                                   "type": instance_type
@@ -1095,7 +1095,7 @@ dropdown.change(function() {
                         {"hosts": webserver_ip,
                          #"remote_user": remote_user,
                          "become_method": "sudo",
-                         "become_user": "root",
+                         #"become_user": "root",
                          "vars": {"appname": appname,
                                   "all_sites": ",".join(all_sites),
                                   "db_ip": db_ip,
@@ -1269,7 +1269,7 @@ dropdown.change(function() {
                      "connection": "local", # @ToDo: Don't assume this
                      "remote_user": remote_user,
                      "become_method": "sudo",
-                     "become_user": "root",
+                     #"become_user": "root",
                      "tasks": [{"name": "Edit 000_config.py",
                                 "lineinfile": {"dest": "/home/%s/applications/%s/models/000_config.py" % (instance_type, appname),
                                                "regexp": "^settings.%s =" % the_setting,
@@ -1388,7 +1388,7 @@ dropdown.change(function() {
                      "connection": "local", # @ToDo: Don't assume this
                      "remote_user": remote_user,
                      "become_method": "sudo",
-                     "become_user": "root",
+                     #"become_user": "root",
                      "tasks": tasks,
                      },
                     ]
@@ -2182,6 +2182,100 @@ def setup_run_playbook(playbook, hosts, tags=None, private_key=None):
     """
 
     # No try/except here as we want ImportErrors to raise
+    import shutil
+    import yaml
+    from ansible.module_utils.common.collections import ImmutableDict
+    from ansible.parsing.dataloader import DataLoader
+    from ansible.vars.manager import VariableManager
+    from ansible.inventory.manager import InventoryManager
+    from ansible.playbook.play import Play
+    from ansible.executor.task_queue_manager import TaskQueueManager
+    from ansible.plugins.callback import CallbackBase
+    from ansible import context
+    import ansible.constants as C
+
+    class ResultCallback(CallbackBase):
+        def v2_runner_on_ok(self, result, **kwargs):
+            host = result._host
+            current.log.debug(json.dumps({host.name: result._result}, indent=4))
+
+    # Copy the current working directory to revert back to later
+    cwd = os.getcwd()
+
+    # Change working directory
+    roles_path = os.path.join(current.request.folder, "private", "eden_deploy")
+    os.chdir(roles_path)
+
+    # Since the API is constructed for CLI it expects certain options to always be set in the context object
+    context.CLIARGS = ImmutableDict(connection = "local",
+                                    module_path = [roles_path],
+                                    forks = 10,
+                                    become = None,
+                                    become_method = None,
+                                    become_user = None,
+                                    check = False,
+                                    diff = False)
+
+    # Initialize needed objects
+    loader = DataLoader() # Takes care of finding and reading yaml, json and ini files
+
+    # Instantiate Logging for handling results as they come in
+    results_callback = ResultCallback()
+
+    # Create Inventory and pass to Var manager
+    if len(hosts) == 1:
+        # Ensure that we have a comma to tell Ansible that this is a list of hosts not a file to read from
+        sources = "%s," % hosts[0]
+    else:
+        sources = ",".join(hosts)
+
+    inventory = InventoryManager(loader=loader, sources='localhost,')
+    variable_manager = VariableManager(loader=loader, inventory=inventory)
+
+    # Load Playbook
+    play_source = yaml.load(playbook)
+
+    # Create play object, playbook objects use .load instead of init or new methods,
+    # this will also automatically create the task objects from the info provided in play_source
+    play = Play().load(play_source,
+                       variable_manager = variable_manager,
+                       loader = loader)
+
+    # Run it - instantiate task queue manager, which takes care of forking and setting up all objects to iterate over host list and tasks
+    tqm = None
+    try:
+        tqm = TaskQueueManager(inventory = inventory,
+                               variable_manager = variable_manager,
+                               loader = loader,
+                               passwords = None,
+                               # Use our custom callback instead of the ``default`` callback plugin, which prints to stdout
+                               stdout_callback = results_callback,
+                               )
+        result = tqm.run(play) # most interesting data for a play is actually sent to the callback's methods
+    finally:
+        # we always need to cleanup child procs and the structures we use to communicate with them
+        if tqm is not None:
+            tqm.cleanup()
+
+        # Remove ansible tmpdir
+        shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
+
+    # Change working directory back
+    os.chdir(cwd)
+
+    return result
+
+# =============================================================================
+def setup_run_playbook_old(playbook, hosts, tags=None, private_key=None):
+    """
+        Run an Ansible Playbook & return the result
+        - designed to be run as a Scheduled Task
+
+        http://docs.ansible.com/ansible/latest/dev_guide/developing_api.html
+        https://serversforhackers.com/c/running-ansible-2-programmatically
+    """
+
+    # No try/except here as we want ImportErrors to raise
     from ansible.parsing.dataloader import DataLoader
     from ansible.vars.manager import VariableManager
     from ansible.inventory.manager import InventoryManager
@@ -2388,7 +2482,7 @@ def setup_instance_method(instance_id, method="start"):
                  "connection": "local", # @ToDo: Don't assume this
                  "remote_user": server.remote_user,
                  "become_method": "sudo",
-                 "become_user": "root",
+                 #"become_user": "root",
                  "vars": {"db_type": DB_SERVERS[deployment.db_type],
                           "web_server": WEB_SERVERS[deployment.webserver_type],
                           "type": INSTANCE_TYPES[instance.type],
