@@ -457,7 +457,9 @@ class S3OptionsMenu(object):
         return M()(
                     M("Setup", c="setup", f="deployment")(
                         M("AWS Clouds", f="aws_cloud")(),
-                        M("Deployments", f="deployment")(),
+                        M("Deployments", f="deployment")(
+                            M("Create", m="create"),
+                        ),
                     ),
                     M("Settings", c="admin", f="setting")(
                         settings_messaging,

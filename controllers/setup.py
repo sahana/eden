@@ -2,8 +2,7 @@
 
 """
     Setup Tool:
-        Assists with Installation of a Deployment
-        tbc: Assists with Configuration of a Deployment
+        Assists with Installation, Configuration & Maintenance of a Deployment
 """
 
 module = request.controller
@@ -52,6 +51,7 @@ def index():
             # @ToDo: Support multi-host deployments
             # @ToDo: Read remote_user/private_key
             server_id = s3db.setup_server.insert(deployment_id = deployment_id,
+                                                 host_ip = "127.0.0.1",
                                                  )
             s3db.setup_monitor_server.insert(server_id = server_id)
             task_id = current.s3task.run_async("dummy")
@@ -108,7 +108,61 @@ def deployment():
                 #                   insertable = False
                 #                   )
 
-                if r.component.name == "instance":
+                cname = r.component.name
+                if cname == "server":
+
+                    from s3 import S3SQLCustomForm
+
+                    if r.record.cloud_id:
+                        # Assume AWS for now
+                        crud_form = S3SQLCustomForm("deployment_id",
+                                                    "name",
+                                                    "host_ip",
+                                                    "role",
+                                                    "remote_user",
+                                                    "private_key",
+                                                    (T("AWS Region"), "aws_server.region"),
+                                                    (T("AWS Instance Type"), "aws_server.instance_type"),
+                                                    (T("AWS Image"), "aws_server.image"),
+                                                    (T("AWS Security Group"), "aws_server.security_group"),
+                                                    (T("AWS Instance ID"), "aws_server.instance_id"),
+                                                    (T("Monitor"), "monitor_server.enabled"),
+                                                    "monitor_server.status",
+                                                    )
+
+                        list_fields = ["deployment_id",
+                                       "name",
+                                       "host_ip",
+                                       "role",
+                                       "monitor_server.enabled",
+                                       "monitor_server.status",
+                                       ]
+                    else:
+                        # No Cloud
+                        crud_form = S3SQLCustomForm("deployment_id",
+                                                    "name",
+                                                    "host_ip",
+                                                    "role",
+                                                    "remote_user",
+                                                    "private_key",
+                                                    (T("Monitor"), "monitor_server.enabled"),
+                                                    "monitor_server.status",
+                                                    )
+
+                        list_fields = ["deployment_id",
+                                       "name",
+                                       "host_ip",
+                                       "role",
+                                       "monitor_server.enabled",
+                                       "monitor_server.status",
+                                       ]
+
+                    s3db.configure("setup_server",
+                                   crud_form = crud_form,
+                                   list_fields = list_fields,
+                                   )
+
+                elif cname == "instance":
                     if r.method in (None, "create"):
                         itable = db.setup_instance
                         # Additional instances off by default
@@ -133,8 +187,25 @@ def deployment():
 
             elif r.method == "create":
                 # Include Production Instance & Server details in main form
+                
+                def deployment_create_postprocess(form):
+                    form_vars_get = form.vars.get
+                    deployment_id = form_vars_get("id")
+                    # Set server name
+                    stable = s3db.setup_server
+                    url = form_vars_get("sub_production_url")
+                    db(stable.deployment_id == deployment_id).update(name = url.split("//")[1].split(".")[0])
+                    cloud_id = form_vars_get("cloud_id")
+                    if cloud_id:
+                        # Create AWS Server record
+                        server = db(stable.deployment_id == deployment_id).select(stable.id,
+                                                                                  limitby = (0, 1)
+                                                                                  ).first()
+                        s3db.setup_aws_server.insert(server_id = server.id)
+
                 from s3 import S3SQLCustomForm
-                crud_form = S3SQLCustomForm((T("Production URL"), "production.url"),
+                crud_form = S3SQLCustomForm("cloud_id",
+                                            (T("Production URL"), "production.url"),
                                             "production.sender",
                                             #"repo_url",
                                             "country",
@@ -143,8 +214,7 @@ def deployment():
                                             "db_type",
                                             "production_server.remote_user",
                                             "production_server.private_key",
-                                            #"secret_key",
-                                            #"access_key",
+                                            postprocess = deployment_create_postprocess,
                                             )
 
                 s3db.configure("setup_deployment",
@@ -277,6 +347,70 @@ def deployment():
 
 # -----------------------------------------------------------------------------
 def server():
+
+    def prep(r):
+        if r.interactive:
+            if r.record and not r.component:
+
+                from s3 import S3SQLCustomForm
+
+                s3db = current.s3db
+                dtable = s3db.setup_deployment
+                deployment = db(dtable.id == r.record.deployment_id).select(dtable.cloud_id,
+                                                                            limitby = (0, 1)
+                                                                            ).first()
+
+                if deployment.cloud_id:
+                    # Assume AWS for now
+                    crud_form = S3SQLCustomForm("deployment_id",
+                                                "name",
+                                                "host_ip",
+                                                "role",
+                                                "remote_user",
+                                                "private_key",
+                                                (T("AWS Region"), "aws_server.region"),
+                                                (T("AWS Instance Type"), "aws_server.instance_type"),
+                                                (T("AWS Image"), "aws_server.image"),
+                                                (T("AWS Security Group"), "aws_server.security_group"),
+                                                (T("AWS Instance ID"), "aws_server.instance_id"),
+                                                (T("Monitor"), "monitor_server.enabled"),
+                                                "monitor_server.status",
+                                                )
+
+                    list_fields = ["deployment_id",
+                                   "name",
+                                   "host_ip",
+                                   "role",
+                                   "monitor_server.enabled",
+                                   "monitor_server.status",
+                                   ]
+                else:
+                    # No Cloud
+                    crud_form = S3SQLCustomForm("deployment_id",
+                                                "name",
+                                                "host_ip",
+                                                "role",
+                                                "remote_user",
+                                                "private_key",
+                                                (T("Monitor"), "monitor_server.enabled"),
+                                                "monitor_server.status",
+                                                )
+
+                    list_fields = ["deployment_id",
+                                   "name",
+                                   "host_ip",
+                                   "role",
+                                   "monitor_server.enabled",
+                                   "monitor_server.status",
+                                   ]
+
+                s3db.configure("setup_server",
+                               crud_form = crud_form,
+                               list_fields = list_fields,
+                               )
+
+        return True
+    s3.prep = prep
 
     def postp(r, output):
         if r.component is None and r.method in (None, "read"):

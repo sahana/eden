@@ -209,11 +209,11 @@ class S3CloudModel(S3Model):
                           Field("description",
                                 #label = T("Description"),
                                 ),
-                          Field("enabled", "boolean",
-                                default = True,
-                                #label = T("Enabled?")
-                                #represent = s3_yes_no_represent,
-                                ),
+                          #Field("enabled", "boolean",
+                          #      default = True,
+                          #      #label = T("Enabled?")
+                          #      #represent = s3_yes_no_represent,
+                          #      ),
                           #on_define = lambda table: \
                           #  [table.instance_type.set_attributes(readable = True),
                           #   ],
@@ -248,38 +248,80 @@ class S3AWSCloudModel(S3CloudModel):
         https://docs.ansible.com/ansible/latest/modules/ec2_module.html
     """
 
-    names = ("setup_aws_cloud",)
+    names = ("setup_aws_cloud",
+             "setup_aws_server",
+             )
 
     def model(self):
 
         #T = current.T
 
+        define_table = self.define_table
+
         # ---------------------------------------------------------------------
+        # AWS Cloud Configuration
+        #
         tablename = "setup_aws_cloud"
-        self.define_table(tablename,
-                          self.super_link("cloud_id", "setup_cloud"),
-                          Field("name"),
-                          Field("description"),
-                          Field("enabled", "boolean",
-                                default = True,
-                                #label = T("Enabled?"),
-                                represent = s3_yes_no_represent,
-                                ),
-                          Field("secret_key", "password",
-                                readable = False,
-                                requires = IS_NOT_EMPTY(),
-                                widget = S3PasswordWidget(),
-                                ),
-                          Field("access_key", "password",
-                                readable = False,
-                                requires = IS_NOT_EMPTY(),
-                                widget = S3PasswordWidget(),
-                                ),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     # Instance of Super-Entity
+                     self.super_link("cloud_id", "setup_cloud"),
+                     Field("name"),
+                     Field("description"),
+                     #Field("enabled", "boolean",
+                     #      default = True,
+                     #      #label = T("Enabled?"),
+                     #      represent = s3_yes_no_represent,
+                     #      ),
+                     Field("secret_key", "password",
+                           readable = False,
+                           requires = IS_NOT_EMPTY(),
+                           widget = S3PasswordWidget(),
+                           ),
+                     Field("access_key", "password",
+                           readable = False,
+                           requires = IS_NOT_EMPTY(),
+                           widget = S3PasswordWidget(),
+                           ),
+                     *s3_meta_fields())
 
         self.configure(tablename,
                        super_entity = "setup_cloud",
                        )
+
+        # ---------------------------------------------------------------------
+        # AWS Server Details
+        #
+        #aws_instance_types = ["t2.micro",
+        #                      ]
+        #aws_regions = {"eu-west-2": "Europe (London)",
+        #               }
+        tablename = "setup_aws_server"
+        define_table(tablename,
+                     self.setup_server_id(),
+                     Field("region",
+                           default = "eu-west-2", # Europe (London)
+                           #label = T("Region"),
+                           #requires = IS_IN_SET(aws_regions),
+                           #represent = S3Represent(options = aws_regions)
+                           ),
+                     Field("instance_type",
+                           default = "t2.micro",
+                           #label = T("Instance Type"),
+                           #requires = IS_IN_SET(aws_instance_types),
+                           ),
+                     Field("image",
+                           default = "ami-0ad916493173c5680", # Debian 9 in London
+                           #label = T("Image"), # AMI ID
+                           ),
+                     Field("security_group",
+                           default = "default",
+                           #label = T("Security Group"),
+                           ),
+                     # Normally populated automatically:
+                     Field("instance_id",
+                           #label = T("Instance ID"),
+                           ),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         return {}
@@ -394,7 +436,7 @@ class S3SetupModel(S3Model):
 
         configure(tablename,
                   #editable = False,
-                  listadd = False,
+                  listadd = False, # Create method customises form
                   create_onaccept = self.setup_deployment_create_onaccept,
                   create_next = URL(c="setup", f="deployment",
                                     args = ["[id]", "instance"],
@@ -466,12 +508,25 @@ class S3SetupModel(S3Model):
                      # @ToDo: Server Groups
                      #group_id(),
                      deployment_id(),
-                     Field("host_ip", unique=True, length=24,
-                           default = "127.0.0.1",
-                           label = T("IP Address"),
-                           requires = IS_IPV4(),
-                           writable = False,
+                     Field("name",
+                           label = T("Name"),
+                           # Can do this in templates if-required
+                           #requires = IS_NOT_IN_DB(db, "setup_server.name"),
                            comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Name"),
+                                                           # If not defined then can be automated by the Cloud integration, if-present
+                                                           T("Optional.")
+                                                           )
+                                         ),
+                           ),
+                     Field("host_ip", length=24,
+                           label = T("IP Address"),
+                           requires = IS_EMPTY_OR(
+                                        IS_IPV4(),
+                                        ),
+                           #writable = False,
+                           comment = DIV(_class="tooltip",
+                                         # If not defined then can be automated by the Cloud integration, if-present
                                          _title="%s|%s" % (T("IP Address"),
                                                            T("Currently only 127.0.0.1 is supported by this tool, although others should be possible with a little work.")
                                                            )
@@ -489,21 +544,17 @@ class S3SetupModel(S3Model):
                                                            )
                                          ),
                            ),
-                     #Field("hostname",
-                     #      label = T("Hostname"),
-                     #      requires = IS_NOT_EMPTY(),
-                     #      ),
                      Field("remote_user",
                            default = "admin",
                            label = T("Remote User"),
                            ),
                      Field("private_key", "upload",
-                           label = T("Private Key"),
+                           label = T("SSH Private Key"),
                            length = current.MAX_FILENAME_LENGTH,
                            requires = IS_EMPTY_OR(IS_UPLOAD_FILENAME()),
                            uploadfolder = path_join(folder, "uploads"),
                            comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Private Key"),
+                                         _title="%s|%s" % (T("SSH Private Key"),
                                                            T("if you wish to configure servers other than the one hosting the co-app then you need to provide a PEM-encoded SSH private key")
                                                            )
                                          ),
@@ -523,26 +574,10 @@ class S3SetupModel(S3Model):
             msg_record_deleted = T("Server deleted"),
             msg_list_empty = T("No Servers currently registered"))
 
-        crud_form = S3SQLCustomForm("deployment_id",
-                                    "host_ip",
-                                    "role",
-                                    "remote_user",
-                                    "private_key",
-                                    (T("Monitor"), "monitor_server.enabled"),
-                                    "monitor_server.status",
-                                    )
-
-        configure(tablename,
-                  crud_form = crud_form,
-                  list_fields = ["deployment_id",
-                                 "host_ip",
-                                 "role",
-                                 "monitor_server.enabled",
-                                 "monitor_server.status",
-                                 ],
-                  )
-
         add_components(tablename,
+                       setup_aws_server = {"joinby": "server_id",
+                                           "multiple": False,
+                                           },
                        setup_monitor_run = {"name": "monitor_log",
                                             "joinby": "server_id",
                                             },
@@ -2262,94 +2297,6 @@ def setup_run_playbook(playbook, hosts, tags=None, private_key=None):
 
         # Remove ansible tmpdir
         shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
-
-    # Change working directory back
-    os.chdir(cwd)
-
-    return result
-
-# =============================================================================
-def setup_run_playbook_old(playbook, hosts, tags=None, private_key=None):
-    """
-        Run an Ansible Playbook & return the result
-        - designed to be run as a Scheduled Task
-
-        http://docs.ansible.com/ansible/latest/dev_guide/developing_api.html
-        https://serversforhackers.com/c/running-ansible-2-programmatically
-    """
-
-    # No try/except here as we want ImportErrors to raise
-    from ansible.parsing.dataloader import DataLoader
-    from ansible.vars.manager import VariableManager
-    from ansible.inventory.manager import InventoryManager
-    from ansible.playbook.play import Play
-    from ansible.executor.playbook_executor import PlaybookExecutor
-    #from ansible.plugins.callback import CallbackBase
-
-    # Copy the current working directory to revert back to later
-    cwd = os.getcwd()
-
-    # Change working directory
-    roles_path = os.path.join(current.request.folder, "private", "eden_deploy")
-    os.chdir(roles_path)
-
-    # Initialize needed objects
-    loader = DataLoader()
-    options = Storage(connection = "local", # @ToDo: Will need changing when doing multi-host
-                      module_path = roles_path,
-                      forks = 100,
-                      become = None,
-                      become_method = None,
-                      become_user = None,
-                      check = False,
-                      diff = False,
-                      tags = tags or [],
-                      skip_tags = [], # Needs to be an iterable as hasattr(Storage()) is always True
-                      private_key_file = private_key, # @ToDo: Needs testing
-                      )
-
-    # Instantiate Logging for handling results as they come in
-    #results_callback = CallbackModule() # custom subclass of CallbackBase
-
-    # Create Inventory and pass to Var manager
-    if len(hosts) == 1:
-        # Ensure that we have a comma to tell Ansible that this is a list of hosts not a file to read from
-        sources = "%s," % hosts[0]
-    else:
-        sources = ",".join(hosts)
-
-    inventory = InventoryManager(loader=loader, sources=sources)
-    variable_manager = VariableManager(loader=loader, inventory=inventory)
-
-    # Broken with Ansible 2.8
-    # https://github.com/ansible/ansible/issues/21562
-    tmp_path = os.path.join("/", "tmp")
-    variable_manager.extra_vars = {"ansible_local_tmp": tmp_path,
-                                   "ansible_remote_tmp": tmp_path,
-                                   }
-
-    # Run Playbook
-    pbex = PlaybookExecutor(playbooks = [playbook],
-                            inventory = inventory,
-                            variable_manager = variable_manager,
-                            loader = loader,
-                            # Not supported in Ansible 2.8
-                            options = options,
-                            passwords = {},
-                            )
-    pbex.run()
-
-    # Check for Failures
-    result = {}
-    stats = pbex._tqm._stats
-    hosts = sorted(stats.processed.keys())
-    for h in hosts:
-        t = stats.summarize(h)
-        if t["failures"] > 0:
-            raise Exception("One of the tasks failed")
-        elif t["unreachable"] > 0:
-            raise Exception("Host unreachable")
-        result[h] = t
 
     # Change working directory back
     os.chdir(cwd)
