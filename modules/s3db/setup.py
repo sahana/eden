@@ -1225,6 +1225,7 @@ dropdown.change(function() {
             else:
                 # No Cloud
                 delete_ssh_key = False
+                remote_user = server.remote_user
                 host_ip = server.host_ip
                 if host_ip != "127.0.0.1":
                     # We will need the SSH key
@@ -1254,7 +1255,6 @@ dropdown.change(function() {
             playbook.append({"hosts": host_ip,
                              "connection": connection,
                              "remote_user": remote_user,
-                             "gather_facts": "no", # We do this manually by running the 'gather_facts' role
                              "become_method": "sudo",
                              #"become_user": "root",
                              "vars": {"appname": appname,
@@ -1271,8 +1271,7 @@ dropdown.change(function() {
                                       "type": instance_type,
                                       "web_server": web_server,
                                       },
-                             "roles": [{"role": "%s/gather_facts" % roles_path },
-                                       {"role": "%s/common" % roles_path },
+                             "roles": [{"role": "%s/common" % roles_path },
                                        {"role": "%s/%s" % (roles_path, web_server) },
                                        {"role": "%s/uwsgi" % roles_path },
                                        {"role": "%s/%s" % (roles_path, db_type) },

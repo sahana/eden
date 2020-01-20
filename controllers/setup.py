@@ -195,7 +195,8 @@ def deployment():
                     # Set server name
                     stable = s3db.setup_server
                     url = form_vars_get("sub_production_url")
-                    db(stable.deployment_id == deployment_id).update(name = url.split("//")[1].split(".")[0])
+                    server_vars = {"name": url.split("//")[1].split(".")[0],
+                                   }
                     cloud_id = form_vars_get("cloud_id")
                     if cloud_id:
                         # Create AWS Server record
@@ -203,6 +204,9 @@ def deployment():
                                                                                   limitby = (0, 1)
                                                                                   ).first()
                         s3db.setup_aws_server.insert(server_id = server.id)
+                    else:
+                        server_vars["host_ip"] = "127.0.0.1"
+                    db(stable.deployment_id == deployment_id).update(**server_vars)
 
                 from s3 import S3SQLCustomForm
                 crud_form = S3SQLCustomForm("cloud_id",
