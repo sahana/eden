@@ -2424,8 +2424,8 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
     os.chdir(roles_path)
 
     # Since the API is constructed for CLI it expects certain options to always be set in the context object
-    #if tags is not None:
-    #    tags = ",".join(tags)
+    if tags is None:
+        tags = [] # Needs to be an iterable
     context.CLIARGS = ImmutableDict(#connection = "local",
                                     module_path = [roles_path],
                                     forks = 10,
