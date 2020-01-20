@@ -1249,7 +1249,7 @@ dropdown.change(function() {
                                                 },
                                                ],
                                      })
-                 else:
+                else:
                     connection = "local"
             # Deploy to Server
             playbook.append({"hosts": host_ip,
