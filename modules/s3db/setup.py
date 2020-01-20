@@ -1108,6 +1108,7 @@ dropdown.change(function() {
 
         if len(servers) == 1:
             # All-in-one deployment
+            hosts = [host_ip]
             server = servers.first()
             playbook = []
             if cloud_id:
@@ -1488,7 +1489,8 @@ dropdown.change(function() {
         appname = r.application
 
         playbook = [{"hosts": host,
-                     #"connection": "local", # @ToDo: Don't assume this
+                     # @ToDo: "smart" & SSH Keys for non-localhost
+                     "connection": "local",
                      "remote_user": remote_user,
                      "become_method": "sudo",
                      #"become_user": "root",
@@ -1606,7 +1608,8 @@ dropdown.change(function() {
                  })
 
         playbook = [{"hosts": host,
-                     #"connection": "local", # @ToDo: Don't assume this
+                     # @ToDo: "smart" & SSH Keys for non-localhost
+                     "connection": "local",
                      "remote_user": remote_user,
                      "become_method": "sudo",
                      #"become_user": "root",
@@ -2618,7 +2621,8 @@ def setup_instance_method(instance_id, method="start"):
     roles_path = os.path.join(current.request.folder, "private", "eden_deploy", "roles")
 
     playbook = [{"hosts": host,
-                 #"connection": "local", # @ToDo: Don't assume this
+                 # @ToDo: "smart" & SSH Keys for non-localhost
+                 "connection": "local",
                  "remote_user": server.remote_user,
                  "become_method": "sudo",
                  #"become_user": "root",
