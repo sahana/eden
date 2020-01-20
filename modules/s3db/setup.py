@@ -1471,7 +1471,7 @@ dropdown.change(function() {
                                   svtable.private_key,
                                   limitby = (0, 1)
                                   ).first()
-        host = server.host_ip
+        host_ip = server.host_ip
         remote_user = server.remote_user
         private_key = server.private_key
 
@@ -1485,7 +1485,7 @@ dropdown.change(function() {
 
         appname = r.application
 
-        playbook = [{"hosts": host,
+        playbook = [{"hosts": host_ip,
                      # @ToDo: "smart" & SSH Keys for non-localhost
                      "connection": "local",
                      "remote_user": remote_user,
@@ -1515,7 +1515,6 @@ dropdown.change(function() {
         name = "apply_%d" % int(time.time())
         task_vars = setup_write_playbook("%s.yml" % name,
                                          playbook,
-                                         tags = None,
                                          )
 
         # Run the Playbook
@@ -1570,7 +1569,7 @@ dropdown.change(function() {
                                   svtable.private_key,
                                   limitby = (0, 1)
                                   ).first()
-        host = server.host_ip
+        host_ip = server.host_ip
         remote_user = server.remote_user
         private_key = server.private_key
 
@@ -1603,7 +1602,7 @@ dropdown.change(function() {
                  "become": "yes",
                  })
 
-        playbook = [{"hosts": host,
+        playbook = [{"hosts": host_ip,
                      # @ToDo: "smart" & SSH Keys for non-localhost
                      "connection": "local",
                      "remote_user": remote_user,
@@ -1617,7 +1616,6 @@ dropdown.change(function() {
         name = "apply_%d" % int(time.time())
         task_vars = setup_write_playbook("%s.yml" % name,
                                          playbook,
-                                         tags = None,
                                          )
 
         # Run the Playbook
@@ -2377,7 +2375,6 @@ def setup_write_playbook(playbook_name,
         yaml_file.write(yaml.dump(playbook_data, default_flow_style=False))
 
     task_vars = {"playbook": playbook_path,
-                 "hosts": ["127.0.0.1"],
                  }
     if tags:
         # only_tags
@@ -2386,7 +2383,7 @@ def setup_write_playbook(playbook_name,
     return task_vars
 
 # =============================================================================
-def setup_run_playbook(playbook, hosts, tags=None):
+def setup_run_playbook(playbook, tags=None, hosts=None):
     """
         Run an Ansible Playbook & return the result
         - designed to be run as a Scheduled Task
@@ -2407,6 +2404,9 @@ def setup_run_playbook(playbook, hosts, tags=None):
     from ansible.plugins.callback import CallbackBase
     from ansible import context
     import ansible.constants as C
+
+    if hosts is None:
+        hosts = ["127.0.0.1"]
 
     # @ToDo: Improve this...currently not easy to find this data if something goes wrong
     # e.g. Update scheduler_run.run_output or run_result
@@ -2602,7 +2602,7 @@ def setup_instance_method(instance_id, method="start"):
                               stable.remote_user,
                               limitby = (0, 1)
                               ).first()
-    host = server.host_ip
+    host_ip = server.host_ip
 
     # Get Deployment details
     dtable = s3db.setup_deployment
@@ -2614,7 +2614,7 @@ def setup_instance_method(instance_id, method="start"):
     # Build Playbook data structure
     roles_path = os.path.join(current.request.folder, "private", "eden_deploy", "roles")
 
-    playbook = [{"hosts": host,
+    playbook = [{"hosts": host_ip,
                  # @ToDo: "smart" & SSH Keys for non-localhost
                  "connection": "local",
                  "remote_user": server.remote_user,
@@ -2633,7 +2633,6 @@ def setup_instance_method(instance_id, method="start"):
     name = "%s_%d" % (method, int(time.time()))
     task_vars = setup_write_playbook("%s.yml" % name,
                                      playbook,
-                                     tags = None,
                                      )
 
     # Run the Playbook
