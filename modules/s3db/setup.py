@@ -1111,6 +1111,7 @@ dropdown.change(function() {
             server = servers.first()
             playbook = []
             if cloud_id:
+                connection = "smart"
                 # @ToDo: Will need extending when we support multiple Cloud Providers
                 access_key = aws.access_key
                 secret_key = aws.secret_key
@@ -1222,10 +1223,12 @@ dropdown.change(function() {
                                            ],
                                  })
             else:
+                # No Cloud
                 delete_ssh_key = False
                 host_ip = server.host_ip
                 if host_ip != "127.0.0.1":
                     # We will need the SSH key
+                    connection = "smart"
                     private_key = server.private_key
                     if not private_key:
                         # Abort
@@ -1245,11 +1248,13 @@ dropdown.change(function() {
                                                 },
                                                ],
                                      })
+                 else:
+                    connection = "local"
             # Deploy to Server
             playbook.append({"hosts": host_ip,
-                             #"connection": "local", # @ToDo: Don't assume this
+                             "connection": connection,
                              "remote_user": remote_user,
-                             "gather_facts": "no", # We do this manually by running 'setup' in the common role
+                             "gather_facts": "no", # We do this manually by running the 'gather_facts' role
                              "become_method": "sudo",
                              #"become_user": "root",
                              "vars": {"appname": appname,
@@ -1266,7 +1271,8 @@ dropdown.change(function() {
                                       "type": instance_type,
                                       "web_server": web_server,
                                       },
-                             "roles": [{"role": "%s/common" % roles_path },
+                             "roles": [{"role": "%s/gather_facts" % roles_path },
+                                       {"role": "%s/common" % roles_path },
                                        {"role": "%s/%s" % (roles_path, web_server) },
                                        {"role": "%s/uwsgi" % roles_path },
                                        {"role": "%s/%s" % (roles_path, db_type) },
