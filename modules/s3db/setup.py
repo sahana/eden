@@ -1108,7 +1108,6 @@ dropdown.change(function() {
 
         if len(servers) == 1:
             # All-in-one deployment
-            hosts = [host_ip]
             server = servers.first()
             playbook = []
             if cloud_id:
@@ -1304,7 +1303,6 @@ dropdown.change(function() {
                     remote_user = server.remote_user
                 else:
                     webserver_ip = server.host_ip
-            hosts = [db_ip, webserver_ip]
             playbook = [{"hosts": db_ip,
                          "remote_user": remote_user,
                          "become_method": "sudo",
@@ -1350,7 +1348,6 @@ dropdown.change(function() {
             tags = [instance_type]
         task_vars = setup_write_playbook("%s.yml" % name,
                                          playbook,
-                                         hosts,
                                          tags,
                                          )
 
@@ -1518,7 +1515,6 @@ dropdown.change(function() {
         name = "apply_%d" % int(time.time())
         task_vars = setup_write_playbook("%s.yml" % name,
                                          playbook,
-                                         [host],
                                          tags = None,
                                          )
 
@@ -1621,7 +1617,6 @@ dropdown.change(function() {
         name = "apply_%d" % int(time.time())
         task_vars = setup_write_playbook("%s.yml" % name,
                                          playbook,
-                                         [host],
                                          tags = None,
                                          )
 
@@ -2354,7 +2349,6 @@ def setup_monitor_check_email_reply(run_id):
 # =============================================================================
 def setup_write_playbook(playbook_name,
                          playbook_data,
-                         hosts,
                          tags = None,
                          ):
     """
@@ -2383,7 +2377,7 @@ def setup_write_playbook(playbook_name,
         yaml_file.write(yaml.dump(playbook_data, default_flow_style=False))
 
     task_vars = {"playbook": playbook_path,
-                 "hosts": hosts,
+                 "hosts": ["127.0.0.1"],
                  }
     if tags:
         # only_tags
@@ -2639,7 +2633,6 @@ def setup_instance_method(instance_id, method="start"):
     name = "%s_%d" % (method, int(time.time()))
     task_vars = setup_write_playbook("%s.yml" % name,
                                      playbook,
-                                     [host],
                                      tags = None,
                                      )
 
