@@ -72,7 +72,8 @@ def config(settings):
     # Default language for Language Toolbar (& GIS Locations in future)
     settings.L10n.default_language = "en-gb"
 
-    l10n_options = {"so": "Somali",
+    l10n_options = {"es": "Spanish",
+                    "so": "Somali",
                     }
     # Pass to controllers.py (not a real deployment_setting)
     settings.L10n.survey_languages = l10n_options

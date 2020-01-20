@@ -49,7 +49,6 @@ def index():
                                                          db_password = settings.database.get("password"),
                                                          )
             # @ToDo: Support multi-host deployments
-            # @ToDo: Read remote_user/private_key
             server_id = s3db.setup_server.insert(deployment_id = deployment_id,
                                                  host_ip = "127.0.0.1",
                                                  )
@@ -139,6 +138,8 @@ def deployment():
                                        ]
                     else:
                         # No Cloud
+                        f = s3db.setup_server.host_ip
+                        f.requires = f.requires.other # IP is required
                         crud_form = S3SQLCustomForm("deployment_id",
                                                     "name",
                                                     "host_ip",
@@ -386,6 +387,8 @@ def server():
                                    ]
                 else:
                     # No Cloud
+                    f = s3db.setup_server.host_ip
+                    f.requires = f.requires.other # IP is required
                     crud_form = S3SQLCustomForm("deployment_id",
                                                 "name",
                                                 "host_ip",
@@ -406,6 +409,7 @@ def server():
 
                 s3db.configure("setup_server",
                                crud_form = crud_form,
+                               #insertable = False, # We want to allow monitoring of external hosts
                                list_fields = list_fields,
                                )
 

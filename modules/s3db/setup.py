@@ -521,6 +521,7 @@ class S3SetupModel(S3Model):
                            ),
                      Field("host_ip", length=24,
                            label = T("IP Address"),
+                           # required for non-cloud deployments (set in controller)
                            requires = IS_EMPTY_OR(
                                         IS_IPV4(),
                                         ),
@@ -616,6 +617,9 @@ class S3SetupModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Instances
+        #
+        # @ToDo: Allow a Test instance to source Prod data from a different deployment
+        #        - to allow it to be run on different hosts (or even different cloud)
         #
         type_represent = S3Represent(options = INSTANCE_TYPES)
 
@@ -1043,23 +1047,53 @@ dropdown.change(function() {
         # (plain http requests will still work as automatically redirected to https)
         protocol = "https"
 
-        # Get Server(s) details
-        stable = s3db.setup_server
-        query = (stable.deployment_id == deployment_id)
-        servers = db(query).select(stable.role,
-                                   stable.host_ip,
-                                   stable.remote_user,
-                                   stable.private_key,
-                                   )
-
         # Get Deployment details
         dtable = s3db.setup_deployment
-        deployment = db(dtable.id == deployment_id).select(dtable.webserver_type,
+        deployment = db(dtable.id == deployment_id).select(dtable.cloud_id,
+                                                           dtable.webserver_type,
                                                            dtable.db_type,
                                                            dtable.db_password,
                                                            dtable.template,
-                                                           limitby=(0, 1)
+                                                           limitby = (0, 1)
                                                            ).first()
+
+        # Get Server(s) details
+        stable = s3db.setup_server
+        query = (stable.deployment_id == deployment_id)
+        cloud_id = deployment.cloud_id
+        if cloud_id:
+            # Get AWS details
+            # @ToDo: Will need extending when we support multiple Cloud Providers
+            atable = s3db.setup_aws_cloud
+            aws = db(atable.id == cloud_id).select(atable.access_key,
+                                                   atable.secret_key,
+                                                   limitby = (0, 1)
+                                                   ).first()
+
+            # Get Server(s) details
+            astable = s3db.setup_aws_server
+            left = astable.on(astable.server_id == stable.id)
+            servers = db(query).select(stable.id,
+                                       stable.name,
+                                       stable.role,
+                                       stable.host_ip,
+                                       stable.remote_user,
+                                       stable.private_key,
+                                       astable.region,
+                                       astable.instance_type,
+                                       astable.image,
+                                       astable.security_group,
+                                       astable.instance_id,
+                                       left = left,
+                                       )
+        else:
+            # Get Server(s) details
+            servers = db(query).select(#stable.name,
+                                       stable.role,
+                                       stable.host_ip,
+                                       stable.remote_user,
+                                       stable.private_key,
+                                       )
 
         # Build Playbook data structure
         roles_path = os.path.join(r.folder, "private", "eden_deploy", "roles")
@@ -1075,39 +1109,188 @@ dropdown.change(function() {
         if len(servers) == 1:
             # All-in-one deployment
             server = servers.first()
-            host_ip = server.host_ip
-            hosts = [host_ip]
-            private_key = server.private_key
-            playbook = [{"hosts": host_ip,
-                         "connection": "local", # @ToDo: Don't assume this
-                         "remote_user": server.remote_user,
-                         "become_method": "sudo",
-                         #"become_user": "root",
-                         "vars": {"appname": appname,
-                                  "all_sites": ",".join(all_sites),
-                                  "db_ip": host_ip,
-                                  "db_type": db_type,
-                                  "hostname": hostname,
-                                  "password": db_password,
-                                  "protocol": protocol,
-                                  "sender": sender,
-                                  "sitename": sitename,
-                                  "start": start,
-                                  "template": template,
-                                  "type": instance_type,
-                                  "web_server": web_server,
-                                  },
-                         "roles": [{ "role": "%s/common" % roles_path },
-                                   { "role": "%s/%s" % (roles_path, web_server) },
-                                   { "role": "%s/uwsgi" % roles_path },
-                                   { "role": "%s/%s" % (roles_path, db_type) },
-                                   { "role": "%s/final" % roles_path },
-                                   ]
-                         },
-                        ]
+            playbook = []
+            if cloud_id:
+                # @ToDo: Will need extending when we support multiple Cloud Providers
+                access_key = aws.access_key
+                secret_key = aws.secret_key
+                aws_server = server["setup_aws_server"]
+                region = aws_server.region
+                server = server["setup_server"]
+                remote_user = server.remote_user
+                server_name = server.name
+                private_key = "/tmp/%s" % server_name
+                key_material = "%s.pub" % private_key
+                provided_key = server.private_key
+                if provided_key:
+                    delete_ssh_key = False
+                    provided_key = os.path.join(r.folder, "uploads", provided_key)
+                    # Generate the Public Key
+                    command = "openssl rsa -in %(provided_key)s -pubout > %(key_material)s" % \
+                        {provided_key: provided_key,
+                         key_material: key_material,
+                         }
+                    playbook.append({"hosts": "localhost",
+                                     "gather_facts": "no",
+                                     "tasks": [{"command": command,
+                                                },
+                                               ],
+                                     })
+                else:
+                    delete_ssh_key = True
+                    # Generate an OpenSSH keypair with the default values (4096 bits, rsa)
+                    playbook.append({"hosts": "localhost",
+                                     "gather_facts": "no",
+                                     "tasks": [{"openssh_keypair": {"path": private_key,
+                                                                    },
+                                                },
+                                               ],
+                                     })
+                # Upload Public Key to AWS
+                playbook.append({"hosts": "localhost",
+                                 "gather_facts": "no",
+                                 "tasks": [{"ec2_key": {"aws_access_key": access_key,
+                                                        "aws_secret_key": secret_key,
+                                                        "region": region,
+                                                        "name": server_name,
+                                                        "key_material": key_material,
+                                                        },
+                                            },
+                                           ],
+                                 })
+                if aws_server.instance_id:
+                    # Terminate old AWS instance
+                    # @ToDo: Allow deployment on existing instances?
+                    playbook.append({"hosts": "localhost",
+                                     "gather_facts": "no",
+                                     "tasks": [{"ec2": {"aws_access_key": access_key,
+                                                        "aws_secret_key": secret_key,
+                                                        "region": region,
+                                                        "instance_ids": aws_server.instance_id,
+                                                        "state": "absent",
+                                                        },
+                                                },
+                                               ],
+                                     })
+                # Launch AWS instance
+                command = "python web2py.py -S %(appname)s -M -R applications/%(appname)s/private/eden_deploy/tools/update_server.py -A %(server_id)s {{ item.id }} {{ item.public_ip }} %(server_name)s" % \
+                            {"appname": appname,
+                             "server_id": server.id,
+                             "server_name": server_name,
+                             }
+                playbook.append({"hosts": "localhost",
+                                 "gather_facts": "no",
+                                 "tasks": [# Launch AWS Instance
+                                           {"ec2": {"aws_access_key": access_key,
+                                                    "aws_secret_key": secret_key,
+                                                    "key_name": server_name,
+                                                    "region": region,
+                                                    "instance_type": aws_server.instance_type,
+                                                    "image": aws_server.image,
+                                                    "group": aws_server.security_group,
+                                                    "wait": "yes",
+                                                    "count": 1,
+                                                    "instance_tags": {"Name": server_name,
+                                                                      },
+                                                    },
+                                            "register": "ec2",
+                                            },
+                                           # Add new instance to host group (to associate private_key)
+                                           {"add_host": {"hostname": "{{ item.public_ip }}",
+                                                         "groupname": "launched",
+                                                         "ansible_ssh_private_key_file": server_name,
+                                                         },
+                                            "loop": "{{ ec2.instances }}",
+                                            },
+                                           # Update Server record
+                                           {"command": {"cmd": command,
+                                                        "chdir": "/home/prod",
+                                                        },
+                                            "become": "yes",
+                                            "become-user": "web2py",
+                                            "loop": "{{ ec2.instances }}",
+                                            },
+                                           ],
+                                  })
+                host_ip = "launched"
+                # Wait for Server to become available
+                playbook.append({"hosts": "launched",
+                                 "remote_user": remote_user,
+                                 "gather_facts": "no",
+                                 "tasks": [{"wait_for_connection": "",
+                                            },
+                                           ],
+                                 })
+            else:
+                delete_ssh_key = False
+                host_ip = server.host_ip
+                if host_ip != "127.0.0.1":
+                    # We will need the SSH key
+                    private_key = server.private_key
+                    if not private_key:
+                        # Abort
+                        current.session.error = current.T("Deployment failed: SSH Key needed when deploying away from localhost")
+                        redirect(URL(c="setup", f="deployment",
+                                     args = [deployment_id, "instance"],
+                                     ))
+                    # Add instance to host group (to associate private_key)
+                    host_ip = "launched"
+                    private_key = os.path.join(r.folder, "uploads", private_key)
+                    playbook.append({"hosts": "localhost",
+                                     "gather_facts": "no",
+                                     "tasks": [{"add_host": {"hostname": host_ip,
+                                                             "groupname": "launched",
+                                                             "ansible_ssh_private_key_file": private_key,
+                                                             },
+                                                },
+                                               ],
+                                     })
+            # Deploy to Server
+            playbook.append({"hosts": host_ip,
+                             #"connection": "local", # @ToDo: Don't assume this
+                             "remote_user": remote_user,
+                             "gather_facts": "no", # We do this manually by running 'setup' in the common role
+                             "become_method": "sudo",
+                             #"become_user": "root",
+                             "vars": {"appname": appname,
+                                      "all_sites": ",".join(all_sites),
+                                      "db_ip": "127.0.0.1",
+                                      "db_type": db_type,
+                                      "hostname": hostname,
+                                      "password": db_password,
+                                      "protocol": protocol,
+                                      "sender": sender,
+                                      "sitename": sitename,
+                                      "start": start,
+                                      "template": template,
+                                      "type": instance_type,
+                                      "web_server": web_server,
+                                      },
+                             "roles": [{"role": "%s/common" % roles_path },
+                                       {"role": "%s/%s" % (roles_path, web_server) },
+                                       {"role": "%s/uwsgi" % roles_path },
+                                       {"role": "%s/%s" % (roles_path, db_type) },
+                                       {"role": "%s/final" % roles_path },
+                                       ]
+                             })
+            if delete_ssh_key:
+                # Delete SSH private key from the filesystem
+                playbook.append({"hosts": "localhost",
+                                 "gather_facts": "no",
+                                 "tasks": [{"file": {"path": private_key,
+                                                     "state": "absent",
+                                                     },
+                                            },
+                                           ],
+                                 })
         else:
             # Separate Database
-            # @ToDo: Needs testing/completion
+            # @ToDo: Needs completing
+            # Abort
+            current.session.error = current.T("Deployment failed: Currently only All-in-one deployments supported with this tool")
+            redirect(URL(c="setup", f="deployment",
+                         args = [deployment_id, "instance"],
+                         ))
             for server in servers:
                 if server.role == 2:
                     db_ip = server.host_ip
@@ -1145,10 +1328,10 @@ dropdown.change(function() {
                                   "type": instance_type,
                                   "web_server": web_server,
                                   },
-                         "roles": [{ "role": "%s/common" % roles_path },
-                                   { "role": "%s/%s" % (roles_path, web_server) },
-                                   { "role": "%s/uwsgi" % roles_path },
-                                   { "role": "%s/final" % roles_path },
+                         "roles": [{"role": "%s/common" % roles_path },
+                                   {"role": "%s/%s" % (roles_path, web_server) },
+                                   {"role": "%s/uwsgi" % roles_path },
+                                   {"role": "%s/final" % roles_path },
                                    ],
                          },
                         ]
@@ -1163,7 +1346,6 @@ dropdown.change(function() {
                                          playbook,
                                          hosts,
                                          tags,
-                                         private_key,
                                          )
 
         # Run Playbook
@@ -1301,7 +1483,7 @@ dropdown.change(function() {
         appname = r.application
 
         playbook = [{"hosts": host,
-                     "connection": "local", # @ToDo: Don't assume this
+                     #"connection": "local", # @ToDo: Don't assume this
                      "remote_user": remote_user,
                      "become_method": "sudo",
                      #"become_user": "root",
@@ -1331,7 +1513,6 @@ dropdown.change(function() {
                                          playbook,
                                          [host],
                                          tags = None,
-                                         private_key = private_key,
                                          )
 
         # Run the Playbook
@@ -1420,7 +1601,7 @@ dropdown.change(function() {
                  })
 
         playbook = [{"hosts": host,
-                     "connection": "local", # @ToDo: Don't assume this
+                     #"connection": "local", # @ToDo: Don't assume this
                      "remote_user": remote_user,
                      "become_method": "sudo",
                      #"become_user": "root",
@@ -1434,7 +1615,6 @@ dropdown.change(function() {
                                          playbook,
                                          [host],
                                          tags = None,
-                                         private_key = private_key,
                                          )
 
         # Run the Playbook
@@ -2168,7 +2348,6 @@ def setup_write_playbook(playbook_name,
                          playbook_data,
                          hosts,
                          tags = None,
-                         private_key = None,
                          ):
     """
         Write an Ansible Playbook file
@@ -2201,13 +2380,11 @@ def setup_write_playbook(playbook_name,
     if tags:
         # only_tags
         task_vars["tags"] = tags
-    if private_key:
-        task_vars["private_key"] = os_path_join(folder, "uploads", private_key)
 
     return task_vars
 
 # =============================================================================
-def setup_run_playbook(playbook, hosts, tags=None, private_key=None):
+def setup_run_playbook(playbook, hosts, tags=None):
     """
         Run an Ansible Playbook & return the result
         - designed to be run as a Scheduled Task
@@ -2229,6 +2406,9 @@ def setup_run_playbook(playbook, hosts, tags=None, private_key=None):
     from ansible import context
     import ansible.constants as C
 
+    # @ToDo: Improve this...currently not easy to find this data if something goes wrong
+    # e.g. Update scheduler_run.run_output or run_result
+    # (If this happens during a deploy from co-app and after nginx has replaced co-app on Port 80 then revert to co-app)
     class ResultCallback(CallbackBase):
         def v2_runner_on_ok(self, result, **kwargs):
             host = result._host
@@ -2242,14 +2422,18 @@ def setup_run_playbook(playbook, hosts, tags=None, private_key=None):
     os.chdir(roles_path)
 
     # Since the API is constructed for CLI it expects certain options to always be set in the context object
-    context.CLIARGS = ImmutableDict(connection = "local",
+    #if tags is not None:
+    #    tags = ",".join(tags)
+    context.CLIARGS = ImmutableDict(#connection = "local",
                                     module_path = [roles_path],
                                     forks = 10,
                                     become = None,
                                     become_method = None,
                                     become_user = None,
                                     check = False,
-                                    diff = False)
+                                    diff = False,
+                                    tags = tags,
+                                    )
 
     # Initialize needed objects
     loader = DataLoader() # Takes care of finding and reading yaml, json and ini files
@@ -2429,7 +2613,7 @@ def setup_instance_method(instance_id, method="start"):
     roles_path = os.path.join(current.request.folder, "private", "eden_deploy", "roles")
 
     playbook = [{"hosts": host,
-                 "connection": "local", # @ToDo: Don't assume this
+                 #"connection": "local", # @ToDo: Don't assume this
                  "remote_user": server.remote_user,
                  "become_method": "sudo",
                  #"become_user": "root",
@@ -2448,7 +2632,6 @@ def setup_instance_method(instance_id, method="start"):
                                      playbook,
                                      [host],
                                      tags = None,
-                                     private_key = server.private_key,
                                      )
 
     # Run the Playbook
