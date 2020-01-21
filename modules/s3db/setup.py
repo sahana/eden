@@ -2411,6 +2411,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
         hosts = ["127.0.0.1"]
 
     # Logging
+    # @ToDo: Investigate why this isn't working
     db = current.db
     W2P_TASK = current.W2P_TASK
     table = current.s3db.scheduler_run
@@ -2427,7 +2428,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
                 current.s3task.scheduler.stop_task(W2P_TASK.id)
 
         def v2_runner_on_failed(self, result, ignore_errors=False):
-            host = result._host.get_name()
+            #host = result._host.get_name()
             jsonified_results = self._dump_results(result)
             record = db(query).select(ifield,
                                       rfield,
@@ -2436,7 +2437,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
             record.update_record(run_result = "%s\%s" % (record.run_result, jsonified_results))
 
         def v2_runner_on_ok(self, result):
-            host = result._host.get_name()
+            #host = result._host.get_name()
             jsonified_results = self._dump_results(result)
             record = db(query).select(ifield,
                                       ofield,
@@ -2445,7 +2446,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
             record.update_record(run_output = "%s\%s" % (record.run_output, jsonified_results))
 
         def v2_runner_on_unreachable(self, result):
-            host = result._host.get_name()
+            #host = result._host.get_name()
             jsonified_results = self._dump_results(result)
             record = db(query).select(ifield,
                                       rfield,
