@@ -55,7 +55,7 @@ from gluon import current, redirect, URL, \
 from gluon.storage import Storage, Messages
 from gluon.tools import callback, fetch
 
-from s3compat import pickle, StringIO, basestring, urllib2, urlopen, HTTPError, URLError
+from s3compat import basestring, pickle, urllib2, urlopen, BytesIO, StringIO, HTTPError, URLError
 from s3dal import Field
 from .s3datetime import s3_utc
 from .s3rest import S3Method, S3Request
@@ -4679,7 +4679,7 @@ class S3BulkImporter(object):
                 except IOError:
                     current.log.error("Unable to open image file %s" % image)
                     continue
-                image_source = StringIO(openFile.read())
+                image_source = BytesIO(openFile.read())
                 # Get the id of the resource
                 query = base_query & (idfield == row["id"])
                 record = db(query).select(limitby = (0, 1),
@@ -4761,7 +4761,7 @@ class S3BulkImporter(object):
 
         if extension == "gz":
             import tarfile
-            tf = tarfile.open(fileobj=StringIO(_file))
+            tf = tarfile.open(fileobj = StringIO(_file))
             tf.extractall()
 
         elif extension == "zip":
