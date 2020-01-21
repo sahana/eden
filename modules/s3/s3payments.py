@@ -51,6 +51,65 @@ class S3Payments(S3Method):
     pass
 
 # =============================================================================
+class S3PaymentLog(object):
+    """
+        Simple log writer for Payment Service Adapters
+    """
+
+    def __init__(self, service_id):
+        """
+            Constructor
+
+            @param service_id: the fin_payment_service record ID
+        """
+        self.service_id = service_id
+
+    # -------------------------------------------------------------------------
+    def write(self, action, result, reason):
+        """
+            Add a log entry
+
+            @param action: description of the attempted action
+            @param result: result of the action
+            @param reason: reason for the result (e.g. error message)
+
+            NB: Logging process must either explicitly commit before
+                raising an exception, or catch+resolve all exceptions,
+                otherwise the log entries will be rolled back
+        """
+
+        if not action or not result:
+            return
+
+        table = current.s3db.fin_payment_log
+        table.insert(date = datetime.datetime.utcnow(),
+                     service_id = self.service_id,
+                     action = action,
+                     result = result,
+                     reason = reason,
+                     )
+
+        if result in ("ERROR", "FATAL"):
+            # Support debugging by additionally logging critical
+            # errors in log file (if enabled), in case a subsequent
+            # uncaught exception would roll back the DB log entry
+            current.log.error("Payment Services: '%s' failed due to '%s'" % (action, reason))
+
+    # -------------------------------------------------------------------------
+    # Shortcuts
+    #
+    def info(self, action, reason):
+        self.write(action, "INFO", reason)
+    def success(self, action, reason):
+        self.write(action, "SUCCESS", reason)
+    def warning(self, action, reason):
+        self.write(action, "WARNING", reason)
+    def error(self, action, reason):
+        self.write(action, "ERROR", reason)
+    def fatal(self, action, reason):
+        self.write(action, "FATAL", reason)
+
+# =============================================================================
 class S3PaymentService(object):
     """ Online Payment Service (base class) """
 
@@ -67,6 +126,7 @@ class S3PaymentService(object):
 
         # Store service config record ID
         self.service_id = row.id
+        self.log = S3PaymentLog(self.service_id)
 
         # Store attributes
         self.base_url = row.base_url
@@ -84,7 +144,13 @@ class S3PaymentService(object):
     # API Functions (to be implemented by subclasses)
     # -------------------------------------------------------------------------
     def get_access_token(self):
-        # TODO docstring
+        """
+            Retrieve and store a new access token for Token-Auth using
+            current username (=client_id) and password (=client_secret);
+            to be called implicitly by http() if/when required
+
+            @returns: the new access token if successful, otherwise None
+        """
 
         raise NotImplementedError
 
@@ -122,7 +188,7 @@ class S3PaymentService(object):
 
         base_url = self.base_url
         if not base_url:
-            raise RuntimeError("No base URL set")
+            return None, None, "No base URL set"
 
         url = base_url.rstrip("/")
         if path:
@@ -173,7 +239,7 @@ class S3PaymentService(object):
             error = e.reason
             if not error:
                 error = "Unknown network error"
-        except:
+        except Exception:
             # Other Error
             error = sys.exc_info()[1]
         else:
@@ -331,6 +397,8 @@ class PayPalAdapter(S3PaymentService):
             @returns: the new access token
         """
 
+        action = "Get Access Token"
+
         username = self.username
         password = self.password
 
@@ -345,14 +413,14 @@ class PayPalAdapter(S3PaymentService):
                                               decode = "json",
                                               )
             if error:
-                # TODO log
+                self.log.error(action, error)
                 return None
 
             if credentials:
                 try:
                     access_token = credentials["access_token"]
                 except (KeyError, TypeError):
-                    # TODO log
+                    self.log.error(action, "No access token received")
                     return None
 
                 ttl = credentials.get("expires_in")
@@ -374,10 +442,13 @@ class PayPalAdapter(S3PaymentService):
                 self.access_token = access_token
                 self.token_expiry_date = token_expiry_date
 
-                # TODO log
+                self.log.success(action, "Access token received")
                 return self.access_token
+            else:
+                self.log.error(action, "No credentials received")
+        else:
+            self.log.error(action, "Lacking client ID/secret to fetch access token")
 
-        # TODO log
         return None
 
 # END =========================================================================

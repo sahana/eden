@@ -26,6 +26,6 @@ def expense():
 def payment_service():
     """ Payment Services: RESTful CRUD controller """
 
-    return s3_rest_controller()
+    return s3_rest_controller(rheader = s3db.fin_rheader)
 
 # END =========================================================================

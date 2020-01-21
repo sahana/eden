@@ -29,6 +29,7 @@
 
 __all__ = ("FinExpensesModel",
            "FinPaymentServiceModel",
+           "fin_rheader",
            )
 
 from gluon import *
@@ -150,7 +151,7 @@ class FinPaymentServiceModel(S3Model):
     """ Model for Payment Services """
 
     names = ("fin_payment_service",
-             #"fin_payment_log", # TODO
+             "fin_payment_log",
              )
 
     def model(self):
@@ -248,6 +249,25 @@ class FinPaymentServiceModel(S3Model):
                                      sortby = "name",
                                      )
 
+        self.add_components(tablename,
+                            fin_payment_log = "service_id",
+                            )
+
+        # -------------------------------------------------------------------------
+        # Payments Log
+        #
+        tablename = "fin_payment_log"
+        self.define_table(tablename,
+                          service_id(empty = False,
+                                     ondelete = "CASCADE",
+                                     ),
+                          s3_datetime(default="now",
+                                      ),
+                          Field("action"),
+                          Field("result"),
+                          Field("reason"),
+                          *s3_meta_fields())
+
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #
@@ -268,5 +288,46 @@ class FinPaymentServiceModel(S3Model):
 
         return {"fin_service_id": lambda **attr: dummy("service_id"),
                 }
+
+# =============================================================================
+def fin_rheader(r, tabs=None):
+    """ FIN Resource Headers """
+
+    if r.representation != "html":
+        # Resource headers only used in interactive views
+        return None
+
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
+    else:
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+
+        T = current.T
+        if tablename == "fin_payment_service":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Log"), "payment_log"),
+                        ]
+
+            rheader_fields = [["organisation_id",
+                               "api_type",
+                               ],
+                              ]
+
+        # Generate rheader XML
+        rheader = S3ResourceHeader(rheader_fields, tabs)(
+                        r,
+                        table = resource.table,
+                        record = record,
+                        )
+
+    return rheader
 
 # END =========================================================================
