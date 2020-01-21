@@ -2406,15 +2406,51 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
     import ansible.constants as C
 
     if hosts is None:
+        # NB This is the only current usecase as we always start on localhost
+        #    - remote servers are then accessed once we have the SSH private_key available
         hosts = ["127.0.0.1"]
 
-    # @ToDo: Improve this...currently not easy to find this data if something goes wrong
-    # e.g. Update scheduler_run.run_output or run_result
-    # (If this happens during a deploy from co-app and after nginx has replaced co-app on Port 80 then revert to co-app)
+    # Logging
+    db = current.db
+    table = current.s3db.scheduler_run
+    ifield = table.id
+    ofield = table.run_output
+    rfield = table.run_result
+    query = (ifield == W2P_TASK.run_id)
+
     class ResultCallback(CallbackBase):
-        def v2_runner_on_ok(self, result, **kwargs):
-            host = result._host
-            current.log.debug(json.dumps({host.name: result._result}, indent=4))
+        def _handle_exception(result, use_stderr=False):
+             if "exception" in result:
+                # @ToDo: If this happens during a deploy from co-app and after nginx has replaced co-app on Port 80 then revert to co-app
+                db(query).update(traceback = result["exception"])
+                current.s3task.scheduler.stop_task(W2P_TASK.id)
+
+        def v2_runner_on_failed(self, result, ignore_errors=False):
+            host = result._host.get_name()
+            jsonified_results = self._dump_results(result)
+            record = db(query).select(ifield,
+                                      rfield,
+                                      limitby = (0, 1)
+                                      ).first()
+            record.update_record(run_result = "%s\%s" % (record.run_result, jsonified_results))
+
+        def v2_runner_on_ok(self, result):
+            host = result._host.get_name()
+            jsonified_results = self._dump_results(result)
+            record = db(query).select(ifield,
+                                      ofield,
+                                      limitby = (0, 1)
+                                      ).first()
+            record.update_record(run_output = "%s\%s" % (record.run_output, jsonified_results))
+
+        def v2_runner_on_unreachable(self, result):
+            host = result._host.get_name()
+            jsonified_results = self._dump_results(result)
+            record = db(query).select(ifield,
+                                      rfield,
+                                      limitby = (0, 1)
+                                      ).first()
+            record.update_record(run_result = "%s\%s" % (record.run_result, jsonified_results))
 
     # Copy the current working directory to revert back to later
     cwd = os.getcwd()
@@ -2426,8 +2462,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
     # Since the API is constructed for CLI it expects certain options to always be set in the context object
     if tags is None:
         tags = [] # Needs to be an iterable
-    context.CLIARGS = ImmutableDict(#connection = "local",
-                                    module_path = [roles_path],
+    context.CLIARGS = ImmutableDict(module_path = [roles_path],
                                     forks = 10,
                                     become = None,
                                     become_method = None,
