@@ -1042,6 +1042,8 @@ dropdown.change(function() {
                 sender = instance.sender
                 start = instance.start
                 instance_type = instance.type
+            if instance.type == 1:
+                sitename_prod = url
 
         # Default to SSL
         # (plain http requests will still work as automatically redirected to https)
@@ -1266,6 +1268,7 @@ dropdown.change(function() {
                                       "protocol": protocol,
                                       "sender": sender,
                                       "sitename": sitename,
+                                      "sitename_prod": sitename_prod,
                                       "start": start,
                                       "template": template,
                                       "type": instance_type,
@@ -2411,7 +2414,6 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
         hosts = ["127.0.0.1"]
 
     # Logging
-    # @ToDo: Investigate why this isn't working
     db = current.db
     W2P_TASK = current.W2P_TASK
     table = current.s3db.scheduler_run
@@ -2422,6 +2424,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
 
     class ResultCallback(CallbackBase):
         def _handle_exception(result, use_stderr=False):
+             # @ToDo: Investigate why this isn't working
              if "exception" in result:
                 # @ToDo: If this happens during a deploy from co-app and after nginx has replaced co-app on Port 80 then revert to co-app
                 db(query).update(traceback = result["exception"])
@@ -2429,30 +2432,33 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
 
         def v2_runner_on_failed(self, result, ignore_errors=False):
             #host = result._host.get_name()
-            jsonified_results = self._dump_results(result)
+            jsonified_results = self._dump_results(result._result, indent=4)
             record = db(query).select(ifield,
                                       rfield,
                                       limitby = (0, 1)
                                       ).first()
-            record.update_record(run_result = "%s\%s" % (record.run_result, jsonified_results))
+            record.update_record(run_result = "%s\%s" % (record.run_result,
+                                                         jsonified_results))
 
         def v2_runner_on_ok(self, result):
             #host = result._host.get_name()
-            jsonified_results = self._dump_results(result)
+            jsonified_results = self._dump_results(result._result, indent=4)
             record = db(query).select(ifield,
                                       ofield,
                                       limitby = (0, 1)
                                       ).first()
-            record.update_record(run_output = "%s\%s" % (record.run_output, jsonified_results))
+            record.update_record(run_output = "%s\%s" % (record.run_output,
+                                                         jsonified_results))
 
         def v2_runner_on_unreachable(self, result):
             #host = result._host.get_name()
-            jsonified_results = self._dump_results(result)
+            jsonified_results = self._dump_results(result._result, indent=4)
             record = db(query).select(ifield,
                                       rfield,
                                       limitby = (0, 1)
                                       ).first()
-            record.update_record(run_result = "%s\%s" % (record.run_result, jsonified_results))
+            record.update_record(run_result = "%s\%s" % (record.run_result,
+                                                         jsonified_results))
 
     # Copy the current working directory to revert back to later
     cwd = os.getcwd()
@@ -2494,7 +2500,8 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
 
     # Load Playbook
     with open(playbook, "r") as yaml_file:
-        play_source = yaml.load(yaml_file)[0]
+        # https://msg.pyyaml.org/load
+        play_source = yaml.full_load(yaml_file)[0]
 
     # Create play object, playbook objects use .load instead of init or new methods,
     # this will also automatically create the task objects from the info provided in play_source
