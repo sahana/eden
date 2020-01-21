@@ -1033,6 +1033,15 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def fin():
+        """ FINANCES """
+
+        return M(c="fin")(
+                    M("Payment Services", f="payment_service"),
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def fire():
         """ FIRE """
 
