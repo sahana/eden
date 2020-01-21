@@ -1,4 +1,5 @@
 uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes,
+ANONYMOUS,Anonymous,,,,org_organisation,,READ,,,,,Required for self-registration,
 ANONYMOUS,Anonymous,,,,org_organisation_organisation_type,,READ,,,,,Required for self-registration,
 ANONYMOUS,Anonymous,,org,sites_for_org,,,READ,,,,,Required for self-registration,
 AUTHENTICATED,Authenticated,,default,person,,,READ|CREATE|UPDATE,,,,,,

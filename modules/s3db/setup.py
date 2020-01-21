@@ -2412,6 +2412,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
 
     # Logging
     db = current.db
+    W2P_TASK = current.W2P_TASK
     table = current.s3db.scheduler_run
     ifield = table.id
     ofield = table.run_output
