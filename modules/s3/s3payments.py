@@ -352,26 +352,30 @@ class S3PaymentService(object):
             @param service_id: the fin_payment_service record ID
         """
 
-        # TODO Check permissions
-        # Current user must have read-permission for this record
-        # - use accessible_query? or just has_permission? or resource.select?
-
         # Load service configuration
-        table = current.s3db.fin_payment_service
-        row = current.db(table.id == service_id).select(table.id,
-                                                        table.api_type,
-                                                        table.base_url,
-                                                        table.use_proxy,
-                                                        table.proxy,
-                                                        table.username,
-                                                        table.password,
-                                                        table.token_type,
-                                                        table.access_token,
-                                                        table.token_expiry_date,
-                                                        limitby = (0, 1),
-                                                        ).first()
-        if not row:
+        # - resource.select implies READ permission required,
+        #   so access to service config can be restricted to
+        #   certain user roles and realms
+        resource = current.s3db.resource("fin_payment_service",
+                                         id = service_id,
+                                         )
+        rows = resource.select(["id",
+                                "api_type",
+                                "base_url",
+                                "use_proxy",
+                                "proxy",
+                                "username",
+                                "password",
+                                "token_type",
+                                "access_token",
+                                "token_expiry_date",
+                                ],
+                                limit = 1,
+                                as_rows = True,
+                                )
+        if not rows:
             raise KeyError("Payment service configuration #%s not found" % service_id)
+        row = rows[0]
 
         # Get adapter for API type
         adapters = {"PAYPAL": PayPalAdapter,
