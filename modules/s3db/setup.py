@@ -1229,7 +1229,18 @@ dropdown.change(function() {
                 delete_ssh_key = False
                 remote_user = server.remote_user
                 host_ip = server.host_ip
+                # Check if DNS is already configured properly
+                import socket
+                try:
+                    ip_addr = socket.gethostbyname(sitename)
+                except socket.gaierror:
+                    current.session.warning = current.T("Deployment will not have SSL: URL doesn't resolve in DNS")
+                    protocol = "http"
                 if host_ip != "127.0.0.1":
+                    # We may wish to administer via a private IP, so shouldn't do this:
+                    #if protocol == "https" and ip_addr != host_ip:
+                    #    current.session.warning = current.T("Deployment will not have SSL: URL doesn't match server IP Address")
+                    #    protocol = "http"
                     # We will need the SSH key
                     connection = "smart"
                     private_key = server.private_key
@@ -1253,6 +1264,7 @@ dropdown.change(function() {
                                      })
                 else:
                     connection = "local"
+                    
             # Deploy to Server
             playbook.append({"hosts": host_ip,
                              "connection": connection,
