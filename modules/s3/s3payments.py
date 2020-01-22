@@ -93,20 +93,24 @@ class S3PaymentLog(object):
             # Support debugging by additionally logging critical
             # errors in log file (if enabled), in case a subsequent
             # uncaught exception would roll back the DB log entry
-            current.log.error("Payment Services: '%s' failed due to '%s'" % (action, reason))
+            if reason:
+                msg = "'%s' failed [%s]" % (action, reason)
+            else:
+                msg = "'%s' failed" % action
+            current.log.error("Payment Service #%s: %s" % (self.service_id, msg))
 
     # -------------------------------------------------------------------------
     # Shortcuts
     #
-    def info(self, action, reason):
+    def info(self, action, reason=None):
         self.write(action, "INFO", reason)
-    def success(self, action, reason):
+    def success(self, action, reason=None):
         self.write(action, "SUCCESS", reason)
-    def warning(self, action, reason):
+    def warning(self, action, reason=None):
         self.write(action, "WARNING", reason)
-    def error(self, action, reason):
+    def error(self, action, reason=None):
         self.write(action, "ERROR", reason)
-    def fatal(self, action, reason):
+    def fatal(self, action, reason=None):
         self.write(action, "FATAL", reason)
 
 # =============================================================================
@@ -120,12 +124,10 @@ class S3PaymentService(object):
             @param row: the fin_payment_service Row
         """
 
-        # TODO perhaps not necessary:
-        if not row:
-            raise SyntaxError("Payment service configuration required")
-
         # Store service config record ID
         self.service_id = row.id
+
+        # Instantiate log writer
         self.log = S3PaymentLog(self.service_id)
 
         # Store attributes
@@ -151,12 +153,15 @@ class S3PaymentService(object):
 
             @returns: the new access token if successful, otherwise None
         """
-
         raise NotImplementedError
 
     def get_user_info(self):
-        # TODO docstring
+        """
+            Retrieve user information from this service; for account
+            verification and API testing (implementation optional)
 
+            @returns: a dict with user details
+        """
         raise NotImplementedError
 
     # -------------------------------------------------------------------------
@@ -197,15 +202,16 @@ class S3PaymentService(object):
             url = "?".join((url, urlencode(args)))
 
         # Generate the Request
-        req = urllib2.Request(url = url,
-                              method = method,
-                              )
+        if PY2:
+            req = urllib2.Request(url)
+            req.get_method = lambda: method
+        else:
+            req = urllib2.Request(url = url, method = method)
 
         # Request data
         if method == "GET":
             request_data = None
         elif data:
-            # TODO Py2 compat
             if encode == "json":
                 request_data = json.dumps(data).encode("utf-8")
                 req.add_header("Content-Type", "application/json")
@@ -233,7 +239,7 @@ class S3PaymentService(object):
         except HTTPError as e:
             # HTTP error status
             status = e.code
-            error = e.read()
+            error = s3_str(e.read())
         except URLError as e:
             # Network Error
             error = e.reason
@@ -252,8 +258,7 @@ class S3PaymentService(object):
                 except JSONERRORS:
                     error = sys.exc_info()[1]
             elif decode == "text":
-                # TODO Py2 compat
-                output = f.read().decode("utf-8")
+                output = s3_str(f.read())
             else:
                 # return the stream as-is
                 output = f
@@ -385,9 +390,27 @@ class PayPalAdapter(S3PaymentService):
 
     # -------------------------------------------------------------------------
     def get_user_info(self):
-        # TODO implement
+        """
+            Retrieve user information (of the config owner)
 
-        raise NotImplementedError
+            @returns: a dict with user details
+        """
+
+        action = "Get User Info"
+
+        userinfo, _, error = self.http(method = "GET",
+                                       path = "/v1/identity/oauth2/userinfo",
+                                       args = {"schema": "paypalv1.1"},
+                                       auth = "Token",
+                                       decode = "json",
+                                       )
+        if error:
+            self.log.error(action, error)
+            return None
+        else:
+            self.log.success(action)
+
+        return userinfo
 
     # -------------------------------------------------------------------------
     def get_access_token(self):
@@ -442,7 +465,7 @@ class PayPalAdapter(S3PaymentService):
                 self.access_token = access_token
                 self.token_expiry_date = token_expiry_date
 
-                self.log.success(action, "Access token received")
+                self.log.success(action)
                 return self.access_token
             else:
                 self.log.error(action, "No credentials received")
