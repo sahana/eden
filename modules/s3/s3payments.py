@@ -323,8 +323,7 @@ class S3PaymentService(object):
             pass
 
         if auth and username and password:
-            # Add a HTTP-401-handler (if pre-emptive Auth not acceptable)
-            # TODO do this only if no pre-emptive Auth
+            # Add a HTTP-401-handler as fallback in case pre-emptive auth fails
             passwd_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
             passwd_manager.add_password(realm = None,
                                         uri = req.get_full_url(),
