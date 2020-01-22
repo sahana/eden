@@ -437,7 +437,7 @@ if has_module("setup"):
 
         # Run the Task & return the result
         result = s3db.setup_run_playbook(playbook, tags, hosts)
-        #db.commit()
+        db.commit()
         return result
 
     tasks["setup_run_playbook"] = setup_run_playbook

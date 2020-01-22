@@ -2403,10 +2403,13 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
     from ansible.vars.manager import VariableManager
     from ansible.inventory.manager import InventoryManager
     from ansible.playbook.play import Play
+    from ansible.playbook.task_include import TaskInclude
     from ansible.executor.task_queue_manager import TaskQueueManager
     from ansible.plugins.callback import CallbackBase
     from ansible import context
     import ansible.constants as C
+
+    W2P_TASK = current.W2P_TASK
 
     if hosts is None:
         # NB This is the only current usecase as we always start on localhost
@@ -2414,55 +2417,115 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
         hosts = ["127.0.0.1"]
 
     # Logging
-    # @ToDo: Investigate why this isn't working
-    db = current.db
-    W2P_TASK = current.W2P_TASK
-    table = current.s3db.scheduler_run
-    ifield = table.id
-    ofield = table.run_output
-    query = (ifield == W2P_TASK.run_id)
+    class PlayLogger:
+        """
+            Store log output in a single String object.
+            We create a new object per Ansible run
+        """
+        def __init__(self):
+            self.log = ""
+
+        def append(self, log_line):
+            """ Append to log """
+            self.log += log_line + "\n\n"
+
+    logger = PlayLogger()
 
     class ResultCallback(CallbackBase):
-        def _handle_exception(result, use_stderr=False):
-             # @ToDo: Investigate why this isn't working
-             if "exception" in result:
+        CALLBACK_VERSION = 2.0
+        CALLBACK_TYPE = "stored"
+        CALLBACK_NAME = "database"
+
+        def __init__(self):
+
+            self._last_task_banner = None
+            self._last_task_name = None
+            self._task_type_cache = {}
+            super(ResultCallback, self).__init__()
+
+        @staticmethod
+        def _handle_exception(result):
+            # Catch an exception
+            # This may never be called because default handler deletes
+            # the exception, since Ansible thinks it knows better
+            traceback = result.get("exception")
+            if traceback:
+                # Extract the error message and log it
+                error = traceback.strip().split("\n")[-1]
+                logger.append(error)
+                # Remove the exception from the result so it's not shown every time
+                del result._result["exception"]
+                #current.s3task.scheduler.stop_task(W2P_TASK.id)
                 # @ToDo: If this happens during a deploy from co-app and after nginx has replaced co-app on Port 80 then revert to co-app
-                db(query).update(traceback = result["exception"])
-                db.commit()
-                current.s3task.scheduler.stop_task(W2P_TASK.id)
+
+        def _print_task_banner(self, task):
+            args = u", ".join(u"%s=%s" % a for a in task.args.items())
+            prefix = self._task_type_cache.get(task._uuid, "TASK")
+
+            # Use cached task name
+            task_name = self._last_task_name
+            if task_name is None:
+                task_name = task.get_name().strip()
+
+            logger.append(u"%s [%s %s]" % (prefix, task_name, args))
 
         def v2_runner_on_failed(self, result, ignore_errors=False):
-            #host = result._host.get_name()
-            jsonified_results = self._dump_results(result._result, indent=4)
-            record = db(query).select(ifield,
-                                      ofield,
-                                      limitby = (0, 1)
-                                      ).first()
-            record.update_record(run_output = "%s\%s" % (record.run_output,
-                                                         jsonified_results))
-            db.commit()
+            if self._last_task_banner != result._task._uuid:
+                self._print_task_banner(result._task)
+
+            self._handle_exception(result._result)
+
+            if result._task.loop and "results" in result._result:
+                self._process_items(result)
+            else:
+                logger.append("fatal: [%s]: FAILED! => %s" % (result._host.get_name(), self._dump_results(result._result, indent=4)))
 
         def v2_runner_on_ok(self, result):
-            #host = result._host.get_name()
-            jsonified_results = self._dump_results(result._result, indent=4)
-            record = db(query).select(ifield,
-                                      ofield,
-                                      limitby = (0, 1)
-                                      ).first()
-            record.update_record(run_output = "%s\%s" % (record.run_output,
-                                                         jsonified_results))
-            db.commit()
+            if isinstance(result._task, TaskInclude):
+                return
+            if self._last_task_banner != result._task._uuid:
+                self._print_task_banner(result._task)
+            if result._result.get("changed", False):
+                msg = "changed: [%s]" % result._host.get_name()
+            else:
+                msg = "ok: [%s]" % result._host.get_name()
 
+            if result._task.loop and "results" in result._result:
+                self._process_items(result)
+            else:
+                self._clean_results(result._result, result._task.action)
+                msg += " => %s" % self._dump_results(result._result, indent=4)
+                logger.log(msg)
+                
         def v2_runner_on_unreachable(self, result):
-            #host = result._host.get_name()
-            jsonified_results = self._dump_results(result._result, indent=4)
-            record = db(query).select(ifield,
-                                      ofield,
-                                      limitby = (0, 1)
-                                      ).first()
-            record.update_record(run_output = "%s\%s" % (record.run_output,
-                                                         jsonified_results))
-            db.commit()
+            if self._last_task_banner != result._task._uuid:
+                self._print_task_banner(result._task)
+            logger.log("fatal: [%s]: UNREACHABLE! => %s" % (result._host.get_name(), self._dump_results(result._result, indent=4)))
+
+        def v2_runner_item_on_failed(self, result):
+            if self._last_task_banner != result._task._uuid:
+                self._print_task_banner(result._task)
+
+            self._handle_exception(result._result)
+
+            msg = "failed: [%s]" % (result._host.get_name())
+
+            logger.log(msg + " (item=%s) => %s" % (self._get_item_label(result._result), self._dump_results(result._result, indent=4)))
+
+        def v2_runner_item_on_ok(self, result):
+            if isinstance(result._task, TaskInclude):
+                return
+            if self._last_task_banner != result._task._uuid:
+                self._print_task_banner(result._task)
+            if result._result.get("changed", False):
+                msg = "changed"
+            else:
+                msg = "ok"
+
+            msg += ": [%s]" % result._host.get_name()
+            msg += " => (item=%s)" % self._get_item_label(result._result)
+            msg += " => %s" % self._dump_results(result._result, indent=4)
+            logger.log(msg)
 
     # Copy the current working directory to revert back to later
     cwd = os.getcwd()
@@ -2523,7 +2586,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
                                # Use our custom callback instead of the ``default`` callback plugin, which prints to stdout
                                stdout_callback = results_callback,
                                )
-        result = tqm.run(play) # most interesting data for a play is actually sent to the callback's methods
+        result = tqm.run(play) # Most interesting data for a play is actually sent to the callback's methods
     finally:
         # we always need to cleanup child procs and the structures we use to communicate with them
         if tqm is not None:
@@ -2531,6 +2594,9 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
 
         # Remove ansible tmpdir
         shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
+
+    # Dump Logs to Database
+    current.db(current.s3db.scheduler_run.id == W2P_TASK.run_id).update(run_output = logger.log)
 
     # Change working directory back
     os.chdir(cwd)
