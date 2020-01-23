@@ -2591,32 +2591,38 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
     # Load Playbook
     with open(playbook, "r") as yaml_file:
         # https://msg.pyyaml.org/load
-        play_source = yaml.full_load(yaml_file)[0]
+        playbooks = yaml.full_load(yaml_file)
 
-    # Create play object, playbook objects use .load instead of init or new methods,
-    # this will also automatically create the task objects from the info provided in play_source
-    play = Play().load(play_source,
-                       variable_manager = variable_manager,
-                       loader = loader)
+    for play_source in playbooks:
+        # Create play object, playbook objects use .load instead of init or new methods,
+        # this will also automatically create the task objects from the info provided in play_source
+        play = Play().load(play_source,
+                           variable_manager = variable_manager,
+                           loader = loader)
 
-    # Run it - instantiate task queue manager, which takes care of forking and setting up all objects to iterate over host list and tasks
-    tqm = None
-    try:
-        tqm = TaskQueueManager(inventory = inventory,
-                               variable_manager = variable_manager,
-                               loader = loader,
-                               passwords = None,
-                               # Use our custom callback instead of the ``default`` callback plugin, which prints to stdout
-                               stdout_callback = results_callback,
-                               )
-        result = tqm.run(play) # Most interesting data for a play is actually sent to the callback's methods
-    finally:
-        # we always need to cleanup child procs and the structures we use to communicate with them
-        if tqm is not None:
-            tqm.cleanup()
+        # Run it - instantiate task queue manager, which takes care of forking and setting up all objects to iterate over host list and tasks
+        tqm = None
+        try:
+            tqm = TaskQueueManager(inventory = inventory,
+                                   variable_manager = variable_manager,
+                                   loader = loader,
+                                   passwords = None,
+                                   # Use our custom callback instead of the ``default`` callback plugin, which prints to stdout
+                                   stdout_callback = results_callback,
+                                   )
+            result = tqm.run(play) # Most interesting data for a play is actually sent to the callback's methods
+        finally:
+            # we always need to cleanup child procs and the structures we use to communicate with them
+            if tqm is not None:
+                tqm.cleanup()
 
-        # Remove ansible tmpdir
-        shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
+            # Remove ansible tmpdir
+            shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
+
+    # Dump Logs to File
+    with open(os.path.join("/", "tmp", "%s.log" % playbook.split(".")[0]), "w") as log_file:
+        log_file.write(W2P_TASK.run_id)
+        log_file.write(logger.log)
 
     # Dump Logs to Database
     current.db(current.s3db.scheduler_run.id == W2P_TASK.run_id).update(run_output = logger.log)
