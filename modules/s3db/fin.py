@@ -29,11 +29,14 @@
 
 __all__ = ("FinExpensesModel",
            "FinPaymentServiceModel",
+           "FinProductModel",
+           "FinSubscriptionModel",
            "fin_rheader",
            )
 
 from gluon import *
 from ..s3 import *
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class FinExpensesModel(S3Model):
@@ -139,11 +142,7 @@ class FinExpensesModel(S3Model):
             Return safe defaults in case the model has been deactivated.
         """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return {"fin_expense_id": lambda **attr: dummy("expense_id"),
+        return {"fin_expense_id": S3ReusableField.dummy("expense_id"),
                 }
 
 # =============================================================================
@@ -281,12 +280,151 @@ class FinPaymentServiceModel(S3Model):
             Return safe defaults in case the model has been deactivated.
         """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False,
-                                )
+        return {"fin_service_id": S3ReusableField.dummy("service_id"),
+                }
 
-        return {"fin_service_id": lambda **attr: dummy("service_id"),
+# =============================================================================
+class FinProductModel(S3Model):
+    """ Model to manage billable products/services """
+
+    names = ("fin_product",
+             "fin_product_id",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+
+        define_table = self.define_table
+        crud_strings = s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Products; represent billable products or services
+        #
+        tablename = "fin_product"
+        define_table(tablename,
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Product"),
+            title_display = T("Product Details"),
+            title_list = T("Products"),
+            title_update = T("Edit Product"),
+            label_list_button = T("List Products"),
+            label_delete_button = T("Delete Product"),
+            msg_record_created = T("Product created"),
+            msg_record_modified = T("Product updated"),
+            msg_record_deleted = T("Product deleted"),
+            msg_list_empty = T("No Products currently registered"),
+        )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, show_link=True)
+        product_id = S3ReusableField("product_id", "reference %s" % tablename,
+                                     label = T("Product"),
+                                     represent = represent,
+                                     requires = IS_ONE_OF(db, "%s.id" % tablename,
+                                                          represent,
+                                                          ),
+                                     sortby = "name",
+                                     comment = S3PopupLink(c="fin",
+                                                           f="product",
+                                                           tooltip=T("Create a new product"),
+                                                           ),
+                                     )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"fin_product_id": product_id,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        return {"fin_product_id": S3ReusableField.dummy("product_id"),
+                }
+
+# =============================================================================
+class FinSubscriptionModel(S3Model):
+    """ Model to manage subscription-based payments """
+
+    names = (#"fin_subscription_plan",    # TODO
+             #"fin_subscription",         # TODO
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+
+        define_table = self.define_table
+        crud_strings = s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Subscription Plans
+        #
+        tablename = "fin_subscription_plan"
+        define_table(tablename,
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Subscription Plan"),
+            title_display = T("Subscription Plan Details"),
+            title_list = T("Subscription Plans"),
+            title_update = T("Edit Subscription Plan"),
+            label_list_button = T("List Subscription Plans"),
+            label_delete_button = T("Delete Subscription Plan"),
+            msg_record_created = T("Subscription Plan created"),
+            msg_record_modified = T("Subscription Plan updated"),
+            msg_record_deleted = T("Subscription Plan deleted"),
+            msg_list_empty = T("No Subscription Plans currently registered"),
+        )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, show_link=True)
+        plan_id = S3ReusableField("plan_id", "reference %s" % tablename,
+                                  label = T("Plan"),
+                                  represent = represent,
+                                  requires = IS_ONE_OF(db, "%s.id" % tablename,
+                                                       represent,
+                                                       ),
+                                  sortby = "name",
+                                  #comment = S3PopupLink(c="fin",
+                                  #                      f="subscription_plan",
+                                  #                      tooltip=T("Create a new subscription plan"),
+                                  #                      ),
+                                  )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"fin_subscription_plan_id": plan_id,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        return {"fin_subscription_plan_id": S3ReusableField.dummy("plan_id"),
                 }
 
 # =============================================================================

@@ -213,6 +213,23 @@ class S3ReusableField(object):
         else:
             return Field(name, self.__type, **ia)
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def dummy(fname="dummy_id", ftype="integer"):
+        """
+            Provide a dummy reusable field; for safe defaults in models
+
+            @param name: override the dummy field name
+
+            @returns: a lambda with the same signature as a reusable field
+        """
+
+        return lambda name=fname, **attr: Field(name,
+                                                ftype,
+                                                readable = False,
+                                                writable = False,
+                                                )
+
 # =============================================================================
 class S3Represent(object):
     """
