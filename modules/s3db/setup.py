@@ -1134,6 +1134,7 @@ dropdown.change(function() {
                          key_material: key_material,
                          }
                     playbook.append({"hosts": "localhost",
+                                     "connection": "local",
                                      "gather_facts": "no",
                                      "tasks": [{"command": command,
                                                 },
@@ -1143,6 +1144,7 @@ dropdown.change(function() {
                     delete_ssh_key = True
                     # Generate an OpenSSH keypair with the default values (4096 bits, rsa)
                     playbook.append({"hosts": "localhost",
+                                     "connection": "local",
                                      "gather_facts": "no",
                                      "tasks": [{"openssh_keypair": {"path": private_key,
                                                                     },
@@ -1151,6 +1153,7 @@ dropdown.change(function() {
                                      })
                 # Upload Public Key to AWS
                 playbook.append({"hosts": "localhost",
+                                 "connection": "local",
                                  "gather_facts": "no",
                                  "tasks": [{"ec2_key": {"aws_access_key": access_key,
                                                         "aws_secret_key": secret_key,
@@ -1165,6 +1168,7 @@ dropdown.change(function() {
                     # Terminate old AWS instance
                     # @ToDo: Allow deployment on existing instances?
                     playbook.append({"hosts": "localhost",
+                                     "connection": "local",
                                      "gather_facts": "no",
                                      "tasks": [{"ec2": {"aws_access_key": access_key,
                                                         "aws_secret_key": secret_key,
@@ -1182,6 +1186,7 @@ dropdown.change(function() {
                              "server_name": server_name,
                              }
                 playbook.append({"hosts": "localhost",
+                                 "connection": "local",
                                  "gather_facts": "no",
                                  "tasks": [# Launch AWS Instance
                                            {"ec2": {"aws_access_key": access_key,
@@ -1219,6 +1224,7 @@ dropdown.change(function() {
                 host_ip = "launched"
                 # Wait for Server to become available
                 playbook.append({"hosts": "launched",
+                                 "connection": "smart",
                                  "remote_user": remote_user,
                                  "gather_facts": "no",
                                  "tasks": [{"wait_for_connection": "",
