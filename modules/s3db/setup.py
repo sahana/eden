@@ -1206,6 +1206,7 @@ dropdown.change(function() {
                                             "loop": "{{ ec2.instances }}",
                                             },
                                            # Update Server record
+                                           # NB A generic way to find out the Public IP is https://docs.ansible.com/ansible/latest/modules/ipify_facts_module.html
                                            {"command": {"cmd": command,
                                                         "chdir": "/home/prod",
                                                         },
@@ -1236,6 +1237,8 @@ dropdown.change(function() {
                 except socket.gaierror:
                     current.session.warning = current.T("Deployment will not have SSL: URL doesn't resolve in DNS")
                     protocol = "http"
+                # @ToDo Check that ip_addr is correct
+                #       - if host_ip == "127.0.0.1" then we can check the contents 
                 if host_ip != "127.0.0.1":
                     # We may wish to administer via a private IP, so shouldn't do this:
                     #if protocol == "https" and ip_addr != host_ip:
@@ -1287,9 +1290,10 @@ dropdown.change(function() {
                                       "web_server": web_server,
                                       },
                              "roles": [{"role": "%s/common" % roles_path },
-                                       {"role": "%s/%s" % (roles_path, web_server) },
-                                       {"role": "%s/uwsgi" % roles_path },
+                                       {"role": "%s/exim" % roles_path },
                                        {"role": "%s/%s" % (roles_path, db_type) },
+                                       {"role": "%s/uwsgi" % roles_path },
+                                       {"role": "%s/%s" % (roles_path, web_server) },
                                        {"role": "%s/final" % roles_path },
                                        ]
                              })
@@ -1348,8 +1352,9 @@ dropdown.change(function() {
                                   "web_server": web_server,
                                   },
                          "roles": [{"role": "%s/common" % roles_path },
-                                   {"role": "%s/%s" % (roles_path, web_server) },
+                                   {"role": "%s/exim" % roles_path },
                                    {"role": "%s/uwsgi" % roles_path },
+                                   {"role": "%s/%s" % (roles_path, web_server) },
                                    {"role": "%s/final" % roles_path },
                                    ],
                          },
@@ -2507,12 +2512,12 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
             else:
                 self._clean_results(result._result, result._task.action)
                 msg += " => %s" % self._dump_results(result._result, indent=4)
-                logger.log(msg)
+                logger.append(msg)
                 
         def v2_runner_on_unreachable(self, result):
             if self._last_task_banner != result._task._uuid:
                 self._print_task_banner(result._task)
-            logger.log("fatal: [%s]: UNREACHABLE! => %s" % (result._host.get_name(), self._dump_results(result._result, indent=4)))
+            logger.append("fatal: [%s]: UNREACHABLE! => %s" % (result._host.get_name(), self._dump_results(result._result, indent=4)))
 
         def v2_runner_item_on_failed(self, result):
             if self._last_task_banner != result._task._uuid:
@@ -2522,7 +2527,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
 
             msg = "failed: [%s]" % (result._host.get_name())
 
-            logger.log(msg + " (item=%s) => %s" % (self._get_item_label(result._result), self._dump_results(result._result, indent=4)))
+            logger.append(msg + " (item=%s) => %s" % (self._get_item_label(result._result), self._dump_results(result._result, indent=4)))
 
         def v2_runner_item_on_ok(self, result):
             if isinstance(result._task, TaskInclude):
@@ -2537,7 +2542,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
             msg += ": [%s]" % result._host.get_name()
             msg += " => (item=%s)" % self._get_item_label(result._result)
             msg += " => %s" % self._dump_results(result._result, indent=4)
-            logger.log(msg)
+            logger.append(msg)
 
     # Copy the current working directory to revert back to later
     cwd = os.getcwd()
