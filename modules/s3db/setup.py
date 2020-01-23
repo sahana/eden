@@ -693,6 +693,13 @@ class S3SetupModel(S3Model):
                               ) if opt else current.messages["NONE"],
                            writable = False,
                            ),
+                     Field("log_file", "upload",
+                           label = T("Log File"),
+                           length = current.MAX_FILENAME_LENGTH,
+                           requires = IS_EMPTY_OR(IS_UPLOAD_FILENAME()),
+                           uploadfolder = path_join(folder, "uploads"),
+                           writable = False,
+                           ),
                      # Has the Configuration Wizard been run?
                      Field("configured", "boolean",
                            default = False,
@@ -1180,8 +1187,9 @@ dropdown.change(function() {
                                                ],
                                      })
                 # Launch AWS instance
+                request = current.request
                 command = "python web2py.py -S %(appname)s -M -R applications/%(appname)s/private/eden_deploy/tools/update_server.py -A %(server_id)s {{ item.id }} {{ item.public_ip }} %(server_name)s" % \
-                            {"appname": appname,
+                            {"appname": request.application,
                              "server_id": server.id,
                              "server_name": server_name,
                              }
@@ -1213,7 +1221,7 @@ dropdown.change(function() {
                                            # Update Server record
                                            # NB A generic way to find out the Public IP is https://docs.ansible.com/ansible/latest/modules/ipify_facts_module.html
                                            {"command": {"cmd": command,
-                                                        "chdir": "/home/prod",
+                                                        "chdir": request.env.web2py_path,
                                                         },
                                             "become": "yes",
                                             "become_user": "web2py",
@@ -2433,7 +2441,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
     from ansible import context
     import ansible.constants as C
 
-    W2P_TASK = current.W2P_TASK
+    #W2P_TASK = current.W2P_TASK
 
     if hosts is None:
         # NB This is the only current usecase as we always start on localhost
@@ -2491,7 +2499,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
             if task_name is None:
                 task_name = task.get_name().strip()
 
-            logger.append(u"%s [%s %s]" % (prefix, task_name, args))
+            logger.append(u"%s: %s\n[%s]" % (prefix, task_name, args))
 
         def v2_runner_on_failed(self, result, ignore_errors=False):
             if self._last_task_banner != result._task._uuid:
@@ -2502,7 +2510,9 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
             if result._task.loop and "results" in result._result:
                 self._process_items(result)
             else:
-                logger.append("fatal: [%s]: FAILED! => %s" % (result._host.get_name(), self._dump_results(result._result, indent=4)))
+                logger.append("fatal: [%s]: FAILED!\n%s" % \
+                    (result._host.get_name(),
+                     self._dump_results(result._result, indent=4)))
 
         def v2_runner_on_ok(self, result):
             if isinstance(result._task, TaskInclude):
@@ -2518,13 +2528,15 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
                 self._process_items(result)
             else:
                 self._clean_results(result._result, result._task.action)
-                msg += " => %s" % self._dump_results(result._result, indent=4)
+                msg += "\n%s" % self._dump_results(result._result, indent=4)
                 logger.append(msg)
                 
         def v2_runner_on_unreachable(self, result):
             if self._last_task_banner != result._task._uuid:
                 self._print_task_banner(result._task)
-            logger.append("fatal: [%s]: UNREACHABLE! => %s" % (result._host.get_name(), self._dump_results(result._result, indent=4)))
+            logger.append("fatal: [%s]: UNREACHABLE!\n%s" % \
+                (result._host.get_name(),
+                 self._dump_results(result._result, indent=4)))
 
         def v2_runner_item_on_failed(self, result):
             if self._last_task_banner != result._task._uuid:
@@ -2534,7 +2546,9 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
 
             msg = "failed: [%s]" % (result._host.get_name())
 
-            logger.append(msg + " (item=%s) => %s" % (self._get_item_label(result._result), self._dump_results(result._result, indent=4)))
+            logger.append(msg + " (item=%s)\n%s" % \
+                (self._get_item_label(result._result),
+                 self._dump_results(result._result, indent=4)))
 
         def v2_runner_item_on_ok(self, result):
             if isinstance(result._task, TaskInclude):
@@ -2546,9 +2560,10 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
             else:
                 msg = "ok"
 
-            msg += ": [%s]" % result._host.get_name()
-            msg += " => (item=%s)" % self._get_item_label(result._result)
-            msg += " => %s" % self._dump_results(result._result, indent=4)
+            msg += ": [%s] (item=%s)\n%s" % \
+                (result._host.get_name(),
+                 self._get_item_label(result._result),
+                 self._dump_results(result._result, indent=4))
             logger.append(msg)
 
     # Copy the current working directory to revert back to later
@@ -2621,12 +2636,20 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
             shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
 
     # Dump Logs to File
-    with open(os.path.join("/", "tmp", "%s.log" % playbook.split(".")[0]), "w") as log_file:
-        log_file.write("run_id: %s\n\n" % W2P_TASK.run_id)
+    # Logging to eden/uploads/playbook instead of /tmp!?
+    log_file_name = "%s.log" % playbook.split(".")[0]
+    log_path = os.path.join("/", "tmp", log_file_name)
+    with open(log_path), "w") as log_file:
         log_file.write(logger.log)
 
     # Dump Logs to Database
-    current.db(current.s3db.scheduler_run.id == W2P_TASK.run_id).update(run_output = logger.log)
+    # This gets deleted:
+    #current.db(current.s3db.scheduler_run.id == W2P_TASK.run_id).update(run_output = logger.log)
+    with open(log_path, "r") as log_file:
+        field = current.s3db.setup_instance.log_file
+        field.store(log_file,
+                    log_file_name,
+                    field.uploadfolder)
 
     # Change working directory back
     os.chdir(cwd)
