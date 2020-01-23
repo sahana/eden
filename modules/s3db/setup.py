@@ -1152,7 +1152,6 @@ dropdown.change(function() {
                                                ],
                                      })
                 # Upload Public Key to AWS
-                # "code": "InvalidKey.Format", "message": "Key is not in valid OpenSSH public key format"
                 playbook.append({"hosts": "localhost",
                                  "connection": "local",
                                  "gather_facts": "no",
@@ -2622,7 +2621,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
 
     # Dump Logs to File
     with open(os.path.join("/", "tmp", "%s.log" % playbook.split(".")[0]), "w") as log_file:
-        log_file.write(W2P_TASK.run_id)
+        log_file.write(str(W2P_TASK.run_id))
         log_file.write(logger.log)
 
     # Dump Logs to Database
