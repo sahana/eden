@@ -1152,6 +1152,7 @@ dropdown.change(function() {
                                                ],
                                      })
                 # Upload Public Key to AWS
+                # "code": "InvalidKey.Format", "message": "Key is not in valid OpenSSH public key format"
                 playbook.append({"hosts": "localhost",
                                  "connection": "local",
                                  "gather_facts": "no",
@@ -1159,7 +1160,7 @@ dropdown.change(function() {
                                                         "aws_secret_key": secret_key,
                                                         "region": region,
                                                         "name": server_name,
-                                                        "key_material": key_material,
+                                                        "key_material": "{{ lookup('file', key_material) }}",
                                                         },
                                             },
                                            ],
@@ -1216,7 +1217,7 @@ dropdown.change(function() {
                                                         "chdir": "/home/prod",
                                                         },
                                             "become": "yes",
-                                            "become-user": "web2py",
+                                            "become_user": "web2py",
                                             "loop": "{{ ec2.instances }}",
                                             },
                                            ],
