@@ -219,7 +219,8 @@ class S3ReusableField(object):
         """
             Provide a dummy reusable field; for safe defaults in models
 
-            @param name: override the dummy field name
+            @param fname: the dummy field name
+            @param ftype: the dummy field type
 
             @returns: a lambda with the same signature as a reusable field
         """
