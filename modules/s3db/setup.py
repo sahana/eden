@@ -1206,7 +1206,7 @@ dropdown.change(function() {
                                            # Add new instance to host group (to associate private_key)
                                            {"add_host": {"hostname": "{{ item.public_ip }}",
                                                          "groupname": "launched",
-                                                         "ansible_ssh_private_key_file": server_name,
+                                                         "ansible_ssh_private_key_file": "/tmp/%s" % server_name,
                                                          },
                                             "loop": "{{ ec2.instances }}",
                                             },
@@ -2477,7 +2477,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
                 error = traceback.strip().split("\n")[-1]
                 logger.append(error)
                 # Remove the exception from the result so it's not shown every time
-                del result._result["exception"]
+                del result["exception"]
                 #current.s3task.scheduler.stop_task(W2P_TASK.id)
                 # @ToDo: If this happens during a deploy from co-app and after nginx has replaced co-app on Port 80 then revert to co-app
 
