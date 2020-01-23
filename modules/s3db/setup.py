@@ -2639,7 +2639,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
     # Logging to eden/uploads/playbook instead of /tmp!?
     log_file_name = "%s.log" % playbook.split(".")[0]
     log_path = os.path.join("/", "tmp", log_file_name)
-    with open(log_path), "w") as log_file:
+    with open(log_path, "w") as log_file:
         log_file.write(logger.log)
 
     # Dump Logs to Database
