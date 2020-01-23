@@ -727,6 +727,7 @@ class S3SetupModel(S3Model):
                                  "url",
                                  "start",
                                  "task_id",
+                                 "log_file",
                                  ],
                   )
 
@@ -1387,6 +1388,7 @@ dropdown.change(function() {
                                          )
 
         # Run Playbook
+        task_vars["instance_id"] = instance_id
         task_id = current.s3task.schedule_task(name,
                                                vars = task_vars,
                                                function_name = "setup_run_playbook",
@@ -1489,11 +1491,12 @@ dropdown.change(function() {
                                                      limitby = (0, 1)
                                                      ).first()
         new_value = setting.new_value
+        instance_id = setting.instance_id
 
         itable = s3db.setup_instance
-        instance = db(itable.id == setting.instance_id).select(itable.type,
-                                                               limitby = (0, 1)
-                                                               ).first()
+        instance = db(itable.id == instance_id).select(itable.type,
+                                                       limitby = (0, 1)
+                                                       ).first()
         instance_type = INSTANCE_TYPES[instance.type]
 
         # Lookup Server Details
@@ -1553,6 +1556,7 @@ dropdown.change(function() {
                                          )
 
         # Run the Playbook
+        task_vars["instance_id"] = instance_id
         current.s3task.schedule_task(name,
                                      vars = task_vars,
                                      function_name = "setup_run_playbook",
@@ -1654,6 +1658,7 @@ dropdown.change(function() {
                                          )
 
         # Run the Playbook
+        task_vars["instance_id"] = instance_id
         current.s3task.schedule_task(name,
                                      vars = task_vars,
                                      function_name = "setup_run_playbook",
@@ -2418,7 +2423,7 @@ def setup_write_playbook(playbook_name,
     return task_vars
 
 # =============================================================================
-def setup_run_playbook(playbook, tags=None, hosts=None):
+def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
     """
         Run an Ansible Playbook & return the result
         - designed to be run as a Scheduled Task
@@ -2645,11 +2650,15 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
     # Dump Logs to Database
     # This gets deleted:
     #current.db(current.s3db.scheduler_run.id == W2P_TASK.run_id).update(run_output = logger.log)
-    with open(log_path, "r") as log_file:
+
+    if instance_id:
+        # Upload logs to Database
         field = current.s3db.setup_instance.log_file
-        field.store(log_file,
-                    log_file_name,
-                    field.uploadfolder)
+        with open(log_path, "r") as log_file:
+            newfilename = field.store(log_file,
+                                      log_file_name,
+                                      field.uploadfolder)
+            current.db(current.setup_instance.id == instance_id).update(log_file = newfilename)
 
     # Change working directory back
     os.chdir(cwd)
@@ -2803,6 +2812,7 @@ def setup_instance_method(instance_id, method="start"):
                                      )
 
     # Run the Playbook
+    task_vars["instance_id"] = instance_id
     current.s3task.schedule_task(name,
                                  vars = task_vars,
                                  function_name = "setup_run_playbook",

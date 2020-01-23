@@ -423,6 +423,7 @@ if has_module("req"):
 if has_module("setup"):
 
     def setup_run_playbook(playbook,
+                           instance_id = None,
                            tags = None,
                            hosts = None,
                            user_id = None,
@@ -436,7 +437,7 @@ if has_module("setup"):
             auth.s3_impersonate(user_id)
 
         # Run the Task & return the result
-        result = s3db.setup_run_playbook(playbook, tags, hosts)
+        result = s3db.setup_run_playbook(playbook, instance_id, tags, hosts)
         db.commit()
         return result
 
