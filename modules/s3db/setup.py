@@ -1123,15 +1123,15 @@ dropdown.change(function() {
                 remote_user = server.remote_user
                 server_name = server.name
                 private_key = "/tmp/%s" % server_name
-                key_material = "%s.pub" % private_key
+                public_key = "%s.pub" % private_key
                 provided_key = server.private_key
                 if provided_key:
                     delete_ssh_key = False
                     provided_key = os.path.join(r.folder, "uploads", provided_key)
                     # Generate the Public Key
-                    command = "openssl rsa -in %(provided_key)s -pubout > %(key_material)s" % \
+                    command = "openssl rsa -in %(provided_key)s -pubout > %(public_key)s" % \
                         {provided_key: provided_key,
-                         key_material: key_material,
+                         public_key: public_key,
                          }
                     playbook.append({"hosts": "localhost",
                                      "connection": "local",
@@ -1159,7 +1159,7 @@ dropdown.change(function() {
                                                         "aws_secret_key": secret_key,
                                                         "region": region,
                                                         "name": server_name,
-                                                        "key_material": "{{ lookup('file', key_material) }}",
+                                                        "key_material": "{{ lookup('file', '%s') }}" % public_key,
                                                         },
                                             },
                                            ],
@@ -2621,7 +2621,7 @@ def setup_run_playbook(playbook, tags=None, hosts=None):
 
     # Dump Logs to File
     with open(os.path.join("/", "tmp", "%s.log" % playbook.split(".")[0]), "w") as log_file:
-        log_file.write(str(W2P_TASK.run_id))
+        log_file.write("run_id: %s\n\n" % W2P_TASK.run_id)
         log_file.write(logger.log)
 
     # Dump Logs to Database
