@@ -1227,7 +1227,8 @@ dropdown.change(function() {
                                  "connection": "smart",
                                  "remote_user": remote_user,
                                  "gather_facts": "no",
-                                 "tasks": [{"wait_for_connection": "",
+                                 "tasks": [{"wait_for_connection": {"timeout": 600, # seconds
+                                                                    },
                                             },
                                            ],
                                  })
