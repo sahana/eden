@@ -151,6 +151,7 @@ class FinPaymentServiceModel(S3Model):
 
     names = ("fin_payment_service",
              "fin_payment_log",
+             "fin_service_id",
              )
 
     def model(self):
@@ -234,7 +235,7 @@ class FinPaymentServiceModel(S3Model):
             )
 
         # TODO Implement represent using API type + org name
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, show_link=True)
         service_id = S3ReusableField("service_id", "reference %s" % tablename,
                                      label = T("Payment Service"),
                                      ondelete = "RESTRICT",
@@ -289,6 +290,7 @@ class FinProductModel(S3Model):
 
     names = ("fin_product",
              "fin_product_id",
+             "fin_product_service",
              )
 
     def model(self):
@@ -304,13 +306,47 @@ class FinProductModel(S3Model):
         # ---------------------------------------------------------------------
         # Products; represent billable products or services
         #
+        # TODO provide mapping per service-type
+        product_types = {"SERVICE": T("Service"),
+                         "PHYSICAL": T("Physical Product"),
+                         "DIGITAL": T("Digital Product"),
+                         }
+
         tablename = "fin_product"
         define_table(tablename,
+                     # The organisation offering the product/service
+                     self.org_organisation_id(),
                      Field("name",
+                           label = T("Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
+                     Field("description", "text",
+                           label = T("Description"),
+                           ),
+                     # TODO move into link table w/service
+                     Field("type",
+                           label = T("Type"),
+                           default = "SERVICE",
+                           requires = IS_IN_SET(product_types, zero=None),
+                           ),
+                     # TODO move into link table w/service
+                     # TODO template to override default
+                     # TODO make lookup-table, provide mapping per service-type
+                     Field("category",
+                           label = T("Category"),
+                           default = "GENERAL",
+                           writable = False,
+                           ),
+                     # TODO product image
+                     # TODO product homepage
                      s3_comments(),
                      *s3_meta_fields())
+
+        # Components
+        self.add_components(tablename,
+                            fin_subscription_plan = "product_id",
+                            fin_product_service = "product_id"
+                            )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -342,6 +378,57 @@ class FinProductModel(S3Model):
                                      )
 
         # ---------------------------------------------------------------------
+        # Link product<=>service
+        #
+        tablename = "fin_product_service"
+        define_table(tablename,
+                     product_id(
+                         empty = False,
+                         ondelete = "CASCADE",
+                         ),
+                     self.fin_service_id(
+                         empty = False,
+                         ondelete = "CASCADE",
+                         ),
+                     Field("is_registered", "boolean",
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
+                     Field("refno",
+                           label = T("Reference Number"),
+                           writable = False,
+                           ),
+                     Field("update_url",
+                           readable = False,
+                           writable = False,
+                           ),
+                     *s3_meta_fields())
+
+        # TODO Limit service selector to services of product-org
+        #      => in product controller prep
+
+        # Table configuration
+        self.configure(tablename,
+                       onaccept = self.product_service_onaccept,
+                       ondelete = self.product_service_ondelete,
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Register Product with Payment Service"),
+            title_display = T("Registration Details"),
+            title_list = T("Registered Payment Services"),
+            title_update = T("Edit Registration"),
+            label_list_button = T("List Registrations"),
+            label_delete_button = T("Delete Registration"),
+            msg_record_created = T("Product registered with Payment Service"),
+            msg_record_modified = T("Registration updated"),
+            msg_record_deleted = T("Registration deleted"),
+            msg_list_empty = T("Product not currently registered with any Payment Services"),
+            )
+
+        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return {"fin_product_id": product_id,
@@ -355,12 +442,62 @@ class FinProductModel(S3Model):
         return {"fin_product_id": S3ReusableField.dummy("product_id"),
                 }
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def product_service_onaccept(form):
+        """
+            Onaccept of product<=>service link:
+            - register product with the service (or update the registration)
+        """
+
+        # Get record
+        form_vars = form.vars
+        try:
+            record_id = form_vars.id
+        except AttributeError:
+            record_id = None
+        if not record_id:
+            return
+
+        # If not bulk:
+        if not current.response.s3.bulk:
+
+            table = current.s3db.fin_product_service
+            query = (table.id == record_id) & \
+                    (table.deleted == False)
+            row = current.db(query).select(table.product_id,
+                                           table.service_id,
+                                           limitby = (0, 1),
+                                           ).first()
+
+            if row:
+                from s3.s3payments import S3PaymentService
+                try:
+                    adapter = S3PaymentService.adapter(row.service_id)
+                except (KeyError, ValueError) as e:
+                    current.response.error = "Service registration failed: %s" % e
+                else:
+                    success = adapter.register_product(row.product_id)
+                    if not success:
+                        current.response.error = "Service registration failed"
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def product_service_ondelete(row):
+        """
+            Ondelete of product<=>service link:
+            - retire product from service (if supported by service)
+        """
+
+        # TODO implement
+        pass
+
 # =============================================================================
 class FinSubscriptionModel(S3Model):
     """ Model to manage subscription-based payments """
 
-    names = (#"fin_subscription_plan",    # TODO
-             #"fin_subscription",         # TODO
+    names = ("fin_subscription_plan",
+             "fin_subscription",
              )
 
     def model(self):
@@ -376,14 +513,73 @@ class FinSubscriptionModel(S3Model):
         # ---------------------------------------------------------------------
         # Subscription Plans
         #
+        plan_statuses = {"CREATED": T("New"),
+                         "ACTIVE": T("Active"),
+                         "INACTIVE": T("Inactive"),
+                         }
+        interval_units = {"DAY": T("Days"),
+                          "WEEK": T("Weeks"),
+                          "MONTH": T("Months"),
+                          "YEAR": T("Year"),
+                          }
+
         tablename = "fin_subscription_plan"
         define_table(tablename,
+                     # TODO make mandatory
+                     # TODO should not be able to create a product from here
+                     self.fin_product_id(
+                         ondelete = "CASCADE",
+                         ),
                      Field("name",
+                           label = T("Name"),
                            requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("description",
+                           label = T("Description"),
+                           ),
+                     # TODO onvalidation to make sure the interval is max 1 year in total
+                     Field("interval_count", "integer",
+                           label = T("Interval"),
+                           requires = IS_INT_IN_RANGE(1, 365),
+                           ),
+                     Field("interval_unit",
+                           label = T("Interval Unit"),
+                           default = "MONTH",
+                           requires = IS_IN_SET(interval_units,
+                                                zero = None,
+                                                ),
+                           ),
+                     # TODO consider alternative "fixed", default False
+                     Field("indefinite", "boolean",
+                           label = T("Indefinite"),
+                           default = True,
+                           ),
+                     # TODO show only if indefinite is un-checked
+                     # TODO onvalidation to check whether total cycles set for indefinite=False
+                     Field("total_cycles", "integer",
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999)),
+                           ),
+                     # TODO represent
+                     Field("price", "double",
+                           label = T("Price"),
+                           requires = IS_FLOAT_AMOUNT(minimum = 0.01,
+                                                      ),
+                           ),
+                     s3_currency(),
+                     # TODO drop "CREATED"
+                     # - plan is either active or inactive
+                     # - if it is not registered yet, then we have no service link
+                     # TODO represent
+                     Field("status",
+                           default = "CREATED",
+                           requires = IS_IN_SET(plan_statuses,
+                                                zero = None,
+                                                ),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
 
+        # TODO components
         # CRUD Strings
         crud_strings[tablename] = Storage(
             label_create = T("Create Subscription Plan"),
@@ -399,6 +595,7 @@ class FinSubscriptionModel(S3Model):
         )
 
         # Reusable field
+        # TODO represent to include product name
         represent = S3Represent(lookup=tablename, show_link=True)
         plan_id = S3ReusableField("plan_id", "reference %s" % tablename,
                                   label = T("Plan"),
@@ -414,18 +611,64 @@ class FinSubscriptionModel(S3Model):
                                   )
 
         # ---------------------------------------------------------------------
+        # Link subscription_plan<=>service
+        # - when a subscription plan is registered with a payment service
+        # - tracks service-specific reference numbers
+        #
+        tablename = "fin_subscription_plan_service"
+        define_table(tablename,
+                     self.fin_service_id(
+                         ondelete = "CASCADE",
+                         writable = False,
+                         ),
+                     plan_id(
+                         ondelete = "CASCADE",
+                         writable = False,
+                         ),
+                     Field("refno",
+                           label = T("Reference Number"),
+                           writable = False,
+                           ),
+                     *s3_meta_fields())
+
+        # TODO Crud-strings?
+
+        # ---------------------------------------------------------------------
+        # Subscription
+        # - track subscriptions and their status
+        #
+        tablename = "fin_subscription"
+        define_table(tablename,
+                     self.super_link("pe_id", "pr_pentity",
+                                     label = T("Subscriber"),
+                                     ondelete = "RESTRICT",
+                                     ),
+                     plan_id(ondelete = "CASCADE",
+                             writable = False,
+                             ),
+                     self.fin_service_id(ondelete = "CASCADE",
+                                         writable = False,
+                                         ),
+                     Field("refno",
+                           label = T("Reference Number"),
+                           writable = False,
+                           ),
+                     *s3_meta_fields())
+
+        # TODO make a component of subscription plan and show on tab
+        # TODO make a component of service and show on tab
+
+        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"fin_subscription_plan_id": plan_id,
-                }
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        return {"fin_subscription_plan_id": S3ReusableField.dummy("plan_id"),
-                }
+        return {}
 
 # =============================================================================
 def fin_rheader(r, tabs=None):
@@ -451,6 +694,8 @@ def fin_rheader(r, tabs=None):
 
             if not tabs:
                 tabs = [(T("Basic Details"), None),
+                        (T("Registered Products"), "product"),
+                        (T("Subscriptions"), "subscription"),
                         (T("Log"), "payment_log"),
                         ]
 
@@ -458,9 +703,37 @@ def fin_rheader(r, tabs=None):
                                "api_type",
                                ],
                               ]
+            rheader_title = None
+
+        elif tablename == "fin_product":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Payment Services"), "product_service"),
+                        (T("Subscription Plans"), "subscription_plan"),
+                        ]
+
+            rheader_fields = [["type"],
+                              ["organisation_id"],
+                              ]
+            rheader_title = "name"
+
+        elif tablename == "fin_subscription_plan":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Subscriptions"), "subscription"),
+                        ]
+
+            rheader_fields = [["product_id"],
+                              ]
+            rheader_title = "name"
+
+        else:
+            return None
 
         # Generate rheader XML
-        rheader = S3ResourceHeader(rheader_fields, tabs)(
+        rheader = S3ResourceHeader(rheader_fields, tabs, title=rheader_title)(
                         r,
                         table = resource.table,
                         record = record,
