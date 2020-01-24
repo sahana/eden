@@ -2489,8 +2489,10 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
             traceback = result.get("exception")
             if traceback:
                 # Extract the error message and log it
-                error = traceback.strip().split("\n")[-1]
-                logger.append(error)
+                #error = traceback.strip().split("\n")[-1]
+                #logger.append(error)
+                # Log the whole Traceback
+                logger.append(traceback)
                 # Remove the exception from the result so it's not shown every time
                 del result["exception"]
                 #current.s3task.scheduler.stop_task(W2P_TASK.id)
