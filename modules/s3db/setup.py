@@ -1226,6 +1226,7 @@ dropdown.change(function() {
                                                         "chdir": request.env.web2py_path,
                                                         },
                                             "become": "yes",
+                                            "become_method": "sudo",
                                             "become_user": "web2py",
                                             "loop": "{{ ec2.instances }}",
                                             },
