@@ -2640,6 +2640,9 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
             # Remove ansible tmpdir
             shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
 
+    # Change working directory back
+    os.chdir(cwd)
+
     # Dump Logs to File
     # Logging to eden/uploads/playbook instead of /tmp!?
     log_file_name = "%s.log" % playbook.split(".")[0]
@@ -2659,9 +2662,6 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
                                       log_file_name,
                                       field.uploadfolder)
             current.db(current.setup_instance.id == instance_id).update(log_file = newfilename)
-
-    # Change working directory back
-    os.chdir(cwd)
 
     return result
 

@@ -65,7 +65,7 @@ class IDCardLayout(S3PDFCardLayout):
         db = current.db
         s3db = current.s3db
 
-        defaultpath = os.path.join(current.request.folder, 'uploads')
+        defaultpath = os.path.join(current.request.folder, "uploads")
 
         # Get all root organisations
         root_orgs = set(item["_row"]["org_organisation.root_organisation"]
@@ -324,7 +324,7 @@ class IDCardLayout(S3PDFCardLayout):
                     field = current.s3db.doc_card_config.signature
                     path = field.uploadfolder
                     if not path:
-                        path = os.path.join(current.request.folder, 'uploads')
+                        path = os.path.join(current.request.folder, "uploads")
                     self.draw_image(os.path.join(path, signature),
                                     CENTER,
                                     MIDDLE - 25,
