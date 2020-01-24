@@ -2644,7 +2644,7 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
     os.chdir(cwd)
 
     # Dump Logs to File
-    # Logging to eden/uploads/playbook instead of /tmp!?
+    # Logs are in eden/uploads/playbook instead of /tmp, however it works
     log_file_name = "%s.log" % playbook.split(".")[0]
     log_path = os.path.join("/", "tmp", log_file_name)
     with open(log_path, "w") as log_file:
