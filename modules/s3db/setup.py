@@ -1191,7 +1191,7 @@ dropdown.change(function() {
                                      })
                 # Launch AWS instance
                 request = current.request
-                command = "python web2py.py -S %(appname)s -M -R applications/%(appname)s/private/eden_deploy/tools/update_server.py -A %(server_id)s {{ item.id }} {{ item.public_ip }} %(server_name)s" % \
+                command = "python web2py.py -S %(appname)s -M -R %(appname)s/private/eden_deploy/tools/update_server.py -A %(server_id)s {{ item.id }} {{ item.public_ip }} %(server_name)s" % \
                             {"appname": request.application,
                              "server_id": server.id,
                              "server_name": server_name,
@@ -1222,7 +1222,7 @@ dropdown.change(function() {
                                             "loop": "{{ ec2.instances }}",
                                             },
                                            # Update Server record
-                                           {"command": {"cmd": command,
+                                           {"command": {"cmd": '"%s"' % command,
                                                         "chdir": request.env.web2py_path,
                                                         },
                                             "become": "yes",
