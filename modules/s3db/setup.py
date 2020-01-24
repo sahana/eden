@@ -2656,12 +2656,13 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
 
     if instance_id:
         # Upload logs to Database
-        field = current.s3db.setup_instance.log_file
+        table = current.s3db.setup_instance
+        field = table.log_file
         with open(log_path, "r") as log_file:
             newfilename = field.store(log_file,
                                       log_file_name,
                                       field.uploadfolder)
-            current.db(current.setup_instance.id == instance_id).update(log_file = newfilename)
+            current.db(table.id == instance_id).update(log_file = newfilename)
 
     return result
 
