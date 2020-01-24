@@ -155,12 +155,46 @@ class S3PaymentService(object):
         """
         raise NotImplementedError
 
+    # -------------------------------------------------------------------------
     def get_user_info(self):
         """
             Retrieve user information from this service; for account
             verification and API testing (implementation optional)
 
             @returns: a dict with user details
+        """
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    def register_product(self, product_id):
+        """
+            Register a product with this payment service
+
+            @param product_id: the fin_product record ID
+
+            @returns: True if successful, or False on error
+        """
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    def update_product(self, product_id):
+        """
+            Update a product registration in this payment service
+
+            @param product_id: the fin_product record ID
+
+            @returns: True if successful, or False on error
+        """
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    def retire_product(self, product_id):
+        """
+            Retire a product from this payment service
+
+            @param product_id: the fin_product record ID
+
+            @returns: True if successful, or False on error
         """
         raise NotImplementedError
 
@@ -341,6 +375,28 @@ class S3PaymentService(object):
         return opener
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def has_product(product_id):
+        """
+            Check whether a product is already registered with this service
+
+            @param product_id: the fin_product record ID
+
+            @returns: boolean
+        """
+
+        table = current.s3db.fin_product_service
+        query = (table.product_id == product_id) & \
+                (table.deleted == False)
+
+        row = current.db(query).select(table.id,
+                                       table.is_registered,
+                                       limitby = (0, 1),
+                                       ).first()
+
+        return row.is_registered if row else False
+
+    # -------------------------------------------------------------------------
     # Factory Method
     # -------------------------------------------------------------------------
     @staticmethod
@@ -390,30 +446,6 @@ class S3PaymentService(object):
 # =============================================================================
 class PayPalAdapter(S3PaymentService):
     """ API Adapter for PayPal """
-
-    # -------------------------------------------------------------------------
-    def get_user_info(self):
-        """
-            Retrieve user information (of the config owner)
-
-            @returns: a dict with user details
-        """
-
-        action = "Get User Info"
-
-        userinfo, _, error = self.http(method = "GET",
-                                       path = "/v1/identity/oauth2/userinfo",
-                                       args = {"schema": "paypalv1.1"},
-                                       auth = "Token",
-                                       decode = "json",
-                                       )
-        if error:
-            self.log.error(action, error)
-            return None
-        else:
-            self.log.success(action)
-
-        return userinfo
 
     # -------------------------------------------------------------------------
     def get_access_token(self):
@@ -476,5 +508,154 @@ class PayPalAdapter(S3PaymentService):
             self.log.error(action, "Lacking client ID/secret to fetch access token")
 
         return None
+
+    # -------------------------------------------------------------------------
+    def get_user_info(self):
+        """
+            Retrieve user information (of the config owner)
+
+            @returns: a dict with user details
+        """
+
+        action = "Get User Info"
+
+        userinfo, _, error = self.http(method = "GET",
+                                       path = "/v1/identity/oauth2/userinfo",
+                                       args = {"schema": "paypalv1.1"},
+                                       auth = "Token",
+                                       decode = "json",
+                                       )
+        if error:
+            self.log.error(action, error)
+            return None
+        else:
+            self.log.success(action)
+
+        return userinfo
+
+    # -------------------------------------------------------------------------
+    def register_product(self, product_id):
+        """
+            Register a product with this payment service
+
+            @param product_id: the fin_product record ID
+
+            @returns: True if successful, or False on error
+        """
+
+        success = False
+
+        if self.has_product(product_id):
+            # Product is already registered with this service
+            # => update it
+            success = self.update_product(product_id)
+
+        else:
+            action = "Register Product %s" % product_id
+
+            db = current.db
+            s3db = current.s3db
+
+            # Get product data
+            ptable = s3db.fin_product
+            query = (ptable.id == product_id) & \
+                    (ptable.deleted == False)
+            row = db(query).select(ptable.name,
+                                   ptable.description,
+                                   ptable.type,
+                                   ptable.category,
+                                   limitby = (0, 1),
+                                   ).first()
+            if not row:
+                self.log.error(action, "Product not found")
+            else:
+                # Register Product
+                response, status, error = self.http(method = "POST",
+                                                    path = "/v1/catalogs/products",
+                                                    #args = None,
+                                                    data = {
+                                                        "name": row.name,
+                                                        "description": row.description,
+                                                        "type": row.type,
+                                                        "category": row.category,
+                                                        #"image_url": None,
+                                                        #"home_url": None,
+                                                        },
+                                                    #headers = None,
+                                                    auth = "Token",
+                                                    #encode = "json",
+                                                    #decode = "json",
+                                                    )
+                if error:
+                    reason = ("%s %s" % (status, error)) if status else error
+                    self.log.error(action, reason)
+
+                else:
+                    success = True
+                    self.log.success(action)
+
+                    # Extract registration details from response
+                    refno = response["id"]
+                    update_url = None
+                    links = response["links"]
+                    for link in links:
+                        if link["rel"] == "edit":
+                            update_url = link["href"]
+                            break
+
+                    # Create or update product<=>service link
+                    # - no onaccept here (onaccept calls this)
+                    ltable = s3db.fin_product_service
+                    ltable.update_or_insert(
+                        (ltable.product_id == product_id) & \
+                        (ltable.service_id == self.service_id),
+                        product_id = product_id,
+                        service_id = self.service_id,
+                        is_registered = True,
+                        refno = refno,
+                        update_url = update_url,
+                        )
+
+        return success
+
+    # -------------------------------------------------------------------------
+    def update_product(self, product_id):
+        """
+            Update a product registration in this payment service
+
+            @param product_id: the fin_product record ID
+
+            @returns: True if successful, or False on error
+        """
+
+        action = "Update product %s" % product_id
+
+        # TODO implement
+        # can update these fields:
+            #description
+            #category
+            #image_url
+            #home_url
+
+        self.log.info(action, "Not implemented yet")
+
+        return True
+
+    # -------------------------------------------------------------------------
+    def retire_product(self, product_id):
+        """
+            Retire a product from this payment service
+
+            @param product_id: the fin_product record ID
+
+            @returns: True if successful, or False on error
+        """
+
+        action = "Retire product %s" % product_id
+
+        # PayPal API does not support deletion of products
+        self.log.info(action, "Not supported by API")
+
+        return True
 
 # END =========================================================================

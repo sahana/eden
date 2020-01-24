@@ -1037,7 +1037,19 @@ class S3OptionsMenu(object):
         """ FINANCES """
 
         return M(c="fin")(
-                    M("Payment Services", f="payment_service"),
+                    # TODO activate via deployment setting:
+                    M("Payment Services", f="payment_service")(
+                        M("Create", m="create"),
+                        ),
+                    # TODO activate via deployment setting:
+                    M("Products", f="product")(
+                        M("Create", m="create"),
+                        ),
+                    # TODO activate via deployment setting:
+                    M("Subscriptions", link=False)(
+                        M("Plans", f="subscription_plan"),
+                        M("Subscriptions", f="subscription"),
+                        ),
                     )
 
     # -------------------------------------------------------------------------
