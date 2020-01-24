@@ -851,6 +851,8 @@ class S3SetupModel(S3Model):
         chars = chars.replace("'", "")
         # Ensure that @ isn't included as Web2Py doesn't like this
         chars = chars.replace("@", "")
+        # Ensure that \ isn't included as control characters can cause the settings.database.password to not match pgpass (e.g. \a -> ^G)
+        chars = chars.replace("\\", "")
         password = "".join(random.choice(chars) for _ in range(12))
         db(table.id == deployment_id).update(db_password = password)
 
@@ -1220,7 +1222,6 @@ dropdown.change(function() {
                                             "loop": "{{ ec2.instances }}",
                                             },
                                            # Update Server record
-                                           # NB A generic way to find out the Public IP is https://docs.ansible.com/ansible/latest/modules/ipify_facts_module.html
                                            {"command": {"cmd": command,
                                                         "chdir": request.env.web2py_path,
                                                         },
@@ -1236,7 +1237,7 @@ dropdown.change(function() {
                                  "connection": "smart",
                                  "remote_user": remote_user,
                                  "gather_facts": "no",
-                                 "tasks": [{"wait_for_connection": {"timeout": 600, # seconds
+                                 "tasks": [{"wait_for_connection": {"timeout": 300, # seconds
                                                                     },
                                             },
                                            ],
