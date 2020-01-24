@@ -1222,7 +1222,7 @@ dropdown.change(function() {
                                             "loop": "{{ ec2.instances }}",
                                             },
                                            # Update Server record
-                                           {"command": {"cmd": "^\n%s" % command, # multi-line
+                                           {"command": {"cmd": command,
                                                         "chdir": request.env.web2py_path,
                                                         },
                                             "become": "yes",
