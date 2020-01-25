@@ -1,4 +1,0 @@
-*** Settings ***
-Resource  ../../../../tests/implementation/resources/main.txt
-Suite Setup  Start Testing
-Suite Teardown  End Testing

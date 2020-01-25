@@ -1,7 +1,0 @@
-Position,Status,Default,Closed,Default Closure,Color,Comments
-1,Planned,true,false,false,8f3d5e,Response action is planned
-2,In Progress,false,false,false,c85583,Response action is in progress
-3,Waiting,false,false,false,fc6900,Response action is waiting for something (e.g. a document to be produced)
-4,Completed,false,true,true,d8e6d8,Response action is completed
-5,Canceled,false,true,false,e0e0e0,Response action canceled
-6,Obsolete,false,true,false,e0e0e0,Response action is no longer required

@@ -1,0 +1,33 @@
+uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
+ANONYMOUS,Anonymous,,event,incident,,,READ,,,,,general Public can view Incidents
+ANONYMOUS,Anonymous,,,,event_incident,,READ,,,,,general Public can view Incidents
+ANONYMOUS,Anonymous,,,,event_team,,READ,,,,,general Public can view Incident details
+ANONYMOUS,Anonymous,,,,event_human_resource,,READ,,,,,general Public can view Incident details
+ANONYMOUS,Anonymous,,,,event_organisation,,READ,,,,,general Public can view Incident details
+ANONYMOUS,Anonymous,,event,event,,,READ,,,,,general Public can view Events
+ANONYMOUS,Anonymous,,,,event_event,,READ,,,,,general Public can view Events
+ANONYMOUS,Anonymous,,cms,post,,,READ,,,,,general Public can view Updates inc Alerts
+ANONYMOUS,Anonymous,,,,cms_post,,READ,,,,,general Public can view Updates inc Alerts
+ANONYMOUS,Anonymous,,,,doc_ckeditor,,READ,,,,,general Public can view attachments in CMS
+ANONYMOUS,Anonymous,,,,gis_location,,READ,,,,,general Public can view Incidents on Map (which has an accessible_query on locations)
+AUTHENTICATED,Authenticated,,gis,,,,READ,READ|CREATE|UPDATE|DELETE,,,,Authenticated users can see the Map
+AUTHENTICATED,Authenticated,,gis,location,,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
+AUTHENTICATED,Authenticated,,pr,,,,READ|UPDATE,,,,,Authenticated users can only see/edit their own PR records
+AUTHENTICATED,Authenticated,,pr,forum,,,READ,READ|UPDATE|DELETE,,,,
+AUTHENTICATED,Authenticated,,,,pr_person,,READ|UPDATE,,,,,Authenticated users can only see/edit their own PR records
+AUTHENTICATED,Authenticated,,pr,person,,,CREATE,READ|UPDATE,,,,But need to be able to add/edit addresses
+AUTHENTICATED,Authenticated,,pr,pentity,,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
+AUTHENTICATED,Authenticated,,,,pr_forum_membership,,,READ|UPDATE|DELETE,,,,
+AUTHENTICATED,Authenticated,,pr,person_search,,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
+AUTHENTICATED,Authenticated,,hrm,,,,READ|UPDATE,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,hrm,person,,,,READ|UPDATE,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,hrm,staff,,,,READ|UPDATE,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+ADASHI,ADASHI,,sync,sync,,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,event_incident,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,event_incident_type,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,event_team,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,event_team_status,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,event_team_status_team,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,pr_group,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,gis_location,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,sit_presence,,READ|CREATE|UPDATE,,,true,true,
