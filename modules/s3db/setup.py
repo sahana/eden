@@ -1249,7 +1249,7 @@ dropdown.change(function() {
                                        "method": "POST",
                                        "headers": {"X-Api-Key": gandi_api_key,
                                                    },
-                                       "body_format": "application/json",
+                                       "body_format": "json", # Content-Type: application/json
                                        "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ item.public_ip }}"]}' % dns_record
                                        },
                                "loop": "{{ ec2.instances }}",
