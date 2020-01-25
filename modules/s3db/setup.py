@@ -1074,11 +1074,12 @@ dropdown.change(function() {
 
         # Get Deployment details
         dtable = s3db.setup_deployment
-        deployment = db(dtable.id == deployment_id).select(dtable.cloud_id,
-                                                           dtable.webserver_type,
+        deployment = db(dtable.id == deployment_id).select(dtable.webserver_type,
                                                            dtable.db_type,
                                                            dtable.db_password,
                                                            dtable.template,
+                                                           dtable.cloud_id,
+                                                           dtable.dns_id,
                                                            limitby = (0, 1)
                                                            ).first()
 
