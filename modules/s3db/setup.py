@@ -126,7 +126,7 @@ class S3DNSModel(S3Model):
                                  ondelete = "SET NULL",
                                  represent = represent,
                                  requires = IS_EMPTY_OR(
-                                    IS_ONE_OF(db, "setup_dns.id",
+                                    IS_ONE_OF(db, "setup_dns.dns_id",
                                               represent,
                                               sort = True
                                               ),
