@@ -1241,6 +1241,8 @@ dropdown.change(function() {
                                        "headers": {"X-Api-Key": gandi_api_key,
                                                    },
                                        },
+                               # Don't worry if it didn't exist
+                               "ignore_errors": "yes",
                                },
                               # Create new record
                               {"uri": {"url": url,
