@@ -4003,7 +4003,8 @@ def hrm_training_onaccept(form):
                                                 table.grade,
                                                 table.grade_details,
                                                 table.deleted_fk,
-                                                limitby=(0, 1)).first()
+                                                limitby = (0, 1)
+                                                ).first()
 
     if delete:
         deleted_fks = json.loads(record.deleted_fk)

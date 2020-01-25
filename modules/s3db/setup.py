@@ -586,6 +586,10 @@ class S3SetupModel(S3Model):
             msg_record_deleted = T("Server deleted"),
             msg_list_empty = T("No Servers currently registered"))
 
+        configure(tablename,
+                  ondelete = self.setup_server_ondelete,
+                  )
+
         add_components(tablename,
                        setup_aws_server = {"joinby": "server_id",
                                            "multiple": False,
@@ -1502,6 +1506,134 @@ dropdown.change(function() {
         redirect(URL(c="setup", f="deployment",
                      args = [r.id, "instance"]),
                      )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def setup_server_ondelete(form):
+        """
+            Cleanup Tasks when a Server is Deleted
+            - AWS Instance
+            - AWS Keypair
+            - DNS
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        server_id = form.id
+
+        table = s3db.setup_server
+        record = db(table.id == server_id).select(table.name,
+                                                  table.deleted_fk,
+                                                  limitby = (0, 1)
+                                                  ).first()
+        deleted_fks = json.loads(record.deleted_fk)
+        deployment_id = deleted_fks.get("deployment_id")
+
+        dtable = s3db.setup_deployment
+        deployment = db(dtable.id == deployment_id).select(dtable.cloud_id,
+                                                           dtable.dns_id,
+                                                           limitby = (0, 1)
+                                                           ).first()
+
+        cloud_id = deployment.cloud_id
+        dns_id = deployment.dns_id
+
+        if cloud_id is None and dns_id is None:
+            # Nothing to cleanup
+            return
+
+        tasks = []
+
+        if cloud_id:
+            # @ToDo: Will need extending when we support multiple Cloud Providers
+            # Get AWS details
+            atable = s3db.setup_aws_cloud
+            aws = db(atable.id == cloud_id).select(atable.access_key,
+                                                   atable.secret_key,
+                                                   limitby = (0, 1)
+                                                   ).first()
+            access_key = aws.access_key
+            secret_key = aws.secret_key
+
+            # Get Server details
+            astable = s3db.setup_aws_server
+            aws_server = db(astable.server_id == server_id).select(astable.region,
+                                                                   astable.instance_id,
+                                                                   limitby = (0, 1)
+                                                                   ).first()
+            region = aws_server.region
+
+            tasks += [# Terminate AWS Instance
+                      {"ec2": {"aws_access_key": access_key,
+                               "aws_secret_key": secret_key,
+                               "region": region,
+                               "instance_ids": aws_server.instance_id,
+                               "state": "absent",
+                               },
+                           },
+                      # Delete Keypair
+                      {"ec2-key": {"aws_access_key": access_key,
+                               "aws_secret_key": secret_key,
+                               "region": region,
+                               "name": record.name,
+                               "state": "absent",
+                               },
+                           },
+                      ]
+
+        if dns_id:
+            # @ToDo: Will need extending when we support multiple DNS Providers
+            # Get Gandi details
+            gtable = s3db.setup_gandi_dns
+            gandi = db(gtable.id == dns_id).select(gtable.api_key,
+                                                   gtable.domain,
+                                                   gtable.zone,
+                                                   limitby = (0, 1)
+                                                   ).first()
+            gandi_api_key = gandi.api_key
+            domain = gandi.domain
+            url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
+
+            # Get Instance(s) details
+            itable = s3db.setup_instance
+            instances = db(itable.deployment_id == deployment_id).select(itable.url)
+            for instance in instances:
+                # Delete DNS record
+                parts = instance.url.split("://")
+                if len(parts) == 1:
+                    sitename = parts[0]
+                else:
+                    sitename = parts[1]
+                dns_record = sitename.split(".%s" % domain, 1)[0]
+                tasks.append({"uri": {"url": "%s/%s" % (url, dns_record),
+                                      "method": "DELETE",
+                                      "headers": {"X-Api-Key": gandi_api_key,
+                                                  },
+                                      },
+                              })
+
+        playbook = [{"hosts": "localhost",
+                     "connection": "local",
+                     "gather_facts": "no",
+                     "tasks": tasks,
+                     },
+                    ]
+
+        # Write Playbook
+        name = "server_delete_%d" % int(time.time())
+        task_vars = setup_write_playbook("%s.yml" % name,
+                                         playbook,
+                                         )
+
+        # Run Playbook
+        task_id = current.s3task.schedule_task(name,
+                                               vars = task_vars,
+                                               function_name = "setup_run_playbook",
+                                               repeats = None,
+                                               timeout = 6000,
+                                               #sync_output = 300
+                                               )
 
     # -------------------------------------------------------------------------
     @staticmethod
