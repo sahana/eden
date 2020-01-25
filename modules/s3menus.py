@@ -457,6 +457,7 @@ class S3OptionsMenu(object):
         return M()(
                     M("Setup", c="setup", f="deployment")(
                         M("AWS Clouds", f="aws_cloud")(),
+                        M("GANDI DNS", f="gandi_dns")(),
                         M("Deployments", f="deployment")(
                             M("Create", m="create"),
                         ),

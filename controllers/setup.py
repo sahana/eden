@@ -209,14 +209,15 @@ def deployment():
                     db(stable.deployment_id == deployment_id).update(**server_vars)
 
                 from s3 import S3SQLCustomForm
-                crud_form = S3SQLCustomForm("cloud_id",
-                                            (T("Production URL"), "production.url"),
+                crud_form = S3SQLCustomForm((T("Production URL"), "production.url"),
                                             "production.sender",
                                             #"repo_url",
                                             "country",
                                             "template",
                                             "webserver_type",
                                             "db_type",
+                                            "cloud_id",
+                                            "dns_id",
                                             "production_server.remote_user",
                                             "production_server.private_key",
                                             postprocess = deployment_create_postprocess,

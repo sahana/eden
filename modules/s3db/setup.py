@@ -109,11 +109,11 @@ class S3DNSModel(S3Model):
                           Field("description",
                                 #label = T("Description"),
                                 ),
-                          Field("enabled", "boolean",
-                                default = True,
-                                #label = T("Enabled?")
-                                #represent = s3_yes_no_represent,
-                                ),
+                          #Field("enabled", "boolean",
+                          #      default = True,
+                          #      #label = T("Enabled?")
+                          #      #represent = s3_yes_no_represent,
+                          #      ),
                           #on_define = lambda table: \
                           #  [table.instance_type.set_attributes(readable = True),
                           #   ],
@@ -159,15 +159,23 @@ class S3GandiDNSModel(S3DNSModel):
                           self.super_link("dns_id", "setup_dns"),
                           Field("name"),
                           Field("description"),
-                          Field("enabled", "boolean",
-                                default = True,
-                                #label = T("Enabled?"),
-                                represent = s3_yes_no_represent,
-                                ),
+                          #Field("enabled", "boolean",
+                          #      default = True,
+                          #      #label = T("Enabled?"),
+                          #      represent = s3_yes_no_represent,
+                          #      ),
                           Field("api_key", "password",
                                 readable = False,
                                 requires = IS_NOT_EMPTY(),
                                 widget = S3PasswordWidget(),
+                                ),
+                          # Currently only supports a single Domain per DNS configuration
+                          Field("domain", # Name
+                                requires = IS_NOT_EMPTY(),
+                                ),
+                          # Currently only supports a single Zone per DNS configuration
+                          Field("zone", # UUID
+                                requires = IS_NOT_EMPTY(),
                                 ),
                           *s3_meta_fields())
 
@@ -291,7 +299,7 @@ class S3AWSCloudModel(S3CloudModel):
         # ---------------------------------------------------------------------
         # AWS Server Details
         #
-        #aws_instance_types = ["t2.micro",
+        #aws_instance_types = ["t3.micro",
         #                      ]
         #aws_regions = {"eu-west-2": "Europe (London)",
         #               }
@@ -305,7 +313,7 @@ class S3AWSCloudModel(S3CloudModel):
                            #represent = S3Represent(options = aws_regions)
                            ),
                      Field("instance_type",
-                           default = "t2.micro",
+                           default = "t3.micro",
                            #label = T("Instance Type"),
                            #requires = IS_IN_SET(aws_instance_types),
                            ),
@@ -357,10 +365,11 @@ class S3SetupModel(S3Model):
         #
         tablename = "setup_deployment"
         define_table(tablename,
-                     self.setup_cloud_id(),
-                     # @ToDo: Allow use of Custom repo
+                     # @ToDo: Allow use of a Custom repo
                      # @ToDo: Add ability to get a specific hash/tag
                      Field("repo_url",
+                           # @ToDo: Switch to Stable once it has a templates.txt
+                           #default = "https://github.com/sahana/eden-stable",
                            default = "https://github.com/sahana/eden",
                            label = T("Eden Repository"),
                            requires = IS_URL(),
@@ -419,6 +428,8 @@ class S3SetupModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
+                     self.setup_cloud_id(),
+                     self.setup_dns_id(),
                      *s3_meta_fields()
                      )
 
@@ -864,7 +875,8 @@ class S3SetupModel(S3Model):
         """
             Return a List of Countries for which we have Locale settings defined
 
-            @ToDo: Read the list of templates from the custom repo URL!
+            @ToDo: Read the list of templates from the selected repo URL!
+                   - locations.txt
         """
 
         p = os.path
@@ -885,7 +897,8 @@ class S3SetupModel(S3Model):
         """
             Return a List of Templates for the user to select between
 
-            @ToDo: Read the list of templates from the custom repo URL!
+            @ToDo: Read the list of templates from the selected repo URL!
+                   - templates.txt
         """
 
         p = os.path
@@ -899,7 +912,7 @@ class S3SetupModel(S3Model):
         dirs = next(os.walk(path))[1]
         templates = [d for d in dirs
                          if d[:8] != "skeleton" and
-                         os.path.isfile(os.path.join(path, d, "config.py"))
+                         p.isfile(join(path, d, "config.py"))
                          ]
 
         subtemplates = []
@@ -1123,6 +1136,7 @@ dropdown.change(function() {
             server = servers.first()
             playbook = []
             if cloud_id:
+                tasks = []
                 connection = "smart"
                 # @ToDo: Will need extending when we support multiple Cloud Providers
                 access_key = aws.access_key
@@ -1143,52 +1157,32 @@ dropdown.change(function() {
                         {provided_key: provided_key,
                          public_key: public_key,
                          }
-                    playbook.append({"hosts": "localhost",
-                                     "connection": "local",
-                                     "gather_facts": "no",
-                                     "tasks": [{"command": command,
-                                                },
-                                               ],
-                                     })
+                    tasks.append({"command": command,
+                                  })
                 else:
                     delete_ssh_key = True
                     # Generate an OpenSSH keypair with the default values (4096 bits, rsa)
-                    playbook.append({"hosts": "localhost",
-                                     "connection": "local",
-                                     "gather_facts": "no",
-                                     "tasks": [{"openssh_keypair": {"path": private_key,
-                                                                    },
-                                                },
-                                               ],
-                                     })
+                    tasks.append({"openssh_keypair": {"path": private_key,
+                                                      },
+                                  })
                 # Upload Public Key to AWS
-                playbook.append({"hosts": "localhost",
-                                 "connection": "local",
-                                 "gather_facts": "no",
-                                 "tasks": [{"ec2_key": {"aws_access_key": access_key,
-                                                        "aws_secret_key": secret_key,
-                                                        "region": region,
-                                                        "name": server_name,
-                                                        "key_material": "{{ lookup('file', '%s') }}" % public_key,
-                                                        },
-                                            },
-                                           ],
-                                 })
+                tasks.append({"ec2_key": {"aws_access_key": access_key,
+                                          "aws_secret_key": secret_key,
+                                          "region": region,
+                                          "name": server_name,
+                                          "key_material": "{{ lookup('file', '%s') }}" % public_key,
+                                          },
+                              })
                 if aws_server.instance_id:
                     # Terminate old AWS instance
                     # @ToDo: Allow deployment on existing instances?
-                    playbook.append({"hosts": "localhost",
-                                     "connection": "local",
-                                     "gather_facts": "no",
-                                     "tasks": [{"ec2": {"aws_access_key": access_key,
-                                                        "aws_secret_key": secret_key,
-                                                        "region": region,
-                                                        "instance_ids": aws_server.instance_id,
-                                                        "state": "absent",
-                                                        },
-                                                },
-                                               ],
-                                     })
+                    tasks.append({"ec2": {"aws_access_key": access_key,
+                                          "aws_secret_key": secret_key,
+                                          "region": region,
+                                          "instance_ids": aws_server.instance_id,
+                                          "state": "absent",
+                                          },
+                                  })
                 # Launch AWS instance
                 request = current.request
                 command = "python web2py.py -S %(appname)s -M -R %(appname)s/private/eden_deploy/tools/update_server.py -A %(server_id)s {{ item.id }} {{ item.public_ip }} %(server_name)s" % \
@@ -1196,42 +1190,77 @@ dropdown.change(function() {
                              "server_id": server.id,
                              "server_name": server_name,
                              }
+                tasks += [# Launch AWS Instance
+                          {"ec2": {"aws_access_key": access_key,
+                                   "aws_secret_key": secret_key,
+                                   "key_name": server_name,
+                                   "region": region,
+                                   "instance_type": aws_server.instance_type,
+                                   "image": aws_server.image,
+                                   "group": aws_server.security_group,
+                                   "wait": "yes",
+                                   "count": 1,
+                                   "instance_tags": {"Name": server_name,
+                                                     },
+                                   },
+                           "register": "ec2",
+                           },
+                          # Add new instance to host group (to associate private_key)
+                          {"add_host": {"hostname": "{{ item.public_ip }}",
+                                        "groupname": "launched",
+                                        "ansible_ssh_private_key_file": "/tmp/%s" % server_name,
+                                        },
+                           "loop": "{{ ec2.instances }}",
+                           },
+                          # Update Server record
+                          {"command": {"cmd": command,
+                                       "chdir": request.env.web2py_path,
+                                       },
+                           "become": "yes",
+                           "become_method": "sudo",
+                           "become_user": "web2py",
+                           "loop": "{{ ec2.instances }}",
+                           },
+                          ]
+                dns_id = deployment.dns_id
+                if dns_id:
+                    # @ToDo: Will need extending when we support multiple DNS Providers
+                    gtable = s3db.setup_gandi_dns
+                    gandi = db(gtable.id == dns_id).select(gtable.api_key,
+                                                           gtable.domain,
+                                                           gtable.zone,
+                                                           limitby = (0, 1)
+                                                           ).first()
+                    gandi_api_key = gandi.api_key
+                    url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
+                    dns_record = sitename.split(".%s" % gandi.domain, 1)[0]
+                    tasks += [# Delete any existing record
+                              {"uri": {"url": "%s/%s" % (url, dns_record),
+                                       "method": "DELETE",
+                                       "headers": {"X-Api-Key": gandi_api_key,
+                                                   },
+                                       },
+                               },
+                              # Create new record
+                              {"uri": {"url": url,
+                                       "method": "POST",
+                                       "headers": {"X-Api-Key": gandi_api_key,
+                                                   },
+                                       "body_format": "application/json",
+                                       "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ item.public_ip }}"]}' % dns_record
+                                       },
+                               "loop": "{{ ec2.instances }}",
+                               },
+                              ]
+                else:
+                    current.session.warning = current.T("Deployment will not have SSL: No DNS Provider configured to link to new server IP Address")
+                    # @ToDo: Support Elastic IPs
+                    protocol = "http"
                 playbook.append({"hosts": "localhost",
                                  "connection": "local",
                                  "gather_facts": "no",
-                                 "tasks": [# Launch AWS Instance
-                                           {"ec2": {"aws_access_key": access_key,
-                                                    "aws_secret_key": secret_key,
-                                                    "key_name": server_name,
-                                                    "region": region,
-                                                    "instance_type": aws_server.instance_type,
-                                                    "image": aws_server.image,
-                                                    "group": aws_server.security_group,
-                                                    "wait": "yes",
-                                                    "count": 1,
-                                                    "instance_tags": {"Name": server_name,
-                                                                      },
-                                                    },
-                                            "register": "ec2",
-                                            },
-                                           # Add new instance to host group (to associate private_key)
-                                           {"add_host": {"hostname": "{{ item.public_ip }}",
-                                                         "groupname": "launched",
-                                                         "ansible_ssh_private_key_file": "/tmp/%s" % server_name,
-                                                         },
-                                            "loop": "{{ ec2.instances }}",
-                                            },
-                                           # Update Server record
-                                           {"command": {"cmd": command,
-                                                        "chdir": request.env.web2py_path,
-                                                        },
-                                            "become": "yes",
-                                            "become_method": "sudo",
-                                            "become_user": "web2py",
-                                            "loop": "{{ ec2.instances }}",
-                                            },
-                                           ],
-                                  })
+                                 "tasks": tasks,
+                                 })
                 host_ip = "launched"
                 # Wait for Server to become available
                 playbook.append({"hosts": "launched",
