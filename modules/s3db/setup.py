@@ -1530,6 +1530,11 @@ dropdown.change(function() {
         deleted_fks = json.loads(record.deleted_fk)
         deployment_id = deleted_fks.get("deployment_id")
 
+        if deployment_id is None:
+            # We cannot cleanup
+            current.log.debug("Couldn't find deployment_id when deleting Server")
+            return
+
         dtable = s3db.setup_deployment
         deployment = db(dtable.id == deployment_id).select(dtable.cloud_id,
                                                            dtable.dns_id,
@@ -1562,25 +1567,28 @@ dropdown.change(function() {
                                                                    astable.instance_id,
                                                                    limitby = (0, 1)
                                                                    ).first()
-            region = aws_server.region
-
-            tasks += [# Terminate AWS Instance
-                      {"ec2": {"aws_access_key": access_key,
-                               "aws_secret_key": secret_key,
-                               "region": region,
-                               "instance_ids": aws_server.instance_id,
-                               "state": "absent",
+            try:
+                region = aws_server.region
+            except:
+                current.log.debug("Couldn't find AWS Server record when deleting Server")
+            else:
+                tasks += [# Terminate AWS Instance
+                          {"ec2": {"aws_access_key": access_key,
+                                   "aws_secret_key": secret_key,
+                                   "region": region,
+                                   "instance_ids": aws_server.instance_id,
+                                   "state": "absent",
+                                   },
                                },
-                           },
-                      # Delete Keypair
-                      {"ec2-key": {"aws_access_key": access_key,
-                               "aws_secret_key": secret_key,
-                               "region": region,
-                               "name": record.name,
-                               "state": "absent",
+                          # Delete Keypair
+                          {"ec2-key": {"aws_access_key": access_key,
+                                   "aws_secret_key": secret_key,
+                                   "region": region,
+                                   "name": record.name,
+                                   "state": "absent",
+                                   },
                                },
-                           },
-                      ]
+                          ]
 
         if dns_id:
             # @ToDo: Will need extending when we support multiple DNS Providers
@@ -1591,27 +1599,30 @@ dropdown.change(function() {
                                                    gtable.zone,
                                                    limitby = (0, 1)
                                                    ).first()
-            gandi_api_key = gandi.api_key
-            domain = gandi.domain
-            url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
-
-            # Get Instance(s) details
-            itable = s3db.setup_instance
-            instances = db(itable.deployment_id == deployment_id).select(itable.url)
-            for instance in instances:
-                # Delete DNS record
-                parts = instance.url.split("://")
-                if len(parts) == 1:
-                    sitename = parts[0]
-                else:
-                    sitename = parts[1]
-                dns_record = sitename.split(".%s" % domain, 1)[0]
-                tasks.append({"uri": {"url": "%s/%s" % (url, dns_record),
-                                      "method": "DELETE",
-                                      "headers": {"X-Api-Key": gandi_api_key,
-                                                  },
-                                      },
-                              })
+            try:
+                gandi_api_key = gandi.api_key
+                domain = gandi.domain
+                url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
+            except:
+                current.log.debug("Couldn't find Gandi DNS record when deleting Server")
+            else:
+                # Get Instance(s) details
+                itable = s3db.setup_instance
+                instances = db(itable.deployment_id == deployment_id).select(itable.url)
+                for instance in instances:
+                    # Delete DNS record
+                    parts = instance.url.split("://")
+                    if len(parts) == 1:
+                        sitename = parts[0]
+                    else:
+                        sitename = parts[1]
+                    dns_record = sitename.split(".%s" % domain, 1)[0]
+                    tasks.append({"uri": {"url": "%s/%s" % (url, dns_record),
+                                          "method": "DELETE",
+                                          "headers": {"X-Api-Key": gandi_api_key,
+                                                      },
+                                          },
+                                  })
 
         playbook = [{"hosts": "localhost",
                      "connection": "local",
