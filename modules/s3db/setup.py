@@ -1603,10 +1603,10 @@ dropdown.change(function() {
         instance_id = form.id
 
         table = s3db.setup_instance
-        record = db(table.id == server_id).select(table.url,
-                                                  table.deleted_fk,
-                                                  limitby = (0, 1)
-                                                  ).first()
+        record = db(table.id == instance_id).select(table.url,
+                                                    table.deleted_fk,
+                                                    limitby = (0, 1)
+                                                    ).first()
         deleted_fks = json.loads(record.deleted_fk)
         deployment_id = deleted_fks.get("deployment_id")
 
