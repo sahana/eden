@@ -1393,6 +1393,7 @@ dropdown.change(function() {
                     host_ip = "launched"
                     private_key = os.path.join(r.folder, "uploads", private_key)
                     playbook.append({"hosts": "localhost",
+                                     "connection": "local",
                                      "gather_facts": "no",
                                      "tasks": [{"add_host": {"hostname": host_ip,
                                                              "groupname": "launched",
@@ -1436,6 +1437,7 @@ dropdown.change(function() {
             if delete_ssh_key:
                 # Delete SSH private key from the filesystem
                 playbook.append({"hosts": "localhost",
+                                 "connection": "local",
                                  "gather_facts": "no",
                                  "tasks": [{"file": {"path": private_key,
                                                      "state": "absent",
