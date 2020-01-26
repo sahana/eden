@@ -365,7 +365,7 @@ class S3AWSCloudModel(S3CloudModel):
         stable = s3db.setup_server
         dtable = s3db.setup_deployment
         atable = s3db.setup_aws_cloud
-        query = (stable.id == server_id) & 
+        query = (stable.id == server_id) & \
                 (dtable.id == stable.deployment_id) & \
                 (dtable.cloud_id == atable.id)
         deployment = db(query).select(atable.access_key,
