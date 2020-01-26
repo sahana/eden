@@ -393,7 +393,7 @@ class S3AWSCloudModel(S3CloudModel):
                                         },
                                     },
                                # Delete Keypair
-                               {"ec2-key": {"aws_access_key": access_key,
+                               {"ec2_key": {"aws_access_key": access_key,
                                             "aws_secret_key": secret_key,
                                             "region": region,
                                             "name": server_name,
@@ -411,13 +411,13 @@ class S3AWSCloudModel(S3CloudModel):
                                          )
 
         # Run Playbook
-        task_id = current.s3task.schedule_task(name,
-                                               vars = task_vars,
-                                               function_name = "setup_run_playbook",
-                                               repeats = None,
-                                               timeout = 6000,
-                                               #sync_output = 300
-                                               )
+        current.s3task.schedule_task(name,
+                                     vars = task_vars,
+                                     function_name = "setup_run_playbook",
+                                     repeats = None,
+                                     timeout = 6000,
+                                     #sync_output = 300
+                                     )
 
 # =============================================================================
 class S3SetupModel(S3Model):
@@ -1663,13 +1663,13 @@ dropdown.change(function() {
                                          )
 
         # Run Playbook
-        task_id = current.s3task.schedule_task(name,
-                                               vars = task_vars,
-                                               function_name = "setup_run_playbook",
-                                               repeats = None,
-                                               timeout = 6000,
-                                               #sync_output = 300
-                                               )
+        current.s3task.schedule_task(name,
+                                     vars = task_vars,
+                                     function_name = "setup_run_playbook",
+                                     repeats = None,
+                                     timeout = 6000,
+                                     #sync_output = 300
+                                     )
 
     # -------------------------------------------------------------------------
     @staticmethod
