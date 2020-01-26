@@ -825,7 +825,7 @@ class S3SetupModel(S3Model):
                                  "task_id",
                                  "log_file",
                                  ],
-                  ondelete = setup_instance_ondelete,
+                  ondelete = self.setup_instance_ondelete,
                   )
 
         set_method("setup", "deployment",
