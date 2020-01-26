@@ -264,6 +264,7 @@ class S3AWSCloudModel(S3CloudModel):
 
         #T = current.T
 
+        configure = self.configure
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
@@ -292,9 +293,9 @@ class S3AWSCloudModel(S3CloudModel):
                            ),
                      *s3_meta_fields())
 
-        self.configure(tablename,
-                       super_entity = "setup_cloud",
-                       )
+        configure(tablename,
+                  super_entity = "setup_cloud",
+                  )
 
         # ---------------------------------------------------------------------
         # AWS Server Details
@@ -331,8 +332,92 @@ class S3AWSCloudModel(S3CloudModel):
                            ),
                      *s3_meta_fields())
 
+        configure(tablename,
+                  ondelete = self.setup_aws_server_ondelete,
+                  )
+
         # ---------------------------------------------------------------------
         return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def setup_aws_server_ondelete(form):
+        """
+            Cleanup Tasks when a Server is Deleted
+            - AWS Instance
+            - AWS Keypair
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        aws_server_id = form.id
+
+        table = s3db.setup_aws_server
+        record = db(table.id == aws_server_id).select(table.region,
+                                                      table.instance_id,
+                                                      table.deleted_fk,
+                                                      limitby = (0, 1)
+                                                      ).first()
+        deleted_fks = json.loads(record.deleted_fk)
+        server_id = deleted_fks.get("server_id")
+
+        stable = s3db.setup_server
+        dtable = s3db.setup_deployment
+        atable = s3db.setup_aws_cloud
+        query = (stable.id == server_id) & 
+                (dtable.id == stable.deployment_id) & \
+                (dtable.cloud_id == atable.id)
+        deployment = db(query).select(atable.access_key,
+                                      atable.secret_key,
+                                      stable.name,
+                                      limitby = (0, 1)
+                                      ).first()
+
+        server_name = deployment["setup_server.name"]
+        aws = deployment["setup_aws_cloud"]
+        access_key = aws.access_key
+        secret_key = aws.secret_key
+
+        region = record.region
+
+        playbook = [{"hosts": "localhost",
+                     "connection": "local",
+                     "gather_facts": "no",
+                     "tasks": [# Terminate AWS Instance
+                               {"ec2": {"aws_access_key": access_key,
+                                        "aws_secret_key": secret_key,
+                                        "region": region,
+                                        "instance_ids": record.instance_id,
+                                        "state": "absent",
+                                        },
+                                    },
+                               # Delete Keypair
+                               {"ec2-key": {"aws_access_key": access_key,
+                                            "aws_secret_key": secret_key,
+                                            "region": region,
+                                            "name": server_name,
+                                            "state": "absent",
+                                            },
+                                },
+                               ],
+                     },
+                    ]
+
+        # Write Playbook
+        name = "aws_server_ondelete_%d" % int(time.time())
+        task_vars = setup_write_playbook("%s.yml" % name,
+                                         playbook,
+                                         )
+
+        # Run Playbook
+        task_id = current.s3task.schedule_task(name,
+                                               vars = task_vars,
+                                               function_name = "setup_run_playbook",
+                                               repeats = None,
+                                               timeout = 6000,
+                                               #sync_output = 300
+                                               )
 
 # =============================================================================
 class S3SetupModel(S3Model):
@@ -586,10 +671,6 @@ class S3SetupModel(S3Model):
             msg_record_deleted = T("Server deleted"),
             msg_list_empty = T("No Servers currently registered"))
 
-        configure(tablename,
-                  ondelete = self.setup_server_ondelete,
-                  )
-
         add_components(tablename,
                        setup_aws_server = {"joinby": "server_id",
                                            "multiple": False,
@@ -744,6 +825,7 @@ class S3SetupModel(S3Model):
                                  "task_id",
                                  "log_file",
                                  ],
+                  ondelete = setup_instance_ondelete,
                   )
 
         set_method("setup", "deployment",
@@ -1509,130 +1591,73 @@ dropdown.change(function() {
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def setup_server_ondelete(form):
+    def setup_instance_ondelete(form):
         """
-            Cleanup Tasks when a Server is Deleted
-            - AWS Instance
-            - AWS Keypair
+            Cleanup Tasks when an Instance is Deleted
             - DNS
         """
 
         db = current.db
         s3db = current.s3db
 
-        server_id = form.id
+        instance_id = form.id
 
-        table = s3db.setup_server
-        record = db(table.id == server_id).select(table.name,
+        table = s3db.setup_instance
+        record = db(table.id == server_id).select(table.url,
                                                   table.deleted_fk,
                                                   limitby = (0, 1)
                                                   ).first()
         deleted_fks = json.loads(record.deleted_fk)
         deployment_id = deleted_fks.get("deployment_id")
 
-        if deployment_id is None:
-            # We cannot cleanup
-            current.log.debug("Couldn't find deployment_id when deleting Server")
-            return
-
         dtable = s3db.setup_deployment
-        deployment = db(dtable.id == deployment_id).select(dtable.cloud_id,
-                                                           dtable.dns_id,
+        deployment = db(dtable.id == deployment_id).select(dtable.dns_id,
                                                            limitby = (0, 1)
                                                            ).first()
 
-        cloud_id = deployment.cloud_id
         dns_id = deployment.dns_id
 
-        if cloud_id is None and dns_id is None:
+        if dns_id is None:
             # Nothing to cleanup
             return
 
-        tasks = []
+        # @ToDo: Will need extending when we support multiple DNS Providers
+        # Get Gandi details
+        gtable = s3db.setup_gandi_dns
+        gandi = db(gtable.id == dns_id).select(gtable.api_key,
+                                               gtable.domain,
+                                               gtable.zone,
+                                               limitby = (0, 1)
+                                               ).first()
+        gandi_api_key = gandi.api_key
+        domain = gandi.domain
+        url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
 
-        if cloud_id:
-            # @ToDo: Will need extending when we support multiple Cloud Providers
-            # Get AWS details
-            atable = s3db.setup_aws_cloud
-            aws = db(atable.id == cloud_id).select(atable.access_key,
-                                                   atable.secret_key,
-                                                   limitby = (0, 1)
-                                                   ).first()
-            access_key = aws.access_key
-            secret_key = aws.secret_key
-
-            # Get Server details
-            astable = s3db.setup_aws_server
-            aws_server = db(astable.server_id == server_id).select(astable.region,
-                                                                   astable.instance_id,
-                                                                   limitby = (0, 1)
-                                                                   ).first()
-            try:
-                region = aws_server.region
-            except:
-                current.log.debug("Couldn't find AWS Server record when deleting Server")
-            else:
-                tasks += [# Terminate AWS Instance
-                          {"ec2": {"aws_access_key": access_key,
-                                   "aws_secret_key": secret_key,
-                                   "region": region,
-                                   "instance_ids": aws_server.instance_id,
-                                   "state": "absent",
-                                   },
-                               },
-                          # Delete Keypair
-                          {"ec2-key": {"aws_access_key": access_key,
-                                   "aws_secret_key": secret_key,
-                                   "region": region,
-                                   "name": record.name,
-                                   "state": "absent",
-                                   },
-                               },
-                          ]
-
-        if dns_id:
-            # @ToDo: Will need extending when we support multiple DNS Providers
-            # Get Gandi details
-            gtable = s3db.setup_gandi_dns
-            gandi = db(gtable.id == dns_id).select(gtable.api_key,
-                                                   gtable.domain,
-                                                   gtable.zone,
-                                                   limitby = (0, 1)
-                                                   ).first()
-            try:
-                gandi_api_key = gandi.api_key
-                domain = gandi.domain
-                url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
-            except:
-                current.log.debug("Couldn't find Gandi DNS record when deleting Server")
-            else:
-                # Get Instance(s) details
-                itable = s3db.setup_instance
-                instances = db(itable.deployment_id == deployment_id).select(itable.url)
-                for instance in instances:
-                    # Delete DNS record
-                    parts = instance.url.split("://")
-                    if len(parts) == 1:
-                        sitename = parts[0]
-                    else:
-                        sitename = parts[1]
-                    dns_record = sitename.split(".%s" % domain, 1)[0]
-                    tasks.append({"uri": {"url": "%s/%s" % (url, dns_record),
-                                          "method": "DELETE",
-                                          "headers": {"X-Api-Key": gandi_api_key,
-                                                      },
-                                          },
-                                  })
+        # Delete DNS record
+        parts = record.url.split("://")
+        if len(parts) == 1:
+            sitename = parts[0]
+        else:
+            sitename = parts[1]
+        dns_record = sitename.split(".%s" % domain, 1)[0]
 
         playbook = [{"hosts": "localhost",
                      "connection": "local",
                      "gather_facts": "no",
-                     "tasks": tasks,
+                     "tasks": [{"uri": {"url": "%s/%s" % (url, dns_record),
+                                        "method": "DELETE",
+                                        "headers": {"X-Api-Key": gandi_api_key,
+                                                    },
+                                        },
+                                # Don't worry if it didn't exist
+                                "ignore_errors": "yes",
+                                },
+                               ],
                      },
                     ]
 
         # Write Playbook
-        name = "server_delete_%d" % int(time.time())
+        name = "instance_ondelete_%d" % int(time.time())
         task_vars = setup_write_playbook("%s.yml" % name,
                                          playbook,
                                          )
