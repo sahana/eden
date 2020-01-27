@@ -2062,15 +2062,15 @@ class S3SetupMonitorModel(S3Model):
 
         set_method("monitor", "task",
                    method = "enable",
-                   action = self.setup_monitor_task_enable_interactive)
+                   action = setup_monitor_task_enable_interactive)
 
         set_method("monitor", "task",
                    method = "disable",
-                   action = self.setup_monitor_task_disable_interactive)
+                   action = setup_monitor_task_disable_interactive)
 
         set_method("monitor", "task",
                    method = "check",
-                   action = self.setup_monitor_task_run)
+                   action = setup_monitor_task_run)
 
         # =====================================================================
         # Runs
@@ -2161,120 +2161,6 @@ class S3SetupMonitorModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def setup_monitor_task_enable(task_id):
-        """
-            Enable a Task
-            - Schedule Check
-
-            CLI API for shell scripts & to be called by S3Method
-        """
-
-        db = current.db
-        table = current.s3db.setup_monitor_task
-
-        record = db(table.id == task_id).select(table.id,
-                                                table.enabled,
-                                                limitby = (0, 1),
-                                                ).first()
-
-        if not record.enabled:
-            # Flag it as enabled
-            record.update_record(enabled = True)
-
-        # Is the task already Scheduled?
-        ttable = db.scheduler_task
-        args = "[%s]" % task_id
-        query = ((ttable.function_name == "setup_monitor_run_task") & \
-                 (ttable.args == args) & \
-                 (ttable.status.belongs(["RUNNING",
-                                         "QUEUED",
-                                         "ALLOCATED"])))
-        exists = db(query).select(ttable.id,
-                                  limitby = (0, 1)
-                                  ).first()
-        if exists:
-            return "Task already enabled"
-        else:
-            current.s3task.schedule_task("setup_monitor_run_task",
-                                         args = [task_id],
-                                         period = 300,  # seconds
-                                         timeout = 300, # seconds
-                                         repeats = 0    # unlimited
-                                         )
-            return "Task enabled"
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def setup_monitor_task_enable_interactive(r, **attr):
-        """
-            Enable a Task
-            - Schedule Check
-
-            S3Method for interactive requests
-        """
-
-        result = S3SetupMonitorModel.setup_monitor_task_enable(r.id)
-        current.session.confirmation = result
-        redirect(URL(f="monitor_task",
-                     args = []))
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def setup_monitor_task_disable(task_id):
-        """
-            Disable a Check
-            - Remove Schedule for Check
-
-            CLI API for shell scripts & to be called by S3Method
-        """
-
-        db = current.db
-        table = current.s3db.setup_monitor_task
-
-        record = db(table.id == task_id).select(table.id, # needed for update_record
-                                                table.enabled,
-                                                limitby = (0, 1),
-                                                ).first()
-
-        if record.enabled:
-            # Flag it as disabled
-            record.update_record(enabled = False)
-
-        # Is the task already Scheduled?
-        ttable = db.scheduler_task
-        args = "[%s]" % task_id
-        query = ((ttable.function_name == "setup_monitor_run_task") & \
-                 (ttable.args == args) & \
-                 (ttable.status.belongs(["RUNNING",
-                                         "QUEUED",
-                                         "ALLOCATED"])))
-        exists = db(query).select(ttable.id,
-                                  limitby = (0, 1)
-                                  ).first()
-        if exists:
-            # Disable all
-            db(query).update(status = "STOPPED")
-            return "Task disabled"
-        else:
-            return "Task already disabled"
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def setup_monitor_task_disable_interactive(r, **attr):
-        """
-            Disable a Task
-            - Remove Schedule for Check
-
-            S3Method for interactive requests
-        """
-
-        result = S3SetupMonitorModel.setup_monitor_task_disable(r.id)
-        current.session.confirmation = result
-        redirect(URL(f="monitor_task",
-                     args = []))
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def setup_monitor_task_onaccept(form):
         """
             Process the Enabled Flag
@@ -2288,16 +2174,16 @@ class S3SetupMonitorModel(S3Model):
             # Update form
             # Process if changed
             if form.record.enabled and not form_vars.enabled:
-                S3SetupMonitorModel.setup_monitor_task_disable(form_vars.id)
+                setup_monitor_task_disable(form_vars.id)
             elif form_vars.enabled and not form.record.enabled:
-                S3SetupMonitorModel.setup_monitor_task_enable(form_vars.id)
+                setup_monitor_task_enable(form_vars.id)
         else:
             # Create form
             db = current.db
             record_id = form_vars.id
             if form_vars.enabled:
                 # Process only if enabled
-                S3SetupMonitorModel.setup_monitor_task_enable(record_id)
+                setup_monitor_task_enable(record_id)
 
             # Read default check options
             ctable = db.setup_monitor_check
@@ -2332,25 +2218,6 @@ class S3SetupMonitorModel(S3Model):
                 db(ttable.id == record_id).update(deployment_id = deployment_id,
                                                   options = check.options,
                                                   )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def setup_monitor_task_run(r, **attr):
-        """
-            Run a Task
-
-            S3Method for interactive requests
-        """
-
-        task_id = r.id
-        current.s3task.run_async("setup_monitor_task_run",
-                                 args = [task_id])
-        current.session.confirmation = \
-            current.T("The check request has been submitted, so results should appear shortly - refresh to see them")
-
-        redirect(URL(c="setup", f="monitor_task",
-                     args = [task_id, "log"],
-                     ))
 
 # =============================================================================
 def setup_monitor_server_enable(server_id):
@@ -2501,6 +2368,133 @@ def setup_monitor_server_check(r, **attr):
                  ))
 
 # =============================================================================
+def setup_monitor_task_enable(task_id):
+    """
+        Enable a Task
+        - Schedule Check (if server enabled)
+
+        CLI API for shell scripts & to be called by S3Method
+    """
+
+    db = current.db
+    table = current.s3db.setup_monitor_task
+
+    record = db(table.id == task_id).select(table.id,
+                                            table.enabled,
+                                            limitby = (0, 1),
+                                            ).first()
+
+    if not record.enabled:
+        # Flag it as enabled
+        record.update_record(enabled = True)
+
+    # @ToDo: Only schedule task if monitor_server is enabled
+    # Is the task already Scheduled?
+    ttable = db.scheduler_task
+    args = "[%s]" % task_id
+    query = ((ttable.function_name == "setup_monitor_run_task") & \
+             (ttable.args == args) & \
+             (ttable.status.belongs(["RUNNING",
+                                     "QUEUED",
+                                     "ALLOCATED"])))
+    exists = db(query).select(ttable.id,
+                              limitby = (0, 1)
+                              ).first()
+    if exists:
+        return "Task already enabled"
+    else:
+        current.s3task.schedule_task("setup_monitor_run_task",
+                                     args = [task_id],
+                                     period = 300,  # seconds
+                                     timeout = 300, # seconds
+                                     repeats = 0    # unlimited
+                                     )
+        return "Task enabled"
+
+# =============================================================================
+def setup_monitor_task_enable_interactive(r, **attr):
+    """
+        Enable a Task
+        - Schedule Check
+
+        S3Method for interactive requests
+    """
+
+    result = setup_monitor_task_enable(r.id)
+    current.session.confirmation = result
+    redirect(URL(f = "monitor_task"))
+
+# =============================================================================
+def setup_monitor_task_disable(task_id):
+    """
+        Disable a Check
+        - Remove Schedule for Check
+
+        CLI API for shell scripts & to be called by S3Method
+    """
+
+    db = current.db
+    table = current.s3db.setup_monitor_task
+
+    record = db(table.id == task_id).select(table.id, # needed for update_record
+                                            table.enabled,
+                                            limitby = (0, 1),
+                                            ).first()
+
+    if record.enabled:
+        # Flag it as disabled
+        record.update_record(enabled = False)
+
+    # Is the task already Scheduled?
+    ttable = db.scheduler_task
+    args = "[%s]" % task_id
+    query = ((ttable.function_name == "setup_monitor_run_task") & \
+             (ttable.args == args) & \
+             (ttable.status.belongs(["RUNNING",
+                                     "QUEUED",
+                                     "ALLOCATED"])))
+    exists = db(query).select(ttable.id,
+                              limitby = (0, 1)
+                              ).first()
+    if exists:
+        # Disable all
+        db(query).update(status = "STOPPED")
+        return "Task disabled"
+    else:
+        return "Task already disabled"
+
+# =============================================================================
+def setup_monitor_task_disable_interactive(r, **attr):
+    """
+        Disable a Task
+        - Remove Schedule for Check
+
+        S3Method for interactive requests
+    """
+
+    result = setup_monitor_task_disable(r.id)
+    current.session.confirmation = result
+    redirect(URL(f = "monitor_task"))
+
+# =============================================================================
+def setup_monitor_task_run(r, **attr):
+    """
+        Run a Task
+
+        S3Method for interactive requests
+    """
+
+    task_id = r.id
+    current.s3task.run_async("setup_monitor_task_run",
+                             args = [task_id])
+    current.session.confirmation = \
+        current.T("The check request has been submitted, so results should appear shortly - refresh to see them")
+
+    redirect(URL(c="setup", f="monitor_task",
+                 args = [task_id, "log"],
+                 ))
+
+# =============================================================================
 def setup_monitor_run_task(task_id):
     """
         Check a Service
@@ -2546,7 +2540,9 @@ def setup_monitor_run_task(task_id):
     except Exception:
         import traceback
         tb_parts = sys.exc_info()
-        tb_text = "".join(traceback.format_exception(tb_parts[0], tb_parts[1], tb_parts[2]))
+        tb_text = "".join(traceback.format_exception(tb_parts[0],
+                                                     tb_parts[1],
+                                                     tb_parts[2]))
         result = {"traceback": tb_text,
                   }
         status = 3 # Critical

@@ -115,7 +115,9 @@ class S3Monitor(object):
         except requests.exceptions.SSLError:
             import traceback
             tb_parts = sys.exc_info()
-            tb_text = "".join(traceback.format_exception(tb_parts[0], tb_parts[1], tb_parts[2]))
+            tb_text = "".join(traceback.format_exception(tb_parts[0],
+                                                         tb_parts[1],
+                                                         tb_parts[2]))
             return {"result": "Critical: SSL Error", # e.g. expired
                     "status": 3,
                     "traceback": tb_text,
@@ -123,7 +125,9 @@ class S3Monitor(object):
         except requests.exceptions.Timeout:
             import traceback
             tb_parts = sys.exc_info()
-            tb_text = "".join(traceback.format_exception(tb_parts[0], tb_parts[1], tb_parts[2]))
+            tb_text = "".join(traceback.format_exception(tb_parts[0],
+                                                         tb_parts[1],
+                                                         tb_parts[2]))
             return {"result": "Critical: Timeout Error",
                     "status": 3,
                     "traceback": tb_text,
@@ -131,7 +135,9 @@ class S3Monitor(object):
         except requests.exceptions.TooManyRedirects:
             import traceback
             tb_parts = sys.exc_info()
-            tb_text = "".join(traceback.format_exception(tb_parts[0], tb_parts[1], tb_parts[2]))
+            tb_text = "".join(traceback.format_exception(tb_parts[0],
+                                                         tb_parts[1],
+                                                         tb_parts[2]))
             return {"result": "Critical: TooManyRedirects Error",
                     "status": 3,
                     "traceback": tb_text,
@@ -143,7 +149,8 @@ class S3Monitor(object):
                     }
 
         if r.text != public_url:
-            return {"result": "Critical: Page returned %s" % r.text,
+            return {"result": "Critical: Page returned '%s' instead of  '%s'" % \
+                                (r.text, public_url),
                     "status": 3,
                     }
 
@@ -285,7 +292,9 @@ class S3Monitor(object):
         except Exception:
             import traceback
             tb_parts = sys.exc_info()
-            tb_text = "".join(traceback.format_exception(tb_parts[0], tb_parts[1], tb_parts[2]))
+            tb_text = "".join(traceback.format_exception(tb_parts[0],
+                                                         tb_parts[1],
+                                                         tb_parts[2]))
             return {"result": "Critical: Ping failed",
                     "status": 3,
                     "traceback": tb_text,
