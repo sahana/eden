@@ -349,8 +349,6 @@ class S3AWSCloudModel(S3CloudModel):
             - AWS Keypair
         """
 
-        server_id = row.server_id
-
         db = current.db
         s3db = current.s3db
         stable = s3db.setup_server
@@ -358,12 +356,12 @@ class S3AWSCloudModel(S3CloudModel):
         dtable = s3db.setup_deployment
         atable = s3db.setup_aws_cloud
 
-        aws_server = db(astable.server_id == server_id).select(astable.region, # Only deleted_fks are in the row object
-                                                               limitby = (0, 1)
-                                                               ).first()
+        aws_server = db(astable.id == row.id).select(astable.region, # Only deleted_fks are in the row object
+                                                     limitby = (0, 1)
+                                                     ).first()
         region = aws_server.region
 
-        query = (stable.id == server_id) & \
+        query = (stable.id == row.server_id) & \
                 (dtable.id == stable.deployment_id) & \
                 (dtable.cloud_id == atable.id)
         deployment = db(query).select(atable.access_key,
