@@ -52,6 +52,7 @@ import json
 import os
 import random
 import string
+import sys
 import time
 
 from gluon import *
@@ -1894,14 +1895,14 @@ class S3SetupMonitorModel(S3Model):
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
-        STATUS_OPTS = {1 : T("OK"),
+        STATUS_OPTS = {0 : T("Unknown"),
+                       1 : T("OK"),
                        2 : T("Warning"),
                        3 : T("Critical"),
-                       4 : T("Unknown"),
                        }
 
         status_id = S3ReusableField("status", "integer", notnull=True,
-                                    default = 4,
+                                    default = 0,
                                     label = T("Status"),
                                     represent = lambda opt: \
                                                     STATUS_OPTS.get(opt,
@@ -2078,6 +2079,12 @@ class S3SetupMonitorModel(S3Model):
                      server_id(writable = False),
                      task_id(writable = False),
                      status_id(),
+                     Field("result", "json",
+                           label = T("Result"),
+                           requires = IS_EMPTY_OR(
+                                        IS_JSONS3()
+                                        ),
+                           ),
                      s3_comments(),
                      *s3_meta_fields()#,
                      #on_define = lambda table: \
@@ -2166,7 +2173,7 @@ class S3SetupMonitorModel(S3Model):
 
         record = db(table.id == task_id).select(table.id,
                                                 table.enabled,
-                                                limitby=(0, 1),
+                                                limitby = (0, 1),
                                                 ).first()
 
         if not record.enabled:
@@ -2178,9 +2185,12 @@ class S3SetupMonitorModel(S3Model):
         args = "[%s]" % task_id
         query = ((ttable.function_name == "setup_monitor_run_task") & \
                  (ttable.args == args) & \
-                 (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
+                 (ttable.status.belongs(["RUNNING",
+                                         "QUEUED",
+                                         "ALLOCATED"])))
         exists = db(query).select(ttable.id,
-                                  limitby=(0, 1)).first()
+                                  limitby = (0, 1)
+                                  ).first()
         if exists:
             return "Task already enabled"
         else:
@@ -2221,7 +2231,7 @@ class S3SetupMonitorModel(S3Model):
 
         record = db(table.id == task_id).select(table.id, # needed for update_record
                                                 table.enabled,
-                                                limitby=(0, 1),
+                                                limitby = (0, 1),
                                                 ).first()
 
         if record.enabled:
@@ -2233,12 +2243,15 @@ class S3SetupMonitorModel(S3Model):
         args = "[%s]" % task_id
         query = ((ttable.function_name == "setup_monitor_run_task") & \
                  (ttable.args == args) & \
-                 (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
+                 (ttable.status.belongs(["RUNNING",
+                                         "QUEUED",
+                                         "ALLOCATED"])))
         exists = db(query).select(ttable.id,
-                                  limitby=(0, 1)).first()
+                                  limitby = (0, 1)
+                                  ).first()
         if exists:
             # Disable all
-            db(query).update(status="STOPPED")
+            db(query).update(status = "STOPPED")
             return "Task disabled"
         else:
             return "Task already disabled"
@@ -2270,7 +2283,7 @@ class S3SetupMonitorModel(S3Model):
         form_vars = form.vars
         if form.record:
             # Update form
-            # process if changed
+            # Process if changed
             if form.record.enabled and not form_vars.enabled:
                 S3SetupMonitorModel.setup_monitor_task_disable(form_vars.id)
             elif form_vars.enabled and not form.record.enabled:
@@ -2370,7 +2383,9 @@ def setup_monitor_server_enable(server_id):
     ttable = db.scheduler_task
     query = ((ttable.function_name == "setup_monitor_run_task") & \
              (ttable.args.belongs(args)) & \
-             (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
+             (ttable.status.belongs(["RUNNING",
+                                     "QUEUED",
+                                     "ALLOCATED"])))
     exists = db(query).select(ttable.id)
     exists = [r.id for r in exists]
     for task in tasks:
@@ -2431,7 +2446,9 @@ def setup_monitor_server_disable(server_id):
     ttable = db.scheduler_task
     query = ((ttable.function_name == "setup_monitor_run_task") & \
              (ttable.args.belongs(args)) & \
-             (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
+             (ttable.status.belongs(["RUNNING",
+                                     "QUEUED",
+                                     "ALLOCATED"])))
     exists = db(query).select(ttable.id,
                               limitby = (0, 1)
                               ).first()
@@ -2524,22 +2541,55 @@ def setup_monitor_run_task(task_id):
         # Run the script
         result = fn(task_id, run_id)
     except Exception:
-        tb = sys.exc_info()[2]
-        result = {"traceback": tb,
+        result = {"traceback": sys.exc_info()[2],
                   }
-        status = 2 # Warning
+        status = 3 # Critical
     else:
-        status = result.get("status")
-        if status is None:
-            status = 2 # Warning
+        try:
+            status = result.get("status")
+        except AttributeError:
+            status = 3 # Critical
         else:
             del result["status"]
-        
 
+    # Store the Result & Status
+    # ... in Run
     db(rtable.id == run_id).update(result = result,
                                    status = status)
 
-    # @ToDo: Cascade status to Host
+    # ...in Task
+    db(table.id == task_id).update(result = result,
+                                   status = status)
+
+    # ...in Host
+    check_lower = None
+    stable = db.setup_monitor_server
+    if status == 3:
+        # Task at Critical => Server -> Critical
+        db(stable.id == server_id).update(status = status)
+    else:
+        server = db(stable.id == server_id).select(stable.id,
+                                                   stable.status,
+                                                   limitby = (0, 1),
+                                                   ).first()
+        if status == server.status:
+            pass
+        elif status > server.status:
+            # Increase Server Status to match Task Status
+            server.update_record(status = status)
+        else:
+            # status < server.status
+            # Check if we should Lower the Server Status to match Task Status
+            query = (table.id != task_id) & \
+                    (table.server_id == server_id) & \
+                    (table.status > status) & \
+                    (table.enabled == True) & \
+                    (table.deleted == False)
+            higher = db(query).select(table.id,
+                                      limitby = (0, 1)
+                                      ).first()
+            if higher is None:
+                server.update_record(status = status)
 
     return result
 
@@ -3119,27 +3169,25 @@ def setup_rheader(r, tabs=None):
             rheader = DIV(rheader_tabs)
 
         elif r_name == "monitor_check":
-            tabs = [(T("Check Details"), None),
-                    # @ToDo: Move Inline
-                    (T("Options"), "option"),
-                    ]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
+            #tabs = [(T("Check Details"), None),
+            #        ]
+            #rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            record = r.record
-            table = r.table
-            rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
-                                   record.name),
-                                TR(TH("%s: " % table.function_name.label),
-                                   record.function_name),
-                                TR(TH("%s: " % table.comments.label),
-                                   record.comments or ""),
-                                ), rheader_tabs)
+            #record = r.record
+            #table = r.table
+            #rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+            #                       record.name),
+            #                    TR(TH("%s: " % table.function_name.label),
+            #                       record.function_name),
+            #                    TR(TH("%s: " % table.comments.label),
+            #                       record.comments or ""),
+            #                    ), rheader_tabs)
+            # No tabs => No need for rheader
+            rheader = None
 
         elif r_name == "monitor_task":
             tabs = [(T("Task Details"), None),
-                    # @ToDo: Move Inline
-                    (T("Options"), "option"),
-                    (T("Logs"), "log"),
+                    (T("Logs"), "run"),
                     ]
             rheader_tabs = s3_rheader_tabs(r, tabs)
 

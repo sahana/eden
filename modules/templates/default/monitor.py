@@ -5,7 +5,7 @@
 
     Template-specific Monitoring Tasks are defined here.
 
-    @copyright: 2014-2019 (c) Sahana Software Foundation
+    @copyright: 2014-2020 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -36,6 +36,7 @@ import datetime
 import json
 import platform
 import subprocess
+import sys
 
 from gluon import current
 
@@ -59,7 +60,88 @@ class S3Monitor(object):
             Test the free diskspace
         """
 
-        return NotImplementedError
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def eden(task_id, run_id):
+        """
+            Test that we can retrieve the public_url, which checks:
+            - DNS must resolve to correct IP
+            - Server must be up
+            - Firewall cannot be blocking
+            - Web server is running
+            - UWSGI is running
+            - Database is running
+            - Eden can connect to Database
+        """
+
+        if REQUESTS is None:
+            return {"result": "Critical: Requests library not installed",
+                    "status": 3,
+                    }
+
+        db = current.db
+        s3db = current.s3db
+
+        # Read the Task Options
+        ttable = s3db.setup_monitor_task
+        task = db(ttable.task_id == task_id).select(ttable.deployment_id,
+                                                    ttable.options,
+                                                    limitby = (0, 1)
+                                                    ).first()
+        options = json.loads(task.options)
+        options_get = options.get
+
+        appname = options_get("appname", "eden")
+        public_url = options_get("public_url")
+        timeout = options_get("timeout", 60) # 60s (default is no timeout!)
+
+        if not public_url:
+            itable = s3db.setup_instance
+            query = (itable.deployment_id == task.deployment_id) & \
+                    (itable.type == 1)
+            instance = db(query).select(itable.url,
+                                        limitby = (0, 1)
+                                        ).first()
+            public_url = instance.url
+
+        url = "%(public_url)s/%(appname)s/default/public_url" % {"appname": appname,
+                                                                 "public_url": public_url,
+                                                                 }
+
+        try:
+            r = requests.get(url, timeout = timeout) # verify=True
+        except requests.exceptions.SSLError:
+            return {"result": "Critical: SSL Error", # e.g. expired
+                    "status": 3,
+                    "traceback": sys.exc_info()[2],
+                    }
+        except requests.exceptions.Timeout:
+            return {"result": "Critical: Timeout Error",
+                    "status": 3,
+                    "traceback": sys.exc_info()[2],
+                    }
+        except requests.exceptions.TooManyRedirects:
+            return {"result": "Critical: TooManyRedirects Error",
+                    "status": 3,
+                    "traceback": sys.exc_info()[2],
+                    }
+
+        if r.status_code != 200:
+            return {"result": "Critical: HTTP Error. Status = %s" % r.status_code,
+                    "status": 3,
+                    }
+
+        if r.text != public_url:
+            return {"result": "Critical: Page returned %s" % r.text,
+                    "status": 3,
+                    }
+
+        return {"latency": r.elapsed,
+                "result": "OK",
+                "status": 1,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -78,7 +160,9 @@ class S3Monitor(object):
 
         to = options_get("to", None)
         if not to:
-            return False
+            return {"result": "Critical: No recipient address specified",
+                    "status": 3,
+                    }
 
         subject = options_get("subject", "")
         message = options_get("message", "")
@@ -87,7 +171,9 @@ class S3Monitor(object):
             # Use the outbound email address
             reply_to = current.deployment_settings.get_mail_sender()
             if not reply_to:
-                return False
+                return {"result": "Critical: No reply_to specified",
+                        "status": 3,
+                        }
 
         # Append the run_id for the remote parser to identify as a monitoring message & return to us to be able to match the run
         message = "%s\n%s" % (message, ":run_id:%s:" % run_id)
@@ -111,11 +197,13 @@ class S3Monitor(object):
                                          timeout = 300, # seconds
                                          repeats = 1    # one-time
                                          )
-            # Warning: No reply received yet
-            return 2
+            return {"result": "Warning: No reply received yet",
+                    "status": 2,
+                    }
         else:
-            # Critical: Unable to send Email
-            return 3
+            return {"result": "Critical: Unable to send Email",
+                    "status": 3,
+                    }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -125,26 +213,25 @@ class S3Monitor(object):
         """
 
         if REQUESTS is None:
-            return 2 # Warning
+            return {"result": "Critical: Requests library not installed",
+                    "status": 3,
+                    }
+
+        raise NotImplementedError
 
     # -------------------------------------------------------------------------
     @staticmethod
     def https(task_id, run_id):
         """
-            Test that HTTPS is accessible
+            Test that HTTP is accessible
         """
 
         if REQUESTS is None:
-            return 2 # Warning
+            return {"result": "Critical: Requests library not installed",
+                    "status": 3,
+                    }
 
-        # Read Options
-        url = "/eden/default/public_url"
-
-        try:
-            r = requests.get(url) # verify=True
-        except SSLError:
-            # Problem with SSL certificate - e.g. expired?
-            r = requests.get(url, verify = False)
+        raise NotImplementedError
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -153,7 +240,7 @@ class S3Monitor(object):
             Test the Load Average
         """
 
-        return NotImplementedError
+        raise NotImplementedError
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -177,15 +264,20 @@ class S3Monitor(object):
         host_ip = row.host_ip
 
         try:
+            # @ToDo: Replace with socket?
+            # - we want to see the latency
             output = subprocess.check_output("ping -{} 1 {}".format("n" if platform.system().lower == "windows" else "c",
                                                                     host_ip),
                                              shell = True)
-        except Exception as e:
-            # Critical: Ping failed
-            return 3
+        except Exception:
+            return {"result": "Critical: Ping failed",
+                    "status": 3,
+                    "traceback": sys.exc_info()[2],
+                    }
         else:
-            # OK
-            return 1
+            return {"result": "OK",
+                    "status": 1,
+                    }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -194,6 +286,6 @@ class S3Monitor(object):
             Test that a TCP port is accessible
         """
 
-        return NotImplementedError
+        raise NotImplementedError
 
 # END =========================================================================

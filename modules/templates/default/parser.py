@@ -57,6 +57,53 @@ class S3Parser(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def parse_email(message):
+        """
+            Parse Responses
+                - parse responses to mails from the Monitor service
+        """
+
+        reply = None
+
+        db = current.db
+        s3db = current.s3db
+
+        # Need to use Raw currently as not showing in Body
+        message_id = message.message_id
+        table = s3db.msg_email
+        record = db(table.message_id == message_id).select(table.raw,
+                                                           limitby=(0, 1)
+                                                           ).first()
+        if not record:
+            return reply
+
+        message_body = record.raw
+        if not message_body:
+            return reply
+
+        # What type of message is this?
+        if ":run_id:" in message_body:
+            # Response to Monitor Check
+
+            # Parse Mail
+            try:
+                run_id = S3Parser._parse_value(message_body, "run_id")
+                run_id = int(run_id)
+            except:
+                return reply
+
+            # Update the Run entry to show that we have received the reply OK
+            rtable = s3db.monitor_run
+            db(rtable.id == run_id).update(result = "Reply Received",
+                                           status = 1)
+            return reply
+
+        else:
+            # Don't know what this is: ignore
+            return reply
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def parse_twitter(message):
         """
             Filter unstructured tweets
@@ -251,37 +298,6 @@ class S3Parser(object):
         return None
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def _parse_keywords(message_body):
-        """
-            Parse Keywords
-            - helper function for search_resource, etc
-        """
-
-        # Equivalent keywords in one list
-        primary_keywords = ["get", "give", "show"]
-        contact_keywords = ["email", "mobile", "facility", "clinical",
-                            "security", "phone", "status", "hospital",
-                            "person", "organisation"]
-
-        pkeywords = primary_keywords + contact_keywords
-        keywords = message_body.split(" ")
-        pquery = []
-        name = ""
-        for word in keywords:
-            match = None
-            for key in pkeywords:
-                if soundex(key) == soundex(word):
-                    match = key
-                    break
-            if match:
-                pquery.append(match)
-            else:
-                name = word
-
-        return pquery, name
-
-    # -------------------------------------------------------------------------
     def search_resource(self, message):
         """
             1st Pass Parser for searching resources
@@ -310,7 +326,7 @@ class S3Parser(object):
         """
             Search for People
            - can be called direct
-           - can be called from search_by_keyword
+           - can be called from search_resource
         """
 
         message_body = message.body
@@ -385,7 +401,7 @@ class S3Parser(object):
         """
            Search for Hospitals
            - can be called direct
-           - can be called from search_by_keyword
+           - can be called from search_resource
         """
 
         message_body = message.body
@@ -458,7 +474,7 @@ class S3Parser(object):
         """
            Search for Organisations
            - can be called direct
-           - can be called from search_by_keyword
+           - can be called from search_resource
         """
 
         message_body = message.body
@@ -602,6 +618,49 @@ class S3Parser(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def _parse_keywords(message_body):
+        """
+            Parse Keywords
+            - helper function for search_resource, etc
+        """
+
+        # Equivalent keywords in one list
+        primary_keywords = ["get", "give", "show"]
+        contact_keywords = ["email", "mobile", "facility", "clinical",
+                            "security", "phone", "status", "hospital",
+                            "person", "organisation"]
+
+        pkeywords = primary_keywords + contact_keywords
+        keywords = message_body.split(" ")
+        pquery = []
+        name = ""
+        for word in keywords:
+            match = None
+            for key in pkeywords:
+                if soundex(key) == soundex(word):
+                    match = key
+                    break
+            if match:
+                pquery.append(match)
+            else:
+                name = word
+
+        return pquery, name
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _parse_value(text, fieldname):
+        """
+            Parse a value from a piece of text
+        """
+
+        parts = text.split(":%s:" % fieldname, 1)
+        parts = parts[1].split(":", 1)
+        result = parts[0]
+        return result
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def _respond_drequest(message, report_id, response, text):
         """
             Parse Replies To Deployment Request
@@ -613,8 +672,8 @@ class S3Parser(object):
             rtable = current.s3db.irs_ireport_human_resource
             query = (rtable.ireport_id == report_id) & \
                     (rtable.human_resource_id == hr_id)
-            current.db(query).update(reply=text,
-                                     response=response)
+            current.db(query).update(reply = text,
+                                     response = response)
             reply = "Response Logged in the Report (Id: %d )" % report_id
         else:
             reply = None

@@ -710,8 +710,9 @@ def download():
 def get_settings():
     """
        Function to lookup the value of one or more deployment_settings
-       Responds to GET requests.
-       Requires admin permissions
+           Responds to GET requests.
+           Requires admin permissions
+           Used by edentest_robot.py
     """
 
     # Check if the request has a valid authorization header with admin cred.
