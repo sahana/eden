@@ -1365,7 +1365,7 @@ dropdown.change(function() {
                     current.session.warning = current.T("Deployment will not have SSL: URL doesn't resolve in DNS")
                     protocol = "http"
                 # @ToDo Check that ip_addr is correct
-                #       - if host_ip == "127.0.0.1" then we can check the contents 
+                #       - if host_ip == "127.0.0.1" then we can check the contents
                 if host_ip != "127.0.0.1":
                     # We may wish to administer via a private IP, so shouldn't do this:
                     #if protocol == "https" and ip_addr != host_ip:
@@ -1395,7 +1395,7 @@ dropdown.change(function() {
                                      })
                 else:
                     connection = "local"
-                    
+
             # Deploy to Server
             playbook.append({"hosts": host_ip,
                              "connection": connection,
@@ -2546,7 +2546,7 @@ def setup_monitor_run_task(task_id):
     except Exception:
         import traceback
         tb_parts = sys.exc_info()
-        exception_text = traceback.format_exception_only(parts[0, parts[1])[0]
+        exception_text = traceback.format_exception_only(tb_parts[0], tb_parts[1])[0]
         stack_text = "".join(traceback.format_stack())
         result = {"traceback": "%s\n%s\n%s" % (exception_text,
                                                stack_text,
@@ -2779,7 +2779,7 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
                 self._clean_results(result._result, result._task.action)
                 msg += "\n%s" % self._dump_results(result._result, indent=4)
                 logger.append(msg)
-                
+
         def v2_runner_on_unreachable(self, result):
             if self._last_task_banner != result._task._uuid:
                 self._print_task_banner(result._task)
