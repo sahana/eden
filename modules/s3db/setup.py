@@ -367,7 +367,6 @@ class S3AWSCloudModel(S3CloudModel):
         deployment = db(query).select(atable.access_key,
                                       atable.secret_key,
                                       stable.name,
-                                      left = left,
                                       limitby = (0, 1)
                                       ).first()
 
