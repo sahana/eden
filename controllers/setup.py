@@ -374,64 +374,59 @@ def server():
 
     def prep(r):
         if r.interactive:
-            if r.record and not r.component:
+            if r.record:
+                if not r.component:
+                    from s3 import S3SQLCustomForm
 
-                from s3 import S3SQLCustomForm
+                    dtable = s3db.setup_deployment
+                    deployment = db(dtable.id == r.record.deployment_id).select(dtable.cloud_id,
+                                                                                limitby = (0, 1)
+                                                                                ).first()
 
-                s3db = current.s3db
-                dtable = s3db.setup_deployment
-                deployment = db(dtable.id == r.record.deployment_id).select(dtable.cloud_id,
-                                                                            limitby = (0, 1)
-                                                                            ).first()
+                    if deployment.cloud_id:
+                        # Assume AWS for now
+                        crud_form = S3SQLCustomForm("deployment_id",
+                                                    "name",
+                                                    "host_ip",
+                                                    "role",
+                                                    "remote_user",
+                                                    "private_key",
+                                                    (T("AWS Region"), "aws_server.region"),
+                                                    (T("AWS Instance Type"), "aws_server.instance_type"),
+                                                    (T("AWS Image"), "aws_server.image"),
+                                                    (T("AWS Security Group"), "aws_server.security_group"),
+                                                    (T("AWS Instance ID"), "aws_server.instance_id"),
+                                                    (T("Monitor"), "monitor_server.enabled"),
+                                                    "monitor_server.status",
+                                                    )
+                    else:
+                        # No Cloud
+                        f = s3db.setup_server.host_ip
+                        f.requires = f.requires.other # IP is required
+                        crud_form = S3SQLCustomForm("deployment_id",
+                                                    "name",
+                                                    "host_ip",
+                                                    "role",
+                                                    "remote_user",
+                                                    "private_key",
+                                                    (T("Monitor"), "monitor_server.enabled"),
+                                                    "monitor_server.status",
+                                                    )
 
-                if deployment.cloud_id:
-                    # Assume AWS for now
-                    crud_form = S3SQLCustomForm("deployment_id",
-                                                "name",
-                                                "host_ip",
-                                                "role",
-                                                "remote_user",
-                                                "private_key",
-                                                (T("AWS Region"), "aws_server.region"),
-                                                (T("AWS Instance Type"), "aws_server.instance_type"),
-                                                (T("AWS Image"), "aws_server.image"),
-                                                (T("AWS Security Group"), "aws_server.security_group"),
-                                                (T("AWS Instance ID"), "aws_server.instance_id"),
-                                                (T("Monitor"), "monitor_server.enabled"),
-                                                "monitor_server.status",
-                                                )
+                    s3db.configure("setup_server",
+                                   crud_form = crud_form,
+                                   )
 
-                    list_fields = ["deployment_id",
-                                   "name",
-                                   "host_ip",
-                                   "role",
-                                   "monitor_server.enabled",
-                                   "monitor_server.status",
-                                   ]
-                else:
-                    # No Cloud
-                    f = s3db.setup_server.host_ip
-                    f.requires = f.requires.other # IP is required
-                    crud_form = S3SQLCustomForm("deployment_id",
-                                                "name",
-                                                "host_ip",
-                                                "role",
-                                                "remote_user",
-                                                "private_key",
-                                                (T("Monitor"), "monitor_server.enabled"),
-                                                "monitor_server.status",
-                                                )
-
-                    list_fields = ["deployment_id",
-                                   "name",
-                                   "host_ip",
-                                   "role",
-                                   "monitor_server.enabled",
-                                   "monitor_server.status",
-                                   ]
+            else:
+                list_fields = ["deployment_id",
+                               "name",
+                               "host_ip",
+                               "role",
+                               "monitor_server.enabled",
+                               "monitor_server.status",
+                               ]
 
                 s3db.configure("setup_server",
-                               crud_form = crud_form,
                                #insertable = False, # We want to allow monitoring of external hosts
                                list_fields = list_fields,
                                )
