@@ -341,45 +341,35 @@ class S3AWSCloudModel(S3CloudModel):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def setup_aws_server_ondelete(form):
+    def setup_aws_server_ondelete(row):
         """
             Cleanup Tasks when a Server is Deleted
             - AWS Instance
             - AWS Keypair
         """
 
-        db = current.db
         s3db = current.s3db
-
-        aws_server_id = form.id
-
-        table = s3db.setup_aws_server
-        record = db(table.id == aws_server_id).select(table.region,
-                                                      table.instance_id,
-                                                      table.deleted_fk,
-                                                      limitby = (0, 1)
-                                                      ).first()
-        deleted_fks = json.loads(record.deleted_fk)
-        server_id = deleted_fks.get("server_id")
-
         stable = s3db.setup_server
+        astable = s3db.setup_aws_server
         dtable = s3db.setup_deployment
         atable = s3db.setup_aws_cloud
-        query = (stable.id == server_id) & \
+
+        query = (stable.id == row.server_id) & \
+                (astable.server_id == stable.id) & \
                 (dtable.id == stable.deployment_id) & \
                 (dtable.cloud_id == atable.id)
-        deployment = db(query).select(atable.access_key,
-                                      atable.secret_key,
-                                      stable.name,
-                                      limitby = (0, 1)
-                                      ).first()
+        deployment = current.db(query).select(atable.access_key,
+                                              atable.secret_key,
+                                              astable.region, # Only deleted_fks are in the row object
+                                              stable.name,
+                                              limitby = (0, 1)
+                                              ).first()
 
         server_name = deployment["setup_server.name"]
+        region = deployment["setup_aws_server.region"]
         aws = deployment["setup_aws_cloud"]
         access_key = aws.access_key
         secret_key = aws.secret_key
-
-        region = record.region
 
         playbook = [{"hosts": "localhost",
                      "connection": "local",
@@ -388,7 +378,7 @@ class S3AWSCloudModel(S3CloudModel):
                                {"ec2": {"aws_access_key": access_key,
                                         "aws_secret_key": secret_key,
                                         "region": region,
-                                        "instance_ids": record.instance_id,
+                                        "instance_ids": row.instance_id,
                                         "state": "absent",
                                         },
                                     },
@@ -1593,7 +1583,7 @@ dropdown.change(function() {
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def setup_instance_ondelete(form):
+    def setup_instance_ondelete(row):
         """
             Cleanup Tasks when an Instance is Deleted
             - DNS
@@ -1602,26 +1592,22 @@ dropdown.change(function() {
         db = current.db
         s3db = current.s3db
 
-        instance_id = form.id
-
-        table = s3db.setup_instance
-        record = db(table.id == instance_id).select(table.url,
-                                                    table.deleted_fk,
-                                                    limitby = (0, 1)
-                                                    ).first()
-        deleted_fks = json.loads(record.deleted_fk)
-        deployment_id = deleted_fks.get("deployment_id")
-
         dtable = s3db.setup_deployment
-        deployment = db(dtable.id == deployment_id).select(dtable.dns_id,
-                                                           limitby = (0, 1)
-                                                           ).first()
+        deployment = db(dtable.id == row.deployment_id).select(dtable.dns_id,
+                                                               limitby = (0, 1)
+                                                               ).first()
 
         dns_id = deployment.dns_id
 
         if dns_id is None:
             # Nothing to cleanup
             return
+
+        # Read URL (only deleted_fks are in the row object)
+        itable = s3db.setup_instance
+        instance = db(itable.id == row.id).select(itable.url,
+                                                  limitby = (0, 1)
+                                                  ).first()
 
         # @ToDo: Will need extending when we support multiple DNS Providers
         # Get Gandi details
@@ -1636,7 +1622,7 @@ dropdown.change(function() {
         url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
 
         # Delete DNS record
-        parts = record.url.split("://")
+        parts = instance.url.split("://")
         if len(parts) == 1:
             sitename = parts[0]
         else:
@@ -1889,9 +1875,7 @@ class S3SetupMonitorModel(S3Model):
 
     names = ("setup_monitor_server",
              "setup_monitor_check",
-             "setup_monitor_check_option",
              "setup_monitor_task",
-             "setup_monitor_task_option",
              "setup_monitor_run",
              #"setup_monitor_alert",
              )
@@ -1929,7 +1913,9 @@ class S3SetupMonitorModel(S3Model):
 
         # =====================================================================
         # Servers
-        # - extensions for Monitoring
+        # - extensions for Monitoring:
+        #       Are checks Enabled?
+        #       Overall Server Status
         #
         tablename = "setup_monitor_server"
         define_table(tablename,
@@ -1952,14 +1938,24 @@ class S3SetupMonitorModel(S3Model):
 
         # =====================================================================
         # Checks
+        # - monitoring scripts available
         #
         tablename = "setup_monitor_check"
         define_table(tablename,
                      Field("name", unique=True, length=255,
                            label = T("Name"),
                            ),
+                     # Name of a function in modules.<settings.get_setup_monitor_template()>.monitor[.py]
+                     # List populated in controllers/setup/monitor_check()
                      Field("function_name",
                            label = T("Script"),
+                           ),
+                     # Default Options for this Check
+                     Field("options", "json",
+                           label = T("Options"),
+                           requires = IS_EMPTY_OR(
+                                        IS_JSONS3()
+                                        ),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -1977,7 +1973,7 @@ class S3SetupMonitorModel(S3Model):
                 msg_record_deleted = T("Check deleted"),
                 msg_list_empty = T("No Checks currently registered"))
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         check_id = S3ReusableField("check_id", "reference %s" % tablename,
                                    label = T("Check"),
                                    ondelete = "CASCADE",
@@ -1988,28 +1984,8 @@ class S3SetupMonitorModel(S3Model):
                                    )
 
         add_components(tablename,
-                       setup_monitor_check_option = {"name": "option",
-                                                     "joinby": "check_id",
-                                                     },
                        setup_monitor_task = "check_id",
                        )
-
-        # =====================================================================
-        # Check Options
-        # - default configuration of the Check
-        #
-        tablename = "setup_monitor_check_option"
-        define_table(tablename,
-                     check_id(),
-                     # option is a reserved word in MySQL
-                     Field("tag",
-                           label = T("Option"),
-                           ),
-                     Field("value",
-                           label = T("Value"),
-                           ),
-                     s3_comments(),
-                     *s3_meta_fields())
 
         # =====================================================================
         # Tasks
@@ -2021,12 +1997,25 @@ class S3SetupMonitorModel(S3Model):
                                               ),
                      server_id(),
                      check_id(),
+                     # Options for this Check on this Server
+                     Field("options", "json",
+                           label = T("Options"),
+                           requires = IS_EMPTY_OR(
+                                        IS_JSONS3()
+                                        ),
+                           ),
                      Field("enabled", "boolean",
                            default = True,
                            label = T("Enabled?"),
                            represent = s3_yes_no_represent,
                            ),
                      status_id(),
+                     Field("result", "json",
+                           label = T("Result"),
+                           requires = IS_EMPTY_OR(
+                                        IS_JSONS3()
+                                        ),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -2045,12 +2034,16 @@ class S3SetupMonitorModel(S3Model):
 
         configure(tablename,
                   # Open the Options after creation
-                  create_next = URL(c="setup", f="monitor_task", args=["[id]", "option"]),
+                  create_next = URL(c="setup", f="monitor_task",
+                                    args = ["[id]", "option"],
+                                    ),
                   onaccept = self.setup_monitor_task_onaccept,
                   )
 
         # @ToDo: Fix represent
-        represent = S3Represent(lookup=tablename, fields=["server_id", "check_id"])
+        represent = S3Represent(lookup = tablename,
+                                fields = ["server_id", "check_id"],
+                                )
         task_id = S3ReusableField("task_id", "reference %s" % tablename,
                                   label = T("Task"),
                                   ondelete = "CASCADE",
@@ -2063,9 +2056,6 @@ class S3SetupMonitorModel(S3Model):
         add_components(tablename,
                        setup_monitor_alert = "task_id",
                        setup_monitor_run = "task_id",
-                       setup_monitor_task_option = {"name": "option",
-                                                    "joinby": "task_id",
-                                                    },
                        )
 
         set_method("monitor", "task",
@@ -2079,23 +2069,6 @@ class S3SetupMonitorModel(S3Model):
         set_method("monitor", "task",
                    method = "check",
                    action = self.setup_monitor_task_run)
-
-        # =====================================================================
-        # Task Options
-        # - configuration of the Task
-        #
-        tablename = "setup_monitor_task_option"
-        define_table(tablename,
-                     task_id(),
-                     # option is a reserved word in MySQL
-                     Field("tag",
-                           label = T("Option"),
-                           ),
-                     Field("value",
-                           label = T("Value"),
-                           ),
-                     s3_comments(),
-                     *s3_meta_fields())
 
         # =====================================================================
         # Runs
@@ -2310,7 +2283,13 @@ class S3SetupMonitorModel(S3Model):
                 # Process only if enabled
                 S3SetupMonitorModel.setup_monitor_task_enable(record_id)
 
-            # Set deployment_id
+            # Read default check options
+            ctable = db.setup_monitor_check
+            check = db(ctable.id == form_vars.check_id).select(ctable.options,
+                                                               limitby = (0, 1)
+                                                               ).first()
+
+            # Read deployment_id
             ttable = db.setup_monitor_task
             server_id = form_vars.server_id
             if server_id:
@@ -2327,26 +2306,16 @@ class S3SetupMonitorModel(S3Model):
                                                        limitby = (0, 1)
                                                        ).first()
             deployment_id = server.deployment_id
-            if task:
-                task.update_record(deployment_id = deployment_id)
-            else:
-                db(ttable.id == record_id).update(deployment_id = deployment_id)
 
-            # Pre-populate task options
-            check_id = form_vars.check_id
-            cotable = db.setup_monitor_check_option
-            query = (cotable.check_id == check_id) & \
-                    (cotable.deleted == False)
-            options = db(query).select(cotable.tag,
-                                       cotable.value,
-                                       )
-            if not options:
-                return
-            totable = db.setup_monitor_task_option
-            for option in options:
-                totable.insert(tag = option.tag,
-                               value = option.value,
-                               )
+            # Update record
+            if task:
+                task.update_record(deployment_id = deployment_id,
+                                   options = check.options,
+                                   )
+            else:
+                db(ttable.id == record_id).update(deployment_id = deployment_id,
+                                                  options = check.options,
+                                                  )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2358,7 +2327,8 @@ class S3SetupMonitorModel(S3Model):
         """
 
         task_id = r.id
-        current.s3task.run_async("setup_monitor_task_run", args=[task_id])
+        current.s3task.run_async("setup_monitor_task_run",
+                                 args = [task_id])
         current.session.confirmation = \
             current.T("The check request has been submitted, so results should appear shortly - refresh to see them")
 
@@ -2380,7 +2350,7 @@ def setup_monitor_server_enable(server_id):
     stable = current.s3db.setup_monitor_server
     record = db(stable.server_id == server_id).select(stable.id,
                                                       stable.enabled,
-                                                      limitby=(0, 1),
+                                                      limitby = (0, 1)
                                                       ).first()
 
     if not record.enabled:
@@ -2441,7 +2411,7 @@ def setup_monitor_server_disable(server_id):
     stable = current.s3db.setup_monitor_server
     record = db(stable.server_id == server_id).select(stable.id,
                                                       stable.enabled,
-                                                      limitby=(0, 1),
+                                                      limitby = (0, 1)
                                                       ).first()
 
     if record.enabled:
@@ -2463,10 +2433,11 @@ def setup_monitor_server_disable(server_id):
              (ttable.args.belongs(args)) & \
              (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
     exists = db(query).select(ttable.id,
-                              limitby=(0, 1)).first()
+                              limitby = (0, 1)
+                              ).first()
     if exists:
         # Disable all
-        db(query).update(status="STOPPED")
+        db(query).update(status = "STOPPED")
         return "Server Monitoring disabled"
     else:
         return "Server Monitoring already disabled"
@@ -2500,7 +2471,8 @@ def setup_monitor_server_check(r, **attr):
     tasks = current.db(query).select(table.id)
     run_async = current.s3task.run_async
     for task in tasks:
-        run_async("setup_monitor_run_task", args=[task.id])
+        run_async("setup_monitor_run_task",
+                  args = [task.id])
     current.session.confirmation = \
         current.T("The check requests have been submitted, so results should appear shortly - refresh to see them")
 
@@ -2522,7 +2494,7 @@ def setup_monitor_run_task(task_id):
             (table.check_id == ctable.id)
     row = db(query).select(table.server_id,
                            ctable.function_name,
-                           limitby=(0, 1)
+                           limitby = (0, 1)
                            ).first()
     server_id = row["setup_monitor_task.server_id"]
     function_name = row["setup_monitor_check.function_name"]
@@ -2547,20 +2519,25 @@ def setup_monitor_run_task(task_id):
     run_id = rtable.insert(server_id = server_id,
                            task_id = task_id,
                            )
-    # Ensure the entry is made even if the script crashes
-    db.commit()
 
-    # Run the script
-    result = fn(task_id, run_id)
-
-    # Update the entry with the result
-    if result:
-        status = result
-    else:
-        # No result
+    try:
+        # Run the script
+        result = fn(task_id, run_id)
+    except Exception:
+        tb = sys.exc_info()[2]
+        result = {"traceback": tb,
+                  }
         status = 2 # Warning
+    else:
+        status = result.get("status")
+        if status is None:
+            status = 2 # Warning
+        else:
+            del result["status"]
+        
 
-    db(rtable.id == run_id).update(status=status)
+    db(rtable.id == run_id).update(result = result,
+                                   status = status)
 
     # @ToDo: Cascade status to Host
 
@@ -2575,7 +2552,8 @@ def setup_monitor_check_email_reply(run_id):
     rtable = current.s3db.setup_monitor_run
     record = current.db(rtable.id == run_id).select(rtable.id,
                                                     rtable.status,
-                                                    limitby=(0, 1)).first()
+                                                    limitby = (0, 1)
+                                                    ).first()
     try:
         status = record.status
     except:
@@ -2585,7 +2563,7 @@ def setup_monitor_check_email_reply(run_id):
     else:
         if status == 2:
             # Still in Warning State: Make it go Critical
-            record.update_record(status=3)
+            record.update_record(status = 3)
             # @ToDo: Send Alert
 
 # =============================================================================

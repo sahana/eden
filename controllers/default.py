@@ -1212,6 +1212,12 @@ def privacy():
     return {}
 
 # -----------------------------------------------------------------------------
+def public_url():
+    """ Simple check for use in monitoring scripts """
+
+    return settings.get_base_public_url()
+
+# -----------------------------------------------------------------------------
 def rapid():
     """ Set/remove rapid data entry flag """
 

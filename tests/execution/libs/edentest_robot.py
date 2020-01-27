@@ -65,7 +65,7 @@ class edentest_robot(object):
                 m = "Check 000_config.py/config.py/server/internet settings. request %s" \
                 % request_url
 
-            BuiltIn().fail(msg=m)
+            BuiltIn().fail(msg = m)
 
         output = response.json()
 

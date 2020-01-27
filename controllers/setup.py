@@ -485,7 +485,7 @@ def monitor_check():
             S3Monitor = mymodule.S3Monitor()
 
             functions = inspect.getmembers(S3Monitor, \
-                                           predicate=inspect.isfunction)
+                                           predicate = inspect.isfunction)
             function_opts = []
             append = function_opts.append
             for f in functions:

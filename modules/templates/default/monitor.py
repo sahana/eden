@@ -33,11 +33,18 @@
 __all__ = ("S3Monitor",)
 
 import datetime
+import json
 import platform
 import subprocess
 
 from gluon import current
-#from gluon.tools import fetch
+
+try:
+    import requests
+except ImportError:
+    REQUESTS = None
+else:
+    REQUESTS = True
 
 # =============================================================================
 class S3Monitor(object):
@@ -47,47 +54,12 @@ class S3Monitor(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def ping(task_id, run_id):
+    def diskspace(task_id, run_id):
         """
-            Ping a server
+            Test the free diskspace
         """
 
-        s3db = current.s3db
-
-        # Read the IP to Ping
-        ttable = s3db.setup_monitor_task
-        stable = s3db.setup_server
-        query = (ttable.id == task_id) & \
-                (ttable.server_id == stable.id)
-        row = current.db(query).select(stable.host_ip,
-                                       limitby = (0, 1)
-                                       ).first()
-
-        host_ip = row.host_ip
-
-        try:
-            output = subprocess.check_output("ping -{} 1 {}".format("n" if platform.system().lower == "windows" else "c", host_ip), shell=True)
-        except Exception as e:
-            # Critical: Ping failed
-            return 3
-        else:
-            # OK
-            return 1
-
-    # -------------------------------------------------------------------------
-    #@staticmethod
-    #def http(task_id, run_id):
-    #    """
-    #        Test that HTTP is accessible
-    #    """
-
-    # -------------------------------------------------------------------------
-    #@staticmethod
-    #def https(task_id, run_id):
-    #    """
-    #        Test that HTTPS is accessible
-    #        @ToDo: Check that SSL certificate hasn't expired
-    #    """
+        return NotImplementedError
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -97,21 +69,20 @@ class S3Monitor(object):
         """
 
         # Read the Task Options
-        otable = current.s3db.setup_monitor_task_option
-        query = (otable.task_id == task_id) & \
-                (otable.deleted == False)
-        rows = current.db(query).select(otable.tag,
-                                        otable.value,
-                                        )
-        options = dict((row.tag, row.value) for row in rows)
+        ttable = current.s3db.setup_monitor_task
+        task = current.db(ttable.task_id == task_id).select(ttable.options,
+                                                            limitby = (0, 1)
+                                                            ).first()
+        options = json.loads(task.options)
+        options_get = options.get
 
-        to = options.get("to", None)
+        to = options_get("to", None)
         if not to:
             return False
 
-        subject = options.get("subject", "")
-        message = options.get("message", "")
-        reply_to = options.get("reply_to")
+        subject = options_get("subject", "")
+        message = options_get("message", "")
+        reply_to = options_get("reply_to")
         if not reply_to:
             # Use the outbound email address
             reply_to = current.deployment_settings.get_mail_sender()
@@ -128,11 +99,12 @@ class S3Monitor(object):
         result = current.msg.send_email(to,
                                         subject,
                                         message,
-                                        reply_to=reply_to)
+                                        reply_to = reply_to)
 
         if result:
             # Schedule a task to see if the reply has arrived after 1 hour
-            start_time = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+            start_time = datetime.datetime.utcnow() + \
+                         datetime.timedelta(hours = 1)
             current.s3task.schedule_task("setup_monitor_check_email_reply",
                                          args = [run_id],
                                          start_time = start_time,
@@ -144,5 +116,84 @@ class S3Monitor(object):
         else:
             # Critical: Unable to send Email
             return 3
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def http(task_id, run_id):
+        """
+            Test that HTTP is accessible
+        """
+
+        if REQUESTS is None:
+            return 2 # Warning
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def https(task_id, run_id):
+        """
+            Test that HTTPS is accessible
+        """
+
+        if REQUESTS is None:
+            return 2 # Warning
+
+        # Read Options
+        url = "/eden/default/public_url"
+
+        try:
+            r = requests.get(url) # verify=True
+        except SSLError:
+            # Problem with SSL certificate - e.g. expired?
+            r = requests.get(url, verify = False)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def load_average(task_id, run_id):
+        """
+            Test the Load Average
+        """
+
+        return NotImplementedError
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def ping(task_id, run_id):
+        """
+            ICMP Ping a server
+            - NB AWS instances don't respond to ICMP Ping by default, but this can be enabled in the Firewall
+        """
+
+        s3db = current.s3db
+
+        # Read the IP to Ping
+        ttable = s3db.setup_monitor_task
+        stable = s3db.setup_server
+        query = (ttable.id == task_id) & \
+                (ttable.server_id == stable.id)
+        row = current.db(query).select(stable.host_ip,
+                                       limitby = (0, 1)
+                                       ).first()
+
+        host_ip = row.host_ip
+
+        try:
+            output = subprocess.check_output("ping -{} 1 {}".format("n" if platform.system().lower == "windows" else "c",
+                                                                    host_ip),
+                                             shell = True)
+        except Exception as e:
+            # Critical: Ping failed
+            return 3
+        else:
+            # OK
+            return 1
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def tcp(task_id, run_id):
+        """
+            Test that a TCP port is accessible
+        """
+
+        return NotImplementedError
 
 # END =========================================================================
