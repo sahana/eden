@@ -1479,10 +1479,13 @@ class S3HRSiteModel(S3Model):
 
         db = current.db
         table = db.hrm_human_resource
-        db(table.id == row.human_resource_id).update(location_id = None,
-                                                     site_id = None,
-                                                     site_contact = False,
-                                                     )
+
+        human_resource_id = row.human_resource_id
+
+        db(table.id == human_resource_id).update(location_id = None,
+                                                 site_id = None,
+                                                 site_contact = False,
+                                                 )
         # Update realm_entity of HR
         current.auth.set_realm_entity(table,
                                       human_resource_id,
@@ -5091,7 +5094,7 @@ class S3HRShiftModel(S3Model):
 
     def model(self):
 
-        
+
 
         T = current.T
 
@@ -5212,7 +5215,7 @@ class S3HRShiftModel(S3Model):
                        crud_form = crud_form,
                        list_fields = list_fields,
                        )
-        
+
         # Custom Method to Assign HRs
         STAFF = current.deployment_settings.get_hrm_staff_label()
         filter_widgets = [S3DateFilter("available",
@@ -5268,7 +5271,7 @@ class S3HRShiftModel(S3Model):
 
         def facility_redirect(r, **attr):
             """
-                Redirect to the Facility's Shifts tab 
+                Redirect to the Facility's Shifts tab
             """
 
             s3db = current.s3db
@@ -5567,7 +5570,7 @@ class hrm_AssignMethod(S3Method):
                     if exists:
                         onaccept = component.get_config("update_onaccept",
                                                         component.get_config("onaccept", None))
-                        
+
                         exists.update_record(human_resource_id = human_resource_id)
                         if onaccept:
                             link = Storage(id = exists.id,
