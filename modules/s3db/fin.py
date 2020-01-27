@@ -234,6 +234,14 @@ class FinPaymentServiceModel(S3Model):
             msg_list_empty = T("No Payment Services currently registered")
             )
 
+        # Components
+        self.add_components(tablename,
+                            fin_payment_log = "service_id",
+                            fin_product_service = "service_id",
+                            fin_subscription_plan_service = "service_id",
+                            fin_subscription = "service_id",
+                            )
+
         # TODO Implement represent using API type + org name
         represent = S3Represent(lookup=tablename, show_link=True)
         service_id = S3ReusableField("service_id", "reference %s" % tablename,
@@ -248,10 +256,6 @@ class FinPaymentServiceModel(S3Model):
                                                               )),
                                      sortby = "name",
                                      )
-
-        self.add_components(tablename,
-                            fin_payment_log = "service_id",
-                            )
 
         # -------------------------------------------------------------------------
         # Payments Log
@@ -410,6 +414,8 @@ class FinProductModel(S3Model):
 
         # Table configuration
         self.configure(tablename,
+                       editable = False,
+                       deletable = False, # TODO must retire, not delete
                        onaccept = self.product_service_onaccept,
                        ondelete = self.product_service_ondelete,
                        )
@@ -469,17 +475,18 @@ class FinProductModel(S3Model):
                                            table.service_id,
                                            limitby = (0, 1),
                                            ).first()
+            if not row:
+                return
 
-            if row:
-                from s3.s3payments import S3PaymentService
-                try:
-                    adapter = S3PaymentService.adapter(row.service_id)
-                except (KeyError, ValueError) as e:
-                    current.response.error = "Service registration failed: %s" % e
-                else:
-                    success = adapter.register_product(row.product_id)
-                    if not success:
-                        current.response.error = "Service registration failed"
+            from s3.s3payments import S3PaymentService
+            try:
+                adapter = S3PaymentService.adapter(row.service_id)
+            except (KeyError, ValueError) as e:
+                current.response.error = "Service registration failed: %s" % e
+            else:
+                success = adapter.register_product(row.product_id)
+                if not success:
+                    current.response.error = "Service registration failed"
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -581,6 +588,7 @@ class FinSubscriptionModel(S3Model):
         # Components
         self.add_components(tablename,
                             fin_subscription_plan_service = "plan_id",
+                            fin_subscription = "plan_id",
                             )
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -617,15 +625,16 @@ class FinSubscriptionModel(S3Model):
         # - when a subscription plan is registered with a payment service
         # - tracks service-specific reference numbers
         #
+        # TODO limit service selector to product owner
+        # TODO limit service selector to unregistered services
+        #
         tablename = "fin_subscription_plan_service"
         define_table(tablename,
                      plan_id(
                          ondelete = "CASCADE",
-                         writable = False,
                          ),
                      self.fin_service_id(
                          ondelete = "CASCADE",
-                         writable = False,
                          ),
                      Field("is_registered", "boolean",
                            default = False,
@@ -638,7 +647,26 @@ class FinSubscriptionModel(S3Model):
                            ),
                      *s3_meta_fields())
 
-        # TODO Crud-strings?
+        self.configure(tablename,
+                       editable = False,
+                       deletable = False,
+                       onaccept = self.subscription_plan_service_onaccept,
+                       #ondelete = self.subscription_plan_service_ondelete, TODO
+                       )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Register Plan with Payment Service"),
+            title_display = T("Registration Details"),
+            title_list = T("Registered Payment Services"),
+            title_update = T("Edit Registration"),
+            label_list_button = T("List Registrations"),
+            label_delete_button = T("Delete Registration"),
+            msg_record_created = T("Plan registered with Payment Service"),
+            msg_record_modified = T("Registration updated"),
+            msg_record_deleted = T("Registration deleted"),
+            msg_list_empty = T("Plan not currently registered with any Payment Services"),
+            )
 
         # ---------------------------------------------------------------------
         # Subscription
@@ -649,6 +677,8 @@ class FinSubscriptionModel(S3Model):
                      self.super_link("pe_id", "pr_pentity",
                                      label = T("Subscriber"),
                                      ondelete = "RESTRICT",
+                                     readable = True,
+                                     writable = False,
                                      ),
                      plan_id(ondelete = "CASCADE",
                              writable = False,
@@ -662,7 +692,17 @@ class FinSubscriptionModel(S3Model):
                            ),
                      *s3_meta_fields())
 
-        # TODO make a component of subscription plan and show on tab
+        self.configure(tablename,
+                       list_fields = ["pe_id",
+                                      "plan_id",
+                                      "service_id",
+                                      "refno",
+                                      ],
+                       insertable = False,
+                       editable = False,
+                       deletable = False,
+                       )
+
         # TODO make a component of service and show on tab
 
         # ---------------------------------------------------------------------
@@ -676,6 +716,46 @@ class FinSubscriptionModel(S3Model):
         """ Safe defaults for names in case the module is disabled """
 
         return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def subscription_plan_service_onaccept(form):
+        """
+            Onaccept of subscription_plan<=>service link:
+            - register plan with the service (or update the registration)
+        """
+
+        # Get record
+        form_vars = form.vars
+        try:
+            record_id = form_vars.id
+        except AttributeError:
+            record_id = None
+        if not record_id:
+            return
+
+        # If not bulk:
+        if not current.response.s3.bulk:
+
+            table = current.s3db.fin_subscription_plan_service
+            query = (table.id == record_id) & \
+                    (table.deleted == False)
+            row = current.db(query).select(table.plan_id,
+                                           table.service_id,
+                                           limitby = (0, 1),
+                                           ).first()
+            if not row:
+                return
+
+            from s3.s3payments import S3PaymentService
+            try:
+                adapter = S3PaymentService.adapter(row.service_id)
+            except (KeyError, ValueError) as e:
+                current.response.error = "Service registration failed: %s" % e
+            else:
+                success = adapter.register_subscription_plan(row.plan_id)
+                if not success:
+                    current.response.error = "Service registration failed"
 
 # =============================================================================
 def fin_rheader(r, tabs=None):
@@ -701,7 +781,8 @@ def fin_rheader(r, tabs=None):
 
             if not tabs:
                 tabs = [(T("Basic Details"), None),
-                        (T("Registered Products"), "product"),
+                        (T("Registered Products"), "product_service"),
+                        (T("Subscription Plans"), "subscription_plan_service"),
                         (T("Subscriptions"), "subscription"),
                         (T("Log"), "payment_log"),
                         ]
