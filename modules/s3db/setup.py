@@ -1949,7 +1949,8 @@ class S3SetupMonitorModel(S3Model):
                      # Name of a function in modules.<settings.get_setup_monitor_template()>.monitor[.py]
                      # List populated in controllers/setup/monitor_check()
                      Field("function_name",
-                           label = T("Script"),
+                           label = T("Function"),
+                           comment = T("Functions defined in <template>.monitor.py")
                            ),
                      # Default Options for this Check
                      Field("options", "json",
@@ -1998,17 +1999,17 @@ class S3SetupMonitorModel(S3Model):
                                               ),
                      server_id(),
                      check_id(),
+                     Field("enabled", "boolean",
+                           default = True,
+                           label = T("Enabled?"),
+                           represent = s3_yes_no_represent,
+                           ),
                      # Options for this Check on this Server
                      Field("options", "json",
                            label = T("Options"),
                            requires = IS_EMPTY_OR(
                                         IS_JSONS3()
                                         ),
-                           ),
-                     Field("enabled", "boolean",
-                           default = True,
-                           label = T("Enabled?"),
-                           represent = s3_yes_no_represent,
                            ),
                      status_id(),
                      Field("result", "json",
@@ -2214,7 +2215,8 @@ class S3SetupMonitorModel(S3Model):
 
         result = S3SetupMonitorModel.setup_monitor_task_enable(r.id)
         current.session.confirmation = result
-        redirect(URL(f="task"))
+        redirect(URL(f="monitor_task",
+                     args = []))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2268,7 +2270,8 @@ class S3SetupMonitorModel(S3Model):
 
         result = S3SetupMonitorModel.setup_monitor_task_disable(r.id)
         current.session.confirmation = result
-        redirect(URL(f="monitor_task"))
+        redirect(URL(f="monitor_task",
+                     args = []))
 
     # -------------------------------------------------------------------------
     @staticmethod

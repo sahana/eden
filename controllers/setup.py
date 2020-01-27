@@ -203,6 +203,8 @@ def deployment():
                                            filter_opts = [r.id],
                                            sort = True
                                            )
+                    if r.interactive:
+                        _configure_monitor_check_function()
 
             elif r.method == "create":
                 # Include Production Instance & Server details in main form
@@ -491,7 +493,6 @@ def monitor_check():
 
     def prep(r):
         if r.interactive:
-            # Dynamic lookup of the monitoring functions in S3Monitor class.
             import inspect
             import sys
 
@@ -512,8 +513,9 @@ def monitor_check():
                 if not f.startswith("_"):
                     append(f)
 
-            r.table.function_name.requires = IS_IN_SET(function_opts,
-                                                       zero = None)
+            s3db.setup_monitor.function_name.requires = IS_IN_SET(function_opts,
+                                                                  zero = None)
+
         return True
     s3.prep = prep
 
