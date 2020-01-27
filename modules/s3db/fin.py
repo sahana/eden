@@ -371,9 +371,10 @@ class FinProductModel(S3Model):
         product_id = S3ReusableField("product_id", "reference %s" % tablename,
                                      label = T("Product"),
                                      represent = represent,
-                                     requires = IS_ONE_OF(db, "%s.id" % tablename,
-                                                          represent,
-                                                          ),
+                                     requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "%s.id" % tablename,
+                                                              represent,
+                                                              )),
                                      sortby = "name",
                                      comment = S3PopupLink(c="fin",
                                                            f="product",
@@ -532,9 +533,8 @@ class FinSubscriptionModel(S3Model):
 
         tablename = "fin_subscription_plan"
         define_table(tablename,
-                     # TODO make mandatory
-                     # TODO should not be able to create a product from here
                      self.fin_product_id(
+                         empty = False,
                          ondelete = "CASCADE",
                          ),
                      Field("name",
@@ -573,7 +573,6 @@ class FinSubscriptionModel(S3Model):
                                                       ),
                            ),
                      s3_currency(),
-                     # TODO represent
                      Field("status",
                            default = "ACTIVE",
                            requires = IS_IN_SET(plan_statuses,
@@ -702,8 +701,6 @@ class FinSubscriptionModel(S3Model):
                        editable = False,
                        deletable = False,
                        )
-
-        # TODO make a component of service and show on tab
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
