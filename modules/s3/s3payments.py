@@ -199,6 +199,28 @@ class S3PaymentService(object):
         raise NotImplementedError
 
     # -------------------------------------------------------------------------
+    def register_subscription_plan(self, plan_id):
+        """
+            Register a subscription plan with this service
+
+            @param plan_id: the fin_subscription_plan record ID
+
+            @returns: True if successful, or False on error
+        """
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    def update_subscription_plan(self, plan_id):
+        """
+            Update a subscription plan
+
+            @param plan_id: the fin_subscription_plan record ID
+
+            @returns: True if successful, or False on error
+        """
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
     # Utility Functions
     # -------------------------------------------------------------------------
     def http(self,
@@ -375,8 +397,7 @@ class S3PaymentService(object):
         return opener
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def has_product(product_id):
+    def has_product(self, product_id):
         """
             Check whether a product is already registered with this service
 
@@ -387,10 +408,32 @@ class S3PaymentService(object):
 
         table = current.s3db.fin_product_service
         query = (table.product_id == product_id) & \
+                (table.service_id == self.service_id) & \
                 (table.deleted == False)
 
-        row = current.db(query).select(table.id,
-                                       table.is_registered,
+        row = current.db(query).select(table.is_registered,
+                                       limitby = (0, 1),
+                                       ).first()
+
+        return row.is_registered if row else False
+
+    # -------------------------------------------------------------------------
+    def has_subscription_plan(self, plan_id):
+        """
+            Check whether a subscription_plan is already registered
+            with this service
+
+            @param plan_id: the fin_subscription_plan record ID
+
+            @returns: boolean
+        """
+
+        table = current.s3db.fin_subscription_plan_service
+        query = (table.plan_id == plan_id) & \
+                (table.service_id == self.service_id) & \
+                (table.deleted == False)
+
+        row = current.db(query).select(table.is_registered,
                                        limitby = (0, 1),
                                        ).first()
 
@@ -701,6 +744,157 @@ class PayPalAdapter(S3PaymentService):
 
         # PayPal API does not support deletion of products
         self.log.info(action, "Not supported by API")
+
+        return True
+
+    # -------------------------------------------------------------------------
+    def register_subscription_plan(self, plan_id):
+        """
+            Register a subscription plan with this service
+
+            @param plan_id: the fin_subscription_plan record ID
+
+            @returns: True if successful, or False on error
+        """
+
+        if self.has_subscription_plan(plan_id):
+            # Plan is already registered with this service
+            # => update it
+            return self.update_subscription_plan(plan_id)
+
+        action = "Register subscription plan #%s" % plan_id
+        error = None
+
+        s3db = current.s3db
+        db = current.db
+
+        # Get subscription plan details
+        table = s3db.fin_subscription_plan
+        query = (table.id == plan_id) & \
+                (table.deleted == False)
+        plan = db(query).select(table.id,
+                                table.name,
+                                table.description,
+                                table.status,
+                                table.product_id,
+                                table.interval_unit,
+                                table.interval_count,
+                                table.indefinite,
+                                table.total_cycles,
+                                table.price,
+                                table.currency,
+                                limitby = (0, 1),
+                                ).first()
+
+        # Verify plan status, and make sure the product is registered
+        if not plan:
+            error = "Subscription plan not found"
+        elif plan.status != "ACTIVE":
+            error = "Cannot register inactive subscription plan"
+        else:
+            product_id = plan.product_id
+            if not self.has_product(product_id) and \
+               not self.register_product(product_id):
+                error = "Could not register product with service"
+        if error:
+            self.log.error(action, error)
+            return False
+
+        # Get product reference number
+        ltable = s3db.fin_product_service
+        query = (ltable.product_id == product_id) & \
+                (ltable.service_id == self.service_id) & \
+                (ltable.deleted == False)
+        product = db(query).select(ltable.refno,
+                                   limitby = (0, 1),
+                                   ).first()
+        if not product or not product.refno:
+            self.log.error(action, "Product reference number missing")
+            return False
+
+        # Build data structure
+
+        # Billing Cycles
+        billing_cycles = [
+            {"frequency": {"interval_unit": plan.interval_unit,
+                           "interval_count": plan.interval_count,
+                           },
+             "tenure_type": "REGULAR",
+             "sequence": 1,
+             "total_cycles": 0 if plan.indefinite else plan.total_cycles,
+             "pricing_scheme": {"fixed_price": {"value": plan.price,
+                                                "currency_code": plan.currency,
+                                                },
+                                },
+             },
+            ]
+
+        # Payment Preferences
+        payment_preferences = {
+            "auto_bill_outstanding": True,
+            "payment_failure_threshold": 0,
+            #"setup_fee", ?
+            }
+
+        # Subscription Plan
+        data = {
+            "product_id": product.refno,
+            "name": plan.name,
+            "description": plan.description,
+
+            #"status": "ACTIVE", # default
+
+            "quantity_supported": False,
+            "billing_cycles": billing_cycles,
+            "payment_preferences": payment_preferences,
+            #"taxes": taxes, ?
+            }
+
+        response, status, error = self.http(method = "POST",
+                                            path = "/v1/billing/plans",
+                                            data = data,
+                                            auth = "Token",
+                                            )
+
+        if error:
+            reason = ("%s %s" % (status, error)) if status else error
+            self.log.error(action, reason)
+            return False
+        else:
+            self.log.success(action)
+
+            # Get reference number from response
+            refno = response["id"]
+
+            # Create or update subscription_plan<=>service link
+            # - no onaccept here (onaccept calls this)
+            ltable = s3db.fin_subscription_plan_service
+            query = (ltable.plan_id == plan_id) & \
+                    (ltable.service_id == self.service_id) & \
+                    (ltable.deleted == False)
+            ltable.update_or_insert(query,
+                                    plan_id = plan_id,
+                                    service_id = self.service_id,
+                                    is_registered = True,
+                                    refno = refno,
+                                    )
+
+        return True
+
+    # -------------------------------------------------------------------------
+    def update_subscription_plan(self, plan_id):
+        """
+            Update a subscription plan
+
+            @param plan_id: the fin_subscription_plan record ID
+
+            @returns: True if successful, or False on error
+        """
+
+        action = "Update subscription plan %s" % plan_id
+
+        # TODO implement
+        self.log.info(action, "Not yet implemented")
 
         return True
 

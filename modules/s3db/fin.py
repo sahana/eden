@@ -399,7 +399,7 @@ class FinProductModel(S3Model):
                            label = T("Reference Number"),
                            writable = False,
                            ),
-                     Field("update_url",
+                     Field("update_url", # TODO not required => remove
                            readable = False,
                            writable = False,
                            ),
@@ -497,6 +497,7 @@ class FinSubscriptionModel(S3Model):
     """ Model to manage subscription-based payments """
 
     names = ("fin_subscription_plan",
+             "fin_subscription_plan_service",
              "fin_subscription",
              )
 
@@ -513,8 +514,7 @@ class FinSubscriptionModel(S3Model):
         # ---------------------------------------------------------------------
         # Subscription Plans
         #
-        plan_statuses = {"CREATED": T("New"),
-                         "ACTIVE": T("Active"),
+        plan_statuses = {"ACTIVE": T("Active"),
                          "INACTIVE": T("Inactive"),
                          }
         interval_units = {"DAY": T("Days"),
@@ -566,20 +566,22 @@ class FinSubscriptionModel(S3Model):
                                                       ),
                            ),
                      s3_currency(),
-                     # TODO drop "CREATED"
-                     # - plan is either active or inactive
-                     # - if it is not registered yet, then we have no service link
                      # TODO represent
                      Field("status",
-                           default = "CREATED",
+                           default = "ACTIVE",
                            requires = IS_IN_SET(plan_statuses,
                                                 zero = None,
                                                 ),
+                           represent = S3Represent(options=plan_statuses,
+                                                   ),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
 
-        # TODO components
+        # Components
+        self.add_components(tablename,
+                            fin_subscription_plan_service = "plan_id",
+                            )
         # CRUD Strings
         crud_strings[tablename] = Storage(
             label_create = T("Create Subscription Plan"),
@@ -617,14 +619,19 @@ class FinSubscriptionModel(S3Model):
         #
         tablename = "fin_subscription_plan_service"
         define_table(tablename,
-                     self.fin_service_id(
-                         ondelete = "CASCADE",
-                         writable = False,
-                         ),
                      plan_id(
                          ondelete = "CASCADE",
                          writable = False,
                          ),
+                     self.fin_service_id(
+                         ondelete = "CASCADE",
+                         writable = False,
+                         ),
+                     Field("is_registered", "boolean",
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("refno",
                            label = T("Reference Number"),
                            writable = False,
@@ -722,6 +729,7 @@ def fin_rheader(r, tabs=None):
 
             if not tabs:
                 tabs = [(T("Basic Details"), None),
+                        (T("Payment Services"), "subscription_plan_service"),
                         (T("Subscriptions"), "subscription"),
                         ]
 
