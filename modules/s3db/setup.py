@@ -2546,7 +2546,7 @@ def setup_monitor_run_task(task_id):
     except Exception:
         import traceback
         tb_parts = sys.exc_info()
-        exception_text = traceback.format_exception_only(parts[0, parts[1])[0]
+        exception_text = traceback.format_exception_only(parts[0], parts[1])[0]
         stack_text = "".join(traceback.format_stack())
         result = {"traceback": "%s\n%s\n%s" % (exception_text,
                                                stack_text,

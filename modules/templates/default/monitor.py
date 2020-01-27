@@ -115,7 +115,7 @@ class S3Monitor(object):
         except requests.exceptions.SSLError:
             import traceback
             tb_parts = sys.exc_info()
-            exception_text = traceback.format_exception_only(parts[0, parts[1])[0]
+            exception_text = traceback.format_exception_only(parts[0], parts[1])[0]
             stack_text = "".join(traceback.format_stack())
             return {"result": "Critical: SSL Error", # e.g. expired
                     "status": 3,
@@ -127,7 +127,7 @@ class S3Monitor(object):
         except requests.exceptions.Timeout:
             import traceback
             tb_parts = sys.exc_info()
-            exception_text = traceback.format_exception_only(parts[0, parts[1])[0]
+            exception_text = traceback.format_exception_only(parts[0], parts[1])[0]
             stack_text = "".join(traceback.format_stack())
             return {"result": "Critical: Timeout Error",
                     "status": 3,
@@ -139,7 +139,7 @@ class S3Monitor(object):
         except requests.exceptions.TooManyRedirects:
             import traceback
             tb_parts = sys.exc_info()
-            exception_text = traceback.format_exception_only(parts[0, parts[1])[0]
+            exception_text = traceback.format_exception_only(parts[0], parts[1])[0]
             stack_text = "".join(traceback.format_stack())
             return {"result": "Critical: TooManyRedirects Error",
                     "status": 3,
@@ -221,10 +221,10 @@ class S3Monitor(object):
             return {"result": "Warning: No reply received yet",
                     "status": 2,
                     }
-        else:
-            return {"result": "Critical: Unable to send Email",
-                    "status": 3,
-                    }
+
+        return {"result": "Critical: Unable to send Email",
+                "status": 3,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -287,13 +287,17 @@ class S3Monitor(object):
         try:
             # @ToDo: Replace with socket?
             # - we want to see the latency
-            output = subprocess.check_output("ping -{} 1 {}".format("n" if platform.system().lower == "windows" else "c",
+            if platform.system().lower == "windows":
+                _format = "n"
+            else:
+                _format = "c"
+            output = subprocess.check_output("ping -{} 1 {}".format(_format,
                                                                     host_ip),
                                              shell = True)
         except Exception:
             import traceback
             tb_parts = sys.exc_info()
-            exception_text = traceback.format_exception_only(parts[0, parts[1])[0]
+            exception_text = traceback.format_exception_only(parts[0], parts[1])[0]
             stack_text = "".join(traceback.format_stack())
             return {"result": "Critical: Ping failed",
                     "status": 3,
@@ -302,10 +306,10 @@ class S3Monitor(object):
                                                  exception_text,
                                                  ),
                     }
-        else:
-            return {"result": "OK",
-                    "status": 1,
-                    }
+
+        return {"result": "OK",
+                "status": 1,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
