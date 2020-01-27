@@ -2005,35 +2005,36 @@ $('.copy-link').click(function(e){
                 result = True
 
             if not r.id and r.http == "POST":
-                # Bulk Action 'Message' has been selected
                 post_vars = r.post_vars
-                selected = post_vars.selected
-                if selected:
-                    selected = selected.split(",")
-                else:
-                    selected = []
-
-                # Handle exclusion filter
-                if post_vars.mode == "Exclusive":
-                    if "filterURL" in post_vars:
-                        from s3 import S3URLQuery
-                        filters = S3URLQuery.parse_url(post_vars.filterURL)
+                if "selected" in post_vars:
+                    # Bulk Action 'Message' has been selected
+                    selected = post_vars.selected
+                    if selected:
+                        selected = selected.split(",")
                     else:
-                        filters = None
-                    from s3 import FS
-                    query = ~(FS("id").belongs(selected))
-                    resource = current.s3db.resource("org_organisation",
-                                                     filter = query,
-                                                     vars = filters)
-                    rows = resource.select(["id"], as_rows=True)
-                    selected = [str(row.id) for row in rows]
+                        selected = []
 
-                # NB This method of passing selected to the next page is limited by GET URL lengths
-                #    but this should be OK for this usecase
-                from gluon import redirect, URL
-                redirect(URL(c="project", f="task",
-                             args = "create",
-                             vars = {"o": ",".join(selected)}))
+                    # Handle exclusion filter
+                    if post_vars.mode == "Exclusive":
+                        if "filterURL" in post_vars:
+                            from s3 import S3URLQuery
+                            filters = S3URLQuery.parse_url(post_vars.filterURL)
+                        else:
+                            filters = None
+                        from s3 import FS
+                        query = ~(FS("id").belongs(selected))
+                        resource = current.s3db.resource("org_organisation",
+                                                         filter = query,
+                                                         vars = filters)
+                        rows = resource.select(["id"], as_rows=True)
+                        selected = [str(row.id) for row in rows]
+
+                    # NB This method of passing selected to the next page is limited by GET URL lengths
+                    #    but this should be OK for this usecase
+                    from gluon import redirect, URL
+                    redirect(URL(c="project", f="task",
+                                 args = "create",
+                                 vars = {"o": ",".join(selected)}))
 
             return result
         s3.prep = prep
