@@ -356,7 +356,9 @@ class S3AWSCloudModel(S3CloudModel):
         dtable = s3db.setup_deployment
         atable = s3db.setup_aws_cloud
 
-        aws_server = db(astable.id == row.id).select(astable.region, # Only deleted_fks are in the row object
+        # Only deleted_fks are in the row object
+        aws_server = db(astable.id == row.id).select(astable.region,
+                                                     astable.instance_id,
                                                      limitby = (0, 1)
                                                      ).first()
         region = aws_server.region
@@ -382,7 +384,7 @@ class S3AWSCloudModel(S3CloudModel):
                                {"ec2": {"aws_access_key": access_key,
                                         "aws_secret_key": secret_key,
                                         "region": region,
-                                        "instance_ids": row.instance_id,
+                                        "instance_ids": aws_server.instance_id,
                                         "state": "absent",
                                         },
                                     },
