@@ -349,25 +349,31 @@ class S3AWSCloudModel(S3CloudModel):
             - AWS Keypair
         """
 
+        server_id = row.server_id
+
+        db = current.db
         s3db = current.s3db
         stable = s3db.setup_server
         astable = s3db.setup_aws_server
         dtable = s3db.setup_deployment
         atable = s3db.setup_aws_cloud
 
-        query = (stable.id == row.server_id) & \
-                (astable.server_id == stable.id) & \
+        aws_server = db(astable.server_id == server_id).select(astable.region, # Only deleted_fks are in the row object
+                                                               limitby = (0, 1)
+                                                               ).first()
+        region = aws_server.region
+
+        query = (stable.id == server_id) & \
                 (dtable.id == stable.deployment_id) & \
                 (dtable.cloud_id == atable.id)
-        deployment = current.db(query).select(atable.access_key,
-                                              atable.secret_key,
-                                              astable.region, # Only deleted_fks are in the row object
-                                              stable.name,
-                                              limitby = (0, 1)
-                                              ).first()
+        deployment = db(query).select(atable.access_key,
+                                      atable.secret_key,
+                                      stable.name,
+                                      left = left,
+                                      limitby = (0, 1)
+                                      ).first()
 
         server_name = deployment["setup_server.name"]
-        region = deployment["setup_aws_server.region"]
         aws = deployment["setup_aws_cloud"]
         access_key = aws.access_key
         secret_key = aws.secret_key
