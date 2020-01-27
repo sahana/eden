@@ -866,7 +866,7 @@ class S3SetupModel(S3Model):
                                       requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "setup_instance.id",
                                                               represent,
-                                                              sort=True
+                                                              sort = True
                                                               )),
                                       sortby = "name",
                                       )

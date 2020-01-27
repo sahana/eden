@@ -186,6 +186,24 @@ def deployment():
 
                         itable.type.requires = IS_IN_SET(types)
 
+                elif cname == "setting":
+                    f = s3db.setup_setting.instance_id
+                    f.requires = IS_ONE_OF(db, "setup_instance.id",
+                                           f.represent,
+                                           filterby = "deployment_id",
+                                           filter_opts = [r.id],
+                                           sort = True
+                                           )
+
+                elif cname == "monitor_task":
+                    f = s3db.setup_monitor_task.server_id
+                    f.requires = IS_ONE_OF(db, "setup_server.id",
+                                           f.represent,
+                                           filterby = "deployment_id",
+                                           filter_opts = [r.id],
+                                           sort = True
+                                           )
+
             elif r.method == "create":
                 # Include Production Instance & Server details in main form
                 
