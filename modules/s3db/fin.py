@@ -265,7 +265,7 @@ class FinPaymentServiceModel(S3Model):
                                       ),
                           Field("action"),
                           Field("result"),
-                          Field("reason"),
+                          Field("reason", "text"),
                           *s3_meta_fields())
 
         # ---------------------------------------------------------------------

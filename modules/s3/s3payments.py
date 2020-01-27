@@ -629,17 +629,63 @@ class PayPalAdapter(S3PaymentService):
         """
 
         action = "Update product %s" % product_id
+        success = False
 
-        # TODO implement
-        # can update these fields:
-            #description
-            #category
-            #image_url
-            #home_url
-
-        self.log.info(action, "Not implemented yet")
-
+        # TODO Not working
+        #      - API refuses to accept patch in documented format
+        #      - maybe just a sandbox limitation?
+        self.log.info(action, "Not supported by API")
         return True
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get product data
+        ptable = s3db.fin_product
+        ltable = s3db.fin_product_service
+        left = ltable.on((ltable.product_id == ptable.id) & \
+                         (ltable.service_id == self.service_id) & \
+                         (ltable.deleted == False))
+        query = (ptable.id == product_id) & \
+                (ptable.deleted == False)
+        row = db(query).select(ltable.refno,
+                               ptable.description,
+                               ptable.category,
+                               left = left,
+                               limitby = (0, 1),
+                               ).first()
+
+        if not row or not row.fin_product_service.refno:
+            self.log.error(action, "Product registration not found")
+        else:
+            path = "/v1/catalogs/products/%s" % row.fin_product_service.refno
+
+            # Update Product Details
+            updates = [{"op": "replace",
+                        "path": "/description",
+                        "value": row.fin_product.description,
+                        },
+                       {"op": "replace",
+                        "path": "/category",
+                        "value": row.fin_product.category,
+                        },
+                       #TODO "image_url"
+                       #TODO "home_url"
+                       ]
+
+            _, status, error = self.http(method = "PATCH",
+                                         path = path,
+                                         data = updates,
+                                         auth = "Token",
+                                         )
+            if error:
+                reason = ("%s %s" % (status, error)) if status else error
+                self.log.error(action, reason)
+            else:
+                success = True
+                self.log.success(action)
+
+        return success
 
     # -------------------------------------------------------------------------
     def retire_product(self, product_id):
