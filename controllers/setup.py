@@ -435,7 +435,7 @@ def server():
     s3.prep = prep
 
     def postp(r, output):
-        if r.component is None and r.method in (None, "read"):
+        if r.interactive and not r.id:
             # Normal Action Buttons
             s3_action_buttons(r)
             # Custom Action Buttons
@@ -512,13 +512,22 @@ def monitor_check():
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader = s3db.setup_rheader)
+    return s3_rest_controller(rheader = s3db.setup_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def monitor_run():
+    """
+        Logs
+    """
+
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def monitor_task():
 
     def postp(r, output):
-        if r.interactive:
+        if r.interactive and not r.id:
             # Normal Action Buttons
             s3_action_buttons(r)
             # Custom Action Buttons for Enable/Disable
@@ -549,14 +558,7 @@ def monitor_task():
         return output
     s3.postp = postp
 
-    return s3_rest_controller(rheader = s3db.setup_rheader)
-
-# -----------------------------------------------------------------------------
-def monitor_run():
-    """
-        Logs
-    """
-
-    return s3_rest_controller()
+    return s3_rest_controller(rheader = s3db.setup_rheader,
+                              )
 
 # END =========================================================================

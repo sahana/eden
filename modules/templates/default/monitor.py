@@ -154,7 +154,7 @@ class S3Monitor(object):
                     "status": 3,
                     }
 
-        return {"latency": r.elapsed,
+        return {"latency": str(r.elapsed), # @ToDo: Format
                 "result": "OK",
                 "status": 1,
                 }

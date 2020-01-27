@@ -2220,7 +2220,7 @@ class S3SetupMonitorModel(S3Model):
                                                   )
 
 # =============================================================================
-def setup_monitor_server_enable(server_id):
+def setup_monitor_server_enable(monitor_server_id):
     """
         Enable Monitoring for a Server
         - Schedule all enabled Tasks
@@ -2231,17 +2231,18 @@ def setup_monitor_server_enable(server_id):
     db = current.db
 
     stable = current.s3db.setup_monitor_server
-    record = db(stable.server_id == server_id).select(stable.id,
-                                                      stable.enabled,
-                                                      limitby = (0, 1)
-                                                      ).first()
+    record = db(stable.id == monitor_server_id).select(stable.id,
+                                                       stable.enabled,
+                                                       stable.server_id,
+                                                       limitby = (0, 1)
+                                                       ).first()
 
     if not record.enabled:
         # Flag it as enabled
         record.update_record(enabled = True)
 
     table = db.setup_monitor_task
-    query = (table.server_id == server_id) & \
+    query = (table.server_id == record.server_id) & \
             (table.enabled == True) & \
             (table.deleted == False)
     tasks = db(query).select(table.id)
@@ -2278,12 +2279,17 @@ def setup_monitor_server_enable_interactive(r, **attr):
         S3Method for interactive requests
     """
 
-    result = setup_monitor_server_enable(r.id)
+    table = current.s3db.setup_monitor_server
+    monitor_server = current.db(table.server_id == r.id).select(table.id,
+                                                                limitby = (0, 1)
+                                                                ).first()
+
+    result = setup_monitor_server_enable(monitor_server.id)
     current.session.confirmation = result
-    redirect(URL(f="server"))
+    redirect(URL(f = "server"))
 
 # =============================================================================
-def setup_monitor_server_disable(server_id):
+def setup_monitor_server_disable(monitor_server_id):
     """
         Disable Monitoring for a Server
         - Remove all related Tasks
@@ -2294,17 +2300,18 @@ def setup_monitor_server_disable(server_id):
     db = current.db
 
     stable = current.s3db.setup_monitor_server
-    record = db(stable.server_id == server_id).select(stable.id,
-                                                      stable.enabled,
-                                                      limitby = (0, 1)
-                                                      ).first()
+    record = db(stable.id == monitor_server_id).select(stable.id,
+                                                       stable.enabled,
+                                                       stable.server_id,
+                                                       limitby = (0, 1)
+                                                       ).first()
 
     if record.enabled:
         # Flag it as disabled
         record.update_record(enabled = False)
 
     table = db.setup_monitor_task
-    query = (table.server_id == server_id) & \
+    query = (table.server_id == record.server_id) & \
             (table.enabled == True) & \
             (table.deleted == False)
     tasks = db(query).select(table.id)
@@ -2325,9 +2332,8 @@ def setup_monitor_server_disable(server_id):
     if exists:
         # Disable all
         db(query).update(status = "STOPPED")
-        return "Server Monitoring disabled"
-    else:
-        return "Server Monitoring already disabled"
+
+    return "Server Monitoring disabled"
 
 # =============================================================================
 def setup_monitor_server_disable_interactive(r, **attr):
@@ -2338,9 +2344,14 @@ def setup_monitor_server_disable_interactive(r, **attr):
         S3Method for interactive requests
     """
 
-    result = setup_monitor_server_disable(r.id)
+    table = current.s3db.setup_monitor_server
+    monitor_server = current.db(table.server_id == r.id).select(table.id,
+                                                                limitby = (0, 1)
+                                                                ).first()
+
+    result = setup_monitor_server_disable(monitor_server.id)
     current.session.confirmation = result
-    redirect(URL(f="server"))
+    redirect(URL(f = "server"))
 
 # =============================================================================
 def setup_monitor_server_check(r, **attr):
