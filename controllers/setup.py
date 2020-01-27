@@ -378,7 +378,6 @@ def server():
                 if not r.component:
                     from s3 import S3SQLCustomForm
 
-                    s3db = current.s3db
                     dtable = s3db.setup_deployment
                     deployment = db(dtable.id == r.record.deployment_id).select(dtable.cloud_id,
                                                                                 limitby = (0, 1)
