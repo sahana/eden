@@ -86,10 +86,10 @@ class S3Monitor(object):
 
         # Read the Task Options
         ttable = s3db.setup_monitor_task
-        task = db(ttable.task_id == task_id).select(ttable.deployment_id,
-                                                    ttable.options,
-                                                    limitby = (0, 1)
-                                                    ).first()
+        task = db(ttable.id == task_id).select(ttable.deployment_id,
+                                               ttable.options,
+                                               limitby = (0, 1)
+                                               ).first()
         options = json.loads(task.options)
         options_get = options.get
 
@@ -173,9 +173,9 @@ class S3Monitor(object):
 
         # Read the Task Options
         ttable = current.s3db.setup_monitor_task
-        task = current.db(ttable.task_id == task_id).select(ttable.options,
-                                                            limitby = (0, 1)
-                                                            ).first()
+        task = current.db(ttable.id == task_id).select(ttable.options,
+                                                       limitby = (0, 1)
+                                                       ).first()
         options = json.loads(task.options)
         options_get = options.get
 
