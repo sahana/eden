@@ -90,7 +90,8 @@ class S3Monitor(object):
                                                ttable.options,
                                                limitby = (0, 1)
                                                ).first()
-        options_get = task.options.get
+        options = task.options or {}
+        options_get = options.get
 
         appname = options_get("appname", "eden")
         public_url = options_get("public_url")
@@ -163,7 +164,8 @@ class S3Monitor(object):
         task = current.db(ttable.id == task_id).select(ttable.options,
                                                        limitby = (0, 1)
                                                        ).first()
-        options_get = task.options.get
+        options = task.options or {}
+        options_get = options.get
 
         to = options_get("to", None)
         if not to:
