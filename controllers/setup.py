@@ -417,19 +417,20 @@ def server():
                     s3db.configure("setup_server",
                                    crud_form = crud_form,
                                    )
-        else:
-            list_fields = ["deployment_id",
-                           "name",
-                           "host_ip",
-                           "role",
-                           "monitor_server.enabled",
-                           "monitor_server.status",
-                           ]
 
-            s3db.configure("setup_server",
-                           #insertable = False, # We want to allow monitoring of external hosts
-                           list_fields = list_fields,
-                           )
+            else:
+                list_fields = ["deployment_id",
+                               "name",
+                               "host_ip",
+                               "role",
+                               "monitor_server.enabled",
+                               "monitor_server.status",
+                               ]
+
+                s3db.configure("setup_server",
+                               #insertable = False, # We want to allow monitoring of external hosts
+                               list_fields = list_fields,
+                               )
 
         return True
     s3.prep = prep
