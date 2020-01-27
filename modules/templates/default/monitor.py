@@ -115,38 +115,26 @@ class S3Monitor(object):
         except requests.exceptions.SSLError:
             import traceback
             tb_parts = sys.exc_info()
-            exception_text = traceback.format_exception_only(tb_parts[0], tb_parts[1])[0]
-            stack_text = "".join(traceback.format_stack())
+            tb_text = "".join(traceback.format_exception(tb_parts[0], tb_parts[1]))
             return {"result": "Critical: SSL Error", # e.g. expired
                     "status": 3,
-                    "traceback": "%s\n%s\n%s" % (exception_text,
-                                                 stack_text,
-                                                 exception_text,
-                                                 ),
+                    "traceback": tb_text,
                     }
         except requests.exceptions.Timeout:
             import traceback
             tb_parts = sys.exc_info()
-            exception_text = traceback.format_exception_only(tb_parts[0], tb_parts[1])[0]
-            stack_text = "".join(traceback.format_stack())
+            tb_text = "".join(traceback.format_exception(tb_parts[0], tb_parts[1]))
             return {"result": "Critical: Timeout Error",
                     "status": 3,
-                    "traceback": "%s\n%s\n%s" % (exception_text,
-                                                 stack_text,
-                                                 exception_text,
-                                                 ),
+                    "traceback": tb_text,
                     }
         except requests.exceptions.TooManyRedirects:
             import traceback
             tb_parts = sys.exc_info()
-            exception_text = traceback.format_exception_only(tb_parts[0], tb_parts[1])[0]
-            stack_text = "".join(traceback.format_stack())
+            tb_text = "".join(traceback.format_exception(tb_parts[0], tb_parts[1]))
             return {"result": "Critical: TooManyRedirects Error",
                     "status": 3,
-                    "traceback": "%s\n%s\n%s" % (exception_text,
-                                                 stack_text,
-                                                 exception_text,
-                                                 ),
+                    "traceback": tb_text,
                     }
 
         if r.status_code != 200:
@@ -297,14 +285,10 @@ class S3Monitor(object):
         except Exception:
             import traceback
             tb_parts = sys.exc_info()
-            exception_text = traceback.format_exception_only(tb_parts[0], tb_parts[1])[0]
-            stack_text = "".join(traceback.format_stack())
+            tb_text = "".join(traceback.format_exception(tb_parts[0], tb_parts[1]))
             return {"result": "Critical: Ping failed",
                     "status": 3,
-                    "traceback": "%s\n%s\n%s" % (exception_text,
-                                                 stack_text,
-                                                 exception_text,
-                                                 ),
+                    "traceback": tb_text,
                     }
 
         return {"result": "OK",
