@@ -2618,6 +2618,12 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Notifications
+    def get_msg_notify_check_subscriptions(self):
+        """
+            Whether to Check Subscriptions
+        """
+        return self.msg.get("notify_check_subscriptions", False)
+
     def get_msg_notify_subject(self):
         """
             Template for the subject line in update notifications.

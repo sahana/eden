@@ -131,6 +131,8 @@ def config(settings):
     # Messaging
     # Parser
     settings.msg.parser = "SAMBRO"
+    # Subscriptions
+    settings.msg.notify_check_subscriptions = True
 
     # -------------------------------------------------------------------------
     # Organisations

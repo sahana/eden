@@ -72,12 +72,14 @@ def maintenance(period = "daily"):
                 pass
             else:
                 break
+
     if maintenance is None:
         try:
             # Fallback to default maintenance routine
             from templates.default import maintenance
         except ImportError:
             pass
+
     if maintenance is not None:
         if period == "daily":
             result = maintenance.Daily()()
