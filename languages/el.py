@@ -269,6 +269,8 @@
 'Demographic': 'Δημογραφικό',
 'Dental Examination': 'Οδοντιατρική εξέταση',
 'Dental Profile': 'Οδοντικό Προφίλ',
+# Name of 'Regional Unit' in ISO 3166-2:GR
+#'Department': 'περιφερειακή ενότητα',
 "Describe the procedure which this record relates to (e.g. 'medical examination')": 'Περιγράψτε την διαδικασία με την οποία σχετίζεται αυτή η εγγραφή (π.χ. "Ιατρική Εξέταση")',
 'Description of defecation area': 'Περιγραφή της περιοχής defecation',
 'Description': 'Περιγραφή',
@@ -758,6 +760,7 @@
 'Recurring costs': 'Επαναλαμβανόμενα έξοδα',
 'Recurring': 'Στρατολόγηση',
 'Region': 'περιφέρεια',
+'Regional Unit': 'περιφερειακή ενότητα',
 'Regional Units': 'περιφερειακές ενότητες',
 'Regional': 'Τοπική',
 'Regions': 'περιφέρειες',
