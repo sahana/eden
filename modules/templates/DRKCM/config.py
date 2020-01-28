@@ -150,6 +150,8 @@ def config(settings):
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "DRK"
+    settings.base.theme_layouts = "DRKCM"
+    settings.base.theme_config = "DRKCM"
 
     # Authentication settings
     # Should users be allowed to register themselves?

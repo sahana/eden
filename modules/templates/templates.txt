@@ -1,5 +1,3 @@
-BRCMS
-BRCMS.Caritas
 CCC
 Data
 default

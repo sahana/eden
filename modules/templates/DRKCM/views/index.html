@@ -1,10 +1,10 @@
 {{extend "layout.html"}}
 <div class='row home-top' style='margin-top:20px'>
- <div class='large-5 large-offset-1 columns'>
+ <div class='large-4 large-offset-1 columns'>
   <div class="row hide-for-small">
    <div id='site-title' class='small-12 columns'>
-    <img src='{{=settings.get_frontpage("logo") or URL(c="static", f="img", args=["sahanalarge_14.png"])}}' alt='SAHANA BRCMS' />
-    <h2>{{=settings.get_system_name()}}</h3>
+     <img src='{{=URL(c="static", f="themes", args=["DRK", "img", "logo_small.png"])}}' alt='DEUTSCHES ROTES KREUZ' />
+     <h2>{{=settings.get_system_name()}}</h3>
    </div>
   </div>
  </div>
