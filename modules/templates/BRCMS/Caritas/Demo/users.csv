@@ -1,0 +1,4 @@
+First Name,Last Name,Email,Password,Role,Organisation,Language
+Caritas,Case Manager,case_manager@example.com,eden,"CASE_MANAGEMENT,STAFF",Caritas,de
+Caritas,OrgAdmin,org_admin@example.com,eden,"ORG_ADMIN,STAFF",Caritas,de
+Caritas,OrgGroupAdmin,org_group_admin@example.com,eden,"ORG_GROUP_ADMIN/0,STAFF",Caritas,de

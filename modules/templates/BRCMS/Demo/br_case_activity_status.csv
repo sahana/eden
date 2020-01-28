@@ -1,0 +1,5 @@
+Position,Status,Default,Closed,Comments
+1,In Progress,true,false,
+2,Suspended,false,false,
+3,Canceled,false,true,
+4,Closed,false,true,
