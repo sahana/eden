@@ -419,7 +419,7 @@ def about():
     import subprocess
 
     sahana_version = open(os.path.join(request.folder, "VERSION"), "r").read()
-    web2py_version = open(apath("../VERSION"), "r").read()[8:]
+    web2py_version = open(_apath("../VERSION"), "r").read()[8:]
     python_version = platform.python_version()
     os_version = platform.platform()
 
@@ -1544,7 +1544,7 @@ def openid_connect():
 # =============================================================================
 # Helpers
 # =============================================================================
-def _apath(path=""):
+def _apath(path = ""):
     """ Application path """
 
     from gluon.fileutils import up
