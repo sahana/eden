@@ -1699,7 +1699,7 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def get_countries(key_type="id"):
+    def get_countries(key_type = "id"):
         """
             Returns country code or L0 location id versus name for all countries.
 
@@ -1730,7 +1730,8 @@ class GIS(object):
             countries = current.db(query).select(table.id,
                                                  table.name,
                                                  ttable.value,
-                                                 orderby=table.name)
+                                                 orderby = table.name
+                                                 )
             if not countries:
                 return []
 

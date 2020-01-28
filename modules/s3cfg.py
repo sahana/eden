@@ -1024,7 +1024,7 @@ class S3Config(Storage):
 
     def get_base_guided_tour(self):
         """ Whether the guided tours are enabled """
-        return self.base.get("guided_tour", False)
+        return self.base.get("guided_tour", self.has_module("tour"))
 
     def get_base_public_url(self):
         """

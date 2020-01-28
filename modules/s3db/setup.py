@@ -437,9 +437,7 @@ class S3SetupModel(S3Model):
         define_table = self.define_table
         set_method = self.set_method
 
-        folder = current.request.folder
-        path_join = os.path.join
-        template_path = path_join(folder, "modules", "templates")
+        uploadfolder = os.path.join(current.request.folder, "uploads")
 
         # ---------------------------------------------------------------------
         # Deployments
@@ -449,7 +447,7 @@ class S3SetupModel(S3Model):
                      # @ToDo: Allow use of a Custom repo
                      # @ToDo: Add ability to get a specific hash/tag
                      Field("repo_url",
-                           # @ToDo: Switch to Stable once it has a templates.txt
+                           # @ToDo: Switch to Stable once it has a templates.json
                            #default = "https://github.com/sahana/eden-stable",
                            default = "https://github.com/sahana/eden",
                            label = T("Eden Repository"),
@@ -458,27 +456,28 @@ class S3SetupModel(S3Model):
                            writable = False,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Eden Repository"),
-                                                           T("If you wish to use your own Fork, then you can set this here")
+                                                           T("If you wish to switch to Trunk, or use your own Fork, then you can set this here")
                                                            )
                                          ),
                            ),
-                     Field("country",
+                     Field("country", length=2,
                            label = T("Country"),
                            requires = IS_EMPTY_OR(
-                                        IS_IN_SET_LAZY(lambda: self.setup_get_countries(template_path),
+                                        # We provide a full list of countries here
+                                        # - we then check if there are appropriate locale or sub-templates to include when we deploy
+                                        IS_IN_SET_LAZY(lambda: current.gis.get_countries(key_type = "code"),
                                                        zero = current.messages.SELECT_LOCATION,
                                                        )),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Country"),
-                                                           T("Selecting your country means that the appropriate locale settings can be applied. If you need to support multiple countries then you may need to create a custom template.")
+                                                           T("Selecting your country means that the appropriate locale settings can be applied. If you need to support multiple countries then leave this blank.")
                                                            )
                                          ),
                            ),
-                     Field("template", "list:string",
-                           default = ["default"],
+                     Field("template",
+                           default = "default",
                            label = T("Template"),
-                           requires = IS_IN_SET_LAZY(lambda: self.setup_get_templates(template_path),
-                                                     multiple = True,
+                           requires = IS_IN_SET_LAZY(lambda: self.setup_get_templates(),
                                                      zero = None,
                                                      ),
                            ),
@@ -645,7 +644,7 @@ class S3SetupModel(S3Model):
                            label = T("SSH Private Key"),
                            length = current.MAX_FILENAME_LENGTH,
                            requires = IS_EMPTY_OR(IS_UPLOAD_FILENAME()),
-                           uploadfolder = path_join(folder, "uploads"),
+                           uploadfolder = uploadfolder,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("SSH Private Key"),
                                                            T("if you wish to configure servers other than the one hosting the co-app then you need to provide a PEM-encoded SSH private key")
@@ -742,7 +741,7 @@ class S3SetupModel(S3Model):
                      #      label = T("SSL Certificate"),
                      #      length = current.MAX_FILENAME_LENGTH,
                      #      requires = IS_EMPTY_OR(IS_UPLOAD_FILENAME()),
-                     #      uploadfolder = path_join(folder, "uploads"),
+                     #      uploadfolder = uploadfolder,
                      #      comment = DIV(_class="tooltip",
                      #                    _title="%s|%s" % (T("SSL Certificate"),
                      #                                      T("If not using Let's Encrypt e.g. you wish to use an OV or EV certificate")
@@ -753,7 +752,7 @@ class S3SetupModel(S3Model):
                      #      label = T("SSL Key"),
                      #      length = current.MAX_FILENAME_LENGTH,
                      #      requires = IS_EMPTY_OR(IS_UPLOAD_FILENAME()),
-                     #      uploadfolder = path_join(folder, "uploads"),
+                     #      uploadfolder = uploadfolder,
                      #      comment = DIV(_class="tooltip",
                      #                    _title="%s|%s" % (T("SSL Key"),
                      #                                      T("If not using Let's Encrypt e.g. you wish to use an OV or EV certificate")
@@ -789,7 +788,7 @@ class S3SetupModel(S3Model):
                            label = T("Log File"),
                            length = current.MAX_FILENAME_LENGTH,
                            requires = IS_EMPTY_OR(IS_UPLOAD_FILENAME()),
-                           uploadfolder = path_join(folder, "uploads"),
+                           uploadfolder = uploadfolder,
                            writable = False,
                            ),
                      # Has the Configuration Wizard been run?
@@ -953,63 +952,17 @@ class S3SetupModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def setup_get_countries(path):
+    def setup_get_templates():
         """
-            Return a List of Countries for which we have Locale settings defined
+            Return a Dict of Templates for the user to select from
 
-            @ToDo: Read the list of templates from the selected repo URL!
-                   - locations.txt
-        """
-
-        p = os.path
-        basename = p.basename
-        isdir = p.isdir
-        join = p.join
-
-        path = join(path, "locations")
-        available_countries = [basename(c) for c in os.listdir(path) if isdir(join(path, c))]
-        all_countries = current.gis.get_countries(key_type="code")
-        countries = OrderedDict([(c, all_countries[c]) for c in all_countries if c in available_countries])
-
-        return countries
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def setup_get_templates(path):
-        """
-            Return a List of Templates for the user to select between
-
-            @ToDo: Read the list of templates from the selected repo URL!
-                   - templates.txt
+            @ToDo: Have the controller read this list from the remote repo
         """
 
-        p = os.path
-        basename = p.basename
-        join = p.join
-        isdir = p.isdir
-        listdir = os.listdir
+        file_path = os.path.join(current.request.folder, "modules", "templates", "templates.json")
+        with open(file_path, "r") as file:
+            templates = json.loads(file.read())
 
-        # All subdirectories in the path that contain a config.py are
-        # templates - except skeleton/skeletontheme
-        dirs = next(os.walk(path))[1]
-        templates = [d for d in dirs
-                         if d[:8] != "skeleton" and
-                         p.isfile(join(path, d, "config.py"))
-                         ]
-
-        subtemplates = []
-        sappend = subtemplates.append
-        for template in templates:
-            tpath = join(path, template)
-            for d in listdir(tpath):
-                if isdir(join(tpath, d)):
-                    for f in listdir(join(tpath, d)):
-                        if f == "config.py":
-                            sappend("%s.%s" % (template, d))
-                            continue
-
-        templates += subtemplates
-        templates.sort()
         return templates
 
     # -------------------------------------------------------------------------
@@ -1159,6 +1112,7 @@ dropdown.change(function() {
         deployment = db(dtable.id == deployment_id).select(dtable.webserver_type,
                                                            dtable.db_type,
                                                            dtable.db_password,
+                                                           dtable.country,
                                                            dtable.template,
                                                            dtable.cloud_id,
                                                            dtable.dns_id,
@@ -1409,6 +1363,7 @@ dropdown.change(function() {
                              #"become_user": "root",
                              "vars": {"appname": appname,
                                       "all_sites": ",".join(all_sites),
+                                      "country": deployment.country,
                                       "db_ip": "127.0.0.1",
                                       "db_type": db_type,
                                       "hostname": hostname,
@@ -1418,7 +1373,7 @@ dropdown.change(function() {
                                       "sitename": sitename,
                                       "sitename_prod": sitename_prod,
                                       "start": start,
-                                      "template": template,
+                                      "template": deployment.template,
                                       "type": instance_type,
                                       "web_server": web_server,
                                       },
@@ -1473,6 +1428,7 @@ dropdown.change(function() {
                          #"become_user": "root",
                          "vars": {"appname": appname,
                                   "all_sites": ",".join(all_sites),
+                                  "country": deployment.country,
                                   "db_ip": db_ip,
                                   "db_type": db_type,
                                   "hostname": hostname,
@@ -1481,7 +1437,7 @@ dropdown.change(function() {
                                   "sitename": sitename,
                                   "sender": sender,
                                   "start": start,
-                                  "template": template,
+                                  "template": deployment.template,
                                   "type": instance_type,
                                   "web_server": web_server,
                                   },

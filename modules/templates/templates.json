@@ -1,5 +1,5 @@
-{"BRCMS": "Case Management",
- "default": "Default: Human Resources, Logistics, Project Management",
- "SAFIRE": "First Response (SaFiRe)",
+{"default": "Default: HR, Logistics, PM",
+ "BRCMS": "Case Management",
  "SAMBRO": "Early Warning (SaMBro)",
+ "SAFIRE": "First Response (SaFiRe)"
  }

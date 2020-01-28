@@ -228,12 +228,12 @@ def deployment():
 
                 from s3 import S3SQLCustomForm
                 crud_form = S3SQLCustomForm((T("Production URL"), "production.url"),
-                                            "production.sender",
-                                            #"repo_url",
                                             "country",
                                             "template",
                                             "webserver_type",
                                             "db_type",
+                                            "production.sender",
+                                            #"repo_url",
                                             "cloud_id",
                                             "dns_id",
                                             "production_server.remote_user",

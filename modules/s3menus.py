@@ -180,10 +180,10 @@ class S3MainMenu(object):
                 menu_help.append(SEP())
             for row in tours:
                 menu_help.append(MM(row.name,
-                                    c=row.controller,
-                                    f=row.function,
-                                    vars={"tour":row.id},
-                                    restrict=row.role
+                                    c = row.controller,
+                                    f = row.function,
+                                    vars = {"tour": row.id},
+                                    restrict = row.role
                                     )
                                  )
 

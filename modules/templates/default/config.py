@@ -33,7 +33,8 @@ def config(settings):
     #settings.base.theme = "default"
 
     # Enable Guided Tours
-    settings.base.guided_tour = True
+    # - defaults to module enabled or not
+    #settings.base.guided_tour = True
 
     # Authentication settings
     # These settings should be changed _after_ the 1st (admin) user is
@@ -1237,10 +1238,10 @@ def config(settings):
             access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
             module_type = None  # This item is handled separately for the menu
         )),
-        ("tour", Storage(
-            name_nice = T("Guided Tour Functionality"),
-            module_type = None,
-        )),
+        #("tour", Storage(
+        #    name_nice = T("Guided Tour Functionality"),
+        #    module_type = None,
+        #)),
         ("translate", Storage(
             name_nice = T("Translation Functionality"),
             #description = "Selective translation of strings based on module.",
@@ -1346,24 +1347,24 @@ def config(settings):
         #    restricted = True,
         #    module_type = 5,
         #)),
-        ("dc", Storage(
-           name_nice = T("Assessments"),
-           #description = "Data collection tool",
-           restricted = True,
-           module_type = 5
-        )),
-        ("cr", Storage(
-            name_nice = T("Shelters"),
-            #description = "Tracks the location, capacity and breakdown of victims in Shelters",
-            restricted = True,
-            module_type = 10
-        )),
-        ("hms", Storage(
-            name_nice = T("Hospitals"),
-            #description = "Helps to monitor status of hospitals",
-            restricted = True,
-            module_type = 10
-        )),
+        #("dc", Storage(
+        #   name_nice = T("Assessments"),
+        #   #description = "Data collection tool",
+        #   restricted = True,
+        #   module_type = 5
+        #)),
+        #("cr", Storage(
+        #    name_nice = T("Shelters"),
+        #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
+        #    restricted = True,
+        #    module_type = 10
+        #)),
+        #("hms", Storage(
+        #    name_nice = T("Hospitals"),
+        #    #description = "Helps to monitor status of hospitals",
+        #    restricted = True,
+        #    module_type = 10
+        #)),
         #("disease", Storage(
         #    name_nice = T("Disease Tracking"),
         #    #description = "Helps to track cases and trace contacts in disease outbreaks",
@@ -1376,41 +1377,41 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10,
         #)),
-        ("dvr", Storage(
-            name_nice = T("Disaster Victim Registry"),
-            #description = "Allow affected individuals & households to register to receive compensation and distributions",
-            restricted = True,
-            module_type = 10,
-        )),
-        ("event", Storage(
-            name_nice = T("Events"),
-            #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
-            restricted = True,
-            module_type = 10,
-        )),
-        ("transport", Storage(
-            name_nice = T("Transport"),
-            restricted = True,
-            module_type = 10,
-        )),
+        #("br", Storage(
+        #    name_nice = T("Benficiary Registry"),
+        #    #description = "Allow affected individuals & households to register to receive compensation and distributions",
+        #    restricted = True,
+        #    module_type = 10,
+        #)),
+        #("event", Storage(
+        #    name_nice = T("Events"),
+        #    #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
+        #    restricted = True,
+        #    module_type = 10,
+        #)),
+        #("transport", Storage(
+        #    name_nice = T("Transport"),
+        #    restricted = True,
+        #    module_type = 10,
+        #)),
         ("stats", Storage(
             name_nice = T("Statistics"),
             #description = "Manages statistics",
             restricted = True,
             module_type = None,
         )),
-        ("member", Storage(
-            name_nice = T("Members"),
-            #description = "Membership Management System",
-            restricted = True,
-            module_type = 10,
-        )),
-        ("budget", Storage(
-            name_nice = T("Budgeting Module"),
-            #description = "Allows a Budget to be drawn up",
-            restricted = True,
-            module_type = 10
-        )),
+        #("member", Storage(
+        #    name_nice = T("Members"),
+        #    #description = "Membership Management System",
+        #    restricted = True,
+        #    module_type = 10,
+        #)),
+        #("budget", Storage(
+        #    name_nice = T("Budgeting Module"),
+        #    #description = "Allows a Budget to be drawn up",
+        #    restricted = True,
+        #    module_type = 10
+        #)),
         #("deploy", Storage(
         #    name_nice = T("Deployments"),
         #    #description = "Manage Deployments",
