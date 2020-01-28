@@ -238,7 +238,7 @@ $(document).ready(function(){
         s3.jquery_ready.append(script)
 
         s3.stylesheets.append("../themes/%s/homepage.css" % THEME)
-        self._view(THEME, "index.html")
+        self._view(settings.get_theme_layouts(), "index.html")
 
         return output
 
