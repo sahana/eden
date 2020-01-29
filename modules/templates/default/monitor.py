@@ -113,14 +113,14 @@ class S3Monitor(object):
         try:
             r = requests.get(url, timeout = timeout) # verify=True
         except requests.exceptions.SSLError:
+            # e.g. Expired Certificate
             import traceback
             tb_parts = sys.exc_info()
             tb_text = "".join(traceback.format_exception(tb_parts[0],
                                                          tb_parts[1],
                                                          tb_parts[2]))
-            return {"result": "Critical: SSL Error", # e.g. expired
+            return {"result": "Critical: SSL Error\n\n%s" % tb_text,
                     "status": 3,
-                    "traceback": tb_text,
                     }
         except requests.exceptions.Timeout:
             import traceback
@@ -128,9 +128,8 @@ class S3Monitor(object):
             tb_text = "".join(traceback.format_exception(tb_parts[0],
                                                          tb_parts[1],
                                                          tb_parts[2]))
-            return {"result": "Critical: Timeout Error",
+            return {"result": "Critical: Timeout Error\n\n%s" % tb_text,
                     "status": 3,
-                    "traceback": tb_text,
                     }
         except requests.exceptions.TooManyRedirects:
             import traceback
@@ -138,9 +137,8 @@ class S3Monitor(object):
             tb_text = "".join(traceback.format_exception(tb_parts[0],
                                                          tb_parts[1],
                                                          tb_parts[2]))
-            return {"result": "Critical: TooManyRedirects Error",
+            return {"result": "Critical: TooManyRedirects Error\n\n%s" % tb_text,
                     "status": 3,
-                    "traceback": tb_text,
                     }
 
         if r.status_code != 200:
@@ -154,8 +152,15 @@ class S3Monitor(object):
                     "status": 3,
                     }
 
-        return {"latency": str(r.elapsed), # @ToDo: Format
-                "result": "OK",
+        latency = int(r.elapsed.microseconds / 1000)
+        latency_max = options_get("latency_max", 2000) # 2 seconds
+        if latency > latency_max:
+            return {"result": "Warning: Latency of %s exceeded threshold of %s." % \
+                                (latency, latency_max),
+                    "status": 2,
+                    }
+
+        return {"result": "OK. Latency: %s" % latency,
                 "status": 1,
                 }
 
@@ -295,9 +300,8 @@ class S3Monitor(object):
             tb_text = "".join(traceback.format_exception(tb_parts[0],
                                                          tb_parts[1],
                                                          tb_parts[2]))
-            return {"result": "Critical: Ping failed",
+            return {"result": "Critical: Ping failed\n\n%s" % tb_text,
                     "status": 3,
-                    "traceback": tb_text,
                     }
 
         return {"result": "OK",

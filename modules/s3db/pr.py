@@ -3864,6 +3864,7 @@ class PRContactModel(S3Model):
     """
 
     names = ("pr_contact",
+             #"pr_contact_id",
              "pr_contact_emergency",
              "pr_contact_represent",
              )
@@ -3959,10 +3960,10 @@ class PRContactModel(S3Model):
             msg_list_empty = T("No contact information available"))
 
         configure(tablename,
-                  deduplicate = S3Duplicate(primary=("pe_id",
-                                                     "contact_method",
-                                                     "value",
-                                                     ),
+                  deduplicate = S3Duplicate(primary = ("pe_id",
+                                                       "contact_method",
+                                                       "value",
+                                                       ),
                                             ignore_deleted = True,
                                             ),
                   list_fields = ["id",
@@ -3977,6 +3978,15 @@ class PRContactModel(S3Model):
                   )
 
         contact_represent = pr_ContactRepresent()
+
+        #contact_id = S3ReusableField("contact_id", "reference %s" % tablename,
+        #                             label = T("Contact"),
+        #                             ondelete = "CASCADE",
+        #                             represent = contact_represent,
+        #                             requires = IS_EMPTY_OR(
+        #                                            IS_ONE_OF(current.db, "pr_contact.id",
+        #                                                      contact_represent)),
+        #                             )
 
         # ---------------------------------------------------------------------
         # Emergency Contact Information
@@ -4030,7 +4040,8 @@ class PRContactModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"pr_contact_represent": contact_represent,
+        return {#"pr_contact_id": contact_id,
+                "pr_contact_represent": contact_represent,
                 }
 
     # -------------------------------------------------------------------------
@@ -4393,11 +4404,11 @@ class PRPresenceModel(S3Model):
                           super_link("pe_id", "pr_pentity"),
                           super_link("sit_id", "sit_situation"),
                           self.pr_person_id("observer",
-                          label=T("Observer"),
-                          default = current.auth.s3_logged_in_person(),
-                          comment=pr_person_comment(title=T("Observer"),
-                                                    comment=T("Person who has actually seen the person/group."),
-                                                    child="observer")),
+                                            label=T("Observer"),
+                                            default = current.auth.s3_logged_in_person(),
+                                            comment=pr_person_comment(title=T("Observer"),
+                                                                      comment=T("Person who has actually seen the person/group."),
+                                                                      child="observer")),
                           Field("shelter_id", "integer",
                                 readable = False,
                                 writable = False),
@@ -4824,7 +4835,7 @@ class PRAvailabilityModel(S3Model):
                   # @todo: adapt deduplicator once we allow multiple
                   #        availability records per person (e.g. include
                   #        start/end dates and location_id)
-                  deduplicate = S3Duplicate(primary=("person_id",)),
+                  deduplicate = S3Duplicate(primary = ("person_id",)),
                   )
 
         self.add_components(tablename,
@@ -6026,7 +6037,7 @@ class PRPersonDetailsModel(S3Model):
             msg_list_empty = T("There are no details for this person yet. Add Person's Details."))
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary=("person_id",),
+                       deduplicate = S3Duplicate(primary = ("person_id",),
                                                  ignore_deleted = True,
                                                  ),
                        )
@@ -7492,7 +7503,8 @@ def pr_rheader(r, tabs=None):
                 query = (table.group_id == record.id) & \
                         (table.group_head == True)
                 leader = db(query).select(table.person_id,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1)
+                                          ).first()
                 if leader:
                     leader = s3_fullname(leader.person_id)
                 else:
@@ -8578,7 +8590,7 @@ def pr_update_affiliations(table, record):
         if not isinstance(record, Row):
             record = current.db(htable.id == record).select(htable.deleted_fk,
                                                             htable.person_id,
-                                                            limitby=(0, 1)
+                                                            limitby = (0, 1)
                                                             ).first()
         if not record:
             return
@@ -8743,7 +8755,8 @@ def pr_human_resource_update_affiliations(person_id):
                             otable.pe_id,
                             stable.uuid,
                             stable.instance_type,
-                            left=left)
+                            left = left
+                            )
 
     # Extract all master PE's
     masters = {STAFF:[], VOLUNTEER:[]}

@@ -383,7 +383,7 @@ def server():
                                                                                 limitby = (0, 1)
                                                                                 ).first()
 
-                    if deployment.cloud_id:
+                    if deployment and deployment.cloud_id:
                         # Assume AWS for now
                         crud_form = S3SQLCustomForm("deployment_id",
                                                     "name",

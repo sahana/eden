@@ -263,8 +263,8 @@ class S3Msg(object):
             # Parse the Message
             reply_id = parser(function_name, message.message_id)
             # Update to show that we've parsed the message & provide a link to the reply
-            message.update_record(is_parsed=True,
-                                  reply_id=reply_id)
+            message.update_record(is_parsed = True,
+                                  reply_id = reply_id)
         return
 
     # =========================================================================
@@ -336,8 +336,9 @@ class S3Msg(object):
         # - can be overridden by the calling function
         title = current.T("Send Message")
 
-        return dict(form = form,
-                    title = title)
+        return {"form": form,
+                "title": title,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -393,13 +394,13 @@ class S3Msg(object):
                 from_address = current.deployment_settings.get_mail_sender()
 
             table = s3db.msg_email
-            _id = table.insert(body=message,
-                               subject=subject,
-                               from_address=from_address,
-                               #to_address=pe_id,
-                               inbound=False,
+            _id = table.insert(body = message,
+                               subject = subject,
+                               from_address = from_address,
+                               #to_address = pe_id,
+                               inbound = False,
                                )
-            record = dict(id=_id)
+            record = {"id": _id}
             s3db.update_super(table, record)
             message_id = record["message_id"]
             if document_ids:
@@ -407,28 +408,30 @@ class S3Msg(object):
                 if not isinstance(document_ids, list):
                     document_ids = [document_ids]
                 for document_id in document_ids:
-                    ainsert(message_id=message_id,
-                            document_id=document_id,
+                    ainsert(message_id = message_id,
+                            document_id = document_id,
                             )
 
         elif contact_method == "SMS":
             table = s3db.msg_sms
-            _id = table.insert(body=message,
-                               from_address=from_address,
-                               inbound=False,
+            _id = table.insert(body = message,
+                               from_address = from_address,
+                               inbound = False,
                                )
-            record = dict(id=_id)
+            record = {"id": _id}
             s3db.update_super(table, record)
             message_id = record["message_id"]
+
         elif contact_method == "TWITTER":
             table = s3db.msg_twitter
-            _id = table.insert(body=message,
-                               from_address=from_address,
-                               inbound=False,
+            _id = table.insert(body = message,
+                               from_address = from_address,
+                               inbound = False,
                                )
-            record = dict(id=_id)
+            record = {"id": _id}
             s3db.update_super(table, record)
             message_id = record["message_id"]
+
         else:
             # @ToDo
             raise NotImplementedError
@@ -514,8 +517,9 @@ class S3Msg(object):
                     org_parents = s3db.org_parents
                 for row in rows:
                     channels[row["msg_sms_outbound_gateway.organisation_id"]] = \
-                        dict(outgoing_sms_handler = row["msg_channel.instance_type"],
-                             channel_id = row["msg_sms_outbound_gateway.channel_id"])
+                        {"outgoing_sms_handler": row["msg_channel.instance_type"],
+                         "channel_id": row["msg_sms_outbound_gateway.channel_id"],
+                         }
 
         elif contact_method == "TWITTER":
             twitter_settings = self.get_twitter_api()
@@ -1948,7 +1952,7 @@ class S3Msg(object):
                               body = body,
                               received_on = received_on,
                               )
-                record = dict(id=_id)
+                record = {"id": _id}
                 update_super(mtable, record)
                 if parser:
                     pinsert(message_id = record["message_id"],
@@ -2028,7 +2032,7 @@ class S3Msg(object):
                                   status=sms["status"],
                                   from_address=sender,
                                   received_on=sms["date_sent"])
-                    record = dict(id=_id)
+                    record = {"id": _id}
                     update_super(mtable, record)
                     message_id = record["message_id"]
                     sinsert(message_id = message_id,
@@ -2211,9 +2215,9 @@ class S3Msg(object):
                     if lexists:
                         location_id = lexists.id
                     else:
-                        data = dict(lat=lat,
-                                    lon=lon,
-                                    )
+                        data = {"lat": lat,
+                                "lon": lon,
+                                }
                         results = geocode_r(lat, lon)
                         if isinstance(results, dict):
                             for key in hierarchy_level_keys:
@@ -2277,7 +2281,7 @@ class S3Msg(object):
                               tags = tags,
                               # @ToDo: Enclosures
                               )
-                record = dict(id=_id)
+                record = {"id": _id}
                 update_super(mtable, record)
                 for link_ in links:
                     linsert(rss_id = _id,
@@ -2389,7 +2393,7 @@ class S3Msg(object):
                           inbound = True,
                           msg_id = message.id,
                           )
-            update_super(table, dict(id=_id))
+            update_super(table, {"id": _id})
 
         return True
 
@@ -2536,7 +2540,7 @@ class S3Msg(object):
                                 #inbound = True,
                                 location_id = location_id,
                                 )
-            update_super(rtable, dict(id=_id))
+            update_super(rtable, {"id": _id})
 
         # This is simplistic as we may well want to repeat the same search multiple times
         db(qtable.id == search_id).update(is_searched = True)
@@ -2684,7 +2688,7 @@ class S3Compose(S3CRUD):
 
         # Apply method
         if self.method == "compose":
-            output = dict(form=form)
+            output = {"form": form}
         else:
             r.error(405, current.ERROR.BAD_METHOD)
 
@@ -2895,18 +2899,18 @@ class S3Compose(S3CRUD):
             else:
                 # @ToDo: This should display all the Recipients (truncated with option to see all)
                 # - use pr_PersonEntityRepresent for bulk representation
-                represent = T("%(count)s Recipients") % dict(count=len(recipients))
+                represent = T("%(count)s Recipients") % {"count": len(recipients)}
         else:
             if recipient_type:
                 # Filter by Recipient Type
                 pe_field.requires = IS_ONE_OF(db,
                                               "pr_pentity.pe_id",
                                               # Breaks PG
-                                              #orderby="instance_type",
-                                              filterby="instance_type",
-                                              filter_opts=(recipient_type,),
+                                              #orderby = "instance_type",
+                                              filterby = "instance_type",
+                                              filter_opts = (recipient_type,),
                                               )
-                pe_field.widget = S3PentityAutocompleteWidget(types=(recipient_type,))
+                pe_field.widget = S3PentityAutocompleteWidget(types = (recipient_type,))
             else:
                 # @ToDo A new widget (tree?) required to handle multiple persons and groups
                 pe_field.widget = S3PentityAutocompleteWidget()
@@ -2941,7 +2945,8 @@ class S3Compose(S3CRUD):
         mcustom = mailform.custom
 
         pe_row = TR(TD(LABEL(ocustom.label.pe_id)),
-                    _id="msg_outbox_pe_id__row")
+                    _id = "msg_outbox_pe_id__row",
+                    )
         if recipients:
             ocustom.widget.pe_id["_class"] = "hide"
             pe_row.append(TD(ocustom.widget.pe_id,
@@ -2955,18 +2960,18 @@ class S3Compose(S3CRUD):
                    TABLE(TBODY(TR(TD(LABEL(ocustom.label.contact_method)),
                                   TD(ocustom.widget.contact_method),
                                   TD(ocustom.comment.contact_method),
-                                  _id="msg_outbox_contact_method__row"
+                                  _id = "msg_outbox_contact_method__row"
                                   ),
                                pe_row,
                                TR(TD(LABEL(mcustom.label.subject)),
                                   TD(mcustom.widget.subject),
                                   TD(mcustom.comment.subject),
-                                  _id="msg_log_subject__row"
+                                  _id = "msg_log_subject__row"
                                   ),
                                TR(TD(LABEL(lcustom.label.body)),
                                   TD(lcustom.widget.body),
                                   TD(lcustom.comment.body),
-                                  _id="msg_log_message__row"
+                                  _id = "msg_log_message__row"
                                   ),
                                #TR(TD(LABEL(lcustom.label.priority)),
                                   #TD(lcustom.widget.priority),
@@ -2974,11 +2979,12 @@ class S3Compose(S3CRUD):
                                   #_id="msg_log_priority__row"
                                   #),
                                TR(TD(),
-                                  TD(INPUT(_type="submit",
-                                           _value=T("Send message"),
-                                           _id="dummy_submit"),
+                                  TD(INPUT(_type = "submit",
+                                           _value = T("Send message"),
+                                           _id = "dummy_submit",
+                                           ),
                                      ),
-                                  _id="submit_record__row"
+                                  _id = "submit_record__row"
                                   ),
                                ),
                          ),

@@ -667,10 +667,11 @@ class S3SQLDefaultForm(S3SQLForm):
         formname = "%s/%s" % (tablename, record_id)
         if form.accepts(vars,
                         current.session,
-                        formname=formname,
-                        onvalidation=onvalidation,
-                        keepvalues=False,
-                        hideerror=False):
+                        formname = formname,
+                        onvalidation = onvalidation,
+                        keepvalues = False,
+                        hideerror = False
+                        ):
 
             # Undelete?
             if vars.get("_undelete"):
@@ -802,12 +803,12 @@ class S3SQLCustomForm(S3SQLForm):
     # Rendering/Processing
     # -------------------------------------------------------------------------
     def __call__(self,
-                 request=None,
-                 resource=None,
-                 record_id=None,
-                 readonly=False,
-                 message="Record created/updated",
-                 format=None,
+                 request = None,
+                 resource = None,
+                 record_id = None,
+                 readonly = False,
+                 message = "Record created/updated",
+                 format = None,
                  **options):
         """
             Render/process the form.
@@ -1233,10 +1234,11 @@ class S3SQLCustomForm(S3SQLForm):
     # -------------------------------------------------------------------------
     def accept(self,
                form,
-               format=None,
-               link=None,
-               hierarchy=None,
-               undelete=False):
+               format = None,
+               link = None,
+               hierarchy = None,
+               undelete = False
+               ):
         """
             Create/update all records from the form.
 
@@ -1359,11 +1361,12 @@ class S3SQLCustomForm(S3SQLForm):
     def _accept(self,
                 record_id,
                 data,
-                alias=None,
-                format=None,
-                hierarchy=None,
-                link=None,
-                undelete=False):
+                alias = None,
+                format = None,
+                hierarchy = None,
+                link = None,
+                undelete = False
+                ):
         """
             Create or update a record
 
@@ -1590,19 +1593,19 @@ class S3SQLFormElement(object):
 
         if not hasattr(field, "type"):
             # Virtual Field
-            field = Storage(comment=None,
-                            type="string",
-                            length=255,
-                            unique=False,
-                            uploadfolder=None,
-                            autodelete=False,
-                            label="",
-                            writable=False,
-                            readable=True,
-                            default=None,
-                            update=None,
-                            compute=None,
-                            represent=lambda v: v or "",
+            field = Storage(comment = None,
+                            type = "string",
+                            length = 255,
+                            unique = False,
+                            uploadfolder = None,
+                            autodelete = False,
+                            label = "",
+                            writable = False,
+                            readable = True,
+                            default = None,
+                            update = None,
+                            compute = None,
+                            represent = lambda v: v or "",
                             )
             requires = None
             required = False
@@ -1830,7 +1833,7 @@ class S3SQLDummyField(S3SQLFormElement):
             @return: the widget for this form element as HTML helper
         """
 
-        return DIV(_class="s3-dummy-field",
+        return DIV(_class = "s3-dummy-field",
                    )
 
 # =============================================================================
@@ -1888,7 +1891,7 @@ class S3SQLSectionBreak(S3SQLFormElement):
             @return: the widget for this form element as HTML helper
         """
 
-        return DIV(_class="s3-section-break",
+        return DIV(_class = "s3-section-break",
                    )
 
 # =============================================================================
@@ -2124,8 +2127,8 @@ class S3SQLSubFormLayout(object):
                 data,
                 item_rows,
                 action_rows,
-                empty=False,
-                readonly=False):
+                empty = False,
+                readonly = False):
         """
             Outer container for the subform
 
@@ -2793,7 +2796,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         # Configure the layout
         layout = self._layout()
-        columns = self.options.get("columns")
+        columns = options.get("columns")
         if columns:
             layout.set_columns(columns, row_actions = multiple)
 
@@ -3224,7 +3227,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         query = (mastertable._id == master_id)
                         master = db(query).select(mastertable._id,
                                                   mastertable[pkey],
-                                                  limitby=(0, 1)).first()
+                                                  limitby = (0, 1)
+                                                  ).first()
                         if not master:
                             return
                     else:
@@ -3265,7 +3269,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                 ltable = component.link.table
                                 query = (ltable.person_id == master[pkey])
                                 link_record = db(query).select(ltable.id,
-                                                               limitby=(0, 1)
+                                                               limitby = (0, 1)
                                                                ).first()
                                 if link_record:
                                     values[fkey] = link_record[pkey]
@@ -3345,12 +3349,12 @@ class S3SQLInlineComponent(S3SQLSubForm):
                      table,
                      item,
                      fields,
-                     readonly=True,
-                     editable=False,
-                     deletable=False,
-                     multiple=True,
-                     index="none",
-                     layout=None,
+                     readonly = True,
+                     editable = False,
+                     deletable = False,
+                     multiple = True,
+                     index = "none",
+                     layout = None,
                      **attributes):
         """
             Render a read- or edit-row.
@@ -3459,12 +3463,12 @@ class S3SQLInlineComponent(S3SQLSubForm):
         subform_name = "sub_%s" % formname
         rowstyle = layout.rowstyle_read if readonly else layout.rowstyle
         subform = SQLFORM.factory(*formfields,
-                                  record=data,
-                                  showid=False,
-                                  formstyle=rowstyle,
+                                  record = data,
+                                  showid = False,
+                                  formstyle = rowstyle,
                                   upload = s3.download_url,
-                                  readonly=readonly,
-                                  table_name=subform_name,
+                                  readonly = readonly,
+                                  table_name = subform_name,
                                   separator = ":",
                                   submit = False,
                                   buttons = [])

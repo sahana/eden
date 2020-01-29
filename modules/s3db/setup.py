@@ -1839,7 +1839,7 @@ class S3SetupMonitorModel(S3Model):
              "setup_monitor_check",
              "setup_monitor_task",
              "setup_monitor_run",
-             #"setup_monitor_alert",
+             "setup_monitor_alert",
              )
 
     def model(self):
@@ -1941,9 +1941,8 @@ class S3SetupMonitorModel(S3Model):
                                    label = T("Check"),
                                    ondelete = "CASCADE",
                                    represent = represent,
-                                   requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db, "setup_monitor_check.id",
-                                                          represent)),
+                                   requires = IS_ONE_OF(db, "setup_monitor_check.id",
+                                                        represent),
                                    )
 
         add_components(tablename,
@@ -1966,6 +1965,7 @@ class S3SetupMonitorModel(S3Model):
                            represent = s3_yes_no_represent,
                            ),
                      # Options for this Check on this Server
+                     # - including any thresholds for non-Critical results
                      Field("options", "json",
                            label = T("Options"),
                            requires = IS_EMPTY_OR(
@@ -1973,11 +1973,8 @@ class S3SetupMonitorModel(S3Model):
                                         ),
                            ),
                      status_id(),
-                     Field("result", "json",
+                     Field("result", "text",
                            label = T("Result"),
-                           requires = IS_EMPTY_OR(
-                                        IS_JSONS3()
-                                        ),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -1995,11 +1992,26 @@ class S3SetupMonitorModel(S3Model):
             msg_record_deleted = T("Task deleted"),
             msg_list_empty = T("No Tasks currently registered"))
 
+        crud_form = S3SQLCustomForm("server_id",
+                                    "check_id",
+                                    "enabled",
+                                    "options",
+                                    S3SQLInlineComponent("monitor_alert",
+                                                         label = T("Alerts"),
+                                                         fields = [("", "person_id"),
+                                                                   ],
+                                                         ),
+                                    "status",
+                                    "result",
+                                    "comments",
+                                    )
+
         configure(tablename,
                   # Open the Options after creation
                   create_next = URL(c="setup", f="monitor_task",
                                     args = ["[id]", "option"],
                                     ),
+                  crud_form = crud_form,
                   onaccept = self.setup_monitor_task_onaccept,
                   )
 
@@ -2041,11 +2053,8 @@ class S3SetupMonitorModel(S3Model):
                      server_id(writable = False),
                      task_id(writable = False),
                      status_id(),
-                     Field("result", "json",
+                     Field("result", "text",
                            label = T("Result"),
-                           requires = IS_EMPTY_OR(
-                                        IS_JSONS3()
-                                        ),
                            ),
                      s3_comments(),
                      *s3_meta_fields()#,
@@ -2082,17 +2091,21 @@ class S3SetupMonitorModel(S3Model):
 
         # =============================================================================
         # Alerts
-        #  - what threshold to raise an alert on
+        #  - people to alert when status != OK
         #
-        # @ToDo: UI to wrap normal Subscription / Notifications
 
-        #tablename = "setup_monitor_alert"
-        #define_table(tablename,
-        #             task_id(),
-        #             self.pr_person_id(),
-        #             # @ToDo: Threshold
-        #             s3_comments(),
-        #             *s3_meta_fields())
+        tablename = "setup_monitor_alert"
+        define_table(tablename,
+                     task_id(),
+                     self.pr_person_id(comment = None,
+                                       empty = False,
+                                       ondelete = "CASCADE",
+                                       widget = None, # Dropdown, not Autocomplete
+                                       ),
+                     # Email-only for now
+                     #self.pr_contact_id(),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -2470,10 +2483,15 @@ def setup_monitor_task_run(r, **attr):
 def setup_monitor_run_task(task_id):
     """
         Check a Service
+
+        Non-interactive function run by Scheduler
     """
 
     db = current.db
-    table = current.s3db.setup_monitor_task
+    s3db = current.s3db
+    settings = current.deployment_settings
+
+    table = s3db.setup_monitor_task
     ctable = db.setup_monitor_check
 
     query = (table.id == task_id) & \
@@ -2486,7 +2504,7 @@ def setup_monitor_run_task(task_id):
     function_name = row["setup_monitor_check.function_name"]
 
     # Load the Monitor template for this deployment
-    template = current.deployment_settings.get_setup_monitor_template()
+    template = settings.get_setup_monitor_template()
     module_name = "applications.%s.modules.templates.%s.monitor" \
         % (current.request.application, template)
     __import__(module_name)
@@ -2515,16 +2533,17 @@ def setup_monitor_run_task(task_id):
         tb_text = "".join(traceback.format_exception(tb_parts[0],
                                                      tb_parts[1],
                                                      tb_parts[2]))
-        result = {"traceback": tb_text,
-                  }
+        result = tb_text
         status = 3 # Critical
     else:
         try:
             status = result.get("status")
         except AttributeError:
             status = 3 # Critical
-        else:
-            del result["status"]
+        try:
+            result = result.get("result")
+        except AttributeError:
+            result = ""
 
     # Store the Result & Status
     # ... in Run
@@ -2565,6 +2584,24 @@ def setup_monitor_run_task(task_id):
             if higher is None:
                 server.update_record(status = status)
 
+    if status > 1:
+        # Send any Alerts
+        atable = db.setup_monitor_alert
+        ptable = s3db.pr_person
+        query = (atable.task_id == task_id) & \
+                (atable.person_id == ptable.id)
+        recipients = db(query).select(ptable.pe_id)
+        if len(recipients) > 0:
+            recipients = [p.pe_id for p in recipients]
+            subject = "%s: %s" % (settings.get_system_name_short(),
+                                  result.split("\n")[0],
+                                  )
+            current.msg.send_by_pe_id(recipients,
+                                      subject = subject,
+                                      message = result,
+                                      )
+
+    # Pass result back to scheduler_run
     return result
 
 # =============================================================================
