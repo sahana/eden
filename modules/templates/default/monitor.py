@@ -60,6 +60,49 @@ class S3Monitor(object):
             Test the free diskspace
         """
 
+        db = current.db
+        s3db = current.s3db
+
+        # Read the Task Options
+        ttable = s3db.setup_monitor_task
+        task = db(ttable.id == task_id).select(ttable.options,
+                                               ttable.server_id,
+                                               limitby = (0, 1)
+                                               ).first()
+        options = task.options or {}
+        options_get = options.get
+
+        partition = options_get("partition", "/") # Root Partition by default
+        space_min = options_get("space_min", 1000000000) # 1 Gb
+
+        # @ToDo: SSH into remote server to run this
+        #        Ansible? How does Monitor 
+
+        stable = s3db.setup_server
+        server = db(stable.id == task.server_id).select(stable.host_ip,
+                                                        limitby = (0, 1)
+                                                        ).first()
+
+        host_ip = server.host_ip
+        if host_ip == "127.0.0.1":
+            import os
+            result = os.statvfs(partition)
+            space = result.f_bavail * result.f_frsize
+            percent = float(result.f_bavail) / float(result.f_blocks) * 100
+            if space < space_min:
+                return {"result": "Warning: %s free (%d%%)" % \
+                                    (_bytes_to_size_string(space), percent),
+                        "status": 2,
+                        }
+
+            return {"result": "OK. %s free (%d%%)" % \
+                                (_bytes_to_size_string(space), percent),
+                    "status": 1,
+                    }
+
+        # @ToDo: SSH & run check
+        # e.g. Use Ansible?
+        # https://gist.github.com/alexanderadam/5661307ef6ad1f4f42fa954524104219
         raise NotImplementedError
 
     # -------------------------------------------------------------------------
@@ -339,5 +382,29 @@ class S3Monitor(object):
         """
 
         raise NotImplementedError
+
+# =============================================================================
+def _bytes_to_size_string(b: int) -> str:
+    """
+        Convert a number in bytes to a sensible unit.
+
+        From https://github.com/jamesoff/simplemonitor/blob/develop/simplemonitor/Monitors/host.py#L35
+    """
+
+    kb = 1024
+    mb = kb * 1024
+    gb = mb * 1024
+    tb = gb * 1024
+
+    if b > tb:
+        return "%0.2fTiB" % (b / float(tb))
+    elif b > gb:
+        return "%0.2fGiB" % (b / float(gb))
+    elif b > mb:
+        return "%0.2fMiB" % (b / float(mb))
+    elif b > kb:
+        return "%0.2fKiB" % (b / float(kb))
+    else:
+        return str(b)
 
 # END =========================================================================
