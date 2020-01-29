@@ -1980,7 +1980,7 @@ class S3SetupMonitorModel(S3Model):
                      Field("result", "text",
                            label = T("Result"),
                            represent = lambda v: v.split("\n")[0] if v else \
-                                                 current.messages[NONE"],
+                                                 current.messages["NONE"],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2065,7 +2065,7 @@ class S3SetupMonitorModel(S3Model):
                      Field("result", "text",
                            label = T("Result"),
                            represent = lambda v: v.split("\n")[0] if v else \
-                                                 current.messages[NONE"],
+                                                 current.messages["NONE"],
                            ),
                      s3_comments(),
                      *s3_meta_fields()#,
