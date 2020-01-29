@@ -1046,9 +1046,9 @@ $('.copy-link').click(function(e){
 
         # Construct Email message
         subject = "%s: You have been %s to participate in an Event" % \
-            (settings.get_system_name_short(),
-             approved_or_rejected,
-             )
+                    (settings.get_system_name_short(),
+                     approved_or_rejected,
+                     )
 
         etable = s3db.hrm_training_event
         training_event = db(etable.id == record.training_event_id).select(etable.name,
@@ -1056,9 +1056,9 @@ $('.copy-link').click(function(e){
                                                                           ).first().name
 
         message = "You have been %s to participate in an Event:\n%s" % \
-            (approved_or_rejected,
-             training_event,
-             )
+                    (approved_or_rejected,
+                     training_event,
+                     )
 
         # Send message to each
         current.msg.send_email(to = user.email,
@@ -1197,17 +1197,19 @@ $('.copy-link').click(function(e){
 
         # Construct Email message
         subject = "%s: %s has applied to participate in your Event" % \
-            (settings.get_system_name_short(),
-             fullname,
-             )
+                    (settings.get_system_name_short(),
+                     fullname,
+                     )
 
         url = "%s%s" % (settings.get_base_public_url(),
-                        URL(c="hrm", f="training_event", args=[record_id, "training", training_id]))
+                        URL(c="hrm", f="training_event",
+                            args = [record_id, "training", training_id]),
+                        )
         message = "%s has applied to participate in your Event: %s\n\nYou can approve or decline this here: %s" % \
-            (fullname,
-             r.record.name,
-             url,
-             )
+                    (fullname,
+                     r.record.name,
+                     url,
+                     )
 
         # Send message to each
         send_email = current.msg.send_email
@@ -1241,9 +1243,9 @@ $('.copy-link').click(function(e){
         event_name = record.get("name")
         system_name = settings.get_system_name_short()
         subject = "%s: You have been invited to an Event: %s" % \
-            (system_name,
-             event_name,
-             )
+                    (system_name,
+                     event_name,
+                     )
 
         db = current.db
         s3db = current.s3db
@@ -1260,7 +1262,9 @@ $('.copy-link').click(function(e){
                                                                 ).as_dict(key = "tag")
 
         base_url = "%s%s" % (settings.get_base_public_url(),
-            URL(c="hrm", f="training_event", args=[record_id, "training"]))
+                             URL(c="hrm", f="training_event",
+                                 args = [record_id, "training"]),
+                             )
 
         date = record.get("start_date")
         if isinstance(date, basestring):
@@ -2951,19 +2955,20 @@ $('.copy-link').click(function(e){
         # Construct Email message
         system_name = settings.get_system_name_short()
         subject = "%s: Message sent from %s" % \
-            (system_name,
-             fullname,
-             )
+                    (system_name,
+                     fullname,
+                     )
 
         url = "%s%s" % (settings.get_base_public_url(),
-                        URL(c="project", f="task"))
+                        URL(c="project", f="task"),
+                        )
         message = "%s has sent you a Message on %s\n\nSubject: %s\nMessage: %s\n\nYou can view the message here: %s" % \
-            (fullname,
-             system_name,
-             form_vars_get("name"),
-             form_vars_get("description") or "",
-             url,
-             )
+                    (fullname,
+                     system_name,
+                     form_vars_get("name"),
+                     form_vars_get("description") or "",
+                     url,
+                     )
 
         get_vars_get = current.request.get_vars.get
         organisation_ids = get_vars_get("o")
@@ -3414,20 +3419,20 @@ $('.copy-link').click(function(e){
 
         # Construct Email message
         subject = "%s: %s has applied to participate in your Opportunity" % \
-            (settings.get_system_name_short(),
-             fullname,
-             )
+                    (settings.get_system_name_short(),
+                     fullname,
+                     )
 
         url = "%s%s" % (settings.get_base_public_url(),
                         URL(c="req", f="need",
-                            args=[record_id, "need_person", need_person_id],
-                            )
+                            args = [record_id, "need_person", need_person_id],
+                            ),
                         )
         message = "%s has applied to participate in your Opportunity: %s\n\nYou can approve or decline this here: %s" % \
-            (fullname,
-             r.record.name,
-             url,
-             )
+                    (fullname,
+                     r.record.name,
+                     url,
+                     )
 
         # Send message to each
         send_email = current.msg.send_email
@@ -3461,9 +3466,9 @@ $('.copy-link').click(function(e){
         event_name = record.get("name")
         system_name = settings.get_system_name_short()
         subject = "%s: You have been invited to an Opportunity: %s" % \
-            (system_name,
-             event_name,
-             )
+                    (system_name,
+                     event_name,
+                     )
 
         db = current.db
         s3db = current.s3db
@@ -3504,7 +3509,9 @@ $('.copy-link').click(function(e){
                                                       ).as_dict(key = "tag")
 
         base_url = "%s%s" % (settings.get_base_public_url(),
-            URL(c="req", f="need", args=[record_id, "need_person"]))
+                             URL(c="req", f="need",
+                                 args = [record_id, "need_person"]),
+                             )
 
         date = record.get("date")
         if isinstance(date, basestring):
@@ -3512,21 +3519,21 @@ $('.copy-link').click(function(e){
             date = s3_parse_datetime(date, "%Y-%m-%d %H:%M:%S")
 
         message = "You have been invited to an Opportunity:\n\nTitle: %s\nOrganisation: %s\nStart Date: %s\nDistrict: %s\nStreet Address: %s\nPostcode: %s\nDescription: %s\nContact: %s\nSkill: %s\nAge Restrictions: %s\nPractical Information: %s\nParking Options: %s\nWhat to Bring: %s\n\nYou can respond to the invite here: %s" % \
-            (event_name,
-             organisation,
-             ntable.date.represent(date),
-             location.L3,
-             location.addr_street or "",
-             location.addr_postcode or "",
-             record.get("description") or "",
-             contact,
-             skill,
-             tags.get("age_restrictions")["value"] or "",
-             tags.get("practical_info")["value"] or "",
-             tags.get("parking")["value"] or "",
-             tags.get("bring")["value"] or "",
-             base_url,
-             )
+                    (event_name,
+                     organisation,
+                     ntable.date.represent(date),
+                     location.L3,
+                     location.addr_street or "",
+                     location.addr_postcode or "",
+                     record.get("description") or "",
+                     contact,
+                     skill,
+                     tags.get("age_restrictions")["value"] or "",
+                     tags.get("practical_info")["value"] or "",
+                     tags.get("parking")["value"] or "",
+                     tags.get("bring")["value"] or "",
+                     base_url,
+                     )
 
         # Send message to each
         ctable = s3db.pr_contact
@@ -4021,9 +4028,9 @@ $('.copy-link').click(function(e){
 
         # Construct Email message
         subject = "%s: You have been %s to participate in an Opportunity" % \
-            (settings.get_system_name_short(),
-             approved_or_rejected,
-             )
+                    (settings.get_system_name_short(),
+                     approved_or_rejected,
+                     )
 
         ntable = s3db.req_need
         need = db(ntable.id == record.need_id).select(ntable.name,
@@ -4031,9 +4038,9 @@ $('.copy-link').click(function(e){
                                                       ).first().name
 
         message = "You have been %s to participate in an Opportunity:\n%s" % \
-            (approved_or_rejected,
-             need,
-             )
+                    (approved_or_rejected,
+                     need,
+                     )
 
         # Send message to each
         current.msg.send_email(to = user.email,

@@ -77,6 +77,8 @@ class S3Monitor(object):
 
         stable = s3db.setup_server
         server = db(stable.id == task.server_id).select(stable.host_ip,
+                                                        stable.remote_user,
+                                                        stable.private_key,
                                                         limitby = (0, 1)
                                                         ).first()
 
@@ -97,10 +99,79 @@ class S3Monitor(object):
                     "status": 1,
                     }
 
-        # @ToDo: SSH & run check
-        # e.g. Use Ansible?
-        # https://gist.github.com/alexanderadam/5661307ef6ad1f4f42fa954524104219
-        raise NotImplementedError
+        remote_user = server.remote_user
+        private_key = server.private_key
+        if not private_key or not remote_user:
+            if remote_user:
+                return {"result": "Critical. Missing Private Key",
+                        "status": 3,
+                        }
+            elif private_key:
+                return {"result": "Critical. Missing Remote User",
+                        "status": 3,
+                        }
+           else:
+                return {"result": "Critical. Missing Remote User & Private Key",
+                        "status": 3,
+                        }
+
+        # SSH in & run check
+        try:
+            import paramiko
+        except ImportError:
+            return {"result": "Critical. Paramiko required.",
+                    "status": 3,
+                    }
+
+        keyfile = open(os.path.join(current.request.folder, "uploads", private_key), "r")
+        mykey = paramiko.RSAKey.from_private_key(keyfile)
+
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            ssh.connect(hostname = host_ip,
+                        username = remote_user,
+                        pkey = mykey)
+        except paramiko.ssh_exception.AuthenticationException:
+            import traceback
+            tb_parts = sys.exc_info()
+            tb_text = "".join(traceback.format_exception(tb_parts[0],
+                                                         tb_parts[1],
+                                                         tb_parts[2]))
+            return {"result": "Critical. Authentication Error\n\n%s" % tb_text,
+                    "status": 3,
+                    }
+        except paramiko.ssh_exception.SSHException:
+            import traceback
+            tb_parts = sys.exc_info()
+            tb_text = "".join(traceback.format_exception(tb_parts[0],
+                                                         tb_parts[1],
+                                                         tb_parts[2]))
+            return {"result": "Critical. SSH Error\n\n%s" % tb_text,
+                    "status": 3,
+                    }
+
+        command = command = "import os;result=os.statvfs('%s');print(result.f_bavail);print(result.f_frsize);print(result.f_blocks)" % partition
+        stdin, stdout, stderr = ssh.exec_command('python -c "%s"' % command)
+        outlines = stdout.readlines()
+        ssh.close()
+
+        f_bavail = int(outlines[0])
+        f_frsize = int(outlines[1])
+        f_blocks = int(outlines[2])
+
+        space = f_bavail * f_frsize
+        percent = float(f_bavail) / float(f_blocks) * 100
+        if space < space_min:
+            return {"result": "Warning: %s free (%d%%)" % \
+                                (_bytes_to_size_string(space), percent),
+                    "status": 2,
+                    }
+
+        return {"result": "OK. %s free (%d%%)" % \
+                            (_bytes_to_size_string(space), percent),
+                "status": 1,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
