@@ -152,6 +152,16 @@ class S3Monitor(object):
             return {"result": "Critical: TooManyRedirects Error\n\n%s" % tb_text,
                     "status": 3,
                     }
+        except requests.exceptions.ConnectionError:
+            # e.g. DNS Error
+            import traceback
+            tb_parts = sys.exc_info()
+            tb_text = "".join(traceback.format_exception(tb_parts[0],
+                                                         tb_parts[1],
+                                                         tb_parts[2]))
+            return {"result": "Critical: Connection Error\n\n%s" % tb_text,
+                    "status": 3,
+                    }
 
         if r.status_code != 200:
             return {"result": "Critical: HTTP Error. Status = %s" % r.status_code,

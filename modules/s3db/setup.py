@@ -1979,6 +1979,8 @@ class S3SetupMonitorModel(S3Model):
                      status_id(),
                      Field("result", "text",
                            label = T("Result"),
+                           represent = lambda v: v and v.split("\n")[0] else \
+                                                       current.messages[NONE"],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2016,6 +2018,12 @@ class S3SetupMonitorModel(S3Model):
                                     args = ["[id]", "monitor_run"],
                                     ),
                   crud_form = crud_form,
+                  list_fields = ["deployment_id",
+                                 "server_id",
+                                 "check_id",
+                                 "status",
+                                 "result",
+                                 ],
                   onaccept = self.setup_monitor_task_onaccept,
                   )
 
@@ -2056,6 +2064,8 @@ class S3SetupMonitorModel(S3Model):
                      status_id(),
                      Field("result", "text",
                            label = T("Result"),
+                           represent = lambda v: v and v.split("\n")[0] else \
+                                                       current.messages[NONE"],
                            ),
                      s3_comments(),
                      *s3_meta_fields()#,
@@ -2085,7 +2095,7 @@ class S3SetupMonitorModel(S3Model):
                                  "server_id",
                                  "task_id",
                                  "status",
-                                 "comments",
+                                 "result",
                                  ],
                   orderby = "setup_monitor_run.created_on desc",
                   )
