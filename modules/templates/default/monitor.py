@@ -110,7 +110,7 @@ class S3Monitor(object):
                 return {"result": "Critical. Missing Remote User",
                         "status": 3,
                         }
-           else:
+            else:
                 return {"result": "Critical. Missing Remote User & Private Key",
                         "status": 3,
                         }
@@ -151,7 +151,7 @@ class S3Monitor(object):
                     "status": 3,
                     }
 
-        command = command = "import os;result=os.statvfs('%s');print(result.f_bavail);print(result.f_frsize);print(result.f_blocks)" % partition
+        command = "import os;result=os.statvfs('%s');print(result.f_bavail);print(result.f_frsize);print(result.f_blocks)" % partition
         stdin, stdout, stderr = ssh.exec_command('python -c "%s"' % command)
         outlines = stdout.readlines()
         ssh.close()
@@ -430,9 +430,78 @@ class S3Monitor(object):
                     "status": 1,
                     }
 
-        # @ToDo: SSH & run check
-        # e.g. Use Ansible?
-        raise NotImplementedError
+        remote_user = server.remote_user
+        private_key = server.private_key
+        if not private_key or not remote_user:
+            if remote_user:
+                return {"result": "Critical. Missing Private Key",
+                        "status": 3,
+                        }
+            elif private_key:
+                return {"result": "Critical. Missing Remote User",
+                        "status": 3,
+                        }
+            else:
+                return {"result": "Critical. Missing Remote User & Private Key",
+                        "status": 3,
+                        }
+
+        # SSH in & run check
+        try:
+            import paramiko
+        except ImportError:
+            return {"result": "Critical. Paramiko required.",
+                    "status": 3,
+                    }
+
+        keyfile = open(os.path.join(current.request.folder, "uploads", private_key), "r")
+        mykey = paramiko.RSAKey.from_private_key(keyfile)
+
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            ssh.connect(hostname = host_ip,
+                        username = remote_user,
+                        pkey = mykey)
+        except paramiko.ssh_exception.AuthenticationException:
+            import traceback
+            tb_parts = sys.exc_info()
+            tb_text = "".join(traceback.format_exception(tb_parts[0],
+                                                         tb_parts[1],
+                                                         tb_parts[2]))
+            return {"result": "Critical. Authentication Error\n\n%s" % tb_text,
+                    "status": 3,
+                    }
+        except paramiko.ssh_exception.SSHException:
+            import traceback
+            tb_parts = sys.exc_info()
+            tb_text = "".join(traceback.format_exception(tb_parts[0],
+                                                         tb_parts[1],
+                                                         tb_parts[2]))
+            return {"result": "Critical. SSH Error\n\n%s" % tb_text,
+                    "status": 3,
+                    }
+
+        command = "import os;loadavg=os.getloadavg();print(loadavg[0]);print(loadavg[1]);print(loadavg[2])"
+        stdin, stdout, stderr = ssh.exec_command('python -c "%s"' % command)
+        outlines = stdout.readlines()
+        ssh.close()
+
+        loadavg = {0: float(outlines[0]),
+                   1: float(outlines[1]),
+                   2: float(outlines[2]),
+                   }
+
+        if loadavg[which] > load_max:
+            return {"result": "Warning: load average: %0.2f, %0.2f, %0.2f" % \
+                            (loadavg[0], loadavg[1], loadavg[2]),
+                    "status": 2,
+                    }
+
+        return {"result": "OK. load average: %0.2f, %0.2f, %0.2f" % \
+                            (loadavg[0], loadavg[1], loadavg[2]),
+                "status": 1,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
