@@ -40,6 +40,7 @@ __all__ = ("S3DNSModel",
            "S3SetupMonitorModel",
            #"Storage2",
            #"setup_DeploymentRepresent",
+           #"setup_MonitorTaskRepresent",
            "setup_monitor_run_task",
            "setup_monitor_check_email_reply",
            "setup_instance_settings_read",
@@ -680,7 +681,8 @@ class S3SetupModel(S3Model):
                        )
 
         # @ToDo: Add represented Deployment/Role
-        represent = S3Represent(lookup=tablename, fields=["host_ip"])
+        represent = S3Represent(lookup = tablename,
+                                fields = ["name", "host_ip"])
 
         server_id = S3ReusableField("server_id", "reference %s" % tablename,
                                     label = T("Server"),
@@ -691,7 +693,7 @@ class S3SetupModel(S3Model):
                                                           represent,
                                                           sort=True
                                                           )),
-                                    sortby = "host_ip",
+                                    sortby = "name",
                                     )
 
         set_method("setup", "server",
@@ -3203,7 +3205,7 @@ class setup_MonitorTaskRepresent(S3Represent):
         db = current.db
 
         table = self.table
-        stable = db.setup_server
+        #stable = db.setup_server
         ctable = db.setup_monitor_check
 
         count = len(values)
@@ -3212,12 +3214,12 @@ class setup_MonitorTaskRepresent(S3Represent):
         else:
             query = (table.id.belongs(values))
 
-        left = [stable.on(stable.id == table.server_id),
+        left = [#stable.on(stable.id == table.server_id),
                 ctable.on(ctable.id == table.check_id),
                 ]
         rows = db(query).select(table.id,
-                                stable.name,
-                                stable.host_ip,
+                                #stable.name,
+                                #stable.host_ip,
                                 ctable.name,
                                 left = left,
                                 limitby = (0, count),
@@ -3233,10 +3235,11 @@ class setup_MonitorTaskRepresent(S3Represent):
             @param row: the Row
         """
 
-        return "%s (%s): %s" % (row["setup_server.name"],
-                                row["setup_server.host_ip"],
-                                row["setup_monitor_check.name"],
-                                )
+        #return "%s (%s): %s" % (row["setup_server.name"],
+        #                        row["setup_server.host_ip"],
+        #                        row["setup_monitor_check.name"],
+        #                        )
+        return row["setup_monitor_check.name"]
 
 # =============================================================================
 def setup_rheader(r, tabs=None):
