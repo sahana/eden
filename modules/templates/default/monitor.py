@@ -209,17 +209,18 @@ class S3Monitor(object):
                                         reply_to = reply_to)
 
         if result:
-            # Schedule a task to see if the reply has arrived after 1 hour
+            # Schedule a task to see if the reply has arrived
+            wait = options_get("wait", 60) # Default = 60 minutes
             start_time = datetime.datetime.utcnow() + \
-                         datetime.timedelta(hours = 1)
+                         datetime.timedelta(minutes = wait)
             current.s3task.schedule_task("setup_monitor_check_email_reply",
                                          args = [run_id],
                                          start_time = start_time,
                                          timeout = 300, # seconds
                                          repeats = 1    # one-time
                                          )
-            return {"result": "Warning: No reply received yet",
-                    "status": 2,
+            return {"result": "OK so far: Waiting for Reply",
+                    "status": 1,
                     }
 
         return {"result": "Critical: Unable to send Email",

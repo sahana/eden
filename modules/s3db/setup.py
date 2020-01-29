@@ -924,9 +924,9 @@ class S3SetupModel(S3Model):
     @staticmethod
     def setup_deployment_create_onaccept(form):
         """
-            New deployments:
-                Assign a random DB password
-                Configure localhost to have all tiers (for 1st deployment)
+            New Deployment:
+            - Assign a random DB password
+            - Configure localhost to have all tiers (for 1st deployment)
         """
 
         db = current.db
@@ -966,7 +966,8 @@ class S3SetupModel(S3Model):
         return templates
 
     # -------------------------------------------------------------------------
-    def setup_server_wizard(self, r, **attr):
+    @staticmethod
+    def setup_server_wizard(r, **attr):
         """
             Custom S3Method to select an Instance to Configure
         """
@@ -1066,7 +1067,8 @@ dropdown.change(function() {
         return output
 
     # -------------------------------------------------------------------------
-    def setup_instance_deploy(self, r, **attr):
+    @staticmethod
+    def setup_instance_deploy(r, **attr):
         """
             Custom S3Method to Deploy an Instance
         """
@@ -2007,18 +2009,15 @@ class S3SetupMonitorModel(S3Model):
                                     )
 
         configure(tablename,
-                  # Open the Options after creation
+                  # Open the Log after creation
                   create_next = URL(c="setup", f="monitor_task",
-                                    args = ["[id]", "option"],
+                                    args = ["[id]", "monitor_run"],
                                     ),
                   crud_form = crud_form,
                   onaccept = self.setup_monitor_task_onaccept,
                   )
 
-        # @ToDo: Fix represent
-        represent = S3Represent(lookup = tablename,
-                                fields = ["server_id", "check_id"],
-                                )
+        represent = setup_MonitorTaskRepresent()
         task_id = S3ReusableField("task_id", "reference %s" % tablename,
                                   label = T("Task"),
                                   ondelete = "CASCADE",
@@ -2033,15 +2032,15 @@ class S3SetupMonitorModel(S3Model):
                        setup_monitor_run = "task_id",
                        )
 
-        set_method("monitor", "task",
+        set_method("setup", "monitor_task",
                    method = "enable",
                    action = setup_monitor_task_enable_interactive)
 
-        set_method("monitor", "task",
+        set_method("setup", "monitor_task",
                    method = "disable",
                    action = setup_monitor_task_disable_interactive)
 
-        set_method("monitor", "task",
+        set_method("setup", "monitor_task",
                    method = "check",
                    action = setup_monitor_task_run)
 
@@ -2204,12 +2203,12 @@ def setup_monitor_server_enable(monitor_server_id):
 
     db = current.db
 
-    stable = current.s3db.setup_monitor_server
-    record = db(stable.id == monitor_server_id).select(stable.id,
-                                                       stable.enabled,
-                                                       stable.server_id,
-                                                       limitby = (0, 1)
-                                                       ).first()
+    mstable = current.s3db.setup_monitor_server
+    record = db(mstable.id == monitor_server_id).select(mstable.id,
+                                                        mstable.enabled,
+                                                        mstable.server_id,
+                                                        limitby = (0, 1)
+                                                        ).first()
 
     if not record.enabled:
         # Flag it as enabled
@@ -2273,12 +2272,12 @@ def setup_monitor_server_disable(monitor_server_id):
 
     db = current.db
 
-    stable = current.s3db.setup_monitor_server
-    record = db(stable.id == monitor_server_id).select(stable.id,
-                                                       stable.enabled,
-                                                       stable.server_id,
-                                                       limitby = (0, 1)
-                                                       ).first()
+    mstable = current.s3db.setup_monitor_server
+    record = db(mstable.id == monitor_server_id).select(mstable.id,
+                                                        mstable.enabled,
+                                                        mstable.server_id,
+                                                        limitby = (0, 1)
+                                                        ).first()
 
     if record.enabled:
         # Flag it as disabled
@@ -2362,9 +2361,11 @@ def setup_monitor_task_enable(task_id):
     """
 
     db = current.db
-    table = current.s3db.setup_monitor_task
+    s3db = current.s3db
 
+    table = s3db.setup_monitor_task
     record = db(table.id == task_id).select(table.id,
+                                            table.server_id,
                                             table.enabled,
                                             limitby = (0, 1),
                                             ).first()
@@ -2373,28 +2374,32 @@ def setup_monitor_task_enable(task_id):
         # Flag it as enabled
         record.update_record(enabled = True)
 
-    # @ToDo: Only schedule task if monitor_server is enabled
-    # Is the task already Scheduled?
-    ttable = db.scheduler_task
-    args = "[%s]" % task_id
-    query = ((ttable.function_name == "setup_monitor_run_task") & \
-             (ttable.args == args) & \
-             (ttable.status.belongs(["RUNNING",
-                                     "QUEUED",
-                                     "ALLOCATED"])))
-    exists = db(query).select(ttable.id,
-                              limitby = (0, 1)
-                              ).first()
-    if exists:
-        return "Task already enabled"
-    else:
-        current.s3task.schedule_task("setup_monitor_run_task",
-                                     args = [task_id],
-                                     period = 300,  # seconds
-                                     timeout = 300, # seconds
-                                     repeats = 0    # unlimited
-                                     )
-        return "Task enabled"
+    mstable = s3db.setup_monitor_server
+    monitor_server = db(mstable.server_id == record.server_id).select(mstable.enabled,
+                                                                      limitby = (0, 1),
+                                                                      ).first()
+
+    if monitor_server.enabled:
+        # Is the task already Scheduled?
+        ttable = db.scheduler_task
+        args = "[%s]" % task_id
+        query = ((ttable.function_name == "setup_monitor_run_task") & \
+                 (ttable.args == args) & \
+                 (ttable.status.belongs(["RUNNING",
+                                         "QUEUED",
+                                         "ALLOCATED"])))
+        exists = db(query).select(ttable.id,
+                                  limitby = (0, 1)
+                                  ).first()
+        if not exists:
+            current.s3task.schedule_task("setup_monitor_run_task",
+                                         args = [task_id],
+                                         period = 300,  # seconds
+                                         timeout = 300, # seconds
+                                         repeats = 0    # unlimited
+                                         )
+
+    return "Task enabled"
 
 # =============================================================================
 def setup_monitor_task_enable_interactive(r, **attr):
@@ -2419,8 +2424,8 @@ def setup_monitor_task_disable(task_id):
     """
 
     db = current.db
-    table = current.s3db.setup_monitor_task
 
+    table = current.s3db.setup_monitor_task
     record = db(table.id == task_id).select(table.id, # needed for update_record
                                             table.enabled,
                                             limitby = (0, 1),
@@ -2444,9 +2449,8 @@ def setup_monitor_task_disable(task_id):
     if exists:
         # Disable all
         db(query).update(status = "STOPPED")
-        return "Task disabled"
-    else:
-        return "Task already disabled"
+
+    return "Task disabled"
 
 # =============================================================================
 def setup_monitor_task_disable_interactive(r, **attr):
@@ -2476,7 +2480,7 @@ def setup_monitor_task_run(r, **attr):
         current.T("The check request has been submitted, so results should appear shortly - refresh to see them")
 
     redirect(URL(c="setup", f="monitor_task",
-                 args = [task_id, "log"],
+                 args = [task_id, "monitor_run"],
                  ))
 
 # =============================================================================
@@ -2559,12 +2563,12 @@ def setup_monitor_run_task(task_id):
     stable = db.setup_monitor_server
     if status == 3:
         # Task at Critical => Server -> Critical
-        db(stable.id == server_id).update(status = status)
+        db(stable.server_id == server_id).update(status = status)
     else:
-        server = db(stable.id == server_id).select(stable.id,
-                                                   stable.status,
-                                                   limitby = (0, 1),
-                                                   ).first()
+        server = db(stable.server_id == server_id).select(stable.id,
+                                                          stable.status,
+                                                          limitby = (0, 1),
+                                                          ).first()
         if status == server.status:
             pass
         elif status > server.status:
@@ -2610,22 +2614,60 @@ def setup_monitor_check_email_reply(run_id):
         Check whether we have received a reply to an Email check
     """
 
-    rtable = current.s3db.setup_monitor_run
-    record = current.db(rtable.id == run_id).select(rtable.id,
-                                                    rtable.status,
-                                                    limitby = (0, 1)
-                                                    ).first()
+    db = current.db
+    s3db = current.s3db
+
+    rtable = s3db.setup_monitor_run
+    run = db(rtable.id == run_id).select(rtable.id,
+                                         rtable.task_id,
+                                         rtable.status,
+                                         rtable.server_id,
+                                         limitby = (0, 1)
+                                         ).first()
     try:
-        status = record.status
+        status = run.status
     except:
-        # Can't find run record!
-        # @ToDo: Send Alert
-        pass
+        result = "Critical: Can't find run record"
+        current.debug.error(result)
+        # @ToDo: Send an Alert...however we can't find the details to do this
     else:
-        if status == 2:
-            # Still in Warning State: Make it go Critical
-            record.update_record(status = 3)
-            # @ToDo: Send Alert
+        task_id = run.task_id
+        ttable = s3db.setup_monitor_task
+        task = db(ttable.id == task_id).select(ttable.id,
+                                               ttable.options,
+                                               limitby = (0, 1)
+                                               ).first()
+        result = "Critical: Reply not received after %s minutes" % task.options.get("wait", 60)
+        if status != 3:
+            # Make it go Critical
+            # ... in Run
+            record.update_record(result,
+                                 status = 3)
+
+            # ...in Task
+            task.update_record(result = result,
+                               status = 3)
+
+            # ...in Host
+            db(s3db.setup_monitor_server.server_id == server_id).update(status = 3)
+
+            # Send Alert(s)
+            atable = db.setup_monitor_alert
+            ptable = s3db.pr_person
+            query = (atable.task_id == task_id) & \
+                    (atable.person_id == ptable.id)
+            recipients = db(query).select(ptable.pe_id)
+            if len(recipients) > 0:
+                recipients = [p.pe_id for p in recipients]
+                subject = "%s: %s" % (current.deployment_settings.get_system_name_short(),
+                                      result,
+                                      )
+                current.msg.send_by_pe_id(recipients,
+                                          subject = subject,
+                                          message = result,
+                                          )
+
+    return result
 
 # =============================================================================
 def setup_write_playbook(playbook_name,
@@ -3138,6 +3180,65 @@ class setup_DeploymentRepresent(S3Represent):
         return row.setup_instance.url
 
 # =============================================================================
+class setup_MonitorTaskRepresent(S3Represent):
+
+    def __init__(self):
+        """
+            Constructor
+        """
+
+        super(setup_MonitorTaskRepresent, self).__init__(lookup = "setup_monitor_task",
+                                                         )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom look-up of rows
+
+            @param key: the key field
+            @param values: the values to look up
+            @param fields: unused (retained for API compatibility)
+        """
+
+        db = current.db
+
+        table = self.table
+        stable = db.setup_server
+        ctable = db.setup_monitor_check
+
+        count = len(values)
+        if count == 1:
+            query = (table.id == values[0])
+        else:
+            query = (table.id.belongs(values))
+
+        left = [stable.on(stable.id == table.server_id),
+                ctable.on(ctable.id == table.check_id),
+                ]
+        rows = db(query).select(table.id,
+                                stable.name,
+                                stable.host_ip,
+                                ctable.name,
+                                left = left,
+                                limitby = (0, count),
+                                )
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        return "%s (%s): %s" % (row["setup_server.name"],
+                                row["setup_server.host_ip"],
+                                row["setup_monitor_check.name"],
+                                )
+
+# =============================================================================
 def setup_rheader(r, tabs=None):
     """ Resource component page header """
 
@@ -3160,7 +3261,7 @@ def setup_rheader(r, tabs=None):
             button = A(T("Configuration Wizard"),
                        _class="action-btn",
                        _href=URL(c="setup", f="deployment",
-                                 args=[r.id, "wizard"],
+                                 args = [r.id, "wizard"],
                                  ),
                        )
 
@@ -3198,7 +3299,7 @@ def setup_rheader(r, tabs=None):
 
         elif r_name == "monitor_task":
             tabs = [(T("Task Details"), None),
-                    (T("Logs"), "run"),
+                    (T("Logs"), "monitor_run"),
                     ]
             rheader_tabs = s3_rheader_tabs(r, tabs)
 

@@ -418,6 +418,20 @@ def server():
                                    )
 
             else:
+                # No Cloud in create form
+                from s3 import S3SQLCustomForm
+                f = s3db.setup_server.host_ip
+                f.requires = f.requires.other # IP is required
+                crud_form = S3SQLCustomForm("deployment_id",
+                                            "name",
+                                            "host_ip",
+                                            "role",
+                                            "remote_user",
+                                            "private_key",
+                                            (T("Monitor"), "monitor_server.enabled"),
+                                            "monitor_server.status",
+                                            )
+
                 list_fields = ["deployment_id",
                                "name",
                                "host_ip",
@@ -427,6 +441,7 @@ def server():
                                ]
 
                 s3db.configure("setup_server",
+                               crud_form = crud_form,
                                #insertable = False, # We want to allow monitoring of external hosts
                                list_fields = list_fields,
                                )
@@ -532,10 +547,9 @@ def monitor_task():
             s3_action_buttons(r)
             # Custom Action Buttons for Enable/Disable
             table = r.table
-            query = (table.deleted == False)
-            rows = db(query).select(table.id,
-                                    table.enabled,
-                                    )
+            rows = db(table.deleted == False).select(table.id,
+                                                     table.enabled,
+                                                     )
             restrict_e = [str(row.id) for row in rows if not row.enabled]
             restrict_d = [str(row.id) for row in rows if row.enabled]
             s3.actions += [{"url": URL(args=["[id]", "enable"]),
