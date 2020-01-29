@@ -34,6 +34,7 @@ __all__ = ("S3Monitor",)
 
 import datetime
 import json
+import os
 import platform
 import subprocess
 import sys
@@ -84,7 +85,6 @@ class S3Monitor(object):
 
         host_ip = server.host_ip
         if host_ip == "127.0.0.1":
-            import os
             result = os.statvfs(partition)
             space = result.f_bavail * result.f_frsize
             percent = float(result.f_bavail) / float(result.f_blocks) * 100
@@ -412,12 +412,13 @@ class S3Monitor(object):
 
         stable = s3db.setup_server
         server = db(stable.id == task.server_id).select(stable.host_ip,
+                                                        stable.remote_user,
+                                                        stable.private_key,
                                                         limitby = (0, 1)
                                                         ).first()
 
         host_ip = server.host_ip
         if host_ip == "127.0.0.1":
-            import os
             loadavg = os.getloadavg()
             if loadavg[which] > load_max:
                 return {"result": "Warning: load average: %0.2f, %0.2f, %0.2f" % \
