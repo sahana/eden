@@ -86,8 +86,9 @@ class S3Monitor(object):
 
         # Read the Task Options
         ttable = s3db.setup_monitor_task
-        task = db(ttable.id == task_id).select(ttable.deployment_id,
-                                               ttable.options,
+        task = db(ttable.id == task_id).select(ttable.options,
+                                               ttable.deployment_id,
+                                               ttable.server_id,
                                                limitby = (0, 1)
                                                ).first()
         options = task.options or {}
@@ -98,13 +99,24 @@ class S3Monitor(object):
         timeout = options_get("timeout", 60) # 60s (default is no timeout!)
 
         if not public_url:
-            itable = s3db.setup_instance
-            query = (itable.deployment_id == task.deployment_id) & \
-                    (itable.type == 1)
-            instance = db(query).select(itable.url,
-                                        limitby = (0, 1)
-                                        ).first()
-            public_url = instance.url
+            deployment_id = task.deployment_id
+            if deployment_id:
+                # Read from the instance
+                itable = s3db.setup_instance
+                query = (itable.deployment_id == deployment_id) & \
+                        (itable.type == 1)
+                instance = db(query).select(itable.url,
+                                            limitby = (0, 1)
+                                            ).first()
+                if instance:
+                    public_url = instance.url
+            if not public_url:
+                # Use the server name
+                stable = s3db.setup_server
+                server = db(stable.id == task.server_id).select(stable.name,
+                                                                limitby = (0, 1)
+                                                                ).first()
+                public_url = "https://%s" % server.name
 
         url = "%(public_url)s/%(appname)s/default/public_url" % {"appname": appname,
                                                                  "public_url": public_url,
