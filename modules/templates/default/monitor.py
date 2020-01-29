@@ -75,9 +75,6 @@ class S3Monitor(object):
         partition = options_get("partition", "/") # Root Partition by default
         space_min = options_get("space_min", 1000000000) # 1 Gb
 
-        # @ToDo: SSH into remote server to run this
-        #        Ansible? How does Monitor 
-
         stable = s3db.setup_server
         server = db(stable.id == task.server_id).select(stable.host_ip,
                                                         limitby = (0, 1)
@@ -327,6 +324,43 @@ class S3Monitor(object):
             Test the Load Average
         """
 
+        db = current.db
+        s3db = current.s3db
+
+        # Read the Task Options
+        ttable = s3db.setup_monitor_task
+        task = db(ttable.id == task_id).select(ttable.options,
+                                               ttable.server_id,
+                                               limitby = (0, 1)
+                                               ).first()
+        options = task.options or {}
+        options_get = options.get
+
+        which = options_get("which", 2) # 15 min average
+        load_max = options_get("load_max", 2)
+
+        stable = s3db.setup_server
+        server = db(stable.id == task.server_id).select(stable.host_ip,
+                                                        limitby = (0, 1)
+                                                        ).first()
+
+        host_ip = server.host_ip
+        if host_ip == "127.0.0.1":
+            import os
+            loadavg = os.getloadavg()
+            if loadavg[which] > load_max:
+                return {"result": "Warning: load average: %0.2f, %0.2f, %0.2f" % \
+                                (loadavg[0], loadavg[1], loadavg[2]),
+                        "status": 2,
+                        }
+
+            return {"result": "OK. load average: %0.2f, %0.2f, %0.2f" % \
+                                (loadavg[0], loadavg[1], loadavg[2]),
+                    "status": 1,
+                    }
+
+        # @ToDo: SSH & run check
+        # e.g. Use Ansible?
         raise NotImplementedError
 
     # -------------------------------------------------------------------------
