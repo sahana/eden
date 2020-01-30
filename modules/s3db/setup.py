@@ -458,7 +458,7 @@ class S3SetupModel(S3Model):
                                                            )
                                          ),
                            ),
-                     # @ToDo: Make this a multi-select
+                     # @ToDo: Make this a multi-select (How to handle order?)
                      Field("country", length=2,
                            label = T("Country"),
                            requires = IS_EMPTY_OR(

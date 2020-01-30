@@ -87,7 +87,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,TL,District,SubDistrict,Suco,Aldeia,,
 ,TM,Province,District,,,,
 ,TO,Island Group,District,,,,
-,TR,City,Town,District,,,
+,TR,Province,District / Town,Neighborhood / Village,,,
 ,TV,Island Council,,,,
 ,US,State,County,City,Neighborhood,,False
 ,UZ,Province,District,,,,
