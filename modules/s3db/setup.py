@@ -453,8 +453,8 @@ class S3SetupModel(S3Model):
                            default = "https://github.com/sahana/eden",
                            label = T("Eden Repository"),
                            requires = IS_URL(),
-                           readable = False,
-                           writable = False,
+                           #readable = False,
+                           #writable = False,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Eden Repository"),
                                                            T("If you wish to switch to Trunk, or use your own Fork, then you can set this here")

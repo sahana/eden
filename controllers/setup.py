@@ -81,7 +81,6 @@ def deployment():
 
     def prep(r):
         if r.interactive:
-            s3.scripts.append("/%s/static/scripts/S3/s3.setup.js" % appname)
             if r.component:
 
                 # No new servers once deployment is created
@@ -205,8 +204,37 @@ def deployment():
                                            )
 
             elif r.method == "create":
-                # Include Production Instance & Server details in main form
-                
+
+                # Dynamically update list of templates when repo is changed
+                s3.scripts.append("/%s/static/scripts/S3/s3.setup.js" % appname)
+
+                try:
+                    import requests
+                except ImportError:
+                    response.warning = T("Cannot download list of templates from remote repo, so using list from this install")
+                else:
+                    # Download list of templates from remote repo
+                    # - currently assumes that repo is hosted on GitHub!
+                    table = s3db.setup_deployment
+                    repo_url = table.repo_url.default
+                    parts = repo_url.split("/")
+                    repo_owner = parts[3]
+                    repo = parts[4]
+                    templates_url = "https://raw.githubusercontent.com/%s/%s/master/modules/templates/templates.json" % \
+                    (repo_owner, repo)
+                    try:
+                        r_request = requests.get(templates_url, timeout=3)
+                    except requests.exceptions.RequestException:
+                        response.warning = T("Cannot download list of templates from remote repo, so using list from this install")
+                    else:
+                        import json
+                        try:
+                            templates = json.loads(r_request.text)
+                        except JSONDecodeError:
+                            response.warning = T("Cannot download list of templates from remote repo, so using list from this install")
+                        else:
+                            table.template.requires = IS_IN_SET(templates)
+
                 def deployment_create_postprocess(form):
                     form_vars_get = form.vars.get
                     deployment_id = form_vars_get("id")
@@ -226,6 +254,7 @@ def deployment():
                         server_vars["host_ip"] = "127.0.0.1"
                     db(stable.deployment_id == deployment_id).update(**server_vars)
 
+                # Include Production Instance & Server details in main form
                 from s3 import S3SQLCustomForm
                 crud_form = S3SQLCustomForm((T("Production URL"), "production.url"),
                                             "country",
@@ -233,7 +262,7 @@ def deployment():
                                             "webserver_type",
                                             "db_type",
                                             "production.sender",
-                                            #"repo_url",
+                                            "repo_url",
                                             "cloud_id",
                                             "dns_id",
                                             "production_server.remote_user",
