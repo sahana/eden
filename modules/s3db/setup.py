@@ -1465,7 +1465,7 @@ dropdown.change(function() {
                                   "sitename": sitename,
                                   "sitename_prod": sitename_prod,
                                   "start": start,
-                                  "template": deployment.template,
+                                  "template": template,
                                   "type": instance_type,
                                   "web_server": web_server,
                                   },
@@ -2006,6 +2006,9 @@ class S3SetupMonitorModel(S3Model):
                            represent = lambda v: v.split("\n")[0] if v else \
                                                  current.messages["NONE"],
                            ),
+                     s3_datetime(label = T("Last Checked"),
+                                 writable = False,
+                                 ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -2047,6 +2050,7 @@ class S3SetupMonitorModel(S3Model):
                                  "check_id",
                                  "status",
                                  "result",
+                                 "date",
                                  ],
                   onaccept = self.setup_monitor_task_onaccept,
                   )
@@ -2529,6 +2533,7 @@ def setup_monitor_run_task(task_id):
 
     db = current.db
     s3db = current.s3db
+    request = current.request
     settings = current.deployment_settings
 
     table = s3db.setup_monitor_task
@@ -2546,7 +2551,7 @@ def setup_monitor_run_task(task_id):
     # Load the Monitor template for this deployment
     template = settings.get_setup_monitor_template()
     module_name = "applications.%s.modules.templates.%s.monitor" \
-        % (current.request.application, template)
+        % (request.application, template)
     __import__(module_name)
     mymodule = sys.modules[module_name]
     S3Monitor = mymodule.S3Monitor()
@@ -2592,7 +2597,9 @@ def setup_monitor_run_task(task_id):
 
     # ...in Task
     db(table.id == task_id).update(result = result,
-                                   status = status)
+                                   status = status,
+                                   date = request.utcnow,
+                                   )
 
     # ...in Host
     check_lower = None

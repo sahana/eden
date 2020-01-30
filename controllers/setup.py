@@ -22,8 +22,8 @@ def index():
                                       limitby = (0, 1),
                                       )
     if exists:
-        # Redirect to the list of deployments
-        redirect(URL(c="setup", f="deployment"))
+        # Redirect to the list of monitoring tasks
+        redirect(URL(c="setup", f="monitor_task"))
     else:
         templates = settings.get_template()
         if templates == "setup":
@@ -61,8 +61,9 @@ def index():
                                                      )
             s3db.setup_instance_settings_read(instance_id, deployment_id)
 
-            # Redirect to the list of deployments
-            redirect(URL(c="setup", f="deployment"))
+            # Redirect to this Deployment's Instances
+            redirect(URL(c="setup", f="deployment",
+                         args = [deployment_id, "instance"]))
 
 # -----------------------------------------------------------------------------
 def aws_cloud():
@@ -569,6 +570,30 @@ def monitor_run():
 
 # -----------------------------------------------------------------------------
 def monitor_task():
+
+    from s3 import S3OptionsFilter, s3_set_default_filter
+
+    tablename = "setup_monitor_task"
+
+    filter_widgets = [S3OptionsFilter("enabled",
+                                      label = T("Enabled"),
+                                      options = {True: T("Yes"),
+                                                 False: T("No"),
+                                                 },
+                                      cols = 2,
+                                      ),
+                      ]
+
+    s3db.configure(tablename,
+                   filter_widgets = filter_widgets,
+                   orderby = "setup_monitor_task.status desc",
+                   )
+
+    # Only show Enabled Tasks by default
+    # @ToDo: Also hide those from disabled Servers
+    s3_set_default_filter("~.enabled",
+                          lambda selector, tablename: True,
+                          tablename = tablename)
 
     def postp(r, output):
         if r.interactive and not r.id:

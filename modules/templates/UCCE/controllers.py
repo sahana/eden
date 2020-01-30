@@ -1334,7 +1334,8 @@ class dc_TargetReport(S3Method):
         record = r.record
 
         date_format = "%d/%B/%Y"
-        date_represent = lambda v: S3DateTime.date_represent(v, format = date_format)
+        date_represent = lambda v: \
+            S3DateTime.date_represent(v, format = date_format)
 
         # Project Name
         ptable = s3db.project_project
@@ -1492,7 +1493,7 @@ class dc_TargetReport(S3Method):
                 #"created_on": created_on,
                 "published_on": published_on,
                 #"updated_on": updated_on,
-                "total_responses":total_responses,
+                "total_responses": total_responses,
                 "last_upload": last_upload,
                 "questions": questions,
                 }
@@ -1550,20 +1551,20 @@ class dc_TargetReport(S3Method):
 
         header = DIV(DIV(DIV(H2("Total Responses: %s" % data["total_responses"]),
                              DIV("Survey responses last uploaded on: %s" % data["last_upload"]),
-                             _class="columns medium-4",
+                             _class = "columns medium-4",
                              ),
                          DIV(H1(data["survey_name"]),
                              H3(data["project_name"]),
-                             _class="columns medium-4 tacenter",
+                             _class = "columns medium-4 tacenter",
                              ),
                          DIV(#DIV("Created on: %s" % data["created_on"]),
                              DIV("Published on: %s" % data["published_on"]),
                              #DIV("Last edited on: %s" % data["updated_on"]),
-                             _class="columns medium-4 taright",
+                             _class = "columns medium-4 taright",
                              ),
-                         _class="medium-12 columns report-header",
+                         _class = "medium-12 columns report-header",
                          ),
-                     _class="row",
+                     _class = "row",
                      )
 
         questions_div = DIV()
@@ -1586,24 +1587,24 @@ class dc_TargetReport(S3Method):
             elif question_type == 2:
                 # number
                 table = TABLE(TR(TD(T("Maximum"),
-                                    _class="tacenter",
+                                    _class = "tacenter",
                                     ),
                                  TD(question["max"],
-                                    _class="tacenter",
+                                    _class = "tacenter",
                                     ),
                                  ),
                               TR(TD(T("Minimum"),
-                                    _class="tacenter",
+                                    _class = "tacenter",
                                     ),
                                  TD(question["min"],
-                                    _class="tacenter",
+                                    _class = "tacenter",
                                     ),
                                  ),
                               TR(TD(T("Mean"),
-                                    _class="tacenter",
+                                    _class = "tacenter",
                                     ),
                                  TD(question["mean"],
-                                    _class="tacenter",
+                                    _class = "tacenter",
                                     ),
                                  ),
                               )
@@ -1682,26 +1683,28 @@ class dc_TargetReport(S3Method):
 
                 data = [{"values": values,
                          }]
-                hidden_input = INPUT(_type="hidden",
-                                     _class="multichoice-graph",
-                                     _value=json.dumps(data, separators=SEPARATORS),
+                hidden_input = INPUT(_type = "hidden",
+                                     _class = "multichoice-graph",
+                                     _value = json.dumps(data,
+                                                         separators=SEPARATORS),
                                      )
                 graph = DIV(hidden_input,
-                            _class="graph-container",
-                            _id="multichoice-graph-%s" % question["id"],
+                            _class = "graph-container",
+                            _id = "multichoice-graph-%s" % question["id"],
                             )
                 content.append(graph)
                 if others:
-                    table = TABLE(_class="wide")
+                    table = TABLE(_class = "wide",
+                                  )
                     for other in others:
                         table.append(TR(other))
                     content.append(DIV(DIV(T("Other"),
-                                           _class="medium-1 columns taright",
+                                           _class = "medium-1 columns taright",
                                            ),
                                        DIV(table,
-                                           _class="medium-11 columns",
+                                           _class = "medium-11 columns",
                                            ),
-                                       _class="row",
+                                       _class = "row",
                                        ))
 
             elif question_type == 12:
@@ -1734,14 +1737,15 @@ class dc_TargetReport(S3Method):
 
                 data = [{"values": values,
                          }]
-                hidden_input = INPUT(_type="hidden",
-                                     _class="multichoice-graph",
-                                     _value=json.dumps(data, separators=SEPARATORS),
+                hidden_input = INPUT(_type = "hidden",
+                                     _class = "multichoice-graph",
+                                     _value = json.dumps(data,
+                                                         separators=SEPARATORS),
                                      )
                 hidden_input["_data-scale"] = scale
                 graph = DIV(hidden_input,
-                            _class="graph-container",
-                            _id="likert-graph-%s" % question["id"],
+                            _class = "graph-container",
+                            _id = "likert-graph-%s" % question["id"],
                             )
                 content.append(graph)
 
@@ -1757,25 +1761,26 @@ class dc_TargetReport(S3Method):
                 data = {"p": points,
                         "i": question["file"],
                         }
-                hidden_input = INPUT(_type="hidden",
-                                     _class="heatmap-data",
-                                     _value=json.dumps(data, separators=SEPARATORS),
+                hidden_input = INPUT(_type = "hidden",
+                                     _class = "heatmap-data",
+                                     _value = json.dumps(data,
+                                                         separators=SEPARATORS),
                                      )
                 heatmap = DIV(hidden_input,
-                              _class="heatmap-container",
-                              _id="heatmap-%s" % question["id"],
+                              _class = "heatmap-container",
+                              _id = "heatmap-%s" % question["id"],
                               )
                 content.append(heatmap)
 
-                #scale = DIV(DIV(_class="scale wide",
+                #scale = DIV(DIV(_class = "scale wide",
                 #                ),
                 #            DIV(1,
-                #                _class="fleft",
+                #                _class = "fleft",
                 #                ),
                 #            DIV(12,
-                #                _class="fright",
+                #                _class = "fright",
                 #                ),
-                #            _class="scale-container",
+                #            _class = "scale-container",
                 #            )
                 #content.append(scale)
 
@@ -1801,23 +1806,24 @@ class dc_TargetReport(S3Method):
 
                 data = [{"values": values,
                          }]
-                hidden_input = INPUT(_type="hidden",
-                                     _class="multichoice-graph",
-                                     _value=json.dumps(data, separators=SEPARATORS),
+                hidden_input = INPUT(_type = "hidden",
+                                     _class = "multichoice-graph",
+                                     _value = json.dumps(data,
+                                                         separators=SEPARATORS),
                                      )
                 graph = DIV(hidden_input,
-                            _class="graph-container",
-                            _id="heatmap-graph-%s" % question["id"],
+                            _class = "graph-container",
+                            _id = "heatmap-graph-%s" % question["id"],
                             )
                 content.append(graph)
 
             card = DIV(DIV(SPAN(question["name"],
-                                _class="card-title",
+                                _class = "card-title",
                                 ),
-                           _class="card-header",
+                           _class = "card-header",
                            ),
                        content,
-                       _class="report-card",
+                       _class = "report-card",
                        )
             questions_div.append(card)
 
