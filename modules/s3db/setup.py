@@ -1399,7 +1399,7 @@ dropdown.change(function() {
                                       "sitename": sitename,
                                       "sitename_prod": sitename_prod,
                                       "start": start,
-                                      "template": deployment.template,
+                                      "template": template,
                                       "type": instance_type,
                                       "web_server": web_server,
                                       },
