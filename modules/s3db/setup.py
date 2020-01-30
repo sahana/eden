@@ -445,7 +445,6 @@ class S3SetupModel(S3Model):
         #
         tablename = "setup_deployment"
         define_table(tablename,
-                     # @ToDo: Allow use of a Custom repo
                      # @ToDo: Add ability to get a specific hash/tag
                      Field("repo_url",
                            # @ToDo: Switch to Stable once it has a templates.json
@@ -453,8 +452,6 @@ class S3SetupModel(S3Model):
                            default = "https://github.com/sahana/eden",
                            label = T("Eden Repository"),
                            requires = IS_URL(),
-                           #readable = False,
-                           #writable = False,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Eden Repository"),
                                                            T("If you wish to switch to Trunk, or use your own Fork, then you can set this here")
@@ -481,6 +478,14 @@ class S3SetupModel(S3Model):
                            requires = IS_IN_SET_LAZY(lambda: self.setup_get_templates(),
                                                      zero = None,
                                                      ),
+                           ),
+                     Field("template_manual",
+                           label = T("...or enter manually"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Template (Manual Entry)"),
+                                                           T("If you want to use different template(s) than the ones available in the dropdown, then you can enter the list here as e.g. 'Template,Template.SubTemplate' (locations.Country will be prepended automatically, if set and available).")
+                                                           )
+                                         ),
                            ),
                      Field("webserver_type", "integer",
                            default = 3,
@@ -648,7 +653,7 @@ class S3SetupModel(S3Model):
                            uploadfolder = uploadfolder,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("SSH Private Key"),
-                                                           T("if you wish to configure servers other than the one hosting the co-app then you need to provide a PEM-encoded SSH private key")
+                                                           T("if you wish to configure servers other than this one then you need to provide a PEM-encoded SSH private key")
                                                            )
                                          ),
                            ),
@@ -1113,11 +1118,13 @@ dropdown.change(function() {
 
         # Get Deployment details
         dtable = s3db.setup_deployment
-        deployment = db(dtable.id == deployment_id).select(dtable.webserver_type,
+        deployment = db(dtable.id == deployment_id).select(dtable.repo_url,
+                                                           dtable.webserver_type,
                                                            dtable.db_type,
                                                            dtable.db_password,
                                                            dtable.country,
                                                            dtable.template,
+                                                           dtable.template_manual,
                                                            dtable.cloud_id,
                                                            dtable.dns_id,
                                                            limitby = (0, 1)
@@ -1170,7 +1177,21 @@ dropdown.change(function() {
         web_server = WEB_SERVERS[deployment.webserver_type]
         db_type = DB_SERVERS[deployment.db_type]
         instance_type = INSTANCE_TYPES[instance_type]
-        template = deployment.template
+        parts = deployment.repo_url.split("/")
+        repo_owner = parts[3]
+        repo = parts[4]
+        repo_url = "git://github.com/%s/%s.git" % (repo_owner, repo)
+        template_manual = deployment.template_manual
+        if template_manual:
+            # Use this list
+            templates = template_manual.split(",")
+            template = []
+            for t in templates:
+                # Strip whitespace
+                template.append(t.strip())
+        else:
+            # Use the value from dropdown (& introspect the locale template(s))
+            template = deployment.template
 
         if len(servers) == 1:
             # All-in-one deployment
@@ -1373,6 +1394,7 @@ dropdown.change(function() {
                                       "hostname": hostname,
                                       "password": db_password,
                                       "protocol": protocol,
+                                      "repo_url": repo_url,
                                       "sender": sender,
                                       "sitename": sitename,
                                       "sitename_prod": sitename_prod,
@@ -1438,8 +1460,10 @@ dropdown.change(function() {
                                   "hostname": hostname,
                                   "password": db_password,
                                   "protocol": protocol,
-                                  "sitename": sitename,
+                                  "repo_url": repo_url,
                                   "sender": sender,
+                                  "sitename": sitename,
+                                  "sitename_prod": sitename_prod,
                                   "start": start,
                                   "template": deployment.template,
                                   "type": instance_type,

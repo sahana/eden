@@ -42,7 +42,7 @@ def index():
                         break
                 if country:
                     templates.remove("locations.%s" % country)
-            deployment_id = s3db.setup_deployment.insert(# @ToDo:
+            deployment_id = s3db.setup_deployment.insert(# @ToDo: Read from .git
                                                          #repo_url = ,
                                                          country = country,
                                                          template = templates,
@@ -216,8 +216,7 @@ def deployment():
                     # Download list of templates from remote repo
                     # - currently assumes that repo is hosted on GitHub!
                     table = s3db.setup_deployment
-                    repo_url = table.repo_url.default
-                    parts = repo_url.split("/")
+                    parts = table.repo_url.default.split("/")
                     repo_owner = parts[3]
                     repo = parts[4]
                     templates_url = "https://raw.githubusercontent.com/%s/%s/master/modules/templates/templates.json" % \
@@ -259,9 +258,10 @@ def deployment():
                 crud_form = S3SQLCustomForm((T("Production URL"), "production.url"),
                                             "country",
                                             "template",
+                                            "template_manual",
+                                            "production.sender",
                                             "webserver_type",
                                             "db_type",
-                                            "production.sender",
                                             "repo_url",
                                             "cloud_id",
                                             "dns_id",
