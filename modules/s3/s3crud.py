@@ -2866,7 +2866,7 @@ class S3CRUD(S3Method):
                 continue
             elif var in table.fields:
                 field = table[var]
-                value = str(r.vars[var]).decode("utf-8")
+                value = s3_unicode(r.vars[var])
                 if var in xml.FIELDS_TO_ATTRIBUTES:
                     element.set(var, value)
                 else:

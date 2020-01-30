@@ -300,7 +300,7 @@
                  */
                 switch (xhr.status) {
                 case 500:
-                    web2py.flash(ajax_error_500);
+                    web2py.flash(i18n.ajax_500);
                 }
             });
 

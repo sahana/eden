@@ -772,8 +772,14 @@ def main(argv):
 
     info("Done.")
 
+    return 0
+
 if __name__ == "__main__":
 
-    sys.exit(main(sys.argv[1:]))
+    if PY2:
+        sys.exit(main(sys.argv[1:]))
+    else:
+        # Don't end with a SystemExit Exception
+        main(sys.argv[1:])
 
 # END =========================================================================
