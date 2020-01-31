@@ -141,6 +141,11 @@ class DataCollectionTemplateModel(S3Model):
                            label = T("Layout"),
                            requires = IS_EMPTY_OR(IS_JSONS3()),
                            ),
+                     # Used by UCCE to hold which Questions are Filtered-on in Reports
+                     Field("settings", "json",
+                           label = T("Settings"),
+                           requires = IS_EMPTY_OR(IS_JSONS3()),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -161,8 +166,8 @@ class DataCollectionTemplateModel(S3Model):
                                                            represent,
                                                            ),
                                       sortby = "name",
-                                      comment = S3PopupLink(f="template",
-                                                            tooltip=T("Add a new data collection template"),
+                                      comment = S3PopupLink(f = "template",
+                                                            tooltip = T("Add a new data collection template"),
                                                             ),
                                       )
 
@@ -253,7 +258,7 @@ class DataCollectionTemplateModel(S3Model):
                      Field("field_type", "integer", notnull=True,
                            default = 1, # string
                            label = T("Field Type"),
-                           represent = S3Represent(options=type_opts),
+                           represent = S3Represent(options = type_opts),
                            requires = IS_IN_SET(type_opts),
                            ),
                      Field("options", "json",
@@ -277,36 +282,39 @@ class DataCollectionTemplateModel(S3Model):
                            requires = IS_EMPTY_OR(IS_JSONS3()),
                            ),
                      # Field used by SCPHIMS:
-                     Field("grid", "json",
-                           label = T("Grid"),
-                           requires = IS_EMPTY_OR(IS_JSONS3()),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s%s" % (T("Grid"),
-                                                             T("For Grid Pseudo-Question, this is the Row labels & Column labels"),
-                                                             T("For Questions within the Grid, this is their position in the Grid, encoded as Grid,Row,Col"), # @ToDo: Widget?
-                                                             ),
-                                         ),
-                           ),
+                     # Deprecated: functionality moving to settings
+                     #Field("grid", "json",
+                     #      label = T("Grid"),
+                     #      requires = IS_EMPTY_OR(IS_JSONS3()),
+                     #      comment = DIV(_class="tooltip",
+                     #                    _title="%s|%s%s" % (T("Grid"),
+                     #                                        T("For Grid Pseudo-Question, this is the Row labels & Column labels"),
+                     #                                        T("For Questions within the Grid, this is their position in the Grid, encoded as Grid,Row,Col"), # @ToDo: Widget?
+                     #                                        ),
+                     #                    ),
+                     #      ),
                      # Field used by SCPHIMS:
-                     Field("totals", "json",
-                           label = T("Totals"),
-                           requires = IS_EMPTY_OR(IS_JSONS3()),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Totals"),
-                                                           T("List of fields (codes) which this one is the Total of"),
-                                                           ),
-                                         ),
-                           ),
+                     # Deprecated: functionality moving to settings
+                     #Field("totals", "json",
+                     #      label = T("Totals"),
+                     #      requires = IS_EMPTY_OR(IS_JSONS3()),
+                     #      comment = DIV(_class="tooltip",
+                     #                    _title="%s|%s" % (T("Totals"),
+                     #                                      T("List of fields (codes) which this one is the Total of"),
+                     #                                      ),
+                     #                    ),
+                     #      ),
                      # Field used by SCPHIMS:
-                     Field("show_hidden", "json",
-                           label = T("Show Hidden"),
-                           requires = IS_EMPTY_OR(IS_JSONS3()),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Show Hidden"),
-                                                           T("List of fields (codes) which this one unhides when selected"),
-                                                           ),
-                                         ),
-                           ),
+                     # Deprecated: functionality moving to settings
+                     #Field("show_hidden", "json",
+                     #      label = T("Show Hidden"),
+                     #      requires = IS_EMPTY_OR(IS_JSONS3()),
+                     #      comment = DIV(_class="tooltip",
+                     #                    _title="%s|%s" % (T("Show Hidden"),
+                     #                                      T("List of fields (codes) which this one unhides when selected"),
+                     #                                      ),
+                     #                    ),
+                     #      ),
                      Field("require_not_empty", "boolean",
                            default = False,
                            label = T("Required?"),
@@ -357,7 +365,7 @@ class DataCollectionTemplateModel(S3Model):
                   )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         question_id = S3ReusableField("question_id", "reference %s" % tablename,
                                       label = T("Question"),
                                       represent = represent,
@@ -401,7 +409,8 @@ class DataCollectionTemplateModel(S3Model):
                            ),
                      Field("options_l10n", "json",
                            label = T("Translated Options"), # Regions for Heatmap Questions
-                           represent = lambda opts: ", ".join(json.loads(opts)),
+                           represent = lambda opts: \
+                                        ", ".join(json.loads(opts)),
                            requires = IS_EMPTY_OR(IS_JSONS3()),
                            ),
                      # @ToDo: Implement this when-required
@@ -468,7 +477,7 @@ class DataCollectionTemplateModel(S3Model):
             ttable = s3db.dc_template
             record = db(ttable.id == template_id).select(ttable.master,
                                                          ttable.name,
-                                                         limitby = (0, 1),
+                                                         limitby = (0, 1)
                                                          ).first()
             title = record.name
             master = record.master
@@ -523,7 +532,7 @@ class DataCollectionTemplateModel(S3Model):
         # @ToDo: Call set_record_owner() once we start restricting these
 
         # Link this Table to the Template
-        db(db.dc_template.id == template_id).update(table_id=table_id)
+        db(db.dc_template.id == template_id).update(table_id = table_id)
 
         # Call normal onaccept
         self.dc_template_onaccept(form)
@@ -655,7 +664,7 @@ class DataCollectionTemplateModel(S3Model):
                                                        ltable.name_l10n,
                                                        ltable.options_l10n,
                                                        left = left,
-                                                       limitby=(0, 1)
+                                                       limitby = (0, 1)
                                                        ).first()
 
         l10n = question["dc_question_l10n"]
@@ -1316,9 +1325,11 @@ class DataCollectionModel(S3Model):
                   ftable.label,
                   qtable.id,
                   qtable.code,
-                  qtable.totals,
-                  qtable.grid,
-                  qtable.show_hidden,
+                  # @ToDo: Get all these from settings
+                  #qtable.totals,
+                  #qtable.grid,
+                  #qtable.show_hidden,
+                  qtable.settings,
                   ]
         if translate:
             left.append(ltable.on((ltable.question_id == qtable.id) & \
@@ -1339,36 +1350,37 @@ class DataCollectionModel(S3Model):
             code = question["dc_question.code"]
             if code:
                 codes[code] = field_name
-            totals = question["dc_question.totals"]
-            if totals:
-                auto_totals[field_name] = {"codes": totals,
-                                           "fields": [],
-                                           }
-            grid = question["dc_question.grid"]
-            if grid:
-                len_grid = len(grid)
-                if len_grid == 2:
-                    # Grid Pseudo-Question
-                    if not code:
-                        # @ToDo: Make mandatory in onvalidation
-                        raise ValueError("Code required for Grid Questions")
-                    rows = [s3_str(T(v)) for v in grid[0]]
-                    cols = [s3_str(T(v)) for v in grid[1]]
-                    fields = [[0 for x in xrange(len(rows))] for y in xrange(len(cols))]
-                    grids[code] = {"r": rows,
-                                   "c": cols,
-                                   "f": fields,
-                                   }
-                elif len_grid == 3:
-                    # Child Question
-                    grid_children[field_name] = grid
-                else:
-                    current.log.warning("Invalid grid data for %s - ignoring" % (code or field_name))
-            hides = question["dc_question.show_hidden"]
-            if hides:
-                show_hidden[field_name] = {"codes": hides,
-                                           "fields": [],
-                                           }
+            # @ToDo: Get all these from settings
+            #totals = question["dc_question.totals"]
+            #if totals:
+            #    auto_totals[field_name] = {"codes": totals,
+            #                               "fields": [],
+            #                               }
+            #grid = question["dc_question.grid"]
+            #if grid:
+            #    len_grid = len(grid)
+            #    if len_grid == 2:
+            #        # Grid Pseudo-Question
+            #        if not code:
+            #            # @ToDo: Make mandatory in onvalidation
+            #            raise ValueError("Code required for Grid Questions")
+            #        rows = [s3_str(T(v)) for v in grid[0]]
+            #        cols = [s3_str(T(v)) for v in grid[1]]
+            #        fields = [[0 for x in xrange(len(rows))] for y in xrange(len(cols))]
+            #        grids[code] = {"r": rows,
+            #                       "c": cols,
+            #                       "f": fields,
+            #                       }
+            #    elif len_grid == 3:
+            #        # Child Question
+            #        grid_children[field_name] = grid
+            #    else:
+            #        current.log.warning("Invalid grid data for %s - ignoring" % (code or field_name))
+            #hides = question["dc_question.show_hidden"]
+            #if hides:
+            #    show_hidden[field_name] = {"codes": hides,
+            #                               "fields": [],
+            #                               }
 
             label = None
             if translate:

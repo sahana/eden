@@ -599,6 +599,7 @@ def config(settings):
         from templates.UCCE.controllers import dc_TargetName
         from templates.UCCE.controllers import dc_TargetL10n
         from templates.UCCE.controllers import dc_TargetReport
+        from templates.UCCE.controllers import dc_TargetReportFilters
 
         set_method = current.s3db.set_method
         set_method("dc", "target",
@@ -622,6 +623,9 @@ def config(settings):
         set_method("dc", "target",
                    method = "report_custom",
                    action = dc_TargetReport())
+        set_method("dc", "target",
+                   method = "report_filters",
+                   action = dc_TargetReportFilters())
 
         s3 = current.response.s3
 

@@ -542,7 +542,7 @@ class S3RangeFilter(S3FilterWidget):
         rfilter = resource.rfilter
         if rfilter:
             join = rfilter.get_joins()
-            left = rfilter.get_joins(left=True)
+            left = rfilter.get_joins(left = True)
         else:
             join = left = None
 
@@ -551,8 +551,8 @@ class S3RangeFilter(S3FilterWidget):
 
         row = current.db(query).select(field.min(),
                                        field.max(),
-                                       join=join,
-                                       left=left,
+                                       join = join,
+                                       left = left,
                                        ).first()
 
         minimum = row[field.min()]
@@ -592,10 +592,11 @@ class S3RangeFilter(S3FilterWidget):
 
             input_id = "%s-%s" % (_id, operator)
 
-            input_box = INPUT(_name=input_id,
-                              _id=input_id,
-                              _type="text",
-                              _class=input_class)
+            input_box = INPUT(_name = input_id,
+                              _id = input_id,
+                              _type = "text",
+                              _class = input_class,
+                              )
 
             variable = _variable(selector, operator)
 
@@ -2965,9 +2966,10 @@ class S3FilterForm(object):
                 label = submit
 
             # Submit button
-            submit_button = INPUT(_type="button",
-                                  _value=label,
-                                  _class="filter-submit")
+            submit_button = INPUT(_type = "button",
+                                  _value = label,
+                                  _class = "filter-submit",
+                                  )
             if _class:
                 submit_button.add_class(_class)
 
@@ -2979,12 +2981,14 @@ class S3FilterForm(object):
 
             # Submit row elements
             submit = TAG[""](submit_button,
-                             INPUT(_type="hidden",
-                                   _class="filter-ajax-url",
-                                   _value=ajax_url),
-                             INPUT(_type="hidden",
-                                   _class="filter-submit-url",
-                                   _value=submit_url))
+                             INPUT(_type = "hidden",
+                                   _class = "filter-ajax-url",
+                                   _value = ajax_url,
+                                   ),
+                             INPUT(_type = "hidden",
+                                   _class = "filter-submit-url",
+                                   _value = submit_url,
+                                   ))
             if ajax and target:
                 submit.append(INPUT(_type="hidden",
                                     _class="filter-submit-target",
@@ -3043,9 +3047,9 @@ class S3FilterForm(object):
             formstyle = current.deployment_settings.get_ui_filter_formstyle()
 
         rows = self._render_widgets(resource,
-                                    get_vars=get_vars,
-                                    alias=alias,
-                                    formstyle=formstyle)
+                                    get_vars = get_vars,
+                                    alias = alias,
+                                    formstyle = formstyle)
 
         controls = self._render_controls(resource)
         if controls:
@@ -3096,10 +3100,10 @@ class S3FilterForm(object):
                               data = {"on": label,
                                       "off": label_off,
                                       },
-                              _class="filter-advanced-label",
+                              _class = "filter-advanced-label",
                               ),
                          ICON("down"),
-                         ICON("up", _style="display:none"),
+                         ICON("up", _style = "display:none"),
                          _class=_class
                          )
             controls.append(advanced)
@@ -3181,8 +3185,8 @@ class S3FilterForm(object):
             rappend(formrow)
         if advanced:
             if resource:
-                self.opts["advanced"] = resource.get_config(
-                                            "filter_advanced", True)
+                self.opts["advanced"] = \
+                    resource.get_config("filter_advanced", True)
             else:
                 self.opts["advanced"] = True
         return rows
@@ -3218,12 +3222,14 @@ class S3FilterForm(object):
         rows = current.db(query).select(table._id,
                                         table.title,
                                         table.query,
-                                        orderby=table.title)
+                                        orderby = table.title
+                                        )
 
         options = [OPTION(SELECT_FILTER,
-                          _value="",
-                          _class="filter-manager-prompt",
-                          _disabled="disabled")]
+                          _value = "",
+                          _class = "filter-manager-prompt",
+                          _disabled = "disabled",
+                          )]
         add_option = options.append
         filters = {}
         for row in rows:
@@ -3235,9 +3241,11 @@ class S3FilterForm(object):
             filters[filter_id] = query
         widget_id = "%s-fm" % form_id
         widget = DIV(SELECT(options,
-                            _id=widget_id,
-                            _class="filter-manager-widget"),
-                     _class="filter-manager-container")
+                            _id = widget_id,
+                            _class = "filter-manager-widget",
+                            ),
+                     _class = "filter-manager-container",
+                     )
 
         # JSON-serializable translator
         T = current.T
@@ -3554,19 +3562,22 @@ class S3Filter(S3Method):
         record = None
         record_id = data.get("id")
         if record_id:
-            query = (table.id == record_id) & (table.pe_id == pe_id)
-            record = db(query).select(table.id, limitby=(0, 1)).first()
+            query = (table.id == record_id) & \
+                    (table.pe_id == pe_id)
+            record = db(query).select(table.id,
+                                      limitby = (0, 1)
+                                      ).first()
         if not record:
             r.error(404, current.ERROR.BAD_RECORD)
 
-        resource = s3db.resource("pr_filter", id=record_id)
-        success = resource.delete(format=r.representation)
+        resource = s3db.resource("pr_filter", id = record_id)
+        success = resource.delete(format = r.representation)
 
         if not success:
             r.error(400, resource.error)
 
         current.response.headers["Content-Type"] = "application/json"
-        return current.xml.json_message(deleted=record_id)
+        return current.xml.json_message(deleted = record_id)
 
     # -------------------------------------------------------------------------
     def _save(self, r, **attr):
@@ -3603,8 +3614,11 @@ class S3Filter(S3Method):
         record_id = data.get("id")
         record = None
         if record_id:
-            query = (table.id == record_id) & (table.pe_id == pe_id)
-            record = db(query).select(table.id, limitby=(0, 1)).first()
+            query = (table.id == record_id) & \
+                    (table.pe_id == pe_id)
+            record = db(query).select(table.id,
+                                      limitby = (0, 1)
+                                      ).first()
             if not record:
                 r.error(404, current.ERROR.BAD_RECORD)
 
@@ -3709,7 +3723,8 @@ class S3Filter(S3Method):
         rows = db(query).select(table.id,
                                 table.title,
                                 table.description,
-                                table.query)
+                                table.query,
+                                )
 
         # Pack filters
         filters = []

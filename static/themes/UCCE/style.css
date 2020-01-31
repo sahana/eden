@@ -193,6 +193,21 @@ input[type="text"].text-filter {
 .tick text.icon {
   font-family: "ucce-icons";
 }
+#edit-filters-btn {
+  margin-top: 0.5rem;
+}
+
+/* Report Filters page */
+.report-filter-container {
+  margin-left: 1.35rem;
+}
+input.inline {
+  margin-top: 0.75rem;
+}
+label.inline-ucce {
+  margin-top: -0.25rem;
+  margin-bottom: 0;
+}
 
 /* Template Editor */
 .survey-item {

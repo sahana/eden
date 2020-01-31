@@ -1310,6 +1310,10 @@ class dc_TargetReport(S3Method):
                 data = self.extract(r)
                 return self.html(data)
 
+            elif r.representation == "div":
+                data = self.extract(r)
+                return self.html_content(data)
+
             elif r.representation == "pdf":
                 data = self.extract(r)
                 return self.pdf(data)
@@ -1362,14 +1366,19 @@ class dc_TargetReport(S3Method):
 
         # Template
         ttable = s3db.dc_template
-        template = db(ttable.id == record.template_id).select(ttable.layout,
+        template = db(ttable.id == record.template_id).select(ttable.id,
+                                                              ttable.layout,
                                                               ttable.table_id,
                                                               #ttable.modified_on,
+                                                              ttable.settings,
                                                               limitby = (0, 1)
                                                               ).first()
 
         # Last edited on
         #updated_on = date_represent(template.modified_on)
+
+        settings = template.settings or {}
+        report_filters = settings.get("report_filters")
 
         layout = template.layout
         if layout:
@@ -1380,10 +1389,24 @@ class dc_TargetReport(S3Method):
             table_row = db(s3_table.id == table_id).select(s3_table.name,
                                                            limitby = (0, 1)
                                                            ).first()
-            dtable = s3db.table(table_row.name)
+            dtablename = table_row.name
+            dtable = s3db.table(dtablename)
+
             # Because in UCCE, 1 Target == 1 Template, we can simply pull back all rows in the table,
             # not just those linked to relevant response_ids
-            answers = db(dtable.deleted == False).select()
+            query = (dtable.deleted == False)
+
+            # Parse Filters
+            for get_var in r.get_vars:
+                dfieldname = get_var[2:-4]
+                if dfieldname in dtable.fields:
+                    operator = get_var[-2:]
+                    if operator == "ge":
+                        query &= (dtable[dfieldname] >= r.get_vars.get(get_var))
+                    elif operator == "le":
+                        query &= (dtable[dfieldname] <= r.get_vars.get(get_var))
+
+            answers = db(query).select()
 
             # Questions
             # - in order
@@ -1488,7 +1511,11 @@ class dc_TargetReport(S3Method):
             total_responses = 0
             last_upload = "N/A"
 
-        return {"survey_name": record.name,
+        return {"target_id": target_id,
+                "template_id": template.id,
+                "dtablename": dtablename,
+                "report_filters": report_filters,
+                "survey_name": record.name,
                 "project_name": project_name,
                 #"created_on": created_on,
                 "published_on": published_on,
@@ -1499,10 +1526,117 @@ class dc_TargetReport(S3Method):
                 }
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def html(data):
+    def html(self, data):
         """
             Produce an HTML representation of the report
+        """
+
+        #T = current.T # Not fully-used as no requirement for this in UCCE yet
+
+        # Report Header
+        if current.auth.s3_has_permission("update", "dc_template", record_id = data["target_id"]):
+            edit_filters_btn = DIV(A("Edit Filters",
+                                     _href = URL(args = [data["target_id"], "report_filters"]),
+                                     _class = "button round tiny",
+                                     _id = "edit-filters-btn",
+                                     ),
+                                   )
+        else:
+            edit_filters_btn = ""
+
+        header = DIV(DIV(H2("Total Responses: %s" % data["total_responses"]),
+                         DIV("Survey responses last uploaded on: %s" % data["last_upload"]),
+                         _class = "columns medium-4",
+                         ),
+                     DIV(H1(data["survey_name"]),
+                         H3(data["project_name"]),
+                         _class = "columns medium-4 tacenter",
+                         ),
+                     DIV(#DIV("Created on: %s" % data["created_on"]),
+                         DIV("Published on: %s" % data["published_on"]),
+                         #DIV("Last edited on: %s" % data["updated_on"]),
+                         edit_filters_btn,
+                         _class = "columns medium-4 taright",
+                         ),
+                     _class = "medium-12 columns",
+                     )
+
+        # Report Filters
+        report_filters = data["report_filters"]
+        if report_filters is None:
+            ff = ""
+        else:
+            from s3 import S3FilterForm, S3RangeFilter
+
+            questions_lookup = {}
+            for q in data["questions"]:
+                questions_lookup[q["id"]] = q["field"]
+
+            filter_widgets = []
+            for question_id in report_filters:
+                filter_widgets.append(S3RangeFilter(questions_lookup[int(question_id)],
+                                                    label = report_filters[question_id],
+                                                    ))
+
+            request = current.request
+            filter_submit_url = URL(args = request.args)
+            filter_ajax_url = "%s.div" % filter_submit_url
+            filter_form = S3FilterForm(filter_widgets,
+                                       #clear = False,
+                                       #formstyle = filter_formstyle,
+                                       submit = True,
+                                       url = filter_submit_url,
+                                       ajax = True,
+                                       ajaxurl = filter_ajax_url,
+                                       #_class = "filter-form",
+                                       #_id = "datatable-filter-form",
+                                       )
+            fresource = current.s3db.resource(data["dtablename"])
+            ff = filter_form.html(fresource,
+                                  request.get_vars,
+                                  target = "report-content",
+                                  )
+
+        # Report Contents
+        questions_div = self.html_content(data)
+
+        output = {"header": header,
+                  "filter_form": ff,
+                  "questions": questions_div,
+                  }
+
+        appname = current.request.application
+        s3 = current.response.s3
+        scripts_append = s3.scripts.append
+        if s3.debug:
+            if s3.cdn:
+                scripts_append("https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.js")
+                # We use a patched v1.8.5 currently, so can't use the CDN version
+                #scripts_append("https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.js")
+            else:
+                scripts_append("/%s/static/scripts/d3/d3.js" % appname)
+            scripts_append("/%s/static/scripts/d3/nv.d3.js" % appname)
+            s3.scripts_modules.append("/%s/static/themes/UCCE/js/s3.ui.heatmap.js" % appname)
+            scripts_append("/%s/static/themes/UCCE/js/report.js" % appname)
+        else:
+            if s3.cdn:
+                scripts_append("https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js")
+                # We use a patched v1.8.5 currently, so can't use the CDN version
+                #scripts_append("https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.min.js")
+            else:
+                scripts_append("/%s/static/scripts/d3/d3.min.js" % appname)
+            scripts_append("/%s/static/scripts/d3/nv.d3.min.js" % appname)
+            s3.scripts_modules.append("/%s/static/themes/UCCE/js/s3.ui.heatmap.min.js" % appname)
+            scripts_append("/%s/static/themes/UCCE/js/report.min.js" % appname)
+
+        S3CustomController._view(THEME, "report_custom.html")
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def html_content(data):
+        """
+            Produce an HTML representation of the report contents (no header)
         """
 
         T = current.T # Not fully-used as no requirement for this in UCCE yet
@@ -1549,25 +1683,8 @@ class dc_TargetReport(S3Method):
                               ],
                           }
 
-        header = DIV(DIV(DIV(H2("Total Responses: %s" % data["total_responses"]),
-                             DIV("Survey responses last uploaded on: %s" % data["last_upload"]),
-                             _class = "columns medium-4",
-                             ),
-                         DIV(H1(data["survey_name"]),
-                             H3(data["project_name"]),
-                             _class = "columns medium-4 tacenter",
-                             ),
-                         DIV(#DIV("Created on: %s" % data["created_on"]),
-                             DIV("Published on: %s" % data["published_on"]),
-                             #DIV("Last edited on: %s" % data["updated_on"]),
-                             _class = "columns medium-4 taright",
-                             ),
-                         _class = "medium-12 columns report-header",
-                         ),
-                     _class = "row",
-                     )
-
         questions_div = DIV()
+
         questions = data["questions"]
         for question in questions:
             responses = question["responses"]
@@ -1827,36 +1944,7 @@ class dc_TargetReport(S3Method):
                        )
             questions_div.append(card)
 
-        output = {"header": header,
-                  "questions": questions_div,
-                  }
-
-        appname = current.request.application
-        s3 = current.response.s3
-        scripts_append = s3.scripts.append
-        if s3.debug:
-            if s3.cdn:
-                scripts_append("https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.js")
-                # We use a patched v1.8.5 currently, so can't use the CDN version
-                #scripts_append("https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.js")
-            else:
-                scripts_append("/%s/static/scripts/d3/d3.js" % appname)
-            scripts_append("/%s/static/scripts/d3/nv.d3.js" % appname)
-            s3.scripts_modules.append("/%s/static/themes/UCCE/js/s3.ui.heatmap.js" % appname)
-            scripts_append("/%s/static/themes/UCCE/js/report.js" % appname)
-        else:
-            if s3.cdn:
-                scripts_append("https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js")
-                # We use a patched v1.8.5 currently, so can't use the CDN version
-                #scripts_append("https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.min.js")
-            else:
-                scripts_append("/%s/static/scripts/d3/d3.min.js" % appname)
-            scripts_append("/%s/static/scripts/d3/nv.d3.min.js" % appname)
-            s3.scripts_modules.append("/%s/static/themes/UCCE/js/s3.ui.heatmap.min.js" % appname)
-            scripts_append("/%s/static/themes/UCCE/js/report.min.js" % appname)
-
-        S3CustomController._view(THEME, "report_custom.html")
-        return output
+        return questions_div
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1885,6 +1973,180 @@ class dc_TargetReport(S3Method):
         response.headers["Content-disposition"] = disposition
 
         return doc.output.getvalue()
+
+# =============================================================================
+class dc_TargetReportFilters(S3Method):
+    """
+        Survey Report Filters
+        - select which fields are used as filters in the Report
+        - currently only Number fields supported, producing a RangeFilter
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "target":
+
+            s3db = current.s3db
+
+            table = s3db.dc_template
+            record_id = r.record.template_id
+            if not current.auth.s3_has_permission("update", table, record_id=record_id):
+                r.unauthorised()
+
+            if r.interactive:
+
+                T = current.T
+                db = current.db
+
+                # Get all Number Questions in the Template
+                # - in order
+                # - NB we want these in layout order, but JSON.Stringify has converted
+                #      the integer positions to strings, so we need to sort with key=int
+                template = db(table.id == record_id).select(table.id,
+                                                            table.layout,
+                                                            table.settings,
+                                                            limitby = (0, 1)
+                                                            ).first()
+                layout = template.layout or {}
+                question_ids = []
+                iappend = question_ids.append
+                questions_dict = {}
+                for position in sorted(layout.keys(), key=int):
+                    question_id = layout[str(position)].get("id")
+                    if question_id:
+                        iappend(question_id)
+                        questions_dict[question_id] = {"number": position,
+                                                       }
+                qtable = s3db.dc_question
+                query = (qtable.id.belongs(question_ids)) & \
+                        (qtable.field_type == 2)
+                questions = db(query).select(qtable.id,
+                                             qtable.name,
+                                             )
+                if len(questions) == 0:
+                    current.session.warning = T("No Number Questions to use as Filters")
+                    # Redirect to  Report
+                    redirect(URL(args = [r.id, "report_custom"]))
+
+                questions = questions.as_dict()
+                for question_id in question_ids:
+                    if question_id in questions:
+                        questions_dict[question_id]["name"] = questions[question_id]["name"]
+                    else:
+                        del questions_dict[question_id]
+
+                # Get those which are currently marked as Filter Fields
+                settings = template.settings or {}
+                active = settings.get("report_filters", {})
+
+                response = current.response
+
+                # Build Form
+                form = FORM(_id = "report_filters",
+                            )
+                fappend = form.append
+                for question_id in questions_dict:
+                    question_number_label = "Q %s" % questions_dict[question_id]["number"]
+                    question_name = questions_dict[question_id]["name"]
+                    if str(question_id) in active:
+                        checked = "on"
+                        filter_label = active[str(question_id)]
+                    else:
+                        checked = ""
+                        filter_label = ""
+                    fieldset = FIELDSET(DIV(LABEL(B(question_number_label),
+                                                  " : ",
+                                                  question_name,
+                                                  ),
+                                            _class = "row",
+                                            ),
+                                        DIV(DIV(LABEL(T("Use as Filter?"),
+                                                      _class = "right inline",
+                                                      ),
+                                                _class = "small-1 columns",
+                                                ),
+                                            DIV(INPUT(_name = "checkbox-%s" % question_id,
+                                                      _type = "checkbox",
+                                                      _class = "inline",
+                                                      value = checked,
+                                                      ),
+                                                _class = "small-1 columns end",
+                                                ),
+                                            _class = "row",
+                                            ),
+                                        DIV(DIV(LABEL("%s:" % T("Filter Label"),
+                                                      SPAN(" *",
+                                                           _class = "req",
+                                                           ),
+                                                      _class = "right inline inline-ucce",
+                                                      ),
+                                                _class = "small-1 columns",
+                                                ),
+                                            DIV(INPUT(_name = "label-%s" % question_id,
+                                                      value = filter_label,
+                                                      ),
+                                                _class = "small-11 columns",
+                                                ),
+                                            _id = "label-row-%s" % question_id,
+                                            _class = "row",
+                                            ),
+                                        )
+                    fappend(DIV(DIV(fieldset,
+                                    _class = "large-12 columns",
+                                    ),
+                                _class = "row",
+                                ))
+                fappend(DIV(DIV(INPUT(_type = "submit",
+                                      _class = "button round",
+                                      ),
+                                _class = "large-12 columns",
+                                ),
+                            _class = "row",
+                            ))
+
+                # Handle form submission
+                session = current.session
+                if form.accepts(current.request, session):
+                    # Save details in template
+                    form_vars_get = form.request_vars.get
+                    report_filters = {}
+                    filter_label = None
+                    for question_id in questions_dict:
+                        question_number = questions_dict[question_id]["number"]
+                        if form_vars_get("checkbox-%s" % question_id) is not None:
+                            filter_label = form_vars_get("label-%s" % question_id)
+                            if filter_label == "":
+                                filter_label = "Q %s" % question_number
+                            report_filters[question_id] = filter_label # NB question_id will be converted to str when saved to JSON field
+                    if filter_label is None:
+                        report_filters = None
+                    settings["report_filters"] = report_filters
+                    template.update_record(settings = settings)
+                    session.confirmation = T("Filters Submitted")
+                    # Redirect to  Report
+                    redirect(URL(args = [r.id, "report_custom"]))
+
+                script = "/%s/static/themes/ucce/js/report_filters.js" % \
+                            r.application
+                response.s3.scripts.append(script)
+
+                title = T("Questions to use as Report Filters")
+                response.title = title
+                S3CustomController._view(THEME, "form.html")
+                return {"form": form,
+                        "title": title,
+                        }
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(404, current.ERROR.BAD_RESOURCE)
 
 # =============================================================================
 class dc_TemplateEditor(S3Method):
@@ -1931,21 +2193,21 @@ class dc_TemplateEditor(S3Method):
                 elif target_status == 1:
                     # Draft
                     button = A(T("Activate"),
-                               _href=URL(c="dc", f="target",
-                                         args=[target_id, "activate.popup"],
-                                         ),
-                               _class="button round tiny s3_modal",
-                               _title=T("Activate Survey"),
+                               _href = URL(c="dc", f="target",
+                                           args = [target_id, "activate.popup"],
+                                           ),
+                               _class = "button round tiny s3_modal",
+                               _title = T("Activate Survey"),
                                )
                     read_only = False
                 elif target_status in (2, 3):
                     # Active / Deactivated
                     button = A(T("Edit"),
-                               _href=URL(c="dc", f="target",
-                                         args=[target_id, "edit_confirm.popup"],
-                                         ),
-                               _class="button round tiny s3_modal",
-                               _title=T("Edit Survey"),
+                               _href = URL(c="dc", f="target",
+                                           args = [target_id, "edit_confirm.popup"],
+                                           ),
+                               _class = "button round tiny s3_modal",
+                               _title = T("Edit Survey"),
                                )
                 else:
                     # Unknown Status...something odd happening
@@ -1963,65 +2225,65 @@ class dc_TemplateEditor(S3Method):
                 except AttributeError:
                     project_name = ""
 
-                name_widget = INPUT(_value=record.name,
-                                    _type="text",
-                                    _id="survey-name",
+                name_widget = INPUT(_value = record.name,
+                                    _type = "text",
+                                    _id = "survey-name",
                                     )
                 name_widget["_data-id"] = target_id
 
                 header = DIV(DIV("%s: " % T("Survey name"),
                                  name_widget,
-                                 _class="medium-6 columns",
+                                 _class = "medium-6 columns",
                                  ),
                              DIV("%s: " % T("Project"),
                                  project_name,
-                                 _class="medium-3 columns",
+                                 _class = "medium-3 columns",
                                  ),
                              DIV(button,
-                                 _class="medium-3 columns",
+                                 _class = "medium-3 columns",
                                  ),
-                             _class="row",
+                             _class = "row",
                              )
 
                 info_instructions = SPAN(ICON("info-circle"),
-                                         _class="has-tip",
-                                         _title=T("Add instructions for the data collector to indicate what they should do and say at different stages of the survey."),
+                                         _class = "has-tip",
+                                         _title = T("Add instructions for the data collector to indicate what they should do and say at different stages of the survey."),
                                          )
                 info_instructions["data-tooltip"] = 1
 
                 info_text = SPAN(ICON("info-circle"),
-                                 _class="has-tip",
-                                 _title=T("Add a single text box. This question type has no response options and is perfect for adding text-based information to your survey."),
+                                 _class = "has-tip",
+                                 _title = T("Add a single text box. This question type has no response options and is perfect for adding text-based information to your survey."),
                                  )
                 info_text["data-tooltip"] = 1
 
                 info_number = SPAN(ICON("info-circle"),
-                                   _class="has-tip",
-                                   _title=T("Add a question that requires a numeric response. Use question settings to restrict input to numbers within a specified range."),
+                                   _class = "has-tip",
+                                   _title = T("Add a question that requires a numeric response. Use question settings to restrict input to numbers within a specified range."),
                                    )
                 info_number["data-tooltip"] = 1
 
                 info_multichoice = SPAN(ICON("info-circle"),
-                                        _class="has-tip",
-                                        _title=T("Add a question with multiple response choices. Use question settings to allow respondents to select one or several response options."),
+                                        _class = "has-tip",
+                                        _title = T("Add a question with multiple response choices. Use question settings to allow respondents to select one or several response options."),
                                         )
                 info_multichoice["data-tooltip"] = 1
 
                 info_likert = SPAN(ICON("info-circle"),
-                                   _class="has-tip",
-                                   _title=T("Add a multiple choice question with Likert-scale responses. Use question settings to select one of the predefined Likert scales."),
+                                   _class = "has-tip",
+                                   _title = T("Add a multiple choice question with Likert-scale responses. Use question settings to select one of the predefined Likert scales."),
                                    )
                 info_likert["data-tooltip"] = 1
 
                 info_heatmap = SPAN(ICON("info-circle"),
-                                    _class="has-tip",
-                                    _title=T("Add an image-based question to collect interactive responses on a heatmap. Use question settings to define tap regions and number of taps available."),
+                                    _class = "has-tip",
+                                    _title = T("Add an image-based question to collect interactive responses on a heatmap. Use question settings to define tap regions and number of taps available."),
                                     )
                 info_heatmap["data-tooltip"] = 1
 
                 info_break = SPAN(ICON("info-circle"),
-                                  _class="has-tip",
-                                  _title=T("Add a page break to your survey to display questions on different pages."),
+                                  _class = "has-tip",
+                                  _title = T("Add a page break to your survey to display questions on different pages."),
                                   )
                 info_break["data-tooltip"] = 1
 
@@ -2033,21 +2295,21 @@ class dc_TemplateEditor(S3Method):
                     l10n = l10n.language
 
                 languages_dropdown = SELECT(OPTION(T("Choose language"),
-                                                   _value="",
+                                                   _value = "",
                                                    ),
-                                            _id="survey-l10n",
-                                            _class="fright",
+                                            _id = "survey-l10n",
+                                            _class = "fright",
                                             )
                 l10n_options = current.deployment_settings.L10n.get("survey_languages", {})
                 for lang in l10n_options:
                     if lang == l10n:
                         languages_dropdown.append(OPTION(l10n_options[lang],
-                                                         _selected=True,
-                                                         _value=lang,
+                                                         _selected = True,
+                                                         _value = lang,
                                                          ))
                     else:
                         languages_dropdown.append(OPTION(l10n_options[lang],
-                                                         _value=lang,
+                                                         _value = lang,
                                                          ))
                 if l10n:
                     hidden = ""
@@ -2055,108 +2317,108 @@ class dc_TemplateEditor(S3Method):
                     hidden = " hide"
 
                 toolbar = DIV(DIV(H2(T("Question types")),
-                                  _class="row",
+                                  _class = "row",
                                   ),
                               DIV(DIV(ICON("instructions"),
-                                      _class="medium-2 columns",
+                                      _class = "medium-2 columns",
                                       ),
                                   DIV(T("Data collector instructions"),
-                                      _class="medium-9 columns",
+                                      _class = "medium-9 columns",
                                       ),
                                   DIV(info_instructions,
-                                      _class="medium-1 columns",
+                                      _class = "medium-1 columns",
                                       ),
-                                  _class="row draggable",
-                                  _id="instructions",
+                                  _class = "row draggable",
+                                  _id = "instructions",
                                   ),
                               DIV(DIV(ICON("comment-alt"),
-                                      _class="medium-2 columns",
+                                      _class = "medium-2 columns",
                                       ),
                                   DIV(T("Text box"),
-                                      _class="medium-9 columns",
+                                      _class = "medium-9 columns",
                                       ),
                                   DIV(info_text,
-                                      _class="medium-1 columns",
+                                      _class = "medium-1 columns",
                                       ),
-                                  _class="row draggable",
-                                  _id="text",
+                                  _class = "row draggable",
+                                  _id = "text",
                                   ),
                               DIV(DIV(ICON("hashtag"),
-                                      _class="medium-2 columns",
+                                      _class = "medium-2 columns",
                                       ),
                                   DIV(T("Number question"),
-                                      _class="medium-9 columns",
+                                      _class = "medium-9 columns",
                                       ),
                                   DIV(info_number,
-                                      _class="medium-1 columns",
+                                      _class = "medium-1 columns",
                                       ),
-                                  _class="row draggable",
-                                  _id="number",
+                                  _class = "row draggable",
+                                  _id = "number",
                                   ),
                               DIV(DIV(ICON("list"),
-                                      _class="medium-2 columns",
+                                      _class = "medium-2 columns",
                                       ),
                                   DIV(T("Multiple choice question"),
-                                      _class="medium-9 columns",
+                                      _class = "medium-9 columns",
                                       ),
                                   DIV(info_multichoice,
-                                      _class="medium-1 columns",
+                                      _class = "medium-1 columns",
                                       ),
-                                  _class="row draggable",
-                                  _id="multichoice",
+                                  _class = "row draggable",
+                                  _id = "multichoice",
                                   ),
                               DIV(DIV(ICON("tasks"),
-                                      _class="medium-2 columns",
+                                      _class = "medium-2 columns",
                                       ),
                                   DIV(T("Likert-scale"),
-                                      _class="medium-9 columns",
+                                      _class = "medium-9 columns",
                                       ),
                                   DIV(info_likert ,
-                                      _class="medium-1 columns",
+                                      _class = "medium-1 columns",
                                       ),
-                                  _class="row draggable",
-                                  _id="likert",
+                                  _class = "row draggable",
+                                  _id = "likert",
                                   ),
                               DIV(DIV(ICON("picture"),
-                                      _class="medium-2 columns",
+                                      _class = "medium-2 columns",
                                       ),
                                   DIV(T("Heatmap"),
-                                      _class="medium-9 columns",
+                                      _class = "medium-9 columns",
                                       ),
                                   DIV(info_heatmap,
-                                      _class="medium-1 columns",
+                                      _class = "medium-1 columns",
                                       ),
-                                  _class="row draggable",
-                                  _id="heatmap",
+                                  _class = "row draggable",
+                                  _id = "heatmap",
                                   ),
                               DIV(DIV(ICON("section-break"),
-                                      _class="medium-2 columns",
+                                      _class = "medium-2 columns",
                                       ),
                                   DIV(T("Section / Page break"),
-                                      _class="medium-9 columns",
+                                      _class = "medium-9 columns",
                                       ),
                                   DIV(info_break,
-                                      _class="medium-1 columns",
+                                      _class = "medium-1 columns",
                                       ),
-                                  _class="row draggable",
-                                  _id="break",
+                                  _class = "row draggable",
+                                  _id = "break",
                                   ),
                               DIV(H2(T("Translation options")),
-                                  _class="row",
+                                  _class = "row",
                                   ),
                               DIV(LABEL("%s:" % T("Translated to"),
                                         _class = "fleft",
                                         ),
                                   languages_dropdown,
-                                  _class="row",
+                                  _class = "row",
                                   ),
                               DIV(DIV(A(LABEL(ICON("download"),
                                               T("Download survey .xls"),
                                               ),
-                                        _href=URL(c="dc", f="template",
-                                                  args=[template_id, "export_l10n.xls"],
-                                                  ),
-                                        _class="no-link",
+                                        _href = URL(c="dc", f="template",
+                                                    args = [template_id, "export_l10n.xls"],
+                                                    ),
+                                        _class = "no-link",
                                         ),
                                       ),
                                   DIV(A(LABEL(ICON("upload"),
@@ -2169,10 +2431,10 @@ class dc_TemplateEditor(S3Method):
                                               _class = "show-for-sr",
                                               _id = "upload-translation",
                                               ),
-                                        _class="no-link",
+                                        _class = "no-link",
                                         ),
                                       ),
-                                  _class="row%s" % hidden,
+                                  _class = "row%s" % hidden,
                                   ),
                               _id = "question-bar",
                               )
@@ -2208,7 +2470,7 @@ class dc_TemplateEditor(S3Method):
                     questions_l10n = trows.as_dict(key="question_id")
                 for question in qrows:
                     question_id = question.id
-                    this_question = {"name": question.name or '',
+                    this_question = {"name": question.name or "",
                                      "type": question.field_type,
                                      # Always use isNotEmpty validator now, so only applies if field is visible
                                      #"mandatory": question.require_not_empty,
