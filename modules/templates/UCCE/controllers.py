@@ -1579,15 +1579,14 @@ class dc_TargetReport(S3Method):
                                                     ))
 
             request = current.request
-            filter_submit_url = URL(args = request.args)
-            filter_ajax_url = "%s.div" % filter_submit_url
+            filter_submit_url = URL(args = request.args, extension="div")
             filter_form = S3FilterForm(filter_widgets,
                                        #clear = False,
                                        #formstyle = filter_formstyle,
                                        submit = True,
-                                       url = filter_submit_url,
                                        ajax = True,
-                                       ajaxurl = filter_ajax_url,
+                                       url = filter_submit_url,
+                                       #ajaxurl = filter_ajax_url,
                                        #_class = "filter-form",
                                        #_id = "datatable-filter-form",
                                        )

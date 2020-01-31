@@ -1969,6 +1969,7 @@ S3.search = {};
                            t.hasClass('gi-container') ||
                            t.hasClass('pt-container') ||
                            t.hasClass('tp-container') ||
+                           t.hasClass('s3-target') ||
                            t.hasClass('s3-organizer')) {
                     // These targets can be Ajax-reloaded
                     needs_reload = false;
@@ -2009,6 +2010,7 @@ S3.search = {};
                 } else if (t.hasClass('dl')) {
                     t.datalist('ajaxReload', queries);
                 } else if (t.hasClass('map_wrapper')) {
+                    // @ToDo: Restrict this to just this map
                     S3.gis.refreshLayer('search_results', queries);
                 } else if (t.hasClass('gi-container')) {
                     t.groupedItems('reload', null, queries);
@@ -2016,6 +2018,9 @@ S3.search = {};
                     t.pivottable('reload', null, queries);
                 } else if (t.hasClass('tp-container')) {
                     t.timeplot('reload', null, queries);
+                } else if (t.hasClass('s3-target')) {
+                    // Custom Target
+                    t.s3Target('reload', filterURL(url, queries));
                 } else if (t.hasClass('s3-organizer')) {
                     t.organizer('reload');
                 }

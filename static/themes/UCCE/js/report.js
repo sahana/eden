@@ -115,4 +115,14 @@ $(document).ready(function(){
         $(this).heatMap();
     });
 
+    $.fn.s3Target = function(action, url){
+        //if (action == 'reload') {
+        this.each(function(){
+            var $this = $(this);
+            $.getS3(url, function(data) {
+                // Reload the DIV
+                $this.html(data);
+            }, 'html');
+        });
+    };
 });

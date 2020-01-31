@@ -2990,9 +2990,10 @@ class S3FilterForm(object):
                                    _value = submit_url,
                                    ))
             if ajax and target:
-                submit.append(INPUT(_type="hidden",
-                                    _class="filter-submit-target",
-                                    _value=target))
+                submit.append(INPUT(_type = "hidden",
+                                    _class = "filter-submit-target",
+                                    _value = target,
+                                    ))
 
             # Append submit row
             submit_row = formstyle(None, "", submit, "")
