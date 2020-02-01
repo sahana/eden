@@ -1026,7 +1026,9 @@ class dc_TargetEdit(S3Method):
 
         # Lookup the Dynamic Table
         tetable = s3db.dc_template
-        template = db(tetable.id == r.record.template_id).select(tetable.table_id,
+        template = db(tetable.id == r.record.template_id).select(tetable.id,
+                                                                 tetable.settings,
+                                                                 tetable.table_id,
                                                                  limitby = (0, 1)
                                                                  ).first()
         if template:
@@ -1036,6 +1038,12 @@ class dc_TargetEdit(S3Method):
             new_name = "s3dt_%s" % s3db.s3_table_random_name()
             db(s3db.s3_table.id == template.table_id).update(name = new_name,
                                                              mobile_form = False)
+
+        # Clear any report_filters
+        settings = template.settings
+        if settings is not None and "report_filters" in settings:
+            del settings["report_filters"]
+            template.update_record(settings = settings)
 
 # =============================================================================
 class dc_TargetDelete(S3Method):
@@ -1579,7 +1587,9 @@ class dc_TargetReport(S3Method):
                                                     ))
 
             request = current.request
-            filter_submit_url = URL(args = request.args, extension="div")
+            filter_submit_url = URL(args = request.args,
+                                    extension = "div",
+                                    )
             filter_form = S3FilterForm(filter_widgets,
                                        #clear = False,
                                        #formstyle = filter_formstyle,
@@ -1998,6 +2008,13 @@ class dc_TargetReportFilters(S3Method):
             record_id = r.record.template_id
             if not current.auth.s3_has_permission("update", table, record_id=record_id):
                 r.unauthorised()
+
+            if r.record.status == 1:
+                current.session.error = "Cannot define Report Filters for a Draft Survey"
+                # Redirect to  list of Projects
+                redirect(URL(c = "project",
+                             f = "project",
+                             args = "datalist"))
 
             if r.interactive:
 
