@@ -299,8 +299,8 @@ S3.search = {};
             }
         });
 
-        // Clear range filters
-        form.find('.range-filter-input').val('');
+        // Clear range filters (& trigger any slider's change events)
+        form.find('.range-filter-input').val('').trigger('change.slider');
 
         // Clear date filters
         form.find('.date-filter-input').each(function() {
@@ -2165,10 +2165,10 @@ S3.search = {};
         });
 
         // Set filter widgets to fire optionChanged event
-        $('.text-filter, .range-filter-input').on('input.autosubmit', function () {
+        $('.text-filter, .range-filter-input').on('input.autosubmit', function() {
             $(this).closest('form').trigger('optionChanged');
         });
-        $('.options-filter, .location-filter, .date-filter-input, .age-filter-input, .map-filter, .value-filter').on('change.autosubmit', function () {
+        $('.options-filter, .location-filter, .date-filter-input, .age-filter-input, .map-filter, .value-filter').on('change.autosubmit', function() {
             $(this).closest('form').trigger('optionChanged');
         });
         $('.s3-options-filter-anyall input[type="radio"]').on('change.autosubmit', function() {

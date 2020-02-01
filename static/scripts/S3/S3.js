@@ -1836,63 +1836,36 @@ S3.slider = function(fieldname, min, max, step, value) {
 /**
  * Add a Range Slider to a field - used by S3SliderFilter
  */
-S3.range_slider = function(fieldname, min, max, step, values) {
-    var real_input1 = $('#' + fieldname + '_1');
-    var real_input2 = $('#' + fieldname + '_2');
-    var selector = '#' + fieldname + '_slider';
-    $(selector).slider({
+S3.range_slider = function(selector, min_id, max_id, min_value, max_value, step, values) {
+    var slider_div = $('#' + selector),
+        min_input = $('#' + min_id),
+        max_input = $('#' + max_id);
+    slider_div.slider({
         range: true,
-        min: min,
-        max: max,
+        min: min_value,
+        max: max_value,
         step: step,
         values: values,
-        slide: function (event, ui) {
-            // Set the value of the real inputs
-            real_input1.val(ui.values[0]);
-            real_input2.val(ui.values[1]);
-        },
-        change: function(event, ui) {
-            var value = ui.value,
-                index = ui.handleIndex,
-                real_input = $('#' + fieldname + '_' + (index + 1));
-            if (value == null) {
-                // Set a default value
-                // - halfway between min & max
-                value = (min + max) / 2;
-                // - rounded to nearest step
-                var modulo = value % step;
-                if (modulo != 0) {
-                    if (modulo < (step / 2)) {
-                        // round down
-                        value = value - modulo;
-                    } else {
-                        // round up
-                        value = value + modulo;
-                    }
-                }
-                $(selector).slider('option', 'values', index, value);
-                // Show the control
-                $(selector + ' .ui-slider-handle').show();
-                // Show the value
-                // Hide the help text
-                real_input.show().next().remove();
-            }
+        slide: function(event, ui) {
+            // Set the value of the real inputs & trigger change event
+            min_input.val(ui.values[0]);
+            max_input.val(ui.values[1]).closest('form').trigger('optionChanged');
         }
     });
-    if (values == []) {
-        // Don't show a value until Slider is touched
-        $(selector + ' .ui-slider-handle').hide();
-        // Show help text
-        real_input1.hide();
-        real_input2.hide()
-                   .after('<p>' + i18n.slider_help + '</p>');
-    }
-    // Enable the fields before form is submitted
-    real_input1.closest('form').submit(function() {
-        real_input1.prop('disabled', false);
-        real_input2.prop('disabled', false);
-        // Normal Submit
-        return true;
+    // Update Slider if INPUTs change
+    min_input.on('change.slider', function() {
+        var value = min_input.val()
+        if (value == '') {
+            value = min_value;
+        }
+        slider_div.slider('values', 0, value);
+    });
+    max_input.on('change.slider', function() {
+        var value = max_input.val()
+        if (value == '') {
+            value = max_value;
+        }
+        slider_div.slider('values', 1, value);
     });
 };
 

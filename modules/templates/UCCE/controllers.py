@@ -1515,6 +1515,7 @@ class dc_TargetReport(S3Method):
 
         else:
             # layout is None
+            dtablename = None
             questions = []
             total_responses = 0
             last_upload = "N/A"
@@ -1574,7 +1575,7 @@ class dc_TargetReport(S3Method):
         if report_filters is None:
             ff = ""
         else:
-            from s3 import S3FilterForm, S3RangeFilter
+            from s3 import S3FilterForm, S3SliderFilter
 
             questions_lookup = {}
             for q in data["questions"]:
@@ -1582,9 +1583,9 @@ class dc_TargetReport(S3Method):
 
             filter_widgets = []
             for question_id in report_filters:
-                filter_widgets.append(S3RangeFilter(questions_lookup[int(question_id)],
-                                                    label = report_filters[question_id],
-                                                    ))
+                filter_widgets.append(S3SliderFilter(questions_lookup[int(question_id)],
+                                                     label = report_filters[question_id],
+                                                     ))
 
             request = current.request
             filter_submit_url = URL(args = request.args,

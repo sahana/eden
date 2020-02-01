@@ -32,10 +32,17 @@ $anonymize_button_bgcolor_hover: $alert-button-bg-hover !default;
         font-size: 0.7em;
     }
 }
+.ui-widget-header.ui-slider-range {
+    background: #cccccc;
+}
 .ui-state-active,
 .ui-widget-content .ui-state-active,
 .ui-widget-header .ui-state-active {
     border-color: #ADA6A0;
+}
+.ui-widget-content .ui-state-active.ui-slider-handle {
+    background: #007fff;
+    border: 1px solid #003eff;
 }
 .ui-multiselect-header {
     span.ui-icon {
