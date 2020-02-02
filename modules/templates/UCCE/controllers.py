@@ -2150,7 +2150,7 @@ class dc_TargetReportFilters(S3Method):
                     # Redirect to  Report
                     redirect(URL(args = [r.id, "report_custom"]))
 
-                script = "/%s/static/themes/ucce/js/report_filters.js" % \
+                script = "/%s/static/themes/UCCE/js/report_filters.js" % \
                             r.application
                 response.s3.scripts.append(script)
 
