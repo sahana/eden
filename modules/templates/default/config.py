@@ -7,9 +7,8 @@ from gluon.storage import Storage
 
 def config(settings):
     """
-        Template settings for a default system
-
-        @ToDo: Rename this as 'Demo'
+        Template settings for the Default template
+        - default settings suitable for a small organisation managing it's own resources
     """
 
     T = current.T
