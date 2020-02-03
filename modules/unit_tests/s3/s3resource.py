@@ -186,7 +186,7 @@ class ResourceAxisFilterTests(unittest.TestCase):
 
             rfield = S3ResourceField(resource, "facility_type_id")
 
-            values, ignore = af.values(rfield)
+            values, _ = af.values(rfield)
             assertTrue("1" in values)
             assertFalse("2" in values)
             assertTrue("3" in values)
@@ -242,17 +242,19 @@ class ResourceDataTableFilterTests(unittest.TestCase):
         """ Test Standard Data Table """
 
         resource = current.s3db.resource("hrm_certificate_skill")
-        vars = Storage({"bSortable_0": "false",
-                        "bSortable_1": "true",
-                        "bSortable_2": "true",
-                        "sSortDir_0": "asc",
-                        "iSortCol_0": "1",
-                        "iColumns": "3",
-                        "iSortingCols": "1"})
-        searchq, orderby, left = resource.datatable_filter(["id",
-                                                            "skill_id",
-                                                            "competency_id"],
-                                                            vars)
+        get_vars = Storage({"bSortable_0": "false",
+                            "bSortable_1": "true",
+                            "bSortable_2": "true",
+                            "sSortDir_0": "asc",
+                            "iSortCol_0": "1",
+                            "iColumns": "3",
+                            "iSortingCols": "1",
+                            })
+        orderby = resource.datatable_filter(["id",
+                                             "skill_id",
+                                             "competency_id",
+                                             ],
+                                             get_vars)[1]
         self.assertEqual(orderby, "hrm_skill.name asc")
 
     # -------------------------------------------------------------------------
@@ -260,18 +262,20 @@ class ResourceDataTableFilterTests(unittest.TestCase):
         """ Test De-Duplicator Data Table """
 
         resource = current.s3db.resource("hrm_certificate_skill")
-        vars = Storage({"bSortable_0": "false",
-                        "bSortable_1": "false",
-                        "bSortable_2": "true",
-                        "bSortable_3": "true",
-                        "sSortDir_0": "desc",
-                        "iSortCol_0": "2",
-                        "iColumns": "4",
-                        "iSortingCols": "1"})
-        searchq, orderby, left = resource.datatable_filter(["id",
-                                                            "skill_id",
-                                                            "competency_id"],
-                                                            vars)
+        get_vars = Storage({"bSortable_0": "false",
+                            "bSortable_1": "false",
+                            "bSortable_2": "true",
+                            "bSortable_3": "true",
+                            "sSortDir_0": "desc",
+                            "iSortCol_0": "2",
+                            "iColumns": "4",
+                            "iSortingCols": "1",
+                            })
+        orderby = resource.datatable_filter(["id",
+                                             "skill_id",
+                                             "competency_id",
+                                             ],
+                                             get_vars)[1]
         self.assertEqual(orderby, "hrm_skill.name desc")
 
     # -------------------------------------------------------------------------
@@ -279,23 +283,46 @@ class ResourceDataTableFilterTests(unittest.TestCase):
         """ Test Other Data Table """
 
         resource = current.s3db.resource("hrm_certificate_skill")
-        vars = Storage({"bSortable_0": "false",
-                        "bSortable_1": "true",
-                        "bSortable_2": "false",
-                        "bSortable_3": "true",
-                        "sSortDir_0": "desc",
-                        "iSortCol_0": "3",
-                        "iColumns": "4",
-                        "iSortingCols": "1"})
-        searchq, orderby, left = resource.datatable_filter(["id",
-                                                            "skill_id",
-                                                            "competency_id"],
-                                                            vars)
+        get_vars = Storage({"bSortable_0": "false",
+                            "bSortable_1": "true",
+                            "bSortable_2": "false",
+                            "bSortable_3": "true",
+                            "sSortDir_0": "desc",
+                            "iSortCol_0": "3",
+                            "iColumns": "4",
+                            "iSortingCols": "1",
+                            })
+        orderby = resource.datatable_filter(["id",
+                                             "skill_id",
+                                             "competency_id",
+                                             ],
+                                             get_vars)[1]
         self.assertEqual(orderby, "hrm_competency_rating.priority desc")
 
 # =============================================================================
 class ResourceExportTests(unittest.TestCase):
     """ Test XML export of resources """
+
+    @classmethod
+    def setUpClass(cls):
+
+        current.auth.override = True
+
+        # Define test table
+        db = current.db
+        db.define_table("exporter_test",
+                        Field("name"),
+                        *s3_meta_fields())
+        db.commit()
+
+    @classmethod
+    def tearDownClass(cls):
+
+        db = current.db
+        db.exporter_test.drop()
+        db.commit()
+
+        current.auth.override = False
 
     # -------------------------------------------------------------------------
     def testExportTree(self):
@@ -305,9 +332,6 @@ class ResourceExportTests(unittest.TestCase):
         assertTrue = self.assertTrue
 
         xml = current.xml
-        auth = current.auth
-
-        auth.override = True
 
         xmlstr = """
 <s3xml>
@@ -346,7 +370,6 @@ class ResourceExportTests(unittest.TestCase):
                 assertTrue("uuid" in attrib)
         finally:
             current.db.rollback()
-            auth.override = False
 
     # -------------------------------------------------------------------------
     def testExportTreeWithMaxBounds(self):
@@ -354,11 +377,6 @@ class ResourceExportTests(unittest.TestCase):
 
         assertEqual = self.assertEqual
         assertTrue = self.assertTrue
-
-        xml = current.xml
-        auth = current.auth
-
-        auth.override = True
 
         xmlstr = """
 <s3xml>
@@ -390,7 +408,6 @@ class ResourceExportTests(unittest.TestCase):
 
         finally:
             current.db.rollback()
-            auth.override = False
 
     # -------------------------------------------------------------------------
     def testExportTreeWithMSince(self):
@@ -398,74 +415,66 @@ class ResourceExportTests(unittest.TestCase):
 
         assertEqual = self.assertEqual
 
-        auth = current.auth
-        auth.override = True
-
         xmlstr = """
 <s3xml>
-    <resource name="hms_hospital" uuid="ORDERTESTHOSPITAL1">
-        <data field="name">OrderTestHospital1</data>
+    <resource name="exporter_test" uuid="ORDERTESTRECORD1">
+        <data field="name">OrderTestRecord1</data>
     </resource>
-    <resource name="hms_hospital" uuid="ORDERTESTHOSPITAL2">
-        <data field="name">OrderTestHospital2</data>
+    <resource name="exporter_test" uuid="ORDERTESTRECORD2">
+        <data field="name">OrderTestRecord2</data>
     </resource>
 </s3xml>"""
 
-        try:
-            xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-            resource = current.s3db.resource("hms_hospital")
-            resource.import_xml(xmltree)
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        resource = current.s3db.resource("exporter_test")
+        resource.import_xml(xmltree)
 
-            resource = current.s3db.resource(resource,
-                                             uid=["ORDERTESTHOSPITAL1",
-                                                  "ORDERTESTHOSPITAL2",
-                                                  ])
+        resource = current.s3db.resource(resource,
+                                         uid=["ORDERTESTRECORD1",
+                                              "ORDERTESTRECORD2",
+                                              ])
 
-            # Load the records without orderby
-            resource.load(limit=2)
-            assertEqual(len(resource), 2)
+        # Load the records without orderby
+        resource.load(limit=2)
+        assertEqual(len(resource), 2)
 
-            # Determine which comes first and which last without orderby
-            first = resource._rows[0]["uuid"]
-            last = resource._rows[1]["uuid"]
+        # Determine which comes first and which last without orderby
+        first = resource._rows[0]["uuid"]
+        last = resource._rows[1]["uuid"]
 
-            # Make first older than last
-            now = datetime.datetime.utcnow()
-            ts = now - datetime.timedelta(seconds=5)
-            resource._rows[0].update_record(created_on = ts,
-                                            modified_on = ts,
-                                            )
-            resource._rows[1].update_record(created_on = now,
-                                            modified_on = now,
-                                            )
+        # Make first older than last
+        now = datetime.datetime.utcnow()
+        ts = now - datetime.timedelta(seconds=5)
+        resource._rows[0].update_record(created_on = ts,
+                                        modified_on = ts,
+                                        )
+        resource._rows[1].update_record(created_on = now,
+                                        modified_on = now,
+                                        )
 
-            # Without msince, elements should have same order as in load
-            msince = msince=datetime.datetime.utcnow() - datetime.timedelta(days=1)
-            tree = resource.export_tree(start=0,
-                                        limit=1,
-                                        dereference=False)
-            root = tree.getroot()
-            assertEqual(len(root), 1)
+        # Without msince, elements should have same order as in load
+        msince = msince=datetime.datetime.utcnow() - datetime.timedelta(days=1)
+        tree = resource.export_tree(start=0,
+                                    limit=1,
+                                    dereference=False)
+        root = tree.getroot()
+        assertEqual(len(root), 1)
 
-            child = root[0]
-            uuid = child.get("uuid", None)
-            assertEqual(uuid, first)
+        child = root[0]
+        uuid = child.get("uuid", None)
+        assertEqual(uuid, first)
 
-            # With msince, elements should be ordered by age
-            tree = resource.export_tree(start=0,
-                                        limit=1,
-                                        msince=msince,
-                                        dereference=False)
-            root = tree.getroot()
-            assertEqual(len(root), 1)
+        # With msince, elements should be ordered by age
+        tree = resource.export_tree(start=0,
+                                    limit=1,
+                                    msince=msince,
+                                    dereference=False)
+        root = tree.getroot()
+        assertEqual(len(root), 1)
 
-            child = root[0]
-            uuid = child.get("uuid", None)
-            assertEqual(uuid, last)
-
-        finally:
-            current.db.rollback()
-            auth.override = False
+        child = root[0]
+        uuid = child.get("uuid", None)
+        assertEqual(uuid, last)
 
     # -------------------------------------------------------------------------
     def testExportXMLWithSyncFilters(self):
@@ -475,10 +484,7 @@ class ResourceExportTests(unittest.TestCase):
         assertTrue = self.assertTrue
         assertFalse = self.assertFalse
 
-        auth = current.auth
         s3db = current.s3db
-
-        auth.override = True
 
         xmlstr = """
 <s3xml>
@@ -611,7 +617,6 @@ class ResourceExportTests(unittest.TestCase):
 
         finally:
             current.db.rollback()
-            auth.override = False
 
 # =============================================================================
 class ResourceImportTests(unittest.TestCase):
@@ -621,6 +626,23 @@ class ResourceImportTests(unittest.TestCase):
     def setUpClass(cls):
 
         current.auth.override = True
+
+        db = current.db
+
+        # Define test table
+        db.define_table("importer_test",
+                        Field("name"),
+                        *s3_meta_fields())
+        db.commit()
+
+    @classmethod
+    def tearDownClass(cls):
+
+        db = current.db
+        db.importer_test.drop()
+        db.commit()
+
+        current.auth.override = False
 
     # -------------------------------------------------------------------------
     def testImportXML(self):
@@ -653,19 +675,22 @@ class ResourceImportTests(unittest.TestCase):
 
 </s3xml>"""
 
-        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        try:
+            xmltree = etree.ElementTree(etree.fromstring(xmlstr))
 
-        resource = current.s3db.resource("pr_person")
-        msg = resource.import_xml(xmltree)
+            resource = current.s3db.resource("pr_person")
+            msg = resource.import_xml(xmltree)
 
-        msg = json.loads(msg)
+            msg = json.loads(msg)
 
-        assertEqual(msg["status"], "success")
-        assertEqual(msg["statuscode"], "200")
-        assertEqual(msg["records"], 1)
-        assertTrue("created" in msg)
-        assertTrue(isinstance(msg["created"], list))
-        assertTrue(len(msg["created"]) == 1)
+            assertEqual(msg["status"], "success")
+            assertEqual(msg["statuscode"], "200")
+            assertEqual(msg["records"], 1)
+            assertTrue("created" in msg)
+            assertTrue(isinstance(msg["created"], list))
+            assertTrue(len(msg["created"]) == 1)
+        finally:
+            current.db.rollback()
 
     # -------------------------------------------------------------------------
     def testImportXMLWithMTime(self):
@@ -675,16 +700,16 @@ class ResourceImportTests(unittest.TestCase):
         # get updated to the youngest entry
         xmlstr = """
 <s3xml>
-    <resource name="hms_hospital" uuid="MTIMETESTHOSPITAL1" modified_on="2012-03-31T00:00:00">
-        <data field="name">MTimeTestHospital1</data>
+    <resource name="importer_test" uuid="MTIMETESTRECORD1" modified_on="2012-03-31T00:00:00">
+        <data field="name">MTimeTestRecord1</data>
     </resource>
-    <resource name="hms_hospital" uuid="MTIMETESTHOSPITAL2" modified_on="2012-04-21T00:00:00">
-        <data field="name">MTimeTestHospital2</data>
+    <resource name="importer_test" uuid="MTIMETESTRECORD2" modified_on="2012-04-21T00:00:00">
+        <data field="name">MTimeTestRecord2</data>
     </resource>
 </s3xml>"""
 
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-        resource = current.s3db.resource("hms_hospital")
+        resource = current.s3db.resource("importer_test")
         resource.import_xml(xmltree)
         self.assertEqual(s3_utc(resource.mtime),
                          s3_utc(datetime.datetime(2012, 4, 21, 0, 0, 0)))
@@ -696,13 +721,13 @@ class ResourceImportTests(unittest.TestCase):
         # If no mtime is given, resource.mtime should be set to current UTC
         xmlstr = """
 <s3xml>
-    <resource name="hms_hospital" uuid="MTIMETESTHOSPITAL3">
-        <data field="name">MTimeTestHospital3</data>
+    <resource name="importer_test" uuid="MTIMETESTRECORD3">
+        <data field="name">MTimeTestRecord3</data>
     </resource>
 </s3xml>"""
 
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-        resource = current.s3db.resource("hms_hospital")
+        resource = current.s3db.resource("importer_test")
         resource.import_xml(xmltree)
         # Can't compare with exactly utcnow as these would be milliseconds apart,
         # assume equal dates are sufficient for this test
@@ -716,26 +741,19 @@ class ResourceImportTests(unittest.TestCase):
         # If mixed, then we should still get current UTC
         xmlstr = """
 <s3xml>
-    <resource name="hms_hospital" uuid="MTIMETESTHOSPITAL4" modified_on="2012-03-31T00:00:00">
-        <data field="name">MTimeTestHospital4</data>
+    <resource name="importer_test" uuid="MTIMETESTRECORD4" modified_on="2012-03-31T00:00:00">
+        <data field="name">MTimeTestRecord4</data>
     </resource>
-    <resource name="hms_hospital" uuid="MTIMETESTHOSPITAL5">
-        <data field="name">MTimeTestHospital5</data>
+    <resource name="importer_test" uuid="MTIMETESTRECORD5">
+        <data field="name">MTimeTestRecord5</data>
     </resource>
 </s3xml>"""
 
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-        resource = current.s3db.resource("hms_hospital")
+        resource = current.s3db.resource("importer_test")
         resource.import_xml(xmltree)
         self.assertEqual(s3_utc(resource.mtime).date(),
                          s3_utc(datetime.datetime.utcnow()).date())
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def tearDownClass(cls):
-
-        current.db.rollback()
-        current.auth.override = False
 
 # =============================================================================
 class ResourceDataObjectAPITests (unittest.TestCase):
@@ -1092,11 +1110,9 @@ class MergeOrganisationsTests(unittest.TestCase):
         assertEqual = self.assertEqual
         assertNotEqual = self.assertNotEqual
         assertTrue = self.assertTrue
-        assertFalse = self.assertFalse
 
         db = current.db
         s3db = current.s3db
-        deployment_settings = current.deployment_settings
 
         org1, org2 = self.get_records()
 
@@ -1227,10 +1243,8 @@ class MergePersonsTests(unittest.TestCase):
     def setUp(self):
         """ Set up person records """
 
-        db = current.db
         auth = current.auth
         s3db = current.s3db
-        deployment_settings = current.deployment_settings
 
         auth.override = True
 
@@ -1260,7 +1274,6 @@ class MergePersonsTests(unittest.TestCase):
         db = current.db
         auth = current.auth
         s3db = current.s3db
-        deployment_settings = current.deployment_settings
 
         # Anonymous
         auth.override = False
@@ -1281,7 +1294,6 @@ class MergePersonsTests(unittest.TestCase):
 
         db = current.db
         s3db = current.s3db
-        deployment_settings = current.deployment_settings
 
         with self.assertRaises(KeyError):
             self.resource.merge(0, self.id2)
@@ -1298,7 +1310,6 @@ class MergePersonsTests(unittest.TestCase):
 
         db = current.db
         s3db = current.s3db
-        deployment_settings = current.deployment_settings
 
         with self.assertRaises(KeyError):
             self.resource.merge(self.id1, 0)
@@ -1377,7 +1388,6 @@ class MergePersonsTests(unittest.TestCase):
 
         db = current.db
         s3db = current.s3db
-        deployment_settings = current.deployment_settings
 
         person1, person2 = self.get_records()
 
@@ -1422,7 +1432,6 @@ class MergePersonsTests(unittest.TestCase):
 
         db = current.db
         s3db = current.s3db
-        deployment_settings = current.deployment_settings
 
         person1, person2 = self.get_records()
 
@@ -2613,8 +2622,8 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
         assertEqual = self.assertEqual
         assertTrue = self.assertTrue
 
-        vars = Storage({"person.name__like": "Admin*"})
-        resource = current.s3db.resource("pr_person", vars=vars)
+        get_vars = Storage({"person.name__like": "Admin*"})
+        resource = current.s3db.resource("pr_person", vars=get_vars)
 
         data = resource.select(["name", "first_name", "last_name"],
                                limit=None)
@@ -2840,18 +2849,19 @@ class ResourceFilteredComponentTests(unittest.TestCase):
 
         resource = s3db.resource("org_organisation")
         fields = ["id", "name", "test.name", "test.office_type_id$name"]
-        vars = Storage({"bSortable_0": "false", # action column
-                        "bSortable_1": "true",
-                        "bSortable_2": "true",
-                        "bSortable_3": "true",
-                        "sSortDir_0": "asc",
-                        "iSortCol_0": "2",
-                        "sSortDir_1": "desc",
-                        "iSortCol_1": "3",
-                        "iColumns": "4",
-                        "iSortingCols": "2",
-                        "sSearch": "test"})
-        searchq, orderby, left = resource.datatable_filter(fields, vars)
+        get_vars = Storage({"bSortable_0": "false", # action column
+                            "bSortable_1": "true",
+                            "bSortable_2": "true",
+                            "bSortable_3": "true",
+                            "sSortDir_0": "asc",
+                            "iSortCol_0": "2",
+                            "sSortDir_1": "desc",
+                            "iSortCol_1": "3",
+                            "iColumns": "4",
+                            "iSortingCols": "2",
+                            "sSearch": "test",
+                            })
+        searchq, orderby, left = resource.datatable_filter(fields, get_vars)
         expected = (((org_organisation.name.lower().like("%test%")) |
                      (org_test_office.name.lower().like("%test%"))) |
                     (org_office_type.name.lower().like("%test%")))
@@ -3038,12 +3048,12 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         assertEqual(str(resource.components.hq.filter), \
                     "(org_hq_office.office_type_id = 4)")
 
-        tree = resource.export_tree(mcomponents=["fieldoffice", "hq"])
+        resource.export_tree(mcomponents=["fieldoffice", "hq"])
         assertTrue(resource.components.fieldoffice._length > 0)
         assertTrue(resource.components.hq._length > 0)
         assertTrue(resource.components.office._length is None)
 
-        tree = resource.export_tree(mcomponents=["office", "fieldoffice", "hq"])
+        resource.export_tree(mcomponents=["office", "fieldoffice", "hq"])
         assertTrue(resource.components.office._length > 0)
         assertTrue(resource.components.fieldoffice._length is None)
         assertTrue(resource.components.hq._length is None)
@@ -3298,7 +3308,6 @@ class ResourceDeleteTests(unittest.TestCase):
 
         assertEqual = self.assertEqual
         assertNotEqual = self.assertNotEqual
-        assertTrue = self.assertTrue
         assertFalse = self.assertFalse
 
         s3db = current.s3db
@@ -3534,7 +3543,6 @@ class ResourceDeleteTests(unittest.TestCase):
 
         assertEqual = self.assertEqual
         assertNotEqual = self.assertNotEqual
-        assertTrue = self.assertTrue
         assertFalse = self.assertFalse
 
         s3db = current.s3db

@@ -54,8 +54,8 @@ import re
 from collections import OrderedDict
 
 from gluon import current, URL, A, DIV, FORM, INPUT, LABEL, OPTION, SELECT, \
-                  SPAN, TABLE, TAG, TBODY, IS_EMPTY_OR, IS_FLOAT_IN_RANGE, \
-                  IS_INT_IN_RANGE, IS_IN_SET
+                  SPAN, TABLE, TAG, TBODY, \
+                  IS_IN_SET
 from gluon.storage import Storage
 from gluon.tools import callback
 
@@ -1225,7 +1225,7 @@ class S3SliderFilter(S3RangeFilter):
             @param resource: the S3Resource
         """
 
-        minimum, maximum, empty = self._options(resource)
+        minimum, maximum = self._options(resource)[:2]
 
         attr = self._attr(resource)
         options = {attr["_id"]: {"min": minimum,
