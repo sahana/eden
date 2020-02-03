@@ -599,7 +599,7 @@ def do_js(minimize, do_gis = False, warnings = True):
         if use_compressor == "closure":
             # Suppress strict-mode errors
             minimize_ = lambda stream: minimize(stream,
-                                                extra_params="--strict_mode_input=false",
+                                                extra_params = "--strict_mode_input=false",
                                                 )
         else:
             minimize_ = minimize
