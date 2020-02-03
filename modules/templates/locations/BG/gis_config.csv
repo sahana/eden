@@ -1,0 +1,3 @@
+UUID,Name,OU,OU Type,Region Country,Default Country,Default L1,Default L2,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Marker,WMS Browser
+SITE_DEFAULT,Default,,,,BG,,,7,42.3382,24.5507,900913,41,45,22,30,,
+,BG,,,BG,BG,,,7,42.3382,24.5507,900913,41,45,22,30,,
