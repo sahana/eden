@@ -4,32 +4,30 @@ from gluon import current
 
 def config(settings):
     """
-        Template settings for Ecuador
+        Template settings for Germany
         - designed to be used in a Cascade with an application template
     """
 
     #T = current.T
 
     # Pre-Populate
-    settings.base.prepopulate.append("locations/EC")
+    settings.base.prepopulate.append("locations/DE")
 
     # Restrict to specific country/countries
-    settings.gis.countries.append("EC")
+    settings.gis.countries.append("DE")
     # Dosable the Postcode selector in the LocationSelector
     #settings.gis.postcode_selector = False
 
     # L10n (Localization) settings
-    settings.L10n.languages["es"] = "Spanish"
-    settings.L10n.languages["qug"] = "Kichwa" # Chimborazo Highland
-    settings.L10n.languages["jiv"] = "Shuar"
+    settings.L10n.languages["de"] = "German"
     # Default Language (put this in custom template if-required)
-    #settings.L10n.default_language = "es"
+    #settings.L10n.default_language = "de"
     # Default timezone for users
-    settings.L10n.timezone = "America/Guayaquil"
+    settings.L10n.timezone = "Europe/Berlin"
     # Default Country Code for telephone numbers
-    settings.L10n.default_country_code = 593
+    settings.L10n.default_country_code = 49
 
-    settings.fin.currencies["USD"] = "United States Dollars"
-    settings.fin.currency_default = "USD"
+    settings.fin.currencies["EUR"] = "Euros"
+    settings.fin.currency_default = "EUR"
 
 # END =========================================================================
