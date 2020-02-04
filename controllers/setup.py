@@ -112,10 +112,10 @@ def deployment():
 
                     from s3 import S3SQLCustomForm
 
-                    if r.record.cloud_id:
+                    deployment = r.record
+                    if deployment.cloud_id:
                         # Assume AWS for now
-                        crud_form = S3SQLCustomForm("deployment_id",
-                                                    "name",
+                        crud_form = S3SQLCustomForm("name",
                                                     "host_ip",
                                                     "role",
                                                     "remote_user",
@@ -140,8 +140,7 @@ def deployment():
                         # No Cloud
                         f = s3db.setup_server.host_ip
                         f.requires = f.requires.other # IP is required
-                        crud_form = S3SQLCustomForm("deployment_id",
-                                                    "name",
+                        crud_form = S3SQLCustomForm("name",
                                                     "host_ip",
                                                     "role",
                                                     "remote_user",
@@ -160,11 +159,43 @@ def deployment():
 
                     s3db.configure("setup_server",
                                    crud_form = crud_form,
+                                   deletable = False, # currently we just support a single server per deployment with Role 'all'
+                                   insertable = False, # currently we just support a single server per deployment with Role 'all'
                                    list_fields = list_fields,
                                    )
 
+                    # Has this deployment got a deployed instance?
+                    itable = s3db.setup_instance
+                    query = (itable.deployment_id == deployment.id) & \
+                            (itable.task_id != None)
+                    instances = db(query).select(itable.id)
+                    if len(instances):
+                        # Prevent editing fields
+                        stable = s3db.setup_server
+                        stable.name.writable = False # @ToDo: Allow switching post-deployment
+                        stable.host_ip.writable = False # @ToDo: Allow switching post-deployment
+                        if deployment.cloud_id:
+                            # Assume AWS for now
+                            astable = s3db.setup_aws_server
+                            astable.region.writable = False # @ToDo: Allow switching post-deployment
+                            astable.instance_type.writable = False # @ToDo: Allow switching post-deployment (Highest Priority)
+                            astable.image.writable = False # @ToDo: Allow switching post-deployment
+                            astable.security_group.writable = False # @ToDo: Allow switching post-deployment
+
                 elif cname == "instance":
-                    if r.method in (None, "create"):
+                    if r.component_id:
+                        itable = db.setup_instance
+                        crecord = db(itable.id == r.component_id).select(itable.task_id,
+                                                                         limitby = (0, 1)
+                                                                         ).first()
+                        if crecord.task_id is not None:
+                            # Prevent editing fields
+                            itable.type.writable = False # @ToDo: Allow switching post-deployment
+                            itable.url.writable = False # @ToDo: Allow switching post-deployment
+                            #itable.sender.writable = False # Changes handled in setup_instance_update_onaccept
+                            itable.start.writable = False # @ToDo: Changes handled in setup_instance_update_onaccept
+
+                    elif r.method in (None, "create"):
                         itable = db.setup_instance
                         # Additional instances off by default
                         itable.start.default = False
@@ -274,6 +305,28 @@ def deployment():
                 s3db.configure("setup_deployment",
                                crud_form = crud_form,
                                )
+            else:
+                # Has this deployment got a deployed instance?
+                itable = s3db.setup_instance
+                query = (itable.deployment_id == r.id) & \
+                        (itable.task_id != None)
+                instances = db(query).select(itable.id)
+                if len(instances):
+                    # Prevent editing fields
+                    table = s3db.setup_deployment
+                    table.repo_url.writable = False # @ToDo: Allow switching post-deployment (Highest Priority)
+                    table.repo_url.comment = None
+                    table.country.writable = False # @ToDo: Allow switching post-deployment
+                    table.country.comment = None
+                    table.template.writable = False # @ToDo: Allow switching post-deployment
+                    table.template_manual.writable = False # @ToDo: Allow switching post-deployment
+                    table.template_manual.comment = None
+                    table.webserver_type.writable = False # @ToDo: Allow switching post-deployment
+                    table.webserver_type.comment = None
+                    table.db_type.writable = False # @ToDo: Allow switching post-deployment
+                    table.db_type.comment = None
+                    table.cloud_id.writable = False # @ToDo: Allow switching post-deployment
+                    table.dns_id.writable = False # @ToDo: Allow switching post-deployment
 
         return True
     s3.prep = prep
@@ -406,42 +459,29 @@ def server():
         if r.interactive:
             if r.record:
                 if not r.component:
+
+                    if r.method in ("check", "enable", "disable"):
+                        return True
+
+                    deployment_id = r.record.deployment_id
+                    if deployment_id:
+                        # Open on Deployment Tab
+                        redirect(URL(c="setup", f="deployment",
+                                     args = [deployment_id, "server", r.id],
+                                     ))
+
+                    # 'External' servers just added for Monitoring
                     from s3 import S3SQLCustomForm
-
-                    dtable = s3db.setup_deployment
-                    deployment = db(dtable.id == r.record.deployment_id).select(dtable.cloud_id,
-                                                                                limitby = (0, 1)
-                                                                                ).first()
-
-                    if deployment and deployment.cloud_id:
-                        # Assume AWS for now
-                        crud_form = S3SQLCustomForm("deployment_id",
-                                                    "name",
-                                                    "host_ip",
-                                                    "role",
-                                                    "remote_user",
-                                                    "private_key",
-                                                    (T("AWS Region"), "aws_server.region"),
-                                                    (T("AWS Instance Type"), "aws_server.instance_type"),
-                                                    (T("AWS Image"), "aws_server.image"),
-                                                    (T("AWS Security Group"), "aws_server.security_group"),
-                                                    (T("AWS Instance ID"), "aws_server.instance_id"),
-                                                    (T("Monitor"), "monitor_server.enabled"),
-                                                    "monitor_server.status",
-                                                    )
-                    else:
-                        # No Cloud
-                        f = s3db.setup_server.host_ip
-                        f.requires = f.requires.other # IP is required
-                        crud_form = S3SQLCustomForm("deployment_id",
-                                                    "name",
-                                                    "host_ip",
-                                                    "role",
-                                                    "remote_user",
-                                                    "private_key",
-                                                    (T("Monitor"), "monitor_server.enabled"),
-                                                    "monitor_server.status",
-                                                    )
+                    f = s3db.setup_server.host_ip
+                    f.requires = f.requires.other # IP is required
+                    crud_form = S3SQLCustomForm("name",
+                                                "host_ip",
+                                                "role",
+                                                "remote_user",
+                                                "private_key",
+                                                (T("Monitor"), "monitor_server.enabled"),
+                                                "monitor_server.status",
+                                                )
 
                     s3db.configure("setup_server",
                                    crud_form = crud_form,
@@ -449,10 +489,11 @@ def server():
 
             else:
                 # No Cloud in create form
+                # - we don't deploy Servers except within Deployments
                 from s3 import S3SQLCustomForm
                 f = s3db.setup_server.host_ip
                 f.requires = f.requires.other # IP is required
-                crud_form = S3SQLCustomForm("deployment_id",
+                crud_form = S3SQLCustomForm(#"deployment_id",
                                             "name",
                                             "host_ip",
                                             "role",
@@ -482,27 +523,41 @@ def server():
     def postp(r, output):
         if r.interactive and not r.id:
             # Normal Action Buttons
-            s3_action_buttons(r)
+            #s3_action_buttons(r)
             # Custom Action Buttons
-            table = s3db.setup_monitor_server
-            rows = db(table.deleted == False).select(table.server_id,
-                                                     table.enabled,
+            table = s3db.setup_server
+            mtable = s3db.setup_monitor_server
+            rows = db(table.deleted == False).select(table.id,
+                                                     table.deployment_id,
+                                                     mtable.enabled,
+                                                     left = mtable.on(mtable.server_id == table.id),
                                                      )
-            restrict_e = [str(row.server_id) for row in rows if row.enabled is False]
-            restrict_d = [str(row.server_id) for row in rows if row.enabled is True]
-            s3.actions += [{"url": URL(args = ["[id]", "enable"]),
-                            "_class": "action-btn",
-                            "label": s3_str(T("Enable")),
-                            "restrict": restrict_e,
-                            },
-                           {"url": URL(args = ["[id]", "disable"]),
-                            "_class": "action-btn",
-                            "label": s3_str(T("Disable")),
-                            "restrict": restrict_d,
-                            },
-                           ]
+            #restrict_deployment = [str(row.id) for row in rows if row["setup_server.deployment_id"] is not None]
+            restrict_external = [str(row["setup_server.id"]) for row in rows if row["setup_server.deployment_id"] is None]
+            restrict_enable = [str(row["setup_server.id"]) for row in rows if row.get("setup_monitor_server.enabled") is not True]
+            restrict_disable = [str(row["setup_server.id"]) for row in rows if row.get("setup_monitor_server.enabled") is True]
+            s3.actions = [{"url": URL(args = "[id]"),
+                           "_class": "action-btn",
+                           "label": s3_str(T("Open")),
+                           },
+                          {"url": URL(args = ["[id]", "delete"]),
+                           "_class": "delete-btn",
+                           "label": s3_str(T("Delete")),
+                           "restrict": restrict_external,
+                           },
+                          {"url": URL(args = ["[id]", "enable"]),
+                           "_class": "action-btn",
+                           "label": s3_str(T("Enable")),
+                           "restrict": restrict_enable,
+                           },
+                          {"url": URL(args = ["[id]", "disable"]),
+                           "_class": "action-btn",
+                           "label": s3_str(T("Disable")),
+                           "restrict": restrict_disable,
+                           },
+                          ]
             if not s3task._is_alive():
-                # No Scheduler Running
+                # No Scheduler Running (e.g. Windows Laptop)
                 s3.actions.append({"url": URL(args = ["[id]", "check"]),
                                    "_class": "action-btn",
                                    "label": s3_str(T("Check")),

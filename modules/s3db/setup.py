@@ -328,9 +328,10 @@ class S3AWSCloudModel(S3CloudModel):
                            default = "default",
                            #label = T("Security Group"),
                            ),
-                     # Normally populated automatically:
                      Field("instance_id",
                            #label = T("Instance ID"),
+                           # Normally populated automatically:
+                           writable = False,
                            ),
                      *s3_meta_fields())
 
@@ -777,7 +778,6 @@ class S3SetupModel(S3Model):
                                                            )
                                          ),
                            ),
-                     # @ToDo: Action post-deployment changes
                      Field("start", "boolean",
                            default = True, # default = False in Controller for additional instances
                            label = T("Start at Boot"),
@@ -829,6 +829,7 @@ class S3SetupModel(S3Model):
                                  "log_file",
                                  ],
                   ondelete = self.setup_instance_ondelete,
+                  update_onaccept = self.setup_instance_update_onaccept,
                   )
 
         set_method("setup", "deployment",
@@ -919,7 +920,7 @@ class S3SetupModel(S3Model):
         set_method("setup", "deployment",
                    component_name = "setting",
                    method = "apply",
-                   action = self.setup_setting_apply,
+                   action = self.setup_setting_apply_interactive,
                    )
 
         # ---------------------------------------------------------------------
@@ -1064,8 +1065,10 @@ dropdown.change(function() {
 
         if form.accepts(r.post_vars, current.session):
             # Processs Form
-            result = self.setup_settings_apply(r.id, form.vars)
+            result = setup_settings_apply(r.id, form.vars)
             if result:
+                response.error = result
+            else:
                 response.confirmation = T("Settings Applied")
 
         current.response.view = "simple.html"
@@ -1351,7 +1354,9 @@ dropdown.change(function() {
                     protocol = "http"
                 # @ToDo Check that ip_addr is correct
                 #       - if host_ip == "127.0.0.1" then we can check the contents
-                if host_ip != "127.0.0.1":
+                if host_ip == "127.0.0.1":
+                    connection = "local"
+                else:
                     # We may wish to administer via a private IP, so shouldn't do this:
                     #if protocol == "https" and ip_addr != host_ip:
                     #    current.session.warning = current.T("Deployment will not have SSL: URL doesn't match server IP Address")
@@ -1378,8 +1383,6 @@ dropdown.change(function() {
                                                 },
                                                ],
                                      })
-                else:
-                    connection = "local"
 
             # Deploy to Server
             playbook.append({"hosts": host_ip,
@@ -1652,214 +1655,61 @@ dropdown.change(function() {
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def setup_setting_apply(r, **attr):
+    def setup_instance_update_onaccept(form):
+        """
+            Process changed fields on server
+        """
+
+        form_vars_get = form.vars.get
+        record = form.record
+
+        sender = form_vars_get("sender")
+        if sender != record.sender:
+            # Adjust the Instance's Email Sender
+            instance_id = form_vars_get("id")
+            stable = current.s3db.setup_setting
+            query = (stable.instance_id == instance_id) & \
+                    (stable.setting == "mail.sender")
+            setting = current.db(query).select(stable.id,
+                                               limitby = (0, 1)
+                                               ).first()
+            if setting:
+                setting_id = setting.id
+                setting.update_record(new_value = sender)
+            else:
+                setting_id = stable.insert(deployment_id = record.deployment_id,
+                                           instance_id = instance_id,
+                                           setting = "mail.sender",
+                                           new_value = sender,
+                                           )
+            setup_setting_apply(setting_id)
+
+        #if form_vars_get("start") is True:
+        #    if record.start is False:
+        #        # Start Instance at Boot
+        #        pass
+        #else if record.start is True:
+        #    # Stop Instance at Boot
+        #    pass
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def setup_setting_apply_interactive(r, **attr):
         """
             Custom interactive S3Method to Apply a Setting to an instance
             via models/000_config.py
         """
 
-        db = current.db
-        s3db = current.s3db
+        result = setup_setting_apply(r.component_id)
 
-        deployment_id = r.id
-        setting_id = r.component_id
-
-        stable = s3db.setup_setting
-        setting = db(stable.id == setting_id).select(stable.id,
-                                                     stable.instance_id,
-                                                     stable.setting,
-                                                     stable.new_value,
-                                                     limitby = (0, 1)
-                                                     ).first()
-        new_value = setting.new_value
-        instance_id = setting.instance_id
-
-        itable = s3db.setup_instance
-        instance = db(itable.id == instance_id).select(itable.type,
-                                                       limitby = (0, 1)
-                                                       ).first()
-        instance_type = INSTANCE_TYPES[instance.type]
-
-        # Lookup Server Details
-        # @ToDo: Support multiple Eden servers used as Load-balancers
-        svtable = s3db.setup_server
-        query = (svtable.deployment_id == deployment_id) & \
-                (svtable.role.belongs((1, 4)))
-        server = db(query).select(svtable.host_ip,
-                                  svtable.remote_user,
-                                  svtable.private_key,
-                                  limitby = (0, 1)
-                                  ).first()
-        host_ip = server.host_ip
-        remote_user = server.remote_user
-        private_key = server.private_key
-
-        # Build Playbook data structure:
-        the_setting = setting.setting
-        if new_value is True or new_value is False:
-            new_line = "settings.%s = %s" % (the_setting, new_value)
+        if result:
+            current.session.error = result
         else:
-            # @ToDo: Handle lists/dicts (load into JSONS3?)
-            new_line = 'settings.%s = "%s"' % (the_setting, new_value)
-
-        appname = r.application
-
-        playbook = [{"hosts": host_ip,
-                     # @ToDo: "smart" & SSH Keys for non-localhost
-                     "connection": "local",
-                     "remote_user": remote_user,
-                     "become_method": "sudo",
-                     #"become_user": "root",
-                     "tasks": [{"name": "Edit 000_config.py",
-                                "lineinfile": {"dest": "/home/%s/applications/%s/models/000_config.py" % (instance_type, appname),
-                                               "regexp": "^settings.%s =" % the_setting,
-                                               "line": new_line,
-                                               "state": "present",
-                                               },
-                                },
-                               # @ToDo: Handle case where need to restart multiple webservers
-                               {"name": "Compile & Restart WebServer",
-                                #"command": "sudo -H -u web2py python web2py.py -S %(appname)s -M -R applications/%(appname)s/static/scripts/tools/compile.py" % {"appname": appname},
-                                #"args": {"chdir": "/home/%s" % instance_type,
-                                #         },
-                                # We don't want to restart the UWSGI process running the Task until after the Task has completed
-                                "command": 'echo "/usr/local/bin/compile %s" | at now + 1 minutes' % instance_type,
-                                "become": "yes",
-                                },
-                               ]
-                     },
-                    ]
-
-        # Write Playbook
-        name = "apply_%d" % int(time.time())
-        task_vars = setup_write_playbook("%s.yml" % name,
-                                         playbook,
-                                         )
-
-        # Run the Playbook
-        task_vars["instance_id"] = instance_id
-        current.s3task.schedule_task(name,
-                                     vars = task_vars,
-                                     function_name = "setup_run_playbook",
-                                     repeats = None,
-                                     timeout = 6000,
-                                     #sync_output = 300
-                                     )
-
-        # Update the DB to show that the setting has been applied
-        # @ToDo: Do this as a callback from the async task
-        setting.update_record(current_value = new_value,
-                              new_value = None,
-                              )
-
-        current.session.confirmation = current.T("Setting Applied")
+            current.session.confirmation = current.T("Setting Applied")
 
         redirect(URL(c="setup", f="deployment",
-                     args = [deployment_id, "setting"]),
+                     args = [r.id, "setting"]),
                      )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def setup_settings_apply(instance_id, settings):
-        """
-            Method to Apply Settings to an instance
-            via models/000_config.py
-        """
-
-        db = current.db
-        s3db = current.s3db
-        appname = current.request.application
-
-        itable = s3db.setup_instance
-        instance = db(itable.id == instance_id).select(itable.id,
-                                                       itable.deployment_id,
-                                                       itable.type,
-                                                       limitby = (0, 1)
-                                                       ).first()
-        deployment_id = instance.deployment_id
-        instance_type = INSTANCE_TYPES[instance.type]
-
-        # Lookup Server Details
-        # @ToDo: Support multiple Eden servers used as Load-balancers
-        svtable = s3db.setup_server
-        query = (svtable.deployment_id == deployment_id) & \
-                (svtable.role.belongs((1, 4)))
-        server = db(query).select(svtable.host_ip,
-                                  svtable.remote_user,
-                                  svtable.private_key,
-                                  limitby = (0, 1)
-                                  ).first()
-        host_ip = server.host_ip
-        remote_user = server.remote_user
-        private_key = server.private_key
-
-        # Build Playbook data structure:
-        tasks = []
-        tappend = tasks.append
-        for setting in settings:
-            the_setting = setting.replace("_", ".", 1)
-            new_value = settings[setting]
-            if new_value == "True" or new_value == "False":
-                new_line = "settings.%s = %s" % (the_setting, new_value)
-            else:
-                # @ToDo: Handle lists/dicts (load into JSONS3?)
-                new_line = 'settings.%s = "%s"' % (the_setting, new_value)
-            tappend({"name": "Edit 000_config.py",
-                     "lineinfile": {"dest": "/home/%s/applications/%s/models/000_config.py" % (instance_type, appname),
-                                    "regexp": "^settings.%s =" % the_setting,
-                                    "line": new_line,
-                                    "state": "present",
-                                    },
-                     })
-
-        # @ToDo: Handle case where need to restart multiple webservers
-        tappend({"name": "Compile & Restart WebServer",
-                 #"command": "sudo -H -u web2py python web2py.py -S %(appname)s -M -R applications/%(appname)s/static/scripts/tools/compile.py" % {"appname": appname},
-                 #"args": {"chdir": "/home/%s" % instance_type,
-                 #         },
-                 # We don't want to restart the UWSGI process running the Task until after the Task has completed
-                 "command": 'echo "/usr/local/bin/compile %s" | at now + 1 minutes' % instance_type,
-                 "become": "yes",
-                 })
-
-        playbook = [{"hosts": host_ip,
-                     # @ToDo: "smart" & SSH Keys for non-localhost
-                     "connection": "local",
-                     "remote_user": remote_user,
-                     "become_method": "sudo",
-                     #"become_user": "root",
-                     "tasks": tasks,
-                     },
-                    ]
-
-        # Write Playbook
-        name = "apply_%d" % int(time.time())
-        task_vars = setup_write_playbook("%s.yml" % name,
-                                         playbook,
-                                         )
-
-        # Run the Playbook
-        task_vars["instance_id"] = instance_id
-        current.s3task.schedule_task(name,
-                                     vars = task_vars,
-                                     function_name = "setup_run_playbook",
-                                     repeats = None,
-                                     timeout = 6000,
-                                     #sync_output = 300
-                                     )
-
-        # Update the DB to show that the settings have been applied
-        # @ToDo: Do this as a callback from the async task
-        instance.update_record(configured = True)
-        stable = s3db.setup_setting
-        q = (stable.instance_id == instance_id)
-        for setting in settings:
-            the_setting = setting.replace("_", ".", 1)
-            new_value = settings[setting]
-            db(q & (stable.setting == the_setting)).update(current_value = new_value,
-                                                           new_value = None)
-
-        return True
 
 # =============================================================================
 class S3SetupMonitorModel(S3Model):
@@ -2293,12 +2143,17 @@ def setup_monitor_server_enable_interactive(r, **attr):
         S3Method for interactive requests
     """
 
-    table = current.s3db.setup_monitor_server
-    monitor_server = current.db(table.server_id == r.id).select(table.id,
-                                                                limitby = (0, 1)
-                                                                ).first()
+    server_id = r.id
 
-    result = setup_monitor_server_enable(monitor_server.id)
+    table = current.s3db.setup_monitor_server
+    monitor_server = current.db(table.server_id == server_id).select(table.id,
+                                                                     limitby = (0, 1)
+                                                                     ).first()
+    if monitor_server:
+        monitor_server_id = monitor_server.id
+    else:
+        monitor_server_id = table.insert(server_id = server_id)
+    result = setup_monitor_server_enable(monitor_server_id)
     current.session.confirmation = result
     redirect(URL(f = "server"))
 
@@ -3090,9 +2945,13 @@ def setup_instance_method(instance_id, method="start"):
             - called by interactive method to start/stop
     """
 
-    # Read Data
     db = current.db
     s3db = current.s3db
+    folder = current.request.folder
+
+    playbook = []
+
+    # Get Instance details
     itable = s3db.setup_instance
     instance = db(itable.id == instance_id).select(itable.deployment_id,
                                                    itable.type,
@@ -3111,31 +2970,51 @@ def setup_instance_method(instance_id, method="start"):
                               limitby = (0, 1)
                               ).first()
     host_ip = server.host_ip
+    if host_ip == "127.0.0.1":
+        connection = "local"
+    else:
+        private_key = server.private_key
+        if not private_key:
+            # Abort
+            return(current.T("Method failed: SSH Key needed when running away from localhost"))
+
+        connection = "smart"
+        # Add instance to host group (to associate private_key)
+        host_ip = "launched"
+        private_key = os.path.join(folder, "uploads", private_key)
+        playbook.append({"hosts": "localhost",
+                         "connection": "local",
+                         "gather_facts": "no",
+                         "tasks": [{"add_host": {"hostname": host_ip,
+                                                 "groupname": "launched",
+                                                 "ansible_ssh_private_key_file": private_key,
+                                                 },
+                                    },
+                                   ],
+                         })
 
     # Get Deployment details
     dtable = s3db.setup_deployment
     deployment = db(dtable.id == deployment_id).select(dtable.db_type,
                                                        dtable.webserver_type,
-                                                       limitby=(0, 1)
+                                                       limitby = (0, 1)
                                                        ).first()
 
     # Build Playbook data structure
-    roles_path = os.path.join(current.request.folder, "private", "eden_deploy", "roles")
+    roles_path = os.path.join(folder, "private", "eden_deploy", "roles")
 
-    playbook = [{"hosts": host_ip,
-                 # @ToDo: "smart" & SSH Keys for non-localhost
-                 "connection": "local",
-                 "remote_user": server.remote_user,
-                 "become_method": "sudo",
-                 #"become_user": "root",
-                 "vars": {"db_type": DB_SERVERS[deployment.db_type],
-                          "web_server": WEB_SERVERS[deployment.webserver_type],
-                          "type": INSTANCE_TYPES[instance.type],
-                          },
-                 "roles": [{ "role": "%s/%s" % (roles_path, method) },
-                           ]
-                 },
-                ]
+    playbook.append({"hosts": host_ip,
+                     "connection": connection,
+                     "remote_user": server.remote_user,
+                     "become_method": "sudo",
+                     #"become_user": "root",
+                     "vars": {"db_type": DB_SERVERS[deployment.db_type],
+                              "web_server": WEB_SERVERS[deployment.webserver_type],
+                              "type": INSTANCE_TYPES[instance.type],
+                              },
+                     "roles": [{ "role": "%s/%s" % (roles_path, method) },
+                               ]
+                     })
 
     # Write Playbook
     name = "%s_%d" % (method, int(time.time()))
@@ -3152,6 +3031,247 @@ def setup_instance_method(instance_id, method="start"):
                                  timeout = 6000,
                                  #sync_output = 300
                                  )
+
+# =============================================================================
+def setup_setting_apply(setting_id):
+    """
+        Apply a Setting to an instance via models/000_config.py
+
+        CLI API for shell scripts & to be called by S3Method
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    playbook = []
+
+    # Lookup Setting Details
+    stable = s3db.setup_setting
+    setting = db(stable.id == setting_id).select(stable.id,
+                                                 stable.deployment_id,
+                                                 stable.instance_id,
+                                                 stable.setting,
+                                                 stable.new_value,
+                                                 limitby = (0, 1)
+                                                 ).first()
+
+    # Lookup Server Details
+    # @ToDo: Support multiple Eden servers used as Load-balancers
+    svtable = s3db.setup_server
+    query = (svtable.deployment_id == setting.deployment_id) & \
+            (svtable.role.belongs((1, 4)))
+    server = db(query).select(svtable.host_ip,
+                              svtable.remote_user,
+                              svtable.private_key,
+                              limitby = (0, 1)
+                              ).first()
+    host_ip = server.host_ip
+    if host_ip == "127.0.0.1":
+        connection = "local"
+    else:
+        private_key = server.private_key
+        if not private_key:
+            # Abort
+            return(current.T("Apply failed: SSH Key needed when applying away from localhost"))
+
+        connection = "smart"
+        # Add instance to host group (to associate private_key)
+        host_ip = "launched"
+        private_key = os.path.join(current.request.folder, "uploads", private_key)
+        playbook.append({"hosts": "localhost",
+                         "connection": "local",
+                         "gather_facts": "no",
+                         "tasks": [{"add_host": {"hostname": host_ip,
+                                                 "groupname": "launched",
+                                                 "ansible_ssh_private_key_file": private_key,
+                                                 },
+                                    },
+                                   ],
+                         })
+
+    appname = "eden" # @ToDo: Allow this to be configurable
+
+    new_value = setting.new_value
+    instance_id = setting.instance_id
+
+    itable = s3db.setup_instance
+    instance = db(itable.id == instance_id).select(itable.type,
+                                                   limitby = (0, 1)
+                                                   ).first()
+    instance_type = INSTANCE_TYPES[instance.type]
+
+    # Build Playbook data structure:
+    the_setting = setting.setting
+    if new_value is True or new_value is False:
+        new_line = "settings.%s = %s" % (the_setting, new_value)
+    else:
+        # @ToDo: Handle lists/dicts (load into JSONS3?)
+        new_line = 'settings.%s = "%s"' % (the_setting, new_value)
+
+    playbook.append({"hosts": host_ip,
+                     "connection": connection,
+                     "remote_user": server.remote_user,
+                     "become_method": "sudo",
+                     #"become_user": "root",
+                     "tasks": [{"name": "Edit 000_config.py",
+                                "become": "yes",
+                                "lineinfile": {"dest": "/home/%s/applications/%s/models/000_config.py" % (instance_type, appname),
+                                               "regexp": "^settings.%s =" % the_setting,
+                                               "line": new_line,
+                                               "state": "present",
+                                               },
+                                },
+                               # @ToDo: Handle case where need to restart multiple webservers
+                               {"name": "Compile & Restart WebServer",
+                                # We don't want to restart the UWSGI process running the Task until after the Task has completed
+                                "command": 'echo "/usr/local/bin/compile %s" | at now + 1 minutes' % instance_type,
+                                "become": "yes",
+                                },
+                               ]
+                     })
+
+    # Write Playbook
+    name = "apply_%d" % int(time.time())
+    task_vars = setup_write_playbook("%s.yml" % name,
+                                     playbook,
+                                     )
+
+    # Run the Playbook
+    task_vars["instance_id"] = instance_id
+    current.s3task.schedule_task(name,
+                                 vars = task_vars,
+                                 function_name = "setup_run_playbook",
+                                 repeats = None,
+                                 timeout = 6000,
+                                 #sync_output = 300
+                                 )
+
+    # Update the DB to show that the setting has been applied
+    # @ToDo: Do this as a callback from the async task
+    setting.update_record(current_value = new_value,
+                          new_value = None,
+                          )
+
+# =============================================================================
+def setup_settings_apply(instance_id, settings):
+    """
+        Method to Apply Settings to an instance
+        via models/000_config.py
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    playbook = []
+
+    # Lookup Instance details
+    itable = s3db.setup_instance
+    instance = db(itable.id == instance_id).select(itable.id,
+                                                   itable.deployment_id,
+                                                   itable.type,
+                                                   limitby = (0, 1)
+                                                   ).first()
+    deployment_id = instance.deployment_id
+
+    # Lookup Server Details
+    # @ToDo: Support multiple Eden servers used as Load-balancers
+    svtable = s3db.setup_server
+    query = (svtable.deployment_id == deployment_id) & \
+            (svtable.role.belongs((1, 4)))
+    server = db(query).select(svtable.host_ip,
+                              svtable.remote_user,
+                              svtable.private_key,
+                              limitby = (0, 1)
+                              ).first()
+    host_ip = server.host_ip
+    if host_ip == "127.0.0.1":
+        connection = "local"
+    else:
+        private_key = server.private_key
+        if not private_key:
+            # Abort
+            return(current.T("Apply failed: SSH Key needed when applying away from localhost"))
+
+        connection = "smart"
+        # Add instance to host group (to associate private_key)
+        host_ip = "launched"
+        private_key = os.path.join(current.request.folder, "uploads", private_key)
+        playbook.append({"hosts": "localhost",
+                         "connection": "local",
+                         "gather_facts": "no",
+                         "tasks": [{"add_host": {"hostname": host_ip,
+                                                 "groupname": "launched",
+                                                 "ansible_ssh_private_key_file": private_key,
+                                                 },
+                                    },
+                                   ],
+                         })
+
+    appname = "eden" # @ToDo: Allow this to be configurable
+
+    instance_type = INSTANCE_TYPES[instance.type]
+
+    # Build List of Tasks
+    tasks = []
+    tappend = tasks.append
+    for setting in settings:
+        the_setting = setting.replace("_", ".", 1)
+        new_value = settings[setting]
+        if new_value == "True" or new_value == "False":
+            new_line = "settings.%s = %s" % (the_setting, new_value)
+        else:
+            # @ToDo: Handle lists/dicts (load into JSONS3?)
+            new_line = 'settings.%s = "%s"' % (the_setting, new_value)
+        tappend({"name": "Edit 000_config.py",
+                 "become": "yes",
+                 "lineinfile": {"dest": "/home/%s/applications/%s/models/000_config.py" % (instance_type, appname),
+                                "regexp": "^settings.%s =" % the_setting,
+                                "line": new_line,
+                                "state": "present",
+                                },
+                 })
+
+    # @ToDo: Handle case where need to restart multiple webservers
+    tappend({"name": "Compile & Restart WebServer",
+             # We don't want to restart the UWSGI process running the Task until after the Task has completed
+             "command": 'echo "/usr/local/bin/compile %s" | at now + 1 minutes' % instance_type,
+             "become": "yes",
+             })
+
+    playbook.append({"hosts": host_ip,
+                     "connection": connection,
+                     "remote_user": server.remote_user,
+                     "become_method": "sudo",
+                     #"become_user": "root",
+                     "tasks": tasks,
+                     })
+
+    # Write Playbook
+    name = "apply_%d" % int(time.time())
+    task_vars = setup_write_playbook("%s.yml" % name,
+                                     playbook,
+                                     )
+
+    # Run the Playbook
+    task_vars["instance_id"] = instance_id
+    current.s3task.schedule_task(name,
+                                 vars = task_vars,
+                                 function_name = "setup_run_playbook",
+                                 repeats = None,
+                                 timeout = 6000,
+                                 #sync_output = 300
+                                 )
+
+    # Update the DB to show that the settings have been applied
+    # @ToDo: Do this as a callback from the async task
+    instance.update_record(configured = True)
+    stable = s3db.setup_setting
+    q = (stable.instance_id == instance_id)
+    for setting in settings:
+        the_setting = setting.replace("_", ".", 1)
+        new_value = settings[setting]
+        db(q & (stable.setting == the_setting)).update(current_value = new_value,
+                                                       new_value = None)
 
 # =============================================================================
 class Storage2(Storage):
