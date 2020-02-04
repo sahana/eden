@@ -1710,9 +1710,12 @@ dropdown.change(function() {
             else:
                 # Nothing more to do
                 return
-        else if record.start is True:
+        elif record.start is True:
             # Stop Instance at Boot
             command = "disable"
+        else:
+            # Nothing more to do
+            return
 
         playbook = []
 
