@@ -662,6 +662,10 @@ class S3SetupModel(S3Model):
                      *s3_meta_fields()
                      )
 
+        configure(tablename,
+                  create_onaccept = self.setup_server_create_onaccept,
+                  )
+
         crud_strings[tablename] = Storage(
             label_create = T("Add Server"),
             title_display = T("Server Details"),
@@ -935,14 +939,7 @@ class S3SetupModel(S3Model):
         """
             New Deployment:
             - Assign a random DB password
-            - Configure localhost to have all tiers (for 1st deployment)
         """
-
-        db = current.db
-        s3db = current.s3db
-        table = s3db.setup_deployment
-
-        deployment_id = form.vars.id
 
         # Assign a random DB password
         chars = string.ascii_letters + string.digits + string.punctuation
@@ -955,7 +952,8 @@ class S3SetupModel(S3Model):
         # Ensure that \ isn't included as control characters can cause the settings.database.password to not match pgpass (e.g. \a -> ^G)
         chars = chars.replace("\\", "")
         password = "".join(random.choice(chars) for _ in range(12))
-        db(table.id == deployment_id).update(db_password = password)
+
+        current.db(current.s3db.setup_deployment.id == form.vars.id).update(db_password = password)
 
         current.session.information = current.T("Press 'Deploy' when you are ready")
 
@@ -965,7 +963,7 @@ class S3SetupModel(S3Model):
         """
             Return a Dict of Templates for the user to select from
 
-            @ToDo: Have the controller read this list from the remote repo
+            NB Controller reads this from remote repo...this is a fallback in case offline
         """
 
         file_path = os.path.join(current.request.folder, "modules", "templates", "templates.json")
@@ -973,6 +971,23 @@ class S3SetupModel(S3Model):
             templates = json.loads(file.read())
 
         return templates
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def setup_server_create_onaccept(form):
+        """
+            New Server:
+            - Enable Monitoring
+        """
+
+        server_id = form.vars.id
+        table = current.s3db.setup_monitor_server
+
+        exists = current.db(table.server_id == server_id).select(table.id,
+                                                                 limitby = (0, 1)
+                                                                 ).first()
+        if exists is None:
+            table.insert(server_id = server_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
