@@ -3147,7 +3147,8 @@ def setup_setting_apply(setting_id):
                                 "args": {"chdir": "/home/%s" % instance_type,
                                          },
                                 "become": "yes",
-                                "become_user": "web2py",
+                                # Admin scripts do this as root, so we need to be able to over-write
+                                #"become_user": "web2py",
                                 },
                                {"name": "Restart WebServer",
                                 # We don't want to restart the UWSGI process running the Task until after the Task has completed
@@ -3267,7 +3268,8 @@ def setup_settings_apply(instance_id, settings):
                "args": {"chdir": "/home/%s" % instance_type,
                         },
                "become": "yes",
-               "become_user": "web2py",
+               # Admin scripts do this as root, so we need to be able to over-write
+               #"become_user": "web2py",
                },
               # @ToDo: Handle case where need to restart multiple webservers
               {"name": "Restart WebServer",
