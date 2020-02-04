@@ -3115,6 +3115,10 @@ def setup_setting_apply(setting_id):
                                                    ).first()
     instance_type = INSTANCE_TYPES[instance.type]
 
+    # @ToDo: Lookup webserver_type from deployment once we support Apache
+    #service_name = "apache2"
+    service_name = "uwsgi-%s" % instance_type
+
     # Build Playbook data structure:
     the_setting = setting.setting
     if new_value is True or new_value is False:
@@ -3130,16 +3134,27 @@ def setup_setting_apply(setting_id):
                      #"become_user": "root",
                      "tasks": [{"name": "Edit 000_config.py",
                                 "become": "yes",
-                                "lineinfile": {"dest": "/home/%s/applications/%s/models/000_config.py" % (instance_type, appname),
+                                "lineinfile": {"dest": "/home/%s/applications/%s/models/000_config.py" % \
+                                                        (instance_type, appname),
                                                "regexp": "^settings.%s =" % the_setting,
                                                "line": new_line,
                                                "state": "present",
                                                },
                                 },
-                               # @ToDo: Handle case where need to restart multiple webservers
-                               {"name": "Compile & Restart WebServer",
+                               {"name": "Compile",
+                                "command": "python web2py.py -S %s -M -R applications/%s/static/scripts/tools/compile.py" % \
+                                                (appname, appname),
+                                "args": {"chdir": "/home/%s" % instance_type,
+                                         },
+                                "become": "yes",
+                                "become_user": "web2py",
+                                },
+                               {"name": "Restart WebServer",
                                 # We don't want to restart the UWSGI process running the Task until after the Task has completed
-                                "command": 'echo "/usr/local/bin/compile %s" | at now + 1 minutes' % instance_type,
+                                #"service": {"name": service_name,
+                                #            "state": "restarted",
+                                #            },
+                                "shell": 'echo "service %s restart" | at now + 1 minutes' % service_name
                                 "become": "yes",
                                 },
                                ]
@@ -3246,12 +3261,24 @@ def setup_settings_apply(instance_id, settings):
                                 },
                  })
 
-    # @ToDo: Handle case where need to restart multiple webservers
-    tappend({"name": "Compile & Restart WebServer",
-             # We don't want to restart the UWSGI process running the Task until after the Task has completed
-             "command": 'echo "/usr/local/bin/compile %s" | at now + 1 minutes' % instance_type,
-             "become": "yes",
-             })
+    tasks += [{"name": "Compile",
+               "command": "python web2py.py -S %s -M -R applications/%s/static/scripts/tools/compile.py" % \
+                            (appname, appname),
+               "args": {"chdir": "/home/%s" % instance_type,
+                        },
+               "become": "yes",
+               "become_user": "web2py",
+               },
+              # @ToDo: Handle case where need to restart multiple webservers
+              {"name": "Restart WebServer",
+               # We don't want to restart the UWSGI process running the Task until after the Task has completed
+               #"service": {"name": service_name,
+               #            "state": "restarted",
+               #            },
+               "shell": 'echo "service %s restart" | at now + 1 minutes' % service_name
+               "become": "yes",
+               },
+              ]
 
     playbook.append({"hosts": host_ip,
                      "connection": connection,
