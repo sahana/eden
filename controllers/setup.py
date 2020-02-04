@@ -512,6 +512,7 @@ def server():
                                ]
 
                 s3db.configure("setup_server",
+                               create_onaccept = None, # Handled by S3SQLCustomForm
                                crud_form = crud_form,
                                #insertable = False, # We want to allow monitoring of external hosts
                                list_fields = list_fields,
