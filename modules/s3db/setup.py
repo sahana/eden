@@ -3154,7 +3154,7 @@ def setup_setting_apply(setting_id):
                                 #"service": {"name": service_name,
                                 #            "state": "restarted",
                                 #            },
-                                "shell": 'echo "service %s restart" | at now + 1 minutes' % service_name
+                                "shell": 'echo "service %s restart" | at now + 1 minutes' % service_name,
                                 "become": "yes",
                                 },
                                ]
