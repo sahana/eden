@@ -193,7 +193,7 @@ def deployment():
                             itable.type.writable = False # @ToDo: Allow switching post-deployment
                             itable.url.writable = False # @ToDo: Allow switching post-deployment
                             #itable.sender.writable = False # Changes handled in setup_instance_update_onaccept
-                            itable.start.writable = False # @ToDo: Changes handled in setup_instance_update_onaccept
+                            #itable.start.writable = False # Changes handled in setup_instance_update_onaccept
 
                     elif r.method in (None, "create"):
                         itable = db.setup_instance

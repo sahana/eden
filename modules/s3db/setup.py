@@ -1675,37 +1675,124 @@ dropdown.change(function() {
             Process changed fields on server
         """
 
+        db = current.db
+        s3db = current.s3db
+
         form_vars_get = form.vars.get
         record = form.record
+        deployment_id = record.deployment_id
+        instance_id = form_vars_get("id")
 
         sender = form_vars_get("sender")
         if sender != record.sender:
             # Adjust the Instance's Email Sender
-            instance_id = form_vars_get("id")
-            stable = current.s3db.setup_setting
+            stable = s3db.setup_setting
             query = (stable.instance_id == instance_id) & \
                     (stable.setting == "mail.sender")
-            setting = current.db(query).select(stable.id,
-                                               limitby = (0, 1)
-                                               ).first()
+            setting = db(query).select(stable.id,
+                                       limitby = (0, 1)
+                                       ).first()
             if setting:
                 setting_id = setting.id
                 setting.update_record(new_value = sender)
             else:
-                setting_id = stable.insert(deployment_id = record.deployment_id,
+                setting_id = stable.insert(deployment_id = deployment_id,
                                            instance_id = instance_id,
                                            setting = "mail.sender",
                                            new_value = sender,
                                            )
             setup_setting_apply(setting_id)
 
-        #if form_vars_get("start") is True:
-        #    if record.start is False:
-        #        # Start Instance at Boot
-        #        pass
-        #else if record.start is True:
-        #    # Stop Instance at Boot
-        #    pass
+        if form_vars_get("start") is True:
+            if record.start is False:
+                # Start Instance at Boot
+                command = "enable"
+            else:
+                # Nothing more to do
+                return
+        else if record.start is True:
+            # Stop Instance at Boot
+            command = "disable"
+
+        playbook = []
+
+        # Lookup Server Details
+        svtable = s3db.setup_server
+        query = (svtable.deployment_id == deployment_id) & \
+                (svtable.role.belongs((1, 4)))
+        server = db(query).select(svtable.host_ip,
+                                  svtable.remote_user,
+                                  svtable.private_key,
+                                  limitby = (0, 1)
+                                  ).first()
+        host_ip = server.host_ip
+        if host_ip == "127.0.0.1":
+            connection = "local"
+        else:
+            private_key = server.private_key
+            if not private_key:
+                # Abort
+                current.T("Apply failed: SSH Key needed when applying away from localhost")
+                return
+
+            connection = "smart"
+            # Add instance to host group (to associate private_key)
+            host_ip = "launched"
+            private_key = os.path.join(current.request.folder, "uploads", private_key)
+            playbook.append({"hosts": "localhost",
+                             "connection": "local",
+                             "gather_facts": "no",
+                             "tasks": [{"add_host": {"hostname": host_ip,
+                                                     "groupname": "launched",
+                                                     "ansible_ssh_private_key_file": private_key,
+                                                     },
+                                        },
+                                       ],
+                             })
+
+        appname = "eden" # @ToDo: Allow this to be configurable
+
+        itable = s3db.setup_instance
+        instance = db(itable.id == instance_id).select(itable.type,
+                                                       limitby = (0, 1)
+                                                       ).first()
+        instance_type = INSTANCE_TYPES[instance.type]
+
+        # @ToDo: Lookup webserver_type from deployment once we support Apache
+
+        # Build Playbook data structure:
+        playbook.append({"hosts": host_ip,
+                         "connection": connection,
+                         "remote_user": server.remote_user,
+                         "become_method": "sudo",
+                         #"become_user": "root",
+                         "tasks": [{"name": "Modify Startup",
+                                    "command": "update-rc.d uwsgi-%s {{item}}" % instance_type,
+                                    "become": "yes",
+                                    "loop": ["%s 2" % command,
+                                             "%s 3" % command,
+                                             "%s 4" % command,
+                                             "%s 5" % command,
+                                             ],
+                                    },
+                                   ],
+                         })
+
+        # Write Playbook
+        name = "boot_%d" % int(time.time())
+        task_vars = setup_write_playbook("%s.yml" % name,
+                                         playbook,
+                                         )
+
+        # Run the Playbook
+        task_vars["instance_id"] = instance_id
+        current.s3task.schedule_task(name,
+                                     vars = task_vars,
+                                     function_name = "setup_run_playbook",
+                                     repeats = None,
+                                     timeout = 6000,
+                                     #sync_output = 300
+                                     )
 
     # -------------------------------------------------------------------------
     @staticmethod
