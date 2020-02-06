@@ -51,7 +51,7 @@ $(document).ready(function(){
                 },
                 truncateLabel = function(label, len) {
                     if (label && label.length > len) {
-                        return label.substring(0, len-3).replace(/\s+$/g,'') + '...';
+                        return label.substring(0, len - 3).replace(/\s+$/g,'') + '...';
                     } else {
                         return label;
                     }
@@ -61,7 +61,7 @@ $(document).ready(function(){
                 var chart = nv.models.multiBarHorizontalChart()
                                      .x(function(d) { return d.label })
                                      .y(function(d) { return d.value })
-                                     .margin({top: 10, right: 10, bottom: 40, left: 100})
+                                     .margin({top: 10, right: 10, bottom: 40, left: 150})
                                      .showValues(true)      // Show bar value next to each bar.
                                      .duration(350)
                                      .showLegend(false)     // Hide the Legend (We only have 1 series, so meaningless)

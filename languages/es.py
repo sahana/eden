@@ -4073,6 +4073,7 @@
 'Maximum Weight': 'Peso máximo',
 'Maximum weight capacity of the items the storage bin can contain. followed by choosing the unit from the drop down list.': 'Capacidad máxima de peso de los artículos que el compartimiento de almacenamiento puede contener. seguido por la elección de la unidad de la lista desplegable.',
 'Maximum weight capacity of the Storage Location followed by choosing the unit from the drop down list.': 'Capacidad máxima de peso del compartimiento de almacenamiento seguido de seleccionar la unidad desde la list desplegable.',
+'Mean': 'Promedio',
 'Means of Verification': 'Medios de Verificación',
 'Measure Area: Click the points around the polygon & end with a double-click': 'Medir el área: Haga clic en los puntos alrededor del poligono y termine con un doble clic',
 'Measure Length: Click the points along the path & end with a double-click': 'Medida de Longitud: Haga clic en los puntos a lo largo del camino y termine con un doble clic',
