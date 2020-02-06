@@ -341,7 +341,7 @@
                 }
             }
             itemList.sort(function(a, b) {
-                return a[1] === b[1] && 0 || (a[1] > b[1] && 1 || -1);
+                return a[1] !== b[1] && (a[1] > b[1] && 1 || -1) || 0;
             }).forEach(function(o) {
                 $('<option>').attr('value', o[0]).text(o[1]).appendTo(selector);
             });
