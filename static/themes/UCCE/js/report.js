@@ -64,7 +64,7 @@ $(document).ready(function(){
 
             // Measure the length of each label to ensure we have sufficient space for each
             $this.append('<canvas id="tempCanvas"></canvas>');
-            canvas = document.getElementbyId('tempCanvas');
+            canvas = document.getElementById('tempCanvas');
             context = canvas.getContext();
             context.font = '12px Arial'; // nv.d3.css
             for (var i=0; i < values.length; i++) {
