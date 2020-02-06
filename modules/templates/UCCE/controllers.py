@@ -2091,7 +2091,7 @@ class dc_TargetReportFilters(S3Method):
                     question_name = question["name"]
                     if str(question_id) in active:
                         checked = "on"
-                        filter_label = active[str(question_id)]
+                        filter_label = active[str(question_id)]["label"]
                     else:
                         checked = ""
                         filter_label = ""
