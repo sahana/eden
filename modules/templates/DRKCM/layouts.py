@@ -229,20 +229,25 @@ class S3LanguageMenuLayout(S3NavigationItem):
                 # The language menu itself
                 current_language = current.T.accepted_language
                 items = item.render_components()
-                select = SELECT(items, value=current_language,
-                                    _name="_language",
-                                    # @ToDo T:
-                                    _title="Language Selection",
-                                    _onchange="S3.reloadWithQueryStringVars({'_language':$(this).val()});")
-                form = FORM(select, _class="language-selector",
-                                    _name="_language",
-                                    _action="",
-                                    _method="get")
+                select = SELECT(items,
+                                value = current_language,
+                                _name = "_language",
+                                # @ToDo T:
+                                _title = "Language Selection",
+                                _onchange = "S3.reloadWithQueryStringVars({'_language':$(this).val()});",
+                                )
+                form = FORM(select,
+                            _class = "language-selector",
+                            _name = "_language",
+                            _action = "",
+                            _method = "get",
+                            )
                 return form
             else:
                 # A language entry
                 return OPTION(item.opts.lang_name,
-                              _value=item.opts.lang_code)
+                              _value = item.opts.lang_code,
+                              )
         else:
             return None
 

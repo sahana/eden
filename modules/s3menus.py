@@ -209,11 +209,11 @@ class S3MainMenu(object):
             self_registration = settings.get_security_registration_visible()
             if self_registration == "index":
                 register = MM("Register", c="default", f="index", m="register",
-                               vars=dict(_next=login_next),
+                               vars={"_next": login_next},
                                check=self_registration)
             else:
                 register = MM("Register", m="register",
-                               vars=dict(_next=login_next),
+                               vars={"_next": login_next},
                                check=self_registration)
 
             if settings.get_auth_password_changes() and \
@@ -224,9 +224,9 @@ class S3MainMenu(object):
 
             menu_auth = MM("Login", c="default", f="user", m="login",
                            _id="auth_menu_login",
-                           vars=dict(_next=login_next), **attr)(
+                           vars={"_next": login_next}, **attr)(
                                 MM("Login", m="login",
-                                   vars=dict(_next=login_next)),
+                                   vars={"_next": login_next}),
                                 register,
                                 lost_pw,
                                 )

@@ -18,13 +18,22 @@ class S3MainMenu(default.S3MainMenu):
     def menu(cls):
         """ Compose Menu """
 
-        main_menu = MM()(
-
-            # Note: always define right-hand items in reverse order!
-            cls.menu_auth(right=True),
-            cls.menu_modules(right=True),
-            #cls.menu_admin(right=True),
-        )
+        if current.auth.s3_logged_in():
+            main_menu = MM()(
+                # Note: always define right-hand items in reverse order!
+                cls.menu_auth(right = True),
+                cls.menu_lang(right = True),
+                cls.menu_modules(right = True),
+                #cls.menu_admin(right = True),
+                )
+        else:
+            main_menu = MM()(
+                # Note: always define right-hand items in reverse order!
+                cls.menu_auth(right = True),
+                #cls.menu_lang(right = True),
+                cls.menu_modules(right = True),
+                #cls.menu_admin(right = True),
+                )
 
         return main_menu
 
@@ -59,11 +68,11 @@ class S3MainMenu(default.S3MainMenu):
             #self_registration = settings.get_security_registration_visible()
             #if self_registration == "index":
             #    register = MM("Register", c="default", f="index", m="register",
-            #                   vars=dict(_next=login_next),
+            #                   vars={"_next": login_next}),
             #                   check=self_registration)
             #else:
             #    register = MM("Register", m="register",
-            #                   vars=dict(_next=login_next),
+            #                   vars={"_next": login_next},
             #                   check=self_registration)
 
             #if settings.get_auth_password_changes() and \
@@ -74,9 +83,9 @@ class S3MainMenu(default.S3MainMenu):
 
             menu_auth = MM("My Account", c="default", f="user", m="login",
                            _id="auth_menu_login",
-                           vars=dict(_next=login_next), **attr)(
+                           vars={"_next": login_next}, **attr)(
                                 #MM("Login", m="login",
-                                #   vars=dict(_next=login_next)),
+                                #   vars={"_next": login_next}),
                                 #register,
                                 #lost_pw,
                                 )

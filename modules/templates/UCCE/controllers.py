@@ -251,7 +251,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
             switch = ""
         else:
             responses = db(rtable.target_id == target_id).count()
-            responses = DIV("%s Responses" % responses)
+            responses = DIV(T("%(count)s Responses") % {"count": responses})
             #export_btn = A(ICON("upload"),
             #               SPAN("export",
             #                    _class = "show-for-sr",
@@ -1373,14 +1373,15 @@ class dc_TargetReport(S3Method):
             published_on = "N/A"
 
         # Template
+        template_id = record.template_id
         ttable = s3db.dc_template
-        template = db(ttable.id == record.template_id).select(ttable.id,
-                                                              ttable.layout,
-                                                              ttable.table_id,
-                                                              #ttable.modified_on,
-                                                              ttable.settings,
-                                                              limitby = (0, 1)
-                                                              ).first()
+        template = db(ttable.id == template_id).select(ttable.id,
+                                                       ttable.layout,
+                                                       ttable.table_id,
+                                                       #ttable.modified_on,
+                                                       ttable.settings,
+                                                       limitby = (0, 1)
+                                                       ).first()
 
         # Last edited on
         #updated_on = date_represent(template.modified_on)
@@ -1391,6 +1392,22 @@ class dc_TargetReport(S3Method):
         layout = template.layout
         if layout:
             table_id = template.table_id
+
+            # Language
+            language = current.session.s3.language
+            if language == "en":
+                translate = False
+            else:
+                ltable = s3db.dc_template_l10n
+                query = (ltable.template_id == template_id) & \
+                        (ltable.language == language)
+                translation = db(query).select(ltable.id,
+                                               limitby = (0, 1)
+                                               ).first()
+                if translation:
+                    translate = True
+                else:
+                    translate = False
 
             # Dynamic Table
             s3_table = s3db.s3_table
@@ -1434,14 +1451,42 @@ class dc_TargetReport(S3Method):
                 question_id = layout[str(position)].get("id")
                 if question_id:
                     qappend(question_id)
-            questions_dict = db(qtable.id.belongs(question_ids)).select(qtable.id,
-                                                                        qtable.name,
-                                                                        qtable.field_id,
-                                                                        qtable.field_type,
-                                                                        qtable.options,
-                                                                        qtable.settings,
-                                                                        qtable.file,
-                                                                        ).as_dict()
+
+            fields = [qtable.id,
+                      qtable.name,
+                      qtable.field_id,
+                      qtable.field_type,
+                      qtable.options,
+                      qtable.settings,
+                      qtable.file,
+                      ]
+            if translate:
+                qltable = s3db.dc_question_l10n
+                fields += [qltable.name_l10n,
+                           qltable.options_l10n,
+                           ]
+                left = qltable.on((qltable.question_id == qtable.id) & \
+                                  (qltable.language == language))
+            else:
+                left = None
+            questions = db(qtable.id.belongs(question_ids)).select(*fields,
+                                                                   left = left,
+                                                                   )
+            if translate:
+                questions_dict = {}
+                for q in questions:
+                    questions_dict[q["dc_question.id"]] = {"name": q["dc_question.name"],
+                                                           "field_id": q["dc_question.field_id"],
+                                                           "field_type": q["dc_question.field_type"],
+                                                           "options": q["dc_question.options"],
+                                                           "settings": q["dc_question.settings"],
+                                                           "file": q["dc_question.file"],
+                                                           "name_l10n": q["dc_question_l10n.name_l10n"],
+                                                           "options_l10n": q["dc_question_l10n.options_l10n"],
+                                                           }
+            else:
+                questions_dict = questions.as_dict()
+
             # Fields
             # Note that we want 'Other' fields too, so don't want to do this as a join with questions
             ftable = s3db.s3_field
@@ -1455,8 +1500,15 @@ class dc_TargetReport(S3Method):
                 question_row = questions_dict.get(question_id)
                 field_type = question_row["field_type"]
                 dfieldname = fields[question_row["field_id"]]["name"]
+                if translate:
+                    question_name = question_row["name_l10n"]
+                    if not question_name:
+                        # No translation available for this question
+                        question_name = question_row["name"]
+                else:
+                    question_name = question_row["name"]
                 question = {"id": question_id,
-                            "name": question_row["name"],
+                            "name": question_name,
                             "field_type": field_type,
                             "field": dfieldname,
                             }
@@ -1464,6 +1516,8 @@ class dc_TargetReport(S3Method):
                 if field_type == 6:
                     # multichoice
                     question["options"] = question_row["options"] or []
+                    if translate:
+                        question["options_l10n"] = question_row["options_l10n"] or None
                     settings = question_row["settings"] or {}
                     other_id = settings.get("other_id")
                     if other_id:
@@ -1475,10 +1529,14 @@ class dc_TargetReport(S3Method):
                     # likert
                     settings = question_row["settings"] or {}
                     question["scale"] = settings.get("scale")
+                    if translate:
+                        question["options_l10n"] = question_row["options_l10n"] or None
                 elif field_type == 13:
                     # heatmap
                     question["file"] = question_row["file"]
                     question["options"] = question_row["options"] or []
+                    if translate:
+                        question["options_l10n"] = question_row["options_l10n"] or None
                 responses = []
                 rappend = responses.append
                 for row in answers:
@@ -1537,6 +1595,7 @@ class dc_TargetReport(S3Method):
                 "published_on": published_on,
                 #"updated_on": updated_on,
                 "total_responses": total_responses,
+                "translate": translate,
                 "last_upload": last_upload,
                 "questions": questions,
                 }
@@ -1547,11 +1606,11 @@ class dc_TargetReport(S3Method):
             Produce an HTML representation of the report
         """
 
-        #T = current.T # Not fully-used as no requirement for this in UCCE yet
+        T = current.T # Not fully-used as no full requirement for this in UCCE yet
 
         # Report Header
         if current.auth.s3_has_permission("update", "dc_template", record_id = data["target_id"]):
-            edit_filters_btn = DIV(A("Edit Filters",
+            edit_filters_btn = DIV(A(T("Edit Filters"),
                                      _href = URL(args = [data["target_id"], "report_filters"]),
                                      _class = "button round tiny",
                                      _id = "edit-filters-btn",
@@ -1560,7 +1619,8 @@ class dc_TargetReport(S3Method):
         else:
             edit_filters_btn = ""
 
-        header = DIV(DIV(H2("Total Responses: %s" % data["total_responses"]),
+        header = DIV(DIV(H2("%s: %s" % (T("Total Responses"),
+                                        data["total_responses"])),
                          DIV("Survey responses last uploaded on: %s" % data["last_upload"]),
                          _class = "columns medium-4",
                          ),
@@ -1662,7 +1722,8 @@ class dc_TargetReport(S3Method):
             Produce an HTML representation of the report contents (no header)
         """
 
-        T = current.T # Not fully-used as no requirement for this in UCCE yet
+        T = current.T # Not fully-used as no full requirement for this in UCCE yet
+        translate = data["translate"]
 
         likert_options = {1: ["Very appropriate",
                               "Somewhat appropriate",
@@ -1712,7 +1773,7 @@ class dc_TargetReport(S3Method):
         for question in questions:
             responses = question["responses"]
             len_responses = len(responses)
-            content = DIV("%s responses" % len_responses,
+            content = DIV(T("%(count)s Responses") % {"count": len_responses},
                           _class="report-content",
                           )
             question_type = question["field_type"]
@@ -1758,8 +1819,18 @@ class dc_TargetReport(S3Method):
                 else:
                     multiple = False
                 options = question["options"]
+                if translate:
+                    options_l10n = question["options_l10n"]
+                    if options_l10n is None:
+                        _translate = False
+                    else:
+                        _translate = True
+                else:
+                    _translate = False
+
                 values = []
                 vappend = values.append
+                i = 0
                 if multiple:
                     for option in options:
                         total = 0
@@ -1771,10 +1842,17 @@ class dc_TargetReport(S3Method):
                         #    percentage = total / len_responses
                         #else:
                         #    percentage = 0
-                        vappend({"label": option,
+                        if _translate:
+                            label = options_l10n[i]
+                            if not label:
+                                label = option
+                        else:
+                            label = option
+                        vappend({"label": label,
                                  "value": total,
                                  #"p": percentage,
                                  })
+                        i += 1
                 else:
                     for option in options:
                         total = 0
@@ -1786,10 +1864,17 @@ class dc_TargetReport(S3Method):
                         #    percentage = total / len_responses
                         #else:
                         #    percentage = 0
-                        vappend({"label": option,
+                        if _translate:
+                            label = options_l10n[i]
+                            if not label:
+                                label = option
+                        else:
+                            label = option
+                        vappend({"label": label,
                                  "value": total,
                                  #"p": percentage,
                                  })
+                        i += 1
                 others = question.get("others")
                 if others:
                     if multiple:
@@ -1856,10 +1941,19 @@ class dc_TargetReport(S3Method):
                 else:
                     # 5-point
                     options = [0, 1, 2, 3, 4]
-                labels = likert_options[scale]
+                if translate:
+                    options_l10n = question["options_l10n"]
+                    if options_l10n is None:
+                        _translate = False
+                    else:
+                        _translate = True
+                else:
+                    _translate = False
+                labels_en = likert_options[scale]
                 values = []
                 vappend = values.append
 
+                i = 0
                 for option in options:
                     total = 0
                     for answer in responses:
@@ -1870,10 +1964,17 @@ class dc_TargetReport(S3Method):
                     #    percentage = total / len_responses
                     #else:
                     #    percentage = 0
-                    vappend({"label": labels[option],
+                    if _translate:
+                        label = options_l10n[i]
+                        if not label:
+                            label = labels_en[option]
+                    else:
+                        label = labels_en[option]
+                    vappend({"label": label,
                              "value": total,
                              #"p": percentage,
                              })
+                    i += 1
 
                 data = [{"values": values,
                          }]
@@ -1925,6 +2026,14 @@ class dc_TargetReport(S3Method):
                 #content.append(scale)
 
                 options = question["options"]
+                if translate:
+                    options_l10n = question["options_l10n"]
+                    if options_l10n is None:
+                        _translate = False
+                    else:
+                        _translate = True
+                else:
+                    _translate = False
                 values = []
                 vappend = values.append
                 i = 0
@@ -1938,7 +2047,13 @@ class dc_TargetReport(S3Method):
                     #    percentage = total / len_responses
                     #else:
                     #    percentage = 0
-                    vappend({"label": option,
+                    if _translate:
+                        label = options_l10n[i]
+                        if not label:
+                            label = option
+                    else:
+                        label = option
+                    vappend({"label": label,
                              "value": total,
                              #"p": percentage,
                              })
