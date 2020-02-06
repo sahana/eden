@@ -1,16 +1,21 @@
 $(document).ready(function(){
 
-    
     var do_report_actions = function(){
         $('.multichoice-graph').each(function(/* index */) {
 
             var $this = $(this),
+                canvas,
+                context,
                 colors = ['#00AAA0', '#AFAEAE'], // Alternate between $persian-green & $darkgray
                 data = JSON.parse($this.val()),
-                scale = $this.data('scale'),
+                labels = [],
+                labelLength,
+                maxLabelLength = 0,
                 precision = null,
+                scale = $this.data('scale'),
                 thousandGrouping = '3',
                 thousandSeparator = ' ';
+                values = data[0].values,
                 numberFormatter = function(number) {
 
                     var decimals = precision;
@@ -48,20 +53,33 @@ $(document).ready(function(){
                                    '<div class="pt-tooltip-text" style="background:' + color + '"><span class="pt-tooltip-value">' + item.value + '</span></div>' +
                                   '</div>';
                     return tooltip;
-                },
+                };/*,
                 truncateLabel = function(label, len) {
                     if (label && label.length > len) {
                         return label.substring(0, len - 3).replace(/\s+$/g,'') + '...';
                     } else {
                         return label;
                     }
-                };
+                };*/
+
+            // Measure the length of each label to ensure we have sufficient space for each
+            $this.append('<canvas id="tempCanvas"></canvas>');
+            canvas = document.getElementbyId('tempCanvas');
+            context = canvas.getContext();
+            context.font = '12px Arial'; // nv.d3.css
+            for (var i=0; i < values.length; i++) {
+                labelLength = Math.ceil(context.measureText(values[i] + '  ').width);
+                if (labelLength > maxLabelLength) {
+                    maxLabelLength = labelLength;
+                }
+            }
+            canvas.parentNode.removeChild(canvas);
 
             nv.addGraph(function() {
                 var chart = nv.models.multiBarHorizontalChart()
                                      .x(function(d) { return d.label })
                                      .y(function(d) { return d.value })
-                                     .margin({top: 10, right: 10, bottom: 40, left: 150})
+                                     .margin({top: 10, right: 10, bottom: 40, left: maxLabelLength})
                                      .showValues(true)      // Show bar value next to each bar.
                                      .duration(350)
                                      .showLegend(false)     // Hide the Legend (We only have 1 series, so meaningless)
@@ -91,7 +109,8 @@ $(document).ready(function(){
                                 return '\u{f12e}';
                             }
                         } else {
-                            return truncateLabel(d, 24);
+                            //return truncateLabel(d, 24);
+                            return d;
                         }
                      });
 
