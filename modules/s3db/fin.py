@@ -544,17 +544,16 @@ class FinSubscriptionModel(S3Model):
                      Field("description",
                            label = T("Description"),
                            ),
-                     # TODO onvalidation to make sure the interval is max 1 year in total
-                     Field("interval_count", "integer",
-                           label = T("Interval"),
-                           requires = IS_INT_IN_RANGE(1, 365),
-                           ),
                      Field("interval_unit",
                            label = T("Interval Unit"),
                            default = "MONTH",
                            requires = IS_IN_SET(interval_units,
                                                 zero = None,
                                                 ),
+                           ),
+                     Field("interval_count", "integer",
+                           label = T("Interval"),
+                           requires = IS_INT_IN_RANGE(1, 365),
                            ),
                      # TODO consider alternative "fixed", default False
                      Field("indefinite", "boolean",
@@ -589,6 +588,12 @@ class FinSubscriptionModel(S3Model):
                             fin_subscription_plan_service = "plan_id",
                             fin_subscription = "plan_id",
                             )
+
+        # Table Configuration
+        self.configure(tablename,
+                       onvalidation = self.subscription_plan_onvalidation,
+                       )
+
         # CRUD Strings
         crud_strings[tablename] = Storage(
             label_create = T("Create Subscription Plan"),
@@ -713,6 +718,28 @@ class FinSubscriptionModel(S3Model):
         """ Safe defaults for names in case the module is disabled """
 
         return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def subscription_plan_onvalidation(form):
+        """
+            Form validation for subscription plans
+            - interval can be at most 1 year
+        """
+
+        T = current.T
+
+        form_vars = form.vars
+        try:
+            unit = form_vars.interval_unit
+            count = form_vars.interval_count
+        except AttributeError:
+            pass
+        else:
+            MAX_INTERVAL = {"DAY": 365, "WEEK": 52, "MONTH": 12, "YEAR": 1}
+            limit = MAX_INTERVAL.get(unit)
+            if limit and count > limit:
+                form.errors.interval_count = T("Interval can be at most 1 year")
 
     # -------------------------------------------------------------------------
     @staticmethod
