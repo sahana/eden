@@ -14,7 +14,7 @@ $(document).ready(function(){
                 precision = null,
                 scale = $this.data('scale'),
                 thousandGrouping = '3',
-                thousandSeparator = ' ';
+                thousandSeparator = ' ',
                 values = data[0].values,
                 numberFormatter = function(number) {
 
@@ -68,7 +68,7 @@ $(document).ready(function(){
             context = canvas.getContext('2d');
             context.font = '12px Arial'; // nv.d3.css
             for (var i=0; i < values.length; i++) {
-                labelLength = Math.ceil(context.measureText(values[i] + '  ').width);
+                labelLength = Math.ceil(context.measureText(values[i].label + '  ').width);
                 if (labelLength > maxLabelLength) {
                     maxLabelLength = labelLength;
                 }
