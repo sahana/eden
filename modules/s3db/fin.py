@@ -555,14 +555,18 @@ class FinSubscriptionModel(S3Model):
                            label = T("Interval"),
                            requires = IS_INT_IN_RANGE(1, 365),
                            ),
-                     # TODO consider alternative "fixed", default False
-                     Field("indefinite", "boolean",
-                           label = T("Indefinite"),
-                           default = True,
+                     Field("fixed", "boolean",
+                           label = T("Fixed-term"),
+                           default = False,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Fixed-term"),
+                                                           T("Subscription plan has a fixed total number of cycles"),
+                                                           ),
+                                         ),
                            ),
-                     # TODO show only if indefinite is un-checked
-                     # TODO onvalidation to check whether total cycles set for indefinite=False
+                     # TODO show only if fixed is checked
                      Field("total_cycles", "integer",
+                           label = T("Total Cycles"),
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999)),
                            ),
                      # TODO represent
@@ -725,11 +729,14 @@ class FinSubscriptionModel(S3Model):
         """
             Form validation for subscription plans
             - interval can be at most 1 year
+            - fixed-term plan must specify number of cycles
         """
 
         T = current.T
 
         form_vars = form.vars
+
+        # Verify interval length <= 1 year
         try:
             unit = form_vars.interval_unit
             count = form_vars.interval_count
@@ -740,6 +747,16 @@ class FinSubscriptionModel(S3Model):
             limit = MAX_INTERVAL.get(unit)
             if limit and count > limit:
                 form.errors.interval_count = T("Interval can be at most 1 year")
+
+        # Verify total cycles specified for fixed-term plan
+        try:
+            fixed = form_vars.fixed
+            cycles = form_vars.cycles
+        except AttributeError:
+            pass
+        else:
+            if fixed and not cycles:
+                form.errors.total_cycles = T("Fixed-term plan must specify number of cycles")
 
     # -------------------------------------------------------------------------
     @staticmethod
