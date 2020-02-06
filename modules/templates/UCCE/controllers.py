@@ -1405,14 +1405,21 @@ class dc_TargetReport(S3Method):
             query = (dtable.deleted == False)
 
             # Parse Filters
-            for get_var in r.get_vars:
-                dfieldname = get_var[2:-4]
-                if dfieldname in dtable.fields:
-                    operator = get_var[-2:]
-                    if operator == "ge":
-                        query &= (dtable[dfieldname] >= r.get_vars.get(get_var))
-                    elif operator == "le":
-                        query &= (dtable[dfieldname] <= r.get_vars.get(get_var))
+            get_vars = r.get_vars
+            for get_var in get_vars:
+                if "__" in get_var:
+                    dfieldname, operator = get_var[2:].split("__", 1)
+                    if dfieldname in dtable.fields:
+                        value = get_vars.get(get_var)
+                        if operator == "ge":
+                            query &= (dtable[dfieldname] >= value)
+                        elif operator == "le":
+                            query &= (dtable[dfieldname] <= value)
+                        elif operator == "belongs":
+                            if "," in value:
+                                query &= (dtable[dfieldname].belongs(value.split(",")))
+                            else:
+                                query &= (dtable[dfieldname] == value)
 
             answers = db(query).select()
 
@@ -1575,7 +1582,7 @@ class dc_TargetReport(S3Method):
         if report_filters is None:
             ff = ""
         else:
-            from s3 import S3FilterForm, S3SliderFilter
+            from s3 import S3FilterForm, S3OptionsFilter, S3SliderFilter
 
             questions_lookup = {}
             for q in data["questions"]:
@@ -1583,9 +1590,15 @@ class dc_TargetReport(S3Method):
 
             filter_widgets = []
             for question_id in report_filters:
-                filter_widgets.append(S3SliderFilter(questions_lookup[int(question_id)],
-                                                     label = report_filters[question_id],
-                                                     ))
+                question = report_filters[question_id]
+                if question["field_type"] == 2:
+                    filter_widgets.append(S3SliderFilter(questions_lookup[int(question_id)],
+                                                         label = question["label"],
+                                                         ))
+                elif question["field_type"] == 6:
+                    filter_widgets.append(S3OptionsFilter(questions_lookup[int(question_id)],
+                                                          label = question["label"],
+                                                          ))
 
             request = current.request
             filter_submit_url = URL(args = request.args,
@@ -2022,7 +2035,7 @@ class dc_TargetReportFilters(S3Method):
                 T = current.T
                 db = current.db
 
-                # Get all Number Questions in the Template
+                # Get all Questions in the Template
                 # - in order
                 # - NB we want these in layout order, but JSON.Stringify has converted
                 #      the integer positions to strings, so we need to sort with key=int
@@ -2041,14 +2054,16 @@ class dc_TargetReportFilters(S3Method):
                         iappend(question_id)
                         questions_dict[question_id] = {"number": position,
                                                        }
+                # Filter to those suitable for use as Filters
                 qtable = s3db.dc_question
                 query = (qtable.id.belongs(question_ids)) & \
-                        (qtable.field_type == 2)
+                        (qtable.field_type.belongs(2, 6))
                 questions = db(query).select(qtable.id,
                                              qtable.name,
+                                             qtable.field_type,
                                              )
                 if len(questions) == 0:
-                    current.session.warning = T("No Number Questions to use as Filters")
+                    current.session.warning = T("No Questions suitable for use as Filters: Only Number & Multichoice Questions are supported")
                     # Redirect to  Report
                     redirect(URL(args = [r.id, "report_custom"]))
 
@@ -2056,6 +2071,7 @@ class dc_TargetReportFilters(S3Method):
                 for question_id in question_ids:
                     if question_id in questions:
                         questions_dict[question_id]["name"] = questions[question_id]["name"]
+                        questions_dict[question_id]["field_type"] = questions[question_id]["field_type"]
                     else:
                         del questions_dict[question_id]
 
@@ -2070,8 +2086,9 @@ class dc_TargetReportFilters(S3Method):
                             )
                 fappend = form.append
                 for question_id in questions_dict:
-                    question_number_label = "Q %s" % questions_dict[question_id]["number"]
-                    question_name = questions_dict[question_id]["name"]
+                    question = questions_dict[question_id]
+                    question_number_label = "Q %s" % question["number"]
+                    question_name = question["name"]
                     if str(question_id) in active:
                         checked = "on"
                         filter_label = active[str(question_id)]
@@ -2136,18 +2153,21 @@ class dc_TargetReportFilters(S3Method):
                     report_filters = {}
                     filter_label = None
                     for question_id in questions_dict:
-                        question_number = questions_dict[question_id]["number"]
                         if form_vars_get("checkbox-%s" % question_id) is not None:
+                            question = questions_dict[question_id]
                             filter_label = form_vars_get("label-%s" % question_id)
                             if filter_label == "":
-                                filter_label = "Q %s" % question_number
-                            report_filters[question_id] = filter_label # NB question_id will be converted to str when saved to JSON field
+                                filter_label = "Q %s" % question["number"]
+                            # NB question_id will be converted to str when saved to JSON field
+                            report_filters[question_id] = {"field_type": question["field_type"],
+                                                           "label": filter_label,
+                                                           }
                     if filter_label is None:
                         report_filters = None
                     settings["report_filters"] = report_filters
                     template.update_record(settings = settings)
                     session.confirmation = T("Filters Submitted")
-                    # Redirect to  Report
+                    # Redirect to Report
                     redirect(URL(args = [r.id, "report_custom"]))
 
                 script = "/%s/static/themes/UCCE/js/report_filters.js" % \
