@@ -1347,7 +1347,7 @@ class GIS(object):
                 # The requested config must be invalid, so just use site default
                 row = rows.first()
 
-        elif config_id is 0:
+        elif config_id == 0:
             # Use site default
             query = (ctable.uuid == "SITE_DEFAULT")
             # May well not be complete, so Left Join
