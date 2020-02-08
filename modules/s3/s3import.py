@@ -1200,9 +1200,9 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
         if timestmp != None:
             current.session.flash = messages.job_completed % \
                                         (self.date_represent(timestmp), msg)
-        elif totals[1] is not 0:
+        elif totals[1] != 0:
             current.session.error = msg
-        elif totals[2] is not 0:
+        elif totals[2] != 0:
             current.session.warning = msg
         else:
             current.session.flash = msg
