@@ -35,7 +35,7 @@ from gluon import current
 from gluon.languages import read_dict, write_dict
 from gluon.storage import Storage
 
-from s3compat import StringIO, pickle
+from s3compat import BytesIO, pickle
 from .s3fields import S3ReusableField
 
 """
@@ -636,12 +636,12 @@ class TranslateReadFiles(object):
         """
 
         try:
-            f = open(fileName, "rb")
+            f = open(fileName, "r")
         except:
             path = os.path.split(__file__)[0]
             fileName = os.path.join(path, fileName)
             try:
-                f = open(fileName, "rb")
+                f = open(fileName, "r")
             except:
                 return
 
@@ -1266,7 +1266,7 @@ class Strings(object):
             sheet.col(colx).width = 15000
 
         # Initialize output
-        output = StringIO()
+        output = BytesIO()
 
         # Save the spreadsheet
         wbk.save(output)
@@ -1387,7 +1387,7 @@ class Pootle(object):
             current.log.error("Connection Error")
             return False
 
-        zipf = zipfile.ZipFile(StringIO(r.content))
+        zipf = zipfile.ZipFile(BytesIO(r.content))
         zipf.extractall()
         file_name_po = "%s.po" % lang_code
         file_name_py = "%s.py" % lang_code
@@ -1405,7 +1405,7 @@ class Pootle(object):
         postrings = S.read_w2p(w2pfilename)
         # Remove untranslated strings
         postrings = [tup for tup in postrings if tup[0] != tup[1]]
-        postrings.sort(key=lambda tup: tup[0])
+        postrings.sort(key = lambda tup: tup[0])
 
         os.unlink(file_name_po)
         os.unlink(w2pfilename)
