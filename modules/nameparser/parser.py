@@ -691,7 +691,7 @@ class HumanName(object):
                 # http://code.google.com/p/python-nameparser/issues/detail?id=11
                 continue
 
-            if i is 0:
+            if i == 0:
                 new_piece = " ".join(pieces[i:i+2])
                 if self.is_title(pieces[i+1]):
                     # when joining to a title, make new_piece a title too

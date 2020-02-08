@@ -636,12 +636,12 @@ class TranslateReadFiles(object):
         """
 
         try:
-            f = open(fileName)
+            f = open(fileName, "rb")
         except:
             path = os.path.split(__file__)[0]
             fileName = os.path.join(path, fileName)
             try:
-                f = open(fileName)
+                f = open(fileName, "rb")
             except:
                 return
 
@@ -741,7 +741,7 @@ class TranslateReadFiles(object):
         regex_trans = re.compile(PY_STRING_LITERAL_RE, re.DOTALL)
         findall = regex_trans.findall
 
-        html_js_file = open(filename)
+        html_js_file = open(filename, "rb")
         linecount = 0
         strings = []
         sappend = strings.append
@@ -769,7 +769,7 @@ class TranslateReadFiles(object):
         COMMENT = "User supplied"
 
         if os.path.exists(user_file):
-            f = open(user_file, "r")
+            f = open(user_file, "rb")
             for line in f:
                 line = line.replace("\n", "").replace("\r", "")
                 strings.append((COMMENT, line))
@@ -792,7 +792,7 @@ class TranslateReadFiles(object):
         oappend = oldstrings.append
 
         if os.path.exists(user_file):
-            f = open(user_file, "r")
+            f = open(user_file, "rb")
             for line in f:
                 oappend(line)
             f.close()
@@ -1010,7 +1010,7 @@ class Strings(object):
 
         # If the language file doesn't exist, create it
         if not os.path.exists(langfile):
-            f = open(langfile, "w")
+            f = open(langfile, "wb")
             f.write("")
             f.close()
 
@@ -1173,7 +1173,7 @@ class Strings(object):
         # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
         call(["csv2po", "-i", csvfilename, "-o", pofilename], shell=True)
 
-        h = open(pofilename, "r")
+        h = open(pofilename, "rb")
 
         # Modify headers to return the po file for download
         filename = "trans.po"
@@ -1356,7 +1356,7 @@ class Pootle(object):
             # If user is not admin then overwrite option is not there
             br.form.find_control(name="overwrite").value = ["overwrite"]
             br.form.find_control(name ="upload_to").value = [upload_code]
-            br.form.add_file(open(filename), "text/plain", filename)
+            br.form.add_file(open(filename, "rb"), "text/plain", filename)
             br.submit()
         except:
             current.log.error("Error in Uploading form")

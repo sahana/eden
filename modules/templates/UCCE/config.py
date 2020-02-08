@@ -221,6 +221,41 @@ def config(settings):
     settings.dc.response_web = False
 
     # -------------------------------------------------------------------------
+    def ucce_realm_entity(table, row):
+        """
+            Assign a Realm Entity to records
+        """
+
+        if table._tablename in ("dc_target",
+                                "dc_template",
+                                ):
+            s3db = current.s3db
+            ltable = s3db.project_project_target
+            ptable = s3db.project_project
+            if table._tablename == "dc_target":
+                query = (ltable.target_id == row.id) & \
+                        (ltable.project_id == ptable.id)
+            else:
+                ttable = s3db.dc_target
+                query = (ttable.template_id == row.id) & \
+                        (ltable.target_id == ttable.id) & \
+                        (ltable.project_id == ptable.id)
+                
+            project = current.db(query).select(ptable.realm_entity,
+                                               limitby = (0, 1)
+                                               ).first()
+
+            try:
+                return project.realm_entity
+            except AttributeError:
+                pass
+
+        # Use default rules
+        return 0
+
+    settings.auth.realm_entity = ucce_realm_entity
+
+    # -------------------------------------------------------------------------
     def ucce_rheader(r):
         """
             Custom rheaders

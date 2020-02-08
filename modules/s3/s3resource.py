@@ -3925,7 +3925,7 @@ class S3Resource(object):
                 seen(selector)
                 append(f)
 
-        if id_column is 0:
+        if id_column == 0:
             fields.insert(0, id_field)
 
         return fields
