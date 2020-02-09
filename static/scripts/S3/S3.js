@@ -213,16 +213,17 @@ S3.addModals = function() {
                 'src': '',
                 // Set initial 'loading' class to show spinner until contents loaded
                 'class': 'loading',
-                'load': function() {
-                    // Call popup_loaded only once we have a src
-                    if ($(this).attr('src')) {
-                        S3.popup_loaded(id);
-                    }
-                },
                 'marginWidth': '0',
                 'marginHeight': '0',
                 'frameBorder': '0'
             }).appendTo('body');
+
+        dialog.on('load', function() {
+            // Call popup_loaded only once we have a src
+            if ($(this).attr('src')) {
+                S3.popup_loaded(id);
+            }
+        });
 
         // Create jQuery UI dialog
         var self = this;

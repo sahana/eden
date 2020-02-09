@@ -862,7 +862,7 @@ class TranslateReadFiles(object):
         read_csv = S.read_csv
         for template in template_list:
             pth = path.join(base_dir, "modules", "templates", template)
-            if path.exists(path.join(pth, "tasks.cfg")) == False:
+            if path.exists(path.join(pth, "tasks.cfg")) is False:
                 continue
             bi.load_descriptor(pth)
 
@@ -1125,7 +1125,10 @@ class Strings(object):
 
         data = []
         dappend = data.append
-        f = open(fileName, "r") # , newline=""
+        if PY2:
+            f = open(fileName, "r")
+        else:
+            f = open(fileName, "r", encoding="utf-8", newline="")
         transReader = csv.reader(f)
         for row in transReader:
             dappend(row)
@@ -1160,8 +1163,10 @@ class Strings(object):
         f = open(fileName, "wb")
 
         # Quote all the elements while writing
-        transWriter = csv.writer(f, delimiter=" ",
-                                 quotechar='"', quoting = csv.QUOTE_ALL)
+        transWriter = csv.writer(f,
+                                 delimiter = " ",
+                                 quotechar = '"',
+                                 quoting = csv.QUOTE_ALL)
         transWriter.writerow(("location", "source", "target"))
         for row in data:
             transWriter.writerow(row)
@@ -1247,6 +1252,9 @@ class Strings(object):
         import xlwt
 
         from gluon.contenttype import contenttype
+        
+        #if not PY2:
+        #    import unicodedata
 
         # Define spreadsheet properties
         wbk = xlwt.Workbook("utf-8")
@@ -1262,20 +1270,17 @@ class Strings(object):
 
         row_num = 1
 
-        if PY2:
-            def string_escape(s, encoding="utf-8"):
-                return(s.decode("string-escape")
-                        .decode("utf-8"))
-        else:
-            def string_escape(s, encoding="utf-8"):
-                return(s.encode("latin1")         # To bytes, required by 'unicode-escape'
-                        .decode("unicode-escape") # Perform the actual octal-escaping decode
-                        .encode("latin1")         # 1:1 mapping back to bytes
-                        .decode(encoding))        # Decode original encoding
+        # Accent Folding - why?
+        #if PY2:
+        #    def string_escape(s):
+        #        return s.decode("string-escape").decode("utf-8")
+        #else:
+        #    def string_escape(s):
+        #        return unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode("utf-8")
 
         # Write the data to spreadsheet
         for (loc, d1, d2) in Strings:
-            d2 = string_escape(d2)
+            #d2 = string_escape(d2)
             sheet.write(row_num, 0, loc, style)
             try:
                 sheet.write(row_num, 1, d1, style)

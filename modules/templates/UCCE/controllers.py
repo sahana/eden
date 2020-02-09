@@ -1582,8 +1582,9 @@ class dc_TargetReport(S3Method):
             # layout is None
             dtablename = None
             questions = []
-            total_responses = 0
             last_upload = "N/A"
+            total_responses = 0
+            translate = None
 
         return {"target_id": target_id,
                 "template_id": template.id,
