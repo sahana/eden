@@ -35,7 +35,7 @@ from gluon import current
 from gluon.languages import read_dict, write_dict
 from gluon.storage import Storage
 
-from s3compat import BytesIO, pickle
+from s3compat import PY2, BytesIO, pickle
 from .s3fields import S3ReusableField
 
 """
@@ -636,17 +636,17 @@ class TranslateReadFiles(object):
         """
 
         try:
-            f = open(fileName, "r")
+            f = open(fileName, "rb")
         except:
             path = os.path.split(__file__)[0]
             fileName = os.path.join(path, fileName)
             try:
-                f = open(fileName, "r")
+                f = open(fileName, "rb")
             except:
                 return
 
         # Read all contents of file
-        fileContent = f.read()
+        fileContent = f.read().decode("utf-8")
         f.close()
 
         # Remove CL-RF and NOEOL characters
@@ -731,6 +731,19 @@ class TranslateReadFiles(object):
            using regular expressions
         """
 
+        html_js_file = open(filename, "rb")
+        try:
+            html_js = html_js_file.read().decode("utf-8")
+        except UnicodeDecodeError:
+            try:
+                html_js = html_js_file.read().decode("latin-1")
+            except UnicodeDecodeError:
+                current.log.warning("%s is not in either UTF-8 or LATIN-1 encoding" % filename)
+                return []
+            else:
+                current.log.warning("%s is in LATIN-1 encoding not UTF-8" % filename)
+        html_js_file.close()
+
         import re
 
         PY_STRING_LITERAL_RE = r'(?<=[^\w]T\()(?P<name>'\
@@ -741,18 +754,16 @@ class TranslateReadFiles(object):
         regex_trans = re.compile(PY_STRING_LITERAL_RE, re.DOTALL)
         findall = regex_trans.findall
 
-        html_js_file = open(filename, "rb")
         linecount = 0
         strings = []
         sappend = strings.append
 
-        for line in html_js_file:
+        for line in html_js:
             linecount += 1
             occur = findall(line)
             for s in occur:
                 sappend((linecount, s))
 
-        html_js_file.close()
         return strings
 
     # ---------------------------------------------------------------------
@@ -770,10 +781,11 @@ class TranslateReadFiles(object):
 
         if os.path.exists(user_file):
             f = open(user_file, "rb")
-            for line in f:
+            user_data = f.read().decode("utf-8")
+            f.close()
+            for line in user_data:
                 line = line.replace("\n", "").replace("\r", "")
                 strings.append((COMMENT, line))
-            f.close()
 
         return strings
 
@@ -793,9 +805,10 @@ class TranslateReadFiles(object):
 
         if os.path.exists(user_file):
             f = open(user_file, "rb")
+            user_data = f.read().decode("utf-8")
+            f.close()
             for line in f:
                 oappend(line)
-            f.close()
 
         # Append user strings if not already present
         f = open(user_file, "a")
@@ -1010,7 +1023,7 @@ class Strings(object):
 
         # If the language file doesn't exist, create it
         if not os.path.exists(langfile):
-            f = open(langfile, "wb")
+            f = open(langfile, "w")
             f.write("")
             f.close()
 
@@ -1112,7 +1125,7 @@ class Strings(object):
 
         data = []
         dappend = data.append
-        f = open(fileName, "rb")
+        f = open(fileName, "r") # , newline=""
         transReader = csv.reader(f)
         for row in transReader:
             dappend(row)
@@ -1249,9 +1262,20 @@ class Strings(object):
 
         row_num = 1
 
+        if PY2:
+            def string_escape(s, encoding="utf-8"):
+                return(s.decode("string-escape")
+                        .decode("utf-8"))
+        else:
+            def string_escape(s, encoding="utf-8"):
+                return(s.encode("latin1")         # To bytes, required by 'unicode-escape'
+                        .decode("unicode-escape") # Perform the actual octal-escaping decode
+                        .encode("latin1")         # 1:1 mapping back to bytes
+                        .decode(encoding))        # Decode original encoding
+
         # Write the data to spreadsheet
         for (loc, d1, d2) in Strings:
-            d2 = d2.decode("string-escape").decode("utf-8")
+            d2 = string_escape(d2)
             sheet.write(row_num, 0, loc, style)
             try:
                 sheet.write(row_num, 1, d1, style)

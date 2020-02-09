@@ -2370,20 +2370,20 @@ class S3Resource(object):
     # XML Import
     # -------------------------------------------------------------------------
     def import_xml(self, source,
-                   files=None,
-                   id=None,
-                   format="xml",
-                   stylesheet=None,
-                   extra_data=None,
-                   ignore_errors=False,
-                   job_id=None,
-                   commit_job=True,
-                   delete_job=False,
-                   strategy=None,
-                   update_policy=None,
-                   conflict_policy=None,
-                   last_sync=None,
-                   onconflict=None,
+                   files = None,
+                   id = None,
+                   format = "xml",
+                   stylesheet = None,
+                   extra_data = None,
+                   ignore_errors = False,
+                   job_id = None,
+                   commit_job = True,
+                   delete_job = False,
+                   strategy = None,
+                   update_policy = None,
+                   conflict_policy = None,
+                   last_sync = None,
+                   onconflict = None,
                    **args):
         """
             XML Importer
@@ -2422,11 +2422,11 @@ class S3Resource(object):
         if not job_id:
 
             # Additional stylesheet parameters
-            args.update(domain=xml.domain,
-                        base_url=current.response.s3.base_url,
-                        prefix=self.prefix,
-                        name=self.name,
-                        utcnow=s3_format_datetime())
+            args.update(domain = xml.domain,
+                        base_url = current.response.s3.base_url,
+                        prefix = self.prefix,
+                        name = self.name,
+                        utcnow = s3_format_datetime())
 
             # Build import tree
             if not isinstance(source, (list, tuple)):
@@ -2446,12 +2446,12 @@ class S3Resource(object):
                         t = xml.json2tree(s)
                 elif format == "csv":
                     t = xml.csv2tree(s,
-                                     resourcename=resourcename,
-                                     extra_data=extra_data)
+                                     resourcename = resourcename,
+                                     extra_data = extra_data)
                 elif format == "xls":
                     t = xml.xls2tree(s,
-                                     resourcename=resourcename,
-                                     extra_data=extra_data)
+                                     resourcename = resourcename,
+                                     extra_data = extra_data)
                 else:
                     t = xml.parse(s)
                 if not t:
@@ -2481,15 +2481,15 @@ class S3Resource(object):
         # Flag to let onvalidation/onaccept know this is coming from a Bulk Import
         response.s3.bulk = True
         success = self.import_tree(id, tree,
-                                   ignore_errors=ignore_errors,
-                                   job_id=job_id,
-                                   commit_job=commit_job,
-                                   delete_job=delete_job,
-                                   strategy=strategy,
-                                   update_policy=update_policy,
-                                   conflict_policy=conflict_policy,
-                                   last_sync=last_sync,
-                                   onconflict=onconflict)
+                                   ignore_errors = ignore_errors,
+                                   job_id = job_id,
+                                   commit_job = commit_job,
+                                   delete_job = delete_job,
+                                   strategy = strategy,
+                                   update_policy = update_policy,
+                                   conflict_policy = conflict_policy,
+                                   last_sync = last_sync,
+                                   onconflict = onconflict)
         response.s3.bulk = False
 
         self.files = Storage()
@@ -2544,15 +2544,15 @@ class S3Resource(object):
 
     # -------------------------------------------------------------------------
     def import_tree(self, record_id, tree,
-                    job_id=None,
-                    ignore_errors=False,
-                    delete_job=False,
-                    commit_job=True,
-                    strategy=None,
-                    update_policy=None,
-                    conflict_policy=None,
-                    last_sync=None,
-                    onconflict=None):
+                    job_id = None,
+                    ignore_errors = False,
+                    delete_job = False,
+                    commit_job = True,
+                    strategy = None,
+                    update_policy = None,
+                    conflict_policy = None,
+                    last_sync = None,
+                    onconflict = None):
         """
             Import data from an S3XML element tree.
 
@@ -2582,12 +2582,12 @@ class S3Resource(object):
             self.error_tree = None
             try:
                 import_job = S3ImportJob(table,
-                                         job_id=job_id,
-                                         strategy=strategy,
-                                         update_policy=update_policy,
-                                         conflict_policy=conflict_policy,
-                                         last_sync=last_sync,
-                                         onconflict=onconflict)
+                                         job_id = job_id,
+                                         strategy = strategy,
+                                         update_policy = update_policy,
+                                         conflict_policy = conflict_policy,
+                                         last_sync = last_sync,
+                                         onconflict = onconflict)
             except:
                 self.error = current.ERROR.BAD_SOURCE
                 return False
@@ -2699,13 +2699,13 @@ class S3Resource(object):
 
             # Import all matching elements
             import_job = S3ImportJob(table,
-                                     tree=tree,
-                                     files=self.files,
-                                     strategy=strategy,
-                                     update_policy=update_policy,
-                                     conflict_policy=conflict_policy,
-                                     last_sync=last_sync,
-                                     onconflict=onconflict)
+                                     tree = tree,
+                                     files = self.files,
+                                     strategy = strategy,
+                                     update_policy = update_policy,
+                                     conflict_policy = conflict_policy,
+                                     last_sync = last_sync,
+                                     onconflict = onconflict)
             add_item = import_job.add_item
             exposed_aliases = self.components.exposed_aliases
             for element in elements:
@@ -2758,12 +2758,12 @@ class S3Resource(object):
     # XML introspection
     # -------------------------------------------------------------------------
     def export_options(self,
-                       component=None,
-                       fields=None,
-                       only_last=False,
-                       show_uids=False,
-                       hierarchy=False,
-                       as_json=False):
+                       component = None,
+                       fields = None,
+                       only_last = False,
+                       show_uids = False,
+                       hierarchy = False,
+                       as_json = False):
         """
             Export field options of this resource as element tree
 
@@ -2779,11 +2779,11 @@ class S3Resource(object):
         if component is not None:
             c = self.components.get(component)
             if c:
-                tree = c.export_options(fields=fields,
-                                        only_last=only_last,
-                                        show_uids=show_uids,
-                                        hierarchy=hierarchy,
-                                        as_json=as_json)
+                tree = c.export_options(fields = fields,
+                                        only_last = only_last,
+                                        show_uids = show_uids,
+                                        hierarchy = hierarchy,
+                                        as_json = as_json)
                 return tree
             else:
                 # If we get here, we've been called from the back-end,
@@ -2833,8 +2833,8 @@ class S3Resource(object):
 
                 # Get the latest record
                 # NB: this assumes that the lookupfield is auto-incremented
-                row = db().select(orderby=~lookupfield,
-                                  limitby=(0, 1),
+                row = db().select(orderby = ~lookupfield,
+                                  limitby = (0, 1),
                                   *fields).first()
 
                 # Represent the value and generate the output JSON
@@ -2864,9 +2864,9 @@ class S3Resource(object):
 
             xml = current.xml
             tree = xml.get_options(self.table,
-                                   fields=fields,
-                                   show_uids=show_uids,
-                                   hierarchy=hierarchy)
+                                   fields = fields,
+                                   show_uids = show_uids,
+                                   hierarchy = hierarchy)
 
             if as_json:
                 return xml.tree2json(tree, pretty_print=False,
@@ -2900,12 +2900,12 @@ class S3Resource(object):
 
     # -------------------------------------------------------------------------
     def export_struct(self,
-                      meta=False,
-                      options=False,
-                      references=False,
-                      stylesheet=None,
-                      as_json=False,
-                      as_tree=False):
+                      meta = False,
+                      options = False,
+                      references = False,
+                      stylesheet = None,
+                      as_json = False,
+                      as_tree = False):
         """
             Get the structure of the resource
 
