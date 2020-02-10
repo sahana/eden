@@ -1,18 +1,16 @@
 {{if s3.debug:}}
 {{if s3.cdn:}}
 <!-- For Sites Hosted on the Public Internet, using Google's version of jQuery will provide better performance -->
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.js"></script>
-<script src="//code.jquery.com/jquery-migrate-1.2.1.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.js"></script>
+<script src="//code.jquery.com/jquery-migrate-1.4.1.js"></script>
 {{else:}}
-<script src="/{{=appname}}/static/scripts/jquery-1.11.3.js"></script>
-<script src="/{{=appname}}/static/scripts/jquery-migrate-1.2.1.js"></script>
+<script src="/{{=appname}}/static/scripts/jquery-2.2.4.js"></script>
+<script src="/{{=appname}}/static/scripts/jquery-migrate-1.4.1.js"></script>
 {{pass}}
 {{else:}}
 {{if s3.cdn:}}
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 {{else:}}
-<script src="/{{=appname}}/static/scripts/jquery-1.11.3.min.js"></script>
-<script src="/{{=appname}}/static/scripts/jquery-migrate-1.2.1.min.js"></script>
+<script src="/{{=appname}}/static/scripts/jquery-2.2.4.min.js"></script>
 {{pass}}
 {{pass}}

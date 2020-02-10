@@ -1575,7 +1575,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 url = S3.Ap.concat('/default/download/' + file);
 
             // Add image to DOM to get the height/width
-            $('<img>').attr('src', url).load(function() {
+            $('<img>').attr('src', url).on('load', function() {
                 var width = this.width,     // Should always be 480
                     height = this.height;   // Should always be 480
 

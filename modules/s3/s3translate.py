@@ -35,7 +35,7 @@ from gluon import current
 from gluon.languages import read_dict, write_dict
 from gluon.storage import Storage
 
-from s3compat import StringIO, pickle
+from s3compat import PY2, BytesIO, pickle
 from .s3fields import S3ReusableField
 
 """
@@ -646,7 +646,7 @@ class TranslateReadFiles(object):
                 return
 
         # Read all contents of file
-        fileContent = f.read()
+        fileContent = f.read().decode("utf-8")
         f.close()
 
         # Remove CL-RF and NOEOL characters
@@ -731,6 +731,19 @@ class TranslateReadFiles(object):
            using regular expressions
         """
 
+        html_js_file = open(filename, "rb")
+        try:
+            html_js = html_js_file.read().decode("utf-8")
+        except UnicodeDecodeError:
+            try:
+                html_js = html_js_file.read().decode("latin-1")
+            except UnicodeDecodeError:
+                current.log.warning("%s is not in either UTF-8 or LATIN-1 encoding" % filename)
+                return []
+            else:
+                current.log.warning("%s is in LATIN-1 encoding not UTF-8" % filename)
+        html_js_file.close()
+
         import re
 
         PY_STRING_LITERAL_RE = r'(?<=[^\w]T\()(?P<name>'\
@@ -741,18 +754,16 @@ class TranslateReadFiles(object):
         regex_trans = re.compile(PY_STRING_LITERAL_RE, re.DOTALL)
         findall = regex_trans.findall
 
-        html_js_file = open(filename, "rb")
         linecount = 0
         strings = []
         sappend = strings.append
 
-        for line in html_js_file:
+        for line in html_js:
             linecount += 1
             occur = findall(line)
             for s in occur:
                 sappend((linecount, s))
 
-        html_js_file.close()
         return strings
 
     # ---------------------------------------------------------------------
@@ -770,10 +781,11 @@ class TranslateReadFiles(object):
 
         if os.path.exists(user_file):
             f = open(user_file, "rb")
-            for line in f:
+            user_data = f.read().decode("utf-8")
+            f.close()
+            for line in user_data:
                 line = line.replace("\n", "").replace("\r", "")
                 strings.append((COMMENT, line))
-            f.close()
 
         return strings
 
@@ -793,9 +805,10 @@ class TranslateReadFiles(object):
 
         if os.path.exists(user_file):
             f = open(user_file, "rb")
+            user_data = f.read().decode("utf-8")
+            f.close()
             for line in f:
                 oappend(line)
-            f.close()
 
         # Append user strings if not already present
         f = open(user_file, "a")
@@ -849,7 +862,7 @@ class TranslateReadFiles(object):
         read_csv = S.read_csv
         for template in template_list:
             pth = path.join(base_dir, "modules", "templates", template)
-            if path.exists(path.join(pth, "tasks.cfg")) == False:
+            if path.exists(path.join(pth, "tasks.cfg")) is False:
                 continue
             bi.load_descriptor(pth)
 
@@ -1010,7 +1023,7 @@ class Strings(object):
 
         # If the language file doesn't exist, create it
         if not os.path.exists(langfile):
-            f = open(langfile, "wb")
+            f = open(langfile, "w")
             f.write("")
             f.close()
 
@@ -1112,7 +1125,10 @@ class Strings(object):
 
         data = []
         dappend = data.append
-        f = open(fileName, "rb")
+        if PY2:
+            f = open(fileName, "r")
+        else:
+            f = open(fileName, "r", encoding="utf-8", newline="")
         transReader = csv.reader(f)
         for row in transReader:
             dappend(row)
@@ -1147,8 +1163,10 @@ class Strings(object):
         f = open(fileName, "wb")
 
         # Quote all the elements while writing
-        transWriter = csv.writer(f, delimiter=" ",
-                                 quotechar='"', quoting = csv.QUOTE_ALL)
+        transWriter = csv.writer(f,
+                                 delimiter = " ",
+                                 quotechar = '"',
+                                 quoting = csv.QUOTE_ALL)
         transWriter.writerow(("location", "source", "target"))
         for row in data:
             transWriter.writerow(row)
@@ -1234,6 +1252,9 @@ class Strings(object):
         import xlwt
 
         from gluon.contenttype import contenttype
+        
+        #if not PY2:
+        #    import unicodedata
 
         # Define spreadsheet properties
         wbk = xlwt.Workbook("utf-8")
@@ -1249,9 +1270,17 @@ class Strings(object):
 
         row_num = 1
 
+        # Accent Folding - why?
+        #if PY2:
+        #    def string_escape(s):
+        #        return s.decode("string-escape").decode("utf-8")
+        #else:
+        #    def string_escape(s):
+        #        return unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode("utf-8")
+
         # Write the data to spreadsheet
         for (loc, d1, d2) in Strings:
-            d2 = d2.decode("string-escape").decode("utf-8")
+            #d2 = string_escape(d2)
             sheet.write(row_num, 0, loc, style)
             try:
                 sheet.write(row_num, 1, d1, style)
@@ -1266,7 +1295,7 @@ class Strings(object):
             sheet.col(colx).width = 15000
 
         # Initialize output
-        output = StringIO()
+        output = BytesIO()
 
         # Save the spreadsheet
         wbk.save(output)
@@ -1387,7 +1416,7 @@ class Pootle(object):
             current.log.error("Connection Error")
             return False
 
-        zipf = zipfile.ZipFile(StringIO(r.content))
+        zipf = zipfile.ZipFile(BytesIO(r.content))
         zipf.extractall()
         file_name_po = "%s.po" % lang_code
         file_name_py = "%s.py" % lang_code
@@ -1405,7 +1434,7 @@ class Pootle(object):
         postrings = S.read_w2p(w2pfilename)
         # Remove untranslated strings
         postrings = [tup for tup in postrings if tup[0] != tup[1]]
-        postrings.sort(key=lambda tup: tup[0])
+        postrings.sort(key = lambda tup: tup[0])
 
         os.unlink(file_name_po)
         os.unlink(w2pfilename)

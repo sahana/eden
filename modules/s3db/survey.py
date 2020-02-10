@@ -88,7 +88,7 @@ from gluon.storage import Storage
 from gluon.sqlhtml import *
 
 from ..s3 import *
-from s3compat import StringIO, xrange
+from s3compat import BytesIO, StringIO, xrange
 from s3chart import S3Chart
 
 DEBUG = False
@@ -2614,8 +2614,10 @@ class S3SurveyCompleteModel(S3Model):
             survey_complete into answer records held in survey_answer
         """
 
+        import codecs
         import csv
         import os
+        from tempfile import TemporaryFile
 
         strio = StringIO()
         strio.write(question_list)
@@ -2628,14 +2630,15 @@ class S3SurveyCompleteModel(S3Model):
                 row.insert(0, complete_id)
                 append(row)
 
-        from tempfile import TemporaryFile
-        csvfile = TemporaryFile()
-        writer = csv.writer(csvfile)
+        bio = TemporaryFile()
+        StreamWriter = codecs.getwriter("utf-8")
+        csv_file = StreamWriter(bio)
+        writer = csv.writer(csv_file)
         writerow = writer.writerow
         writerow(["complete_id", "question_code", "value"])
         for row in answer:
             writerow(row)
-        csvfile.seek(0)
+        bio.seek(0)
         xsl = os.path.join("applications",
                            current.request.application,
                            "static",
@@ -2644,7 +2647,7 @@ class S3SurveyCompleteModel(S3Model):
                            "survey",
                            "answer.xsl")
         resource = current.s3db.resource("survey_answer")
-        resource.import_xml(csvfile, stylesheet = xsl, format="csv",)
+        resource.import_xml(bio, stylesheet=xsl, format="csv")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2653,8 +2656,10 @@ class S3SurveyCompleteModel(S3Model):
             Private function used to save the locations to gis.location
         """
 
+        import codecs
         import csv
         import os
+        from tempfile import TemporaryFile
 
         last_loc_widget = None
         code_list = ["STD-L0", "STD-L1", "STD-L2", "STD-L3", "STD-L4"]
@@ -2685,13 +2690,14 @@ class S3SurveyCompleteModel(S3Model):
             else:
                 aappend("")
 
-        from tempfile import TemporaryFile
-        csvfile = TemporaryFile()
-        writer = csv.writer(csvfile)
+        bio = TemporaryFile()
+        StreamWriter = codecs.getwriter("utf-8")
+        csv_file = StreamWriter(bio)
+        writer = csv.writer(csv_file)
         headings += ["Code2", "Lat", "Lon"]
         writer.writerow(headings)
         writer.writerow(answer)
-        csvfile.seek(0)
+        bio.seek(0)
         xsl = os.path.join("applications",
                            current.request.application,
                            "static",
@@ -2700,7 +2706,7 @@ class S3SurveyCompleteModel(S3Model):
                            "gis",
                            "location.xsl")
         resource = current.s3db.resource("gis_location")
-        resource.import_xml(csvfile, stylesheet = xsl, format="csv")
+        resource.import_xml(bio, stylesheet = xsl, format="csv")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3269,7 +3275,7 @@ class survey_TranslateDownload(S3Method):
         except IOError:
             strings = {}
 
-        output = StringIO()
+        output = BytesIO()
 
         book = xlwt.Workbook(encoding="utf-8")
         sheet = book.add_sheet(record.language)
@@ -3359,7 +3365,7 @@ class survey_ExportResponses(S3Method):
         except AttributeError:
             r.error(404, T("Series not found!"))
 
-        output = StringIO()
+        output = BytesIO()
 
         book = xlwt.Workbook(encoding="utf-8")
         # Get all questions and write out as a heading
@@ -6597,11 +6603,11 @@ class S3AbstractAnalysis():
     # -------------------------------------------------------------------------
     def drawChart(self,
                   series_id,
-                  output=None,
-                  data=None,
-                  label=None,
-                  xLabel=None,
-                  yLabel=None):
+                  output = None,
+                  data = None,
+                  label = None,
+                  xLabel = None,
+                  yLabel = None):
         """
             This function will draw the chart using the answer set.
 
@@ -6612,9 +6618,9 @@ class S3AbstractAnalysis():
         """
 
         msg = "Programming Error: No chart for %sWidget" % self.type
-        output = StringIO()
-        output.write(msg)
-        current.response.body = output
+        #output = BytesIO()
+        #output.write(msg)
+        current.response.body = msg
 
     # -------------------------------------------------------------------------
     def summary(self):

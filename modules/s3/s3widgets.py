@@ -1691,27 +1691,27 @@ class S3CalendarWidget(FormWidget):
     """
 
     def __init__(self,
-                 calendar=None,
-                 date_format=None,
-                 time_format=None,
-                 separator=None,
-                 minimum=None,
-                 maximum=None,
-                 past=None,
-                 future=None,
-                 past_months=None,
-                 future_months=None,
-                 month_selector=False,
-                 year_selector=True,
-                 min_year=None,
-                 max_year=None,
-                 week_number=False,
-                 buttons=None,
-                 timepicker=False,
-                 minute_step=5,
-                 set_min=None,
-                 set_max=None,
-                 clear_text=None,
+                 calendar = None,
+                 date_format = None,
+                 time_format = None,
+                 separator = None,
+                 minimum = None,
+                 maximum = None,
+                 past = None,
+                 future = None,
+                 past_months = None,
+                 future_months = None,
+                 month_selector = False,
+                 year_selector = True,
+                 min_year = None,
+                 max_year = None,
+                 week_number = False,
+                 buttons = None,
+                 timepicker = False,
+                 minute_step = 5,
+                 set_min = None,
+                 set_max = None,
+                 clear_text = None,
                  ):
         """
             Constructor
@@ -1837,7 +1837,7 @@ class S3CalendarWidget(FormWidget):
         firstDOW = c.first_dow
 
         dtformat = separator.join([date_format, time_format])
-        extremes = self.extremes(dtformat=dtformat)
+        extremes = self.extremes(dtformat = dtformat)
 
         T = current.T
 
@@ -1878,8 +1878,8 @@ class S3CalendarWidget(FormWidget):
 
         # Construct and return the widget
         return TAG[""](DIV(real_input,
-                           _id=container_id,
-                           _class="calendar-widget-container",
+                           _id = container_id,
+                           _class = "calendar-widget-container",
                            ),
                        )
 
@@ -1933,16 +1933,16 @@ class S3CalendarWidget(FormWidget):
                 # Consistency with S3Calendar
                 latest = datetime.datetime.combine(latest, datetime.time(8, 0, 0))
         elif self.future is not None:
-            latest = now + datetime.timedelta(hours=self.future)
+            latest = now + datetime.timedelta(hours = self.future)
         elif self.future_months is not None:
-            latest = now + relativedelta(months=self.future_months)
+            latest = now + relativedelta(months = self.future_months)
         else:
             fallback = True
-            latest = now + datetime.timedelta(hours=876000)
+            latest = now + datetime.timedelta(hours = 876000)
         if latest is not None:
             if not fallback:
                 fyears = abs(latest.year - now.year)
-            latest = S3DateTime.to_local(latest.replace(microsecond=0))
+            latest = S3DateTime.to_local(latest.replace(microsecond = 0))
             extremes["maxDateTime"] = latest.isoformat()
 
         # Default date/time
