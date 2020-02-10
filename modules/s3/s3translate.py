@@ -807,7 +807,7 @@ class TranslateReadFiles(object):
             f = open(user_file, "rb")
             user_data = f.read().decode("utf-8")
             f.close()
-            for line in f:
+            for line in user_data:
                 oappend(line)
 
         # Append user strings if not already present
@@ -1160,7 +1160,10 @@ class Strings(object):
 
         import csv
 
-        f = open(fileName, "wb")
+        if PY2:
+            f = open(fileName, "w")
+        else:
+            f = open(fileName, "w", encoding="utf-8")
 
         # Quote all the elements while writing
         transWriter = csv.writer(f,
@@ -1177,19 +1180,17 @@ class Strings(object):
     def write_po(self, data):
         """ Returns a ".po" file constructed from given strings """
 
-        from subprocess import call
         from tempfile import NamedTemporaryFile
         from gluon.contenttype import contenttype
+        # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
+        from translate.convert.csv2po import main as csv2po
 
         f = NamedTemporaryFile(delete=False)
         csvfilename = "%s.csv" % f.name
         self.write_csv(csvfilename, data)
 
-        g = NamedTemporaryFile(delete=False)
-        pofilename = "%s.po" % g.name
-        # Shell needed on Win32
-        # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
-        call(["csv2po", "-i", csvfilename, "-o", pofilename], shell=True)
+        pofilename = "%s.po" % f.name
+        csv2po(['-i', csvfilename, '-o', pofilename])
 
         h = open(pofilename, "rb")
 
@@ -1500,8 +1501,9 @@ class Pootle(object):
         if not ret:
             return
 
-        from subprocess import call
         from tempfile import NamedTemporaryFile
+        # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
+        from translate.convert.csv2po import main as csv2po
 
         # returns pystrings if preference was True else returns postrings
         ret = self.merge_strings(ret[0], ret[1], preference)
@@ -1511,8 +1513,8 @@ class Pootle(object):
         data = []
         dappend = data.append
 
-        temp_csv = NamedTemporaryFile(delete=False)
-        csvfilename = "%s.csv" % temp_csv.name
+        f = NamedTemporaryFile(delete=False)
+        csvfilename = "%s.csv" % f.name
 
         if preference:
             # Only python file has been changed
@@ -1532,12 +1534,8 @@ class Pootle(object):
 
             S.write_csv(csvfilename, data)
 
-            temp_po = NamedTemporaryFile(delete=False)
-            pofilename = "%s.po" % temp_po.name
-
-            # Shell needed on Win32
-            # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
-            call(["csv2po", "-i", csvfilename, "-o", pofilename], shell=True)
+            pofilename = "%s.po" % f.name
+            csv2po(['-i', csvfilename, '-o', pofilename])
             self.upload(lang_code, pofilename)
 
             # Clean up extra created files
