@@ -1298,9 +1298,6 @@ dropdown.change(function() {
                           {"command": {"cmd": command,
                                        "chdir": request.env.web2py_path,
                                        },
-                           #"become": "yes",
-                           #"become_method": "sudo",
-                           #"become_user": "web2py",
                            "loop": "{{ ec2.instances }}",
                            },
                           ]
@@ -1321,6 +1318,7 @@ dropdown.change(function() {
                                        "method": "DELETE",
                                        "headers": {"X-Api-Key": gandi_api_key,
                                                    },
+                                       "status_code": ["200", "204"],
                                        },
                                # Don't worry if it didn't exist
                                "ignore_errors": "yes",
@@ -1332,6 +1330,7 @@ dropdown.change(function() {
                                                    },
                                        "body_format": "json", # Content-Type: application/json
                                        "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ item.public_ip }}"]}' % dns_record
+                                       "status_code": ["200", "201"],
                                        },
                                "loop": "{{ ec2.instances }}",
                                },
@@ -2723,7 +2722,7 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
     """
 
     # No try/except here as we want ImportErrors to raise
-    #import shutil
+    import shutil
     import yaml
     from ansible.module_utils.common.collections import ImmutableDict
     from ansible.parsing.dataloader import DataLoader
@@ -2873,14 +2872,15 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
     # Since the API is constructed for CLI, it expects certain options to always be set in the context object
     if tags is None:
         tags = [] # Needs to be an iterable
-    context.CLIARGS = ImmutableDict(module_path = [roles_path],
-                                    forks = 10,
-                                    become = None,
+    context.CLIARGS = ImmutableDict(become = None,
                                     become_method = None,
                                     become_user = None,
                                     check = False,
                                     diff = False,
+                                    forks = 10,
+                                    module_path = [roles_path],
                                     tags = tags,
+                                    verbosity = 1,
                                     )
 
     # Initialize needed objects
@@ -2930,7 +2930,7 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
                 tqm.cleanup()
 
             # Remove ansible tmpdir
-            #shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
+            shutil.rmtree(os.path.join("/", "tmp", "ansible"), True)
 
     # Change working directory back
     os.chdir(cwd)
