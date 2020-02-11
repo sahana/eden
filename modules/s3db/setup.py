@@ -1329,7 +1329,7 @@ dropdown.change(function() {
                                        "headers": {"X-Api-Key": gandi_api_key,
                                                    },
                                        "body_format": "json", # Content-Type: application/json
-                                       "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ item.public_ip }}"]}' % dns_record
+                                       "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ item.public_ip }}"]}' % dns_record,
                                        "status_code": ["200", "201"],
                                        },
                                "loop": "{{ ec2.instances }}",
