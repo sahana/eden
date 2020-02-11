@@ -2872,11 +2872,16 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
     # Since the API is constructed for CLI, it expects certain options to always be set in the context object
     if tags is None:
         tags = [] # Needs to be an iterable
+    tmp_path = os.path.join("/", "tmp", "ansible")
     context.CLIARGS = ImmutableDict(become = None,
                                     become_method = None,
                                     become_user = None,
                                     check = False,
                                     diff = False,
+                                    #extra_vars = {"ansible_local_temp": tmp_path,
+                                    #              "ansible_local_tmp": tmp_path,
+                                    #              "ansible_ssh_control_path_dir": tmp_path,
+                                    #              },
                                     forks = 10,
                                     module_path = [roles_path],
                                     tags = tags,
@@ -2930,7 +2935,7 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
                 tqm.cleanup()
 
             # Remove ansible tmpdir
-            shutil.rmtree(os.path.join("/", "tmp", "ansible"), True)
+            shutil.rmtree(tmp_path, True)
 
     # Change working directory back
     os.chdir(cwd)
