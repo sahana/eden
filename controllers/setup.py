@@ -297,6 +297,7 @@ def deployment():
                                             "repo_url",
                                             "cloud_id",
                                             "dns_id",
+                                            "production_server.host_ip",
                                             "production_server.remote_user",
                                             "production_server.private_key",
                                             postprocess = deployment_create_postprocess,

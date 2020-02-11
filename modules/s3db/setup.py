@@ -2867,7 +2867,8 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
     cwd = os.getcwd()
 
     # Change working directory
-    roles_path = os.path.join(current.request.folder, "private", "eden_deploy", "roles")
+    request = current.request
+    roles_path = os.path.join(request.env.applications_parent, request.folder, "private", "eden_deploy", "roles")
     os.chdir(roles_path)
 
     # Since the API is constructed for CLI, it expects certain options to always be set in the context object

@@ -1182,7 +1182,6 @@ class Strings(object):
 
         from tempfile import NamedTemporaryFile
         from gluon.contenttype import contenttype
-        # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
         from translate.convert.csv2po import main as csv2po
 
         f = NamedTemporaryFile(delete=False)
@@ -1502,7 +1501,6 @@ class Pootle(object):
             return
 
         from tempfile import NamedTemporaryFile
-        # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
         from translate.convert.csv2po import main as csv2po
 
         # returns pystrings if preference was True else returns postrings
