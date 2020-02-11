@@ -988,7 +988,7 @@ def config(settings):
     #        34: T("Purchase"),
     #    }
     #settings.inv.item_status = {
-    #        0: "",
+    #        0: "-",
     #        1: T("Dump"),
     #        2: T("Sale"),
     #        3: T("Reject"),
