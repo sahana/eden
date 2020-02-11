@@ -2736,6 +2736,8 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
     from ansible import context
     import ansible.constants as C
 
+    C.DEFAULT_LOCAL_TMP = "/tmp/ansible"
+
     #W2P_TASK = current.W2P_TASK
 
     if hosts is None:
