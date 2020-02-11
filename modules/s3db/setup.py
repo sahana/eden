@@ -2723,7 +2723,7 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
     """
 
     # No try/except here as we want ImportErrors to raise
-    import shutil
+    #import shutil
     import yaml
     from ansible.module_utils.common.collections import ImmutableDict
     from ansible.parsing.dataloader import DataLoader
@@ -2734,9 +2734,6 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
     from ansible.executor.task_queue_manager import TaskQueueManager
     from ansible.plugins.callback import CallbackBase
     from ansible import context
-    import ansible.constants as C
-
-    C.set_constant("DEFAULT_LOCAL_TMP", "/tmp/ansible")
 
     #W2P_TASK = current.W2P_TASK
 
@@ -2933,7 +2930,7 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
                 tqm.cleanup()
 
             # Remove ansible tmpdir
-            shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
+            #shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
 
     # Change working directory back
     os.chdir(cwd)
@@ -2953,7 +2950,7 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
         # Upload logs to Database
         table = current.s3db.setup_instance
         field = table.log_file
-        with open(log_path, "r") as log_file:
+        with open(log_path, "rb") as log_file:
             newfilename = field.store(log_file,
                                       log_file_name,
                                       field.uploadfolder)
