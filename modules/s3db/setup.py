@@ -283,12 +283,12 @@ class S3AWSCloudModel(S3CloudModel):
                      #      #label = T("Enabled?"),
                      #      represent = s3_yes_no_represent,
                      #      ),
-                     Field("secret_key", "password",
+                     Field("access_key", "password",
                            readable = False,
                            requires = IS_NOT_EMPTY(),
                            widget = S3PasswordWidget(),
                            ),
-                     Field("access_key", "password",
+                     Field("secret_key", "password",
                            readable = False,
                            requires = IS_NOT_EMPTY(),
                            widget = S3PasswordWidget(),
@@ -321,7 +321,8 @@ class S3AWSCloudModel(S3CloudModel):
                            #requires = IS_IN_SET(aws_instance_types),
                            ),
                      Field("image",
-                           default = "ami-0ad916493173c5680", # Debian 9 in London
+                           # https://wiki.debian.org/Cloud/AmazonEC2Image/Buster
+                           default = "ami-042796b8e41bb5fad", # Debian 10 in London
                            #label = T("Image"), # AMI ID
                            ),
                      Field("security_group",
@@ -1188,7 +1189,7 @@ dropdown.change(function() {
                                        )
 
         # Build Playbook data structure
-        roles_path = os.path.join(r.folder, "private", "eden_deploy", "roles")
+        #roles_path = os.path.join(r.folder, "private", "eden_deploy", "roles")
 
         appname = "eden" # @ToDo: Allow this to be configurable
         hostname = sitename.split(".", 1)[0]
@@ -1422,12 +1423,12 @@ dropdown.change(function() {
                                       "type": instance_type,
                                       "web_server": web_server,
                                       },
-                             "roles": [{"role": "%s/common" % roles_path },
-                                       {"role": "%s/exim" % roles_path },
-                                       {"role": "%s/%s" % (roles_path, db_type) },
-                                       {"role": "%s/uwsgi" % roles_path },
-                                       {"role": "%s/%s" % (roles_path, web_server) },
-                                       {"role": "%s/final" % roles_path },
+                             "roles": [{"role": "common" },# "%s/common" % roles_path
+                                       {"role": "exim" }, # "%s/exim" % roles_path
+                                       {"role": db_type }, # "%s/%s" % (roles_path, db_type)
+                                       {"role": "uwsgi" }, # "%s/uwsgi" % roles_path
+                                       {"role": web_server }, # "%s/%s" % (roles_path, web_server)
+                                       {"role": "final" }, # "%s/final" % roles_path
                                        ]
                              })
             if delete_ssh_key:
@@ -1464,7 +1465,7 @@ dropdown.change(function() {
                                   "password": db_password,
                                   "type": instance_type
                                   },
-                         "roles": [{ "role": "%s/%s" % (roles_path, db_type) },
+                         "roles": [{ "role": db_type }, # "%s/%s" % (roles_path, db_type)
                                    ]
                          },
                         {"hosts": webserver_ip,
@@ -1488,11 +1489,11 @@ dropdown.change(function() {
                                   "type": instance_type,
                                   "web_server": web_server,
                                   },
-                         "roles": [{"role": "%s/common" % roles_path },
-                                   {"role": "%s/exim" % roles_path },
-                                   {"role": "%s/uwsgi" % roles_path },
-                                   {"role": "%s/%s" % (roles_path, web_server) },
-                                   {"role": "%s/final" % roles_path },
+                         "roles": [{"role": "common" },# "%s/common" % roles_path
+                                   {"role": "exim" }, # "%s/exim" % roles_path
+                                   {"role": "uwsgi" }, # "%s/uwsgi" % roles_path
+                                   {"role": web_server }, # "%s/%s" % (roles_path, web_server)
+                                   {"role": "final" }, # "%s/final" % roles_path
                                    ],
                          },
                         ]
@@ -2866,7 +2867,7 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
     cwd = os.getcwd()
 
     # Change working directory
-    roles_path = os.path.join(current.request.folder, "private", "eden_deploy")
+    roles_path = os.path.join(current.request.folder, "private", "eden_deploy", "roles")
     os.chdir(roles_path)
 
     # Since the API is constructed for CLI, it expects certain options to always be set in the context object
@@ -3106,7 +3107,7 @@ def setup_instance_method(instance_id, method="start"):
                                                        ).first()
 
     # Build Playbook data structure
-    roles_path = os.path.join(folder, "private", "eden_deploy", "roles")
+    #roles_path = os.path.join(folder, "private", "eden_deploy", "roles")
 
     playbook.append({"hosts": host_ip,
                      "connection": connection,
@@ -3117,7 +3118,7 @@ def setup_instance_method(instance_id, method="start"):
                               "web_server": WEB_SERVERS[deployment.webserver_type],
                               "type": INSTANCE_TYPES[instance.type],
                               },
-                     "roles": [{ "role": "%s/%s" % (roles_path, method) },
+                     "roles": [{ "role": method }, #"%s/%s" % (roles_path, method)
                                ]
                      })
 
