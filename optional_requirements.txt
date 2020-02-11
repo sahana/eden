@@ -10,9 +10,9 @@ GDAL>=1.9.0 #from osgeo import ogr
 geopy>=1.18.1 #from geopy import geocoders
 # Warning: S3PDF unresolved dependency: reportlab required for PDF export
 reportlab>=2.5
-# Warning: S3Msg unresolved dependency pyserial required for Serial port modem usage
+# Warning: S3Msg unresolved dependency: pyserial required for Serial port modem usage
 pyserial>=2.6
-# Warning: S3Msg unresolved dependency tweepy required for non-Tropo Twitter support
+# Warning: S3Msg unresolved dependency: tweepy required for non-Tropo Twitter support
 tweepy>=1.9
 # Warning: S3XLS unresolved dependency: xlrd required for XLS export
 xlrd>=0.7.1
@@ -54,3 +54,5 @@ pyparsing>=2.0.1
 #pyshorteners>=0.6.1
 # Warning: S3Doc unresolved dependency: docx-mailmerge required to merge into docx templates (currently used by DRKCM)
 #docx-mailmerge>=0.4.0
+# Warning: S3Translate unresolved dependency: translate-toolkit required for Pootle support
+translate-toolkit>=1.0.1
