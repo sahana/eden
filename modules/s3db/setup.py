@@ -754,7 +754,7 @@ class S3SetupModel(S3Model):
                            ),
                      Field("url",
                            label = T("URL"),
-                           requires = IS_URL(),
+                           requires = IS_URL(prepend_scheme = "https"),
                            represent = lambda opt: A(opt,
                                                      _href = opt,
                                                      _target="_blank",
@@ -1228,6 +1228,7 @@ dropdown.change(function() {
             # Use the value from dropdown (& introspect the locale template(s))
             template = deployment.template
 
+        delete_ssh_key = True
         if len(servers) == 1:
             # All-in-one deployment
             server = servers.first()
@@ -1247,8 +1248,13 @@ dropdown.change(function() {
                 public_key = "%s.pub" % private_key
                 provided_key = server.private_key
                 if provided_key:
-                    delete_ssh_key = False
                     provided_key = os.path.join(r.folder, "uploads", provided_key)
+                    # Copy the Private Key to where it will be used
+                    tasks.append({"copy": {"src": provided_key,
+                                           "dest": private_key,
+                                           "mode": "0600",
+                                           },
+                                  })
                     # Generate the Public Key
                     command = "openssl rsa -in %(provided_key)s -pubout > %(public_key)s" % \
                         {provided_key: provided_key,
@@ -1257,7 +1263,6 @@ dropdown.change(function() {
                     tasks.append({"command": command,
                                   })
                 else:
-                    delete_ssh_key = True
                     # Generate an OpenSSH keypair with the default values (4096 bits, rsa)
                     tasks.append({"openssh_keypair": {"path": private_key,
                                                       },
@@ -1372,13 +1377,13 @@ dropdown.change(function() {
                                  })
             else:
                 # No Cloud
-                delete_ssh_key = False
                 remote_user = server.remote_user
                 host_ip = server.host_ip
                 # @ToDo Check that ip_addr is correct
                 #       - if host_ip == "127.0.0.1" then we can check the contents
                 if host_ip == "127.0.0.1":
                     connection = "local"
+                    delete_ssh_key = False
                 else:
                     # We will need the SSH key
                     private_key = server.private_key
@@ -1435,8 +1440,15 @@ dropdown.change(function() {
                         #   if ip_addr != host_ip:
                         #       current.session.warning = current.T("Deployment will not have SSL: URL doesn't match server IP Address")
                         #       protocol = "http"
+                    # Copy the Private Key to where it will be used
+                    provided_key = os.path.join(r.folder, "uploads", private_key)
+                    private_key = "/tmp/%s" % server_name
+                    tasks.append({"copy": {"src": provided_key,
+                                           "dest": private_key,
+                                           "mode": "0600",
+                                           },
+                                  })
                     # Add instance to host group (to associate private_key)
-                    private_key = os.path.join(r.folder, "uploads", private_key)
                     tasks.append({"add_host": {"hostname": host_ip,
                                                "groupname": "launched",
                                                "ansible_ssh_private_key_file": private_key,
