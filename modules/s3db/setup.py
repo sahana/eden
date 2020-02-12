@@ -133,6 +133,11 @@ class S3DNSModel(S3Model):
                                               sort = True
                                               ),
                                     ),
+                                 comment = DIV(_class="tooltip",
+                                               _title="%s|%s" % (T("DNS Provider"),
+                                                                 T("If you use a DNS Provider configuration then you can create/update the DNS entry automatically as part of the deployment.")
+                                                                 )
+                                               ),
                                  )
 
         # ---------------------------------------------------------------------
@@ -241,6 +246,11 @@ class S3CloudModel(S3Model):
                                               sort = True
                                               ),
                                     ),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Cloud"),
+                                                                   T("If you use a Cloud configuration then you can create the server(s) automatically as part of the deployment.")
+                                                                   )
+                                                 ),
                                    )
 
         # ---------------------------------------------------------------------
@@ -283,12 +293,12 @@ class S3AWSCloudModel(S3CloudModel):
                      #      #label = T("Enabled?"),
                      #      represent = s3_yes_no_represent,
                      #      ),
-                     Field("secret_key", "password",
+                     Field("access_key", "password",
                            readable = False,
                            requires = IS_NOT_EMPTY(),
                            widget = S3PasswordWidget(),
                            ),
-                     Field("access_key", "password",
+                     Field("secret_key", "password",
                            readable = False,
                            requires = IS_NOT_EMPTY(),
                            widget = S3PasswordWidget(),
@@ -321,7 +331,8 @@ class S3AWSCloudModel(S3CloudModel):
                            #requires = IS_IN_SET(aws_instance_types),
                            ),
                      Field("image",
-                           default = "ami-0ad916493173c5680", # Debian 9 in London
+                           # https://wiki.debian.org/Cloud/AmazonEC2Image/Buster
+                           default = "ami-042796b8e41bb5fad", # Debian 10 in London
                            #label = T("Image"), # AMI ID
                            ),
                      Field("security_group",
@@ -505,6 +516,7 @@ class S3SetupModel(S3Model):
                            label = T("Database"),
                            represent = S3Represent(options = DB_SERVERS),
                            requires = IS_IN_SET(DB_SERVERS),
+                           writable = False,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Database"),
                                                            T("Currently only PostgreSQL is supported by this tool, although MySQL should be possible with a little work.")
@@ -628,7 +640,7 @@ class S3SetupModel(S3Model):
                            comment = DIV(_class="tooltip",
                                          # If not defined then can be automated by the Cloud integration, if-present
                                          _title="%s|%s" % (T("IP Address"),
-                                                           T("Currently only 127.0.0.1 is supported by this tool, although others should be possible with a little work.")
+                                                           T("Leave blank if using a Cloud configuration or deploying to this Server (where it will default to 127.0.0.1). Set to the IP address of the remote server if you have an SSH private key.")
                                                            )
                                          ),
                            ),
@@ -647,6 +659,11 @@ class S3SetupModel(S3Model):
                      Field("remote_user",
                            default = "admin",
                            label = T("Remote User"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Remote User"),
+                                                           T("If you wish to configure a server other than this one then you need to provide the username that the SSH private key works with. For Debian OS, this is normally 'admin'.")
+                                                           )
+                                         ),
                            ),
                      Field("private_key", "upload",
                            label = T("SSH Private Key"),
@@ -655,7 +672,7 @@ class S3SetupModel(S3Model):
                            uploadfolder = uploadfolder,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("SSH Private Key"),
-                                                           T("if you wish to configure servers other than this one then you need to provide a PEM-encoded SSH private key")
+                                                           T("If you wish to configure a server other than this one then either you need to use a Cloud or provide a PEM-encoded SSH private key")
                                                            )
                                          ),
                            ),
@@ -738,7 +755,7 @@ class S3SetupModel(S3Model):
                            ),
                      Field("url",
                            label = T("URL"),
-                           requires = IS_URL(),
+                           requires = IS_URL(prepend_scheme = "https"),
                            represent = lambda opt: A(opt,
                                                      _href = opt,
                                                      _target="_blank",
@@ -1180,7 +1197,7 @@ dropdown.change(function() {
                                        )
         else:
             # Get Server(s) details
-            servers = db(query).select(#stable.name,
+            servers = db(query).select(stable.name,
                                        stable.role,
                                        stable.host_ip,
                                        stable.remote_user,
@@ -1188,7 +1205,7 @@ dropdown.change(function() {
                                        )
 
         # Build Playbook data structure
-        roles_path = os.path.join(r.folder, "private", "eden_deploy", "roles")
+        #roles_path = os.path.join(r.folder, "private", "eden_deploy", "roles")
 
         appname = "eden" # @ToDo: Allow this to be configurable
         hostname = sitename.split(".", 1)[0]
@@ -1212,6 +1229,7 @@ dropdown.change(function() {
             # Use the value from dropdown (& introspect the locale template(s))
             template = deployment.template
 
+        delete_ssh_key = True
         if len(servers) == 1:
             # All-in-one deployment
             server = servers.first()
@@ -1231,8 +1249,13 @@ dropdown.change(function() {
                 public_key = "%s.pub" % private_key
                 provided_key = server.private_key
                 if provided_key:
-                    delete_ssh_key = False
                     provided_key = os.path.join(r.folder, "uploads", provided_key)
+                    # Copy the Private Key to where it will be used
+                    tasks.append({"copy": {"src": provided_key,
+                                           "dest": private_key,
+                                           "mode": "0600",
+                                           },
+                                  })
                     # Generate the Public Key
                     command = "openssl rsa -in %(provided_key)s -pubout > %(public_key)s" % \
                         {provided_key: provided_key,
@@ -1241,7 +1264,6 @@ dropdown.change(function() {
                     tasks.append({"command": command,
                                   })
                 else:
-                    delete_ssh_key = True
                     # Generate an OpenSSH keypair with the default values (4096 bits, rsa)
                     tasks.append({"openssh_keypair": {"path": private_key,
                                                       },
@@ -1297,9 +1319,6 @@ dropdown.change(function() {
                           {"command": {"cmd": command,
                                        "chdir": request.env.web2py_path,
                                        },
-                           "become": "yes",
-                           "become_method": "sudo",
-                           "become_user": "web2py",
                            "loop": "{{ ec2.instances }}",
                            },
                           ]
@@ -1320,6 +1339,7 @@ dropdown.change(function() {
                                        "method": "DELETE",
                                        "headers": {"X-Api-Key": gandi_api_key,
                                                    },
+                                       "status_code": ["200", "204"],
                                        },
                                # Don't worry if it didn't exist
                                "ignore_errors": "yes",
@@ -1330,7 +1350,8 @@ dropdown.change(function() {
                                        "headers": {"X-Api-Key": gandi_api_key,
                                                    },
                                        "body_format": "json", # Content-Type: application/json
-                                       "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ item.public_ip }}"]}' % dns_record
+                                       "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ item.public_ip }}"]}' % dns_record,
+                                       "status_code": ["200", "201"],
                                        },
                                "loop": "{{ ec2.instances }}",
                                },
@@ -1357,27 +1378,15 @@ dropdown.change(function() {
                                  })
             else:
                 # No Cloud
-                delete_ssh_key = False
                 remote_user = server.remote_user
                 host_ip = server.host_ip
-                # Check if DNS is already configured properly
-                import socket
-                try:
-                    ip_addr = socket.gethostbyname(sitename)
-                except socket.gaierror:
-                    current.session.warning = current.T("Deployment will not have SSL: URL doesn't resolve in DNS")
-                    protocol = "http"
                 # @ToDo Check that ip_addr is correct
                 #       - if host_ip == "127.0.0.1" then we can check the contents
                 if host_ip == "127.0.0.1":
                     connection = "local"
+                    delete_ssh_key = False
                 else:
-                    # We may wish to administer via a private IP, so shouldn't do this:
-                    #if protocol == "https" and ip_addr != host_ip:
-                    #    current.session.warning = current.T("Deployment will not have SSL: URL doesn't match server IP Address")
-                    #    protocol = "http"
                     # We will need the SSH key
-                    connection = "smart"
                     private_key = server.private_key
                     if not private_key:
                         # Abort
@@ -1385,19 +1394,74 @@ dropdown.change(function() {
                         redirect(URL(c="setup", f="deployment",
                                      args = [deployment_id, "instance"],
                                      ))
+                    tasks = []
+                    dns_id = deployment.dns_id
+                    if dns_id:
+                        # @ToDo: Will need extending when we support multiple DNS Providers
+                        gtable = s3db.setup_gandi_dns
+                        gandi = db(gtable.id == dns_id).select(gtable.api_key,
+                                                               gtable.domain,
+                                                               gtable.zone,
+                                                               limitby = (0, 1)
+                                                               ).first()
+                        gandi_api_key = gandi.api_key
+                        url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
+                        dns_record = sitename.split(".%s" % gandi.domain, 1)[0]
+                        tasks += [# Delete any existing record
+                                  {"uri": {"url": "%s/%s" % (url, dns_record),
+                                           "method": "DELETE",
+                                           "headers": {"X-Api-Key": gandi_api_key,
+                                                       },
+                                           "status_code": ["200", "204"],
+                                           },
+                                   # Don't worry if it didn't exist
+                                   "ignore_errors": "yes",
+                                   },
+                                  # Create new record
+                                  {"uri": {"url": url,
+                                           "method": "POST",
+                                           "headers": {"X-Api-Key": gandi_api_key,
+                                                       },
+                                           "body_format": "json", # Content-Type: application/json
+                                           "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["%s"]}' % (dns_record, host_ip),
+                                           "status_code": ["200", "201"],
+                                           },
+                                   },
+                                  ]
+                    else:
+                        # Check if DNS is already configured properly
+                        import socket
+                        try:
+                            ip_addr = socket.gethostbyname(sitename)
+                        except socket.gaierror:
+                            current.session.warning = current.T("Deployment will not have SSL: URL doesn't resolve in DNS")
+                            protocol = "http"
+                        #else:
+                        #   # We may wish to administer via a private IP, so shouldn't do this:
+                        #   if ip_addr != host_ip:
+                        #       current.session.warning = current.T("Deployment will not have SSL: URL doesn't match server IP Address")
+                        #       protocol = "http"
+                    # Copy the Private Key to where it will be used
+                    provided_key = os.path.join(r.folder, "uploads", private_key)
+                    private_key = "/tmp/%s" % server.name
+                    tasks.append({"copy": {"src": provided_key,
+                                           "dest": private_key,
+                                           "mode": "0600",
+                                           },
+                                  })
                     # Add instance to host group (to associate private_key)
-                    host_ip = "launched"
-                    private_key = os.path.join(r.folder, "uploads", private_key)
+                    tasks.append({"add_host": {"hostname": host_ip,
+                                               "groupname": "launched",
+                                               "ansible_ssh_private_key_file": private_key,
+                                               },
+                                  })
                     playbook.append({"hosts": "localhost",
                                      "connection": "local",
                                      "gather_facts": "no",
-                                     "tasks": [{"add_host": {"hostname": host_ip,
-                                                             "groupname": "launched",
-                                                             "ansible_ssh_private_key_file": private_key,
-                                                             },
-                                                },
-                                               ],
+                                     "tasks": tasks,
                                      })
+                    host_ip = "launched"
+                    connection = "smart"
 
             # Deploy to Server
             playbook.append({"hosts": host_ip,
@@ -1422,12 +1486,12 @@ dropdown.change(function() {
                                       "type": instance_type,
                                       "web_server": web_server,
                                       },
-                             "roles": [{"role": "%s/common" % roles_path },
-                                       {"role": "%s/exim" % roles_path },
-                                       {"role": "%s/%s" % (roles_path, db_type) },
-                                       {"role": "%s/uwsgi" % roles_path },
-                                       {"role": "%s/%s" % (roles_path, web_server) },
-                                       {"role": "%s/final" % roles_path },
+                             "roles": [{"role": "common" },
+                                       {"role": "exim" },
+                                       {"role": db_type },
+                                       {"role": "uwsgi" },
+                                       {"role": web_server },
+                                       {"role": "final" },
                                        ]
                              })
             if delete_ssh_key:
@@ -1464,7 +1528,7 @@ dropdown.change(function() {
                                   "password": db_password,
                                   "type": instance_type
                                   },
-                         "roles": [{ "role": "%s/%s" % (roles_path, db_type) },
+                         "roles": [{ "role": db_type }, # "%s/%s" % (roles_path, db_type)
                                    ]
                          },
                         {"hosts": webserver_ip,
@@ -1488,11 +1552,11 @@ dropdown.change(function() {
                                   "type": instance_type,
                                   "web_server": web_server,
                                   },
-                         "roles": [{"role": "%s/common" % roles_path },
-                                   {"role": "%s/exim" % roles_path },
-                                   {"role": "%s/uwsgi" % roles_path },
-                                   {"role": "%s/%s" % (roles_path, web_server) },
-                                   {"role": "%s/final" % roles_path },
+                         "roles": [{"role": "common" },
+                                   {"role": "exim" },
+                                   {"role": "uwsgi" },
+                                   {"role": web_server },
+                                   {"role": "final" },
                                    ],
                          },
                         ]
@@ -2733,7 +2797,6 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
     from ansible.executor.task_queue_manager import TaskQueueManager
     from ansible.plugins.callback import CallbackBase
     from ansible import context
-    import ansible.constants as C
 
     #W2P_TASK = current.W2P_TASK
 
@@ -2866,20 +2929,27 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
     cwd = os.getcwd()
 
     # Change working directory
-    roles_path = os.path.join(current.request.folder, "private", "eden_deploy")
+    request = current.request
+    roles_path = os.path.join(request.env.applications_parent, request.folder, "private", "eden_deploy", "roles")
     os.chdir(roles_path)
 
     # Since the API is constructed for CLI, it expects certain options to always be set in the context object
     if tags is None:
         tags = [] # Needs to be an iterable
-    context.CLIARGS = ImmutableDict(module_path = [roles_path],
-                                    forks = 10,
-                                    become = None,
+    tmp_path = os.path.join("/", "tmp", "ansible")
+    context.CLIARGS = ImmutableDict(become = None,
                                     become_method = None,
                                     become_user = None,
                                     check = False,
                                     diff = False,
+                                    #extra_vars = {"ansible_local_temp": tmp_path,
+                                    #              "ansible_local_tmp": tmp_path,
+                                    #              "ansible_ssh_control_path_dir": tmp_path,
+                                    #              },
+                                    forks = 10,
+                                    module_path = [roles_path],
                                     tags = tags,
+                                    verbosity = 1,
                                     )
 
     # Initialize needed objects
@@ -2929,7 +2999,7 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
                 tqm.cleanup()
 
             # Remove ansible tmpdir
-            shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
+            shutil.rmtree(tmp_path, True)
 
     # Change working directory back
     os.chdir(cwd)
@@ -2949,7 +3019,7 @@ def setup_run_playbook(playbook, instance_id=None, tags=None, hosts=None):
         # Upload logs to Database
         table = current.s3db.setup_instance
         field = table.log_file
-        with open(log_path, "r") as log_file:
+        with open(log_path, "rb") as log_file:
             newfilename = field.store(log_file,
                                       log_file_name,
                                       field.uploadfolder)
@@ -3106,7 +3176,7 @@ def setup_instance_method(instance_id, method="start"):
                                                        ).first()
 
     # Build Playbook data structure
-    roles_path = os.path.join(folder, "private", "eden_deploy", "roles")
+    #roles_path = os.path.join(folder, "private", "eden_deploy", "roles")
 
     playbook.append({"hosts": host_ip,
                      "connection": connection,
@@ -3117,7 +3187,7 @@ def setup_instance_method(instance_id, method="start"):
                               "web_server": WEB_SERVERS[deployment.webserver_type],
                               "type": INSTANCE_TYPES[instance.type],
                               },
-                     "roles": [{ "role": "%s/%s" % (roles_path, method) },
+                     "roles": [{ "role": method }, #"%s/%s" % (roles_path, method)
                                ]
                      })
 
