@@ -1196,7 +1196,7 @@ dropdown.change(function() {
                                        )
         else:
             # Get Server(s) details
-            servers = db(query).select(#stable.name,
+            servers = db(query).select(stable.name,
                                        stable.role,
                                        stable.host_ip,
                                        stable.remote_user,
