@@ -516,6 +516,7 @@ class S3SetupModel(S3Model):
                            label = T("Database"),
                            represent = S3Represent(options = DB_SERVERS),
                            requires = IS_IN_SET(DB_SERVERS),
+                           writable = False,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Database"),
                                                            T("Currently only PostgreSQL is supported by this tool, although MySQL should be possible with a little work.")
