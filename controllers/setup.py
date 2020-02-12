@@ -281,7 +281,7 @@ def deployment():
                                                                                   limitby = (0, 1)
                                                                                   ).first()
                         s3db.setup_aws_server.insert(server_id = server.id)
-                    else:
+                    elif form_vars_get("sub_production_server_host_ip") is None:
                         server_vars["host_ip"] = "127.0.0.1"
                     db(stable.deployment_id == deployment_id).update(**server_vars)
 

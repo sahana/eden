@@ -133,6 +133,11 @@ class S3DNSModel(S3Model):
                                               sort = True
                                               ),
                                     ),
+                                 comment = DIV(_class="tooltip",
+                                               _title="%s|%s" % (T("DNS Provider"),
+                                                                 T("If you use a DNS Provider configuration then you can create/update the DNS entry automatically as part of the deployment.")
+                                                                 )
+                                               ),
                                  )
 
         # ---------------------------------------------------------------------
@@ -241,6 +246,11 @@ class S3CloudModel(S3Model):
                                               sort = True
                                               ),
                                     ),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Cloud"),
+                                                                   T("If you use a Cloud configuration then you can create the server(s) automatically as part of the deployment.")
+                                                                   )
+                                                 ),
                                    )
 
         # ---------------------------------------------------------------------
@@ -629,7 +639,7 @@ class S3SetupModel(S3Model):
                            comment = DIV(_class="tooltip",
                                          # If not defined then can be automated by the Cloud integration, if-present
                                          _title="%s|%s" % (T("IP Address"),
-                                                           T("Currently only 127.0.0.1 is supported by this tool, although others should be possible with a little work.")
+                                                           T("Leave blank if using a Cloud configuration or deploying to this Server (where it will default to 127.0.0.1). Set to the IP address of the remote server if you have an SSH private key.")
                                                            )
                                          ),
                            ),
@@ -648,6 +658,11 @@ class S3SetupModel(S3Model):
                      Field("remote_user",
                            default = "admin",
                            label = T("Remote User"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Remote User"),
+                                                           T("If you wish to configure a server other than this one then you need to provide the username that the SSH private key works with. For Debian OS, this is normally 'admin'.")
+                                                           )
+                                         ),
                            ),
                      Field("private_key", "upload",
                            label = T("SSH Private Key"),
@@ -656,7 +671,7 @@ class S3SetupModel(S3Model):
                            uploadfolder = uploadfolder,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("SSH Private Key"),
-                                                           T("if you wish to configure servers other than this one then you need to provide a PEM-encoded SSH private key")
+                                                           T("If you wish to configure a server other than this one then either you need to use a Cloud or provide a PEM-encoded SSH private key")
                                                            )
                                          ),
                            ),
@@ -1360,24 +1375,12 @@ dropdown.change(function() {
                 delete_ssh_key = False
                 remote_user = server.remote_user
                 host_ip = server.host_ip
-                # Check if DNS is already configured properly
-                import socket
-                try:
-                    ip_addr = socket.gethostbyname(sitename)
-                except socket.gaierror:
-                    current.session.warning = current.T("Deployment will not have SSL: URL doesn't resolve in DNS")
-                    protocol = "http"
                 # @ToDo Check that ip_addr is correct
                 #       - if host_ip == "127.0.0.1" then we can check the contents
                 if host_ip == "127.0.0.1":
                     connection = "local"
                 else:
-                    # We may wish to administer via a private IP, so shouldn't do this:
-                    #if protocol == "https" and ip_addr != host_ip:
-                    #    current.session.warning = current.T("Deployment will not have SSL: URL doesn't match server IP Address")
-                    #    protocol = "http"
                     # We will need the SSH key
-                    connection = "smart"
                     private_key = server.private_key
                     if not private_key:
                         # Abort
@@ -1385,19 +1388,67 @@ dropdown.change(function() {
                         redirect(URL(c="setup", f="deployment",
                                      args = [deployment_id, "instance"],
                                      ))
+                    tasks = []
+                    dns_id = deployment.dns_id
+                    if dns_id:
+                        # @ToDo: Will need extending when we support multiple DNS Providers
+                        gtable = s3db.setup_gandi_dns
+                        gandi = db(gtable.id == dns_id).select(gtable.api_key,
+                                                               gtable.domain,
+                                                               gtable.zone,
+                                                               limitby = (0, 1)
+                                                               ).first()
+                        gandi_api_key = gandi.api_key
+                        url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
+                        dns_record = sitename.split(".%s" % gandi.domain, 1)[0]
+                        tasks += [# Delete any existing record
+                                  {"uri": {"url": "%s/%s" % (url, dns_record),
+                                           "method": "DELETE",
+                                           "headers": {"X-Api-Key": gandi_api_key,
+                                                       },
+                                           "status_code": ["200", "204"],
+                                           },
+                                   # Don't worry if it didn't exist
+                                   "ignore_errors": "yes",
+                                   },
+                                  # Create new record
+                                  {"uri": {"url": url,
+                                           "method": "POST",
+                                           "headers": {"X-Api-Key": gandi_api_key,
+                                                       },
+                                           "body_format": "json", # Content-Type: application/json
+                                           "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["%s"]}' % (dns_record, host_ip),
+                                           "status_code": ["200", "201"],
+                                           },
+                                   },
+                                  ]
+                    else:
+                        # Check if DNS is already configured properly
+                        import socket
+                        try:
+                            ip_addr = socket.gethostbyname(sitename)
+                        except socket.gaierror:
+                            current.session.warning = current.T("Deployment will not have SSL: URL doesn't resolve in DNS")
+                            protocol = "http"
+                        #else:
+                        #   # We may wish to administer via a private IP, so shouldn't do this:
+                        #   if ip_addr != host_ip:
+                        #       current.session.warning = current.T("Deployment will not have SSL: URL doesn't match server IP Address")
+                        #       protocol = "http"
                     # Add instance to host group (to associate private_key)
-                    host_ip = "launched"
                     private_key = os.path.join(r.folder, "uploads", private_key)
+                    tasks.append({"add_host": {"hostname": host_ip,
+                                               "groupname": "launched",
+                                               "ansible_ssh_private_key_file": private_key,
+                                               },
+                                  })
                     playbook.append({"hosts": "localhost",
                                      "connection": "local",
                                      "gather_facts": "no",
-                                     "tasks": [{"add_host": {"hostname": host_ip,
-                                                             "groupname": "launched",
-                                                             "ansible_ssh_private_key_file": private_key,
-                                                             },
-                                                },
-                                               ],
+                                     "tasks": tasks,
                                      })
+                    host_ip = "launched"
+                    connection = "smart"
 
             # Deploy to Server
             playbook.append({"hosts": host_ip,
@@ -1422,12 +1473,12 @@ dropdown.change(function() {
                                       "type": instance_type,
                                       "web_server": web_server,
                                       },
-                             "roles": [{"role": "common" },# "%s/common" % roles_path
-                                       {"role": "exim" }, # "%s/exim" % roles_path
-                                       {"role": db_type }, # "%s/%s" % (roles_path, db_type)
-                                       {"role": "uwsgi" }, # "%s/uwsgi" % roles_path
-                                       {"role": web_server }, # "%s/%s" % (roles_path, web_server)
-                                       {"role": "final" }, # "%s/final" % roles_path
+                             "roles": [{"role": "common" },
+                                       {"role": "exim" },
+                                       {"role": db_type },
+                                       {"role": "uwsgi" },
+                                       {"role": web_server },
+                                       {"role": "final" },
                                        ]
                              })
             if delete_ssh_key:
@@ -1488,11 +1539,11 @@ dropdown.change(function() {
                                   "type": instance_type,
                                   "web_server": web_server,
                                   },
-                         "roles": [{"role": "common" },# "%s/common" % roles_path
-                                   {"role": "exim" }, # "%s/exim" % roles_path
-                                   {"role": "uwsgi" }, # "%s/uwsgi" % roles_path
-                                   {"role": web_server }, # "%s/%s" % (roles_path, web_server)
-                                   {"role": "final" }, # "%s/final" % roles_path
+                         "roles": [{"role": "common" },
+                                   {"role": "exim" },
+                                   {"role": "uwsgi" },
+                                   {"role": web_server },
+                                   {"role": "final" },
                                    ],
                          },
                         ]
