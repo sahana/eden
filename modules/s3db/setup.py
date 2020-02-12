@@ -1442,7 +1442,7 @@ dropdown.change(function() {
                         #       protocol = "http"
                     # Copy the Private Key to where it will be used
                     provided_key = os.path.join(r.folder, "uploads", private_key)
-                    private_key = "/tmp/%s" % server_name
+                    private_key = "/tmp/%s" % server.name
                     tasks.append({"copy": {"src": provided_key,
                                            "dest": private_key,
                                            "mode": "0600",
