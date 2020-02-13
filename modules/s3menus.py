@@ -282,7 +282,7 @@ class S3MainMenu(object):
                                 MM("Synchronization", c="sync", f="index"),
                                 MM("Translation", c="admin", f="translate",
                                    check=translate),
-                                MM("Test Results", f="result"),
+                                #MM("Test Results", f="result"),
                             )
         elif has_role("ORG_ADMIN"):
             menu_admin = MM(name_nice, c="admin", f="user", **attr)()
@@ -508,8 +508,8 @@ class S3OptionsMenu(object):
                        M("Add strings manually", c="admin", f="translate",
                          m="create", vars=dict(opt="4"))
                     ),
-                    M("View Test Result Reports", c="admin", f="result"),
-                    M("Portable App", c="admin", f="portable")
+                    #M("View Test Result Reports", c="admin", f="result"),
+                    #M("Portable App", c="admin", f="portable")
                 )
 
     # -------------------------------------------------------------------------

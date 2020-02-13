@@ -1961,6 +1961,17 @@ class S3SetupMonitorModel(S3Model):
                            label = T("Function"),
                            comment = T("Functions defined in <template>.monitor.py")
                            ),
+                     Field("period", "integer",
+                           default = 300,
+                           label = T("Period"),
+                           requires = IS_INT_IN_RANGE(60, 31536000), # Max 1 Year
+                           represent = IS_INT_AMOUNT.represent,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Period"),
+                                                           T("How many seconds between runs.")
+                                                           )
+                                         ),
+                           ),
                      # Default Options for this Check
                      Field("options", "json",
                            label = T("Options"),
@@ -2011,6 +2022,17 @@ class S3SetupMonitorModel(S3Model):
                            default = True,
                            label = T("Enabled?"),
                            represent = s3_yes_no_represent,
+                           ),
+                     Field("period", "integer",
+                           default = 300,
+                           label = T("Period"),
+                           requires = IS_INT_IN_RANGE(60, 31536000), # Max 1 Year
+                           represent = IS_INT_AMOUNT.represent,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Period"),
+                                                           T("How many seconds between runs.")
+                                                           )
+                                         ),
                            ),
                      # Options for this Check on this Server
                      # - including any thresholds for non-Critical results
@@ -2199,7 +2221,7 @@ class S3SetupMonitorModel(S3Model):
             Process the Enabled Flag
             Create Form:
                 Set deployment_id
-                PrePopulate Task Options from Check Options
+                PrePopulate Task Options/Period from Check Options/Period
         """
 
         form_vars = form.vars
@@ -2221,6 +2243,7 @@ class S3SetupMonitorModel(S3Model):
             # Read default check options
             ctable = db.setup_monitor_check
             check = db(ctable.id == form_vars.check_id).select(ctable.options,
+                                                               ctable.period,
                                                                limitby = (0, 1)
                                                                ).first()
 
@@ -2246,10 +2269,12 @@ class S3SetupMonitorModel(S3Model):
             if task:
                 task.update_record(deployment_id = deployment_id,
                                    options = check.options,
+                                   period = check.period,
                                    )
             else:
                 db(ttable.id == record_id).update(deployment_id = deployment_id,
                                                   options = check.options,
+                                                  period = check.period,
                                                   )
 
 # =============================================================================
@@ -2278,7 +2303,9 @@ def setup_monitor_server_enable(monitor_server_id):
     query = (table.server_id == record.server_id) & \
             (table.enabled == True) & \
             (table.deleted == False)
-    tasks = db(query).select(table.id)
+    tasks = db(query).select(table.id,
+                             table.period,
+                             )
 
     # Do we have any Tasks already Scheduled?
     args = []
@@ -2297,7 +2324,7 @@ def setup_monitor_server_enable(monitor_server_id):
         if task_id not in exists:
             current.s3task.schedule_task("setup_monitor_run_task",
                                          args = [task_id],
-                                         period = 300,  # seconds
+                                         period = task.period,  # seconds
                                          timeout = 300, # seconds
                                          repeats = 0    # unlimited
                                          )
@@ -2432,6 +2459,7 @@ def setup_monitor_task_enable(task_id):
     record = db(table.id == task_id).select(table.id,
                                             table.server_id,
                                             table.enabled,
+                                            table.period,
                                             limitby = (0, 1),
                                             ).first()
 
@@ -2459,7 +2487,7 @@ def setup_monitor_task_enable(task_id):
         if not exists:
             current.s3task.schedule_task("setup_monitor_run_task",
                                          args = [task_id],
-                                         period = 300,  # seconds
+                                         period = record.period,  # seconds
                                          timeout = 300, # seconds
                                          repeats = 0    # unlimited
                                          )
