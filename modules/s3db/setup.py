@@ -1106,7 +1106,6 @@ class S3SetupDeploymentModel(S3Model):
 
             connection = "smart"
             # Add instance to host group (to associate private_key)
-            host_ip = "launched"
             private_key = os.path.join(current.request.folder, "uploads", private_key)
             playbook.append({"hosts": "localhost",
                              "connection": "local",
@@ -1118,6 +1117,7 @@ class S3SetupDeploymentModel(S3Model):
                                         },
                                        ],
                              })
+            host_ip = "launched"
 
         if smtp_id is None:
             # Reset to default configuration
@@ -2104,7 +2104,6 @@ dropdown.change(function() {
 
             connection = "smart"
             # Add instance to host group (to associate private_key)
-            host_ip = "launched"
             private_key = os.path.join(current.request.folder, "uploads", private_key)
             playbook.append({"hosts": "localhost",
                              "connection": "local",
@@ -2116,6 +2115,7 @@ dropdown.change(function() {
                                         },
                                        ],
                              })
+            host_ip = "launched"
 
         appname = "eden" # @ToDo: Allow this to be configurable
 
@@ -3490,7 +3490,6 @@ def setup_instance_method(instance_id, method="start"):
 
         connection = "smart"
         # Add instance to host group (to associate private_key)
-        host_ip = "launched"
         private_key = os.path.join(folder, "uploads", private_key)
         playbook.append({"hosts": "localhost",
                          "connection": "local",
@@ -3502,6 +3501,7 @@ def setup_instance_method(instance_id, method="start"):
                                     },
                                    ],
                          })
+        host_ip = "launched"
 
     # Get Deployment details
     dtable = s3db.setup_deployment
@@ -3586,7 +3586,6 @@ def setup_setting_apply(setting_id):
 
         connection = "smart"
         # Add instance to host group (to associate private_key)
-        host_ip = "launched"
         private_key = os.path.join(current.request.folder, "uploads", private_key)
         playbook.append({"hosts": "localhost",
                          "connection": "local",
@@ -3598,6 +3597,7 @@ def setup_setting_apply(setting_id):
                                     },
                                    ],
                          })
+        host_ip = "launched"
 
     appname = "eden" # @ToDo: Allow this to be configurable
 
@@ -3720,7 +3720,6 @@ def setup_settings_apply(instance_id, settings):
 
         connection = "smart"
         # Add instance to host group (to associate private_key)
-        host_ip = "launched"
         private_key = os.path.join(current.request.folder, "uploads", private_key)
         playbook.append({"hosts": "localhost",
                          "connection": "local",
@@ -3732,6 +3731,7 @@ def setup_settings_apply(instance_id, settings):
                                     },
                                    ],
                          })
+        host_ip = "launched"
 
     appname = "eden" # @ToDo: Allow this to be configurable
 
