@@ -2070,6 +2070,7 @@ class S3SetupMonitorModel(S3Model):
         crud_form = S3SQLCustomForm("server_id",
                                     "check_id",
                                     "enabled",
+                                    "period",
                                     "options",
                                     S3SQLInlineComponent("monitor_alert",
                                                          label = T("Alerts"),
