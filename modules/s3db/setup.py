@@ -444,6 +444,7 @@ class S3SMTPModel(S3Model):
     """
 
     names = ("setup_smtp",
+             "setup_smtp_id",
              )
 
     def model(self):
