@@ -553,7 +553,7 @@ class S3Monitor(object):
                                                      appname,
                                                      ticket,
                                                      )
-                new.append(url)
+                 new.append(url)
             return {"result": "Warning: New tickets:\n\n%s" % "\n".join(new),
                     "status": 2,
                     }
