@@ -42,13 +42,6 @@ import sys
 from gluon import current
 
 try:
-    import arrow
-except ImportError:
-    ARROW = None
-else:
-    ARROW = True
-
-try:
     import requests
 except ImportError:
     REQUESTS = None
@@ -473,11 +466,6 @@ class S3Monitor(object):
             Test whether the scheduler is running
         """
 
-        if ARROW is None:
-            return {"result": "Critical: Arrow library not installed",
-                    "status": 3,
-                    }
-
         db = current.db
         s3db = current.s3db
 
@@ -497,7 +485,7 @@ class S3Monitor(object):
                                                         limitby = (0, 1)
                                                         ).first()
 
-        earliest = arrow.utcnow().shift(minutes = -15)
+        earliest = current.request.utcnow - datetime.timedelta(seconds = 900) # 15 minutes
 
         if server.host_ip == "127.0.0.1":
             # This doesn't make much sense as a check, since this won't run if the scheduler has died!
