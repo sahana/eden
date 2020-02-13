@@ -369,11 +369,11 @@ class S3Monitor(object):
         load_max = options_get("load_max", 2)
 
         stable = s3db.setup_server
-        server = db(stable.id == server_id).select(stable.host_ip,
-                                                   stable.remote_user,
-                                                   stable.private_key,
-                                                   limitby = (0, 1)
-                                                   ).first()
+        server = db(stable.id == task.server_id).select(stable.host_ip,
+                                                        stable.remote_user,
+                                                        stable.private_key,
+                                                        limitby = (0, 1)
+                                                        ).first()
 
         if server.host_ip == "127.0.0.1":
             loadavg = os.getloadavg()
@@ -490,12 +490,12 @@ class S3Monitor(object):
         options_get = options.get
 
         stable = s3db.setup_server
-        server = db(stable.id == server_id).select(stable.host_ip,
-                                                   stable.remote_user,
-                                                   stable.private_key,
-                                                   stable.deployment_id,
-                                                   limitby = (0, 1)
-                                                   ).first()
+        server = db(stable.id == task.server_id).select(stable.host_ip,
+                                                        stable.remote_user,
+                                                        stable.private_key,
+                                                        stable.deployment_id,
+                                                        limitby = (0, 1)
+                                                        ).first()
 
         request = current.request
         today = request.utcnow.date().isoformat()
