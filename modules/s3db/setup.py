@@ -1088,7 +1088,8 @@ class S3SetupDeploymentModel(S3Model):
         svtable = s3db.setup_server
         query = (svtable.deployment_id == deployment_id) & \
                 (svtable.role.belongs((1, 4)))
-        server = db(query).select(svtable.host_ip,
+        server = db(query).select(svtable.name,
+                                  svtable.host_ip,
                                   svtable.remote_user,
                                   svtable.private_key,
                                   limitby = (0, 1)
@@ -1097,25 +1098,33 @@ class S3SetupDeploymentModel(S3Model):
         if host_ip == "127.0.0.1":
             connection = "local"
         else:
-            private_key = server.private_key
-            if not private_key:
+            provided_key = server.private_key
+            if not provided_key:
                 # Abort
                 db.rollback()
                 current.response.error = current.T("Update failed: SSH Key needed when applying away from localhost")
                 return
 
             connection = "smart"
+            tasks = []
+            # Copy the Private Key to where it will be used
+            provided_key = os.path.join(current.request.folder, "uploads", provided_key)
+            private_key = "/tmp/%s.pem" % server.name
+            tasks.append({"copy": {"src": provided_key,
+                                   "dest": private_key,
+                                   "mode": "0600",
+                                   },
+                          })
             # Add instance to host group (to associate private_key)
-            private_key = os.path.join(current.request.folder, "uploads", private_key)
+            tasks.append({"add_host": {"hostname": host_ip,
+                                       "groupname": "launched",
+                                       "ansible_ssh_private_key_file": private_key,
+                                       },
+                          })
             playbook.append({"hosts": "localhost",
                              "connection": "local",
                              "gather_facts": "no",
-                             "tasks": [{"add_host": {"hostname": host_ip,
-                                                     "groupname": "launched",
-                                                     "ansible_ssh_private_key_file": private_key,
-                                                     },
-                                        },
-                                       ],
+                             "tasks": tasks,
                              })
             host_ip = "launched"
 
@@ -2086,7 +2095,8 @@ dropdown.change(function() {
         svtable = s3db.setup_server
         query = (svtable.deployment_id == deployment_id) & \
                 (svtable.role.belongs((1, 4)))
-        server = db(query).select(svtable.host_ip,
+        server = db(query).select(svtable.name,
+                                  svtable.host_ip,
                                   svtable.remote_user,
                                   svtable.private_key,
                                   limitby = (0, 1)
@@ -2095,25 +2105,33 @@ dropdown.change(function() {
         if host_ip == "127.0.0.1":
             connection = "local"
         else:
-            private_key = server.private_key
-            if not private_key:
+            provided_key = server.private_key
+            if not provided_key:
                 # Abort
                 db.rollback()
                 current.response.error = current.T("Update failed: SSH Key needed when applying away from localhost")
                 return
 
             connection = "smart"
+            tasks = []
+            # Copy the Private Key to where it will be used
+            provided_key = os.path.join(current.request.folder, "uploads", provided_key)
+            private_key = "/tmp/%s.pem" % server.name
+            tasks.append({"copy": {"src": provided_key,
+                                   "dest": private_key,
+                                   "mode": "0600",
+                                   },
+                          })
             # Add instance to host group (to associate private_key)
-            private_key = os.path.join(current.request.folder, "uploads", private_key)
+            tasks.append({"add_host": {"hostname": host_ip,
+                                       "groupname": "launched",
+                                       "ansible_ssh_private_key_file": private_key,
+                                       },
+                          })
             playbook.append({"hosts": "localhost",
                              "connection": "local",
                              "gather_facts": "no",
-                             "tasks": [{"add_host": {"hostname": host_ip,
-                                                     "groupname": "launched",
-                                                     "ansible_ssh_private_key_file": private_key,
-                                                     },
-                                        },
-                                       ],
+                             "tasks": tasks,
                              })
             host_ip = "launched"
 
@@ -3474,7 +3492,8 @@ def setup_instance_method(instance_id, method="start"):
     stable = s3db.setup_server
     query = (stable.deployment_id == deployment_id) & \
             (stable.role == 1)
-    server = db(query).select(stable.host_ip,
+    server = db(query).select(stable.name,
+                              stable.host_ip,
                               stable.private_key,
                               stable.remote_user,
                               limitby = (0, 1)
@@ -3483,23 +3502,31 @@ def setup_instance_method(instance_id, method="start"):
     if host_ip == "127.0.0.1":
         connection = "local"
     else:
-        private_key = server.private_key
-        if not private_key:
+        provided_key = server.private_key
+        if not provided_key:
             # Abort
             return(current.T("Method failed: SSH Key needed when running away from localhost"))
 
         connection = "smart"
+        tasks = []
+        # Copy the Private Key to where it will be used
+        provided_key = os.path.join(current.request.folder, "uploads", provided_key)
+        private_key = "/tmp/%s.pem" % server.name
+        tasks.append({"copy": {"src": provided_key,
+                               "dest": private_key,
+                               "mode": "0600",
+                               },
+                      })
         # Add instance to host group (to associate private_key)
-        private_key = os.path.join(folder, "uploads", private_key)
+        tasks.append({"add_host": {"hostname": host_ip,
+                                   "groupname": "launched",
+                                   "ansible_ssh_private_key_file": private_key,
+                                   },
+                      })
         playbook.append({"hosts": "localhost",
                          "connection": "local",
                          "gather_facts": "no",
-                         "tasks": [{"add_host": {"hostname": host_ip,
-                                                 "groupname": "launched",
-                                                 "ansible_ssh_private_key_file": private_key,
-                                                 },
-                                    },
-                                   ],
+                         "tasks": tasks,
                          })
         host_ip = "launched"
 
@@ -3570,7 +3597,8 @@ def setup_setting_apply(setting_id):
     svtable = s3db.setup_server
     query = (svtable.deployment_id == setting.deployment_id) & \
             (svtable.role.belongs((1, 4)))
-    server = db(query).select(svtable.host_ip,
+    server = db(query).select(svtable.name,
+                              svtable.host_ip,
                               svtable.remote_user,
                               svtable.private_key,
                               limitby = (0, 1)
@@ -3579,23 +3607,31 @@ def setup_setting_apply(setting_id):
     if host_ip == "127.0.0.1":
         connection = "local"
     else:
-        private_key = server.private_key
-        if not private_key:
+        provided_key = server.private_key
+        if not provided_key:
             # Abort
             return(current.T("Apply failed: SSH Key needed when applying away from localhost"))
 
         connection = "smart"
+        tasks = []
+        # Copy the Private Key to where it will be used
+        provided_key = os.path.join(current.request.folder, "uploads", provided_key)
+        private_key = "/tmp/%s.pem" % server.name
+        tasks.append({"copy": {"src": provided_key,
+                               "dest": private_key,
+                               "mode": "0600",
+                               },
+                      })
         # Add instance to host group (to associate private_key)
-        private_key = os.path.join(current.request.folder, "uploads", private_key)
+        tasks.append({"add_host": {"hostname": host_ip,
+                                   "groupname": "launched",
+                                   "ansible_ssh_private_key_file": private_key,
+                                   },
+                      })
         playbook.append({"hosts": "localhost",
                          "connection": "local",
                          "gather_facts": "no",
-                         "tasks": [{"add_host": {"hostname": host_ip,
-                                                 "groupname": "launched",
-                                                 "ansible_ssh_private_key_file": private_key,
-                                                 },
-                                    },
-                                   ],
+                         "tasks": tasks,
                          })
         host_ip = "launched"
 
@@ -3704,7 +3740,8 @@ def setup_settings_apply(instance_id, settings):
     svtable = s3db.setup_server
     query = (svtable.deployment_id == deployment_id) & \
             (svtable.role.belongs((1, 4)))
-    server = db(query).select(svtable.host_ip,
+    server = db(query).select(svtable.name,
+                              svtable.host_ip,
                               svtable.remote_user,
                               svtable.private_key,
                               limitby = (0, 1)
@@ -3713,23 +3750,31 @@ def setup_settings_apply(instance_id, settings):
     if host_ip == "127.0.0.1":
         connection = "local"
     else:
-        private_key = server.private_key
-        if not private_key:
+        provided_key = server.private_key
+        if not provided_key:
             # Abort
             return(current.T("Apply failed: SSH Key needed when applying away from localhost"))
 
         connection = "smart"
+        tasks = []
+        # Copy the Private Key to where it will be used
+        provided_key = os.path.join(current.request.folder, "uploads", provided_key)
+        private_key = "/tmp/%s.pem" % server.name
+        tasks.append({"copy": {"src": provided_key,
+                               "dest": private_key,
+                               "mode": "0600",
+                               },
+                      })
         # Add instance to host group (to associate private_key)
-        private_key = os.path.join(current.request.folder, "uploads", private_key)
+        tasks.append({"add_host": {"hostname": host_ip,
+                                   "groupname": "launched",
+                                   "ansible_ssh_private_key_file": private_key,
+                                   },
+                      })
         playbook.append({"hosts": "localhost",
                          "connection": "local",
                          "gather_facts": "no",
-                         "tasks": [{"add_host": {"hostname": host_ip,
-                                                 "groupname": "launched",
-                                                 "ansible_ssh_private_key_file": private_key,
-                                                 },
-                                    },
-                                   ],
+                         "tasks": tasks,
                          })
         host_ip = "launched"
 
