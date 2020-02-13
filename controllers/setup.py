@@ -2,7 +2,7 @@
 
 """
     Setup Tool:
-        Assists with Installation, Configuration & Maintenance of a Deployment
+        Assists with Installation, Configuration & Maintenance of Sahana Eden Deployment(s)
 """
 
 module = request.controller
@@ -297,6 +297,7 @@ def deployment():
                                             "repo_url",
                                             "cloud_id",
                                             "dns_id",
+                                            "smtp_id",
                                             "production_server.host_ip",
                                             "production_server.remote_user",
                                             "production_server.private_key",
@@ -328,6 +329,7 @@ def deployment():
                     table.db_type.comment = None
                     table.cloud_id.writable = False # @ToDo: Allow switching post-deployment
                     table.dns_id.writable = False # @ToDo: Allow switching post-deployment
+                    table.smtp_id.writable = False # @ToDo: Allow switching post-deployment
 
         return True
     s3.prep = prep

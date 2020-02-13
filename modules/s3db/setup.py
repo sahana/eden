@@ -36,7 +36,8 @@ __all__ = ("S3DNSModel",
            "S3GandiDNSModel",
            "S3CloudModel",
            "S3AWSCloudModel",
-           "S3SetupModel",
+           "S3SMTPModel",
+           "S3SetupDeploymentModel",
            "S3SetupMonitorModel",
            #"Storage2",
            #"setup_DeploymentRepresent",
@@ -164,7 +165,9 @@ class S3GandiDNSModel(S3DNSModel):
         tablename = "setup_gandi_dns"
         self.define_table(tablename,
                           self.super_link("dns_id", "setup_dns"),
-                          Field("name"),
+                          Field("name",
+                                requires = IS_NOT_EMPTY(),
+                                ),
                           Field("description"),
                           #Field("enabled", "boolean",
                           #      default = True,
@@ -286,7 +289,9 @@ class S3AWSCloudModel(S3CloudModel):
         define_table(tablename,
                      # Instance of Super-Entity
                      self.super_link("cloud_id", "setup_cloud"),
-                     Field("name"),
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      Field("description"),
                      #Field("enabled", "boolean",
                      #      default = True,
@@ -420,6 +425,7 @@ class S3AWSCloudModel(S3CloudModel):
                                          )
 
         # Run Playbook
+        #task_vars["instance_id"] = instance_id # To Upload Logs to Instance record
         current.s3task.schedule_task(name,
                                      vars = task_vars,
                                      function_name = "setup_run_playbook",
@@ -429,7 +435,84 @@ class S3AWSCloudModel(S3CloudModel):
                                      )
 
 # =============================================================================
-class S3SetupModel(S3Model):
+class S3SMTPModel(S3Model):
+    """
+        SMTP Smart Hosts
+        - tested with:
+            * AWS SES - free for 62,000 mails/month if hosting on AWS
+            * SendGrid - free for 100 mails/day
+    """
+
+    names = ("setup_smtp",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        #----------------------------------------------------------------------
+        # SMTP Smart Host configurations
+        #
+        tablename = "setup_smtp"
+        self.define_table(tablename,
+                          Field("name",
+                                label = T("Name"),
+                                requires = IS_NOT_EMPTY(),
+                                ),
+                          Field("description",
+                                label = T("Description"),
+                                ),
+                          #Field("enabled", "boolean",
+                          #      default = True,
+                          #      label = T("Enabled?")
+                          #      #represent = s3_yes_no_represent,
+                          #      ),
+                          Field("hostname",
+                                # https://docs.aws.amazon.com/ses/latest/DeveloperGuide/smtp-connect.html
+                                default = "smtp.sendgrid.net",
+                                label = T("Host name"),
+                                ),
+                          # https://docs.aws.amazon.com/ses/latest/DeveloperGuide/smtp-credentials.html
+                          Field("username",
+                                default = "apikey", # Sendgrid
+                                label = T("User name"),
+                                requires = IS_NOT_EMPTY(),
+                                ),
+                          Field("password", "password",
+                                label = T("Password"),
+                                readable = False,
+                                requires = IS_NOT_EMPTY(),
+                                widget = S3PasswordWidget(),
+                                ),
+                          )
+
+        # Reusable Field
+        represent = S3Represent(lookup = tablename)
+        smtp_id = S3ReusableField("smtp_id", "reference %s" % tablename,
+                                  label = T("SMTP Smart Host"),
+                                  ondelete = "SET NULL",
+                                  represent = represent,
+                                  requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(db, "setup_smtp.id",
+                                              represent,
+                                              sort = True
+                                              ),
+                                    ),
+                                  comment = DIV(_class="tooltip",
+                                                _title="%s|%s" % (T("SMTP Smart Host"),
+                                                                  T("If you use an SMTP Smart Host, then you can configure your deployment to use it.")
+                                                                  )
+                                                ),
+                                  )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        return {"setup_smtp_id": smtp_id,
+                }
+
+# =============================================================================
+class S3SetupDeploymentModel(S3Model):
 
     names = ("setup_deployment",
              "setup_deployment_id",
@@ -530,6 +613,7 @@ class S3SetupModel(S3Model):
                            ),
                      self.setup_cloud_id(),
                      self.setup_dns_id(),
+                     self.setup_smtp_id(),
                      *s3_meta_fields()
                      )
 
@@ -558,6 +642,7 @@ class S3SetupModel(S3Model):
                                  "webserver_type",
                                  "db_type",
                                  ],
+                  #update_onaccept = self.setup_deployment_update_onaccept,
                   )
 
         add_components(tablename,
@@ -976,6 +1061,93 @@ class S3SetupModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def setup_deployment_update_onaccept(form):
+        """
+            Process changed fields on server:
+            - smtp_id
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        form_vars_get = form.vars.get
+        record = form.record
+        deployment_id = form_vars_get("id")
+
+        smtp_id = form_vars_get("smtp_id")
+        if smtp_id == record.smtp_id:
+            # Nothing more to do
+            return
+
+        # Adjust the Deployment's SMTP Smart Host
+
+        playbook = []
+
+        # Lookup Server Details
+        svtable = s3db.setup_server
+        query = (svtable.deployment_id == deployment_id) & \
+                (svtable.role.belongs((1, 4)))
+        server = db(query).select(svtable.host_ip,
+                                  svtable.remote_user,
+                                  svtable.private_key,
+                                  limitby = (0, 1)
+                                  ).first()
+        host_ip = server.host_ip
+        if host_ip == "127.0.0.1":
+            connection = "local"
+        else:
+            private_key = server.private_key
+            if not private_key:
+                # Abort
+                current.T("Apply failed: SSH Key needed when applying away from localhost")
+                return
+
+            connection = "smart"
+            # Add instance to host group (to associate private_key)
+            host_ip = "launched"
+            private_key = os.path.join(current.request.folder, "uploads", private_key)
+            playbook.append({"hosts": "localhost",
+                             "connection": "local",
+                             "gather_facts": "no",
+                             "tasks": [{"add_host": {"hostname": host_ip,
+                                                     "groupname": "launched",
+                                                     "ansible_ssh_private_key_file": private_key,
+                                                     },
+                                        },
+                                       ],
+                             })
+
+        appname = "eden" # @ToDo: Allow this to be configurable
+
+        # Build Playbook data structure:
+        playbook.append({"hosts": host_ip,
+                         "connection": connection,
+                         "remote_user": server.remote_user,
+                         "become_method": "sudo",
+                         #"become_user": "root",
+                         "tasks": [{# @ToDo
+                                    },
+                                   ],
+                         })
+
+        # Write Playbook
+        name = "smtp_%d" % int(time.time())
+        task_vars = setup_write_playbook("%s.yml" % name,
+                                         playbook,
+                                         )
+
+        # Run the Playbook
+        #task_vars["instance_id"] = instance_id # To Upload Logs to Instance record
+        current.s3task.schedule_task(name,
+                                     vars = task_vars,
+                                     function_name = "setup_run_playbook",
+                                     repeats = None,
+                                     timeout = 6000,
+                                     #sync_output = 300
+                                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def setup_get_templates():
         """
             Return a Dict of Templates for the user to select from
@@ -1163,6 +1335,7 @@ dropdown.change(function() {
                                                            dtable.template_manual,
                                                            dtable.cloud_id,
                                                            dtable.dns_id,
+                                                           dtable.smtp_id,
                                                            limitby = (0, 1)
                                                            ).first()
 
@@ -1228,6 +1401,22 @@ dropdown.change(function() {
         else:
             # Use the value from dropdown (& introspect the locale template(s))
             template = deployment.template
+
+        if smtp_id and instance_type == "prod":
+            # SMTP Smart Host
+            stable = s3db.setup_smtp
+            smtp = db(stable.id == smtp_id).select(stable.hostname,
+                                                   stable.username,
+                                                   stable.password,
+                                                   limitby = (0, 1)
+                                                   ).first()
+            smart_host = smtp.hostname
+            smtp_username = smtp.username
+            smtp_password = smtp.password
+        else:
+            smart_host = None
+            smtp_username = None
+            smtp_password = None
 
         delete_ssh_key = True
         if len(servers) == 1:
@@ -1481,6 +1670,9 @@ dropdown.change(function() {
                                       "sender": sender,
                                       "sitename": sitename,
                                       "sitename_prod": sitename_prod,
+                                      "smart_host": smart_host,
+                                      "smtp_username": smtp_username,
+                                      "smtp_password": smtp_password,
                                       "start": start,
                                       "template": template,
                                       "type": instance_type,
@@ -1573,7 +1765,7 @@ dropdown.change(function() {
                                          )
 
         # Run Playbook
-        task_vars["instance_id"] = instance_id
+        task_vars["instance_id"] = instance_id # To Upload Logs to Instance record
         task_id = current.s3task.schedule_task(name,
                                                vars = task_vars,
                                                function_name = "setup_run_playbook",
@@ -1724,6 +1916,7 @@ dropdown.change(function() {
                                          )
 
         # Run Playbook
+        #task_vars["instance_id"] = instance_id # To Upload Logs to Instance record
         current.s3task.schedule_task(name,
                                      vars = task_vars,
                                      function_name = "setup_run_playbook",
@@ -1736,7 +1929,9 @@ dropdown.change(function() {
     @staticmethod
     def setup_instance_update_onaccept(form):
         """
-            Process changed fields on server
+            Process changed fields on server:
+            - sender
+            - start
         """
 
         db = current.db
@@ -1852,7 +2047,7 @@ dropdown.change(function() {
                                          )
 
         # Run the Playbook
-        task_vars["instance_id"] = instance_id
+        task_vars["instance_id"] = instance_id # To Upload Logs to Instance record
         current.s3task.schedule_task(name,
                                      vars = task_vars,
                                      function_name = "setup_run_playbook",
@@ -3357,7 +3552,7 @@ def setup_setting_apply(setting_id):
                                      )
 
     # Run the Playbook
-    task_vars["instance_id"] = instance_id
+    task_vars["instance_id"] = instance_id # To Upload Logs to Instance record
     current.s3task.schedule_task(name,
                                  vars = task_vars,
                                  function_name = "setup_run_playbook",
@@ -3486,7 +3681,7 @@ def setup_settings_apply(instance_id, settings):
                                      )
 
     # Run the Playbook
-    task_vars["instance_id"] = instance_id
+    task_vars["instance_id"] = instance_id # To Upload Logs to Instance record
     current.s3task.schedule_task(name,
                                  vars = task_vars,
                                  function_name = "setup_run_playbook",
