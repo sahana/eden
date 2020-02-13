@@ -42,6 +42,13 @@ import sys
 from gluon import current
 
 try:
+    import arrow
+except ImportError:
+    ARROW = None
+else:
+    ARROW = True
+
+try:
     import requests
 except ImportError:
     REQUESTS = None
@@ -452,6 +459,80 @@ class S3Monitor(object):
                                                          tb_parts[1],
                                                          tb_parts[2]))
             return {"result": "Critical: Ping failed\n\n%s" % tb_text,
+                    "status": 3,
+                    }
+
+        return {"result": "OK",
+                "status": 1,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def scheduler(task_id, run_id):
+        """
+            Test whether the scheduler is running
+        """
+
+        if ARROW is None:
+            return {"result": "Critical: Arrow library not installed",
+                    "status": 3,
+                    }
+
+        db = current.db
+        s3db = current.s3db
+
+        # Read the Task Options
+        ttable = s3db.setup_monitor_task
+        task = db(ttable.id == task_id).select(#ttable.options,
+                                               ttable.server_id,
+                                               limitby = (0, 1)
+                                               ).first()
+        #options = task.options or {}
+        #options_get = options.get
+
+        stable = s3db.setup_server
+        server = db(stable.id == task.server_id).select(stable.host_ip,
+                                                        stable.remote_user,
+                                                        stable.private_key,
+                                                        limitby = (0, 1)
+                                                        ).first()
+
+        earliest = arrow.utcnow().shift(minutes = -15)
+
+        if server.host_ip == "127.0.0.1":
+            # This doesn't make much sense as a check, since this won't run if the scheduler has died!
+
+            wtable = s3db.scheduler_worker
+            worker = db(wtable.status == "ACTIVE").select(wtable.last_heartbeat,
+                                                          limitby = (0, 1)
+                                                          ).first()
+            
+            if not worker:
+                return {"result": "Warning: Scheduler not ACTIVE",
+                        "status": 3,
+                        }
+
+            if worker.last_heartbeat < earliest:
+                return {"result": "Warning: Scheduler stalled since:\n\n%s" % worker.last_heartbeat,
+                        "status": 3,
+                        }
+            return {"result": "OK",
+                    "status": 1,
+                    }
+
+
+        ssh = _ssh(server)
+        if isinstance(ssh, dict):
+            # We failed to login
+            return ssh
+
+        command = "cd" % earliest
+        stdin, stdout, stderr = ssh.exec_command('python -c "%s"' % command)
+        outlines = stdout.readlines()
+        ssh.close()
+
+        if outlines:
+            return {"result": outlines[0],
                     "status": 3,
                     }
 
