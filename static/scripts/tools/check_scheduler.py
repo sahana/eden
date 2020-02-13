@@ -22,8 +22,8 @@ worker = db(wtable.status == "ACTIVE").select(wtable.last_heartbeat,
                                               limitby = (0, 1)
                                               ).first()
 
-if not worker:
-    return "Warning: Scheduler not ACTIVE"
+if worker is None:
+    print("Warning: Scheduler not ACTIVE")
 
-if worker.last_heartbeat < datetime.datetime.fromisoformat(earliest):
-    return "Warning: Scheduler stalled since:\n\n%s" % worker.last_heartbeat
+elif worker.last_heartbeat < datetime.datetime.fromisoformat(earliest):
+    print("Warning: Scheduler stalled since:\n\n%s" % worker.last_heartbeat)
