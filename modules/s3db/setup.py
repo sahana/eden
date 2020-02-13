@@ -643,7 +643,7 @@ class S3SetupDeploymentModel(S3Model):
                                  "webserver_type",
                                  "db_type",
                                  ],
-                  #update_onaccept = self.setup_deployment_update_onaccept,
+                  update_onaccept = self.setup_deployment_update_onaccept,
                   )
 
         add_components(tablename,
@@ -1100,7 +1100,8 @@ class S3SetupDeploymentModel(S3Model):
             private_key = server.private_key
             if not private_key:
                 # Abort
-                current.T("Apply failed: SSH Key needed when applying away from localhost")
+                db.rollback()
+                current.response.error = current.T("Update failed: SSH Key needed when applying away from localhost")
                 return
 
             connection = "smart"
@@ -1118,7 +1119,111 @@ class S3SetupDeploymentModel(S3Model):
                                        ],
                              })
 
-        appname = "eden" # @ToDo: Allow this to be configurable
+        if smtp_id is None:
+            # Reset to default configuration
+            tasks = [{"file": {"path": "/etc/exim4/exim4.conf",
+                               "state": "absent",
+                               },
+                      },
+                     {"service": {"name": "exim4",
+                                  "state": "restarted",
+                                  },
+                      "become": "yes",
+                      },
+                     ]
+        else:
+            # Apply Smart Host configuration
+            # - like roles/exim/smart_host.yml
+            itable = s3db.setup_instance
+            query = (itable.deployment_id == record.id) & \
+                    (itable.type == 1)
+            instance = db(query).select(itable.url,
+                                        limitby = (0, 1)
+                                        ).first()
+            url = instance.url
+            if "://" in url:
+                protocol, sitename = url.split("://", 1)
+            else:
+                sitename = url
+            stable = s3db.setup_smtp
+            smtp = db(stable.id == smtp_id).select(stable.hostname,
+                                                   stable.username,
+                                                   stable.password,
+                                                   limitby = (0, 1)
+                                                   ).first()
+            tasks = [{"copy": {"src": "/usr/share/doc/exim4-base/examples/example.conf.gz",
+                               "dest": "/etc/exim4/example.conf.gz",
+                               "remote_src": "yes",
+                               },
+                      "become": "yes",
+                      },
+                     {"command": "gunzip /etc/exim4/example.conf.gz",
+                      "args": {"chdir": "/etc/exim4",
+                               },
+                      "become": "yes",
+                      },
+                     {"copy": {"src": "/etc/exim4/example.conf",
+                               "dest": "/etc/exim4/exim4.conf",
+                               "remote_src": "yes",
+                               },
+                      "become": "yes",
+                      },
+                     {"lineinfile": {"path": "/etc/exim4/exim4.conf",
+                                     "regexp": QuotedDouble("{{ item.regexp }}"),
+                                     "line": QuotedDouble("{{ item.line }}"),
+                                     "state": "present",
+                                     "backrefs": "yes",
+                                     },
+                      "loop": [{"regexp": QuotedSingle("^# primary_hostname ="),
+                                "line": QuotedSingle("primary_hostname = %s" % sitename),
+                                },
+                               {"regexp": QuotedSingle("^# keep_environment ="),
+                                "line": QuotedSingle("keep_environment ="),
+                                },
+                               {"regexp": QuotedSingle("^# tls_advertise_hosts = *"),
+                                "line": QuotedSingle("tls_advertise_hosts ="),
+                                },
+                               ],
+                      "become": "yes",
+                      },
+                     {"blockinfile": {"path": "/etc/exim4/exim4.conf",
+                                      "insertafter": QuotedSingle("begin routers"),
+                                      "marker": QuotedDouble("# {mark} ANSIBLE MANAGED BLOCK Router"),
+                                      "block": Literal("""send_via_smart_host:
+  driver = manualroute
+  domains = ! +local_domains
+  transport = smart_host_smtp
+  route_list = * %s;""" % smtp.hostname),
+                                      },
+                      "become": "yes",
+                      },
+                     {"blockinfile": {"path": "/etc/exim4/exim4.conf",
+                                      "insertafter": QuotedSingle("begin transports"),
+                                      "marker": QuotedDouble("# {mark} ANSIBLE MANAGED BLOCK Transport"),
+                                      "block": Literal("""smart_host_smtp:
+  driver = smtp
+  port = 587
+  hosts_require_auth = *
+  hosts_require_tls = *"""),
+                                      },
+                      "become": "yes",
+                      },
+                     {"blockinfile": {"path": "/etc/exim4/exim4.conf",
+                                      "insertafter": QuotedSingle("begin authenticators"),
+                                      "marker": QuotedDouble("# {mark} ANSIBLE MANAGED BLOCK Authenticator"),
+                                      "block": Literal("""smarthost_login:
+  driver = plaintext
+  public_name = LOGIN
+  client_send = : %s : %s""" % (smtp.username, smtp.password)),
+                                      },
+                      "become": "yes",
+                      },
+                     {"service": {"name": "exim4",
+                                  "state": "restarted",
+                                  },
+                      "become": "yes",
+                      },
+                     ]
 
         # Build Playbook data structure:
         playbook.append({"hosts": host_ip,
@@ -1126,9 +1231,7 @@ class S3SetupDeploymentModel(S3Model):
                          "remote_user": server.remote_user,
                          "become_method": "sudo",
                          #"become_user": "root",
-                         "tasks": [{# @ToDo
-                                    },
-                                   ],
+                         "tasks": tasks,
                          })
 
         # Write Playbook
@@ -1996,7 +2099,8 @@ dropdown.change(function() {
             private_key = server.private_key
             if not private_key:
                 # Abort
-                current.T("Apply failed: SSH Key needed when applying away from localhost")
+                db.rollback()
+                current.response.error = current.T("Update failed: SSH Key needed when applying away from localhost")
                 return
 
             connection = "smart"
@@ -2980,6 +3084,17 @@ def setup_write_playbook(playbook_name,
         current.response.error = error
         return
 
+    # https://stackoverflow.com/questions/8640959/how-can-i-control-what-scalar-form-pyyaml-uses-for-my-data#answer-8641732
+    def double_quoted_presenter(dumper, data):
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='"')
+    yaml.add_representer(QuotedDouble, double_quoted_presenter)
+    def single_quoted_presenter(dumper, data):
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style="'")
+    yaml.add_representer(QuotedSingle, single_quoted_presenter)
+    def literal_presenter(dumper, data):
+        return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
+    yaml.add_representer(Literal, literal_presenter)
+
     folder = current.request.folder
     os_path = os.path
     os_path_join = os_path.join
@@ -3702,6 +3817,30 @@ def setup_settings_apply(instance_id, settings):
         new_value = settings[setting]
         db(q & (stable.setting == the_setting)).update(current_value = new_value,
                                                        new_value = None)
+
+# =============================================================================
+class QuotedDouble(str):
+    """
+        Ensure that strings are double-quoted when output in YAML
+        https://stackoverflow.com/questions/8640959/how-can-i-control-what-scalar-form-pyyaml-uses-for-my-data#answer-8641732
+    """
+    pass
+
+# =============================================================================
+class QuotedSingle(str):
+    """
+        Ensure that strings are single-quoted when output in YAML
+        https://stackoverflow.com/questions/8640959/how-can-i-control-what-scalar-form-pyyaml-uses-for-my-data#answer-8641732
+    """
+    pass
+
+# =============================================================================
+class Literal(str):
+    """
+        Ensure that multiline strings are output as a block literal in YAML
+        https://stackoverflow.com/questions/8640959/how-can-i-control-what-scalar-form-pyyaml-uses-for-my-data#answer-8641732
+    """
+    pass
 
 # =============================================================================
 class Storage2(Storage):

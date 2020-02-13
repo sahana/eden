@@ -333,9 +333,9 @@ def deployment():
                     table.webserver_type.comment = None
                     table.db_type.writable = False # @ToDo: Allow switching post-deployment
                     table.db_type.comment = None
-                    table.cloud_id.writable = False # @ToDo: Allow switching post-deployment
-                    table.dns_id.writable = False # @ToDo: Allow switching post-deployment
-                    table.smtp_id.writable = False # @ToDo: Allow switching post-deployment
+                    # Changing these post-deployment isn't an issue until we want to delete...should we cleanup on a change?
+                    #table.cloud_id.writable = False
+                    #table.dns_id.writable = False
 
         return True
     s3.prep = prep
