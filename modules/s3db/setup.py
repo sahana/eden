@@ -1403,6 +1403,7 @@ dropdown.change(function() {
             # Use the value from dropdown (& introspect the locale template(s))
             template = deployment.template
 
+        smtp_id = deployment.smtp_id
         if smtp_id and instance_type == "prod":
             # SMTP Smart Host
             stable = s3db.setup_smtp
