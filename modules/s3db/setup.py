@@ -3011,8 +3011,17 @@ def setup_monitor_run_task(task_id):
                 (atable.person_id == ptable.id)
         recipients = db(query).select(ptable.pe_id)
         if len(recipients) > 0:
+            stable = s3db.setup_server
+            server = db(stable.id == server_id).select(stable.name,
+                                                       stable.host_ip,
+                                                       limitby = (0, 1)
+                                                       ).first()
+            if server.host_ip == "127.0.0.1":
+                server_name = settings.get_system_name_short()
+            else:
+                server_name = server.name
             recipients = [p.pe_id for p in recipients]
-            subject = "%s: %s" % (settings.get_system_name_short(),
+            subject = "%s: %s" % (server_name,
                                   result.split("\n")[0],
                                   )
             current.msg.send_by_pe_id(recipients,
