@@ -43,6 +43,7 @@ __all__ = ("S3DNSModel",
            #"setup_DeploymentRepresent",
            #"setup_MonitorTaskRepresent",
            "setup_monitor_run_task",
+           "setup_monitor_task_restart",
            "setup_monitor_check_email_reply",
            "setup_instance_settings_read",
            #"setup_write_playbook",
@@ -2878,6 +2879,46 @@ def setup_monitor_task_disable_interactive(r, **attr):
     redirect(URL(f = "monitor_task"))
 
 # =============================================================================
+def setup_monitor_task_restart():
+    """
+        Restart all Enabled Monitor Tasks
+
+        CLI API for shell scripts & to be called by S3Method
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    # Clear all current Tasks from the Scheduler
+    ttable = s3db.scheduler_task
+    db(ttable.function_name == "setup_monitor_run_task").delete()
+
+    # Schedule all Enabled Tasks on all Enabled Servers
+    stable = s3db.setup_monitor_server
+    query = (stable.enabled == True) & \
+            (stable.deleted == False)
+    servers = db(query).select(stable.server_id)
+    servers = [s.server_id for s in servers]
+
+    table = s3db.setup_monitor_task
+    query = (table.server_id.belongs(servers)) & \
+            (table.enabled == True) & \
+            (table.deleted == False)
+    tasks = db(query).select(table.id,
+                             table.period,
+                             )
+    schedule_task = current.s3task.schedule_task
+    for task in tasks:
+        schedule_task("setup_monitor_run_task",
+                      args = [task.id],
+                      period = task.period,  # seconds
+                      timeout = 300, # seconds
+                      repeats = 0    # unlimited
+                      )
+
+    return "Monitor Tasks restarted"
+
+# =============================================================================
 def setup_monitor_task_run(r, **attr):
     """
         Run a Task
@@ -3691,7 +3732,7 @@ def setup_setting_apply(setting_id):
                                 #"become_user": "web2py",
                                 },
                                {"name": "Restart WebServer",
-                                # We don't want to restart the UWSGI process running the Task until after the Task has completed
+                                # We don't want to restart the WSGI process running the Task until after the Task has completed
                                 #"service": {"name": service_name,
                                 #            "state": "restarted",
                                 #            },

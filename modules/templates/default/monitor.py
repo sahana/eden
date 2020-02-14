@@ -488,22 +488,44 @@ class S3Monitor(object):
         earliest = current.request.utcnow - datetime.timedelta(seconds = 900) # 15 minutes
 
         if server.host_ip == "127.0.0.1":
-            # This doesn't make much sense as a check, since this won't run if the scheduler has died!
+            # This shouldn't make much sense as a check, since this won't run if the scheduler has died
+            # - however in practise, it can actually provide useful warning!
 
             wtable = s3db.scheduler_worker
             worker = db(wtable.status == "ACTIVE").select(wtable.last_heartbeat,
                                                           limitby = (0, 1)
                                                           ).first()
             
+            error = None
             if worker is None:
-                return {"result": "Warning: Scheduler not ACTIVE",
+                error = "Warning: Scheduler not ACTIVE"
+
+            elif worker.last_heartbeat < earliest:
+                error = "Warning: Scheduler stalled since %s" % worker.last_heartbeat.strftime("%H:%M %a %d %b")
+
+            if error:
+                appname = options_get("appname", "eden")
+                instance = options_get("instance", "prod")
+
+                # Restart uwsgi
+                error += "\n\nAttempting to restart:\n"
+                # Note this needs to actually run after last task as it kills us ;)
+                command = 'echo "sudo service uwsgi-%s restart" | at now + 1 minutes' % instance
+                output = subprocess.check_output(command,
+                                                 stderr = subprocess.STDOUT,
+                                                 shell = True)
+                error += output
+                # Restart Monitoring Scripts
+                command = 'echo "cd /home/%s;python web2py.py --no-banner -S %s -M -R applications/%s/static/scripts/tools/restart_monitor_tasks.py" | at now + 5 minutes' % \
+                    (instance, appname, appname)
+                output = subprocess.check_output(command,
+                                                 stderr = subprocess.STDOUT,
+                                                 shell = True)
+                error += output
+                return {"result": error,
                         "status": 3,
                         }
 
-            if worker.last_heartbeat < earliest:
-                return {"result": "Warning: Scheduler stalled since:\n\n%s" % worker.last_heartbeat,
-                        "status": 3,
-                        }
             return {"result": "OK",
                     "status": 1,
                     }
@@ -521,12 +543,24 @@ class S3Monitor(object):
             (instance, appname, appname, earliest)
         stdin, stdout, stderr = ssh.exec_command(command)
         outlines = stdout.readlines()
-        ssh.close()
 
         if outlines:
-            return {"result": outlines[0],
+            error = outlines[0]
+            # Restart uwsgi
+            error += "\n\nAttempting to restart:\n"
+            command = "sudo service uwsgi-%s restart" % instance
+            stdin, stdout, stderr = ssh.exec_command(command)
+            outlines = stdout.readlines()
+            if outlines:
+                error += "\n".join(outlines)
+            else:
+                # Doesn't usually give any output
+                error += "OK"
+            ssh.close()
+            return {"result": error,
                     "status": 3,
                     }
+        ssh.close()
 
         return {"result": "OK",
                 "status": 1,

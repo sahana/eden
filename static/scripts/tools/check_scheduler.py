@@ -4,7 +4,7 @@
 # Script to check the status of the Scheduler Worker
 #
 # Run as:
-#   python web2py.py -S eden -M -R applications/eden/static/scripts/tools/check_scheduler.py -A earliest
+#   python web2py.py --no-banner -S eden -M -R applications/eden/static/scripts/tools/check_scheduler.py -A earliest
 
 import datetime
 import sys
@@ -26,4 +26,4 @@ if worker is None:
     print("Warning: Scheduler not ACTIVE")
 
 elif worker.last_heartbeat < datetime.datetime.fromisoformat(earliest):
-    print("Warning: Scheduler stalled since:\n\n%s" % worker.last_heartbeat)
+    print("Warning: Scheduler stalled since %s" % worker.last_heartbeat.strftime("%H:%M %a %d %b"))

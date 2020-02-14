@@ -73,7 +73,11 @@ class S3Task(object):
             # Warning should already have been given by eden_update_check.py
             self.scheduler = None
         else:
-            self.scheduler = Scheduler(current.db, tasks, migrate=migrate)
+            self.scheduler = Scheduler(current.db,
+                                       tasks,
+                                       migrate = migrate,
+                                       #use_spawn = True # Possible subprocess method with Py3
+                                       )
 
     # -------------------------------------------------------------------------
     def configure_tasktable_crud(self,
