@@ -514,14 +514,14 @@ class S3Monitor(object):
                 output = subprocess.check_output(command,
                                                  stderr = subprocess.STDOUT,
                                                  shell = True)
-                error += output
+                error += output.decode("utf-8")
                 # Restart Monitoring Scripts
                 command = 'echo "cd /home/%s;python web2py.py --no-banner -S %s -M -R applications/%s/static/scripts/tools/restart_monitor_tasks.py" | at now + 5 minutes' % \
                     (instance, appname, appname)
                 output = subprocess.check_output(command,
                                                  stderr = subprocess.STDOUT,
                                                  shell = True)
-                error += output
+                error += output.decode("utf-8")
                 return {"result": error,
                         "status": 3,
                         }
