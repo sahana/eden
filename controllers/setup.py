@@ -84,6 +84,12 @@ def smtp():
                               )
 
 # -----------------------------------------------------------------------------
+def google_email():
+
+    return s3_rest_controller(#rheader = s3db.setup_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
 def deployment():
 
     def prep(r):
@@ -200,6 +206,11 @@ def deployment():
                             itable.url.writable = False # @ToDo: Allow switching post-deployment
                             #itable.sender.writable = False # Changes handled in setup_instance_update_onaccept
                             #itable.start.writable = False # Changes handled in setup_instance_update_onaccept
+                            if r.record.email_id:
+                                # Assume Google for now
+                                google_instance.name.writable = False
+                                google_instance.email.writable = False
+                                google_instance.member.writable = False # @ToDo: Allow switching post-deployment
 
                     elif r.method in (None, "create"):
                         itable = db.setup_instance
@@ -222,6 +233,26 @@ def deployment():
                             del types[row.type]
 
                         itable.type.requires = IS_IN_SET(types)
+
+                    deployment = r.record
+                    if deployment.email_id:
+                        # Assume Google for now
+                        from s3 import S3SQLCustomForm
+                        crud_form = S3SQLCustomForm("type",
+                                                    "url",
+                                                    "start",
+                                                    # Will be set automatically
+                                                    #"sender",
+                                                    "google_instance.name",
+                                                    "google_instance.email",
+                                                    "google_instance.member",
+                                                    "task_id",
+                                                    "log_file",
+                                                    )
+
+                        s3db.configure("setup_instance",
+                                       crud_form = crud_form,
+                                       )
 
                 elif cname == "setting":
                     f = s3db.setup_setting.instance_id
@@ -303,6 +334,7 @@ def deployment():
                                             "repo_url",
                                             "cloud_id",
                                             "dns_id",
+                                            "email_id",
                                             "smtp_id",
                                             "production_server.host_ip",
                                             "production_server.remote_user",
@@ -336,6 +368,7 @@ def deployment():
                     # Changing these post-deployment isn't an issue until we want to delete...should we cleanup on a change?
                     #table.cloud_id.writable = False
                     #table.dns_id.writable = False
+                    #table.email_id.writable = False
 
         return True
     s3.prep = prep

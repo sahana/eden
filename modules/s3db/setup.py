@@ -36,6 +36,8 @@ __all__ = ("S3DNSModel",
            "S3GandiDNSModel",
            "S3CloudModel",
            "S3AWSCloudModel",
+           "S3EmailProviderModel",
+           "S3GoogleEmailModel",
            "S3SMTPModel",
            "S3SetupDeploymentModel",
            "S3SetupMonitorModel",
@@ -138,7 +140,7 @@ class S3DNSModel(S3Model):
                                  comment = DIV(_class="tooltip",
                                                _title="%s|%s" % (T("DNS Provider"),
                                                                  T("If you use a DNS Provider configuration then you can create/update the DNS entry automatically as part of the deployment.")
-                                                                 )
+                                                                 ),
                                                ),
                                  )
 
@@ -253,7 +255,7 @@ class S3CloudModel(S3Model):
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Cloud"),
                                                                    T("If you use a Cloud configuration then you can create the server(s) automatically as part of the deployment.")
-                                                                   )
+                                                                   ),
                                                  ),
                                    )
 
@@ -436,6 +438,210 @@ class S3AWSCloudModel(S3CloudModel):
                                      )
 
 # =============================================================================
+class S3EmailProviderModel(S3Model):
+    """
+        Email Providers (we just use Groups currently)
+        - super-entity
+    """
+
+    names = ("setup_email",
+             "setup_email_id",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        #----------------------------------------------------------------------
+        # Super entity
+        #
+        email_types = Storage(setup_google_email = T("Google"),
+                              )
+
+        tablename = "setup_email"
+        self.super_entity(tablename, "email_id",
+                          email_types,
+                          Field("name",
+                                #label = T("Name"),
+                                ),
+                          Field("description",
+                                #label = T("Description"),
+                                ),
+                          #Field("enabled", "boolean",
+                          #      default = True,
+                          #      #label = T("Enabled?")
+                          #      #represent = s3_yes_no_represent,
+                          #      ),
+                          #on_define = lambda table: \
+                          #  [table.instance_type.set_attributes(readable = True),
+                          #   ],
+                          )
+
+        # Reusable Field
+        represent = S3Represent(lookup = tablename)
+        email_id = S3ReusableField("email_id", "reference %s" % tablename,
+                                   label = T("Email Group Provider"),
+                                   ondelete = "SET NULL",
+                                   represent = represent,
+                                   requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(db, "setup_email.email_id",
+                                              represent,
+                                              sort = True
+                                              ),
+                                   ),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Email Group Provider"),
+                                                                   T("If you use an Email Group Provider configuration then you can create/update the Email Sender entry automatically as part of the deployment.")
+                                                                   ),
+                                                 ),
+                                   )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        return {"setup_email_id": email_id,
+                }
+
+# =============================================================================
+class S3GoogleEmailModel(S3EmailProviderModel):
+    """
+        Google
+        - Email Group Provider Instance
+
+        https://developers.google.com/admin-sdk/directory/v1/guides/manage-groups
+
+        https://github.com/googleapis/google-api-python-client
+        # NB Only supports Python 3.x
+    """
+
+    names = ("setup_google_email",
+             "setup_google_instance",
+             )
+
+    def model(self):
+
+        T = current.T
+        configure = self.configure
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        tablename = "setup_google_email"
+        define_table(tablename,
+                     self.super_link("email_id", "setup_email"),
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("description"),
+                     #Field("enabled", "boolean",
+                     #      default = True,
+                     #      #label = T("Enabled?"),
+                     #      represent = s3_yes_no_represent,
+                     #      ),
+                     Field("credentials", "json",
+                           requires = IS_JSONS3(),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Credentials"),
+                                                           T("JSON of the Service Account.")
+                                                           ),
+                                         ),
+                           ),
+                     Field("email",
+                           requires = IS_EMAIL(),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Email"),
+                                                           T("A User account with Administrative access.")
+                                                           ),
+                                         ),
+                           ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  super_entity = "setup_email",
+                  )
+
+        # ---------------------------------------------------------------------
+        # Google Instance Details
+        #
+        tablename = "setup_google_instance"
+        define_table(tablename,
+                     self.setup_instance_id(),
+                     Field("name",
+                           label = T("Group Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("email",
+                           label = T("Group Email"),
+                           requires = IS_EMAIL(),
+                           ),
+                     Field("member",
+                           label = T("Member Email"),
+                           requires = IS_EMAIL(),
+                           ),
+                     Field("group_id",
+                           # Normally populated automatically
+                           writable = False,
+                           ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  ondelete = self.setup_google_instance_ondelete,
+                  )
+
+        # ---------------------------------------------------------------------
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def setup_google_instance_ondelete(row):
+        """
+            Cleanup Tasks when a Server is Deleted
+            - Google Group
+        """
+
+        from google.oauth2 import service_account
+        from googleapiclient.discovery import build
+
+        db = current.db
+        s3db = current.s3db
+        itable = s3db.setup_instance
+        gitable = s3db.setup_google_instance
+        dtable = s3db.setup_deployment
+        gtable = s3db.setup_google_email
+
+        # Only deleted_fks are in the row object
+        instance_id = row.instance_id
+        instance = db(gitable.id == row.id).select(gitable.group_id,
+                                                   limitby = (0, 1)
+                                                   ).first()
+
+        query = (itable.id == instance_id) & \
+                (dtable.id == itable.deployment_id) & \
+                (dtable.email_id == gtable.id)
+        deployment = db(query).select(gtable.credentials,
+                                      gtable.email,
+                                      limitby = (0, 1)
+                                      ).first()
+
+        creds_path = os.path.join("/", "tmp", "credentials-%s.json" % instance_id)
+
+        with open(creds_path, "w") as creds_file:
+            creds_file.write(json.dumps(deployment.credentials))
+
+        credentials = service_account.Credentials.from_service_account_file(
+                creds_path,
+                scopes = ["https://www.googleapis.com/auth/admin.directory.group"]
+                )
+        credentials = credentials.with_subject(deployment.email)
+        service = build("admin", "directory_v1", credentials=credentials)
+
+        results = service.groups().delete(groupKey = instance.group_id).execute()
+
+        if results is not None:
+            current.session.warning("Couldn't delete Email Group: %s" % result)
+
+        os.unlink(creds_path)
+
+# =============================================================================
 class S3SMTPModel(S3Model):
     """
         SMTP Smart Hosts
@@ -521,6 +727,7 @@ class S3SetupDeploymentModel(S3Model):
              "setup_server",
              "setup_server_id",
              "setup_instance",
+             "setup_instance_id",
              "setup_setting",
              )
 
@@ -616,6 +823,7 @@ class S3SetupDeploymentModel(S3Model):
                      self.setup_cloud_id(),
                      self.setup_dns_id(),
                      self.setup_smtp_id(),
+                     self.setup_email_id(),
                      *s3_meta_fields()
                      )
 
@@ -882,7 +1090,7 @@ class S3SetupDeploymentModel(S3Model):
                                         IS_EMAIL()),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Email Sender"),
-                                                           T("The Address which you want Outbound Email to be From. Not setting this means that Outbound Email is Disabled.")
+                                                           T("The Address which you want Outbound Email to be From. Not setting this means that Outbound Email is Disabled unless you automate this with an Email Group Provider.")
                                                            )
                                          ),
                            ),
@@ -928,6 +1136,13 @@ class S3SetupDeploymentModel(S3Model):
             msg_record_modified = T("Instance updated"),
             msg_record_deleted = T("Instance deleted"),
             msg_list_empty = T("No Instances currently registered"))
+
+        add_components(tablename,
+                       setup_google_instance = {"joinby": "instance_id",
+                                                "multiple": False,
+                                                },
+                       setup_setting = "instance_id",
+                       )
 
         configure(tablename,
                   list_fields = ["type",
@@ -1035,6 +1250,7 @@ class S3SetupDeploymentModel(S3Model):
         # Pass names back to global scope (s3.*)
         return {"setup_deployment_id": deployment_id,
                 "setup_server_id": server_id,
+                "setup_instance_id": instance_id,
                 }
 
     # -------------------------------------------------------------------------
@@ -1449,6 +1665,7 @@ dropdown.change(function() {
                                                            dtable.template_manual,
                                                            dtable.cloud_id,
                                                            dtable.dns_id,
+                                                           dtable.email_id,
                                                            dtable.smtp_id,
                                                            limitby = (0, 1)
                                                            ).first()
@@ -1515,6 +1732,57 @@ dropdown.change(function() {
         else:
             # Use the value from dropdown (& introspect the locale template(s))
             template = deployment.template
+
+        email_id = deployment.email_id
+        if email_id:
+            # Email Group Provider
+            # - assume Google for now
+            getable = s3db.setup_google_email
+            email_service = db(getable.id == email_id).select(getable.credentials,
+                                                              getable.email,
+                                                              limitby = (0, 1)
+                                                              ).first()
+            gitable = s3db.setup_google_instance
+            google_instance = db(gitable.instance_id == instance_id).select(gitable.name,
+                                                                            gitable.email,
+                                                                            gitable.member,
+                                                                            limitby = (0, 1)
+                                                                            ).first()
+
+            group_email = google_instance.email
+
+            from google.oauth2 import service_account
+            from googleapiclient.discovery import build
+
+            #creds_path = os.path.join("/", "tmp", "credentials-%s.json" % instance_id)
+            creds_path = os.path.join("\\", "temp", "credentials-%s.json" % instance_id)
+
+            with open(creds_path, "w") as creds_file:
+                creds_file.write(json.dumps(email_service.credentials))
+
+            credentials = service_account.Credentials.from_service_account_file(
+                    creds_path,
+                    scopes = ["https://www.googleapis.com/auth/admin.directory.group"]
+                    )
+            credentials = credentials.with_subject(email_service.email)
+            service = build("admin", "directory_v1", credentials=credentials)
+
+            # Create Group
+            results = service.groups().insert(body = {"name": google_instance.name,
+                                                      "email": group_email,
+                                                      }).execute()
+            group_id = results.get("id")
+
+            # Add Member
+            results = service.members().insert(groupKey = group_id,
+                                               body = {"email": google_instance.member,
+                                                       }).execute()
+
+            # Cleanup
+            os.unlink(creds_path)
+
+            # Use newly-created group as the Sender
+            sender = group_email
 
         smtp_id = deployment.smtp_id
         if smtp_id and instance_type == "prod":

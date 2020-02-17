@@ -48,6 +48,8 @@ boto>=2.49.0
 boto3>=1.11.4
 # Warning: Setup unresolved dependency: dnspython required for Setup Module to be able to do DNS Lookups
 dnspython>=1.16.0
+# Warning: Setup unresolved dependency: google-api-python-client required to be able to manage Google Email Groups
+google-api-python-client>=1.7.11
 # Warning: S3 unresolved dependency: pyparsing required for Calendar Support and Advanced URL Queries
 pyparsing>=2.0.1
 # Warning: URL shortener unresolved dependency: pyshorteners required to shorten the url (currently used by SAMBRO)

@@ -510,6 +510,7 @@ class S3Monitor(object):
                 # Restart uwsgi
                 error += "\n\nAttempting to restart:\n"
                 # Note this needs to actually run after last task as it kills us ;)
+                # NB Need to ensure the web2py user has permission to run sudo
                 command = 'echo "sudo service uwsgi-%s restart" | at now + 1 minutes' % instance
                 output = subprocess.check_output(command,
                                                  stderr = subprocess.STDOUT,
