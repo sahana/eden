@@ -43,4 +43,5 @@ chown -R ${USER} .
 cp modules/templates/000_config.py models/000_config.py
 
 sed -ie 's|EDITING_CONFIG_FILE = False|EDITING_CONFIG_FILE = True|' models/000_config.py
+sed -ie 's|settings.base.template = "default"|settings.base.template = ("default", "default.Demo")|' models/000_config.py
 sed -ie 's|\#settings.base.prepopulate += ("default", "default/users")|settings.base.prepopulate += ("default", "default/users")|' models/000_config.py
