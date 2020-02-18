@@ -1012,7 +1012,7 @@ def config(settings):
     #settings.inv.recv_shortname = "ARDR"
     # Types common to both Send and Receive
     #settings.inv.shipment_types = {
-    #         0: T("-"),
+    #         0: "-", # current.messages["NONE"] but current.messages is defined only after 000_config.py is executed
     #         1: T("Other Warehouse"),
     #         2: T("Donation"),
     #         3: T("Foreign Donation"),
@@ -1028,7 +1028,7 @@ def config(settings):
     #        34: T("Purchase"),
     #    }
     #settings.inv.item_status = {
-    #        0: current.messages["NONE"],
+    #        0: "-", # current.messages["NONE"] but current.messages is defined only after 000_config.py is executed
     #        1: T("Dump"),
     #        2: T("Sale"),
     #        3: T("Reject"),
