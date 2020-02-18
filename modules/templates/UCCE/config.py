@@ -17,8 +17,8 @@ def config(settings):
     settings.base.system_name_short = T("UCCE")
 
     # PrePopulate data
-    settings.base.prepopulate += ("UCCE",)
-    settings.base.prepopulate_demo += ("UCCE/Demo",)
+    settings.base.prepopulate.append("UCCE")
+    settings.base.prepopulate_demo.append("UCCE/Demo")
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "UCCE"

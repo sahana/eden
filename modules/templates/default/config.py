@@ -24,6 +24,8 @@ def config(settings):
     # Unless doing a manual DB migration, where prepopulate = 0
     # In Production, prepopulate = 0 (to save 1x DAL hit every page)
     settings.base.prepopulate.append("default")
+    # Done by enabling the sub-template:
+    #settings.base.prepopulate_demo.append("default/Demo")
 
     # Uncomment this to prefer scalability-optimized strategies globally
     #settings.base.bigtable = True
@@ -41,9 +43,9 @@ def config(settings):
     # Should users be allowed to register themselves?
     #settings.security.self_registration = False
     # Do new users need to verify their email address?
-    #settings.auth.registration_requires_verification = True
+    settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
-    #settings.auth.registration_requires_approval = True
+    settings.auth.registration_requires_approval = True
     # Disable welcome-emails to newly registered users
     #settings.auth.registration_welcome_email = False
 
@@ -140,24 +142,24 @@ def config(settings):
     settings.L10n.languages = OrderedDict([
         ("ar", "Arabic"),
         ("bs", "Bosnian"),
-        #("crs", "Seychellois Creole"),
-        #("dv", "Divehi"), # Maldives
-        #("dz", "Dzongkha"), # Bhutan
+        ##("crs", "Seychellois Creole"),
+        ##("dv", "Divehi"), # Maldives
+        ##("dz", "Dzongkha"), # Bhutan
         ("en", "English"),
         ("fr", "French"),
         ("de", "German"),
         ("el", "Greek"),
         ("es", "Spanish"),
-        #("id", "Bahasa Indonesia"),
+        ##("id", "Bahasa Indonesia"),
         ("it", "Italian"),
         ("ja", "Japanese"),
         ("km", "Khmer"), # Cambodia
         ("ko", "Korean"),
-        #("lo", "Lao"),
-        #("lt", "Lithuanian"),
-        #("mg", "Malagasy"),
+        ##("lo", "Lao"),
+        ##("lt", "Lithuanian"),
+        ##("mg", "Malagasy"),
         ("mn", "Mongolian"),
-        #("ms", "Malaysian"),
+        ##("ms", "Malaysian"),
         ("my", "Burmese"), # Myanmar
         ("ne", "Nepali"),
         ("prs", "Dari"), # Afghan Persian
@@ -165,14 +167,14 @@ def config(settings):
         ("pt", "Portuguese"),
         ("pt-br", "Portuguese (Brazil)"),
         ("ru", "Russian"),
-        ("tet", "Tetum"),
-        #("si", "Sinhala"), # Sri Lanka
-        #("so", "Somali"),
-        #("ta", "Tamil"), # India, Sri Lanka
-        ("th", "Thai"),
-        ("tl", "Tagalog"), # Philippines
-        ("tr", "Turkish"),
-        ("ur", "Urdu"), # Pakistan
+        #("tet", "Tetum"),
+        ##("si", "Sinhala"), # Sri Lanka
+        ##("so", "Somali"),
+        ##("ta", "Tamil"), # India, Sri Lanka
+        #("th", "Thai"),
+        #("tl", "Tagalog"), # Philippines
+        #("tr", "Turkish"),
+        #("ur", "Urdu"), # Pakistan
         ("vi", "Vietnamese"),
         ("zh-cn", "Chinese (Simplified)"), # Mainland China
         ("zh-tw", "Chinese (Taiwan)"),
@@ -383,8 +385,8 @@ def config(settings):
     # 6: Apply Controller, Function, Table ACLs and Entity Realm
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
-    #
-    #settings.security.policy = 7 # Organisation-ACLs
+
+    settings.security.policy = 5 # Controller, Function & Table ACLs
 
     # Ownership-rule for records without owner:
     # True = not owned by any user (strict ownership, default)
