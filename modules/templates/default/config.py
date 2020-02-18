@@ -49,11 +49,14 @@ def config(settings):
     # Disable welcome-emails to newly registered users
     #settings.auth.registration_welcome_email = False
 
+    # Approval emails get sent to all admins
+    settings.mail.approver = "ADMIN"
+
     # Allow a new user to be linked to a record (and a new record will be created if it doesn't already exist)
-    #settings.auth.registration_link_user_to = {"staff": T("Staff"),
-    #                                           "volunteer": T("Volunteer"),
-    #                                           "member": T("Member"),
-    #                                           }
+    settings.auth.registration_link_user_to = {"staff": T("Staff"),
+                                               "volunteer": T("Volunteer"),
+                                               #"member": T("Member"),
+                                               }
 
     # Always notify the approver of a new (verified) user, even if the user is automatically approved
     #settings.auth.always_notify_approver = False
@@ -136,6 +139,19 @@ def config(settings):
     # Uncomment this to enable the creation of new locations if a user logs in from an unknown location. Warning: This may lead to many useless location entries
     #settings.auth.create_unknown_locations = True
 
+    # -------------------------------------------------------------------------
+    # Setup
+    settings.setup.wizard_questions += [{"question": "Will you record data for multiple Organisations?",
+                                         "setting": "hrm.multiple_orgs",
+                                         "options": {True: "Yes", False: "No"},
+                                         },
+                                        {"question": "Do you need support for Branch Organisations?",
+                                         "setting": "org.branches",
+                                         "options": {True: "Yes", False: "No"},
+                                         },
+                                        ]
+
+    # -------------------------------------------------------------------------
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar, GIS Locations, etc)
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
@@ -313,7 +329,7 @@ def config(settings):
     # Uncomment to have custom folders in the LayerTree use Radio Buttons
     #settings.gis.layer_tree_radio = True
     # Uncomment to display the Map Legend as a floating DIV
-    #settings.gis.legend = "float"
+    settings.gis.legend = "float"
     # Uncomment to use scalability-optimized options lookups in location filters
     #settings.gis.location_filter_bigtable_lookups = True
     # Uncomment to prevent showing LatLon in Location Represents
