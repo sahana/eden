@@ -1574,9 +1574,19 @@ dropdown.change(function() {
         fields = []
         fappend = fields.append
         for q in questions:
+            try:
+                fn = getattr(settings, q["fn"])
+            except:
+                default = None
+            else:
+                try:
+                    default = fn()
+                except:
+                    default = None
             setting = q["setting"]
             fname = setting.replace(".", "_")
             fappend(Field(fname,
+                          default = default,
                           label = T(q["question"]),
                           requires = IS_IN_SET(q["options"]),
                           widget = RadioWidget.widget,
@@ -4103,6 +4113,10 @@ def setup_settings_apply(instance_id, settings):
     appname = "eden" # @ToDo: Allow this to be configurable
 
     instance_type = INSTANCE_TYPES[instance.type]
+
+    # @ToDo: Lookup webserver_type from deployment once we support Apache
+    #service_name = "apache2"
+    service_name = "uwsgi-%s" % instance_type
 
     # Build List of Tasks
     tasks = []

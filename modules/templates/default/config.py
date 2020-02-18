@@ -143,10 +143,22 @@ def config(settings):
     # Setup
     settings.setup.wizard_questions += [{"question": "Will you record data for multiple Organisations?",
                                          "setting": "hrm.multiple_orgs",
+                                         "fn": "get_hrm_multiple_orgs",
                                          "options": {True: "Yes", False: "No"},
                                          },
                                         {"question": "Do you need support for Branch Organisations?",
                                          "setting": "org.branches",
+                                         "fn": "get_org_branches",
+                                         "options": {True: "Yes", False: "No"},
+                                         },
+                                        {"question": "Do your human resources need to be able to mark their periods of unavailability?",
+                                         "setting": "hrm.unavailability",
+                                         "fn": "get_hrm_unavailability",
+                                         "options": {True: "Yes", None: "No"},
+                                         },
+                                        {"question": "Do you want to manage Shifts for your Facilities?",
+                                         "setting": "org.facility_shifts",
+                                         "fn": "get_org_facility_shifts",
                                          "options": {True: "Yes", False: "No"},
                                          },
                                         ]
@@ -164,13 +176,13 @@ def config(settings):
         ("en", "English"),
         ("fr", "French"),
         ("de", "German"),
-        ("el", "Greek"),
+        #("el", "Greek"),
         ("es", "Spanish"),
         ##("id", "Bahasa Indonesia"),
         ("it", "Italian"),
-        ("ja", "Japanese"),
+        #("ja", "Japanese"),
         ("km", "Khmer"), # Cambodia
-        ("ko", "Korean"),
+        #("ko", "Korean"),
         ##("lo", "Lao"),
         ##("lt", "Lithuanian"),
         ##("mg", "Malagasy"),
@@ -181,8 +193,8 @@ def config(settings):
         ("prs", "Dari"), # Afghan Persian
         ("ps", "Pashto"), # Afghanistan, Pakistan
         ("pt", "Portuguese"),
-        ("pt-br", "Portuguese (Brazil)"),
-        ("ru", "Russian"),
+        #("pt-br", "Portuguese (Brazil)"),
+        #("ru", "Russian"),
         #("tet", "Tetum"),
         ##("si", "Sinhala"), # Sri Lanka
         ##("so", "Somali"),
@@ -192,8 +204,8 @@ def config(settings):
         #("tr", "Turkish"),
         #("ur", "Urdu"), # Pakistan
         ("vi", "Vietnamese"),
-        ("zh-cn", "Chinese (Simplified)"), # Mainland China
-        ("zh-tw", "Chinese (Taiwan)"),
+        #("zh-cn", "Chinese (Simplified)"), # Mainland China
+        #("zh-tw", "Chinese (Taiwan)"),
     ])
     # Default language for Language Toolbar (& GIS Locations in future)
     #settings.L10n.default_language = "en"
