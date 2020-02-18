@@ -911,7 +911,7 @@ class S3SetupDeploymentModel(S3Model):
 
         tablename = "setup_server"
         define_table(tablename,
-                     # @ToDo: Server Groups
+                     # @ToDo: Server Groups (e.g. 'all webservers', 'all debian 9')
                      #group_id(),
                      deployment_id(),
                      Field("name",
@@ -1743,7 +1743,8 @@ dropdown.change(function() {
                                                               limitby = (0, 1)
                                                               ).first()
             gitable = s3db.setup_google_instance
-            google_instance = db(gitable.instance_id == instance_id).select(gitable.name,
+            google_instance = db(gitable.instance_id == instance_id).select(gitable.id,
+                                                                            gitable.name,
                                                                             gitable.email,
                                                                             gitable.member,
                                                                             limitby = (0, 1)
@@ -1772,6 +1773,9 @@ dropdown.change(function() {
                                                       "email": group_email,
                                                       }).execute()
             group_id = results.get("id")
+
+            # Store group_id
+            google_instance.update_record(group_id = group_id)
 
             # Add Member
             results = service.members().insert(groupKey = group_id,
