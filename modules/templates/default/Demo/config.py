@@ -98,6 +98,10 @@ def config(settings):
     #
     settings.security.policy = 1 # Simple Policy
 
+    # Events
+    # Uncomment this to use link Projects to Events
+    settings.project.event_projects = True
+
     # -------------------------------------------------------------------------
     settings.modules = OrderedDict([
         # Core modules which shouldn't be disabled

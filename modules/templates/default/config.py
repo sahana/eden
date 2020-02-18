@@ -161,6 +161,16 @@ def config(settings):
                                          "fn": "get_org_facility_shifts",
                                          "options": {True: "Yes", False: "No"},
                                          },
+                                        {"question": "Do you want to categorise Projects by Hazard?",
+                                         "setting": "project.hazards",
+                                         "fn": "get_project_hazards",
+                                         "options": {True: "Yes", False: "No"},
+                                         },
+                                        {"question": "Do you want to categorise Projects by Theme?",
+                                         "setting": "project.themes",
+                                         "fn": "get_project_themes",
+                                         "options": {True: "Yes", False: "No"},
+                                         },
                                         ]
 
     # -------------------------------------------------------------------------
@@ -1122,19 +1132,19 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Projects
     # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
-    #settings.project.mode_3w = True
+    settings.project.mode_3w = True
     # Uncomment this to use DRR (Disaster Risk Reduction) extensions
     #settings.project.mode_drr = True
     # Uncomment this to use settings suitable for detailed Task management
-    #settings.project.mode_task = True
+    settings.project.mode_task = True
     # Uncomment this to use link Projects to Events
     #settings.project.event_projects = True
     # Uncomment this to use Activities for Projects & Tasks
-    #settings.project.activities = True
+    settings.project.activities = True
     # Uncomment this to use link Activities to Events
     #settings.project.event_activities = True
     # Uncomment this to use Activity Types for Activities & Projects
-    #settings.project.activity_types = True
+    settings.project.activity_types = True
     # Uncomment this to filter dates in Activities
     #settings.project.activity_filter_year = True
     # Uncomment this to not use Beneficiaries for Activities
@@ -1146,29 +1156,29 @@ def config(settings):
     # Uncomment this to call project locations 'Communities'
     #settings.project.community = True
     # Uncomment this to enable Demographics in 3W projects
-    #settings.project.demographics = True
+    settings.project.demographics = True
     # Uncomment this to enable Hazards in 3W projects
     #settings.project.hazards = True
     # Uncomment this to enable Indicators in projects
-    #settings.project.indicators = True
+    settings.project.indicators = True
     # Uncomment this to enable Milestones in projects
-    #settings.project.milestones = True
+    settings.project.milestones = True
     # Uncomment this to use Projects for Activities & Tasks
-    #settings.project.projects = True
+    settings.project.projects = True
     # Uncomment this to disable Sectors in projects
     #settings.project.sectors = False
     # Uncomment this to enable Programmes in projects
-    #settings.project.programmes = True
+    settings.project.programmes = True
     # Uncomment this to enable Budgets in Programmes
-    #settings.project.programme_budget = True
+    settings.project.programme_budget = True
     # Uncomment this to enable Themes in 3W projects
     #settings.project.themes = True
     # Uncomment this to use Theme Percentages for projects
     #settings.project.theme_percentages = True
     # Uncomment this to use multiple Budgets per project
-    #settings.project.multiple_budgets = True
+    settings.project.multiple_budgets = True
     # Uncomment this to use multiple Organisations per project
-    #settings.project.multiple_organisations = True
+    settings.project.multiple_organisations = True
     # Uncomment this to customise
     # Links to Filtered Components for Donors & Partners
     #settings.project.organisation_roles = {
