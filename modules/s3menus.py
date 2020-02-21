@@ -457,6 +457,7 @@ class S3OptionsMenu(object):
         return M()(
                     M("Setup", c="setup", f="deployment")(
                         M("AWS Clouds", f="aws_cloud")(),
+                        M("OpenStack Clouds", f="openstack_cloud")(),
                         M("GANDI DNS", f="gandi_dns")(),
                         M("Google Email", f="google_email")(),
                         M("SMTP SmartHosts", f="smtp")(),

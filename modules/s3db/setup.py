@@ -36,20 +36,21 @@ __all__ = ("S3DNSModel",
            "S3GandiDNSModel",
            "S3CloudModel",
            "S3AWSCloudModel",
+           "S3OpenStackCloudModel",
            "S3EmailProviderModel",
            "S3GoogleEmailModel",
            "S3SMTPModel",
            "S3SetupDeploymentModel",
            "S3SetupMonitorModel",
-           #"Storage2",
-           #"setup_DeploymentRepresent",
-           #"setup_MonitorTaskRepresent",
+           "setup_instance_settings_read",
            "setup_monitor_run_task",
            "setup_monitor_task_restart",
            "setup_monitor_check_email_reply",
-           "setup_instance_settings_read",
            #"setup_write_playbook",
            "setup_run_playbook",
+           #"setup_DeploymentRepresent",
+           #"setup_MonitorTaskRepresent",
+           #"Storage2",
            "setup_rheader",
            )
 
@@ -219,6 +220,7 @@ class S3CloudModel(S3Model):
         # Super entity
         #
         cloud_types = Storage(setup_aws_cloud = T("Amazon Web Services"),
+                              setup_openstack_cloud = T("OpenStack"),
                               )
 
         tablename = "setup_cloud"
@@ -373,30 +375,30 @@ class S3AWSCloudModel(S3CloudModel):
         db = current.db
         s3db = current.s3db
         stable = s3db.setup_server
-        astable = s3db.setup_aws_server
+        cstable = s3db.setup_aws_server
         dtable = s3db.setup_deployment
-        atable = s3db.setup_aws_cloud
+        ctable = s3db.setup_aws_cloud
 
         # Only deleted_fks are in the row object
-        aws_server = db(astable.id == row.id).select(astable.region,
-                                                     astable.instance_id,
+        aws_server = db(cstable.id == row.id).select(cstable.region,
+                                                     cstable.instance_id,
                                                      limitby = (0, 1)
                                                      ).first()
         region = aws_server.region
 
         query = (stable.id == row.server_id) & \
                 (dtable.id == stable.deployment_id) & \
-                (dtable.cloud_id == atable.id)
-        deployment = db(query).select(atable.access_key,
-                                      atable.secret_key,
+                (dtable.cloud_id == ctable.id)
+        deployment = db(query).select(ctable.access_key,
+                                      ctable.secret_key,
                                       stable.name,
                                       limitby = (0, 1)
                                       ).first()
 
         server_name = deployment["setup_server.name"]
-        aws = deployment["setup_aws_cloud"]
-        access_key = aws.access_key
-        secret_key = aws.secret_key
+        cloud = deployment["setup_aws_cloud"]
+        access_key = cloud.access_key
+        secret_key = cloud.secret_key
 
         playbook = [{"hosts": "localhost",
                      "connection": "local",
@@ -423,6 +425,184 @@ class S3AWSCloudModel(S3CloudModel):
 
         # Write Playbook
         name = "aws_server_ondelete_%d" % int(time.time())
+        task_vars = setup_write_playbook("%s.yml" % name,
+                                         playbook,
+                                         )
+
+        # Run Playbook
+        #task_vars["instance_id"] = instance_id # To Upload Logs to Instance record
+        current.s3task.schedule_task(name,
+                                     vars = task_vars,
+                                     function_name = "setup_run_playbook",
+                                     repeats = None,
+                                     timeout = 6000,
+                                     #sync_output = 300
+                                     )
+
+# =============================================================================
+class S3OpenStackCloudModel(S3CloudModel):
+    """
+        OpenStack
+        - Cloud Instance
+
+        https://www.openstack.org
+        https://docs.ansible.com/ansible/latest/modules/os_server_module.html
+    """
+
+    names = ("setup_openstack_cloud",
+             "setup_openstack_server",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        configure = self.configure
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # OpenStack Cloud Configuration
+        #
+        tablename = "setup_openstack_cloud"
+        define_table(tablename,
+                     # Instance of Super-Entity
+                     self.super_link("cloud_id", "setup_cloud"),
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("description"),
+                     #Field("enabled", "boolean",
+                     #      default = True,
+                     #      #label = T("Enabled?"),
+                     #      represent = s3_yes_no_represent,
+                     #      ),
+                     Field("auth_url",
+                           requires = IS_URL(),
+                           ),
+                     Field("username",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("password", "password",
+                           readable = False,
+                           requires = IS_NOT_EMPTY(),
+                           widget = S3PasswordWidget(),
+                           ),
+                     Field("project_name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("domain_name",
+                           default = "Default",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  super_entity = "setup_cloud",
+                  )
+
+        # ---------------------------------------------------------------------
+        # OpenStack Server Details
+        #
+        tablename = "setup_openstack_server"
+        define_table(tablename,
+                     self.setup_server_id(),
+                     Field("instance_type",
+                           default = "m1.small", # Varies by Deployment, this matches OSUOSL
+                           #label = T("Flavor"),
+                           #requires = IS_IN_SET(openstack_instance_types), # Varies by Deployment
+                           ),
+                     Field("image",
+                           default = "Debian 10.1", # Varies by Deployment, this matches OSUOSL
+                           #label = T("Image"), # Image Name or ID
+                           ),
+                     Field("volume_size", "integer",
+                           default = 8, # Gb
+                           #label = T("Volume Size (Gb)"),
+                           ),
+                     Field("network",
+                           default = "general_servers1", # Varies by Deployment, this matches OSUOSL
+                           #label = T("Security Group"),
+                           ),
+                     Field("security_group",
+                           default = "default",
+                           #label = T("Security Group"),
+                           ),
+                     Field("region",
+                           default = "RegionOne", # Varies by Deployment, this matches OSUOSL
+                           #label = T("Region"),
+                           #requires = IS_IN_SET(openstack_regions), # Varies by Deployment
+                           #represent = S3Represent(options = aws_regions)
+                           ),
+                     Field("availability_zone",
+                           default = "nova", # Varies by Deployment, this matches OSUOSL
+                           #label = T("Availability Zone"),
+                           ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  ondelete = self.setup_openstack_server_ondelete,
+                  )
+
+        # ---------------------------------------------------------------------
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def setup_openstack_server_ondelete(row):
+        """
+            Cleanup Tasks when a Server is Deleted
+            - OpenStack Instance
+            - OpenStack Keypair
+        """
+
+        db = current.db
+        s3db = current.s3db
+        stable = s3db.setup_server
+        dtable = s3db.setup_deployment
+        ctable = s3db.setup_openstack_cloud
+
+        query = (stable.id == row.server_id) & \
+                (dtable.id == stable.deployment_id) & \
+                (dtable.cloud_id == ctable.id)
+        deployment = db(query).select(ctable.auth_url,
+                                      ctable.username,
+                                      ctable.password,
+                                      ctable.project_name,
+                                      ctable.domain_name,
+                                      stable.name,
+                                      limitby = (0, 1)
+                                      ).first()
+
+        server_name = deployment["setup_server.name"]
+        cloud = deployment["setup_openstack_cloud"]
+        auth = {"auth_url": cloud.auth_url,
+                "username": cloud.username,
+                "password": cloud.password,
+                "project_name": cloud.project_name,
+                "domain_name": cloud.domain_name,
+                }
+
+        playbook = [{"hosts": "localhost",
+                     "connection": "local",
+                     "gather_facts": "no",
+                     "tasks": [# Terminate OpenStack Instance
+                               {"os_server": {"auth": auth,
+                                              "name": server_name,
+                                              "state": "absent",
+                                              },
+                                },
+                               # Delete Keypair
+                               {"os_keypair": {"auth": auth,
+                                               "name": server_name,
+                                               "state": "absent",
+                                               },
+                                },
+                               ],
+                     },
+                    ]
+
+        # Write Playbook
+        name = "openstack_server_ondelete_%d" % int(time.time())
         task_vars = setup_write_playbook("%s.yml" % name,
                                          playbook,
                                          )
@@ -904,7 +1084,7 @@ class S3SetupDeploymentModel(S3Model):
         # Servers
         #
         SERVER_ROLES = {1: "all",
-                        2: "db",
+                        #2: "db",
                         #3: "webserver",
                         #4: "eden",
                         }
@@ -994,6 +1174,9 @@ class S3SetupDeploymentModel(S3Model):
                        setup_aws_server = {"joinby": "server_id",
                                            "multiple": False,
                                            },
+                       setup_openstack_server = {"joinby": "server_id",
+                                                 "multiple": False,
+                                                 },
                        setup_monitor_run = {"name": "monitor_log",
                                             "joinby": "server_id",
                                             },
@@ -1685,30 +1868,67 @@ dropdown.change(function() {
         query = (stable.deployment_id == deployment_id)
         cloud_id = deployment.cloud_id
         if cloud_id:
-            # Get AWS details
-            # @ToDo: Will need extending when we support multiple Cloud Providers
-            atable = s3db.setup_aws_cloud
-            aws = db(atable.id == cloud_id).select(atable.access_key,
-                                                   atable.secret_key,
-                                                   limitby = (0, 1)
-                                                   ).first()
+            # Lookup the Instance Type
+            ctable = s3db.setup_cloud
+            cloud = db(ctable.cloud_id == deployment.cloud_id).select(ctable.instance_type,
+                                                                      limitby = (0, 1)
+                                                                      ).first()
+            cloud_type = cloud.instance_type
+            if cloud_type == "setup_aws_cloud":
+                # Get Cloud details
+                ctable = s3db.setup_aws_cloud
+                cloud = db(ctable.id == cloud_id).select(ctable.access_key,
+                                                         ctable.secret_key,
+                                                         limitby = (0, 1)
+                                                         ).first()
 
-            # Get Server(s) details
-            astable = s3db.setup_aws_server
-            left = astable.on(astable.server_id == stable.id)
-            servers = db(query).select(stable.id,
-                                       stable.name,
-                                       stable.role,
-                                       stable.host_ip,
-                                       stable.remote_user,
-                                       stable.private_key,
-                                       astable.region,
-                                       astable.instance_type,
-                                       astable.image,
-                                       astable.security_group,
-                                       astable.instance_id,
-                                       left = left,
-                                       )
+                # Get Server(s) details
+                cstable = s3db.setup_aws_server
+                left = cstable.on(cstable.server_id == stable.id)
+                servers = db(query).select(stable.id,
+                                           stable.name,
+                                           stable.role,
+                                           stable.host_ip,
+                                           stable.remote_user,
+                                           stable.private_key,
+                                           cstable.region,
+                                           cstable.instance_type,
+                                           cstable.image,
+                                           cstable.security_group,
+                                           cstable.instance_id,
+                                           left = left,
+                               )
+            elif cloud_type == "setup_openstack_cloud":
+                # Get Cloud details
+                ctable = s3db.setup_openstack_cloud
+                cloud = db(ctable.id == cloud_id).select(ctable.auth_url,
+                                                         ctable.username,
+                                                         ctable.password,
+                                                         ctable.project_name,
+                                                         ctable.domain_name,
+                                                         limitby = (0, 1)
+                                                         ).first()
+
+                # Get Server(s) details
+                cstable = s3db.setup_openstack_server
+                left = cstable.on(cstable.server_id == stable.id)
+                servers = db(query).select(stable.id,
+                                           stable.name,
+                                           stable.role,
+                                           stable.host_ip,
+                                           stable.remote_user,
+                                           stable.private_key,
+                                           cstable.instance_type,
+                                           cstable.image,
+                                           cstable.volume_size,
+                                           cstable.network,
+                                           cstable.security_group,
+                                           cstable.region,
+                                           cstable.availability_zone,
+                                           left = left,
+                               )
+            else:
+                 raise NotImplementedError
         else:
             # Get Server(s) details
             servers = db(query).select(stable.name,
@@ -1823,11 +2043,22 @@ dropdown.change(function() {
             if cloud_id:
                 tasks = []
                 connection = "smart"
-                # @ToDo: Will need extending when we support multiple Cloud Providers
-                access_key = aws.access_key
-                secret_key = aws.secret_key
-                aws_server = server["setup_aws_server"]
-                region = aws_server.region
+                request = current.request
+
+                if cloud_type == "setup_aws_cloud":
+                    access_key = cloud.access_key
+                    secret_key = cloud.secret_key
+                    cloud_server = server["setup_aws_server"]
+                    
+                elif cloud_type == "setup_openstack_cloud":
+                    auth = {"auth_url": cloud.auth_url,
+                            "username": cloud.username,
+                            "password": cloud.password,
+                            "project_name": cloud.project_name,
+                            "domain_name": cloud.domain_name,
+                            }
+                    cloud_server = server["setup_openstack_server"]
+
                 server = server["setup_server"]
                 remote_user = server.remote_user
                 server_name = server.name
@@ -1854,60 +2085,103 @@ dropdown.change(function() {
                     tasks.append({"openssh_keypair": {"path": private_key,
                                                       },
                                   })
-                # Upload Public Key to AWS
-                tasks.append({"ec2_key": {"aws_access_key": access_key,
-                                          "aws_secret_key": secret_key,
-                                          "region": region,
-                                          "name": server_name,
-                                          "key_material": "{{ lookup('file', '%s') }}" % public_key,
-                                          },
-                              })
-                if aws_server.instance_id:
-                    # Terminate old AWS instance
-                    # @ToDo: Allow deployment on existing instances?
-                    tasks.append({"ec2": {"aws_access_key": access_key,
-                                          "aws_secret_key": secret_key,
-                                          "region": region,
-                                          "instance_ids": aws_server.instance_id,
-                                          "state": "absent",
-                                          },
+                if cloud_type == "setup_aws_cloud":
+                    region = cloud_server.region
+                    # Upload Public Key to Cloud
+                    tasks.append({"ec2_key": {"aws_access_key": access_key,
+                                              "aws_secret_key": secret_key,
+                                              "region": region,
+                                              "name": server_name,
+                                              "key_material": "{{ lookup('file', '%s') }}" % public_key,
+                                              },
                                   })
-                # Launch AWS instance
-                request = current.request
-                command = "python web2py.py -S %(appname)s -M -R %(appname)s/private/eden_deploy/tools/update_server.py -A %(server_id)s {{ item.id }} {{ item.public_ip }} %(server_name)s" % \
-                            {"appname": request.application,
-                             "server_id": server.id,
-                             "server_name": server_name,
-                             }
-                tasks += [# Launch AWS Instance
-                          {"ec2": {"aws_access_key": access_key,
-                                   "aws_secret_key": secret_key,
-                                   "key_name": server_name,
-                                   "region": region,
-                                   "instance_type": aws_server.instance_type,
-                                   "image": aws_server.image,
-                                   "group": aws_server.security_group,
-                                   "wait": "yes",
-                                   "count": 1,
-                                   "instance_tags": {"Name": server_name,
-                                                     },
-                                   },
-                           "register": "ec2",
-                           },
-                          # Add new instance to host group (to associate private_key)
-                          {"add_host": {"hostname": "{{ item.public_ip }}",
-                                        "groupname": "launched",
-                                        "ansible_ssh_private_key_file": "/tmp/%s" % server_name,
-                                        },
-                           "loop": "{{ ec2.instances }}",
-                           },
-                          # Update Server record
-                          {"command": {"cmd": command,
-                                       "chdir": request.env.web2py_path,
+                    if cloud_server.instance_id:
+                        # Terminate old AWS instance
+                        # @ToDo: Allow deployment on existing instances?
+                        tasks.append({"ec2": {"aws_access_key": access_key,
+                                              "aws_secret_key": secret_key,
+                                              "region": region,
+                                              "instance_ids": cloud_server.instance_id,
+                                              "state": "absent",
+                                              },
+                                      })
+                    # Launch Cloud instance
+                    command = "python web2py.py -S %(appname)s -M -R %(appname)s/private/eden_deploy/tools/update_aws_server.py -A %(server_id)s %(server_name)s {{ item.public_ip }} {{ item.id }}" % \
+                                {"appname": request.application,
+                                 "server_id": server.id,
+                                 "server_name": server_name,
+                                 }
+                    tasks += [# Launch AWS Instance
+                              {"ec2": {"aws_access_key": access_key,
+                                       "aws_secret_key": secret_key,
+                                       "key_name": server_name,
+                                       "region": region,
+                                       "instance_type": cloud_server.instance_type,
+                                       "image": cloud_server.image,
+                                       "group": cloud_server.security_group,
+                                       "wait": "yes",
+                                       "count": 1,
+                                       "instance_tags": {"Name": server_name,
+                                                         },
                                        },
-                           "loop": "{{ ec2.instances }}",
-                           },
-                          ]
+                               "register": "ec2",
+                               },
+                              # Add new instance to host group (to associate private_key)
+                              {"add_host": {"hostname": "{{ item.public_ip }}",
+                                            "groupname": "launched",
+                                            "ansible_ssh_private_key_file": "/tmp/%s" % server_name,
+                                            },
+                               "loop": "{{ ec2.instances }}",
+                               },
+                              # Update Server record
+                              {"command": {"cmd": command,
+                                           "chdir": request.env.web2py_path,
+                                           },
+                               "loop": "{{ ec2.instances }}",
+                               },
+                              ]
+                elif cloud_type == "setup_openstack_cloud":
+                    # Upload Public Key to Cloud
+                    tasks.append({"os_keypair": {"auth": auth,
+                                                 "name": server_name,
+                                                 "public_key_file": public_key,
+                                                 },
+                                  })
+                    # Launch Cloud instance
+                    command = "python web2py.py -S %(appname)s -M -R %(appname)s/private/eden_deploy/tools/update_server.py -A %(server_id)s %(server_name)s {{ openstack.openstack.public_v4 }}" % \
+                                {"appname": request.application,
+                                 "server_id": server.id,
+                                 "server_name": server_name,
+                                 }
+                    tasks += [# Launch OpenStack Instance
+                              {"os_server": {"auth": auth,
+                                             "key_name": server_name,
+                                             "name": server_name,
+                                             "flavor": cloud_server.instance_type,
+                                             "image": cloud_server.image,
+                                             "volume_size": cloud_server.volume_size,
+                                             "boot_from_volume": "yes",
+                                             "terminate_volume": "yes",
+                                             "network": cloud_server.network,
+                                             "security_group": cloud_server.security_group,
+                                             "region": cloud_server.region,
+                                             "availability_zone": cloud_server.availability_zone,
+                                             "wait": "yes",
+                                             },
+                               "register": "openstack",
+                               },
+                              # Add new instance to host group (to associate private_key)
+                              {"add_host": {"hostname": "{{ openstack.openstack.public_v4 }}",
+                                            "groupname": "launched",
+                                            "ansible_ssh_private_key_file": "/tmp/%s" % server_name,
+                                            },
+                               },
+                              # Update Server record
+                              {"command": {"cmd": command,
+                                           "chdir": request.env.web2py_path,
+                                           },
+                               },
+                              ]
                 dns_id = deployment.dns_id
                 if dns_id:
                     # @ToDo: Will need extending when we support multiple DNS Providers

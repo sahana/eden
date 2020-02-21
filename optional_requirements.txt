@@ -46,6 +46,8 @@ PyYAML>=5.1 #yaml
 boto>=2.49.0
 # Warning: Setup unresolved dependency: boto required for Setup Module to be able to manage AWS EC2 keypairs
 boto3>=1.11.4
+# Warning: Setup unresolved dependency: openstacksdk required for Setup Module to be able to manage OpenStack instances
+openstacksdk>=0.41.0
 # Warning: Setup unresolved dependency: dnspython required for Setup Module to be able to do DNS Lookups
 dnspython>=1.16.0
 # Warning: Setup unresolved dependency: google-api-python-client required to be able to manage Google Email Groups
