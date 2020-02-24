@@ -202,7 +202,6 @@ def config(settings):
         #("dvr", Storage(
         #   name_nice = T("Disaster Victim Registry"),
         #   #description = "Allow affected individuals & households to register to receive compensation and distributions",
-        #   restricted = True,
         #   module_type = 10,
         #)),
         ("event", Storage(
