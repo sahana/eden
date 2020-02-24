@@ -2194,28 +2194,38 @@ dropdown.change(function() {
                     gandi_api_key = gandi.api_key
                     url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
                     dns_record = sitename.split(".%s" % gandi.domain, 1)[0]
-                    tasks += [# Delete any existing record
-                              {"uri": {"url": "%s/%s" % (url, dns_record),
-                                       "method": "DELETE",
-                                       "headers": {"X-Api-Key": gandi_api_key,
-                                                   },
-                                       "status_code": ["200", "204"],
-                                       },
-                               # Don't worry if it didn't exist
-                               "ignore_errors": "yes",
-                               },
-                              # Create new record
-                              {"uri": {"url": url,
-                                       "method": "POST",
-                                       "headers": {"X-Api-Key": gandi_api_key,
-                                                   },
-                                       "body_format": "json", # Content-Type: application/json
-                                       "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ item.public_ip }}"]}' % dns_record,
-                                       "status_code": ["200", "201"],
-                                       },
-                               "loop": "{{ ec2.instances }}",
-                               },
-                              ]
+                    # Delete any existing record
+                    tasks.append({"uri": {"url": "%s/%s" % (url, dns_record),
+                                          "method": "DELETE",
+                                          "headers": {"X-Api-Key": gandi_api_key,
+                                                      },
+                                          "status_code": ["200", "204"],
+                                          },
+                                  # Don't worry if it didn't exist
+                                  "ignore_errors": "yes",
+                                  })
+                    # Create new record
+                    if cloud_type == "setup_aws_cloud":
+                        tasks.append({"uri": {"url": url,
+                                              "method": "POST",
+                                              "headers": {"X-Api-Key": gandi_api_key,
+                                                          },
+                                              "body_format": "json", # Content-Type: application/json
+                                              "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ item.public_ip }}"]}' % dns_record,
+                                              "status_code": ["200", "201"],
+                                              },
+                                      "loop": "{{ ec2.instances }}",
+                                      })
+                    elif cloud_type == "setup_openstack_cloud":
+                        tasks.append({"uri": {"url": url,
+                                              "method": "POST",
+                                              "headers": {"X-Api-Key": gandi_api_key,
+                                                          },
+                                              "body_format": "json", # Content-Type: application/json
+                                              "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ openstack.openstack.public_v4 }}"]}' % dns_record,
+                                              "status_code": ["200", "201"],
+                                              },
+                                      })
                 else:
                     current.session.warning = current.T("Deployment will not have SSL: No DNS Provider configured to link to new server IP Address")
                     # @ToDo: Support Elastic IPs
