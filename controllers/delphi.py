@@ -21,7 +21,7 @@ def index():
     redirect(URL(f="problem"))
 
     # Alternative dashboard
-    module_name = settings.modules[module].name_nice
+    module_name = settings.modules[module].get("name_nice")
 
     table = s3db.delphi_group
     groups = db(table.active == True).select()
@@ -1062,9 +1062,10 @@ function comment_reply(id){
     s3.js_global.append(js)
 
     response.view = "delphi/discuss.html"
-    return dict(rheader=rheader,
-                resourcename=resourcename,
-                id=id)
+    return {"rheader": rheader,
+            "resourcename": resourcename,
+            "id": id,
+            }
 
 # -----------------------------------------------------------------------------
 def comment_parse(comment, comments, solution_id=None):

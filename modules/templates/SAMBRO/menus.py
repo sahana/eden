@@ -133,7 +133,7 @@ class S3MainMenu(default.S3MainMenu):
         """ Administrator Menu """
 
         if current.auth.s3_has_role("ADMIN"):
-            name_nice = current.deployment_settings.modules["admin"].name_nice
+            name_nice = current.deployment_settings.modules["admin"].get("name_nice")
             menu_admin = MM(name_nice, c="admin", right=True, **attr)(
                             MM("Settings", f="setting"),
                             MM("Manage Users", f="user"),

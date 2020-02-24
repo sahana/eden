@@ -13,9 +13,10 @@ if not settings.has_module(module):
 def index():
     "Module's Home Page"
 
-    module_name = settings.modules[module].name_nice
+    module_name = settings.modules[module].get("name_nice")
     response.title = module_name
-    return dict(module_name=module_name)
+    return {"module_name": module_name,
+            }
 
 # -----------------------------------------------------------------------------
 def disease():

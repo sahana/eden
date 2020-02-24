@@ -38,7 +38,7 @@ def index2():
     # Need CRUD String
     table = s3db.table("cr_shelter", None)
 
-    module_name = settings.modules[module].name_nice
+    module_name = settings.modules[module].get("name_nice")
     response.title = module_name
     response.view = "inv/index.html"
     if s3.debug:
@@ -266,14 +266,15 @@ def index2():
                                        )
                 return supply_items
         r = s3_request(prefix = "inv", name = "inv_item")
-        return dict(module_name=module_name,
-                    warehouses = warehouses,
-                    inventory = inventory,
-                    supply_items = supply_items,
-                    r = r,
-                    )
+        return {"module_name": module_name,
+                "warehouses": warehouses,
+                "inventory": inventory,
+                "supply_items": supply_items,
+                "r": r,
+                }
         # End of TEST CODE
-    return dict(module_name=module_name)
+    return {"module_name": module_name,
+            }
 
 # -----------------------------------------------------------------------------
 def warehouse():

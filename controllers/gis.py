@@ -16,7 +16,7 @@ def index():
        Module's Home Page: Show the Main map
     """
 
-    module_name = settings.modules[module].name_nice
+    module_name = settings.modules[module].get("name_nice")
     response.title = module_name
 
     # Read user request

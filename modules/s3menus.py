@@ -69,15 +69,15 @@ class S3MainMenu(object):
 
         # ---------------------------------------------------------------------
         # Modules Menu
+        #
+        # Show all enabled modules in a way where it is easy to move them around
+        # without having to redefine a full menu
+        #
         # @todo: this is very ugly - cleanup or make a better solution
         # @todo: probably define the menu explicitly?
         #
         menu_modules = []
         all_modules = current.deployment_settings.modules
-
-        # Home always 1st (commented because redundant/unnecessary)
-        #module = all_modules["default"]
-        #menu_modules.append(MM(module.name_nice, c="default", f="index"))
 
         # Modules to hide due to insufficient permissions
         hidden_modules = current.auth.permission.hidden_modules()
@@ -88,15 +88,20 @@ class S3MainMenu(object):
                 if module in hidden_modules:
                     continue
                 _module = all_modules[module]
-                if (_module.module_type == module_type):
-                    if not _module.access:
-                        menu_modules.append(MM(_module.name_nice, c=module, f="index"))
+                if _module.get("module_type") == module_type:
+                    access = _module.get("access")
+                    if access:
+                        groups = re.split(r"\|", access)[1:-1]
+                        menu_modules.append(MM(_module.get("name_nice"),
+                                               c = module,
+                                               f = "index",
+                                               restrict = groups,
+                                               ))
                     else:
-                        groups = re.split(r"\|", _module.access)[1:-1]
-                        menu_modules.append(MM(_module.name_nice,
-                                               c=module,
-                                               f="index",
-                                               restrict=groups))
+                        menu_modules.append(MM(_module.get("name_nice"),
+                                               c = module,
+                                               f = "index",
+                                               ))
 
         # Modules to display off the 'more' menu
         modules_submenu = []
@@ -104,15 +109,20 @@ class S3MainMenu(object):
             if module in hidden_modules:
                 continue
             _module = all_modules[module]
-            if (_module.module_type == 10):
-                if not _module.access:
-                    modules_submenu.append(MM(_module.name_nice, c=module, f="index"))
+            if _module.get("module_type") == 10:
+                access = _module.get("access")
+                if access:
+                    groups = re.split(r"\|", access)[1:-1]
+                    modules_submenu.append(MM(_module.get("name_nice"),
+                                              c = module,
+                                              f = "index",
+                                              restrict = groups,
+                                              ))
                 else:
-                    groups = re.split(r"\|", _module.access)[1:-1]
-                    modules_submenu.append(MM(_module.name_nice,
-                                              c=module,
-                                              f="index",
-                                              restrict=groups))
+                    modules_submenu.append(MM(_module.get("name_nice"),
+                                              c = module,
+                                              f = "index",
+                                              ))
 
         if modules_submenu:
             # Only show the 'more' menu if there are entries in the list

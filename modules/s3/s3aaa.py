@@ -7318,7 +7318,7 @@ class S3Permission(object):
             sr = self.auth.get_system_roles()
             modules = current.deployment_settings.modules
             restricted_modules = [m for m in modules
-                                    if modules[m].restricted]
+                                    if modules[m].get("restricted", True)]
             roles = []
             if current.session.s3 is not None:
                 roles = current.session.s3.roles or []

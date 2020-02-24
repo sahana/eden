@@ -13,7 +13,6 @@
 """
 
 module = request.controller
-resourcename = request.function
 
 # NB Requires 'project' module too
 if not settings.has_module(module):
@@ -23,9 +22,10 @@ if not settings.has_module(module):
 def index():
     """ Module's Home Page """
 
-    module_name = settings.modules[module].name_nice
+    module_name = settings.modules[module].get("name_nice")
     response.title = module_name
-    return dict(module_name=module_name)
+    return {"module_name": module_name, 
+            }
 
 # =============================================================================
 def budget():
@@ -40,7 +40,7 @@ def budget():
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader=s3db.budget_rheader)
+    return s3_rest_controller(rheader = s3db.budget_rheader)
 
 # =============================================================================
 def allocation():
@@ -60,7 +60,7 @@ def location():
 
     # @todo: link to gis_location
 
-    return s3_rest_controller(main="code")
+    return s3_rest_controller(main = "code")
 
 # =============================================================================
 def item():
@@ -83,8 +83,9 @@ def kit():
         s3db.configure("budget_kit",
                        update_next=URL(f="kit_item", args=request.args[1]))
 
-    return s3_rest_controller(rheader=s3db.budget_rheader,
-                              main="code")
+    return s3_rest_controller(main = "code",
+                              rheader = s3db.budget_rheader,
+                              )
 
 # =============================================================================
 def bundle():
@@ -94,7 +95,7 @@ def bundle():
         s3db.configure("budget_bundle",
             update_next=URL(f="bundle_kit_item", args=request.args[1]))
 
-    return s3_rest_controller(rheader=s3db.budget_rheader)
+    return s3_rest_controller(rheader = s3db.budget_rheader)
 
 # =============================================================================
 def staff():

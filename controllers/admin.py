@@ -9,10 +9,11 @@
 def index():
     """ Module's Home Page """
 
-    module_name = settings.modules["admin"].name_nice
+    module_name = settings.modules["admin"].get("name_nice")
     response.title = module_name
 
-    return {"module_name": module_name}
+    return {"module_name": module_name,
+            }
 
 # =============================================================================
 @auth.s3_requires_membership(1)
@@ -927,12 +928,14 @@ def translate():
             from s3.s3translate import TranslateAPI, Strings
             if form.accepts(request.vars, session):
                 modlist = []
+                form_request_vars_get = form.request_vars.get
                 # If only one module is selected
-                if isinstance(form.request_vars.module_list, str):
-                    modlist.append(form.request_vars.module_list)
+                module_list = form_request_vars_get("module_list")
+                if isinstance(module_list, str):
+                    modlist.append(module_list)
                 # If multiple modules are selected
                 else:
-                    modlist = form.request_vars.module_list
+                    modlist = module_list
 
                 # If no module is selected
                 if modlist is None:
@@ -944,17 +947,17 @@ def translate():
                     all_template_flag = 1
                     A = TranslateAPI()
                     modlist = A.get_modules()
-                    if "core" in form.request_vars.module_list:
+                    if "core" in module_list:
                         modlist.append("core")
 
                 # Obtaining the language file from the language code
-                code = form.request_vars.new_code
+                code = form_request_vars_get("new_code")
                 if code == "":
-                    code = form.request_vars.code
+                    code = form_request_vars_get("code")
                 code += ".py"
 
                 # Obtaining the type of file to export to
-                filetype = form.request_vars.filetype
+                filetype = form_request_vars_get("filetype")
 
                 # Generate the file to download
                 X = Strings()
@@ -988,14 +991,15 @@ def translate():
             modules = settings.modules
             while num < max_rows:
                 check = "yes"
-                mod_name = modules[modlist[num]].name_nice
-                mod_name = "%s (%s)" %(mod_name, modlist[num])
+                module = modlist[num]
+                mod_name = modules[module].get("name_nice") or module
+                mod_name = "%s (%s)" % (mod_name, module)
                 row = TR(TD(num + 1),
-                         TD(INPUT(_type="checkbox",
-                                  _name="module_list",
-                                  _value=modlist[num],
+                         TD(INPUT(_type = "checkbox",
+                                  _name = "module_list",
+                                  _value = module,
                                   _checked = check,
-                                  _class="translate-select-module",
+                                  _class = "translate-select-module",
                                   )),
                          TD(mod_name),
                          )
@@ -1003,14 +1007,15 @@ def translate():
                 for c in range(1, NO_OF_COLUMNS):
                     cmax_rows = num + (c * max_rows)
                     if cmax_rows < modcount:
-                        mod_name = modules[modlist[cmax_rows]].name_nice
-                        mod_name = "%s (%s)" % (mod_name, modlist[cmax_rows])
+                        module = modlist[cmax_rows]
+                        mod_name = modules[module].get("name_nice") or module
+                        mod_name = "%s (%s)" % (mod_name, module)
                         row.append(TD(cmax_rows + 1))
-                        row.append(TD(INPUT(_type="checkbox",
-                                            _name="module_list",
-                                            _value=modlist[cmax_rows],
+                        row.append(TD(INPUT(_type = "checkbox",
+                                            _name = "module_list",
+                                            _value = module,
                                             _checked = check,
-                                            _class="translate-select-module",
+                                            _class = "translate-select-module",
                                             )))
                         row.append(TD(mod_name))
                 num += 1
@@ -1019,9 +1024,9 @@ def translate():
             div = DIV(table, BR())
 
             # Toogle box to select/de-select all modules
-            row = TR(TD(INPUT(_type="checkbox",
-                              _class="translate-select-all-modules",
-                              _checked=check,
+            row = TR(TD(INPUT(_type = "checkbox",
+                              _class = "translate-select-all-modules",
+                              _checked = check,
                               ),
                         ),
                      TD(T("Select all modules")),
@@ -1032,16 +1037,23 @@ def translate():
             div.append(BR())
 
             # Checkbox for inclusion of core files
-            row = TR(TD(INPUT(_type="checkbox", _name="module_list",
-                              _value="core", _checked="yes")),
+            row = TR(TD(INPUT(_type = "checkbox",
+                              _name = "module_list",
+                              _value = "core",
+                              _checked = "yes",
+                              ),
+                        ),
                      TD(T("Include core files")),
                      )
             div.append(row)
             div.append(BR())
 
             # Checkbox for inclusion of templates
-            row = TR(TD(INPUT(_type="checkbox", _name="module_list",
-                              _value="all")),
+            row = TR(TD(INPUT(_type = "checkbox",
+                              _name = "module_list",
+                              _value = "all",
+                              ),
+                        ),
                      TD(T("Select all templates (All modules included)")),
                      )
             div.append(row)
@@ -1049,10 +1061,18 @@ def translate():
 
             # Provide option to choose export format
             row = TR(TD("%s:" % T("Export as")),
-                     TD(INPUT(_type="radio", _name="filetype",
-                            _value="xls", _checked="checked")),
+                     TD(INPUT(_type = "radio",
+                              _name = "filetype",
+                              _value = "xls",
+                              _checked = "checked",
+                              ),
+                        ),
                      TD(".xls (Excel)"),
-                     TD(INPUT(_type="radio", _name="filetype", _value="po")),
+                     TD(INPUT(_type = "radio",
+                              _name = "filetype",
+                              _value = "po",
+                              ),
+                        ),
                      TD(".po (Pootle)"),
                      BR(),
                      BR(),

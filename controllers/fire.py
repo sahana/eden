@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 module = request.controller
-resourcename = request.function
 
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
@@ -10,7 +9,7 @@ if not settings.has_module(module):
 def index():
     """ Module Homepage """
 
-    module_name = settings.modules[module].name_nice
+    module_name = settings.modules[module].get("name_nice")
     response.title = module_name
 
     htable = s3db.fire_shift_staff
