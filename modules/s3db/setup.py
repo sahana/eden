@@ -388,7 +388,7 @@ class S3AWSCloudModel(S3CloudModel):
 
         query = (stable.id == row.server_id) & \
                 (dtable.id == stable.deployment_id) & \
-                (dtable.cloud_id == ctable.id)
+                (dtable.cloud_id == ctable.cloud_id)
         deployment = db(query).select(ctable.access_key,
                                       ctable.secret_key,
                                       stable.name,
@@ -563,7 +563,7 @@ class S3OpenStackCloudModel(S3CloudModel):
 
         query = (stable.id == row.server_id) & \
                 (dtable.id == stable.deployment_id) & \
-                (dtable.cloud_id == ctable.id)
+                (dtable.cloud_id == ctable.cloud_id)
         deployment = db(query).select(ctable.auth_url,
                                       ctable.username,
                                       ctable.password,
@@ -1877,10 +1877,10 @@ dropdown.change(function() {
             if cloud_type == "setup_aws_cloud":
                 # Get Cloud details
                 ctable = s3db.setup_aws_cloud
-                cloud = db(ctable.id == cloud_id).select(ctable.access_key,
-                                                         ctable.secret_key,
-                                                         limitby = (0, 1)
-                                                         ).first()
+                cloud = db(ctable.cloud_id == cloud_id).select(ctable.access_key,
+                                                               ctable.secret_key,
+                                                               limitby = (0, 1)
+                                                               ).first()
 
                 # Get Server(s) details
                 cstable = s3db.setup_aws_server
@@ -1901,13 +1901,13 @@ dropdown.change(function() {
             elif cloud_type == "setup_openstack_cloud":
                 # Get Cloud details
                 ctable = s3db.setup_openstack_cloud
-                cloud = db(ctable.id == cloud_id).select(ctable.auth_url,
-                                                         ctable.username,
-                                                         ctable.password,
-                                                         ctable.project_name,
-                                                         ctable.domain_name,
-                                                         limitby = (0, 1)
-                                                         ).first()
+                cloud = db(ctable.cloud_id == cloud_id).select(ctable.auth_url,
+                                                               ctable.username,
+                                                               ctable.password,
+                                                               ctable.project_name,
+                                                               ctable.domain_name,
+                                                               limitby = (0, 1)
+                                                               ).first()
 
                 # Get Server(s) details
                 cstable = s3db.setup_openstack_server
