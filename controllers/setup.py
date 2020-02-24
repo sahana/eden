@@ -2,7 +2,7 @@
 
 """
     Setup Tool:
-        Assists with Installation, Configuration & Maintenance of a Deployment
+        Assists with Installation, Configuration & Maintenance of Sahana Eden Deployment(s)
 """
 
 module = request.controller
@@ -72,7 +72,25 @@ def aws_cloud():
                               )
 
 # -----------------------------------------------------------------------------
+def openstack_cloud():
+
+    return s3_rest_controller(#rheader = s3db.setup_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
 def gandi_dns():
+
+    return s3_rest_controller(#rheader = s3db.setup_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def smtp():
+
+    return s3_rest_controller(#rheader = s3db.setup_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
+def google_email():
 
     return s3_rest_controller(#rheader = s3db.setup_rheader,
                               )
@@ -113,29 +131,46 @@ def deployment():
                     from s3 import S3SQLCustomForm
 
                     deployment = r.record
-                    if deployment.cloud_id:
-                        # Assume AWS for now
-                        crud_form = S3SQLCustomForm("name",
-                                                    "host_ip",
-                                                    "role",
-                                                    "remote_user",
-                                                    "private_key",
-                                                    (T("AWS Region"), "aws_server.region"),
-                                                    (T("AWS Instance Type"), "aws_server.instance_type"),
-                                                    (T("AWS Image"), "aws_server.image"),
-                                                    (T("AWS Security Group"), "aws_server.security_group"),
-                                                    (T("AWS Instance ID"), "aws_server.instance_id"),
-                                                    (T("Monitor"), "monitor_server.enabled"),
-                                                    "monitor_server.status",
-                                                    )
 
-                        list_fields = ["deployment_id",
-                                       "name",
-                                       "host_ip",
-                                       "role",
-                                       "monitor_server.enabled",
-                                       "monitor_server.status",
-                                       ]
+                    if deployment.cloud_id:
+                        # Lookup the Instance Type
+                        ctable = s3db.setup_cloud
+                        cloud = db(ctable.cloud_id == deployment.cloud_id).select(ctable.instance_type,
+                                                                                  limitby = (0, 1)
+                                                                                  ).first()
+                        if cloud.instance_type == "setup_aws_cloud":
+                            crud_form = S3SQLCustomForm("name",
+                                                        "host_ip",
+                                                        "role",
+                                                        "remote_user",
+                                                        "private_key",
+                                                        (T("AWS Region"), "aws_server.region"),
+                                                        (T("AWS Instance Type"), "aws_server.instance_type"),
+                                                        (T("AWS Image"), "aws_server.image"),
+                                                        (T("AWS Security Group"), "aws_server.security_group"),
+                                                        (T("AWS Instance ID"), "aws_server.instance_id"),
+                                                        (T("Monitor"), "monitor_server.enabled"),
+                                                        "monitor_server.status",
+                                                        )
+                        elif cloud.instance_type == "setup_openstack_cloud":
+                            crud_form = S3SQLCustomForm("name",
+                                                        "host_ip",
+                                                        "role",
+                                                        "remote_user",
+                                                        "private_key",
+                                                        (T("OpenStack Instance Type"), "openstack_server.instance_type"),
+                                                        (T("OpenStack Image"), "openstack_server.image"),
+                                                        (T("OpenStack Volume Size"), "openstack_server.volume_size"),
+                                                        (T("OpenStack Network"), "openstack_server.network"),
+                                                        (T("OpenStack Security Group"), "openstack_server.security_group"),
+                                                        (T("OpenStack Region"), "openstack_server.region"),
+                                                        (T("OpenStack Availability Zone"), "openstack_server.availability_zone"),
+                                                        (T("Monitor"), "monitor_server.enabled"),
+                                                        "monitor_server.status",
+                                                        )
+                        else:
+                             raise NotImplementedError
+
                     else:
                         # No Cloud
                         f = s3db.setup_server.host_ip
@@ -149,13 +184,13 @@ def deployment():
                                                     "monitor_server.status",
                                                     )
 
-                        list_fields = ["deployment_id",
-                                       "name",
-                                       "host_ip",
-                                       "role",
-                                       "monitor_server.enabled",
-                                       "monitor_server.status",
-                                       ]
+                    list_fields = ["deployment_id",
+                                   "name",
+                                   "host_ip",
+                                   "role",
+                                   "monitor_server.enabled",
+                                   "monitor_server.status",
+                                   ]
 
                     s3db.configure("setup_server",
                                    crud_form = crud_form,
@@ -175,12 +210,21 @@ def deployment():
                         stable.name.writable = False # @ToDo: Allow switching post-deployment
                         stable.host_ip.writable = False # @ToDo: Allow switching post-deployment
                         if deployment.cloud_id:
-                            # Assume AWS for now
+                            # AWS
                             astable = s3db.setup_aws_server
                             astable.region.writable = False # @ToDo: Allow switching post-deployment
                             astable.instance_type.writable = False # @ToDo: Allow switching post-deployment (Highest Priority)
                             astable.image.writable = False # @ToDo: Allow switching post-deployment
                             astable.security_group.writable = False # @ToDo: Allow switching post-deployment
+                            # OpenStack
+                            ostable = s3db.setup_openstack_server
+                            ostable.instance_type.writable = False # @ToDo: Allow switching post-deployment (Highest Priority)
+                            ostable.image.writable = False # @ToDo: Allow switching post-deployment
+                            ostable.volume_size.writable = False # @ToDo: Allow switching post-deployment
+                            ostable.network.writable = False # @ToDo: Allow switching post-deployment
+                            ostable.security_group.writable = False # @ToDo: Allow switching post-deployment
+                            ostable.region.writable = False # @ToDo: Allow switching post-deployment
+                            ostable.availability_zone.writable = False # @ToDo: Allow switching post-deployment
 
                 elif cname == "instance":
                     if r.component_id:
@@ -194,6 +238,11 @@ def deployment():
                             itable.url.writable = False # @ToDo: Allow switching post-deployment
                             #itable.sender.writable = False # Changes handled in setup_instance_update_onaccept
                             #itable.start.writable = False # Changes handled in setup_instance_update_onaccept
+                            if r.record.email_id:
+                                # Assume Google for now
+                                google_instance.name.writable = False
+                                google_instance.email.writable = False
+                                google_instance.member.writable = False # @ToDo: Allow switching post-deployment
 
                     elif r.method in (None, "create"):
                         itable = db.setup_instance
@@ -216,6 +265,26 @@ def deployment():
                             del types[row.type]
 
                         itable.type.requires = IS_IN_SET(types)
+
+                    deployment = r.record
+                    if deployment.email_id:
+                        # Assume Google for now
+                        from s3 import S3SQLCustomForm
+                        crud_form = S3SQLCustomForm("type",
+                                                    "url",
+                                                    "start",
+                                                    # Will be set automatically
+                                                    #"sender",
+                                                    "google_instance.name",
+                                                    "google_instance.email",
+                                                    "google_instance.member",
+                                                    "task_id",
+                                                    "log_file",
+                                                    )
+
+                        s3db.configure("setup_instance",
+                                       crud_form = crud_form,
+                                       )
 
                 elif cname == "setting":
                     f = s3db.setup_setting.instance_id
@@ -276,11 +345,23 @@ def deployment():
                                    }
                     cloud_id = form_vars_get("cloud_id")
                     if cloud_id:
-                        # Create AWS Server record
-                        server = db(stable.deployment_id == deployment_id).select(stable.id,
-                                                                                  limitby = (0, 1)
-                                                                                  ).first()
-                        s3db.setup_aws_server.insert(server_id = server.id)
+                        ctable = s3db.setup_cloud
+                        cloud = db(ctable.cloud_id == cloud_id).select(ctable.instance_type,
+                                                                       limitby = (0, 1)
+                                                                       ).first()
+                        if cloud.instance_type == "setup_aws_cloud":
+                            # Create AWS Server record
+                            server = db(stable.deployment_id == deployment_id).select(stable.id,
+                                                                                      limitby = (0, 1)
+                                                                                      ).first()
+                            s3db.setup_aws_server.insert(server_id = server.id)
+                        elif cloud.instance_type == "setup_openstack_cloud":
+                            # Create OpenStack Server record
+                            server = db(stable.deployment_id == deployment_id).select(stable.id,
+                                                                                      limitby = (0, 1)
+                                                                                      ).first()
+                            s3db.setup_openstack_server.insert(server_id = server.id)
+
                     elif form_vars_get("sub_production_server_host_ip") is None:
                         server_vars["host_ip"] = "127.0.0.1"
                     db(stable.deployment_id == deployment_id).update(**server_vars)
@@ -297,6 +378,8 @@ def deployment():
                                             "repo_url",
                                             "cloud_id",
                                             "dns_id",
+                                            "email_id",
+                                            "smtp_id",
                                             "production_server.host_ip",
                                             "production_server.remote_user",
                                             "production_server.private_key",
@@ -326,8 +409,10 @@ def deployment():
                     table.webserver_type.comment = None
                     table.db_type.writable = False # @ToDo: Allow switching post-deployment
                     table.db_type.comment = None
-                    table.cloud_id.writable = False # @ToDo: Allow switching post-deployment
-                    table.dns_id.writable = False # @ToDo: Allow switching post-deployment
+                    # Changing these post-deployment isn't an issue until we want to delete...should we cleanup on a change?
+                    #table.cloud_id.writable = False
+                    #table.dns_id.writable = False
+                    #table.email_id.writable = False
 
         return True
     s3.prep = prep
@@ -458,52 +543,44 @@ def server():
 
     def prep(r):
         if r.interactive:
-            if r.record:
-                if not r.component:
 
-                    if r.method in ("check", "enable", "disable"):
-                        return True
+            if r.method in ("check", "enable", "disable"):
+                return True
 
-                    deployment_id = r.record.deployment_id
-                    if deployment_id:
-                        # Open on Deployment Tab
-                        redirect(URL(c="setup", f="deployment",
-                                     args = [deployment_id, "server", r.id],
-                                     ))
+            record = r.record
+            if record and not r.component:
+                deployment_id = record.deployment_id
+                if deployment_id:
+                    # Open on Deployment Tab
+                    redirect(URL(c="setup", f="deployment",
+                                 args = [deployment_id, "server", r.id],
+                                 ))
 
-                    # 'External' servers just added for Monitoring
-                    from s3 import S3SQLCustomForm
-                    f = s3db.setup_server.host_ip
-                    f.requires = f.requires.other # IP is required
-                    crud_form = S3SQLCustomForm("name",
-                                                "host_ip",
-                                                "role",
-                                                "remote_user",
-                                                "private_key",
-                                                (T("Monitor"), "monitor_server.enabled"),
-                                                "monitor_server.status",
-                                                )
+            # No Cloud in create form:
+            # 'External' servers just added for Monitoring
+            # - we don't deploy Servers except within Deployments
+            from s3 import S3SQLCustomForm
+            f = s3db.setup_server.host_ip
+            f.requires = f.requires.other # IP is required
+            crud_form = S3SQLCustomForm(#"deployment_id",
+                                        "name",
+                                        "host_ip",
+                                        "role",
+                                        "remote_user",
+                                        "private_key",
+                                        (T("Monitor"), "monitor_server.enabled"),
+                                        "monitor_server.status",
+                                        )
 
-                    s3db.configure("setup_server",
-                                   crud_form = crud_form,
-                                   )
+            s3db.configure("setup_server",
+                           crud_form = crud_form,
+                           )
 
+            if record:
+                s3db.configure("setup_server",
+                               crud_form = crud_form,
+                               )
             else:
-                # No Cloud in create form
-                # - we don't deploy Servers except within Deployments
-                from s3 import S3SQLCustomForm
-                f = s3db.setup_server.host_ip
-                f.requires = f.requires.other # IP is required
-                crud_form = S3SQLCustomForm(#"deployment_id",
-                                            "name",
-                                            "host_ip",
-                                            "role",
-                                            "remote_user",
-                                            "private_key",
-                                            (T("Monitor"), "monitor_server.enabled"),
-                                            "monitor_server.status",
-                                            )
-
                 list_fields = ["deployment_id",
                                "name",
                                "host_ip",

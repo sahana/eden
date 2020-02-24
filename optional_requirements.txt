@@ -40,14 +40,18 @@ ansible>=2.9.3
 PyYAML>=5.1 #yaml
 # Warning: Setup unresolved dependency: ruamel.yaml required for Setup Module
 #ruamel.yaml>=0.15.35
-# Warning: Setup unresolved dependency: arrow used for some HRM functionality (currently just by IFRC)
+# Warning: Setup unresolved dependency: arrow used for some HRM functionality for IFRC
 #arrow>=0.10.0
 # Warning: Setup unresolved dependency: boto required for Setup Module to be able to manage AWS EC2 instances
 boto>=2.49.0
 # Warning: Setup unresolved dependency: boto required for Setup Module to be able to manage AWS EC2 keypairs
 boto3>=1.11.4
+# Warning: Setup unresolved dependency: openstacksdk required for Setup Module to be able to manage OpenStack instances
+openstacksdk>=0.41.0
 # Warning: Setup unresolved dependency: dnspython required for Setup Module to be able to do DNS Lookups
 dnspython>=1.16.0
+# Warning: Setup unresolved dependency: google-api-python-client required to be able to manage Google Email Groups
+google-api-python-client>=1.7.11
 # Warning: S3 unresolved dependency: pyparsing required for Calendar Support and Advanced URL Queries
 pyparsing>=2.0.1
 # Warning: URL shortener unresolved dependency: pyshorteners required to shorten the url (currently used by SAMBRO)

@@ -24,7 +24,7 @@ def config(settings):
     settings.base.theme_config = "CCC"
 
     # PrePopulate data
-    settings.base.prepopulate += ("CCC",)
+    settings.base.prepopulate.append("CCC")
     settings.base.prepopulate_demo = ("CCC/Demo",)
 
     # Authentication settings

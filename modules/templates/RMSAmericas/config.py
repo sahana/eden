@@ -31,8 +31,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Pre-Populate
     #
-    settings.base.prepopulate += ("RMSAmericas",)
-    settings.base.prepopulate_demo += ("RMSAmericas/Demo",)
+    settings.base.prepopulate.append("RMSAmericas")
+    settings.base.prepopulate_demo.append("RMSAmericas/Demo")
 
     # -------------------------------------------------------------------------
     # Theme (folder to use for views/layout.html)

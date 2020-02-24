@@ -18,8 +18,8 @@ def config(settings):
     settings.base.system_name_short = T("SAFIRE")
 
     # PrePopulate data
-    settings.base.prepopulate += ("SAFIRE",)
-    settings.base.prepopulate_demo += ("SAFIRE/Demo",)
+    settings.base.prepopulat.append("SAFIRE")
+    settings.base.prepopulate_demo.append("SAFIRE/Demo")
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "SAFIRE"

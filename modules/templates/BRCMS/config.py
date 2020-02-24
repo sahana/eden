@@ -24,8 +24,8 @@ def config(settings):
     settings.base.system_name_short = "Sahana BRCMS"
 
     # PrePopulate data
-    settings.base.prepopulate += ("BRCMS",)
-    settings.base.prepopulate_demo += ("BRCMS/Demo",)
+    settings.base.prepopulate.append("BRCMS")
+    settings.base.prepopulate_demo.append("BRCMS/Demo")
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "BRCMS"

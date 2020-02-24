@@ -24,6 +24,8 @@ def config(settings):
     # Unless doing a manual DB migration, where prepopulate = 0
     # In Production, prepopulate = 0 (to save 1x DAL hit every page)
     settings.base.prepopulate.append("default")
+    # Done by enabling the sub-template:
+    #settings.base.prepopulate_demo.append("default/Demo")
 
     # Uncomment this to prefer scalability-optimized strategies globally
     #settings.base.bigtable = True
@@ -41,17 +43,20 @@ def config(settings):
     # Should users be allowed to register themselves?
     #settings.security.self_registration = False
     # Do new users need to verify their email address?
-    #settings.auth.registration_requires_verification = True
+    settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
-    #settings.auth.registration_requires_approval = True
+    settings.auth.registration_requires_approval = True
     # Disable welcome-emails to newly registered users
     #settings.auth.registration_welcome_email = False
 
+    # Approval emails get sent to all admins
+    settings.mail.approver = "ADMIN"
+
     # Allow a new user to be linked to a record (and a new record will be created if it doesn't already exist)
-    #settings.auth.registration_link_user_to = {"staff": T("Staff"),
-    #                                           "volunteer": T("Volunteer"),
-    #                                           "member": T("Member"),
-    #                                           }
+    settings.auth.registration_link_user_to = {"staff": T("Staff"),
+                                               "volunteer": T("Volunteer"),
+                                               #"member": T("Member"),
+                                               }
 
     # Always notify the approver of a new (verified) user, even if the user is automatically approved
     #settings.auth.always_notify_approver = False
@@ -134,48 +139,83 @@ def config(settings):
     # Uncomment this to enable the creation of new locations if a user logs in from an unknown location. Warning: This may lead to many useless location entries
     #settings.auth.create_unknown_locations = True
 
+    # -------------------------------------------------------------------------
+    # Setup
+    settings.setup.wizard_questions += [{"question": "Will you record data for multiple Organisations?",
+                                         "setting": "hrm.multiple_orgs",
+                                         "fn": "get_hrm_multiple_orgs",
+                                         "options": {True: "Yes", False: "No"},
+                                         },
+                                        {"question": "Do you need support for Branch Organisations?",
+                                         "setting": "org.branches",
+                                         "fn": "get_org_branches",
+                                         "options": {True: "Yes", False: "No"},
+                                         },
+                                        {"question": "Do your human resources need to be able to mark their periods of unavailability?",
+                                         "setting": "hrm.unavailability",
+                                         "fn": "get_hrm_unavailability",
+                                         "options": {True: "Yes", None: "No"},
+                                         },
+                                        {"question": "Do you want to manage Shifts for your Facilities?",
+                                         "setting": "org.facility_shifts",
+                                         "fn": "get_org_facility_shifts",
+                                         "options": {True: "Yes", False: "No"},
+                                         },
+                                        {"question": "Do you want to categorise Projects by Hazard?",
+                                         "setting": "project.hazards",
+                                         "fn": "get_project_hazards",
+                                         "options": {True: "Yes", False: "No"},
+                                         },
+                                        {"question": "Do you want to categorise Projects by Theme?",
+                                         "setting": "project.themes",
+                                         "fn": "get_project_themes",
+                                         "options": {True: "Yes", False: "No"},
+                                         },
+                                        ]
+
+    # -------------------------------------------------------------------------
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar, GIS Locations, etc)
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
     settings.L10n.languages = OrderedDict([
         ("ar", "Arabic"),
         ("bs", "Bosnian"),
-        #("crs", "Seychellois Creole"),
-        #("dv", "Divehi"), # Maldives
-        #("dz", "Dzongkha"), # Bhutan
+        ##("crs", "Seychellois Creole"),
+        ##("dv", "Divehi"), # Maldives
+        ##("dz", "Dzongkha"), # Bhutan
         ("en", "English"),
         ("fr", "French"),
         ("de", "German"),
-        ("el", "Greek"),
+        #("el", "Greek"),
         ("es", "Spanish"),
-        #("id", "Bahasa Indonesia"),
+        ##("id", "Bahasa Indonesia"),
         ("it", "Italian"),
-        ("ja", "Japanese"),
+        #("ja", "Japanese"),
         ("km", "Khmer"), # Cambodia
-        ("ko", "Korean"),
-        #("lo", "Lao"),
-        #("lt", "Lithuanian"),
-        #("mg", "Malagasy"),
+        #("ko", "Korean"),
+        ##("lo", "Lao"),
+        ##("lt", "Lithuanian"),
+        ##("mg", "Malagasy"),
         ("mn", "Mongolian"),
-        #("ms", "Malaysian"),
+        ##("ms", "Malaysian"),
         ("my", "Burmese"), # Myanmar
         ("ne", "Nepali"),
         ("prs", "Dari"), # Afghan Persian
         ("ps", "Pashto"), # Afghanistan, Pakistan
         ("pt", "Portuguese"),
-        ("pt-br", "Portuguese (Brazil)"),
-        ("ru", "Russian"),
-        ("tet", "Tetum"),
-        #("si", "Sinhala"), # Sri Lanka
-        #("so", "Somali"),
-        #("ta", "Tamil"), # India, Sri Lanka
-        ("th", "Thai"),
-        ("tl", "Tagalog"), # Philippines
-        ("tr", "Turkish"),
-        ("ur", "Urdu"), # Pakistan
+        #("pt-br", "Portuguese (Brazil)"),
+        #("ru", "Russian"),
+        #("tet", "Tetum"),
+        ##("si", "Sinhala"), # Sri Lanka
+        ##("so", "Somali"),
+        ##("ta", "Tamil"), # India, Sri Lanka
+        #("th", "Thai"),
+        #("tl", "Tagalog"), # Philippines
+        #("tr", "Turkish"),
+        #("ur", "Urdu"), # Pakistan
         ("vi", "Vietnamese"),
-        ("zh-cn", "Chinese (Simplified)"), # Mainland China
-        ("zh-tw", "Chinese (Taiwan)"),
+        #("zh-cn", "Chinese (Simplified)"), # Mainland China
+        #("zh-tw", "Chinese (Taiwan)"),
     ])
     # Default language for Language Toolbar (& GIS Locations in future)
     #settings.L10n.default_language = "en"
@@ -311,7 +351,7 @@ def config(settings):
     # Uncomment to have custom folders in the LayerTree use Radio Buttons
     #settings.gis.layer_tree_radio = True
     # Uncomment to display the Map Legend as a floating DIV
-    #settings.gis.legend = "float"
+    settings.gis.legend = "float"
     # Uncomment to use scalability-optimized options lookups in location filters
     #settings.gis.location_filter_bigtable_lookups = True
     # Uncomment to prevent showing LatLon in Location Represents
@@ -383,8 +423,8 @@ def config(settings):
     # 6: Apply Controller, Function, Table ACLs and Entity Realm
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
-    #
-    #settings.security.policy = 7 # Organisation-ACLs
+
+    settings.security.policy = 5 # Controller, Function & Table ACLs
 
     # Ownership-rule for records without owner:
     # True = not owned by any user (strict ownership, default)
@@ -972,7 +1012,7 @@ def config(settings):
     #settings.inv.recv_shortname = "ARDR"
     # Types common to both Send and Receive
     #settings.inv.shipment_types = {
-    #         0: T("-"),
+    #         0: "-", # current.messages["NONE"] but current.messages is defined only after 000_config.py is executed
     #         1: T("Other Warehouse"),
     #         2: T("Donation"),
     #         3: T("Foreign Donation"),
@@ -988,7 +1028,7 @@ def config(settings):
     #        34: T("Purchase"),
     #    }
     #settings.inv.item_status = {
-    #        0: current.messages["NONE"],
+    #        0: "-", # current.messages["NONE"] but current.messages is defined only after 000_config.py is executed
     #        1: T("Dump"),
     #        2: T("Sale"),
     #        3: T("Reject"),
@@ -1092,19 +1132,19 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Projects
     # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
-    #settings.project.mode_3w = True
+    settings.project.mode_3w = True
     # Uncomment this to use DRR (Disaster Risk Reduction) extensions
     #settings.project.mode_drr = True
     # Uncomment this to use settings suitable for detailed Task management
-    #settings.project.mode_task = True
+    settings.project.mode_task = True
     # Uncomment this to use link Projects to Events
     #settings.project.event_projects = True
     # Uncomment this to use Activities for Projects & Tasks
-    #settings.project.activities = True
+    settings.project.activities = True
     # Uncomment this to use link Activities to Events
     #settings.project.event_activities = True
     # Uncomment this to use Activity Types for Activities & Projects
-    #settings.project.activity_types = True
+    settings.project.activity_types = True
     # Uncomment this to filter dates in Activities
     #settings.project.activity_filter_year = True
     # Uncomment this to not use Beneficiaries for Activities
@@ -1116,29 +1156,29 @@ def config(settings):
     # Uncomment this to call project locations 'Communities'
     #settings.project.community = True
     # Uncomment this to enable Demographics in 3W projects
-    #settings.project.demographics = True
+    settings.project.demographics = True
     # Uncomment this to enable Hazards in 3W projects
     #settings.project.hazards = True
     # Uncomment this to enable Indicators in projects
-    #settings.project.indicators = True
+    settings.project.indicators = True
     # Uncomment this to enable Milestones in projects
-    #settings.project.milestones = True
+    settings.project.milestones = True
     # Uncomment this to use Projects for Activities & Tasks
-    #settings.project.projects = True
+    settings.project.projects = True
     # Uncomment this to disable Sectors in projects
     #settings.project.sectors = False
     # Uncomment this to enable Programmes in projects
-    #settings.project.programmes = True
+    settings.project.programmes = True
     # Uncomment this to enable Budgets in Programmes
-    #settings.project.programme_budget = True
+    settings.project.programme_budget = True
     # Uncomment this to enable Themes in 3W projects
     #settings.project.themes = True
     # Uncomment this to use Theme Percentages for projects
     #settings.project.theme_percentages = True
     # Uncomment this to use multiple Budgets per project
-    #settings.project.multiple_budgets = True
+    settings.project.multiple_budgets = True
     # Uncomment this to use multiple Organisations per project
-    #settings.project.multiple_organisations = True
+    settings.project.multiple_organisations = True
     # Uncomment this to customise
     # Links to Filtered Components for Donors & Partners
     #settings.project.organisation_roles = {

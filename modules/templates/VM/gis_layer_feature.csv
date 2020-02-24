@@ -1,2 +1,0 @@
-Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Site,Points,Trackable,Style,Opacity,Folder,Visible,Enabled,Cluster Threshold,Refresh
-Volunteers,All Active Volunteers,vol,volunteer,volunteer,"Contact, Dreadlocks",{person_id} (T('Volunteer'))<br />{organisation_id},"person_id,organisation_id",~.status=1,,True,True,,,,False,,,

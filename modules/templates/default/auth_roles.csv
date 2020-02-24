@@ -1,14 +1,53 @@
-uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
-AUTHENTICATED,Authenticated,,gis,,,READ,"READ|CREATE|UPDATE|DELETE",,,,"Authenticated users can see the Map"
-AUTHENTICATED,Authenticated,,gis,location,,"READ|CREATE","READ|CREATE|UPDATE|DELETE",,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
-AUTHENTICATED,Authenticated,,pr,,,"READ|UPDATE",,,,,"Authenticated users can only see/edit their own PR records"
-AUTHENTICATED,Authenticated,,,,pr_person,"READ|UPDATE",,,,,"Authenticated users can only see/edit their own PR records"
-AUTHENTICATED,Authenticated,,pr,person,,"CREATE","READ|UPDATE",,,,"But need to be able to add/edit addresses"
-AUTHENTICATED,Authenticated,,pr,pentity,,"READ",,,,,"Custom Controller to allow access to PR via JSON for AutoComplete"
-AUTHENTICATED,Authenticated,,pr,person_search,,"READ",,,,,"Custom Controller to allow access to PR via JSON for AutoComplete"
-AUTHENTICATED,Authenticated,,msg,search,,"READ",,,,,"Custom Controller to allow access to PR via JSON for AutoComplete"
-AUTHENTICATED,Authenticated,,supply,,,"READ|CREATE",,,,,"Authenticated  users can see the Supply Catalogue"
-AUTHENTICATED,Authenticated,,hrm,,,"READ|UPDATE",,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-AUTHENTICATED,Authenticated,,hrm,person,,,"READ|UPDATE",,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-AUTHENTICATED,Authenticated,,hrm,staff,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-AUTHENTICATED,Authenticated,,hrm,volunteer,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+uid,role,description,controller,function,table,uacl,oacl,entity,Notes
+AUTHENTICATED,Authenticated,,gis,,,READ,"READ|CREATE|UPDATE|DELETE",,"Authenticated users can see the Map"
+AUTHENTICATED,Authenticated,,gis,location,,"READ|CREATE","READ|CREATE|UPDATE|DELETE",,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
+AUTHENTICATED,Authenticated,,hrm,,,"READ|UPDATE",,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,hrm,person,,,"READ|UPDATE",,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,hrm,staff,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,hrm,volunteer,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,org,organisation,,READ,,any,
+AUTHENTICATED,Authenticated,,,,org_organisation,READ,,any,
+AUTHENTICATED,Authenticated,,pr,,,"READ|UPDATE",,,"Authenticated users can only see/edit their own PR records"
+AUTHENTICATED,Authenticated,,,,pr_person,"READ|UPDATE",,,"Authenticated users can only see/edit their own PR records"
+AUTHENTICATED,Authenticated,,pr,person,,"CREATE","READ|UPDATE",,"But need to be able to add/edit addresses"
+AUTHENTICATED,Authenticated,,pr,pentity,,"READ",,,"Custom Controller to allow access to PR via JSON for AutoComplete"
+AUTHENTICATED,Authenticated,,pr,person_search,,"READ",,,"Custom Controller to allow access to PR via JSON for AutoComplete"
+AUTHENTICATED,Authenticated,,msg,search,,"READ",,,"Custom Controller to allow access to PR via JSON for AutoComplete"
+AUTHENTICATED,Authenticated,,supply,,,"READ|CREATE",,,"Authenticated  users can see the Supply Catalogue"
+MAP_ADMIN,Map Administrator,,gis,,,"READ|CREATE|UPDATE|DELETE",,,
+MAP_ADMIN,Map Administrator,,gis,location,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,asset,,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,cms,,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,doc,,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,gis,,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,gis,location,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,hrm,,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,hrm,person,,"READ|CREATE|UPDATE|DELETE",,
+ORG_ADMIN,Organisation Administrator,,hrm,staff,,"READ|CREATE|UPDATE|DELETE",,
+ORG_ADMIN,Organisation Administrator,,hrm,volunteer,,"READ|CREATE|UPDATE|DELETE",,
+ORG_ADMIN,Organisation Administrator,,inv,,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,msg,,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,org,organisation,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,,,org_organisation,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,pr,,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,,,pr_person,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,pr,person,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,project,,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,supply,,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,req,,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,vehicle,,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,vol,,,"READ|CREATE|UPDATE|DELETE",,,
+HR_ADMIN,HR Administrator,,hrm,,,"READ|CREATE|UPDATE|DELETE",,,
+HR_ADMIN,HR Administrator,,hrm,person,,"READ|CREATE|UPDATE|DELETE",,,
+HR_ADMIN,HR Administrator,,hrm,staff,,"READ|CREATE|UPDATE|DELETE",,,
+HR_ADMIN,HR Administrator,,hrm,volunteer,,"READ|CREATE|UPDATE|DELETE",,,
+HR_ADMIN,HR Administrator,,pr,,,"READ|CREATE|UPDATE|DELETE",,,
+HR_ADMIN,HR Administrator,,,,pr_person,"READ|CREATE|UPDATE|DELETE",,,
+HR_ADMIN,HR Administrator,,pr,person,,"READ|CREATE|UPDATE|DELETE",,,
+HR_ADMIN,HR Administrator,,vol,,,"READ|CREATE|UPDATE|DELETE",,,
+LOGS_ADMIN,Logistics Administrator,,asset,,,"READ|CREATE|UPDATE|DELETE",,,
+LOGS_ADMIN,Logistics Administrator,,inv,,,"READ|CREATE|UPDATE|DELETE",,,
+LOGS_ADMIN,Logistics Administrator,,req,,,"READ|CREATE|UPDATE|DELETE",,,
+LOGS_ADMIN,Logistics Administrator,,supply,,,"READ|CREATE|UPDATE|DELETE",,,
+LOGS_ADMIN,Logistics Administrator,,vehicle,,,"READ|CREATE|UPDATE|DELETE",,,
+PROJECT_ADMIN,Project Administrator,,project,,,"READ|CREATE|UPDATE|DELETE",,,

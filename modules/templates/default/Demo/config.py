@@ -24,7 +24,7 @@ def config(settings):
 
     # Authentication settings
     # Should users be allowed to register themselves?
-    settings.security.self_registration = True
+    #settings.security.self_registration = True
     # Do new users need to verify their email address?
     #settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
@@ -97,6 +97,10 @@ def config(settings):
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
     #
     settings.security.policy = 1 # Simple Policy
+
+    # Events
+    # Uncomment this to use link Projects to Events
+    settings.project.event_projects = True
 
     # -------------------------------------------------------------------------
     settings.modules = OrderedDict([
@@ -279,12 +283,6 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
-        #("br", Storage(
-        #    name_nice = T("Benficiary Registry"),
-        #    #description = "Allow affected individuals & households to register to receive compensation and distributions",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
         ("event", Storage(
             name_nice = T("Events"),
             #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
