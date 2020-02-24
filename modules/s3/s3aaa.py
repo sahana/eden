@@ -7282,7 +7282,7 @@ class S3Permission(object):
             restricted = False
         elif c != "default" or f not in ("tables", "table"):
             modules = current.deployment_settings.modules
-            restricted = c in modules and modules[c].restricted
+            restricted = c in modules and modules[c].get("restricted", True)
         else:
             restricted = True
 
@@ -7304,7 +7304,8 @@ class S3Permission(object):
                     (table.controller == None) & \
                     (table.function == None)
             rows = current.db(query).select(table.tablename,
-                                            groupby=table.tablename)
+                                            groupby = table.tablename
+                                            )
             s3.restricted_tables = [row.tablename for row in rows]
 
         return str(t) in s3.restricted_tables
