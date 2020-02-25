@@ -617,7 +617,7 @@
 'Theme': 'Titlu ',
 'Themes': 'Hatama voluntatariu ba projeitu',
 'There are multiple records at this location': 'Iha fatin ida nee iha vezes gravasaun',
-'This email-address is already registered.': 'Diresaun email nee registu ona',
+'This email address is already in use': 'Diresaun email nee registu ona',
 'This might be due to a temporary overloading or maintenance of the server.': 'Karik buat nee kazu tanba halo servisu liu fali tempu bai-bain ou nia server mak ladun mantain diak',
 'This role can not be assigned to users.': 'Regulamentu ida nee labele asina ba sira neebe uza',
 'Timor-Leste Disaster Information System': 'Timor Leste Sistema Informasaun Dezastre',

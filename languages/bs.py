@@ -8076,7 +8076,7 @@
 'This appears to be a duplicate of': 'Ovo je duplikat od',
 'This appears to be a duplicate of ': 'Ovo izgleda kao duplikat od ',
 'This email address is already in use': 'Ova email adresa je već u upotrebi',
-'This email-address is already registered.': 'Ova email adresa je već registrovana',
+'This email address is already registered': 'Ova email adresa je već registrovana',
 'This file already exists on the server as': 'Ovaj fajl vec postoji na serveru kao',
 'This form allows the administrator to remove a duplicate location.': 'Ovaj formular omogućava administratoru da ukloni duple lokacije.',
 'This Group has no Members yet': 'Ova grupa još nema članova',

@@ -2395,7 +2395,7 @@
 'These need to be added in Decimal Degrees.': 'ဤတြင္သတ္မွတ္ခ်က္ဆယ္ခုကိုျဖည့္ရန္လိုအပ္သည္',
 'This Group has no Members yet': 'ဤအုပ္စုတြင္အဖြဲ႕ဝင္မရွိေသးပါ။',
 'This Team has no Members yet': 'ဤအသင္းတြင္ အဖြဲ႕ဝင္မရွိေသးပါ။',
-'This email-address is already registered.': 'ဤအီးေမးလ္လိပ္စာကိုမွတ္ပံုတင္ျပီးပါျပီ',
+'This email address is already in use': 'ဤအီးေမးလ္လိပ္စာကိုမွတ္ပံုတင္ျပီးပါျပီ',
 'This is appropriate if this level is under construction. To prevent accidental modification after this level is complete, this can be set to False.': 'ေဆာက္လုပ္ျခင္းေအာက္အဆင့္တြင္ရွိပါက ဤအရာသည္သင့္ေတာ္ပါသည္။ မေတာ္တဆျဖည့္စြက္မိျခင္းမွ ေရွာင္က်ဥ္ႏိုင္ရန္ ဤအဆင့္ျပည့္စံုၿပီးေနာက္ အမွားသို႔ေျပာင္းလဲသတ္မွတ္ႏိုင္ပါသည္။',
 'This job has already been finished successfully.': 'ဤအလုပ္ကိုေအာင္ျမင္စြာလုပ္ေဆာင္ျပီးပါျပီ',
 'This level is not open for editing.': 'ဤအဆင့္သည္တည္းျဖတ္ရန္ဖြင့္ထားျခင္းမဟုတ္ပါ',

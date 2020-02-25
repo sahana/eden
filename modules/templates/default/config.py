@@ -73,7 +73,7 @@ def config(settings):
     # Uncomment this to have the Mobile Phone selection during registration be mandatory
     #settings.auth.registration_mobile_phone_mandatory = True
     # Uncomment this to request the Organisation when a user registers
-    #settings.auth.registration_requests_organisation = True
+    settings.auth.registration_requests_organisation = True
     # Uncomment this to have the Organisation selection during registration be mandatory
     #settings.auth.registration_organisation_required = True
     # Uncomment this to hide the Create-Organisation link in registration forms

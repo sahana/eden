@@ -2701,7 +2701,7 @@
 'These need to be added in Decimal Degrees.': 'ពួកវា​នឹង​ត្រូវ​បន្ថែម​ជា​ដឺក្រេទសភាគ ។',
 'This Group has no Members yet': 'បច្ចុប្បន្ន​មិនមាន​ការ​ចុះឈ្មោះ​សមាជិកទេ',
 'This Team has no Members yet': 'បច្ចុប្បន្ន​មិនមាន​ការ​ចុះឈ្មោះ​សមាជិកទេ',
-'This email-address is already registered.': 'អាសយដ្ឋាន​អ៊ីម៉ែល​នេះត្រូវ​បាន​ចុះឈ្មោះ​រួចហើយ ។',
+'This email address is already in use': 'អាសយដ្ឋាន​អ៊ីម៉ែល​នេះត្រូវ​បាន​ចុះឈ្មោះ​រួចហើយ ។',
 'This is appropriate if this level is under construction. To prevent accidental modification after this level is complete, this can be set to False.': 'វា​មិ​នត្រឹមត្រូវទេ ប្រសិនបើ​កម្រិត​នេះ​កំពុង​ត្រូវ​សាងសង់ ។ ដើម្បី​ការពារការធ្វើកំណែប្រែ​ជាយថាហេតុ បន្ទាប់ពី​កម្រិត​នេះ​បាន​បញ្ចប់ អ្នក​អាច​កំណត់​វា​ទៅ​ជា False ។',
 'This is normally edited using the Widget in the Style Tab in the Layer Properties on the Map.': 'វា​ជាទូទៅ​ត្រូវ​បាន​កែសម្រួល​ដោយ​ការ​ប្រើធាតុ​ក្រាហ្វិក​នៅ​ក្នុង​ផ្ទាំង​រចនាប័ទ្ម​ក្នុង​លក្ខណសម្បត្តិ​ស្រទាប់នៅលើ​ផែនទី ។',
 'This job has already been finished successfully.': 'ការងារ​នេះ​ត្រូវ​បានបញ្ចប់​ដោយជោគជ័យ ។',

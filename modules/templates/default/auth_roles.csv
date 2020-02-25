@@ -1,4 +1,6 @@
 uid,role,description,controller,function,table,uacl,oacl,entity,Notes
+ANONYMOUS,Anonymous,,,,org_organisation,,READ,,,,,Required for self-registration
+ANONYMOUS,Anonymous,,,,org_organisation_organisation_type,,READ,,,,,Required for self-registration
 AUTHENTICATED,Authenticated,,gis,,,READ,"READ|CREATE|UPDATE|DELETE",,"Authenticated users can see the Map"
 AUTHENTICATED,Authenticated,,gis,location,,"READ|CREATE","READ|CREATE|UPDATE|DELETE",,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
 AUTHENTICATED,Authenticated,,hrm,,,"READ|UPDATE",,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"

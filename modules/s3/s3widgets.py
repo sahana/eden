@@ -108,7 +108,7 @@ from gluon.languages import lazyT
 from gluon.sqlhtml import *
 from gluon.storage import Storage
 
-from s3compat import INTEGER_TYPES, basestring, long, sorted_locale, unicodeT, xrange
+from s3compat import INTEGER_TYPES, basestring, long, sorted_locale, xrange
 from .s3datetime import S3Calendar, S3DateTime
 from .s3utils import *
 from .s3validators import *
@@ -862,23 +862,23 @@ class S3AddPersonWidget(FormWidget):
         label = LABEL(label, _for=title_id)
 
         widget = DIV(A(ICON("edit"),
-                       _class="edit-action",
-                       _title=T("Edit Entry"),
+                       _class = "edit-action",
+                       _title = T("Edit Entry"),
                        ),
                      A(ICON("remove"),
-                       _class="cancel-action",
-                       _title=T("Revert Entry"),
+                       _class = "cancel-action",
+                       _title = T("Revert Entry"),
                        ),
-                     _class="add_person_edit_bar hide",
-                     _id="%s_edit_bar" % widget_id,
+                     _class = "add_person_edit_bar hide",
+                     _id = "%s_edit_bar" % widget_id,
                      )
 
         if tuple_rows:
             row = TR(TD(DIV(label, widget, _class="box_top_inner"),
-                        _class="box_top_td",
-                        _colspan=2,
+                        _class = "box_top_td",
+                        _colspan = 2,
                         ),
-                     _id="%s__row" % title_id,
+                     _id = "%s__row" % title_id,
                      )
         else:
             row = formstyle("%s__row" % title_id, label, widget, "")
@@ -937,8 +937,8 @@ class S3AddPersonWidget(FormWidget):
             row = row[0]
             row.add_class("box_bottom")
         else:
-            row = DIV(_id="%s_box_bottom" % widget_id,
-                      _class="box_bottom hide",
+            row = DIV(_id = "%s_box_bottom" % widget_id,
+                      _class = "box_bottom hide",
                       )
             if settings.ui.formstyle == "bootstrap":
                 # Need to add custom classes to core HTML markup
@@ -1006,16 +1006,15 @@ class S3AddPersonWidget(FormWidget):
                          a dict {messageKey: translation}
         """
 
-        request = current.request
         s3 = current.response.s3
 
         # Static script
         if s3.debug:
             script = "/%s/static/scripts/S3/s3.ui.addperson.js" % \
-                     request.application
+                     current.request.application
         else:
             script = "/%s/static/scripts/S3/s3.ui.addperson.min.js" % \
-                     request.application
+                     current.request.application
         scripts = s3.scripts
         if script not in scripts:
             scripts.append(script)
@@ -1100,7 +1099,7 @@ class S3AddPersonWidget(FormWidget):
         if not dob and \
            self.fields.get("date_of_birth") and \
            self.required.get("date_of_birth"):
-            return (None, T("Date of Birth is Required"))
+            return (None, current.T("Date of Birth is Required"))
 
         # Validate the email
         error = self.validate_email(data.get("email"))[1]
@@ -1121,7 +1120,7 @@ class S3AddPersonWidget(FormWidget):
                      submitted data like: {fieldname: value, ...}
         """
 
-        from .s3validators import JSONERRORS
+        #from .s3validators import JSONERRORS
         try:
             data = json.loads(value)
         except JSONERRORS:
@@ -1255,7 +1254,7 @@ class S3AddPersonWidget(FormWidget):
                      (ptable.id != person_id)
         email = current.db(query).select(ctable.id, limitby=(0, 1)).first()
         if email:
-            error_message = T("This email-address is already registered.")
+            error_message = T("This email address is already in use")
             return value, error_message
 
         # Ok!
@@ -1397,7 +1396,7 @@ class S3AgeWidget(FormWidget):
         """
 
         if value and isinstance(value, datetime.date):
-            from dateutil.relativedelta import relativedelta
+            #from dateutil.relativedelta import relativedelta
             age = relativedelta(current.request.utcnow, value).years
         else:
             age = value
@@ -1421,7 +1420,7 @@ class S3AgeWidget(FormWidget):
         except ValueError:
             return None, error_message
 
-        from dateutil.relativedelta import relativedelta
+        #from dateutil.relativedelta import relativedelta
         date = (current.request.utcnow - relativedelta(years=age)).date()
 
         # Map back to January 1st of the year of birth
@@ -2011,15 +2010,16 @@ class S3CalendarWidget(FormWidget):
         calendars_picker_l10n = None
 
         # Paths to localization files
-        datepicker_l10n_path = os.path.join(request.folder, "static", "scripts", "ui", "i18n")
-        timepicker_l10n_path = os.path.join(request.folder, "static", "scripts", "ui", "i18n")
-        calendars_l10n_path = os.path.join(request.folder, "static", "scripts", "calendars", "i18n")
+        os_path_join = os.path.join
+        datepicker_l10n_path = os_path_join(request.folder, "static", "scripts", "ui", "i18n")
+        timepicker_l10n_path = os_path_join(request.folder, "static", "scripts", "ui", "i18n")
+        calendars_l10n_path = os_path_join(request.folder, "static", "scripts", "calendars", "i18n")
 
         calendar = options["calendar"].lower()
         if calendar != "gregorian":
             # Include the right calendar script
             filename = "jquery.calendars.%s.js" % calendar
-            lscript = os.path.join(calendars_l10n_path, filename)
+            lscript = os_path_join(calendars_l10n_path, filename)
             if os.path.exists(lscript):
                 calendars_type = "calendars/i18n/%s" % filename
 
@@ -2040,25 +2040,25 @@ class S3CalendarWidget(FormWidget):
 
             # datePicker regional
             filename = "datepicker-%s.js" % language
-            path = os.path.join(timepicker_l10n_path, filename)
+            path = os_path_join(timepicker_l10n_path, filename)
             if os.path.exists(path):
                 timepicker_l10n = "ui/i18n/%s" % filename
 
             # timePicker regional
             filename = "jquery-ui-timepicker-%s.js" % language
-            path = os.path.join(datepicker_l10n_path, filename)
+            path = os_path_join(datepicker_l10n_path, filename)
             if os.path.exists(path):
                 datepicker_l10n = "ui/i18n/%s" % filename
 
             if calendar != "gregorian" and language:
                 # calendars regional
                 filename = "jquery.calendars.%s-%s.js" % (calendar, language)
-                path = os.path.join(calendars_l10n_path, filename)
+                path = os_path_join(calendars_l10n_path, filename)
                 if os.path.exists(path):
                     calendars_l10n = "calendars/i18n/%s" % filename
                 # calendarsPicker regional
                 filename = "jquery.calendars.picker-%s.js" % language
-                path = os.path.join(calendars_l10n_path, filename)
+                path = os_path_join(calendars_l10n_path, filename)
                 if os.path.exists(path):
                     calendars_picker_l10n = "calendars/i18n/%s" % filename
         else:

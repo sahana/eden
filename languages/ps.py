@@ -2811,7 +2811,7 @@
 'There was a problem, sorry, please try again later.': 'یوه ستونزه وه ، بښنه غواړی، هیله وروسته کوښښ وکړی',
 'These are the filters being used by the search.': 'دا فیلترونه د استعمالیدو په حال کی دی د پلټنی په واسطه',
 'These need to be added in Decimal Degrees.': 'دوی ضرورت لری چی اضافه شی په اعشاری درجه سره',
-'This email-address is already registered.': 'دا برقی لیک مخکی د مخکی راجستر شوی',
+'This email address is already in use': 'دا برقی لیک مخکی د مخکی راجستر شوی',
 'This is appropriate if this level is under construction. To prevent accidental modification after this level is complete, this can be set to False.': 'دا مناسب ده که دا سطح د ساختمانی د لاندی وی. که حادثوی مشخصات څخه مخنیوی وشی بیا دا سطح مکمله شوی ، دا کیدای شی غلط ځای پر ځای شی',
 'This is normally edited using the Widget in the Style Tab in the Layer Properties on the Map.': 'دا په عادی توګه تنطیم شوی استعمال د یوه شی د جدول ستایل د پاڼی د تنظیماتو په نقشه کی',
 'This job has already been finished successfully.': 'دا دنده مخکی د مخکی کامیابی سره ختمه شوی ',

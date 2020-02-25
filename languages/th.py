@@ -5926,7 +5926,7 @@
 'This appointment is mandatory before transfer': 'การนัดหมายนี้เป็นข้อบังคับก่อนโอน',
 'This appointment requires the presence of the person concerned': 'การนัดหมายนี้จำเป็นต้องมีบุคคลที่เกี่ยวข้อง',
 'This Case Number is already in use': 'หมายเลขคดีนี้ใช้อยู่แล้ว',
-'This email-address is already registered.': 'ที่อยู่อีเมลนี้ได้ลงทะเบียนแล้ว',
+'This email address is already in use': 'ที่อยู่อีเมลนี้ได้ลงทะเบียนแล้ว',
 'This event type can not currently be registered': 'ไม่สามารถลงทะเบียนประเภทกิจกรรมนี้ได้ในขณะนี้',
 'This event type requires the presence of the person concerned': 'ประเภทกิจกรรมนี้ต้องมีบุคคลที่เกี่ยวข้องด้วย',
 'This flag indicates that the person is currently accommodated/being held externally (e.g. in Hospital or with Police)': ' ธงนี้แสดงว่าขณะนี้บุคคลนั้นเข้าร่วม/จัดอยู่ภายนอก (เช่นในโรงพยาบาลหรือตำรวจ)',

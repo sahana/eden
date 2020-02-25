@@ -4703,7 +4703,7 @@
 'These need to be added in Decimal Degrees.': 'Cần thêm vào trong Số các chữ số thập phân.',
 'They': 'Người ta',
 'This adjustment has already been closed.': 'Điều chỉnh này đã đóng.',
-'This email-address is already registered.': 'Địa chỉ email này đã được đăng ký.',
+'This email address is already in use': 'Địa chỉ email này đã được đăng ký.',
 'This form allows the administrator to remove a duplicate location.': 'Mẫu này cho phép quản trị viên xóa bỏ các địa điểm trùng',
 'This Group has no Members yet': 'Hiện không có hội viên nào được đăng ký',
 'This is appropriate if this level is under construction. To prevent accidental modification after this level is complete, this can be set to False.': 'Lựa chọn này phù hợp nếu cấp độ này đang được xây dựng. Để không vô tình chỉnh sửa sau khi hoàn tất cấp độ này, lựa chọn này có thể được đặt ở giá trị Sai.',

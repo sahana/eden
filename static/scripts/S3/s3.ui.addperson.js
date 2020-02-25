@@ -1294,10 +1294,12 @@
             $(fields.map(function(fieldName) {
                 return selector + '_' + fieldName;
             }).join(',')).on('change' + ns, function() {
-                self._readInputs();
-                self._serialize();
-                if (opts.lookupDuplicates) {
-                    self._checkDuplicates();
+                if (!self.data.id) {
+                    self._readInputs();
+                    self._serialize();
+                    if (opts.lookupDuplicates) {
+                        self._checkDuplicates();
+                    }
                 }
             });
 

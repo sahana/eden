@@ -2837,7 +2837,7 @@
 'There was a problem, sorry, please try again later.': 'یک مشکل بوجود آمد، متاسفانه، لطفاً کمی بعد تر دوباره امتحان نمایید',
 'These are the filters being used by the search.': 'این ها فلتر های هستند که توسط جستجو استعمال می شوند.',
 'These need to be added in Decimal Degrees.': 'این باید به درجات اعشاری اضافه شود',
-'This email-address is already registered.': 'این آدرس ایمیل قبلاً راجستر شده است',
+'This email address is already in use': 'این آدرس ایمیل قبلاً راجستر شده است',
 'This is appropriate if this level is under construction. To prevent accidental modification after this level is complete, this can be set to False.': 'این مناسب است اگر این سطح تحت ساختمان است. برای جلوگیری نمودن از تعریف تصادفی بعد از تکمیل این سطح، این را می توانید که False بسازید.',
 'This is normally edited using the Widget in the Style Tab in the Layer Properties on the Map.': 'این را می توان معمولاً با استفاده از ودجت در استایل در لایه مشخصات در نقشه تغییر دهید.',
 'This job has already been finished successfully.': 'این وظیفه قبلاً موفقانه به اتمام رسید',

@@ -6746,7 +6746,7 @@
 'this': 'esta, este.',
 'This adjustment has already been closed.': 'Este ajuste ya ha sido cerrada.',
 'This appears to be a duplicate of': 'Esto parece ser un duplicado de',
-'This email-address is already registered.': 'Esta dirección de correo electrónico ya está registrada.',
+'This email address is already in use': 'Esta dirección de correo electrónico ya está registrada.',
 'This file already exists on the server as': 'Este archivo ya existe en el servidor como',
 'This form allows the administrator to remove a duplicate location by 1st updating all references to it by a different location.': 'Esta formulario permite que el administrador pueda eliminar una ubicación duplicada, primero actualizando todas las referencias a él por una ubicación diferente.',
 'This form allows the administrator to remove a duplicate location.': 'Este formulario permite al administrador eliminar una ubicación duplicada.',

@@ -2960,7 +2960,7 @@
 'There was a problem, sorry, please try again later.': 'समस्या थियो, माफगर्नुहोला, कृपया पछि प्रयास गर्नुहोला ।',
 'These are the filters being used by the search.': 'खोजीद्वारा प्रयोग गरिएको फिल्टरहरू छन् ।',
 'These need to be added in Decimal Degrees.': 'यो अंक डिग्रीमा संचित गरिनु पर्छ ।',
-'This email-address is already registered.': 'यो इमेल-ठेगाना पहिले नै दर्ता गरिएको छ ।',
+'This email address is already in use': 'यो इमेल-ठेगाना पहिले नै दर्ता गरिएको छ ।',
 'This is appropriate if this level is under construction. To prevent accidental modification after this level is complete, this can be set to False.': 'यदि यो स्तर निर्माण प्रकृयामा रहेको छ भने यो सहि हो । यो स्तर पुरा भएपछि, आपतकालिन परिवर्तन हुन नदिनको निम्ति यसलाई गलत भनेर राख्न सक्नुहुन्छ ।',
 'This is normally edited using the Widget in the Style Tab in the Layer Properties on the Map.': 'यो साधारणतया नक्साको तह प्रपटिको स्टाइल ट्यबमा विजेट प्रयोग गरि परिवर्तन गरिएको हो ।',
 'This job has already been finished successfully.': 'यो काम पहिलेनै सफलतापुर्वक समाप्त भएको छ ।',

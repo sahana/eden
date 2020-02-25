@@ -4374,7 +4374,7 @@
 'These are the Incident Categories visible to normal End-Users': 'Эдгээр нь ердийн эцсийн хэрэглэгчдэд харагдахуйц Голомтын Ангилал байна',
 'These need to be added in Decimal Degrees.': 'Эдгээр нь Decimal хэм нэмж байх хэрэгтэй.',
 'This adjustment has already been closed.': 'Энэ тохируулга нь аль хэдийн хаагдсан байна.',
-'This email-address is already registered.': 'Энэ и-мэйл хаяг аль хэдийн бүртгэлтэй байна.',
+'This email address is already in use': 'Энэ и-мэйл хаяг аль хэдийн бүртгэлтэй байна.',
 'This is appropriate if this level is under construction. To prevent accidental modification after this level is complete, this can be set to False.': 'Энэ түвшинд баригдаж байгаа бол энэ нь тохиромжтой юм. Энэ түвшин дууссаны дараа санамсаргүй өөрчлөлтийг урьдчилан сэргийлэхийн тулд энэ нь буруу тогтоосон болно.',
 'This is normally edited using the Widget in the Style Tab in the Layer Properties on the Map.': 'Энэ нь ихэвчлэн газрын зураг дээр Layer Properties-д Style Tab-д Багажнууд ашиглан засварласан байна.',
 'This is the full name of the language and will be displayed to the user when selecting the template language.': 'Энэ нь хэлний бүрэн нэр болон загвар хэлийг сонгохдоо хэрэглэгчид харуулагдах болно.',

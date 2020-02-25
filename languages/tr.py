@@ -1514,7 +1514,7 @@
 "There is no status for this %(site_label)s yet. Add %(site_label)s Status.": "Bu %(site_label)s için henüz durum kaydı bulunmuyor. %(site_label)s Durumu Ekle",
 "There was a problem, sorry, please try again later.": "Üzgünüz, bir hata oluştu, lütfen daha sonra tekrar deneyin.",
 "This Case Number is already used!": "Bu vaka numarası kullanılmış!",
-"This email-address is already registered.": "Bu e-posta adresi zaten kayıtlı",
+"This email address is already in use": "Bu e-posta adresi zaten kayıtlı",
 "This job has already been finished successfully.": "Bu iş zaten başarılı şekilde tamamlanmıştır.",
 "This role can not be assigned to users.": "Bu Rol kullanıcılara atanamaz",
 "This Team has no Members yet": "Bu Takımın henüz bir üyesi yok",

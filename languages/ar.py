@@ -3923,7 +3923,7 @@
 'There was a problem, sorry, please try again later.': 'كانت هناك مشكلة، آسف، يرجى المحاولة مرة أخرى في وقت لاحق.',
 'These are settings for Inbound Mail.': 'هذه هي الإعدادات للبريد الوارد.',
 'This appears to be a duplicate of ': 'يظهر أن هذا مكرر لـ',
-'This email-address is already registered.': 'هذا البريد الالكتروني مسجل سابقا.',
+'This email address is already in use': 'هذا البريد الالكتروني مسجل سابقا.',
 'This file already exists on the server as': 'هذا الملف موجود مسبقا على الملقم (server) ك',
 'This Group has no Members yet': 'لا يوجد أي أعضاء مسجلين حاليا',
 'This level is not open for editing.': 'هذا المستوى غير مفتوح من أجل التحرير.',
