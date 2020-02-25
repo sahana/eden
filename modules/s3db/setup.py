@@ -4341,7 +4341,16 @@ def setup_modules_apply(instance_id, modules):
                                     "state": "absent",
                                     },
                      })
-            # @ToDo: Only do this if not included in the default set
+            tappend({"name": "Check if we need to enable",
+                     "become": "yes",
+                     "lineinfile": {"dest": dest,
+                                    "regexp": '^("%s", Storage(' % module,
+                                    "state": "absent",
+                                    },
+                     "check_mode": "yes",
+                     "changed_when": "false",
+                     "register": "default",
+                     })
             # @ToDo: Lookup label e.g. from settings.get_setup_wizard_questions()
             label = module
             tappend({"name": "Enable the Module",
@@ -4350,6 +4359,7 @@ def setup_modules_apply(instance_id, modules):
                                     "regexp": '^settings.modules["%s"]' % module,
                                     "line": 'settings.modules["%s"] = {"name_nice": T("%s"), "module_type": 10}' % (module, label),
                                     },
+                     "when": "not default.found",
                      })
         else:
             if not has_module(module):
@@ -4363,13 +4373,23 @@ def setup_modules_apply(instance_id, modules):
                                     "state": "absent",
                                     },
                      })
-            # @ToDo: Only do this if included in the default set
+            tappend({"name": "Check if we need to disable",
+                     "become": "yes",
+                     "lineinfile": {"dest": dest,
+                                    "regexp": '^("%s", Storage(' % module,
+                                    "state": "absent",
+                                    },
+                     "check_mode": "yes",
+                     "changed_when": "false",
+                     "register": "default",
+                     })
             tappend({"name": "Disable the module",
                      "become": "yes",
                      "lineinfile": {"dest": dest,
                                     "regexp": '^del settings.modules["%s"]' % module,
                                     "line": 'del settings.modules["%s"]' % module,
                                     },
+                     "when": "default.found",
                      })
 
     tasks += [# @ToDo: Handle case where need to restart multiple webservers
