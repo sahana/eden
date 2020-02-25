@@ -1,0 +1,18 @@
+{{extend "layout.html"}}
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+ </div>
+</div>
+<div id='rheader' class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=tabs}}{{except:}}{{pass}}
+ </div>
+</div>
+<div id='component' class='row'>
+ <div class='small-12 columns'>
+  <div class='item-container'>
+  {{try:}}{{=item}}{{except:}}{{pass}}
+  </div>
+ </div>
+</div>

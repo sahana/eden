@@ -1738,6 +1738,7 @@ dropdown.change(function() {
         """
             Custom S3Method to Configure an Instance
 
+            @ToDo: Support remote servers/instances
             @ToDo: Option to Propagate settings from Prod to Demo &/or Test
                    - on by default
         """
@@ -1750,16 +1751,44 @@ dropdown.change(function() {
         T = current.T
         response = current.response
         settings = current.deployment_settings
+        has_module = settings.has_module
 
-        pages = settings.get_setup_wizard_questions()
+        all_pages = settings.get_setup_wizard_questions()
 
-        page = r.get_vars.get("page", 1)
-
-        page = pages[int(page) - 1] # 0-indexed
-        page_get = page.get
-
+        # Filter out inactive pages (for disabled modules)
+        # - this only works for Local Server
+        active_pages = []
+        aappend = active_pages.append
+        for page in all_pages:
+            module = page.get("module")
+            if not module or has_module(module):
+                aappend(page)
         
-        questions = page_get("questions", [])
+        current_page = int(r.get_vars.get("page", 1))
+        last_page = len(active_pages)
+
+        base_url = URL(c="setup", f="deployment",
+                       args = r.args,
+                       )
+        i = 0
+        tabs = DIV(_class = "tabs")
+        tappend = tabs.append
+        for page in active_pages:
+            i += 1
+            if i == current_page:
+                _class = "tab_here"
+            elif i == last_page:
+                _class = "tab_last"
+            else:
+                _class = "tab_other"
+            tappend(SPAN(A(T(page.get("title")),
+                           _href = "%s?page=%s" % (base_url, i)
+                           ),
+                         _class = _class,
+                         ))
+
+        page = active_pages[current_page - 1] # 0-indexed
+        questions = page.get("questions", [])
 
         fields = []
         fappend = fields.append
@@ -1787,8 +1816,7 @@ dropdown.change(function() {
                               ))
         else:
             QUESTIONS = False
-            modules = page_get("modules", [])
-            has_module = settings.has_module
+            modules = page.get("modules", [])
             TRUE_FALSE = (True, False)
             for m in modules:
                 module = m["module"]
@@ -1825,15 +1853,17 @@ dropdown.change(function() {
             if QUESTIONS:
                 result = setup_settings_apply(r.id, form.vars)
             else:
+                # NB This won't display suitable tabs immediately as the enabling/disabling is async
                 result = setup_modules_apply(r.id, form.vars)
             if result:
                 response.error = result
             else:
                 response.confirmation = T("Settings Applied")
 
-        current.response.view = "simple.html"
+        current.response.view = "setup/wizard.html"
         output = {"item": form,
-                  "title": T(page_get("title", "Configuration Wizard")),
+                  "tabs": tabs,
+                  "title": T("Configuration Wizard"),
                   }
         return output
 
