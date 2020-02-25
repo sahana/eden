@@ -4340,15 +4340,6 @@ def setup_modules_apply(instance_id, modules):
                                     "regexp": '^del settings.modules["%s"]' % module,
                                     "state": "absent",
                                     },
-                     })
-            tappend({"name": "Check if we need to enable",
-                     "become": "yes",
-                     "lineinfile": {"dest": dest,
-                                    "regexp": '^("%s", Storage(' % module,
-                                    "state": "absent",
-                                    },
-                     "check_mode": "yes",
-                     "changed_when": "false",
                      "register": "default",
                      })
             # @ToDo: Lookup label e.g. from settings.get_setup_wizard_questions()
@@ -4372,15 +4363,6 @@ def setup_modules_apply(instance_id, modules):
                                     "regexp": '^settings.modules["%s"]' % module,
                                     "state": "absent",
                                     },
-                     })
-            tappend({"name": "Check if we need to disable",
-                     "become": "yes",
-                     "lineinfile": {"dest": dest,
-                                    "regexp": '^("%s", Storage(' % module,
-                                    "state": "absent",
-                                    },
-                     "check_mode": "yes",
-                     "changed_when": "false",
                      "register": "default",
                      })
             tappend({"name": "Disable the module",
@@ -4389,7 +4371,7 @@ def setup_modules_apply(instance_id, modules):
                                     "regexp": '^del settings.modules["%s"]' % module,
                                     "line": 'del settings.modules["%s"]' % module,
                                     },
-                     "when": "default.found",
+                     "when": "not default.found",
                      })
 
     tasks += [# @ToDo: Handle case where need to restart multiple webservers
