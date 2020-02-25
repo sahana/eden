@@ -668,6 +668,7 @@ class FinSubscriptionModel(S3Model):
         self.configure(tablename,
                        editable = False,
                        deletable = False,
+                       onvalidation = self.subscription_plan_service_onvalidation,
                        onaccept = self.subscription_plan_service_onaccept,
                        #ondelete = self.subscription_plan_service_ondelete, TODO
                        )
@@ -767,6 +768,46 @@ class FinSubscriptionModel(S3Model):
         else:
             if fixed and not cycles:
                 form.errors.total_cycles = T("Fixed-term plan must specify number of cycles")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def subscription_plan_service_onvalidation(form):
+        """
+            Form validation of subscription_plan<=>service link:
+            - make sure the same plan is linked to a service only once
+        """
+
+        table = current.s3db.fin_subscription_plan_service
+
+        form_vars = form.vars
+
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+
+        plan_id = form_vars.get("plan_id", table.plan_id.default)
+        if not plan_id:
+            return
+
+        try:
+            service_id = form_vars.service_id
+        except AttributeError:
+            pass
+        else:
+            query = (table.plan_id == plan_id) & \
+                    (table.service_id == service_id) & \
+                    (table.deleted == False)
+            if record_id:
+                query &= (table.id != record_id)
+            if current.db(query).count():
+                msg = current.T("Plan is already registered with this service")
+                if "service_id" in form_vars:
+                    form.errors.service_id = msg
+                else:
+                    form.errors.plan_id = msg
 
     # -------------------------------------------------------------------------
     @staticmethod
