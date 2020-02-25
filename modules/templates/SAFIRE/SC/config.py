@@ -12,6 +12,8 @@ def config(settings):
 
     #T = current.T
 
+    #settings.security.policy = 6 # Controller, Function, Table ACLs and Entity Realm
+
     # Send Task Notifications by SMS, not Email
     settings.event.task_notification = "SMS"
 

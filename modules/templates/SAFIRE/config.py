@@ -36,6 +36,9 @@ def config(settings):
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
 
+    settings.auth.registration_link_user_to = {"staff": T("Staff"),
+                                               }
+
     # Uncomment to display the Map Legend as a floating DIV
     settings.gis.legend = "float"
     # Uncomment to Disable the Postcode selector in the LocationSelector
@@ -62,7 +65,7 @@ def config(settings):
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 
-    settings.security.policy = 6 # Controller, Function & Table ACLs
+    settings.security.policy = 5 # Controller, Function & Table ACLs
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
