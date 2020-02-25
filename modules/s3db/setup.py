@@ -4322,7 +4322,6 @@ def setup_modules_apply(instance_id, modules):
 
     settings = current.deployment_settings
     has_module = settings.has_module
-    modules_get = settings.modules.get
 
     # Build List of Tasks
     # This currently only works for Local Server!
@@ -4333,41 +4332,45 @@ def setup_modules_apply(instance_id, modules):
         if new_value == "True":
             if has_module(module):
                 # No changes required
+                # This is only the case for Local Server
                 continue
-            if modules_get(module) is None:
-                # Override the defaults
-                # @ToDo: Lookup label e.g. from settings.get_setup_wizard_questions()
-                label = module
-                lineinfile = {"dest": dest,
-                              "regexp": '^settings.modules["%s"]' % module,
-                              "line": 'settings.modules["%s"] = {"name_nice": T("%s"), "module_type": 10}' % (module, label),
-                              }
-            else:
-                # Remove the addition we added previously
-                lineinfile = {"dest": dest,
-                              "regexp": '^del settings.modules["%s"]' % module,
-                              "state": "absent",
-                              }
+            tappend({"name": "If we disabled the module, then remove the disabling",
+                     "become": "yes",
+                     "lineinfile": {"dest": dest,
+                                    "regexp": '^del settings.modules["%s"]' % module,
+                                    "state": "absent",
+                                    },
+                     })
+            # @ToDo: Only do this if not included in the default set
+            # @ToDo: Lookup label e.g. from settings.get_setup_wizard_questions()
+            label = module
+            tappend({"name": "Enable the Module",
+                     "become": "yes",
+                     "lineinfile": {"dest": dest,
+                                    "regexp": '^settings.modules["%s"]' % module,
+                                    "line": 'settings.modules["%s"] = {"name_nice": T("%s"), "module_type": 10}' % (module, label),
+                                    },
+                     })
         else:
             if not has_module(module):
                 # No changes required
+                # This is only the case for Local Server
                 continue
-            if modules_get(module) is None: # This is only the case for Local Server
-                # Remove the deletion we added previously
-                lineinfile = {"dest": dest,
-                              "regexp": '^del settings.modules["%s"]' % module,
-                              "state": "absent",
-                              }
-            else:
-                # Override the defaults
-                lineinfile = {"dest": dest,
-                              "regexp": '^del settings.modules["%s"]' % module,
-                              "line": 'del settings.modules["%s"]' % module,
-                              }
-        tappend({"name": "Edit 000_config.py",
-                 "become": "yes",
-                 "lineinfile": lineinfile,
-                 })
+            tappend({"name": "If we enabled the module, then remove the enabling",
+                     "become": "yes",
+                     "lineinfile": {"dest": dest,
+                                    "regexp": '^settings.modules["%s"]' % module,
+                                    "state": "absent",
+                                    },
+                     })
+            # @ToDo: Only do this if included in the default set
+            tappend({"name": "Disable the module",
+                     "become": "yes",
+                     "lineinfile": {"dest": dest,
+                                    "regexp": '^del settings.modules["%s"]' % module,
+                                    "line": 'del settings.modules["%s"]' % module,
+                                    },
+                     })
 
     tasks += [# @ToDo: Handle case where need to restart multiple webservers
               {"name": "Migrate & Restart WebServer",
