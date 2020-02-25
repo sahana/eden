@@ -17,4 +17,7 @@ def config(settings):
 
     settings.L10n.display_toolbar = False
 
+    settings.event.label = "Disaster"
+    settings.event.incident_label = "Ticket"
+
 # END =========================================================================

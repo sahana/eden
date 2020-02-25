@@ -1098,6 +1098,8 @@ class S3IncidentModel(S3Model):
         else:
             ondelete = "SET NULL"
 
+        ticket = settings.get_incident_label() # If we add more options in future then == "Ticket"
+
         # ---------------------------------------------------------------------
         # Incidents
         #
@@ -1196,17 +1198,34 @@ class S3IncidentModel(S3Model):
                           s3_comments(),
                           *s3_meta_fields())
 
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create Incident"),
-            title_display = T("Incident Details"),
-            title_list = T("Incidents"),
-            title_update = T("Edit Incident"),
-            label_list_button = T("List Incidents"),
-            label_delete_button = T("Delete Incident"),
-            msg_record_created = T("Incident added"),
-            msg_record_modified = T("Incident updated"),
-            msg_record_deleted = T("Incident removed"),
-            msg_list_empty = T("No Incidents currently registered"))
+        if ticket:
+            label = T("Ticket")
+            fact = T("Number of Tickets")
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Create Ticket"),
+                title_display = T("Ticket Details"),
+                title_list = T("Tickets"),
+                title_update = T("Edit Ticket"),
+                label_list_button = T("List Tickets"),
+                label_delete_button = T("Delete Ticket"),
+                msg_record_created = T("Ticket added"),
+                msg_record_modified = T("Ticket updated"),
+                msg_record_deleted = T("Ticket removed"),
+                msg_list_empty = T("No Tickets currently registered"))
+        else:
+            label = T("Incident")
+            fact = T("Number of Incidents")
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Create Incident"),
+                title_display = T("Incident Details"),
+                title_list = T("Incidents"),
+                title_update = T("Edit Incident"),
+                label_list_button = T("List Incidents"),
+                label_delete_button = T("Delete Incident"),
+                msg_record_created = T("Incident added"),
+                msg_record_modified = T("Incident updated"),
+                msg_record_deleted = T("Incident removed"),
+                msg_list_empty = T("No Incidents currently registered"))
 
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
@@ -1278,16 +1297,17 @@ class S3IncidentModel(S3Model):
 
         represent = S3Represent(lookup=tablename)
         incident_id = S3ReusableField("incident_id", "reference %s" % tablename,
-                                      label = T("Incident"),
+                                      label = label,
                                       ondelete = "RESTRICT",
                                       represent = represent,
                                       requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "event_incident.id",
                                                               represent,
-                                                              filterby="closed",
-                                                              filter_opts=(False,),
-                                                              orderby="event_incident.name",
-                                                              sort=True)),
+                                                              filterby = "closed",
+                                                              filter_opts = (False,),
+                                                              orderby = "event_incident.name",
+                                                              sort = True,
+                                                              )),
                                       sortby = "name",
                                       # Uncomment these to use an Autocomplete & not a Dropdown
                                       #widget = S3AutocompleteWidget()
@@ -1326,7 +1346,7 @@ class S3IncidentModel(S3Model):
                                                 defaults = Storage(
                                                     rows = "location_id$%s" % levels[0],
                                                     cols = "closed",
-                                                    fact = (T("Number of Incidents"), "count(name)"),
+                                                    fact = (fact, "count(name)"),
                                                     totals = True,
                                                     ),
                                                 ),
@@ -1511,8 +1531,12 @@ class S3IncidentModel(S3Model):
                 data["job_title_id"] = job_title.id
             s3db.event_human_resource.insert(**data)
 
+        if current.deployment_settings.get_incident_label(): # == "Ticket"
+            label = "Ticket Created"
+        else:
+            label = "Incident Created"
         s3db.event_incident_log.insert(incident_id = incident_id,
-                                       name = "Incident Created",
+                                       name = label,
                                        )
 
         #closed = form_vars_get("closed", False)
@@ -2652,9 +2676,9 @@ class S3IncidentTypeModel(S3Model):
 
         T = current.T
         db = current.db
+        settings = current.deployment_settings
 
-        hierarchical_incident_types = \
-            current.deployment_settings.get_incident_types_hierarchical()
+        hierarchical_incident_types = settings.get_incident_types_hierarchical()
 
         # ---------------------------------------------------------------------
         # Incident Types
@@ -2689,7 +2713,7 @@ class S3IncidentTypeModel(S3Model):
                                                   # If limiting to just 1 level of parent
                                                   #filterby="parent",
                                                   #filter_opts=(None,),
-                                                  orderby="event_incident_type.name"))
+                                                  orderby = "event_incident_type.name"))
             incident_type_widget = S3HierarchyWidget(lookup = "event_incident_type",
                                                      represent = type_represent,
                                                      multiple = False,
@@ -2721,8 +2745,12 @@ class S3IncidentTypeModel(S3Model):
             msg_list_empty = T("No Incident Types currently registered")
             )
 
+        if settings.get_incident_label(): # == "Ticket":
+            label = T("Ticket Type")
+        else:
+            label = T("Incident Type")
         incident_type_id = S3ReusableField("incident_type_id", "reference %s" % tablename,
-                                           label = T("Incident Type"),
+                                           label = label,
                                            ondelete = "RESTRICT",
                                            represent = type_represent,
                                            requires = IS_EMPTY_OR(
@@ -6514,8 +6542,8 @@ class event_IncidentAssignMethod(S3Method):
 
             # Data table
             resource = s3db.resource("event_incident",
-                                     alias=r.component.alias if r.component else None,
-                                     vars=get_vars)
+                                     alias = r.component.alias if r.component else None,
+                                     vars = get_vars)
             totalrows = resource.count()
             if "pageLength" in get_vars:
                 display_length = get_vars["pageLength"]
@@ -6581,57 +6609,63 @@ class event_IncidentAssignMethod(S3Method):
                     # Where to retrieve updated filter options from:
                     filter_ajax_url = URL(c = "event",
                                           f = "incident",
-                                          args=["filter.options"],
-                                          vars={})
+                                          args = ["filter.options"],
+                                          vars = {},
+                                          )
 
                     get_config = resource.get_config
                     filter_clear = get_config("filter_clear", True)
                     filter_formstyle = get_config("filter_formstyle", None)
                     filter_submit = get_config("filter_submit", True)
                     filter_form = S3FilterForm(filter_widgets,
-                                               clear=filter_clear,
-                                               formstyle=filter_formstyle,
-                                               submit=filter_submit,
-                                               ajax=True,
-                                               url=filter_submit_url,
-                                               ajaxurl=filter_ajax_url,
-                                               _class="filter-form",
-                                               _id="datatable-filter-form",
+                                               clear = filter_clear,
+                                               formstyle = filter_formstyle,
+                                               submit = filter_submit,
+                                               ajax = True,
+                                               url = filter_submit_url,
+                                               ajaxurl = filter_ajax_url,
+                                               _class = "filter-form",
+                                               _id = "datatable-filter-form",
                                                )
                     fresource = current.s3db.resource(resource.tablename)
                     alias = r.component.alias if r.component else None
                     ff = filter_form.html(fresource,
                                           r.get_vars,
-                                          target="datatable",
-                                          alias=alias)
+                                          target = "datatable",
+                                          alias = alias)
                 else:
                     ff = ""
 
                 # Data table (items)
                 data = resource.select(list_fields,
-                                       start=0,
-                                       limit=limit,
-                                       orderby=orderby,
-                                       left=left,
-                                       count=True,
-                                       represent=True)
+                                       start = 0,
+                                       limit = limit,
+                                       orderby = orderby,
+                                       left = left,
+                                       count = True,
+                                       represent = True)
                 filteredrows = data["numrows"]
                 dt = S3DataTable(data["rfields"], data["rows"])
 
                 items = dt.html(totalrows,
                                 filteredrows,
                                 dt_id,
-                                dt_ajax_url=r.url(representation="aadata"),
-                                dt_bulk_actions=dt_bulk_actions,
-                                dt_pageLength=display_length,
-                                dt_pagination="true",
-                                dt_searching="false",
+                                dt_ajax_url = r.url(representation="aadata"),
+                                dt_bulk_actions = dt_bulk_actions,
+                                dt_pageLength = display_length,
+                                dt_pagination = "true",
+                                dt_searching = "false",
                                 )
 
                 response.view = "list_filter.html"
 
+                if current.deployment_settings.get_incident_label(): # == "Ticket"
+                    title = T("Assign to Ticket")
+                else:
+                    title = T("Assign to Incident")
+
                 return {"items": items,
-                        "title": T("Assign to Incident"),
+                        "title": title,
                         "list_filter_form": ff,
                         }
 
@@ -6643,12 +6677,12 @@ class event_IncidentAssignMethod(S3Method):
                     echo = None
 
                 data = resource.select(list_fields,
-                                       start=0,
-                                       limit=limit,
-                                       orderby=orderby,
-                                       left=left,
-                                       count=True,
-                                       represent=True)
+                                       start = 0,
+                                       limit = limit,
+                                       orderby = orderby,
+                                       left = left,
+                                       count = True,
+                                       represent = True)
                 filteredrows = data["numrows"]
                 dt = S3DataTable(data["rfields"], data["rows"])
 
@@ -6656,7 +6690,7 @@ class event_IncidentAssignMethod(S3Method):
                                 filteredrows,
                                 dt_id,
                                 echo,
-                                dt_bulk_actions=dt_bulk_actions)
+                                dt_bulk_actions = dt_bulk_actions)
                 response.headers["Content-Type"] = "application/json"
                 return items
 

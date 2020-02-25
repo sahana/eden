@@ -264,7 +264,11 @@ def config(settings):
 
             name = r.name
             if name == "incident":
-                tabs = [(T("Incident Details"), None),
+                if settings.get_incident_label(): # == "Ticket"
+                    label = T("Ticket Details")
+                else:
+                    label = T("Incident Details")
+                tabs = [(label, None),
                         #(T("Tasks"), "task"),
                         #(T("Human Resources"), "human_resource"),
                         #(T("Equipment"), "asset"),
@@ -323,13 +327,17 @@ def config(settings):
                 if record.event_id or r.method == "event" or not editable:
                     event = ""
                 else:
-                    event = A(T("Assign to Event"),
-                                _href = URL(c = "event",
-                                            f = "incident",
-                                            args = [record_id, "event"],
-                                            ),
-                                _class = "action-btn"
-                                )
+                    if settings.get_event_label(): # == "Disaster"
+                        label = T("Assign to Disaster")
+                    else:
+                        label = T("Assign to Event")
+                    event = A(label,
+                              _href = URL(c = "event",
+                                          f = "incident",
+                                          args = [record_id, "event"],
+                                          ),
+                              _class = "action-btn"
+                              )
 
                 table = r.table
                 rheader = DIV(TABLE(TR(exercise),
@@ -381,7 +389,11 @@ def config(settings):
                                            ),
                                         ))
                 else:
-                    rheader = DIV(A(T("Assign to Incident"),
+                    if settings.get_incident_label(): # == "Ticket"
+                        label = T("Assign to Ticket")
+                    else:
+                        label = T("Assign to Incident")
+                    rheader = DIV(A(label,
                                     _href = URL(c = "event",
                                                 f = "incident_report",
                                                 args = [record_id, "assign"],
@@ -390,8 +402,16 @@ def config(settings):
                                     ))
 
             elif name == "event":
-                tabs = [(T("Event Details"), None),
-                        (T("Incidents"), "incident"),
+                if settings.get_event_label(): # == "Disaster"
+                    label = T("Disaster Details")
+                else:
+                    label = T("Event Details")
+                if settings.get_incident_label(): # == "Ticket"
+                    INCIDENTS = T("Tickets")
+                else:
+                    INCIDENTS = T("Incidents")
+                tabs = [(label, None),
+                        (INCIDENTS, "incident"),
                         (T("Documents"), "document"),
                         (T("Photos"), "image"),
                         ]
@@ -491,7 +511,8 @@ def config(settings):
                 if not result:
                     return False
 
-            if r.method in (None, "create"):
+            method = r.method
+            if method in (None, "create"):
                 current.s3db.gis_location.addr_street.label = T("Street Address or Location Details")
                 from s3 import S3SQLCustomForm
                 crud_form = S3SQLCustomForm((T("What is it?"), "name"),
@@ -513,12 +534,16 @@ def config(settings):
         current.menu.options = None
         req_args = current.request.args
         if len(req_args) > 1 and req_args[1] == "assign":
-            attr["rheader"] = A(T("New Incident"),
-                                _class="action-btn",
-                                _href=URL(c="event", f="incident",
-                                          args=["create"],
-                                          vars={"incident_report_id": req_args[0]},
-                                          ),
+            if settings.get_incident_label(): # == "Ticket"
+                label = T("New Ticket")
+            else:
+                label = T("New Incident")
+            attr["rheader"] = A(label,
+                                _class = "action-btn",
+                                _href = URL(c="event", f="incident",
+                                            args = ["create"],
+                                            vars = {"incident_report_id": req_args[0]},
+                                            ),
                                 )
         else:
             attr["rheader"] = event_rheader
@@ -623,7 +648,8 @@ def config(settings):
                                                  args = ["[id]", "plan"]),
                                )
 
-            if r.method == "create":
+            method = r.method
+            if method == "create":
                 incident_report_id = r.get_vars.get("incident_report_id")
                 if incident_report_id:
                     # Got here from incident report assign => "New Incident"
@@ -653,6 +679,14 @@ def config(settings):
                                                  "create_onaccept",
                                                  create_onaccept,
                                                  )
+
+            elif method == "plan" and settings.get_incident_label(): # == "Ticket"
+                s3db.event_task
+                s3db.event_organisation
+                crud_strings = s3.crud_strings
+                crud_strings.event_task.msg_list_empty = T("No Tasks currently registered for this ticket")
+                crud_strings.event_organisation.msg_list_empty = T("No Organizations currently registered in this ticket")
+
             return True
         s3.prep = custom_prep
 
@@ -678,17 +712,30 @@ def config(settings):
             f.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
             f.widget = S3CalendarWidget(timepicker = True)
 
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Add Equipment"),
-            title_display = T("Equipment Details"),
-            title_list = T("Equipment"),
-            title_update = T("Edit Equipment"),
-            label_list_button = T("List Equipment"),
-            label_delete_button = T("Remove Equipment from this incident"),
-            msg_record_created = T("Equipment added"),
-            msg_record_modified = T("Equipment updated"),
-            msg_record_deleted = T("Equipment removed"),
-            msg_list_empty = T("No Equipment currently registered for this incident"))
+        if settings.get_incident_label(): # == "Ticket"
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Add Equipment"),
+                title_display = T("Equipment Details"),
+                title_list = T("Equipment"),
+                title_update = T("Edit Equipment"),
+                label_list_button = T("List Equipment"),
+                label_delete_button = T("Remove Equipment from this ticket"),
+                msg_record_created = T("Equipment added"),
+                msg_record_modified = T("Equipment updated"),
+                msg_record_deleted = T("Equipment removed"),
+                msg_list_empty = T("No Equipment currently registered for this ticket"))
+        else:
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Add Equipment"),
+                title_display = T("Equipment Details"),
+                title_list = T("Equipment"),
+                title_update = T("Edit Equipment"),
+                label_list_button = T("List Equipment"),
+                label_delete_button = T("Remove Equipment from this incident"),
+                msg_record_created = T("Equipment added"),
+                msg_record_modified = T("Equipment updated"),
+                msg_record_deleted = T("Equipment removed"),
+                msg_list_empty = T("No Equipment currently registered for this incident"))
 
     settings.customise_event_asset_resource = customise_event_asset_resource
 
@@ -784,10 +831,15 @@ def config(settings):
 
         if pe_id:
             # Notify Assignee
+            if settings.get_incident_label(): # == "Ticket"
+                label = T("Ticket")
+            else:
+                label = T("Incident")
             current.msg.send_by_pe_id(pe_id,
                                       subject = "",
-                                      message = "You have been assigned to an Incident: %s%s" % \
-                                        (settings.get_base_public_url(),
+                                      message = "You have been assigned to an %s: %s%s" % \
+                                        (label,
+                                         settings.get_base_public_url(),
                                          URL(c="event", f= "incident",
                                              args = [incident_id, "human_resource", link_id]),
                                              ),
@@ -806,17 +858,30 @@ def config(settings):
             f.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
             f.widget = S3CalendarWidget(timepicker = True)
 
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Add Person"),
-            title_display = T("Person Details"),
-            title_list = T("Personnel"),
-            title_update = T("Edit Person"),
-            label_list_button = T("List Personnel"),
-            label_delete_button = T("Remove Person from this incident"),
-            msg_record_created = T("Person added"),
-            msg_record_modified = T("Person updated"),
-            msg_record_deleted = T("Person removed"),
-            msg_list_empty = T("No Persons currently registered for this incident"))
+        if settings.get_incident_label(): # == "Ticket"
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Add Person"),
+                title_display = T("Person Details"),
+                title_list = T("Personnel"),
+                title_update = T("Edit Person"),
+                label_list_button = T("List Personnel"),
+                label_delete_button = T("Remove Person from this ticket"),
+                msg_record_created = T("Person added"),
+                msg_record_modified = T("Person updated"),
+                msg_record_deleted = T("Person removed"),
+                msg_list_empty = T("No Persons currently registered for this ticket"))
+        else:
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Add Person"),
+                title_display = T("Person Details"),
+                title_list = T("Personnel"),
+                title_update = T("Edit Person"),
+                label_list_button = T("List Personnel"),
+                label_delete_button = T("Remove Person from this incident"),
+                msg_record_created = T("Person added"),
+                msg_record_modified = T("Person updated"),
+                msg_record_deleted = T("Person removed"),
+                msg_list_empty = T("No Persons currently registered for this incident"))
 
         s3db.configure(tablename,
                        # Deliberately over-rides
@@ -868,34 +933,60 @@ def config(settings):
         table.item_id.label = T("Item Type")
         table.asset_id.label = T("Specific Item")
 
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Add Equipment"),
-            title_display = T("Equipment Details"),
-            title_list = T("Equipment"),
-            title_update = T("Edit Equipment"),
-            label_list_button = T("List Equipment"),
-            label_delete_button = T("Remove Equipment from this incident"),
-            msg_record_created = T("Equipment added"),
-            msg_record_modified = T("Equipment updated"),
-            msg_record_deleted = T("Equipment removed"),
-            msg_list_empty = T("No Equipment currently registered for this incident"))
+        if settings.get_incident_label(): # == "Ticket"
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Add Equipment"),
+                title_display = T("Equipment Details"),
+                title_list = T("Equipment"),
+                title_update = T("Edit Equipment"),
+                label_list_button = T("List Equipment"),
+                label_delete_button = T("Remove Equipment from this ticket"),
+                msg_record_created = T("Equipment added"),
+                msg_record_modified = T("Equipment updated"),
+                msg_record_deleted = T("Equipment removed"),
+                msg_list_empty = T("No Equipment currently registered for this ticket"))
+        else:
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Add Equipment"),
+                title_display = T("Equipment Details"),
+                title_list = T("Equipment"),
+                title_update = T("Edit Equipment"),
+                label_list_button = T("List Equipment"),
+                label_delete_button = T("Remove Equipment from this incident"),
+                msg_record_created = T("Equipment added"),
+                msg_record_modified = T("Equipment updated"),
+                msg_record_deleted = T("Equipment removed"),
+                msg_list_empty = T("No Equipment currently registered for this incident"))
 
     settings.customise_event_scenario_asset_resource = customise_event_scenario_asset_resource
 
     # -------------------------------------------------------------------------
     def customise_event_scenario_human_resource_resource(r, tablename):
 
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Add Person"),
-            title_display = T("Person Details"),
-            title_list = T("Personnel"),
-            title_update = T("Edit Person"),
-            label_list_button = T("List Personnel"),
-            label_delete_button = T("Remove Person from this incident"),
-            msg_record_created = T("Person added"),
-            msg_record_modified = T("Person updated"),
-            msg_record_deleted = T("Person removed"),
-            msg_list_empty = T("No Persons currently registered for this incident"))
+        if settings.get_incident_label(): # == "Ticket"
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Add Person"),
+                title_display = T("Person Details"),
+                title_list = T("Personnel"),
+                title_update = T("Edit Person"),
+                label_list_button = T("List Personnel"),
+                label_delete_button = T("Remove Person from this ticket"),
+                msg_record_created = T("Person added"),
+                msg_record_modified = T("Person updated"),
+                msg_record_deleted = T("Person removed"),
+                msg_list_empty = T("No Persons currently registered for this ticket"))
+        else:
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Add Person"),
+                title_display = T("Person Details"),
+                title_list = T("Personnel"),
+                title_update = T("Edit Person"),
+                label_list_button = T("List Personnel"),
+                label_delete_button = T("Remove Person from this incident"),
+                msg_record_created = T("Person added"),
+                msg_record_modified = T("Person updated"),
+                msg_record_deleted = T("Person removed"),
+                msg_list_empty = T("No Persons currently registered for this incident"))
 
     settings.customise_event_scenario_human_resource_resource = customise_event_scenario_human_resource_resource
 

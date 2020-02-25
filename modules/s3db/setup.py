@@ -4369,8 +4369,8 @@ def setup_modules_apply(instance_id, modules):
                  "lineinfile": lineinfile,
                  })
 
-    tasks += [{"name": "Compile",
-               "command": "python web2py.py -S %s -M -R applications/%s/static/scripts/tools/compile.py" % \
+    tasks += [{"name": "Migrate",
+               "command": "python web2py.py -S %s -M -R applications/%s/static/scripts/tools/migrate.py" % \
                             (appname, appname),
                "args": {"chdir": "/home/%s" % instance_type,
                         },

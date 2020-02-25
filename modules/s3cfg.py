@@ -3942,6 +3942,14 @@ class S3Config(Storage):
         """
         return self.event.get("impact_tab", True)
 
+    def get_incident_label(self):
+        """
+            Whether Incidents are called Incidents or Tickets
+            - default: None = Incident
+            - valid options: "Ticket"
+        """
+        return self.event.get("incident_label", None)
+
     def get_incident_dispatch_tab(self):
         """
             Whether to show the dispatch tab for incidents
