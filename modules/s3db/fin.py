@@ -404,10 +404,6 @@ class FinProductModel(S3Model):
                            label = T("Reference Number"),
                            writable = False,
                            ),
-                     Field("update_url", # TODO not required => remove
-                           readable = False,
-                           writable = False,
-                           ),
                      *s3_meta_fields())
 
         # TODO Limit service selector to services of product-org

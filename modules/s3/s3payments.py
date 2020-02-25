@@ -639,12 +639,6 @@ class PayPalAdapter(S3PaymentService):
 
                     # Extract registration details from response
                     refno = response["id"]
-                    update_url = None
-                    links = response["links"]
-                    for link in links:
-                        if link["rel"] == "edit":
-                            update_url = link["href"]
-                            break
 
                     # Create or update product<=>service link
                     # - no onaccept here (onaccept calls this)
@@ -656,7 +650,6 @@ class PayPalAdapter(S3PaymentService):
                         service_id = self.service_id,
                         is_registered = True,
                         refno = refno,
-                        update_url = update_url,
                         )
 
         return success
