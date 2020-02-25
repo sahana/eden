@@ -530,6 +530,10 @@ class FinSubscriptionModel(S3Model):
                           "MONTH": T("Months"),
                           "YEAR": T("Year"),
                           }
+        price_represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v,
+                                                                        precision = 2,
+                                                                        fixed = True,
+                                                                        )
 
         tablename = "fin_subscription_plan"
         define_table(tablename,
@@ -569,11 +573,11 @@ class FinSubscriptionModel(S3Model):
                            label = T("Total Cycles"),
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999)),
                            ),
-                     # TODO represent
                      Field("price", "double",
                            label = T("Price"),
                            requires = IS_FLOAT_AMOUNT(minimum = 0.01,
                                                       ),
+                           represent = price_represent,
                            ),
                      s3_currency(),
                      Field("status",
@@ -595,6 +599,16 @@ class FinSubscriptionModel(S3Model):
 
         # Table Configuration
         self.configure(tablename,
+                       list_fields = ["product_id",
+                                      "name",
+                                      "interval_count",
+                                      "interval_unit",
+                                      "fixed",
+                                      "total_cycles",
+                                      "price",
+                                      "currency",
+                                      "status",
+                                      ],
                        onvalidation = self.subscription_plan_onvalidation,
                        )
 
@@ -610,7 +624,7 @@ class FinSubscriptionModel(S3Model):
             msg_record_modified = T("Subscription Plan updated"),
             msg_record_deleted = T("Subscription Plan deleted"),
             msg_list_empty = T("No Subscription Plans currently registered"),
-        )
+            )
 
         # Reusable field
         # TODO represent to include product name
