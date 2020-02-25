@@ -4318,7 +4318,7 @@ def setup_modules_apply(instance_id, modules):
 
     # @ToDo: Lookup webserver_type from deployment once we support Apache
     #service_name = "apache2"
-    service_name = "uwsgi-%s" % instance_type
+    #service_name = "uwsgi-%s" % instance_type
 
     settings = current.deployment_settings
     has_module = settings.has_module
@@ -4369,22 +4369,10 @@ def setup_modules_apply(instance_id, modules):
                  "lineinfile": lineinfile,
                  })
 
-    tasks += [{"name": "Migrate",
-               "command": "python web2py.py -S %s -M -R applications/%s/static/scripts/tools/migrate.py" % \
-                            (appname, appname),
-               "args": {"chdir": "/home/%s" % instance_type,
-                        },
-               "become": "yes",
-               # Admin scripts do this as root, so we need to be able to over-write
-               #"become_user": "web2py",
-               },
-              # @ToDo: Handle case where need to restart multiple webservers
-              {"name": "Restart WebServer",
+    tasks += [# @ToDo: Handle case where need to restart multiple webservers
+              {"name": "Migrate & Restart WebServer",
                # We don't want to restart the UWSGI process running the Task until after the Task has completed
-               #"service": {"name": service_name,
-               #            "state": "restarted",
-               #            },
-               "shell": 'echo "service %s restart" | at now + 1 minutes' % service_name,
+               "shell": 'echo "/usr/local/bin/migrate %s" | at now + 1 minutes' % instance_type,
                "become": "yes",
                },
               ]
