@@ -669,14 +669,41 @@ class S3Organizer(S3Method):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def parse_interval(intervalstr):
+    def parse_dt(dtstr, end=False):
+        """
+            Parse an ISO8601-format date/datetime string as interval start|end
+
+            @param dtstr: the date/datetime string
+            @param end: interpret the string as interval end
+
+            @returns: a UTC datetime
+        """
+
+        date_only = "T" not in dtstr
+
+        try:
+            dt = s3_decode_iso_datetime(dtstr)
+        except ValueError:
+            return None
+
+        if date_only:
+            dt = dt.replace(hour=0, minute=0, second=0, tzinfo=None)
+            if end:
+                dt += datetime.timedelta(days=1)
+            dt = S3DateTime.to_utc(dt)
+
+        return dt
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def parse_interval(cls, intervalstr):
         """
             Parse an interval string of the format "<ISO8601>--<ISO8601>"
             into a pair of datetimes
 
             @param intervalstr: the interval string
 
-            @returns: tuple of datetimes (start, end)
+            @returns: tuple of UTC datetimes (start, end)
         """
 
         start = end = None
@@ -686,18 +713,8 @@ class S3Organizer(S3Method):
             if len(dates) != 2:
                 return start, end
 
-            try:
-                start = s3_decode_iso_datetime(dates[0])
-            except ValueError:
-                pass
-            else:
-                start = start.replace(hour=0, minute=0, second=0)
-            try:
-                end = s3_decode_iso_datetime(dates[1])
-            except ValueError:
-                pass
-            else:
-                end = end.replace(hour=0, minute=0, second=0)
+            start = cls.parse_dt(dates[0])
+            end = cls.parse_dt(dates[1], end=True)
 
         return start, end
 
