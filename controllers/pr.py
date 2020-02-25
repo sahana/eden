@@ -5,7 +5,6 @@
 """
 
 module = request.controller
-resourcename = request.function
 
 # -----------------------------------------------------------------------------
 # Options Menu (available in all Functions' Views)
@@ -41,10 +40,7 @@ def s3_menu_postp():
 def index():
     """ Module's Home Page """
 
-    try:
-        module_name = settings.modules[module].name_nice
-    except:
-        module_name = T("Person Registry")
+    module_name = settings.modules[module].get("name_nice", T("Person Registry"))
 
     # Load Model
     s3db.table("pr_address")
@@ -171,6 +167,7 @@ def person():
 
     # Contacts Tabs
     contacts_tabs = []
+    resourcename = request.function
     set_method = s3db.set_method
     setting = settings.get_pr_contacts_tabs()
     if "all" in setting:

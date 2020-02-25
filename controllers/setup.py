@@ -562,6 +562,11 @@ def server():
             from s3 import S3SQLCustomForm
             f = s3db.setup_server.host_ip
             f.requires = f.requires.other # IP is required
+            f.comment = DIV(_class="tooltip",
+                            _title="%s|%s" % (T("IP Address"),
+                                              T("Set to 127.0.0.1 for the localhost or set to the IP address of the remote server.")
+                                              )
+                            )
             crud_form = S3SQLCustomForm(#"deployment_id",
                                         "name",
                                         "host_ip",
@@ -571,10 +576,6 @@ def server():
                                         (T("Monitor"), "monitor_server.enabled"),
                                         "monitor_server.status",
                                         )
-
-            s3db.configure("setup_server",
-                           crud_form = crud_form,
-                           )
 
             if record:
                 s3db.configure("setup_server",

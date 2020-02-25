@@ -14,7 +14,7 @@ def index():
     """ Module's Home Page """
 
     # Page title
-    module_name = settings.modules[module].name_nice
+    module_name = settings.modules[module].get("name_nice")
 
     response.title = module_name
     output = {"module_name": module_name}

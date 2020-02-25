@@ -279,7 +279,8 @@ building_nzseel1_search = s3base.S3Search(
 
 # Set as default search method
 s3db.configure(tablename,
-                search_method=building_nzseel1_search)
+               search_method = building_nzseel1_search,
+               )
 # -------------------------------------------------------------------------
 
 # NZSEE Level 2 (~ATC-20 Rapid Evaluation) Safety Assessment Form
@@ -548,7 +549,8 @@ building_nzseel2_search = s3base.S3Search(
 
 # Set as default search method
 s3db.configure(tablename,
-                search_method=building_nzseel2_search)
+               search_method = building_nzseel2_search,
+               )
 
 
 # -----------------------------------------------------------------------------
@@ -558,14 +560,16 @@ def index():
 
     """ Module's Home Page """
 
-    module_name = settings.modules[module].name_nice
+    module_name = settings.modules[module].get("name_nice")
     response.title = module_name
-    return dict(module_name=module_name)
+    return {"module_name": module_name,
+            }
 
-# NZSEE Level 1 (~ATC-20 Rapid Evaluation) Safety Assessment Form -------------
+# -----------------------------------------------------------------------------
 def nzseel1():
-
     """
+        NZSEE Level 1 (~ATC-20 Rapid Evaluation) Safety Assessment Form
+
         RESTful CRUD controller
         @ToDo: Action Button to create a new L2 Assessment from an L1
     """
@@ -579,7 +583,7 @@ def nzseel1():
     # Subheadings in forms:
     s3db.configure(tablename,
         deletable=False,
-        create_next = URL(module,resourcename, args="[id]"),
+        create_next = URL(module, resourcename, args="[id]"),
         subheadings = {"name": ".", # Description in ATC-20
                        "collapse": "%s / %s" % (T("Overall Hazards"), T("Damage")),
                        "posting": ".",

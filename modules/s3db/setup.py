@@ -388,7 +388,7 @@ class S3AWSCloudModel(S3CloudModel):
 
         query = (stable.id == row.server_id) & \
                 (dtable.id == stable.deployment_id) & \
-                (dtable.cloud_id == ctable.id)
+                (dtable.cloud_id == ctable.cloud_id)
         deployment = db(query).select(ctable.access_key,
                                       ctable.secret_key,
                                       stable.name,
@@ -563,7 +563,7 @@ class S3OpenStackCloudModel(S3CloudModel):
 
         query = (stable.id == row.server_id) & \
                 (dtable.id == stable.deployment_id) & \
-                (dtable.cloud_id == ctable.id)
+                (dtable.cloud_id == ctable.cloud_id)
         deployment = db(query).select(ctable.auth_url,
                                       ctable.username,
                                       ctable.password,
@@ -1580,7 +1580,6 @@ class S3SetupDeploymentModel(S3Model):
                      {"lineinfile": {"path": "/etc/exim4/exim4.conf",
                                      "regexp": QuotedDouble("{{ item.regexp }}"),
                                      "line": QuotedDouble("{{ item.line }}"),
-                                     "state": "present",
                                      "backrefs": "yes",
                                      },
                       "loop": [{"regexp": QuotedSingle("^# primary_hostname ="),
@@ -1743,7 +1742,7 @@ dropdown.change(function() {
                    - on by default
         """
 
-        from gluon import IS_IN_SET, SQLFORM
+        from gluon import DIV, IS_IN_SET, SQLFORM
         from gluon.sqlhtml import RadioWidget
         from s3 import s3_mark_required
         from s3dal import Field
@@ -1752,30 +1751,61 @@ dropdown.change(function() {
         response = current.response
         settings = current.deployment_settings
 
-        questions = settings.get_setup_wizard_questions()
+        pages = settings.get_setup_wizard_questions()
+
+        page = r.get_vars.get("page", 1)
+
+        page = pages[int(page) - 1] # 0-indexed
+        page_get = page.get
+
+        
+        questions = page_get("questions", [])
 
         fields = []
         fappend = fields.append
-        for q in questions:
-            try:
-                fn = getattr(settings, q["fn"])
-            except:
-                default = None
-            else:
+        if len(questions):
+            QUESTIONS = True
+            for q in questions:
                 try:
-                    default = fn()
+                    fn = getattr(settings, q["fn"])
                 except:
                     default = None
-            setting = q["setting"]
-            fname = setting.replace(".", "_")
-            fappend(Field(fname,
-                          default = default,
-                          label = T(q["question"]),
-                          requires = IS_IN_SET(q["options"]),
-                          widget = RadioWidget.widget,
-                          #widget = lambda f, v: RadioWidget.widget(f, v, style="divs"),
-                          _id = "setting",
-                          ))
+                else:
+                    try:
+                        default = fn() # This is only the case for Local Server
+                    except:
+                        default = None
+                setting = q["setting"]
+                fname = setting.replace(".", "_")
+                fappend(Field(fname,
+                              default = default,
+                              label = T(q["question"]),
+                              requires = IS_IN_SET(q["options"]),
+                              widget = RadioWidget.widget,
+                              #widget = lambda f, v: RadioWidget.widget(f, v, style="divs"),
+                              _id = "setting",
+                              ))
+        else:
+            QUESTIONS = False
+            modules = page_get("modules", [])
+            has_module = settings.has_module
+            TRUE_FALSE = (True, False)
+            for m in modules:
+                module = m["module"]
+                default = has_module(module) # This is only the case for Local Server
+                label = T(m["label"])
+                fappend(Field(module,
+                              default = default,
+                              label = label,
+                              requires = IS_IN_SET(TRUE_FALSE),
+                              widget = RadioWidget.widget,
+                              comment = DIV(_class="tooltip",
+                                            _title="%s|%s" % (label,
+                                                              T(m["description"]),
+                                                              ),
+                                            ),
+                              _id = "module",
+                              ))
 
         labels, required = s3_mark_required(fields)
         response.s3.has_required = required
@@ -1792,7 +1822,10 @@ dropdown.change(function() {
 
         if form.accepts(r.post_vars, current.session):
             # Processs Form
-            result = setup_settings_apply(r.id, form.vars)
+            if QUESTIONS:
+                result = setup_settings_apply(r.id, form.vars)
+            else:
+                result = setup_modules_apply(r.id, form.vars)
             if result:
                 response.error = result
             else:
@@ -1800,7 +1833,7 @@ dropdown.change(function() {
 
         current.response.view = "simple.html"
         output = {"item": form,
-                  "title": T("Configuration Wizard"),
+                  "title": T(page_get("title", "Configuration Wizard")),
                   }
         return output
 
@@ -1877,10 +1910,10 @@ dropdown.change(function() {
             if cloud_type == "setup_aws_cloud":
                 # Get Cloud details
                 ctable = s3db.setup_aws_cloud
-                cloud = db(ctable.id == cloud_id).select(ctable.access_key,
-                                                         ctable.secret_key,
-                                                         limitby = (0, 1)
-                                                         ).first()
+                cloud = db(ctable.cloud_id == cloud_id).select(ctable.access_key,
+                                                               ctable.secret_key,
+                                                               limitby = (0, 1)
+                                                               ).first()
 
                 # Get Server(s) details
                 cstable = s3db.setup_aws_server
@@ -1901,13 +1934,13 @@ dropdown.change(function() {
             elif cloud_type == "setup_openstack_cloud":
                 # Get Cloud details
                 ctable = s3db.setup_openstack_cloud
-                cloud = db(ctable.id == cloud_id).select(ctable.auth_url,
-                                                         ctable.username,
-                                                         ctable.password,
-                                                         ctable.project_name,
-                                                         ctable.domain_name,
-                                                         limitby = (0, 1)
-                                                         ).first()
+                cloud = db(ctable.cloud_id == cloud_id).select(ctable.auth_url,
+                                                               ctable.username,
+                                                               ctable.password,
+                                                               ctable.project_name,
+                                                               ctable.domain_name,
+                                                               limitby = (0, 1)
+                                                               ).first()
 
                 # Get Server(s) details
                 cstable = s3db.setup_openstack_server
@@ -2163,8 +2196,8 @@ dropdown.change(function() {
                                              "boot_from_volume": "yes",
                                              "terminate_volume": "yes",
                                              "network": cloud_server.network,
-                                             "security_group": cloud_server.security_group,
-                                             "region": cloud_server.region,
+                                             "security_groups": cloud_server.security_group,
+                                             "region_name": cloud_server.region,
                                              "availability_zone": cloud_server.availability_zone,
                                              "wait": "yes",
                                              },
@@ -2194,28 +2227,38 @@ dropdown.change(function() {
                     gandi_api_key = gandi.api_key
                     url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
                     dns_record = sitename.split(".%s" % gandi.domain, 1)[0]
-                    tasks += [# Delete any existing record
-                              {"uri": {"url": "%s/%s" % (url, dns_record),
-                                       "method": "DELETE",
-                                       "headers": {"X-Api-Key": gandi_api_key,
-                                                   },
-                                       "status_code": ["200", "204"],
-                                       },
-                               # Don't worry if it didn't exist
-                               "ignore_errors": "yes",
-                               },
-                              # Create new record
-                              {"uri": {"url": url,
-                                       "method": "POST",
-                                       "headers": {"X-Api-Key": gandi_api_key,
-                                                   },
-                                       "body_format": "json", # Content-Type: application/json
-                                       "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ item.public_ip }}"]}' % dns_record,
-                                       "status_code": ["200", "201"],
-                                       },
-                               "loop": "{{ ec2.instances }}",
-                               },
-                              ]
+                    # Delete any existing record
+                    tasks.append({"uri": {"url": "%s/%s" % (url, dns_record),
+                                          "method": "DELETE",
+                                          "headers": {"X-Api-Key": gandi_api_key,
+                                                      },
+                                          "status_code": ["200", "204"],
+                                          },
+                                  # Don't worry if it didn't exist
+                                  "ignore_errors": "yes",
+                                  })
+                    # Create new record
+                    if cloud_type == "setup_aws_cloud":
+                        tasks.append({"uri": {"url": url,
+                                              "method": "POST",
+                                              "headers": {"X-Api-Key": gandi_api_key,
+                                                          },
+                                              "body_format": "json", # Content-Type: application/json
+                                              "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ item.public_ip }}"]}' % dns_record,
+                                              "status_code": ["200", "201"],
+                                              },
+                                      "loop": "{{ ec2.instances }}",
+                                      })
+                    elif cloud_type == "setup_openstack_cloud":
+                        tasks.append({"uri": {"url": url,
+                                              "method": "POST",
+                                              "headers": {"X-Api-Key": gandi_api_key,
+                                                          },
+                                              "body_format": "json", # Content-Type: application/json
+                                              "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ openstack.openstack.public_v4 }}"]}' % dns_record,
+                                              "status_code": ["200", "201"],
+                                              },
+                                      })
                 else:
                     current.session.warning = current.T("Deployment will not have SSL: No DNS Provider configured to link to new server IP Address")
                     # @ToDo: Support Elastic IPs
@@ -4176,6 +4219,171 @@ def setup_instance_method(instance_id, method="start"):
                                  )
 
 # =============================================================================
+def setup_modules_apply(instance_id, modules):
+    """
+        Method to enable/disable Modules in an instance
+        via models/000_config.py
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    playbook = []
+
+    # Lookup Instance details
+    itable = s3db.setup_instance
+    instance = db(itable.id == instance_id).select(itable.id,
+                                                   itable.deployment_id,
+                                                   itable.type,
+                                                   limitby = (0, 1)
+                                                   ).first()
+    deployment_id = instance.deployment_id
+
+    # Lookup Server Details
+    # @ToDo: Support multiple Eden servers used as Load-balancers
+    svtable = s3db.setup_server
+    query = (svtable.deployment_id == deployment_id) & \
+            (svtable.role.belongs((1, 4)))
+    server = db(query).select(svtable.name,
+                              svtable.host_ip,
+                              svtable.remote_user,
+                              svtable.private_key,
+                              limitby = (0, 1)
+                              ).first()
+    host_ip = server.host_ip
+    if host_ip == "127.0.0.1":
+        connection = "local"
+    else:
+        provided_key = server.private_key
+        if not provided_key:
+            # Abort
+            return(current.T("Apply failed: SSH Key needed when applying away from localhost"))
+
+        connection = "smart"
+        tasks = []
+        # Copy the Private Key to where it will be used
+        provided_key = os.path.join(current.request.folder, "uploads", provided_key)
+        private_key = "/tmp/%s.pem" % server.name
+        tasks.append({"copy": {"src": provided_key,
+                               "dest": private_key,
+                               "mode": "0600",
+                               },
+                      })
+        # Add instance to host group (to associate private_key)
+        tasks.append({"add_host": {"hostname": host_ip,
+                                   "groupname": "launched",
+                                   "ansible_ssh_private_key_file": private_key,
+                                   },
+                      })
+        playbook.append({"hosts": "localhost",
+                         "connection": "local",
+                         "gather_facts": "no",
+                         "tasks": tasks,
+                         })
+        host_ip = "launched"
+
+    appname = "eden" # @ToDo: Allow this to be configurable
+    instance_type = INSTANCE_TYPES[instance.type]
+    dest = "/home/%s/applications/%s/models/000_config.py" % (instance_type, appname)
+
+    # @ToDo: Lookup webserver_type from deployment once we support Apache
+    #service_name = "apache2"
+    service_name = "uwsgi-%s" % instance_type
+
+    settings = current.deployment_settings
+    has_module = settings.has_module
+    modules_get = settings.modules.get
+
+    # Build List of Tasks
+    # This currently only works for Local Server!
+    tasks = []
+    tappend = tasks.append
+    for module in modules:
+        new_value = modules[module]
+        if new_value == "True":
+            if has_module(module):
+                # No changes required
+                continue
+            if modules_get(module) is None:
+                # Override the defaults
+                # @ToDo: Lookup label e.g. from settings.get_setup_wizard_questions()
+                label = module
+                lineinfile = {"dest": dest,
+                              "regexp": '^settings.modules["%s"]' % module,
+                              "line": 'settings.modules["%s"] = {"name_nice": T("%s"), "module_type": 10}' % (module, label),
+                              }
+            else:
+                # Remove the addition we added previously
+                lineinfile = {"dest": dest,
+                              "regexp": '^del settings.modules["%s"]' % module,
+                              "state": "absent",
+                              }
+        else:
+            if not has_module(module):
+                # No changes required
+                continue
+            if modules_get(module) is None: # This is only the case for Local Server
+                # Remove the deletion we added previously
+                lineinfile = {"dest": dest,
+                              "regexp": '^del settings.modules["%s"]' % module,
+                              "state": "absent",
+                              }
+            else:
+                # Override the defaults
+                lineinfile = {"dest": dest,
+                              "regexp": '^del settings.modules["%s"]' % module,
+                              "line": 'del settings.modules["%s"]' % module,
+                              }
+        tappend({"name": "Edit 000_config.py",
+                 "become": "yes",
+                 "lineinfile": lineinfile,
+                 })
+
+    tasks += [{"name": "Compile",
+               "command": "python web2py.py -S %s -M -R applications/%s/static/scripts/tools/compile.py" % \
+                            (appname, appname),
+               "args": {"chdir": "/home/%s" % instance_type,
+                        },
+               "become": "yes",
+               # Admin scripts do this as root, so we need to be able to over-write
+               #"become_user": "web2py",
+               },
+              # @ToDo: Handle case where need to restart multiple webservers
+              {"name": "Restart WebServer",
+               # We don't want to restart the UWSGI process running the Task until after the Task has completed
+               #"service": {"name": service_name,
+               #            "state": "restarted",
+               #            },
+               "shell": 'echo "service %s restart" | at now + 1 minutes' % service_name,
+               "become": "yes",
+               },
+              ]
+
+    playbook.append({"hosts": host_ip,
+                     "connection": connection,
+                     "remote_user": server.remote_user,
+                     "become_method": "sudo",
+                     #"become_user": "root",
+                     "tasks": tasks,
+                     })
+
+    # Write Playbook
+    name = "apply_%d" % int(time.time())
+    task_vars = setup_write_playbook("%s.yml" % name,
+                                     playbook,
+                                     )
+
+    # Run the Playbook
+    task_vars["instance_id"] = instance_id # To Upload Logs to Instance record
+    current.s3task.schedule_task(name,
+                                 vars = task_vars,
+                                 function_name = "setup_run_playbook",
+                                 repeats = None,
+                                 timeout = 6000,
+                                 #sync_output = 300
+                                 )
+
+# =============================================================================
 def setup_setting_apply(setting_id):
     """
         Apply a Setting to an instance via models/000_config.py
@@ -4275,7 +4483,6 @@ def setup_setting_apply(setting_id):
                                                         (instance_type, appname),
                                                "regexp": "^settings.%s =" % the_setting,
                                                "line": new_line,
-                                               "state": "present",
                                                },
                                 },
                                {"name": "Compile",
@@ -4385,8 +4592,8 @@ def setup_settings_apply(instance_id, settings):
         host_ip = "launched"
 
     appname = "eden" # @ToDo: Allow this to be configurable
-
     instance_type = INSTANCE_TYPES[instance.type]
+    dest = "/home/%s/applications/%s/models/000_config.py" % (instance_type, appname)
 
     # @ToDo: Lookup webserver_type from deployment once we support Apache
     #service_name = "apache2"
@@ -4405,10 +4612,9 @@ def setup_settings_apply(instance_id, settings):
             new_line = 'settings.%s = "%s"' % (the_setting, new_value)
         tappend({"name": "Edit 000_config.py",
                  "become": "yes",
-                 "lineinfile": {"dest": "/home/%s/applications/%s/models/000_config.py" % (instance_type, appname),
+                 "lineinfile": {"dest": dest,
                                 "regexp": "^settings.%s =" % the_setting,
                                 "line": new_line,
-                                "state": "present",
                                 },
                  })
 

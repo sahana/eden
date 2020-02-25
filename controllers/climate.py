@@ -1,7 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 
 module = request.controller
-resourcename = request.function
 
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
@@ -21,10 +20,7 @@ def _map_plugin(**client_config):
 
 # -----------------------------------------------------------------------------
 def index():
-    try:
-        module_name = settings.modules[module].name_nice
-    except:
-        module_name = T("Climate")
+    module_name = settings.modules[module].get("name_nice", T("Climate"))
 
     # Include an embedded Overview Map on the index page
     config = gis.get_config()
@@ -70,10 +66,9 @@ def index():
     )
 
     response.title = module_name
-    return dict(
-        module_name=module_name,
-        map=gis_map
-    )
+    return {"module_name": module_name,
+            "map": gis_map,
+            }
 
 # -----------------------------------------------------------------------------
 def climate_overlay_data():
