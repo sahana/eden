@@ -54,9 +54,10 @@ def config(settings):
 
     # Allow a new user to be linked to a record (and a new record will be created if it doesn't already exist)
     settings.auth.registration_link_user_to = {"staff": T("Staff"),
-                                               "volunteer": T("Volunteer"),
+                                               #"volunteer": T("Volunteer"),
                                                #"member": T("Member"),
                                                }
+    settings.auth.registration_link_user_to_default = ["staff"]
 
     # Always notify the approver of a new (verified) user, even if the user is automatically approved
     #settings.auth.always_notify_approver = False
