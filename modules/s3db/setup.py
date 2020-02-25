@@ -2137,9 +2137,9 @@ dropdown.change(function() {
                                            },
                                   })
                     # Generate the Public Key
-                    command = "openssl rsa -in %(provided_key)s -pubout > %(public_key)s" % \
-                        {provided_key: provided_key,
-                         public_key: public_key,
+                    command = "openssl rsa -in %(private_key)s -pubout > %(public_key)s" % \
+                        {"private_key": private_key,
+                         "public_key": public_key,
                          }
                     tasks.append({"command": command,
                                   })
