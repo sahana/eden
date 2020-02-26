@@ -623,8 +623,7 @@ class FinSubscriptionModel(S3Model):
             )
 
         # Reusable field
-        # TODO represent to include product name
-        represent = S3Represent(lookup=tablename, show_link=True)
+        represent = fin_SubscriptionPlanRepresent(show_link=True)
         plan_id = S3ReusableField("plan_id", "reference %s" % tablename,
                                   label = T("Plan"),
                                   represent = represent,
@@ -721,6 +720,20 @@ class FinSubscriptionModel(S3Model):
                        editable = False,
                        deletable = False,
                        )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Subscription"),
+            title_display = T("Subscription Details"),
+            title_list = T("Subscriptions"),
+            title_update = T("Edit Subscription"),
+            label_list_button = T("List Subscriptions"),
+            label_delete_button = T("Delete Subscription"),
+            msg_record_created = T("Subscription created"),
+            msg_record_modified = T("Subscription updated"),
+            msg_record_deleted = T("Subscription deleted"),
+            msg_list_empty = T("No Subscriptions currently registered"),
+            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -848,6 +861,75 @@ class FinSubscriptionModel(S3Model):
                 success = adapter.register_subscription_plan(row.plan_id)
                 if not success:
                     current.response.error = "Service registration failed"
+
+# =============================================================================
+class fin_SubscriptionPlanRepresent(S3Represent):
+    """ Representation of subscription plan IDs """
+
+    def __init__(self, show_link=False):
+        """
+            Constructor
+
+            @param show_link: show representation as clickable link
+        """
+
+        super(fin_SubscriptionPlanRepresent, self).__init__(
+                                                lookup = "fin_subscription_plan",
+                                                show_link = show_link,
+                                                )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        table = self.table
+
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+
+        ptable = current.s3db.fin_product
+        left = [ptable.on(ptable.id == table.product_id)]
+
+        rows = current.db(query).select(table.id,
+                                        table.name,
+                                        ptable.name,
+                                        left = left,
+                                        limitby = (0, count),
+                                        )
+        self.queries += 1
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        try:
+            plan = row.fin_subscription_plan
+            product = row.fin_product
+        except AttributeError:
+            plan = row
+            product = None
+
+        if product:
+            reprstr = "%s: %s" % (product.name, plan.name)
+        else:
+            reprstr = plan.name
+
+        return reprstr
 
 # =============================================================================
 def fin_rheader(r, tabs=None):
