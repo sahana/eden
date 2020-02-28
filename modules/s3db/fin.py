@@ -690,6 +690,15 @@ class FinSubscriptionModel(S3Model):
         # Subscription
         # - track subscriptions and their status
         #
+        subscription_statuses = {
+            "NEW": T("Registration Pending"),
+            "APPROVAL_PENDING": T("Approval Pending"),
+            "APPROVED": T("Approved"), # but not yet activated
+            "ACTIVE": T("Active"),
+            "SUSPENDED": T("Suspended"),
+            "CANCELLED": T("Cancelled"),
+            "EXPIRED": T("Expired"),
+            }
         tablename = "fin_subscription"
         define_table(tablename,
                      self.super_link("pe_id", "pr_pentity",
@@ -704,6 +713,15 @@ class FinSubscriptionModel(S3Model):
                      self.fin_service_id(ondelete = "CASCADE",
                                          writable = False,
                                          ),
+                     Field("status",
+                           default = "NEW",
+                           requires = IS_IN_SET(subscription_statuses,
+                                                zero = None,
+                                                ),
+                           represent = S3Represent(options=subscription_statuses,
+                                                   ),
+                           writable = False,
+                           ),
                      Field("refno",
                            label = T("Reference Number"),
                            writable = False,

@@ -891,4 +891,212 @@ class PayPalAdapter(S3PaymentService):
 
         return True
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_subscriber_info(pe_id):
+        """
+            TODO docstring
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Look up subscriber type
+        petable = s3db.pr_pentity
+        query = (petable.pe_id == pe_id) & \
+                (petable.deleted == False)
+        entity = db(query).select(petable.instance_type,
+                                  limitby = (0, 1),
+                                  ).first()
+        if not entity:
+            return None, "Unknown subscriber #%s" % pe_id
+
+        subscriber_type = entity.instance_type
+        etable = s3db.table(subscriber_type)
+        if not etable:
+            return None, "Unknown subscriber type"
+
+        # Look up subscriber name
+        query = (etable.pe_id == pe_id) & \
+                (etable.deleted == False)
+        if subscriber_type == "org_organisation":
+            row = db(query).select(etable.name,
+                                   limitby = (0, 1),
+                                   ).first()
+            name = {"given_name": row.name,
+                    }
+        elif subscriber_type == "pr_person":
+            row = db(query).select(etable.first_name,
+                                   etable.last_name,
+                                   limitby = (0, 1),
+                                   ).first()
+            name = {"given_name": row.first_name,
+                    "surname": row.last_name,
+                    }
+        else:
+            return None, "Invalid subscriber type %s" % subscriber_type
+
+        subscriber = {"name": name}
+
+        # Look up subscriber email-address
+        ctable = s3db.pr_contact
+        query = (ctable.pe_id == pe_id) & \
+                (ctable.contact_method == "EMAIL") & \
+                ((ctable.access == 2) | (ctable.access == None)) & \
+                (ctable.deleted == False)
+        row = db(query).select(ctable.value,
+                               orderby = ctable.priority,
+                               limitby = (0, 1),
+                               ).first()
+        if row:
+            subscriber["email_address"] = row.value
+
+        return subscriber, None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_merchant_name(product_id):
+        """
+            TODO docstring
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        ptable = s3db.fin_product
+        otable = s3db.org_organisation
+        query = (ptable.id == product_id) & \
+                (otable.id == ptable.organisation_id) & \
+                (ptable.deleted == False)
+        row = db(query).select(otable.name,
+                               limitby = (0, 1),
+                               ).first()
+
+        return row.name if row else None
+
+    # -------------------------------------------------------------------------
+    def register_subscription(self, plan_id, pe_id):
+        """
+            TODO docstring
+        """
+
+        action = "Register subscription for subscriber #%s with plan #%s" % (pe_id, plan_id)
+
+        db = current.db
+        s3db = current.s3db
+
+        # Lookup subscription plan
+        sptable = s3db.fin_subscription_plan
+        query = (sptable.id == plan_id) & \
+                (sptable.status != "INACTIVE") & \
+                (sptable.deleted == False)
+        plan = db(query).select(sptable.id,
+                                sptable.product_id,
+                                limitby = (0, 1),
+                                ).first()
+        if not plan:
+            self.log.fatal(action, "Subscription plan not found")
+            return None
+
+        # Make sure subscription plan is registered with this service
+        if not self.has_subscription_plan(plan_id) and \
+           not self.register_subscription_plan(plan_id):
+            self.log.fatal(action, "Could not register subscription plan #%s" % plan_id)
+            return None
+
+        # Look up subscription plan reference number
+        ltable = s3db.fin_subscription_plan_service
+        query = (ltable.plan_id == plan_id) & \
+                (ltable.service_id == self.service_id) & \
+                (ltable.deleted == False)
+        registration = db(query).select(ltable.refno,
+                                        limitby = (0, 1),
+                                        ).first()
+        refno = registration.refno
+
+        # Look up merchant
+        merchant = self.get_merchant_name(plan.product_id)
+        if not merchant:
+            self.log.warning(action, "Unknown merchant")
+            merchant = "Unknown"
+
+        # Look up subscriber
+        subscriber, error = self.get_subscriber_info(pe_id)
+        if error:
+            self.log.fatal(action, error)
+            return None
+
+        # Create the subscription record (registration pending),
+        stable = s3db.fin_subscription
+        subscription_id = stable.insert(plan_id = plan_id,
+                                        service_id = self.service_id,
+                                        pe_id = pe_id,
+                                        #status = "NEW",
+                                        )
+        if not subscription_id:
+            self.log.fatal(action, "Could not create subscription")
+            return None
+
+        # TODO Generate the RETURN/CANCEL URLs from the record ID
+        return_url = "https://example.com/returnUrl"
+        cancel_url = "https://example.com/cancelUrl"
+
+        application = {"brand_name": merchant,
+                       "locale": "en-US",
+                       "shipping_preference": "NO_SHIPPING",
+                       # With user_action=="CONTINUE", a separate API request
+                       # is required to activate the subscription, whereas
+                       # "SUBSCRIBE_NOW" will auto-activate it after the
+                       # consensus dialog is completed
+                       "user_action": "SUBSCRIBE_NOW",
+
+                       "payment_method": {
+                           "payer_selected": "PAYPAL",
+                           "payee_preferred": "IMMEDIATE_PAYMENT_REQUIRED"
+                           },
+
+                       # The URLs to return to upon approval/cancel:
+                       "return_url": return_url,
+                       "cancel_url": cancel_url,
+                       }
+
+        data = {"plan_id": refno, # Get from fin_subscription_plan
+                "start_time": "2019-03-27T06:00:00Z",    # Set to now
+                "subscriber": subscriber,
+                "application_context": application,
+                }
+
+        response, status, error = self.http(method = "POST",
+                                            path = "/v1/billing/subscriptions",
+                                            data = data,
+                                            auth = "Token",
+                                            )
+
+        if error:
+            reason = ("%s %s" % (status, error)) if status else error
+            self.log.error(action, reason)
+            # TODO remove the subscription record
+            return None
+        else:
+            self.log.success(action)
+
+            # Returns JSON:
+            # TODO store ID and approval-link in subscription record
+            #      then return the approval URL
+            approval_url = None
+            #{"id": "I-KK24TMKLGR0P",
+             #"links": [
+                 ## Need to extract and store/return this link:
+                #{
+                  #"href": "https://www.sandbox.paypal.com/webapps/billing/subscriptions?ba_token=BA-5G371300PF745064S",
+                  #"rel": "approve",
+                  #"method": "GET"
+                #},
+                #...
+              #],
+              #"status": "APPROVAL_PENDING",
+            #}
+
+        return approval_url
+
 # END =========================================================================
