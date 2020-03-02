@@ -35,7 +35,7 @@ import datetime
 import json
 import sys
 
-from gluon import current
+from gluon import current, URL
 
 from s3compat import PY2, HTTPError, URLError, urlencode, urllib2
 from .s3rest import S3Method
@@ -1095,10 +1095,7 @@ class PayPalAdapter(S3PaymentService):
             self.log.fatal(action, "Could not create subscription")
             return None
 
-        # TODO Generate the RETURN/CANCEL URLs from the record ID
-        return_url = "https://example.com/returnUrl"
-        cancel_url = "https://example.com/cancelUrl"
-
+        # Subscription application details
         application = {"brand_name": merchant,
                        "locale": "en-US",
                        "shipping_preference": "NO_SHIPPING",
@@ -1112,14 +1109,21 @@ class PayPalAdapter(S3PaymentService):
                            "payer_selected": "PAYPAL",
                            "payee_preferred": "IMMEDIATE_PAYMENT_REQUIRED"
                            },
-
                        # The URLs to return to upon approval/cancel:
-                       "return_url": return_url,
-                       "cancel_url": cancel_url,
+                       "return_url": URL(c = "fin",
+                                         f = "subscription",
+                                         args = [subscription_id, "confirm"],
+                                         ),
+                       "cancel_url": URL(c = "fin",
+                                         f = "subscription",
+                                         args = [subscription_id, "cancel"],
+                                         ),
                        }
 
-        data = {"plan_id": refno, # Get from fin_subscription_plan
-                "start_time": "2019-03-27T06:00:00Z",    # Set to now
+        data = {"plan_id": refno,
+                "start_time": datetime.datetime.utcnow() \
+                                               .replace(microsecond=0) \
+                                               .isoformat() + "Z",
                 "subscriber": subscriber,
                 "application_context": application,
                 }
@@ -1133,7 +1137,7 @@ class PayPalAdapter(S3PaymentService):
         if error:
             reason = ("%s %s" % (status, error)) if status else error
             self.log.error(action, reason)
-            # TODO remove the subscription record
+            db(stable.id==subscription_id).delete()
             return None
         else:
             self.log.success(action)
