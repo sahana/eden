@@ -221,6 +221,18 @@ class S3PaymentService(object):
         raise NotImplementedError
 
     # -------------------------------------------------------------------------
+    def register_subscription(self, plan_id, pe_id):
+        """
+            Register a subscription with this service
+
+            @param plan_id: the subscription plan ID
+            @param pe_id: the subscriber PE ID
+
+            @returns: a URL to approve the subscription
+        """
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
     # Utility Functions
     # -------------------------------------------------------------------------
     def http(self,
@@ -438,6 +450,104 @@ class S3PaymentService(object):
                                        ).first()
 
         return row.is_registered if row else False
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_subscriber_info(pe_id):
+        """
+            Retrieve information about the subscriber from the DB
+
+            @param pe_id: the PE ID of the subscriber
+
+            @returns: a tuple (info, error), where info is a dict like:
+                        {"first_name": first or only name
+                         "last_name":  last name
+                         "email":      email address
+                         }
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        subscriber = {}
+
+        # Look up subscriber type
+        petable = s3db.pr_pentity
+        query = (petable.pe_id == pe_id) & \
+                (petable.deleted == False)
+        entity = db(query).select(petable.instance_type,
+                                  limitby = (0, 1),
+                                  ).first()
+        if not entity:
+            return None, "Unknown subscriber #%s" % pe_id
+
+        subscriber_type = entity.instance_type
+        etable = s3db.table(subscriber_type)
+        if not etable:
+            return None, "Unknown subscriber type"
+
+        # Look up subscriber name
+        query = (etable.pe_id == pe_id) & \
+                (etable.deleted == False)
+        if subscriber_type == "org_organisation":
+            row = db(query).select(etable.name,
+                                   limitby = (0, 1),
+                                   ).first()
+            subscriber["first_name"] = row.name
+        elif subscriber_type == "pr_person":
+            row = db(query).select(etable.first_name,
+                                   etable.last_name,
+                                   limitby = (0, 1),
+                                   ).first()
+            subscriber["first_name"] = row.first_name
+            subscriber["last_name"] = row.last_name
+        else:
+            return None, "Invalid subscriber type %s" % subscriber_type
+
+        # Look up subscriber email-address
+        ctable = s3db.pr_contact
+        query = (ctable.pe_id == pe_id) & \
+                (ctable.contact_method == "EMAIL") & \
+                (ctable.deleted == False)
+        # If the user can differentiate between public and private
+        # email addresses, then exclude the private ones
+        setting = current.deployment_settings.get_pr_contacts_tabs()
+        if "private" in setting:
+            query &= ((ctable.access == 2) | (ctable.access == None))
+
+        row = db(query).select(ctable.value,
+                               orderby = ctable.priority,
+                               limitby = (0, 1),
+                               ).first()
+        if row:
+            subscriber["email"] = row.value
+
+        return subscriber, None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_merchant_name(product_id):
+        """
+            Get the merchant name (org name) for a product
+
+            @param product_id: the product ID
+
+            @returns: the name as string, or None if not available
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        ptable = s3db.fin_product
+        otable = s3db.org_organisation
+        query = (ptable.id == product_id) & \
+                (otable.id == ptable.organisation_id) & \
+                (ptable.deleted == False)
+        row = db(query).select(otable.name,
+                               limitby = (0, 1),
+                               ).first()
+
+        return row.name if row else None
 
     # -------------------------------------------------------------------------
     # Factory Method
@@ -895,89 +1005,37 @@ class PayPalAdapter(S3PaymentService):
     @staticmethod
     def get_subscriber_info(pe_id):
         """
-            TODO docstring
+            Retrieve information about the subscriber from the DB
+
+            @param pe_id: the PE ID of the subscriber
+
+            @returns: a tuple (info, error)
         """
 
-        db = current.db
-        s3db = current.s3db
-
-        # Look up subscriber type
-        petable = s3db.pr_pentity
-        query = (petable.pe_id == pe_id) & \
-                (petable.deleted == False)
-        entity = db(query).select(petable.instance_type,
-                                  limitby = (0, 1),
-                                  ).first()
-        if not entity:
-            return None, "Unknown subscriber #%s" % pe_id
-
-        subscriber_type = entity.instance_type
-        etable = s3db.table(subscriber_type)
-        if not etable:
-            return None, "Unknown subscriber type"
-
-        # Look up subscriber name
-        query = (etable.pe_id == pe_id) & \
-                (etable.deleted == False)
-        if subscriber_type == "org_organisation":
-            row = db(query).select(etable.name,
-                                   limitby = (0, 1),
-                                   ).first()
-            name = {"given_name": row.name,
-                    }
-        elif subscriber_type == "pr_person":
-            row = db(query).select(etable.first_name,
-                                   etable.last_name,
-                                   limitby = (0, 1),
-                                   ).first()
-            name = {"given_name": row.first_name,
-                    "surname": row.last_name,
-                    }
+        info, error = S3PaymentService.get_subscriber_info(pe_id)
+        if error:
+            return None, error
         else:
-            return None, "Invalid subscriber type %s" % subscriber_type
-
-        subscriber = {"name": name}
-
-        # Look up subscriber email-address
-        ctable = s3db.pr_contact
-        query = (ctable.pe_id == pe_id) & \
-                (ctable.contact_method == "EMAIL") & \
-                ((ctable.access == 2) | (ctable.access == None)) & \
-                (ctable.deleted == False)
-        row = db(query).select(ctable.value,
-                               orderby = ctable.priority,
-                               limitby = (0, 1),
-                               ).first()
-        if row:
-            subscriber["email_address"] = row.value
+            # Map info to PayPal-specific structure
+            name = {"given_name": info["first_name"],
+                    }
+            if "last_name" in info:
+                name["surname"] = info["last_name"]
+            subscriber = {"name": name}
+            if "email" in info:
+                subscriber["email_address"] = info["email"]
 
         return subscriber, None
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def get_merchant_name(product_id):
-        """
-            TODO docstring
-        """
-
-        db = current.db
-        s3db = current.s3db
-
-        ptable = s3db.fin_product
-        otable = s3db.org_organisation
-        query = (ptable.id == product_id) & \
-                (otable.id == ptable.organisation_id) & \
-                (ptable.deleted == False)
-        row = db(query).select(otable.name,
-                               limitby = (0, 1),
-                               ).first()
-
-        return row.name if row else None
-
-    # -------------------------------------------------------------------------
     def register_subscription(self, plan_id, pe_id):
         """
-            TODO docstring
+            Register a subscription with this service
+
+            @param plan_id: the subscription plan ID
+            @param pe_id: the subscriber PE ID
+
+            @returns: a URL to approve the subscription
         """
 
         action = "Register subscription for subscriber #%s with plan #%s" % (pe_id, plan_id)
