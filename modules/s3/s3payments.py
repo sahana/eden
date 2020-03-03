@@ -228,7 +228,19 @@ class S3PaymentService(object):
             @param plan_id: the subscription plan ID
             @param pe_id: the subscriber PE ID
 
-            @returns: a URL to approve the subscription
+            @returns: the record ID of the newly created subscription
+        """
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    def check_subscription(self, subscription_id):
+        """
+            Check the current status of a subscription (and update it
+            in the database)
+
+            @param subscription_id: the subscription record ID
+
+            @returns: the current status of the subscription, or None on error
         """
         raise NotImplementedError
 
@@ -1035,7 +1047,7 @@ class PayPalAdapter(S3PaymentService):
             @param plan_id: the subscription plan ID
             @param pe_id: the subscriber PE ID
 
-            @returns: a URL to approve the subscription
+            @returns: the record ID of the newly created subscription
         """
 
         action = "Register subscription for subscriber #%s with plan #%s" % (pe_id, plan_id)
@@ -1095,6 +1107,13 @@ class PayPalAdapter(S3PaymentService):
             self.log.fatal(action, "Could not create subscription")
             return None
 
+        # The URL to return to upon approval/cancel:
+        status_url = URL(c = "fin",
+                         f = "subscription",
+                         args = [subscription_id, "confirm"],
+                         host = True,
+                         )
+
         # Subscription application details
         application = {"brand_name": merchant,
                        "locale": "en-US",
@@ -1109,15 +1128,8 @@ class PayPalAdapter(S3PaymentService):
                            "payer_selected": "PAYPAL",
                            "payee_preferred": "IMMEDIATE_PAYMENT_REQUIRED"
                            },
-                       # The URLs to return to upon approval/cancel:
-                       "return_url": URL(c = "fin",
-                                         f = "subscription",
-                                         args = [subscription_id, "confirm"],
-                                         ),
-                       "cancel_url": URL(c = "fin",
-                                         f = "subscription",
-                                         args = [subscription_id, "cancel"],
-                                         ),
+                       "return_url": status_url,
+                       "cancel_url": status_url,
                        }
 
         data = {"plan_id": refno,
@@ -1139,26 +1151,70 @@ class PayPalAdapter(S3PaymentService):
             self.log.error(action, reason)
             db(stable.id==subscription_id).delete()
             return None
-        else:
-            self.log.success(action)
 
-            # Returns JSON:
-            # TODO store ID and approval-link in subscription record
-            #      then return the approval URL
-            approval_url = None
-            #{"id": "I-KK24TMKLGR0P",
-             #"links": [
-                 ## Need to extract and store/return this link:
-                #{
-                  #"href": "https://www.sandbox.paypal.com/webapps/billing/subscriptions?ba_token=BA-5G371300PF745064S",
-                  #"rel": "approve",
-                  #"method": "GET"
-                #},
-                #...
-              #],
-              #"status": "APPROVAL_PENDING",
-            #}
+        # Extract the subscription reference (ID)
+        ref = response["id"]
+        if not ref:
+            self.log.error(action, "No subscription reference received")
+            db(stable.id==subscription_id).delete()
+            return None
 
-        return approval_url
+        # Get the approval URL
+        links = response["links"]
+        for link in links:
+            if link["rel"] == "approve":
+                approval_url = link["href"]
+                break
+
+        # Store reference and approval URL
+        db(stable.id==subscription_id).update(refno = ref,
+                                              approval_url = approval_url,
+                                              )
+        self.log.success(action)
+        return subscription_id
+
+    # -------------------------------------------------------------------------
+    def check_subscription(self, subscription_id):
+        """
+            Check the current status of a subscription (and update it
+            in the database)
+
+            @param subscription_id: the subscription record ID
+
+            @returns: the current status of the subscription, or None on error
+        """
+
+        action = "Check subscription #%s" % subscription_id
+
+        db = current.db
+        s3db = current.s3db
+
+        stable = s3db.fin_subscription
+        row = db(stable.id == subscription_id).select(stable.refno,
+                                                      limitby = (0, 1),
+                                                      ).first()
+        if not row:
+            self.log.error(action, "Subscription not found")
+            return None
+
+        status_path = "/v1/billing/subscriptions/%s" % row.refno
+        response, status, error = self.http(method = "GET",
+                                            path = status_path,
+                                            auth = "Token",
+                                            )
+        if error:
+            reason = ("%s %s" % (status, error)) if status else error
+            self.log.error(action, reason)
+            return None
+
+        status = response.get("status")
+        if status:
+            db(stable.id==subscription_id).update(
+                            status=status,
+                            status_date = datetime.datetime.utcnow(),
+                            )
+
+        self.log.success(action)
+        return status
 
 # END =========================================================================

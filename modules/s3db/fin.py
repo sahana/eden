@@ -691,13 +691,13 @@ class FinSubscriptionModel(S3Model):
         # - track subscriptions and their status
         #
         subscription_statuses = {
-            "NEW": T("Registration Pending"),
+            "NEW":              T("Registration Pending"),
             "APPROVAL_PENDING": T("Approval Pending"),
-            "APPROVED": T("Approved"), # but not yet activated
-            "ACTIVE": T("Active"),
-            "SUSPENDED": T("Suspended"),
-            "CANCELLED": T("Cancelled"),
-            "EXPIRED": T("Expired"),
+            "APPROVED":         T("Approved"), # but not yet activated
+            "ACTIVE":           T("Active"),
+            "SUSPENDED":        T("Suspended"),
+            "CANCELLED":        T("Cancelled"),
+            "EXPIRED":          T("Expired"),
             }
         tablename = "fin_subscription"
         define_table(tablename,
@@ -722,8 +722,17 @@ class FinSubscriptionModel(S3Model):
                                                    ),
                            writable = False,
                            ),
+                     s3_datetime("status_date",
+                                 label = T("Status verified on"),
+                                 default = "now",
+                                 writable = False,
+                                 ),
                      Field("refno",
                            label = T("Reference Number"),
+                           writable = False,
+                           ),
+                     Field("approval_url",
+                           label = T("Approval URL"),
                            writable = False,
                            ),
                      *s3_meta_fields())
