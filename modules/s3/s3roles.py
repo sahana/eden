@@ -1413,32 +1413,8 @@ class S3PermissionWidget(object):
         if use_tacls:
             widget_opts["models"] = self.get_active_models()
 
-        # Localized strings for client-side widget
-        i18n = {"rm_Add": T("Add"),
-                "rm_AddRule": T("Add Rule"),
-                "rm_AllEntities": T("All Entities"),
-                "rm_AllRecords": T("All Records"),
-                "rm_AssignedEntities": T("Assigned Entities"),
-                "rm_Cancel": T("Cancel"),
-                "rm_CollapseAll": T("Collapse All"),
-                "rm_ConfirmDeleteRule": T("Do you want to delete this rule?"),
-                "rm_Default": T("default"),
-                "rm_DeleteRule": T("Delete"),
-                "rm_ExpandAll": T("Expand All"),
-                "rm_NoAccess": T("No access"),
-                "rm_NoRestrictions": T("No restrictions"),
-                "rm_Others": T("Others"),
-                "rm_OwnedRecords": T("Owned Records"),
-                "rm_Page": T("Page"),
-                "rm_RestrictedTables": T("Restricted Tables"),
-                "rm_Scope": T("Scope"),
-                "rm_SystemTables": T("System Tables"),
-                "rm_Table": T("Table"),
-                "rm_UnrestrictedTables": T("Unrestricted Tables"),
-                }
-
         # Inject the client-side script
-        self.inject_script(widget_id, widget_opts, i18n)
+        self.inject_script(widget_id, widget_opts)
 
         return widget
 
@@ -1456,7 +1432,7 @@ class S3PermissionWidget(object):
 
         # Active modules
         modules = current.deployment_settings.modules
-        active= {k: (s3_str(modules[k].name_nice), modules[k].restricted)
+        active= {k: (s3_str(modules[k].name_nice), modules[k].get("restricted", True))
                  for k in modules if k not in exclude
                  }
 
@@ -1618,16 +1594,13 @@ class S3PermissionWidget(object):
         return default_permissions
 
     # -------------------------------------------------------------------------
-    def inject_script(self, widget_id, options, i18n):
+    def inject_script(self, widget_id, options):
         """
             Inject the necessary JavaScript for the widget
 
             @param widget_id: the widget ID
                               (=element ID of the person_id field)
             @param options: JSON-serializable dict of widget options
-            @param i18n: translations of screen messages rendered by
-                         the client-side script,
-                         a dict {messageKey: translation}
         """
 
         s3 = current.response.s3
@@ -1642,7 +1615,7 @@ class S3PermissionWidget(object):
         scripts = s3.scripts
         if script not in scripts:
             scripts.append(script)
-            self.inject_i18n(i18n)
+            self.inject_i18n()
 
         # Widget options
         opts = {}
@@ -1660,16 +1633,44 @@ class S3PermissionWidget(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inject_i18n(labels):
+    def inject_i18n():
         """
             Inject translations for screen messages rendered by the
             client-side script
-
-            @param labels: dict of translations {messageKey: translation}
         """
 
+        if current.session.s3.language == "en":
+            # No need to translate
+            return
+
+        T = current.T
+
+        # Localized strings for client-side widget
+        i18n = {"rm_Add": T("Add"),
+                "rm_AddRule": T("Add Rule"),
+                "rm_AllEntities": T("All Entities"),
+                "rm_AllRecords": T("All Records"),
+                "rm_AssignedEntities": T("Assigned Entities"),
+                "rm_Cancel": T("Cancel"),
+                "rm_CollapseAll": T("Collapse All"),
+                "rm_ConfirmDeleteRule": T("Do you want to delete this rule?"),
+                "rm_Default": T("default"),
+                "rm_DeleteRule": T("Delete"),
+                "rm_ExpandAll": T("Expand All"),
+                "rm_NoAccess": T("No access"),
+                "rm_NoRestrictions": T("No restrictions"),
+                "rm_Others": T("Others"),
+                "rm_OwnedRecords": T("Owned Records"),
+                "rm_Page": T("Page"),
+                "rm_RestrictedTables": T("Restricted Tables"),
+                "rm_Scope": T("Scope"),
+                "rm_SystemTables": T("System Tables"),
+                "rm_Table": T("Table"),
+                "rm_UnrestrictedTables": T("Unrestricted Tables"),
+                }
+
         strings = ['''i18n.%s="%s"''' % (k, s3_str(v))
-                                        for k, v in labels.items()]
+                                        for k, v in i18n.items()]
         current.response.s3.js_global.append("\n".join(strings))
 
 # =============================================================================
