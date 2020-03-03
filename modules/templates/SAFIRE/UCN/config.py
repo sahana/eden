@@ -15,6 +15,9 @@ def config(settings):
 
     settings.ui.menu_logo = "/%s/static/themes/UCN/img/logo.png" % current.request.application
 
+    # PrePopulate data
+    settings.base.prepopulate.append("SAFIRE/UCN")
+
     settings.L10n.display_toolbar = False
 
     settings.event.label = "Disaster"

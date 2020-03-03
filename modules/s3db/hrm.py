@@ -2488,6 +2488,13 @@ class S3HRSkillModel(S3Model):
                            readable = course_pass_marks,
                            writable = course_pass_marks,
                            ),
+                     Field("url",
+                           label = T("URL"),
+                           requires = IS_EMPTY_OR(
+                                        IS_URL()
+                                        ),
+                           represent = s3_url_represent,
+                           ),
                      s3_comments(label = T("Description"),
                                  comment = None,
                                  ),
