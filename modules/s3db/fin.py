@@ -699,11 +699,15 @@ class FinSubscriptionModel(S3Model):
             "CANCELLED":        T("Cancelled"),
             "EXPIRED":          T("Expired"),
             }
+
+        subscriber_represent = self.pr_PersonEntityRepresent(show_label=False)
+
         tablename = "fin_subscription"
         define_table(tablename,
                      self.super_link("pe_id", "pr_pentity",
                                      label = T("Subscriber"),
                                      ondelete = "RESTRICT",
+                                     represent = subscriber_represent,
                                      readable = True,
                                      writable = False,
                                      ),
@@ -741,12 +745,23 @@ class FinSubscriptionModel(S3Model):
                        list_fields = ["pe_id",
                                       "plan_id",
                                       "service_id",
-                                      "refno",
+                                      "status",
                                       ],
                        insertable = False,
                        editable = False,
                        deletable = False,
                        )
+
+        # Configure payment service callback methods
+        from s3.s3payments import S3Payments
+        self.set_method("fin", "subscription",
+                        method = "confirm",
+                        action = S3Payments,
+                        )
+        self.set_method("fin", "subscription",
+                        method = "cancel",
+                        action = S3Payments,
+                        )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(

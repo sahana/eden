@@ -46,9 +46,54 @@ from .s3validators import JSONERRORS
 class S3Payments(S3Method):
     """ REST Methods to interact with online payment services """
 
-    # TODO implement
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Page-render entry point for REST interface.
 
-    pass
+            @param r: the S3Request instance
+            @param attr: controller attributes
+        """
+
+        output = {}
+        if r.http == "GET":
+            method = r.method
+            if method == "confirm":
+                output = self.confirm_subscription(r, **attr)
+            elif method == "cancel":
+                output = self.cancel_subscription(r, **attr)
+            else:
+                r.error(405, current.ERROR.BAD_METHOD)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def confirm_subscription(self, r, **attr):
+        """
+            Check subscription status and trigger automated fulfillment
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+        """
+
+        # TODO implement
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    def cancel_subscription(self, r, **attr):
+        """
+            Check subscription status and trigger automated cancelation
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+        """
+
+        # TODO implement
+
+        return {}
 
 # =============================================================================
 class S3PaymentLog(object):
@@ -1208,25 +1253,33 @@ class PayPalAdapter(S3PaymentService):
                                             auth = "Token",
                                             )
         if error:
-            reason = ("%s %s" % (status, error)) if status else error
-            self.log.error(action, reason)
-            return None
-
-        subscription_status = response.get("status")
-        if subscription_status:
-            self.log.success(action)
+            if status == 404:
+                # Subscription does not exist
+                self.log.warning(action, "Subscription not found")
+                subscription_status = "CANCELLED"
+            else:
+                # Status-Check failed
+                reason = ("%s %s" % (status, error)) if status else error
+                self.log.error(action, reason)
+                return None
         else:
-            subscription_status = None
-            self.log.warning(action, "Unclear subscription status")
+            # Read subscription status from response
+            subscription_status = response.get("status")
+            if subscription_status:
+                self.log.success(action)
+            else:
+                subscription_status = None
+                self.log.warning(action, "Unclear subscription status")
 
         # Update status in any case (even if None), so callbacks
         # can take appropriate action
-        db(stable.id==subscription_id).update(
-                        status = subscription_status,
-                        status_date = datetime.datetime.utcnow(),
-                        )
+        data = {"status": subscription_status,
+                "status_date": datetime.datetime.utcnow()
+                }
+        db(stable.id==subscription_id).update(**data)
         # Call onaccept to trigger automated fulfillment/cancelation actions
-        s3db.onaccept(stable, subscription_id, method="update")
+        data["id"] = subscription_id
+        s3db.onaccept(stable, data, method="update")
 
         return subscription_status
 
