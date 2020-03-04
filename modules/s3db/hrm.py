@@ -2075,8 +2075,6 @@ class S3HRSkillModel(S3Model):
         else:
             filter_opts = (None,)
 
-        group = request.get_vars.get("group", None)
-
         c = current.request.controller
         if c not in ("hrm", "vol"):
             c = "hrm"
