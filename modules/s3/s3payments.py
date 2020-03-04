@@ -1108,9 +1108,14 @@ class PayPalAdapter(S3PaymentService):
             return None
 
         # The URL to return to upon approval/cancel:
-        status_url = URL(c = "fin",
+        return_url = URL(c = "fin",
                          f = "subscription",
                          args = [subscription_id, "confirm"],
+                         host = True,
+                         )
+        cancel_url = URL(c = "fin",
+                         f = "subscription",
+                         args = [subscription_id, "cancel"],
                          host = True,
                          )
 
@@ -1128,14 +1133,11 @@ class PayPalAdapter(S3PaymentService):
                            "payer_selected": "PAYPAL",
                            "payee_preferred": "IMMEDIATE_PAYMENT_REQUIRED"
                            },
-                       "return_url": status_url,
-                       "cancel_url": status_url,
+                       "return_url": return_url,
+                       "cancel_url": cancel_url,
                        }
 
         data = {"plan_id": refno,
-                "start_time": datetime.datetime.utcnow() \
-                                               .replace(microsecond=0) \
-                                               .isoformat() + "Z",
                 "subscriber": subscriber,
                 "application_context": application,
                 }
@@ -1150,34 +1152,37 @@ class PayPalAdapter(S3PaymentService):
             reason = ("%s %s" % (status, error)) if status else error
             self.log.error(action, reason)
             db(stable.id==subscription_id).delete()
-            return None
+            subscription_id = None
+        else:
+            # Extract the subscription reference (ID)
+            ref = response["id"]
+            if not ref:
+                self.log.error(action, "No subscription reference received")
+                db(stable.id==subscription_id).delete()
+                return None
 
-        # Extract the subscription reference (ID)
-        ref = response["id"]
-        if not ref:
-            self.log.error(action, "No subscription reference received")
-            db(stable.id==subscription_id).delete()
-            return None
+            # Get the approval URL
+            links = response["links"]
+            for link in links:
+                if link["rel"] == "approve":
+                    approval_url = link["href"]
+                    break
 
-        # Get the approval URL
-        links = response["links"]
-        for link in links:
-            if link["rel"] == "approve":
-                approval_url = link["href"]
-                break
+            # Store reference and approval URL
+            db(stable.id==subscription_id).update(refno = ref,
+                                                  approval_url = approval_url,
+                                                  )
+            self.log.success(action)
 
-        # Store reference and approval URL
-        db(stable.id==subscription_id).update(refno = ref,
-                                              approval_url = approval_url,
-                                              )
-        self.log.success(action)
         return subscription_id
 
     # -------------------------------------------------------------------------
     def check_subscription(self, subscription_id):
         """
-            Check the current status of a subscription (and update it
-            in the database)
+            Check the current status of a subscription and update it
+            in the database; triggers onaccept callback(s) for the
+            subscription to prompt automated fulfillment/cancelation
+            actions
 
             @param subscription_id: the subscription record ID
 
@@ -1207,14 +1212,22 @@ class PayPalAdapter(S3PaymentService):
             self.log.error(action, reason)
             return None
 
-        status = response.get("status")
-        if status:
-            db(stable.id==subscription_id).update(
-                            status=status,
-                            status_date = datetime.datetime.utcnow(),
-                            )
+        subscription_status = response.get("status")
+        if subscription_status:
+            self.log.success(action)
+        else:
+            subscription_status = None
+            self.log.warning(action, "Unclear subscription status")
 
-        self.log.success(action)
-        return status
+        # Update status in any case (even if None), so callbacks
+        # can take appropriate action
+        db(stable.id==subscription_id).update(
+                        status = subscription_status,
+                        status_date = datetime.datetime.utcnow(),
+                        )
+        # Call onaccept to trigger automated fulfillment/cancelation actions
+        s3db.onaccept(stable, subscription_id, method="update")
+
+        return subscription_status
 
 # END =========================================================================
