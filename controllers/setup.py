@@ -84,6 +84,12 @@ def gandi_dns():
                               )
 
 # -----------------------------------------------------------------------------
+def godaddy_dns():
+
+    return s3_rest_controller(#rheader = s3db.setup_rheader,
+                              )
+
+# -----------------------------------------------------------------------------
 def smtp():
 
     return s3_rest_controller(#rheader = s3db.setup_rheader,

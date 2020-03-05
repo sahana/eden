@@ -34,6 +34,7 @@
 
 __all__ = ("S3DNSModel",
            "S3GandiDNSModel",
+           "S3GoDaddyDNSModel",
            "S3CloudModel",
            "S3AWSCloudModel",
            "S3OpenStackCloudModel",
@@ -105,6 +106,7 @@ class S3DNSModel(S3Model):
         # Super entity
         #
         dns_types = Storage(setup_gandi_dns = T("Gandi LiveDNS"),
+                            setup_godaddy_dns = T("GoDaddy"),
                             )
 
         tablename = "setup_dns"
@@ -190,6 +192,57 @@ class S3GandiDNSModel(S3DNSModel):
                           # Currently only supports a single Zone per DNS configuration
                           Field("zone", # UUID
                                 requires = IS_NOT_EMPTY(),
+                                ),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       super_entity = "setup_dns",
+                       )
+
+        # ---------------------------------------------------------------------
+        return {}
+
+# =============================================================================
+class S3GoDaddyDNSModel(S3DNSModel):
+    """
+        GoDaddy DNS
+        - DNS Provider Instance
+
+        https://developer.godaddy.com/
+    """
+
+    names = ("setup_godaddy_dns",)
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        tablename = "setup_gandi_dns"
+        self.define_table(tablename,
+                          self.super_link("dns_id", "setup_dns"),
+                          Field("name",
+                                requires = IS_NOT_EMPTY(),
+                                ),
+                          Field("description"),
+                          #Field("enabled", "boolean",
+                          #      default = True,
+                          #      #label = T("Enabled?"),
+                          #      represent = s3_yes_no_represent,
+                          #      ),
+                          # Currently only supports a single Domain per DNS configuration
+                          Field("domain", # Name
+                                requires = IS_NOT_EMPTY(),
+                                ),
+                          Field("api_key", "password",
+                                readable = False,
+                                requires = IS_NOT_EMPTY(),
+                                widget = S3PasswordWidget(),
+                                ),
+                          Field("secret", "password",
+                                readable = False,
+                                requires = IS_NOT_EMPTY(),
+                                widget = S3PasswordWidget(),
                                 ),
                           *s3_meta_fields())
 
@@ -2247,48 +2300,87 @@ dropdown.change(function() {
                               ]
                 dns_id = deployment.dns_id
                 if dns_id:
-                    # @ToDo: Will need extending when we support multiple DNS Providers
-                    gtable = s3db.setup_gandi_dns
-                    gandi = db(gtable.id == dns_id).select(gtable.api_key,
-                                                           gtable.domain,
-                                                           gtable.zone,
-                                                           limitby = (0, 1)
-                                                           ).first()
-                    gandi_api_key = gandi.api_key
-                    url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
-                    dns_record = sitename.split(".%s" % gandi.domain, 1)[0]
-                    # Delete any existing record
-                    tasks.append({"uri": {"url": "%s/%s" % (url, dns_record),
-                                          "method": "DELETE",
-                                          "headers": {"X-Api-Key": gandi_api_key,
-                                                      },
-                                          "status_code": ["200", "204"],
-                                          },
-                                  # Don't worry if it didn't exist
-                                  "ignore_errors": "yes",
-                                  })
-                    # Create new record
-                    if cloud_type == "setup_aws_cloud":
-                        tasks.append({"uri": {"url": url,
-                                              "method": "POST",
+                    # Lookup the Instance Type
+                    dtable = s3db.setup_dns
+                    dns = db(dtable.dns_id == dns_id).select(dtable.instance_type,
+                                                             limitby = (0, 1)
+                                                             ).first()
+                    dns_type = dns.instance_type
+                    if dns_type == "setup_gandi_dns":
+                        gtable = s3db.setup_gandi_dns
+                        gandi = db(gtable.dns_id == dns_id).select(gtable.api_key,
+                                                                   gtable.domain,
+                                                                   gtable.zone,
+                                                                   limitby = (0, 1)
+                                                                   ).first()
+                        gandi_api_key = gandi.api_key
+                        url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
+                        dns_record = sitename.split(".%s" % gandi.domain, 1)[0]
+                        # Delete any existing record
+                        tasks.append({"uri": {"url": "%s/%s" % (url, dns_record),
+                                              "method": "DELETE",
                                               "headers": {"X-Api-Key": gandi_api_key,
                                                           },
-                                              "body_format": "json", # Content-Type: application/json
-                                              "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ item.public_ip }}"]}' % dns_record,
-                                              "status_code": ["200", "201"],
+                                              "status_code": ["200", "204"],
                                               },
-                                      "loop": "{{ ec2.instances }}",
+                                      # Don't worry if it didn't exist
+                                      "ignore_errors": "yes",
                                       })
-                    elif cloud_type == "setup_openstack_cloud":
-                        tasks.append({"uri": {"url": url,
-                                              "method": "POST",
-                                              "headers": {"X-Api-Key": gandi_api_key,
-                                                          },
-                                              "body_format": "json", # Content-Type: application/json
-                                              "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ openstack.openstack.public_v4 }}"]}' % dns_record,
-                                              "status_code": ["200", "201"],
-                                              },
-                                      })
+                        # Create new record
+                        if cloud_type == "setup_aws_cloud":
+                            tasks.append({"uri": {"url": url,
+                                                  "method": "POST",
+                                                  "headers": {"X-Api-Key": gandi_api_key,
+                                                              },
+                                                  "body_format": "json", # Content-Type: application/json
+                                                  "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ item.public_ip }}"]}' % dns_record,
+                                                  "status_code": ["200", "201"],
+                                                  },
+                                          "loop": "{{ ec2.instances }}",
+                                          })
+                        elif cloud_type == "setup_openstack_cloud":
+                            tasks.append({"uri": {"url": url,
+                                                  "method": "POST",
+                                                  "headers": {"X-Api-Key": gandi_api_key,
+                                                              },
+                                                  "body_format": "json", # Content-Type: application/json
+                                                  "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["{{ openstack.openstack.public_v4 }}"]}' % dns_record,
+                                                  "status_code": ["200", "201"],
+                                                  },
+                                          })
+                    elif dns_type == "setup_godaddy_dns":
+                        gtable = s3db.setup_godaddy_dns
+                        godaddy = db(gtable.dns_id == dns_id).select(gtable.domain,
+                                                                     gtable.api_key,
+                                                                     gtable.secret,
+                                                                     limitby = (0, 1)
+                                                                     ).first()
+                        domain = godaddy.domain
+                        dns_record = sitename.split(".%s" % domain, 1)[0]
+                        url = "https://api.godaddy.com/v1/domains/%s/records/A/%s" % (domain, dns_record)
+                        # No need to delete existing record (can't anyway!)
+                        # Create new record or replace existing
+                        if cloud_type == "setup_aws_cloud":
+                            tasks.append({"uri": {"url": url,
+                                                  "method": "PUT",
+                                                  "headers": {"Authorization": "sso-key %s:%s" % (godaddy.api_key, godaddy.secret),
+                                                              },
+                                                  "body_format": "json", # Content-Type: application/json
+                                                  "body": '[{"name": "%s", "type": "A", "ttl": 10800, "data": "{{ item.public_ip }}"}]' % dns_record,
+                                                  "status_code": ["200"],
+                                                  },
+                                          "loop": "{{ ec2.instances }}",
+                                          })
+                        elif cloud_type == "setup_openstack_cloud":
+                            tasks.append({"uri": {"url": url,
+                                                  "method": "PUT",
+                                                  "headers": {"Authorization": "sso-key %s:%s" % (godaddy.api_key, godaddy.secret),
+                                                              },
+                                                  "body_format": "json", # Content-Type: application/json
+                                                  "body": '[{"name": "%s", "type": "A", "ttl": 10800, "data": "{{ openstack.openstack.public_v4 }}"}]' % dns_record,
+                                                  "status_code": ["200"],
+                                                  },
+                                          })
                 else:
                     current.session.warning = current.T("Deployment will not have SSL: No DNS Provider configured to link to new server IP Address")
                     # @ToDo: Support Elastic IPs
@@ -2330,37 +2422,64 @@ dropdown.change(function() {
                     tasks = []
                     dns_id = deployment.dns_id
                     if dns_id:
-                        # @ToDo: Will need extending when we support multiple DNS Providers
-                        gtable = s3db.setup_gandi_dns
-                        gandi = db(gtable.id == dns_id).select(gtable.api_key,
-                                                               gtable.domain,
-                                                               gtable.zone,
-                                                               limitby = (0, 1)
-                                                               ).first()
-                        gandi_api_key = gandi.api_key
-                        url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
-                        dns_record = sitename.split(".%s" % gandi.domain, 1)[0]
-                        tasks += [# Delete any existing record
-                                  {"uri": {"url": "%s/%s" % (url, dns_record),
-                                           "method": "DELETE",
-                                           "headers": {"X-Api-Key": gandi_api_key,
-                                                       },
-                                           "status_code": ["200", "204"],
-                                           },
-                                   # Don't worry if it didn't exist
-                                   "ignore_errors": "yes",
-                                   },
-                                  # Create new record
-                                  {"uri": {"url": url,
-                                           "method": "POST",
-                                           "headers": {"X-Api-Key": gandi_api_key,
-                                                       },
-                                           "body_format": "json", # Content-Type: application/json
-                                           "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["%s"]}' % (dns_record, host_ip),
-                                           "status_code": ["200", "201"],
-                                           },
-                                   },
-                                  ]
+                        # Lookup the Instance Type
+                        dtable = s3db.setup_dns
+                        dns = db(dtable.dns_id == dns_id).select(dtable.instance_type,
+                                                                 limitby = (0, 1)
+                                                                 ).first()
+                        dns_type = dns.instance_type
+                        if dns_type == "setup_gandi_dns":
+                            gtable = s3db.setup_gandi_dns
+                            gandi = db(gtable.dns_id == dns_id).select(gtable.api_key,
+                                                                       gtable.domain,
+                                                                       gtable.zone,
+                                                                       limitby = (0, 1)
+                                                                       ).first()
+                            gandi_api_key = gandi.api_key
+                            url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
+                            dns_record = sitename.split(".%s" % gandi.domain, 1)[0]
+                            tasks += [# Delete any existing record
+                                      {"uri": {"url": "%s/%s" % (url, dns_record),
+                                               "method": "DELETE",
+                                               "headers": {"X-Api-Key": gandi_api_key,
+                                                           },
+                                               "status_code": ["200", "204"],
+                                               },
+                                       # Don't worry if it didn't exist
+                                       "ignore_errors": "yes",
+                                       },
+                                      # Create new record
+                                      {"uri": {"url": url,
+                                               "method": "POST",
+                                               "headers": {"X-Api-Key": gandi_api_key,
+                                                           },
+                                               "body_format": "json", # Content-Type: application/json
+                                               "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["%s"]}' % (dns_record, host_ip),
+                                               "status_code": ["200", "201"],
+                                               },
+                                       },
+                                      ]
+                        elif dns_type == "setup_godaddy_dns":
+                            gtable = s3db.setup_godaddy_dns
+                            godaddy = db(gtable.dns_id == dns_id).select(gtable.domain,
+                                                                         gtable.api_key,
+                                                                         gtable.secret,
+                                                                         limitby = (0, 1)
+                                                                         ).first()
+                            domain = godaddy.domain
+                            dns_record = sitename.split(".%s" % domain, 1)[0]
+                            url = "https://api.godaddy.com/v1/domains/%s/records/A/%s" % (domain, dns_record)
+                            # No need to delete existing record (can't anyway!)
+                            # Create new record or replace existing
+                            tasks.append({"uri": {"url": url,
+                                                  "method": "PUT",
+                                                  "headers": {"Authorization": "sso-key %s:%s" % (godaddy.api_key, godaddy.secret),
+                                                              },
+                                                  "body_format": "json", # Content-Type: application/json
+                                                  "body": '[{"name": "%s", "type": "A", "ttl": 10800, "data": "%s"}]' % (dns_record, host_ip),
+                                                  "status_code": ["200"],
+                                                  },
+                                          })
                     else:
                         # Check if DNS is already configured properly
                         import socket
@@ -2611,20 +2730,30 @@ dropdown.change(function() {
             # Nothing to cleanup
             return
 
+        # Lookup the Instance Type
+        dtable = s3db.setup_dns
+        dns = db(dtable.dns_id == dns_id).select(dtable.instance_type,
+                                                 limitby = (0, 1)
+                                                 ).first()
+        dns_type = dns.instance_type
+        if dns_type == "setup_godaddy_dns":
+            # No way currently to cleanup without replacing entire domain, omitting this record
+            return
+        #elif dns_type == "setup_gandi_dns":
+
         # Read URL (only deleted_fks are in the row object)
         itable = s3db.setup_instance
         instance = db(itable.id == row.id).select(itable.url,
                                                   limitby = (0, 1)
                                                   ).first()
 
-        # @ToDo: Will need extending when we support multiple DNS Providers
         # Get Gandi details
         gtable = s3db.setup_gandi_dns
-        gandi = db(gtable.id == dns_id).select(gtable.api_key,
-                                               gtable.domain,
-                                               gtable.zone,
-                                               limitby = (0, 1)
-                                               ).first()
+        gandi = db(gtable.dns_id == dns_id).select(gtable.api_key,
+                                                   gtable.domain,
+                                                   gtable.zone,
+                                                   limitby = (0, 1)
+                                                   ).first()
         gandi_api_key = gandi.api_key
         domain = gandi.domain
         url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
