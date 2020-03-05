@@ -218,7 +218,7 @@ class S3GoDaddyDNSModel(S3DNSModel):
         #T = current.T
 
         # ---------------------------------------------------------------------
-        tablename = "setup_gandi_dns"
+        tablename = "setup_godaddy_dns"
         self.define_table(tablename,
                           self.super_link("dns_id", "setup_dns"),
                           Field("name",
