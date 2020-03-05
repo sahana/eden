@@ -659,11 +659,11 @@ $.filterOptionsS3({
         db = current.db
         atable = db.asset_asset
         form_vars = form.vars
+        asset_id = form_vars.id
         kit = form_vars.get("kit", None)
         site_id = form_vars.get("site_id", None)
         if site_id:
             stable = db.org_site
-            asset_id = form_vars.id
             # Set the Base Location
             location_id = db(stable.site_id == site_id).select(stable.location_id,
                                                                limitby=(0, 1)
