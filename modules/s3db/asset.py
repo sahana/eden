@@ -658,16 +658,27 @@ $.filterOptionsS3({
 
         db = current.db
         atable = db.asset_asset
-        form_vars = form.vars
-        asset_id = form_vars.id
-        kit = form_vars.get("kit", None)
-        site_id = form_vars.get("site_id", None)
+        form_vars_get = form.vars.get
+        asset_id = form_vars_get("id")
+        kit = form_vars_get("kit")
+        organisation_id = form_vars_get("organisation_id")
+        site_id = form_vars_get("site_id")
+        if not organisation_id or not site_id:
+            # Component Tab: load record to read
+            record = db(atable.id == asset_id).select(atable.organisation_id,
+                                                      atable.site_id,
+                                                      limitby = (0, 1)
+                                                      ).first()
+            organisation_id = record.organisation_id
+            site_id = record.site_id
+
         if site_id:
-            stable = db.org_site
             # Set the Base Location
-            location_id = db(stable.site_id == site_id).select(stable.location_id,
-                                                               limitby=(0, 1)
-                                                               ).first().location_id
+            stable = db.org_site
+            site = db(stable.site_id == site_id).select(stable.location_id,
+                                                        limitby = (0, 1)
+                                                        ).first()
+            location_id = site.location_id
             tracker = S3Tracker()
             asset_tracker = tracker(atable, asset_id)
             asset_tracker.set_base_location(location_id)
@@ -680,7 +691,7 @@ $.filterOptionsS3({
             ltable = db.asset_log
             ltable.insert(asset_id = asset_id,
                           status = ASSET_LOG_SET_BASE,
-                          organisation_id = form_vars.get("organisation_id", None),
+                          organisation_id = organisation_id,
                           site_id = site_id,
                           cond = 1,
                           )
@@ -699,8 +710,6 @@ $.filterOptionsS3({
             if ids:
                 resource = current.s3db.resource("asset_item", id=ids)
                 resource.delete()
-
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -739,7 +748,7 @@ $.filterOptionsS3({
             db = current.db
             ltable = db.asset_log
             row = db(ltable.id == form_vars.id).select(ltable.asset_id,
-                                                       limitby=(0, 1)
+                                                       limitby = (0, 1)
                                                        ).first()
             try:
                 asset_id = row.asset_id
@@ -749,7 +758,7 @@ $.filterOptionsS3({
             current_log = asset_get_current_log(asset_id)
 
             log_time = current_log.datetime
-            current_time = form_vars.get("datetime", None).replace(tzinfo=None)
+            current_time = form_vars.get("datetime").replace(tzinfo=None)
             new = log_time <= current_time
 
         if new:
@@ -761,11 +770,12 @@ $.filterOptionsS3({
 
             if status == ASSET_LOG_SET_BASE:
                 # Set Base Location
-                site_id = form_vars.get("site_id", None)
+                site_id = form_vars.get("site_id")
                 stable = db.org_site
-                location_id = db(stable.site_id == site_id).select(stable.location_id,
-                                                                   limitby=(0, 1)
-                                                                   ).first().location_id
+                site = db(stable.site_id == site_id).select(stable.location_id,
+                                                            limitby = (0, 1)
+                                                            ).first()
+                location_id = site.location_id
                 asset_tracker.set_base_location(location_id)
                 # Also do component items
                 db(aitable.asset_id == asset_id).update(location_id = location_id)
@@ -782,7 +792,7 @@ $.filterOptionsS3({
                         pass
 
                 elif method == "assignorg":
-                    site_id = form_vars.get("site_id", None)
+                    site_id = form_vars.get("site_id")
                     if site_id:
                         asset_tracker.check_in(db.org_site, site_id,
                                                timestmp = request.utcnow)
@@ -813,7 +823,7 @@ $.filterOptionsS3({
                         # Also do component items
                         db(aitable.asset_id == asset_id).update(location_id = location_id)
                     # Update main record for component
-                    db(atable.id == asset_id).update(assigned_to_id=form_vars.person_id)
+                    db(atable.id == asset_id).update(assigned_to_id = form_vars.person_id)
 
             elif status == ASSET_LOG_RETURN:
                 # Set location to base location
@@ -823,9 +833,7 @@ $.filterOptionsS3({
                 db(aitable.asset_id == asset_id).update(location_id = location_id)
 
             # Update condition in main record
-            db(atable.id == asset_id).update(cond=form_vars.cond)
-
-        return
+            db(atable.id == asset_id).update(cond = form_vars.cond)
 
 # =============================================================================
 class S3AssetHRModel(S3Model):
