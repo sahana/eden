@@ -1529,11 +1529,10 @@ class S3OptionsMenu(object):
         get_vars = Storage()
         try:
             series_id = int(current.request.args[0])
-        except:
+        except (IndexError, ValueError):
             try:
-                (dummy, series_id) = current.request.get_vars["viewing"].split(".")
-                series_id = int(series_id)
-            except:
+                series_id = int(current.request.get_vars["viewing"].split(".")[1])
+            except (AttributeError, IndexError, ValueError):
                 pass
         if series_id:
             get_vars.viewing = "survey_complete.%s" % series_id
@@ -2269,12 +2268,12 @@ class S3OptionsMenu(object):
         # the main menu?
         if controller != "default":
             try:
-                breadcrumbs(
-                    layout(all_modules[controller].name_nice, c=controller)
-                )
-            except:
+                name_nice = all_modules[controller].get("name_nice", controller)
+            except KeyError:
                 # Module not defined
                 pass
+            else:
+                breadcrumbs(layout(name_nice, c = controller))
 
         # This checks the path in the options menu, omitting the top-level item
         # (because that's the menu itself which doesn't have a linked label):
@@ -2287,14 +2286,15 @@ class S3OptionsMenu(object):
                     for item in path[1:]:
                         breadcrumbs(
                             layout(item.label,
-                                   c=item.get("controller"),
-                                   f=item.get("function"),
-                                   args=item.args,
+                                   c = item.get("controller"),
+                                   f = item.get("function"),
+                                   args = item.args,
                                    # Should we retain the request vars in case
                                    # the item has no vars? Or shall we merge them
                                    # in any case? Didn't see the use-case yet
                                    # anywhere...
-                                   vars=item.vars))
+                                   vars = item.vars,
+                                   ))
         return breadcrumbs
 
 # END =========================================================================
