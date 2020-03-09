@@ -234,10 +234,8 @@ class S3GoDaddyDNSModel(S3DNSModel):
                           Field("domain", # Name
                                 requires = IS_NOT_EMPTY(),
                                 ),
-                          Field("api_key", "password",
-                                readable = False,
+                          Field("api_key",
                                 requires = IS_NOT_EMPTY(),
-                                widget = S3PasswordWidget(),
                                 ),
                           Field("secret", "password",
                                 readable = False,
@@ -397,6 +395,10 @@ class S3AWSCloudModel(S3CloudModel):
                            # https://wiki.debian.org/Cloud/AmazonEC2Image/Buster
                            default = "ami-042796b8e41bb5fad", # Debian 10 in London
                            #label = T("Image"), # AMI ID
+                           ),
+                     Field("reserved_instance", "boolean",
+                           default = False,
+                           #label = T("Reserved Instance"),
                            ),
                      Field("security_group",
                            default = "default",
@@ -2010,6 +2012,7 @@ dropdown.change(function() {
                                            cstable.region,
                                            cstable.instance_type,
                                            cstable.image,
+                                           cstable.reserved_instance,
                                            cstable.security_group,
                                            cstable.instance_id,
                                            left = left,
@@ -2256,6 +2259,61 @@ dropdown.change(function() {
                                "loop": "{{ ec2.instances }}",
                                },
                               ]
+                    if cloud_server.reserved_instance:
+                        try:
+                            import awscli.clidriver
+                        except ImportError:
+                            current.session.warning = current.T("Cannot purchase reserved instance as awscli not installed")
+                        else:
+                            # Configure
+                            creds_path = os.path.join("~", ".aws", "credentials")
+                            with open(creds_path, "w") as creds_file:
+                                creds_file.write("""[default]
+aws_access_key_id = %s
+aws_secret_access_key = %s""" % (access_key, secret_key))
+                            conf_path = os.path.join("~", ".aws", "config")
+                            with open(conf_path, "w") as conf_file:
+                                conf_file.write("""[default]
+region = %s
+output = json""" % region)
+                            import subprocess
+                            # Lookup Offering ID
+                            # https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-reserved-instances-offerings.html
+                            command = ["aws",
+                                       "ec2",
+                                       "describe-reserved-instances-offerings",
+                                       "--instance-type",
+                                       cloud_server.instance_type,
+                                       "--max-duration",
+                                       "31536000", # 1 Year
+                                       "--offering-type",
+                                       "All Upfront",
+                                       "--product-description",
+                                       "Linux/UNIX (Amazon VPC)",
+                                       "--filters",
+                                       "Name=scope,Values=Region",
+                                       "--instance-tenancy",
+                                       "default",
+                                       "--offering-class",
+                                       "standard",
+                                       "--no-include-marketplace",
+                                       ]
+                            result = subprocess.run(command, stdout=subprocess.PIPE)
+                            output = json.loads(result.stdout)
+                            offering_id = output["ReservedInstancesOfferings"][0]["ReservedInstancesOfferingId"]
+                            # Purchase a Reserved Instance
+                            # https://docs.aws.amazon.com/cli/latest/reference/ec2/purchase-reserved-instances-offering.html
+                            command = ["aws",
+                                       "ec2",
+                                       "purchase-reserved-instances-offering",
+                                       "--instance-count",
+                                       "1",
+                                       "--reserved-instances-offering-id",
+                                       offering_id,
+                                       #"--dry-run",
+                                       ]
+                            result = subprocess.run(command, stdout=subprocess.PIPE)
+                            #output = json.loads(result.stdout)
                 elif cloud_type == "setup_openstack_cloud":
                     # Upload Public Key to Cloud
                     tasks.append({"os_keypair": {"auth": auth,
