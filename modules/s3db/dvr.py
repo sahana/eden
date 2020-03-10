@@ -3111,11 +3111,18 @@ class DVRCaseActivityModel(S3Model):
                                 "key": "response_type_id",
                                 },
                             dvr_case_activity_update = "case_activity_id",
-                            dvr_vulnerability_type = {
-                                "link": "dvr_vulnerability_type_case_activity",
-                                "joinby": "case_activity_id",
-                                "key": "vulnerability_type_id",
-                                },
+                            dvr_vulnerability_type = (
+                                    {"name": "vulnerability_type",
+                                     "link": "dvr_vulnerability_type_case_activity",
+                                     "joinby": "case_activity_id",
+                                     "key": "vulnerability_type_id",
+                                     },
+                                    {"name": "diagnosis",
+                                     "link": "dvr_diagnosis_case_activity",
+                                     "joinby": "case_activity_id",
+                                     "key": "vulnerability_type_id",
+                                     },
+                                    ),
                             supply_distribution = {
                                 "link": "supply_distribution_case_activity",
                                 "joinby": "case_activity_id",
@@ -5685,9 +5692,24 @@ class DVRVulnerabilityModel(S3Model):
                                                 )
 
         # ---------------------------------------------------------------------
-        # Link table vulnerability type <=> case activity
+        # Link tables vulnerability type <=> case activity
+        # - in the context of psycho-social support, this could be
+        #   diagnoses => when differentiating into suspected / confirmed
+        #   diagnoses, we use the diagnosis-link for the confirmed ones
         #
         tablename = "dvr_vulnerability_type_case_activity"
+        define_table(tablename,
+                     self.dvr_case_activity_id(
+                         empty = False,
+                         ondelete = "CASCADE",
+                         ),
+                     vulnerability_type_id(
+                         empty = False,
+                         ondelete = "RESTRICT",
+                         ),
+                     *s3_meta_fields())
+
+        tablename = "dvr_diagnosis_case_activity"
         define_table(tablename,
                      self.dvr_case_activity_id(
                          empty = False,

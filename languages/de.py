@@ -4866,6 +4866,7 @@
 'Survey Template': 'Umfragenvorlage',
 'Survey Templates': 'Umfragenvorlagen',
 'Surveys': 'Umfragen',
+'Suspected Diagnosis': 'Verdachtsdiagnose',
 'Suspected Stolen Goods': 'Mutmassliches Diebesgut',
 'Suspended Cases': 'Gesperrte Fälle',
 'Suspended': 'Gesperrt',

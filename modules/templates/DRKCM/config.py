@@ -2069,15 +2069,22 @@ def config(settings):
             field = table.need_details
             field.readable = field.writable = ui_options_get("activity_need_details")
 
-            # Embed vulnerability
+            # Embed PSS vulnerability
+            # - separate suspected diagnosis / (confirmed) diagnosis
             if ui_options_get("activity_pss_vulnerability"):
                 vulnerability = S3SQLInlineLink("vulnerability_type",
-                                                label = T("Diagnosis / Suspected"),
+                                                label = T("Suspected Diagnosis"),
                                                 field = "vulnerability_type_id",
                                                 multiple = False,
                                                 )
+                diagnosis = S3SQLInlineLink("diagnosis",
+                                            label = T("Diagnosis"),
+                                            field = "vulnerability_type_id",
+                                            multiple = False,
+                                            )
             else:
                 vulnerability = None
+                diagnosis = None
 
             # Customise Priority
             field = table.priority
@@ -2209,6 +2216,7 @@ def config(settings):
 
                             subject_field,
                             vulnerability,
+                            diagnosis,
                             (T("Initial Situation Details"), ("need_details")),
 
                             "start_date",
@@ -2912,11 +2920,14 @@ def config(settings):
 
             # Vulnerability Axis
             if ui_options_get("activity_pss_vulnerability"):
-                diagnosis = (T("Diagnosis / Suspected"),
-                             "case_activity_id$vulnerability_type__link.vulnerability_type_id",
+                vulnerability = (T("Suspected Diagnosis"),
+                                 "case_activity_id$vulnerability_type__link.vulnerability_type_id",
+                                 )
+                diagnosis = (T("Diagnosis"),
+                             "case_activity_id$diagnosis__link.vulnerability_type_id",
                              )
             else:
-                diagnosis = None
+                vulnerability = diagnosis = None
 
             # Custom Report Options
             facts = ((T("Number of Actions"), "count(id)"),
@@ -2928,6 +2939,7 @@ def config(settings):
                     "person_id$person_details.nationality",
                     "person_id$person_details.marital_status",
                     (T("Size of Family"), "person_id$dvr_case.household_size"),
+                    vulnerability,
                     diagnosis,
                     response_type,
                     (T("Theme"), "response_theme_ids"),
