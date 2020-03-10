@@ -2623,7 +2623,8 @@ output = json""" % region)
                                       "type": instance_type,
                                       "web_server": web_server,
                                       },
-                             "roles": [{"role": "common" },
+                             "roles": [{"role": "ansible" },
+                                       {"role": "common" },
                                        {"role": "exim" },
                                        {"role": db_type },
                                        {"role": "uwsgi" },
@@ -2689,7 +2690,8 @@ output = json""" % region)
                                   "type": instance_type,
                                   "web_server": web_server,
                                   },
-                         "roles": [{"role": "common" },
+                         "roles": [{"role": "ansible" },
+                                   {"role": "common" },
                                    {"role": "exim" },
                                    {"role": "uwsgi" },
                                    {"role": web_server },
@@ -4575,6 +4577,10 @@ def setup_modules_apply(instance_id, modules):
             deps = dependencies.get(module)
             for d in deps:
                 m = d.get("module")
+                if has_module(m):
+                    # No changes required
+                    # This is only the case for Local Server
+                    continue
                 tappend({"name": "Handle Dependency: If we disabled the module, then remove the disabling",
                          "become": "yes",
                          "lineinfile": {"dest": dest,
