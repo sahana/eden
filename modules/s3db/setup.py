@@ -4510,6 +4510,16 @@ def setup_modules_apply(instance_id, modules):
     settings = current.deployment_settings
     has_module = settings.has_module
 
+    all_pages = settings.get_setup_wizard_questions()
+    modules_page = all_pages[0]
+    dependencies = {}
+    labels = {}
+    for m in modules_page["modules"]:
+        labels[m["module"]] = m["label"]
+        d = m.get("dependencies")
+        if d is not None:
+            dependencies[m["module"]] = d
+
     # Build List of Tasks
     # This currently only works for Local Server!
     tasks = []
@@ -4529,8 +4539,7 @@ def setup_modules_apply(instance_id, modules):
                                     },
                      "register": "default",
                      })
-            # @ToDo: Lookup label e.g. from settings.get_setup_wizard_questions()
-            label = module
+            label = labels.get("module")
             tappend({"name": "Enable the Module",
                      "become": "yes",
                      "lineinfile": {"dest": dest,
@@ -4539,6 +4548,25 @@ def setup_modules_apply(instance_id, modules):
                                     },
                      "when": "not default.found",
                      })
+            deps = dependencies.get(module)
+            for d in deps:
+                m = d.get("module")
+                tappend({"name": "Handle Dependency: If we disabled the module, then remove the disabling",
+                         "become": "yes",
+                         "lineinfile": {"dest": dest,
+                                        "regexp": '^del settings.modules\["%s"\]' % m,
+                                        "state": "absent",
+                                        },
+                         "register": "default",
+                         })
+                tappend({"name": "Handle Dependency: Enable the Module",
+                         "become": "yes",
+                         "lineinfile": {"dest": dest,
+                                        "regexp": '^settings.modules\["%s"\]' % module,
+                                        "line": 'settings.modules["%s"] = {"name_nice": T("%s"), "module_type": 10}' % (m, d.get("label")),
+                                        },
+                         "when": "not default.found",
+                         })
         else:
             if not has_module(module):
                 # No changes required
