@@ -1211,6 +1211,7 @@ class S3SetupDeploymentModel(S3Model):
 
         configure(tablename,
                   create_onaccept = self.setup_server_create_onaccept,
+                  ondelete = self.setup_server_ondelete,
                   )
 
         crud_strings[tablename] = Storage(
@@ -1744,6 +1745,29 @@ class S3SetupDeploymentModel(S3Model):
                                                                  ).first()
         if exists is None:
             table.insert(server_id = server_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def setup_server_ondelete(row):
+        """
+            Cleanup Tasks when a Server is Deleted
+            - ~/.ssh/known_hosts
+        """
+
+        table = current.s3db.setup_server
+        server = current.db(table.id == row.id).select(table.host_ip,
+                                                       limitby = (0, 1)
+                                                       ).first()
+        if server.host_ip != "127.0.0.1":
+            # Cleanup known_hosts as it will change for a new deployment
+            import subprocess
+            command = ["ssh-keygen",
+                       "-f",
+                       "~/.ssh/known_hosts",
+                       "-R",
+                       server.host_ip,
+                       ]
+            result = subprocess.run(command, stdout=subprocess.PIPE)
 
     # -------------------------------------------------------------------------
     @staticmethod
