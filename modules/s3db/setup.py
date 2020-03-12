@@ -3486,9 +3486,10 @@ def setup_monitor_server_enable(monitor_server_id):
         if task_id not in exists:
             current.s3task.schedule_task("setup_monitor_run_task",
                                          args = [task_id],
-                                         period = task.period,  # seconds
-                                         timeout = 300, # seconds
-                                         repeats = 0    # unlimited
+                                         period = task.period,# seconds
+                                         timeout = 60,        # seconds
+                                         repeats = 0,         # unlimited
+                                         retry_failed = -1,   # unlimited
                                          )
     return "Server Monitoring enabled"
 
@@ -3649,9 +3650,10 @@ def setup_monitor_task_enable(task_id):
         if not exists:
             current.s3task.schedule_task("setup_monitor_run_task",
                                          args = [task_id],
-                                         period = record.period,  # seconds
-                                         timeout = 300, # seconds
-                                         repeats = 0    # unlimited
+                                         period = record.period,# seconds
+                                         timeout = 60,          # seconds
+                                         repeats = 0,           # unlimited
+                                         retry_failed = -1,     # unlimited
                                          )
 
     return "Task enabled"
@@ -3753,9 +3755,10 @@ def setup_monitor_task_restart():
     for task in tasks:
         schedule_task("setup_monitor_run_task",
                       args = [task.id],
-                      period = task.period,  # seconds
-                      timeout = 300, # seconds
-                      repeats = 0    # unlimited
+                      period = task.period,# seconds
+                      timeout = 60,        # seconds
+                      repeats = 0,         # unlimited
+                      retry_failed = -1,   # unlimited
                       )
 
     return "Monitor Tasks restarted"
