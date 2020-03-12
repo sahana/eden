@@ -943,6 +943,9 @@ def config(settings):
                     else:
                         pe_label = None
 
+                    # Optional: use address in case files
+                    use_address = ui_options_get("case_use_address")
+
                     # Alternatives: site_id or simple text field
                     lodging_opt = ui_options_get("case_lodging")
                     if lodging_opt == "site":
@@ -958,14 +961,16 @@ def config(settings):
                         facts = ((T("Number of Clients"), "count(id)"),
                                  (T("Number of Actions"), "count(case_activity.response_action.id)"),
                                  )
-                        axes = ("gender",
+                        axes = ["gender",
                                 "person_details.nationality",
                                 "person_details.marital_status",
                                 "dvr_case.status_id",
                                 "dvr_case.site_id",
                                 "residence_status.status_type_id",
                                 "residence_status.permit_type_id",
-                                )
+                                ]
+                        if use_address:
+                            axes.insert(-3, (T("Place of Residence"), "~.location_id$L3"))
 
                         report_options = {
                             "rows": axes,
@@ -1103,7 +1108,7 @@ def config(settings):
                             on_site_until = None
 
                         # Optional: Address
-                        if ui_options_get("case_use_address"):
+                        if use_address:
                             address = S3SQLInlineComponent(
                                             "address",
                                             label = T("Current Address"),
@@ -2075,12 +2080,14 @@ def config(settings):
                 vulnerability = S3SQLInlineLink("vulnerability_type",
                                                 label = T("Suspected Diagnosis"),
                                                 field = "vulnerability_type_id",
-                                                multiple = False,
+                                                selectedList = 5,
+                                                #multiple = False,
                                                 )
                 diagnosis = S3SQLInlineLink("diagnosis",
                                             label = T("Diagnosis"),
                                             field = "vulnerability_type_id",
-                                            multiple = False,
+                                            selectedList = 5,
+                                            #multiple = False,
                                             )
             else:
                 vulnerability = None
@@ -2935,7 +2942,7 @@ def config(settings):
                      (T("Hours (Total)"), "sum(hours)"),
                      (T("Hours (Average)"), "avg(hours)"),
                      )
-            axes = ("person_id$gender",
+            axes = ["person_id$gender",
                     "person_id$person_details.nationality",
                     "person_id$person_details.marital_status",
                     (T("Size of Family"), "person_id$dvr_case.household_size"),
@@ -2946,10 +2953,12 @@ def config(settings):
                     need,
                     sector,
                     "human_resource_id",
-                    )
+                    ]
+            if ui_options_get("case_use_address"):
+                axes.insert(3, (T("Place of Residence"), "person_id$location_id$L3"))
             if multiple_orgs:
                 # Add case organisation as report axis
-                axes = axes + (org_context,)
+                axes.append(org_context)
 
             report_options = {
                 "rows": axes,
