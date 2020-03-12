@@ -18,12 +18,13 @@ def index():
     """ Show the index """
 
     dtable = s3db.setup_deployment
-    exists = db(dtable.id > 0).select(dtable.id,
-                                      limitby = (0, 1),
-                                      )
+    exists = db(dtable.deleted == False).select(dtable.id,
+                                                limitby = (0, 1),
+                                                ).first()
     if exists:
-        # Redirect to the list of monitoring tasks
-        redirect(URL(c="setup", f="monitor_task"))
+        # Redirect to this Deployment's Configuration Wizard
+        redirect(URL(c="setup", f="deployment",
+                     args = [exists.id, "wizard"]))
     else:
         templates = settings.get_template()
         if templates == "setup":
@@ -61,9 +62,9 @@ def index():
                                                      )
             s3db.setup_instance_settings_read(instance_id, deployment_id)
 
-            # Redirect to this Deployment's Instances
+            # Redirect to this Deployment's Configuration Wizard
             redirect(URL(c="setup", f="deployment",
-                         args = [deployment_id, "instance"]))
+                         args = [deployment_id, "wizard"]))
 
 # -----------------------------------------------------------------------------
 def aws_cloud():

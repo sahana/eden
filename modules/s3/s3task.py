@@ -307,6 +307,7 @@ class S3Task(object):
                       next_run_time = None,
                       stop_time = None,
                       repeats = None,
+                      retry_failed = None,
                       period = None,
                       timeout = None,
                       enabled = None, # None = Enabled
@@ -324,6 +325,7 @@ class S3Task(object):
             @param next_run_time: next_run_time for the the scheduled task
             @param stop_time: stop_time for the the scheduled task
             @param repeats: number of times the task to be repeated (0=unlimited)
+            @param retry_failed: number of times the task to be retried (-1=unlimited)
             @param period: time period between two consecutive runs (seconds)
             @param timeout: set timeout for a running task
             @param enabled: enabled flag for the scheduled task
@@ -367,6 +369,9 @@ class S3Task(object):
 
         if repeats is not None:
             kwargs["repeats"] = repeats
+
+        if retry_failed is not None:
+            kwargs["retry_failed"] = retry_failed
 
         if period:
             kwargs["period"] = period
