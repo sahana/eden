@@ -3733,6 +3733,7 @@
 'Pitcairn Islands': 'Pitcairn-Inseln',
 'Place of Birth': 'Geburtsort',
 'Place of Recovery': 'Ort der Wiederherstellung',
+'Place of Residence': 'Wohnort',
 'Place on Map': 'Auf Karte plazieren',
 'Places for defecation': 'Plätze für Kotablagerung',
 'Places the children have been sent to': 'Orte an die Kinder geschickt wurden',
