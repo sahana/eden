@@ -6722,14 +6722,14 @@ def event_notification_dispatcher(r, **attr):
             record = r.record
             record_id = record.id
             event_name = record.start_name
-            startDate = record.date
+            start_date = record.date
             exercise = record.exercise
 
             text += "************************************************"
             text += "\n%s " % T("Automatic Message")
             text += "\n%s: %s, " % (T("Event ID"), record_id)
             text += " %s: %s" % (T("Event name"), event_name)
-            text += "\n%s: %s " % (T("Event started"), startDate)
+            text += "\n%s: %s " % (T("Event started"), start_date)
             text += "\n%s= %s, " % (T("Exercise"), exercise)
             text += "%s= %s" % (T("Status open"), exercise)
             text += "\n************************************************\n"

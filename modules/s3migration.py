@@ -144,7 +144,7 @@ class S3Migration(object):
 
         self.environment = environment
 
-        (db_type, db_string, pool_size) = settings.get_database_string()
+        db_type, db_string, _ = settings.get_database_string()
         self.db_engine = db_type
 
         # Get a handle to the database
@@ -237,8 +237,6 @@ class S3Migration(object):
         if not moves and not news and not strbools and not strints:
             # Nothing to backup
             return
-
-        import os
 
         db = self.db
         folder = "%s/databases/backup" % current.request.folder
