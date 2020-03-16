@@ -39,7 +39,7 @@ def config(settings):
     settings.auth.registration_link_user_to_default = ["staff"]
     settings.auth.realm_entity_types = ("org_organisation",
                                         #"org_office",
-                                        "pr_forum", # Donors & Reserves
+                                        "pr_forum", # Reserves
                                         "pr_group", # Volunteer Groups
                                         "pr_person", # Donors
                                         )
