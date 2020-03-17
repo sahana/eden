@@ -3217,7 +3217,7 @@ class S3GroupedOptionsWidget(FormWidget):
                     # Not working with multi-byte str components:
                     #v.flatten()
                     #    if hasattr(v, "flatten") else s3_unicode(v))
-                    s3_unicode(s3_strip_markup(v.xml()))
+                    s3_strip_markup(s3_unicode(v.xml()))
                         if isinstance(v, DIV) else s3_unicode(v))
                    for k, v in options if k not in exclude]
 
