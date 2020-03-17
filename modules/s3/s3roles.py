@@ -1432,9 +1432,10 @@ class S3PermissionWidget(object):
 
         # Active modules
         modules = current.deployment_settings.modules
-        active= {k: (s3_str(modules[k].name_nice), modules[k].get("restricted", True))
-                 for k in modules if k not in exclude
-                 }
+        active = {k: (s3_str(modules[k].get("name_nice", modules[k])),
+                      modules[k].get("restricted", True))
+                  for k in modules if k not in exclude
+                  }
 
         # Special controllers for dynamic models
         if current.auth.permission.use_facls:
