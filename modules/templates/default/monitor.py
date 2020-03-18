@@ -495,7 +495,7 @@ class S3Monitor(object):
             worker = db(wtable.status == "ACTIVE").select(wtable.last_heartbeat,
                                                           limitby = (0, 1)
                                                           ).first()
-            
+
             error = None
             if worker is None:
                 error = "Warning: Scheduler not ACTIVE"
@@ -671,7 +671,8 @@ class S3Monitor(object):
                 }
 
 # =============================================================================
-def _bytes_to_size_string(b: int) -> str:
+def _bytes_to_size_string(b):
+#def _bytes_to_size_string(b: int) -> str:
     """
         Convert a number in bytes to a sensible unit.
 
