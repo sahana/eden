@@ -986,9 +986,8 @@ class S3SetupDeploymentModel(S3Model):
         define_table(tablename,
                      # @ToDo: Add ability to get a specific hash/tag
                      Field("repo_url",
-                           # @ToDo: Switch to Stable once it has a templates.json
-                           #default = "https://github.com/sahana/eden-stable",
-                           default = "https://github.com/sahana/eden",
+                           #default = "https://github.com/sahana/eden",
+                           default = "https://github.com/sahana/eden-stable",
                            label = T("Eden Repository"),
                            requires = IS_URL(),
                            comment = DIV(_class="tooltip",
