@@ -2039,7 +2039,7 @@ dropdown.change(function() {
                                            cstable.security_group,
                                            cstable.instance_id,
                                            left = left,
-                               )
+                                           )
             elif cloud_type == "setup_openstack_cloud":
                 # Get Cloud details
                 ctable = s3db.setup_openstack_cloud
@@ -2068,7 +2068,7 @@ dropdown.change(function() {
                                            cstable.region,
                                            cstable.availability_zone,
                                            left = left,
-                               )
+                                           )
             else:
                  raise NotImplementedError
         else:
@@ -2089,6 +2089,7 @@ dropdown.change(function() {
         web_server = WEB_SERVERS[deployment.webserver_type]
         db_type = DB_SERVERS[deployment.db_type]
         instance_type = INSTANCE_TYPES[instance_type]
+        prod = instance_type == "prod"
         parts = deployment.repo_url.split("/")
         repo_owner = parts[3]
         repo = parts[4]
@@ -2161,7 +2162,7 @@ dropdown.change(function() {
             sender = group_email
 
         smtp_id = deployment.smtp_id
-        if smtp_id and instance_type == "prod":
+        if prod and smtp_id:
             # SMTP Smart Host
             stable = s3db.setup_smtp
             smtp = db(stable.id == smtp_id).select(stable.hostname,
@@ -2182,7 +2183,7 @@ dropdown.change(function() {
             # All-in-one deployment
             server = servers.first()
             playbook = []
-            if cloud_id:
+            if prod and cloud_id:
                 tasks = []
                 connection = "smart"
                 request = current.request
@@ -2483,7 +2484,7 @@ output = json""" % region)
                                            ],
                                  })
             else:
-                # No Cloud
+                # No Cloud or additional Instance on existing Host
                 remote_user = server.remote_user
                 host_ip = server.host_ip
                 # @ToDo Check that ip_addr is correct
@@ -2519,27 +2520,34 @@ output = json""" % region)
                             gandi_api_key = gandi.api_key
                             url = "https://dns.api.gandi.net/api/v5/zones/%s/records" % gandi.zone
                             dns_record = sitename.split(".%s" % gandi.domain, 1)[0]
-                            tasks += [# Delete any existing record
-                                      {"uri": {"url": "%s/%s" % (url, dns_record),
-                                               "method": "DELETE",
-                                               "headers": {"X-Api-Key": gandi_api_key,
-                                                           },
-                                               "status_code": ["200", "204"],
-                                               },
-                                       # Don't worry if it didn't exist
-                                       "ignore_errors": "yes",
-                                       },
-                                      # Create new record
-                                      {"uri": {"url": url,
-                                               "method": "POST",
-                                               "headers": {"X-Api-Key": gandi_api_key,
-                                                           },
-                                               "body_format": "json", # Content-Type: application/json
-                                               "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["%s"]}' % (dns_record, host_ip),
-                                               "status_code": ["200", "201"],
-                                               },
-                                       },
-                                      ]
+                            # Delete any existing record
+                            task = {"uri": {"url": "%s/%s" % (url, dns_record),
+                                            "method": "DELETE",
+                                            "headers": {"X-Api-Key": gandi_api_key,
+                                                        },
+                                            "status_code": ["200", "204"],
+                                            },
+                                    # Don't worry if it didn't exist
+                                    "ignore_errors": "yes",
+                                    }
+                            if not prod:
+                                # only_tags
+                                task["tags"] = [instance_type]
+                            tasks.append(task)
+                            # Create new record
+                            task = {"uri": {"url": url,
+                                            "method": "POST",
+                                            "headers": {"X-Api-Key": gandi_api_key,
+                                                        },
+                                            "body_format": "json", # Content-Type: application/json
+                                            "body": '{"rrset_name": "%s", "rrset_type": "A", "rrset_ttl": 10800, "rrset_values": ["%s"]}' % (dns_record, host_ip),
+                                            "status_code": ["200", "201"],
+                                            },
+                                    }
+                            if not prod:
+                                # only_tags
+                                task["tags"] = [instance_type]
+                            tasks.append(task)
                         elif dns_type == "setup_godaddy_dns":
                             gtable = s3db.setup_godaddy_dns
                             godaddy = db(gtable.dns_id == dns_id).select(gtable.domain,
@@ -2552,15 +2560,19 @@ output = json""" % region)
                             url = "https://api.godaddy.com/v1/domains/%s/records/A/%s" % (domain, dns_record)
                             # No need to delete existing record (can't anyway!)
                             # Create new record or replace existing
-                            tasks.append({"uri": {"url": url,
-                                                  "method": "PUT",
-                                                  "headers": {"Authorization": "sso-key %s:%s" % (godaddy.api_key, godaddy.secret),
-                                                              },
-                                                  "body_format": "json", # Content-Type: application/json
-                                                  "body": '[{"name": "%s", "type": "A", "ttl": 10800, "data": "%s"}]' % (dns_record, host_ip),
-                                                  "status_code": ["200"],
-                                                  },
-                                          })
+                            task = {"uri": {"url": url,
+                                            "method": "PUT",
+                                            "headers": {"Authorization": "sso-key %s:%s" % (godaddy.api_key, godaddy.secret),
+                                                        },
+                                            "body_format": "json", # Content-Type: application/json
+                                            "body": '[{"name": "%s", "type": "A", "ttl": 10800, "data": "%s"}]' % (dns_record, host_ip),
+                                            "status_code": ["200"],
+                                            },
+                                    }
+                            if not prod:
+                                # only_tags
+                                task["tags"] = [instance_type]
+                            tasks.append(task)
                     else:
                         # Check if DNS is already configured properly
                         import socket
@@ -2577,17 +2589,25 @@ output = json""" % region)
                     # Copy the Private Key to where it will be used
                     provided_key = os.path.join(r.folder, "uploads", private_key)
                     private_key = "/tmp/%s" % server.name
-                    tasks.append({"copy": {"src": provided_key,
-                                           "dest": private_key,
-                                           "mode": "0600",
-                                           },
-                                  })
+                    task = {"copy": {"src": provided_key,
+                                     "dest": private_key,
+                                     "mode": "0600",
+                                     },
+                            }
+                    if not prod:
+                        # only_tags
+                        task["tags"] = [instance_type]
+                    tasks.append(task)
                     # Add instance to host group (to associate private_key)
-                    tasks.append({"add_host": {"hostname": host_ip,
-                                               "groupname": "launched",
-                                               "ansible_ssh_private_key_file": private_key,
-                                               },
-                                  })
+                    task = {"add_host": {"hostname": host_ip,
+                                         "groupname": "launched",
+                                         "ansible_ssh_private_key_file": private_key,
+                                         },
+                            }
+                    if not prod:
+                        # only_tags
+                        task["tags"] = [instance_type]
+                    tasks.append(task)
                     playbook.append({"hosts": "localhost",
                                      "connection": "local",
                                      "gather_facts": "no",
@@ -2633,15 +2653,19 @@ output = json""" % region)
                              })
             if delete_ssh_key:
                 # Delete SSH private key from the filesystem
-                playbook.append({"hosts": "localhost",
-                                 "connection": "local",
-                                 "gather_facts": "no",
-                                 "tasks": [{"file": {"path": private_key,
-                                                     "state": "absent",
-                                                     },
+                task = {"hosts": "localhost",
+                        "connection": "local",
+                        "gather_facts": "no",
+                        "tasks": [{"file": {"path": private_key,
+                                            "state": "absent",
                                             },
-                                           ],
-                                 })
+                                   },
+                                  ],
+                        }
+                if not prod:
+                    # only_tags
+                    task["tags"] = [instance_type]
+                playbook.append(task)
         else:
             # Separate Database
             # @ToDo: Needs completing
@@ -2707,7 +2731,7 @@ output = json""" % region)
 
         # Run Playbook
         task_vars["instance_id"] = instance_id # To Upload Logs to Instance record
-        if instance_type != "prod":
+        if not prod:
             # only_tags
             task_vars["tags"] = [instance_type]
 
