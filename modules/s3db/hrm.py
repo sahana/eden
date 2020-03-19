@@ -2312,7 +2312,7 @@ class S3HRSkillModel(S3Model):
         tablename = "hrm_competency"
         define_table(tablename,
                      person_id(ondelete = "CASCADE"),
-                     skill_id(),
+                     skill_id(ondelete = "CASCADE"),
                      competency_id(),
                      # This field can only be filled-out by specific roles
                      # Once this has been filled-out then the other fields are locked
