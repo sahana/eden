@@ -4053,8 +4053,9 @@ class PRContactModel(S3Model):
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
-                     Field("type", "integer",
+                     Field("type", length=8,
                            label = T("Type"),
+                           requires = IS_EMPTY_OR(IS_LENGTH(8)),
                            # Define in template as-required
                            #represent = S3Represent(options = contact_person_types),
                            #requires = IS_EMPTY_OR(IS_IN_SET(contact_person_types)),

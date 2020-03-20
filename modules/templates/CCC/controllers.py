@@ -1368,15 +1368,13 @@ class verify_email(S3CustomController):
                      })
 
         mailer = auth_settings.mailer
+        result = None
         if mailer.settings.server:
             for approver in approvers:
                 result = mailer.send(to = approver.email,
                                      subject = subject,
                                      message = message,
                                      )
-        else:
-            # Email system not configured (yet)
-            result = None
         if not result:
             # Don't prevent registration just because email not configured
             #db.rollback()

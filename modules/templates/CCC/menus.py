@@ -46,7 +46,9 @@ class S3MainMenu(default.S3MainMenu):
         if has_role("ADMIN"):
             menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
                     MM("All Documents", c="doc", f="document", m="datalist"),
-                    MM("Affected People", c="br", f="person"),
+                    MM("Affected People", c="br", f="person")(
+                       MM("Import", c="br", f="person", m="import"),
+                       ),
                     #MM("Donors", c="pr", f="person", vars={"donors": 1})(
                     #   MM("Donations", c="supply", f="person_item"),
                     #   MM("Edit General Information", c="cms", f="post", vars={"~.name": "Donor"}, m="update"),
@@ -82,7 +84,9 @@ class S3MainMenu(default.S3MainMenu):
         elif has_role("AGENCY"):
             menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
                     MM("Documents", c="doc", f="document", m="datalist"),
-                    MM("Affected People", c="br", f="person"),
+                    MM("Affected People", c="br", f="person")(
+                       MM("Import", c="br", f="person", m="import"),
+                       ),
                     #MM("Donors", c="pr", f="person", vars={"donors": 1})(
                     #   MM("Donations", c="supply", f="person_item"),
                     #   ),

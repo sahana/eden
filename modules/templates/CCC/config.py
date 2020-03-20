@@ -2732,6 +2732,8 @@ $('.copy-link').click(function(e){
                    method = "redirect",
                    action = pr_person_redirect)
 
+        br = current.request.controller == "br"
+
         s3 = current.response.s3
 
         # Custom prep
@@ -2743,46 +2745,7 @@ $('.copy-link').click(function(e){
             else:
                 result = True
 
-            if r.component_name == "human_resource":
-
-                s3.crud_strings["hrm_human_resource"] = Storage(
-                    label_create = T("New Affiliation"),
-                    #title_display = T("Affiliation Details"),
-                    #title_list = T("Affiliations"),
-                    title_update = T("Edit Affiliation"),
-                    #title_upload = T("Import Affiliations"),
-                    #label_list_button = T("List Affiliations"),
-                    label_delete_button = T("Delete Affiliation"),
-                    msg_record_created = T("Affiliation added"),
-                    msg_record_modified = T("Affiliation updated"),
-                    msg_record_deleted = T("Affiliation deleted"),
-                    #msg_list_empty = T("No Affiliations currently registered")
-                    )
-
-                s3db.add_custom_callback("hrm_human_resource",
-                                         "onaccept",
-                                         affiliation_create_onaccept,
-                                         method = "create",
-                                         )
-
-                # Only needed if multiple=True
-                #list_fields = ["organisation_id",
-                #               (T("Role"), "job_title.value"),
-                #               "comments",
-                #               ]
-                #r.component.configure(list_fields = list_fields)
-
-            elif r.component_name == "group_membership":
-                r.resource.components._components["group_membership"].configure(listadd = False,
-                                                                                list_fields = [(T("Name"), "group_id$name"),
-                                                                                               "group_id$comments",
-                                                                                               ],
-                                                                                )
-
-            get_vars_get = r.get_vars.get
-            has_role = current.auth.s3_has_role
-            if r.controller == "br":
-
+            if br:
                 s3db.br_case.comments.comment = None
 
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent
@@ -2827,7 +2790,7 @@ $('.copy-link').click(function(e){
                                                           "email",
                                                           ],
                                                 filterby = {"field": "type",
-                                                            "options": 1,
+                                                            "options": "REPORT",
                                                             },
                                                 label = T("Person Reporting"),
                                                 multiple = False,
@@ -2848,7 +2811,7 @@ $('.copy-link').click(function(e){
                                                           "email",
                                                           ],
                                                 filterby = {"field": "type",
-                                                            "options": 2,
+                                                            "options": "INPUT",
                                                             },
                                                 label = T("Report inputted by"),
                                                 multiple = False,
@@ -2899,149 +2862,187 @@ $('.copy-link').click(function(e){
                                               "address.location_id$L4",
                                               ],
                                )
-
-            elif get_vars_get("reserves") or \
-               has_role("RESERVE", include_admin=False):
-                # Reserve Volunteers
-                from s3 import FS, S3OptionsFilter, S3TextFilter
-                resource = r.resource
-                # Only include Reserves
-                db = current.db
-                mtable = db.auth_membership
-                gtable = db.auth_group
-                query = (gtable.uuid == "RESERVE") & \
-                        (gtable.id == mtable.group_id)
-                reserves = db(query).select(mtable.user_id)
-                reserves = [m.user_id for m in reserves]
-                resource.add_filter(FS("user.id").belongs(reserves))
-
-                gtable = s3db.gis_location
-                districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
-                                                                                                 gtable.name,
-                                                                                                 cache = s3db.cache)
-                districts = {d.id:d.name for d in districts}
-
-                resource.configure(list_fields = ["first_name",
-                                                  "middle_name",
-                                                  "last_name",
-                                                  (T("Skills"), "competency.skill_id"),
-                                                  (T("Email"), "email.value"),
-                                                  (T("Mobile Phone"), "phone.value"),
-                                                  ],
-                                   filter_widgets = [S3TextFilter(["first_name",
-                                                                   "middle_name",
-                                                                   "last_name",
-                                                                   "comments",
-                                                                   "competency.skill_id$name",
-                                                                   ],
-                                                                  #formstyle = text_filter_formstyle,
-                                                                  label = "",
-                                                                  _placeholder = T("Search"),
-                                                                  ),
-                                                     S3OptionsFilter("person_location.location_id",
-                                                                     label = T("Locations Served"),
-                                                                     options = districts,
-                                                                     ),
-                                                     S3OptionsFilter("competency.skill_id",
-                                                                     ),
-                                                     ],
-                                   )
-                s3.crud_strings[r.tablename] = Storage(
-                    label_create = T("New Reserve Volunteer"),
-                    title_display = T("Reserve Volunteer Details"),
-                    title_list = T("Reserve Volunteers"),
-                    title_update = T("Edit Reserve Volunteer"),
-                    #title_upload = T("Import Reserve Volunteers"),
-                    label_list_button = T("List Reserve Volunteers"),
-                    label_delete_button = T("Delete Reserve Volunteer"),
-                    msg_record_created = T("Reserve Volunteer added"),
-                    msg_record_modified = T("Reserve Volunteer updated"),
-                    msg_record_deleted = T("Reserve Volunteer deleted"),
-                    msg_list_empty = T("No Reserve Volunteers currently registered")
-                    )
-            elif get_vars_get("donors") or \
-                 has_role("DONOR", include_admin=False):
-                # Donors
-                from s3 import FS, S3OptionsFilter, S3TextFilter
-                resource = r.resource
-                # Only include Donors
-                db = current.db
-                mtable = db.auth_membership
-                gtable = db.auth_group
-                query = (gtable.uuid == "DONOR") & \
-                        (gtable.id == mtable.group_id)
-                donors = db(query).select(mtable.user_id)
-                donors = [d.user_id for d in donors]
-                resource.add_filter(FS("user.id").belongs(donors))
-
-                resource.configure(list_fields = [# @ToDo: Add Organisation freetext
-                                                  "first_name",
-                                                  "middle_name",
-                                                  "last_name",
-                                                  (T("Goods / Services"), "person_item.item_id"),
-                                                  (T("Email"), "email.value"),
-                                                  (T("Mobile Phone"), "phone.value"),
-                                                  ],
-                                   filter_widgets = [S3TextFilter(["first_name",
-                                                                   "middle_name",
-                                                                   "last_name",
-                                                                   "comments",
-                                                                   # @ToDo: Add Items
-                                                                   #"competency.skill_id$name",
-                                                                   ],
-                                                                  #formstyle = text_filter_formstyle,
-                                                                  label = "",
-                                                                  _placeholder = T("Search"),
-                                                                  ),
-                                                     S3OptionsFilter("person_item.item_id",
-                                                                     ),
-                                                     ],
-                                   )
-                s3.crud_strings[r.tablename] = Storage(
-                    label_create = T("New Donor"),
-                    title_display = T("Donor Details"),
-                    title_list = T("Donors"),
-                    title_update = T("Edit Donor"),
-                    #title_upload = T("Import Donors"),
-                    label_list_button = T("List Donors"),
-                    label_delete_button = T("Delete Donor"),
-                    msg_record_created = T("Donor added"),
-                    msg_record_modified = T("Donor updated"),
-                    msg_record_deleted = T("Donor deleted"),
-                    msg_list_empty = T("No Donors currently registered")
-                    )
-            elif get_vars_get("groups") or \
-                 has_role("GROUP_ADMIN", include_admin=False):
-                # Group Members
-                s3.crud_strings[r.tablename] = Storage(
-                    label_create = T("New Member"),
-                    title_display = T("Member Details"),
-                    title_list = T("Members"),
-                    title_update = T("Edit Member"),
-                    #title_upload = T("Import Members"),
-                    label_list_button = T("List Members"),
-                    label_delete_button = T("Delete Member"),
-                    msg_record_created = T("Member added"),
-                    msg_record_modified = T("Member updated"),
-                    msg_record_deleted = T("Member deleted"),
-                    msg_list_empty = T("No Members currently registered")
-                    )
             else:
-                # Organisation Volunteers
-                # (only used for hrm/person profile)
-                s3.crud_strings[r.tablename] = Storage(
-                    label_create = T("New Volunteer"),
-                    title_display = T("Volunteer Details"),
-                    title_list = T("Volunteers"),
-                    title_update = T("Edit Volunteer"),
-                    #title_upload = T("Import Volunteers"),
-                    label_list_button = T("List Volunteers"),
-                    label_delete_button = T("Delete Volunteer"),
-                    msg_record_created = T("Volunteer added"),
-                    msg_record_modified = T("Volunteer updated"),
-                    msg_record_deleted = T("Volunteer deleted"),
-                    msg_list_empty = T("No Volunteers currently registered")
-                    )
+                if r.component_name == "human_resource":
+
+                    s3.crud_strings["hrm_human_resource"] = Storage(
+                        label_create = T("New Affiliation"),
+                        #title_display = T("Affiliation Details"),
+                        #title_list = T("Affiliations"),
+                        title_update = T("Edit Affiliation"),
+                        #title_upload = T("Import Affiliations"),
+                        #label_list_button = T("List Affiliations"),
+                        label_delete_button = T("Delete Affiliation"),
+                        msg_record_created = T("Affiliation added"),
+                        msg_record_modified = T("Affiliation updated"),
+                        msg_record_deleted = T("Affiliation deleted"),
+                        #msg_list_empty = T("No Affiliations currently registered")
+                        )
+
+                    s3db.add_custom_callback("hrm_human_resource",
+                                             "onaccept",
+                                             affiliation_create_onaccept,
+                                             method = "create",
+                                             )
+
+                    # Only needed if multiple=True
+                    #list_fields = ["organisation_id",
+                    #               (T("Role"), "job_title.value"),
+                    #               "comments",
+                    #               ]
+                    #r.component.configure(list_fields = list_fields)
+
+                elif r.component_name == "group_membership":
+                    r.resource.components._components["group_membership"].configure(listadd = False,
+                                                                                    list_fields = [(T("Name"), "group_id$name"),
+                                                                                                   "group_id$comments",
+                                                                                                   ],
+                                                                                    )
+
+                get_vars_get = r.get_vars.get
+                has_role = current.auth.s3_has_role
+                if get_vars_get("reserves") or \
+                   has_role("RESERVE", include_admin=False):
+                    # Reserve Volunteers
+                    from s3 import FS, S3OptionsFilter, S3TextFilter
+                    resource = r.resource
+                    # Only include Reserves
+                    db = current.db
+                    mtable = db.auth_membership
+                    gtable = db.auth_group
+                    query = (gtable.uuid == "RESERVE") & \
+                            (gtable.id == mtable.group_id)
+                    reserves = db(query).select(mtable.user_id)
+                    reserves = [m.user_id for m in reserves]
+                    resource.add_filter(FS("user.id").belongs(reserves))
+
+                    gtable = s3db.gis_location
+                    districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
+                                                                                                     gtable.name,
+                                                                                                     cache = s3db.cache)
+                    districts = {d.id:d.name for d in districts}
+
+                    resource.configure(list_fields = ["first_name",
+                                                      "middle_name",
+                                                      "last_name",
+                                                      (T("Skills"), "competency.skill_id"),
+                                                      (T("Email"), "email.value"),
+                                                      (T("Mobile Phone"), "phone.value"),
+                                                      ],
+                                       filter_widgets = [S3TextFilter(["first_name",
+                                                                       "middle_name",
+                                                                       "last_name",
+                                                                       "comments",
+                                                                       "competency.skill_id$name",
+                                                                       ],
+                                                                      #formstyle = text_filter_formstyle,
+                                                                      label = "",
+                                                                      _placeholder = T("Search"),
+                                                                      ),
+                                                         S3OptionsFilter("person_location.location_id",
+                                                                         label = T("Locations Served"),
+                                                                         options = districts,
+                                                                         ),
+                                                         S3OptionsFilter("competency.skill_id",
+                                                                         ),
+                                                         ],
+                                       )
+                    s3.crud_strings[r.tablename] = Storage(
+                        label_create = T("New Reserve Volunteer"),
+                        title_display = T("Reserve Volunteer Details"),
+                        title_list = T("Reserve Volunteers"),
+                        title_update = T("Edit Reserve Volunteer"),
+                        #title_upload = T("Import Reserve Volunteers"),
+                        label_list_button = T("List Reserve Volunteers"),
+                        label_delete_button = T("Delete Reserve Volunteer"),
+                        msg_record_created = T("Reserve Volunteer added"),
+                        msg_record_modified = T("Reserve Volunteer updated"),
+                        msg_record_deleted = T("Reserve Volunteer deleted"),
+                        msg_list_empty = T("No Reserve Volunteers currently registered")
+                        )
+                elif get_vars_get("donors") or \
+                     has_role("DONOR", include_admin=False):
+                    # Donors
+                    from s3 import FS, S3OptionsFilter, S3TextFilter
+                    resource = r.resource
+                    # Only include Donors
+                    db = current.db
+                    mtable = db.auth_membership
+                    gtable = db.auth_group
+                    query = (gtable.uuid == "DONOR") & \
+                            (gtable.id == mtable.group_id)
+                    donors = db(query).select(mtable.user_id)
+                    donors = [d.user_id for d in donors]
+                    resource.add_filter(FS("user.id").belongs(donors))
+
+                    resource.configure(list_fields = [# @ToDo: Add Organisation freetext
+                                                      "first_name",
+                                                      "middle_name",
+                                                      "last_name",
+                                                      (T("Goods / Services"), "person_item.item_id"),
+                                                      (T("Email"), "email.value"),
+                                                      (T("Mobile Phone"), "phone.value"),
+                                                      ],
+                                       filter_widgets = [S3TextFilter(["first_name",
+                                                                       "middle_name",
+                                                                       "last_name",
+                                                                       "comments",
+                                                                       # @ToDo: Add Items
+                                                                       #"competency.skill_id$name",
+                                                                       ],
+                                                                      #formstyle = text_filter_formstyle,
+                                                                      label = "",
+                                                                      _placeholder = T("Search"),
+                                                                      ),
+                                                         S3OptionsFilter("person_item.item_id",
+                                                                         ),
+                                                         ],
+                                       )
+                    s3.crud_strings[r.tablename] = Storage(
+                        label_create = T("New Donor"),
+                        title_display = T("Donor Details"),
+                        title_list = T("Donors"),
+                        title_update = T("Edit Donor"),
+                        #title_upload = T("Import Donors"),
+                        label_list_button = T("List Donors"),
+                        label_delete_button = T("Delete Donor"),
+                        msg_record_created = T("Donor added"),
+                        msg_record_modified = T("Donor updated"),
+                        msg_record_deleted = T("Donor deleted"),
+                        msg_list_empty = T("No Donors currently registered")
+                        )
+                elif get_vars_get("groups") or \
+                     has_role("GROUP_ADMIN", include_admin=False):
+                    # Group Members
+                    s3.crud_strings[r.tablename] = Storage(
+                        label_create = T("New Member"),
+                        title_display = T("Member Details"),
+                        title_list = T("Members"),
+                        title_update = T("Edit Member"),
+                        #title_upload = T("Import Members"),
+                        label_list_button = T("List Members"),
+                        label_delete_button = T("Delete Member"),
+                        msg_record_created = T("Member added"),
+                        msg_record_modified = T("Member updated"),
+                        msg_record_deleted = T("Member deleted"),
+                        msg_list_empty = T("No Members currently registered")
+                        )
+                else:
+                    # Organisation Volunteers
+                    # (only used for hrm/person profile)
+                    s3.crud_strings[r.tablename] = Storage(
+                        label_create = T("New Volunteer"),
+                        title_display = T("Volunteer Details"),
+                        title_list = T("Volunteers"),
+                        title_update = T("Edit Volunteer"),
+                        #title_upload = T("Import Volunteers"),
+                        label_list_button = T("List Volunteers"),
+                        label_delete_button = T("Delete Volunteer"),
+                        msg_record_created = T("Volunteer added"),
+                        msg_record_modified = T("Volunteer updated"),
+                        msg_record_deleted = T("Volunteer deleted"),
+                        msg_list_empty = T("No Volunteers currently registered")
+                        )
 
             return result
         s3.prep = prep
@@ -3076,6 +3077,11 @@ $('.copy-link').click(function(e){
         # Hide the search box on component tabs, as confusing & not useful
         attr["dtargs"] = {"dt_searching": False,
                           }
+
+        if br:
+            # Link to customised download Template
+            attr["csv_template"] = ("../../themes/CCC/csv", "affected_person")
+
         attr["rheader"] = ccc_rheader
 
         return attr
