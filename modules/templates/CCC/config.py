@@ -245,6 +245,8 @@ def config(settings):
 
     settings.hrm.event_course_mandatory = False
 
+    settings.msg.require_international_phone_numbers = False
+
     settings.org.organisation_location_context = "organisation_location.location_id"
 
     settings.pr.hide_third_gender = False
@@ -470,34 +472,36 @@ $('.copy-link').click(function(e){
                           rheader_tabs)
 
         elif tablename == "pr_person":
-            if r.controller == "br":
-                # No rheader currently
-                return None
             T = current.T
-            tabs = [(T("Basic Details"), None),
-                    (T("Address"), "address"),
-                    (T("Contacts"), "contacts"),
-                    # Included in Contacts tab:
-                    #(T("Emergency Contacts"), "contact_emergency"),
-                    ]
-            get_vars_get = r.get_vars.get
-            has_role = current.auth.s3_has_role
-            if get_vars_get("donors") or \
-               has_role("DONOR", include_admin=False):
-                # Better on main form using S3SQLInlineLink
-                #tabs.append((T("Goods / Services"), "item"))
-                pass
-            elif get_vars_get("groups") or \
-                 has_role("GROUP_ADMIN", include_admin=False):
-                # Better as menu item, to be able to access tab(s)
-                #tabs.append((T("Group"), "group"))
-                pass
+            if r.controller == "br":
+                tabs = [(T("Basic Details"), None),
+                        (T("Report History"), "br_note"),
+                        ]
             else:
-                tabs.append((T("Additional Information"), "additional"))
-                # Better on main form using S3SQLInlineLink
-                #tabs.append((T("Skills"), "competency"))
-                if has_role("ORG_ADMIN"):
-                    tabs.insert(1, (T("Affiliation"), "human_resource"))
+                tabs = [(T("Basic Details"), None),
+                        (T("Address"), "address"),
+                        (T("Contacts"), "contacts"),
+                        # Included in Contacts tab:
+                        #(T("Emergency Contacts"), "contact_emergency"),
+                        ]
+                get_vars_get = r.get_vars.get
+                has_role = current.auth.s3_has_role
+                if get_vars_get("donors") or \
+                   has_role("DONOR", include_admin=False):
+                    # Better on main form using S3SQLInlineLink
+                    #tabs.append((T("Goods / Services"), "item"))
+                    pass
+                elif get_vars_get("groups") or \
+                     has_role("GROUP_ADMIN", include_admin=False):
+                    # Better as menu item, to be able to access tab(s)
+                    #tabs.append((T("Group"), "group"))
+                    pass
+                else:
+                    tabs.append((T("Additional Information"), "additional"))
+                    # Better on main form using S3SQLInlineLink
+                    #tabs.append((T("Skills"), "competency"))
+                    if has_role("ORG_ADMIN"):
+                        tabs.insert(1, (T("Affiliation"), "human_resource"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
@@ -656,6 +660,26 @@ $('.copy-link').click(function(e){
         return attr
 
     settings.customise_auth_user_controller = customise_auth_user_controller
+
+    # -------------------------------------------------------------------------
+    def customise_br_note_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.br_note
+        f = table.note_type_id
+        f.readable = f.writable = False
+        f.requires = None
+        table.note.label = T("Action Taken")
+        s3db.configure(tablename,
+                       list_fields = ["person_id",
+                                      "date",
+                                      "note",
+                                      (T("Author"), "modified_by"),
+                                      ],
+                       )
+
+    settings.customise_br_note_resource = customise_br_note_resource
 
     # -------------------------------------------------------------------------
     def customise_cms_post_resource(r, tablename):
@@ -2758,6 +2782,9 @@ $('.copy-link').click(function(e){
             get_vars_get = r.get_vars.get
             has_role = current.auth.s3_has_role
             if r.controller == "br":
+
+                s3db.br_case.comments.comment = None
+
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 crud_form = S3SQLCustomForm("first_name",
                                             "last_name",
@@ -2766,7 +2793,7 @@ $('.copy-link').click(function(e){
                                                 label = T("Address"),
                                                 fields = [("", "location_id")],
                                                 filterby = {"field": "type",
-                                                            "options": "1",
+                                                            "options": 1,
                                                             },
                                                 link = False,
                                                 multiple = False,
@@ -2775,8 +2802,8 @@ $('.copy-link').click(function(e){
                                                 "contact",
                                                 fields = [("", "value")],
                                                 filterby = {"field": "contact_method",
-                                                           "options": "SMS",
-                                                           },
+                                                            "options": "SMS",
+                                                            },
                                                 label = T("Contact Number"),
                                                 multiple = False,
                                                 name = "phone",
@@ -2786,25 +2813,66 @@ $('.copy-link').click(function(e){
                                                 "contact",
                                                 fields = [("", "value")],
                                                 filterby = {"field": "contact_method",
-                                                           "options": "EMAIL",
-                                                           },
+                                                            "options": "EMAIL",
+                                                            },
                                                 label = T("Email"),
                                                 multiple = False,
                                                 name = "email",
                                                 ),
                                             (T("Issue/Concern"), "case.comments"),
+                                            S3SQLInlineComponent(
+                                                "contact_person",
+                                                fields = ["name",
+                                                          "phone",
+                                                          "email",
+                                                          ],
+                                                filterby = {"field": "type",
+                                                            "options": 1,
+                                                            },
+                                                label = T("Person Reporting"),
+                                                multiple = False,
+                                                required = True,
+                                                name = "reporter",
+                                                ),
+                                            S3SQLInlineComponent(
+                                                "contact_emergency",
+                                                fields = ["name",
+                                                          (T("Contact Number"), "phone"),
+                                                          ],
+                                                label = T("Emergency Contact"),
+                                                multiple = False,
+                                                ),
+                                            S3SQLInlineComponent(
+                                                "contact_person",
+                                                fields = ["name",
+                                                          "email",
+                                                          ],
+                                                filterby = {"field": "type",
+                                                            "options": 2,
+                                                            },
+                                                label = T("Report inputted by"),
+                                                multiple = False,
+                                                name = "inputter",
+                                                ),
                                             "case.date",
                                             )
 
-                from s3 import S3TextFilter, S3DateFilter, S3OptionsFilter
+                from s3 import S3TextFilter, S3DateFilter, S3LocationFilter
                 filter_widgets = [
-                    S3TextFilter(["first_name", "last_name", "case.comments"],
+                    S3TextFilter(["first_name",
+                                  "last_name",
+                                  "address.location_id$L3",
+                                  "address.location_id$L4",
+                                  "address.location_id$addr_street",
+                                  "address.location_id$addr_postcode",
+                                  "case.comments",
+                                  ],
                                  label = T("Search"),
-                                 comment = T("You can search by name or issue"),
+                                 comment = T("You can search by name, address or issue"),
                                  ),
-                    S3OptionsFilter("address.location_id$L3",
-                                    label = T("District"),
-                                    ),
+                    S3LocationFilter("address.location_id",
+                                     levels = ("L3", "L4"),
+                                     ),
                     #S3DateFilter("date_of_birth",
                     #             hidden = True,
                     #             ),
