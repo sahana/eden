@@ -3592,6 +3592,21 @@ class RecordApprovalTests(unittest.TestCase):
             org.update(id=org_id)
             s3db.update_super(otable, org)
 
+            # Give AUTHENTICATED permissions to read all records and
+            # update own records in this table (override any default rules):
+            acl.update_acl(AUTHENTICATED,
+                           c="org",
+                           uacl=acl.READ,
+                           oacl=acl.READ|acl.UPDATE)
+            acl.update_acl(AUTHENTICATED,
+                           c="org", f="organisation",
+                           uacl=acl.READ,
+                           oacl=acl.READ|acl.UPDATE)
+            acl.update_acl(AUTHENTICATED,
+                           t="org_organisation",
+                           uacl=acl.READ,
+                           oacl=acl.READ|acl.UPDATE)
+
             # Normal can see unapproved record if approval is not on for this table
             auth.s3_impersonate("normaluser@example.com")
             permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
@@ -3599,7 +3614,7 @@ class RecordApprovalTests(unittest.TestCase):
             permitted = has_permission("update", otable, record_id=org_id, c="org", f="organisation")
             assertTrue(permitted)
             permitted = has_permission("delete", otable, record_id=org_id, c="org", f="organisation")
-            assertFalse(permitted) # not allowed as per ACL!
+            assertFalse(permitted)
 
             # They can not run any of the approval methods without permission, though
             permitted = has_permission("review", otable, record_id=org_id, c="org", f="organisation")
@@ -3640,7 +3655,7 @@ class RecordApprovalTests(unittest.TestCase):
             permitted = has_permission("update", otable, record_id=org_id, c="org", f="organisation")
             assertTrue(permitted)
             permitted = has_permission("delete", otable, record_id=org_id, c="org", f="organisation")
-            assertFalse(permitted) # not permitted per ACL
+            assertFalse(permitted) # not permitted per default permission rules
 
             # Normal user can not review/approve/reject the record even if he owns it
             permitted = has_permission("review", otable, record_id=org_id, c="org", f="organisation")
@@ -3657,10 +3672,13 @@ class RecordApprovalTests(unittest.TestCase):
                            c="org",
                            uacl=acl.READ|acl.REVIEW|acl.APPROVE,
                            oacl=acl.READ|acl.UPDATE|acl.REVIEW|acl.APPROVE)
-
+            acl.update_acl(AUTHENTICATED,
+                           c="org", f="organisation",
+                           uacl=acl.READ|acl.REVIEW|acl.APPROVE,
+                           oacl=acl.READ|acl.UPDATE|acl.REVIEW|acl.APPROVE)
             acl.update_acl(AUTHENTICATED,
                            t="org_organisation",
-                           uacl=acl.READ|acl.CREATE|acl.REVIEW|acl.APPROVE,
+                           uacl=acl.READ|acl.REVIEW|acl.APPROVE,
                            oacl=acl.READ|acl.UPDATE|acl.REVIEW|acl.APPROVE)
 
             # Normal user read/update unapproved records now that he has review-permission
@@ -3670,7 +3688,7 @@ class RecordApprovalTests(unittest.TestCase):
             permitted = has_permission("update", otable, record_id=org_id, c="org", f="organisation")
             assertTrue(permitted)
             permitted = has_permission("delete", otable, record_id=org_id, c="org", f="organisation")
-            assertFalse(permitted) # not allows as per ACL!
+            assertFalse(permitted) # not permitted per default permission rules
 
             # Normal user can review/approve/reject according to permissions
             permitted = has_permission(["read", "review"], otable, record_id=org_id, c="org", f="organisation")
@@ -3705,7 +3723,10 @@ class RecordApprovalTests(unittest.TestCase):
                            c="org",
                            uacl=acl.READ,
                            oacl=acl.READ|acl.UPDATE)
-
+            acl.update_acl(AUTHENTICATED,
+                           c="org", f="organisation",
+                           uacl=acl.READ,
+                           oacl=acl.READ|acl.UPDATE)
             acl.update_acl(AUTHENTICATED,
                            t="org_organisation",
                            uacl=acl.READ|acl.CREATE,
@@ -3819,7 +3840,10 @@ class RecordApprovalTests(unittest.TestCase):
                            c="org",
                            uacl=acl.READ|acl.REVIEW|acl.APPROVE,
                            oacl=acl.READ|acl.UPDATE|acl.REVIEW|acl.APPROVE)
-
+            acl.update_acl(AUTHENTICATED,
+                           c="org", f="organisation",
+                           uacl=acl.READ|acl.REVIEW|acl.APPROVE,
+                           oacl=acl.READ|acl.UPDATE|acl.REVIEW|acl.APPROVE)
             acl.update_acl(AUTHENTICATED,
                            t="org_organisation",
                            uacl=acl.READ|acl.CREATE|acl.REVIEW|acl.APPROVE,
@@ -3835,7 +3859,6 @@ class RecordApprovalTests(unittest.TestCase):
             assertTrue(str(expected) in str(query))
             # See only unapproved records in review
             query = accessible_query("review", table, c="org", f="organisation")
-            print(query)
             expected = (table.approved_by != None)
             assertFalse(str(expected) in str(query))
             expected = (table.approved_by == None)
@@ -4537,18 +4560,18 @@ class EntityRoleManagerTests(unittest.TestCase):
 if __name__ == "__main__":
 
     run_suite(
-        #AuthUtilsTests,
-        #SetRolesTests,
-        #RoleAssignmentTests,
-        #RecordOwnershipTests,
-        #ACLManagementTests,
-        #HasPermissionTests,
-        #AccessibleQueryTests,
-        #DelegationTests,
+        AuthUtilsTests,
+        SetRolesTests,
+        RoleAssignmentTests,
+        RecordOwnershipTests,
+        ACLManagementTests,
+        HasPermissionTests,
+        AccessibleQueryTests,
+        DelegationTests,
         RecordApprovalTests,
-        #RealmEntityTests,
-        #LinkToPersonTests,
-        #EntityRoleManagerTests,
+        RealmEntityTests,
+        LinkToPersonTests,
+        EntityRoleManagerTests,
         )
 
 # END ========================================================================

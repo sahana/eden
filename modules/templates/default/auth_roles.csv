@@ -9,8 +9,8 @@ AUTHENTICATED,Authenticated,,hrm,staff,,,,,"HRM access is controlled to just HR 
 AUTHENTICATED,Authenticated,,hrm,volunteer,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
 AUTHENTICATED,Authenticated,,org,organisation,,READ,,any,
 AUTHENTICATED,Authenticated,,,,org_organisation,READ,,any,
-AUTHENTICATED,Authenticated,,pr,,,"READ|UPDATE",,,"Authenticated users can only see/edit their own PR records"
-AUTHENTICATED,Authenticated,,,,pr_person,"READ|UPDATE",,,"Authenticated users can only see/edit their own PR records"
+AUTHENTICATED,Authenticated,,pr,,,,"READ|UPDATE",,"Authenticated users can only see/edit their own PR records"
+AUTHENTICATED,Authenticated,,,,pr_person,,"READ|UPDATE",,"Authenticated users can only see/edit their own PR records"
 AUTHENTICATED,Authenticated,,pr,person,,"CREATE","READ|UPDATE",,"But need to be able to add/edit addresses"
 AUTHENTICATED,Authenticated,,pr,pentity,,"READ",,,"Custom Controller to allow access to PR via JSON for AutoComplete"
 AUTHENTICATED,Authenticated,,pr,person_search,,"READ",,,"Custom Controller to allow access to PR via JSON for AutoComplete"
