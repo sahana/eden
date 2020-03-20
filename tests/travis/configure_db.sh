@@ -36,6 +36,9 @@ elif [[ `echo $DB | cut -f1 -d"-"` == postgres ]]; then
         psql -c "create database sahana;" -U postgres
 
         if [[ $DB == postgres-10+postgis ]]; then
+            sudo apt -y install gnupg2
+            wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+            echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" | sudo tee  /etc/apt/sources.list.d/pgdg.list
             sudo apt-get -qq update
             sudo apt-get install -y postgresql-10-postgis-2.5
             psql -U postgres -d sahana -c "create extension postgis"
@@ -54,7 +57,7 @@ elif [[ `echo $DB | cut -f1 -d"-"` == postgres ]]; then
         if [[ $DB == postgres-11+postgis ]]; then
             sudo apt -y install gnupg2
             wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-            echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" |sudo tee  /etc/apt/sources.list.d/pgdg.list
+            echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" | sudo tee  /etc/apt/sources.list.d/pgdg.list
             sudo apt-get -qq update
             sudo apt-get install -y postgis postgresql-11-postgis-2.5
             psql -U postgres -d sahana -c "create extension postgis"
