@@ -82,6 +82,7 @@ class S3MainMenu(default.S3MainMenu):
         elif has_role("AGENCY"):
             menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
                     MM("Documents", c="doc", f="document", m="datalist"),
+                    MM("Affected People", c="br", f="person"),
                     #MM("Donors", c="pr", f="person", vars={"donors": 1})(
                     #   MM("Donations", c="supply", f="person_item"),
                     #   ),
@@ -261,6 +262,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Types", f="organisation_type"),
                         M("Job Titles", c="hrm", f="job_title"),
                         ),
+                    M("Skills", c="hrm", f="skill")(),
                     M("Consent Tracking", c="admin", link=False, check=consent_tracking)(
                         M("Processing Types", f="processing_type"),
                         M("Consent Options", f="consent_option"),
