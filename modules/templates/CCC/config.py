@@ -470,6 +470,9 @@ $('.copy-link').click(function(e){
                           rheader_tabs)
 
         elif tablename == "pr_person":
+            if r.controller == "br":
+                # No rheader currently
+                return None
             T = current.T
             tabs = [(T("Basic Details"), None),
                     (T("Address"), "address"),
@@ -2755,13 +2758,80 @@ $('.copy-link').click(function(e){
             get_vars_get = r.get_vars.get
             has_role = current.auth.s3_has_role
             if r.controller == "br":
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 crud_form = S3SQLCustomForm("first_name",
                                             "last_name",
+                                            S3SQLInlineComponent(
+                                                "address",
+                                                label = T("Address"),
+                                                fields = [("", "location_id")],
+                                                filterby = {"field": "type",
+                                                            "options": "1",
+                                                            },
+                                                link = False,
+                                                multiple = False,
+                                                ),
+                                            S3SQLInlineComponent(
+                                                "contact",
+                                                fields = [("", "value")],
+                                                filterby = {"field": "contact_method",
+                                                           "options": "SMS",
+                                                           },
+                                                label = T("Contact Number"),
+                                                multiple = False,
+                                                name = "phone",
+                                                required = True,
+                                                ),
+                                            S3SQLInlineComponent(
+                                                "contact",
+                                                fields = [("", "value")],
+                                                filterby = {"field": "contact_method",
+                                                           "options": "EMAIL",
+                                                           },
+                                                label = T("Email"),
+                                                multiple = False,
+                                                name = "email",
+                                                ),
+                                            (T("Issue/Concern"), "case.comments"),
+                                            "case.date",
                                             )
+
+                from s3 import S3TextFilter, S3DateFilter, S3OptionsFilter
+                filter_widgets = [
+                    S3TextFilter(["first_name", "last_name", "case.comments"],
+                                 label = T("Search"),
+                                 comment = T("You can search by name or issue"),
+                                 ),
+                    S3OptionsFilter("address.location_id$L3",
+                                    label = T("District"),
+                                    ),
+                    #S3DateFilter("date_of_birth",
+                    #             hidden = True,
+                    #             ),
+                    #S3OptionsFilter("case.status_id",
+                    #               cols = 3,
+                    #               options = status_filter_opts,
+                    #               sort = False,
+                    #               hidden = True,
+                    #               ),
+                    #S3OptionsFilter("person_details.nationality",
+                    #                hidden = True,
+                    #                ),
+                    S3DateFilter("case.date",
+                                 hidden = True,
+                                 ),
+                    ]
 
                 s3db.configure("pr_person",
                                crud_form = crud_form,
+                               filter_widgets = filter_widgets,
+                               list_fields = ["first_name",
+                                              "last_name",
+                                              "address.location_id$L3",
+                                              "address.location_id$L4",
+                                              ],
                                )
+
             elif get_vars_get("reserves") or \
                has_role("RESERVE", include_admin=False):
                 # Reserve Volunteers
@@ -2916,20 +2986,21 @@ $('.copy-link').click(function(e){
                 output = standard_postp(r, output)
 
             if not r.component:
-                # Include get_vars on Action Buttons to configure crud_form/crud_strings appropriately
-                from gluon import URL
-                from s3 import S3CRUD
+                if r.controller != "br":
+                    # Include get_vars on Action Buttons to configure crud_form/crud_strings appropriately
+                    from gluon import URL
+                    from s3 import S3CRUD
 
-                read_url = URL(c="pr", f="person", args=["[id]", "read"],
-                               vars = r.get_vars)
+                    read_url = URL(c="pr", f="person", args=["[id]", "read"],
+                                   vars = r.get_vars)
 
-                update_url = URL(c="pr", f="person", args=["[id]", "update"],
-                                 vars = r.get_vars)
+                    update_url = URL(c="pr", f="person", args=["[id]", "update"],
+                                     vars = r.get_vars)
 
-                S3CRUD.action_buttons(r,
-                                      read_url = read_url,
-                                      update_url = update_url,
-                                      )
+                    S3CRUD.action_buttons(r,
+                                          read_url = read_url,
+                                          update_url = update_url,
+                                          )
 
             return output
         s3.postp = postp
