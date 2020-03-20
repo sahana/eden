@@ -3908,13 +3908,14 @@ $('.copy-link').click(function(e){
             list_fields.insert(0, "need_organisation.organisation_id")
         else:
             organisation_id = auth.user.organisation_id
-            f = s3db.req_need_organisation.organisation_id
-            f.default = organisation_id
-            # Needs to be in the form
-            #f.readable = f.writable = False
-            #f.requires = s3db.org_organisation_requires(updateable = True)
-            from gluon import IS_IN_SET
-            f.requires = IS_IN_SET({organisation_id: s3db.org_organisation[organisation_id].name}, zero=None)
+            if organisation_id:
+                f = s3db.req_need_organisation.organisation_id
+                f.default = organisation_id
+                # Needs to be in the form
+                #f.readable = f.writable = False
+                #f.requires = s3db.org_organisation_requires(updateable = True)
+                from gluon import IS_IN_SET
+                f.requires = IS_IN_SET({organisation_id: s3db.org_organisation[organisation_id].name}, zero=None)
             f.comment = None # No Create
 
             # Dropdown, not Autocomplete
