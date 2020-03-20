@@ -48,7 +48,7 @@ def config(settings):
     # NB This can also be over-ridden for specific contexts later
     # e.g. Activities filtered to those of parent Project
     #settings.gis.countries = ("US",)
-    # Uncomment to display the Map Legend as a floating DIV
+    # Uncomment to display the Map Legend as a floating DIV, so that it is visible on Summary Map
     settings.gis.legend = "float"
     # Uncomment to Disable the Postcode selector in the LocationSelector
     #settings.gis.postcode_selector = False # @ToDo: Vary by country (include in the gis_config!)

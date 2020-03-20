@@ -281,6 +281,7 @@ class PRPersonEntityModel(S3Model):
                                       },
                                      ),
                        pr_contact_emergency = pe_id,
+                       pr_contact_person = pe_id,
                        pr_image = ({"name": "image",
                                     "joinby": "pe_id",
                                     },
@@ -3866,6 +3867,7 @@ class PRContactModel(S3Model):
     names = ("pr_contact",
              #"pr_contact_id",
              "pr_contact_emergency",
+             "pr_contact_person",
              "pr_contact_represent",
              )
 
@@ -3994,6 +3996,7 @@ class PRContactModel(S3Model):
         #
         tablename = "pr_contact_emergency"
         define_table(tablename,
+                     # Component not instance
                      super_link("pe_id", "pr_pentity"),
                      Field("name",
                            label = T("Name"),
@@ -4036,6 +4039,52 @@ class PRContactModel(S3Model):
                                             ),
                   list_layout = pr_EmergencyContactListLayout(),
                   )
+
+        # ---------------------------------------------------------------------
+        # Contact Person Information
+        #
+        # e.g. Person Reporting, Report Input By
+        #
+        tablename = "pr_contact_person"
+        define_table(tablename,
+                     # Component not instance
+                     super_link("pe_id", "pr_pentity"),
+                     Field("name",
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("type", length=8,
+                           label = T("Type"),
+                           requires = IS_EMPTY_OR(IS_LENGTH(8)),
+                           # Define in template as-required
+                           #represent = S3Represent(options = contact_person_types),
+                           #requires = IS_EMPTY_OR(IS_IN_SET(contact_person_types)),
+                           ),
+                     Field("phone",
+                           label = T("Phone"),
+                           represent = s3_phone_represent,
+                           requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
+                           widget = S3PhoneWidget(),
+                           ),
+                     Field("email",
+                           label = T("Email"),
+                           requires = IS_EMPTY_OR(IS_EMAIL()),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Contact Person"),
+            title_display = T("Contact Person Details"),
+            title_list = T("Contact Persons"),
+            title_update = T("Edit Contact Person"),
+            label_list_button = T("List Contact Persons"),
+            label_delete_button = T("Delete Contact Person"),
+            msg_record_created = T("Contact Person Added"),
+            msg_record_modified = T("Contact Person Updated"),
+            msg_record_deleted = T("Contact Person Deleted"),
+            msg_list_empty = T("No contact persons registered"))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -10140,11 +10189,11 @@ class pr_EmergencyContactListLayout(S3DataListLayout):
 
         update_url = URL(c="pr",
                          f="contact_emergency",
-                         args=[record_id, "update.popup"],
-                         vars={"refresh": list_id,
-                               "record": record_id,
-                               "profile": self.profile,
-                               },
+                         args = [record_id, "update.popup"],
+                         vars = {"refresh": list_id,
+                                 "record": record_id,
+                                 "profile": self.profile,
+                                 },
                          )
 
         has_permission = current.auth.s3_has_permission

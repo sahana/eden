@@ -17,6 +17,7 @@
          Case Type......................optional.....br_case.case_type_id$name @ToDo
          Registration Date..............optional.....br_case.date
          Status.........................optional.....br_case.status_id$code
+         Comments.......................optional.....br_case.comments
 
          Family.........................optional.....pr_group.name
          Head of Family.................optional.....pr_group_membership.group_head
@@ -79,7 +80,10 @@
          Permanent L3...................optional.....person permanent address L3
          Permanent L4...................optional.....person permanent address L4
          Photo..........................optional.....pr_image.image (URL to remote server to download)
-
+         Contact Person Name:XX.........optional.....pr_contact_person.name Type = XX
+         Contact Person Phone:XX........optional.....pr_contact_person.phone Type = XX
+         Contact Person Email:XX........optional.....pr_contact_person.email Type = XX
+        
          Column headers looked up in labels.xml:
 
          PersonGender...................optional.....person gender
@@ -231,6 +235,10 @@
                             <xsl:value-of select="concat('Status:',col[@field='Status'])"/>
                         </xsl:attribute>
                     </reference>
+                </xsl:if>
+
+                <xsl:if test="col[@field='Comments']/text()!=''">
+                    <data field="comments"><xsl:value-of select="col[@field='Comments']/text()"/></data>
                 </xsl:if>
 
                 <!-- Link to Organisation -->
@@ -645,6 +653,55 @@
             </resource>
         </xsl:if>
 
+        <!-- Contact Persons -->
+        <xsl:for-each select="col[starts-with(@field, 'Contact Person Name')]">
+            <xsl:variable name="Type" select="normalize-space(substring-after(@field, ':'))"/>
+            <xsl:variable name="phone" select="concat('Contact Person Phone:', $Type)"/>
+            <xsl:variable name="Phone">
+                <xsl:value-of select="../col[@field=$phone]"/>
+            </xsl:variable>
+            <xsl:variable name="email" select="concat('Contact Person Email:', $Type)"/>
+            <xsl:variable name="Email">
+                <xsl:value-of select="../col[@field=$email]"/>
+            </xsl:variable>
+            <xsl:call-template name="ContactPerson">
+                <xsl:with-param name="Type">
+                    <xsl:value-of select="$Type"/>
+                </xsl:with-param>
+                <xsl:with-param name="Phone">
+                    <xsl:value-of select="$Phone"/>
+                </xsl:with-param>
+                <xsl:with-param name="Email">
+                    <xsl:value-of select="$Email"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:for-each>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="ContactPerson">
+        <xsl:param name="Type"/>
+        <xsl:param name="Phone"/>
+        <xsl:param name="Email"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+           <resource name="pr_contact_person">
+                <data field="name">
+                    <xsl:value-of select="$Value"/>
+                </data>
+                <data field="type">
+                    <xsl:value-of select="$Type"/>
+                </data>
+                <data field="phone">
+                    <xsl:value-of select="$Phone"/>
+                </data>
+                <data field="email">
+                    <xsl:value-of select="$Email"/>
+                </data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
