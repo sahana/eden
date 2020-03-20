@@ -40,7 +40,7 @@ elif [[ `echo $DB | cut -f1 -d"-"` == postgres ]]; then
             wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
             echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" | sudo tee  /etc/apt/sources.list.d/pgdg.list
             sudo apt-get -qq update
-            sudo apt-get install -y postgresql-10-postgis-2.5
+            sudo apt-get install -y postgis postgresql-10-postgis-2.5
             psql -U postgres -d sahana -c "create extension postgis"
             psql -U postgres -q -d sahana -c "grant all on geometry_columns to travis;"
             psql -U postgres -q -d sahana -c "grant all on spatial_ref_sys to travis;"
