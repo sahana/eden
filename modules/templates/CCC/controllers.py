@@ -1818,19 +1818,21 @@ def auth_user_register_onaccept(user_id):
                             )
 
         # 2nd Leader
-        # Create User
-        user2 = Storage(first_name = custom["first_name2"],
-                        last_name = custom["last_name2"],
-                        email = custom["email2"],
-                        password = custom["password2"],
-                        )
-        try:
-            user_id = db.auth_user.insert(**user2)
-        except:
-            import sys
-            error = sys.exc_info()[1]
-            current.log.error = "Unable to add 2nd Leader to database: %s" % error
+        email = custom["email2"]
+        utable = db.auth_user
+        exists = db(utable.email == email).select(utable.id,
+                                                  limitby = (0, 1)
+                                                  )
+        if exists:
+            current.log.error = "Unable to add 2nd Leader to database: Email already exists"
         else:
+            # Create User
+            user2 = Storage(first_name = custom["first_name2"],
+                            last_name = custom["last_name2"],
+                            email = email,
+                            password = custom["password2"],
+                            )
+            user_id = utable.insert(**user2)
             user2.id = user_id
             # Approve User (Creates Person & Email)
             auth.s3_approve_user(user2)
