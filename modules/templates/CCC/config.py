@@ -193,6 +193,11 @@ def config(settings):
             # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
             module_type = None,
         )),
+        ("br", Storage(
+            name_nice = T("Affected People"),
+            restricted = True,
+            module_type = 10
+        )),
         #("cr", Storage(
         #    name_nice = T("Shelters"),
         #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
@@ -237,6 +242,8 @@ def config(settings):
     settings.cms.richtext = True
 
     settings.hrm.event_course_mandatory = False
+
+    settings.org.organisation_location_context = "organisation_location.location_id"
 
     settings.pr.hide_third_gender = False
 
@@ -388,9 +395,9 @@ def config(settings):
         elif tablename == "org_organisation":
             T = current.T
             tabs = [(T("Basic Details"), None),
+                    (T("Area Served"), "location"),
                     #(T("Offices"), "office"),
                     (T("Key Locations"), "facility"),
-                    #(T("Locations Served"), "location"),
                     (T("Volunteers"), "human_resource"),
                     ]
             rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -1540,14 +1547,15 @@ $('.copy-link').click(function(e){
         table.site_id.represent = s3db.org_SiteRepresent(show_type = False)
         f = table.location_id
         f.readable = f.writable = True
-        f.widget = S3LocationSelector(levels = ("L3"),
-                                      required_levels = ("L3"),
+        f.widget = S3LocationSelector(levels = ("L3", "L4"),
+                                      required_levels = ("L3",),
                                       show_address = True)
 
         list_fields = ["start_date",
                        "name",
                        "site_id",
                        "location_id$L3",
+                       "location_id$L4",
                        "location_id$addr_street",
                        ]
 
@@ -1970,7 +1978,7 @@ $('.copy-link').click(function(e){
                                                    ),
                        list_fields = ["name",
                                       (T("Type"), "organisation_organisation_type.organisation_type_id"),
-                                      (T("Locations Served"), "organisation_location.location_id"),
+                                      (T("District Served"), "organisation_location.location_id$L3"),
                                       ],
                        filter_widgets = [S3TextFilter(["name",
                                                        "comments",
@@ -1982,8 +1990,8 @@ $('.copy-link').click(function(e){
                                          S3OptionsFilter("organisation_organisation_type.organisation_type_id",
                                                          label = T("Type"),
                                                          ),
-                                         S3OptionsFilter("organisation_location.location_id",
-                                                         label = T("Locations Served"),
+                                         S3OptionsFilter("organisation_location.location_id$L3",
+                                                         label = T("District Served"),
                                                          ),
                                         ],
                        )
@@ -2008,7 +2016,24 @@ $('.copy-link').click(function(e){
             else:
                 result = True
 
-            if not r.id and r.http == "POST":
+            if r.id:
+                if r.component_name == "location":
+                    from s3 import S3LocationSelector
+                    s3db = current.s3db
+                    s3db.org_organisation_location.location_id.widget = S3LocationSelector(levels = ("L3", "L4"),
+                                                                                           required_levels = ("L3",),
+                                                                                           show_postcode = False,
+                                                                                           points = True,
+                                                                                           polygons = True,
+                                                                                           )
+                    s3db.configure("org_organisation_location",
+                                   list_fields = ["location_id$L3",
+                                                  "location_id$L4",
+                                                  "comments",
+                                                  ],
+                                   )
+
+            elif r.http == "POST":
                 post_vars = r.post_vars
                 if "selected" in post_vars:
                     # Bulk Action 'Message' has been selected
@@ -2038,7 +2063,8 @@ $('.copy-link').click(function(e){
                     from gluon import redirect, URL
                     redirect(URL(c="project", f="task",
                                  args = "create",
-                                 vars = {"o": ",".join(selected)}))
+                                 vars = {"o": ",".join(selected)},
+                                 ))
 
             return result
         s3.prep = prep
@@ -2072,7 +2098,8 @@ $('.copy-link').click(function(e){
             return output
         s3.postp = postp
 
-        attr["dtargs"] = {"dt_bulk_actions": [(T("Message"), "message")],
+        if len(current.request.args) == 1:
+            attr["dtargs"] = {"dt_bulk_actions": [(T("Message"), "message")],
                           }
         attr["rheader"] = ccc_rheader
 
@@ -2410,6 +2437,10 @@ $('.copy-link').click(function(e){
     # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
 
+        if r.controller == "br":
+            # Customisation happens in Prep (to override controller prep)
+            return
+
         from gluon import IS_EMPTY_OR, IS_IN_SET
         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
@@ -2721,7 +2752,15 @@ $('.copy-link').click(function(e){
 
             get_vars_get = r.get_vars.get
             has_role = current.auth.s3_has_role
-            if get_vars_get("reserves") or \
+            if r.controller == "br":
+                crud_form = S3SQLCustomForm("first_name",
+                                            "last_name",
+                                            )
+
+                s3db.configure("pr_person",
+                               crud_form = crud_form,
+                               )
+            elif get_vars_get("reserves") or \
                has_role("RESERVE", include_admin=False):
                 # Reserve Volunteers
                 from s3 import FS, S3OptionsFilter, S3TextFilter
@@ -3669,8 +3708,8 @@ $('.copy-link').click(function(e){
         f.requires = IS_UTC_DATETIME()
         f.widget = S3CalendarWidget(timepicker = True)
         table.end_date.readable = table.end_date.writable = True
-        table.location_id.widget = S3LocationSelector(levels = ("L3"),
-                                                      required_levels = ("L3"),
+        table.location_id.widget = S3LocationSelector(levels = ("L3", "L4"),
+                                                      required_levels = ("L3",),
                                                       show_address = True)
 
         current.response.s3.crud_strings[tablename] = Storage(

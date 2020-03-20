@@ -423,6 +423,12 @@ def donor():
     return output
 
 # -----------------------------------------------------------------------------
+#def organisation_location():
+#    """ RESTful CRUD controller """
+
+#    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def resource():
     """ RESTful CRUD controller """
 
