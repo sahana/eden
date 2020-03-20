@@ -1,0 +1,17 @@
+diff --git a/gluon/shell.py b/gluon/shell.py
+index 225ac4e6..84452c87 100644
+--- a/gluon/shell.py
++++ b/gluon/shell.py
+@@ -276,7 +276,11 @@ def run(
+ 
+             if import_models:
+                 BaseAdapter.close_all_instances('commit')
+-        except:
++        except SystemExit:
++            if import_models:
++                BaseAdapter.close_all_instances('rollback')
++            raise
++        except Exception:
+             print(traceback.format_exc())
+             if import_models:
+                 BaseAdapter.close_all_instances('rollback')

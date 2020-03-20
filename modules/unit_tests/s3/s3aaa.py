@@ -3835,6 +3835,7 @@ class RecordApprovalTests(unittest.TestCase):
             assertTrue(str(expected) in str(query))
             # See only unapproved records in review
             query = accessible_query("review", table, c="org", f="organisation")
+            print(query)
             expected = (table.approved_by != None)
             assertFalse(str(expected) in str(query))
             expected = (table.approved_by == None)
@@ -4536,18 +4537,18 @@ class EntityRoleManagerTests(unittest.TestCase):
 if __name__ == "__main__":
 
     run_suite(
-        AuthUtilsTests,
-        SetRolesTests,
-        RoleAssignmentTests,
-        RecordOwnershipTests,
-        ACLManagementTests,
-        HasPermissionTests,
-        AccessibleQueryTests,
-        DelegationTests,
+        #AuthUtilsTests,
+        #SetRolesTests,
+        #RoleAssignmentTests,
+        #RecordOwnershipTests,
+        #ACLManagementTests,
+        #HasPermissionTests,
+        #AccessibleQueryTests,
+        #DelegationTests,
         RecordApprovalTests,
-        RealmEntityTests,
-        LinkToPersonTests,
-        EntityRoleManagerTests,
+        #RealmEntityTests,
+        #LinkToPersonTests,
+        #EntityRoleManagerTests,
         )
 
 # END ========================================================================

@@ -4,8 +4,14 @@ sudo: false
 language: python
 
 python:
-  - "2.7"
-  - "3.5"
+  - "3.7"
+
+addons:
+  apt:
+    update: true
+    packages:
+      - python3-pip
+      - python3-setuptools
 
 # This tests against all the versions of DB supported by Eden
 env:
@@ -13,9 +19,8 @@ env:
   - DB=sqlite3
   - DB=postgres-9.6
   - DB=postgres-9.6+postgis
-
-virtualenv:
-  system_site_packages: true
+  - DB=postgres-10
+  - DB=postgres-10+postgis
 
 services:
   - mysql
@@ -29,29 +34,34 @@ services:
 notifications:
  email: false
 
-# install web2py
 before_install:
- - chmod +x tests/travis/*
- - sudo tests/travis/install_web2py.sh
+  - python --version
+  - pip install -U pip
+  - chmod +x tests/travis/*
 
-# install Eden. This generates generated_requirements.txt which is given as an
-# argument to pip
 install:
-  - sudo tests/travis/install_eden.sh
+  # Essential dependencies
+  - pip install python-dateutil
+  - pip install shapely
+  - pip install lxml
+  - pip install psycopg2
+  # Generated dependencies
+  - python tests/travis/generate_requirements_file.py tests/travis requirements.txt tests/travis/requirements.txt
+  - pip install -r tests/travis/generated_requirements.txt
+  # Install and configure web2py
+  - tests/travis/install_web2py.sh
+  # Install and configure Eden
+  - tests/travis/install_eden.sh
 
-# set up the testing environment
 before_script:
  - cd ../../web2py/
  - sudo chown -R ${USER} .
- # configure DB settings based on the env. variable
  - ./applications/eden/tests/travis/configure_db.sh
- # for debugging in the logs
- - cat ./applications/eden/models/000_config.py
- # prepop
+ #- cat ./applications/eden/models/000_config.py
  - python web2py.py -S eden -M -R applications/eden/static/scripts/tools/noop.py
 
 script:
  - python web2py.py -S eden -M -R applications/eden/modules/unit_tests/suite.py
 
 after_script:
-  - echo  "Travis Test Result" $TRAVIS_TEST_RESULT
+ - echo  "Travis Test Result" $TRAVIS_TEST_RESULT
