@@ -12,6 +12,9 @@ addons:
     packages:
       - python3-pip
       - python3-setuptools
+      - postgresql-10
+      - postgresql-client-10
+      - postgresql-10-postgis-2.5
 
 # This tests against all the versions of DB supported by Eden
 env:
@@ -20,7 +23,7 @@ env:
   - DB=postgres-9.6
   - DB=postgres-9.6+postgis
   - DB=postgres-10
-  #- DB=postgres-10+postgis
+  - DB=postgres-10+postgis
 
 services:
   - mysql
