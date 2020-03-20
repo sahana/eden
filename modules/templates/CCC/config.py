@@ -241,6 +241,8 @@ def config(settings):
 
     settings.cms.richtext = True
 
+    settings.gis.legend = "float"
+
     settings.hrm.event_course_mandatory = False
 
     settings.org.organisation_location_context = "organisation_location.location_id"
