@@ -20,7 +20,7 @@ env:
   - DB=postgres-9.6
   - DB=postgres-9.6+postgis
   - DB=postgres-10
-  - DB=postgres-10+postgis
+  #- DB=postgres-10+postgis
 
 services:
   - mysql
