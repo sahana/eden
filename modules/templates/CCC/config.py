@@ -2922,13 +2922,20 @@ $('.copy-link').click(function(e){
                                                                                                      cache = s3db.cache)
                     districts = {d.id:d.name for d in districts}
 
-                    resource.configure(list_fields = ["first_name",
-                                                      "middle_name",
-                                                      "last_name",
-                                                      (T("Skills"), "competency.skill_id"),
-                                                      (T("Email"), "email.value"),
-                                                      (T("Mobile Phone"), "phone.value"),
-                                                      ],
+                    list_fields = ["first_name",
+                                   "middle_name",
+                                   "last_name",
+                                   (T("Skills"), "competency.skill_id"),
+                                   (T("Email"), "email.value"),
+                                   (T("Mobile Phone"), "phone.value"),
+                                   ]
+                    if current.auth.permission.format == "xls":
+                        from s3 import S3DateTime
+                        s3db.pr_person.created_on.represent = lambda dt: \
+                                  S3DateTime.date_represent(dt, utc=True)
+                        list_fields.append((T("Registration Date"), "created_on"))
+
+                    resource.configure(list_fields = list_fields,
                                        filter_widgets = [S3TextFilter(["first_name",
                                                                        "middle_name",
                                                                        "last_name",
