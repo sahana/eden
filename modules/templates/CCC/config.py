@@ -2932,7 +2932,7 @@ $('.copy-link').click(function(e){
                     if current.auth.permission.format == "xls":
                         from s3 import S3DateTime
                         s3db.pr_person.created_on.represent = lambda dt: \
-                                  S3DateTime.date_represent(dt, utc=True)
+                                  S3DateTime.datetime_represent(dt, utc=True)
                         list_fields.append((T("Registration Date"), "created_on"))
 
                     resource.configure(list_fields = list_fields,
