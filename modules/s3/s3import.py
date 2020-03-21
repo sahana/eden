@@ -699,10 +699,23 @@ class S3Importer(S3Method):
         if template is True:
             args.extend([self.controller, "%s.csv" % self.function])
         elif isinstance(template, basestring):
-            args.extend([self.controller, "%s.csv" % template])
+            if template.endswith(".csv") or \
+               template.endswith(".xls") or \
+               template.endswith(".xlsx") or \
+               template.endswith(".xlsm"):
+               args.append([self.controller, template])
+            else:
+                args.append([self.controller, "%s.csv" % template])
         elif isinstance(template, (tuple, list)):
             args.extend(template[:-1])
-            args.append("%s.csv" % template[-1])
+            template = template[-1]
+            if template.endswith(".csv") or \
+               template.endswith(".xls") or \
+               template.endswith(".xlsx") or \
+               template.endswith(".xlsm"):
+               args.append(template)
+            else:
+                args.append("%s.csv" % template)
         else:
             template = None
         if template is not None:

@@ -275,7 +275,9 @@
             </resource>
 
             <!-- Person record -->
-            <data field="pe_label"><xsl:value-of select="col[@field='Label']/text()"/></data>
+            <xsl:if test="col[@field='Label']/text()!=''">
+                <data field="pe_label"><xsl:value-of select="col[@field='Label']/text()"/></data>
+            </xsl:if>
             <data field="first_name"><xsl:value-of select="col[@field='First Name']/text()"/></data>
             <xsl:if test="col[@field='Middle Name']/text()!=''">
                 <data field="middle_name"><xsl:value-of select="col[@field='Middle Name']/text()"/></data>

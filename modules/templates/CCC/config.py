@@ -2746,7 +2746,15 @@ $('.copy-link').click(function(e){
                 result = True
 
             if br:
-                s3db.br_case.comments.comment = None
+                # Relax Validation for Imports
+                from gluon import IS_EMPTY_OR
+                ctable = s3db.br_case
+                f = ctable.organisation_id
+                f.requires = IS_EMPTY_OR(f.requires)
+                f = s3db.pr_person.gender
+                f.requires = IS_EMPTY_OR(f.requires)
+
+                ctable.comments.comment = None
 
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 crud_form = S3SQLCustomForm("first_name",
@@ -3087,7 +3095,7 @@ $('.copy-link').click(function(e){
 
         if br:
             # Link to customised download Template
-            attr["csv_template"] = ("../../themes/CCC/csv", "affected_person")
+            attr["csv_template"] = ("../../themes/CCC/xls", "Affected_People.xlsm")
 
         attr["rheader"] = ccc_rheader
 
