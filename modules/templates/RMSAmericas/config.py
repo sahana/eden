@@ -1940,7 +1940,7 @@ Thank you"""
                               user_org_default_filter,
                               tablename = "hrm_programme_hours")
 
-        attr["csv_template"] = ("../../themes/RMSAmericas/formats", "hrm_programme_hours.csv")
+        attr["csv_template"] = ("../../themes/RMSAmericas/formats", "hrm_programme_hours")
         return attr
 
     settings.customise_hrm_programme_hours_controller = customise_hrm_programme_hours_controller
@@ -3636,7 +3636,7 @@ Thank you"""
         s3.prep = custom_prep
 
         if current.request.controller in ("hrm", "vol"):
-            attr["csv_template"] = ("../../themes/RMSAmericas/formats", "hrm_person.csv")
+            attr["csv_template"] = ("../../themes/RMSAmericas/formats", "hrm_person")
             # Common rheader for all views
             attr["rheader"] = s3db.hrm_rheader
 
