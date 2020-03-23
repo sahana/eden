@@ -64,6 +64,8 @@ from .s3utils import s3_auth_user_represent_name, s3_get_foreign_key, \
                      s3_has_foreign_key, s3_mark_required, s3_str, s3_unicode
 from .s3validators import IS_JSONS3
 
+KNOWN_SPREADSHEET_EXTENSIONS = ("csv", "xls", "xlsx", "xlsm")
+
 # =============================================================================
 class S3Importer(S3Method):
     """
@@ -699,23 +701,17 @@ class S3Importer(S3Method):
         if template is True:
             args.extend([self.controller, "%s.csv" % self.function])
         elif isinstance(template, basestring):
-            if template.endswith(".csv") or \
-               template.endswith(".xls") or \
-               template.endswith(".xlsx") or \
-               template.endswith(".xlsm"):
-               args.append([self.controller, template])
-            else:
-                args.append([self.controller, "%s.csv" % template])
+            if os.path.splitext(template)[1] not in KNOWN_SPREADSHEET_EXTENSIONS:
+                # Assume CSV if no known spreadsheet extension found
+                template = "%s.csv" % template
+            args.append([self.controller, template])
         elif isinstance(template, (tuple, list)):
             args.extend(template[:-1])
             template = template[-1]
-            if template.endswith(".csv") or \
-               template.endswith(".xls") or \
-               template.endswith(".xlsx") or \
-               template.endswith(".xlsm"):
-               args.append(template)
-            else:
-                args.append("%s.csv" % template)
+            if os.path.splitext(template)[1] not in KNOWN_SPREADSHEET_EXTENSIONS:
+                # Assume CSV if no known spreadsheet extension found
+                template = "%s.csv" % template
+            args.append([self.controller, template])
         else:
             template = None
         if template is not None:
