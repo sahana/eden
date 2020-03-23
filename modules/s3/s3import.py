@@ -64,7 +64,7 @@ from .s3utils import s3_auth_user_represent_name, s3_get_foreign_key, \
                      s3_has_foreign_key, s3_mark_required, s3_str, s3_unicode
 from .s3validators import IS_JSONS3
 
-KNOWN_SPREADSHEET_EXTENSIONS = ("csv", "xls", "xlsx", "xlsm")
+KNOWN_SPREADSHEET_EXTENSIONS = (".csv", ".xls", ".xlsx", ".xlsm")
 
 # =============================================================================
 class S3Importer(S3Method):
