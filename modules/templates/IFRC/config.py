@@ -8339,7 +8339,7 @@ def config(settings):
 
         if vnrc:
             # Link to customised download Template
-            #attr["csv_template"] = ("../../themes/IFRC/formats", "volunteer_vnrc")
+            #attr["csv_template"] = ("../../themes/IFRC/formats", "volunteer_vnrc.csv")
             # Remove link to download Template
             attr["csv_template"] = "hide"
 

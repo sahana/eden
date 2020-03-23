@@ -701,17 +701,21 @@ class S3Importer(S3Method):
         if template is True:
             args.extend([self.controller, "%s.csv" % self.function])
         elif isinstance(template, basestring):
-            if os.path.splitext(template)[1] not in KNOWN_SPREADSHEET_EXTENSIONS:
+            if os.path.splitext(template)[1] in KNOWN_SPREADSHEET_EXTENSIONS:
+                args.append(template)
+            else:
                 # Assume CSV if no known spreadsheet extension found
                 template = "%s.csv" % template
-            args.append([self.controller, template])
+                args.append([self.controller, template])
         elif isinstance(template, (tuple, list)):
             args.extend(template[:-1])
             template = template[-1]
-            if os.path.splitext(template)[1] not in KNOWN_SPREADSHEET_EXTENSIONS:
+            if os.path.splitext(template)[1] in KNOWN_SPREADSHEET_EXTENSIONS:
+                args.append(template)
+            else:
                 # Assume CSV if no known spreadsheet extension found
                 template = "%s.csv" % template
-            args.append([self.controller, template])
+                args.append([self.controller, template])
         else:
             template = None
         if template is not None:
