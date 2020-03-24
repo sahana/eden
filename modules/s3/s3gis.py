@@ -1593,10 +1593,8 @@ class GIS(object):
         T = current.T
         row = rows.first()
         if level:
-            try:
-                return T(row[level])
-            except:
-                return level
+            label = row[level]
+            return T(label) if label else level
         else:
             levels = OrderedDict()
             hierarchy_level_keys = self.hierarchy_level_keys
