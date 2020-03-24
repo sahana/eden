@@ -47,13 +47,14 @@ class S3MainMenu(default.S3MainMenu):
             menu = [MM("General Information and Advice", c="cms", f="post", m="datalist"),
                     MM("All Documents", c="doc", f="document", m="datalist"),
                     MM("Affected People", c="br", f="person")(
-                       MM("Import", c="br", f="person", m="import"),
+                       MM("Import", m="import"),
                        ),
                     MM("Donors", c="pr", f="person", vars={"donors": 1})(
                        MM("Donations", c="supply", f="person_item"),
                        MM("Edit General Information", c="cms", f="post", vars={"~.name": "Donor"}, m="update"),
                        ),
                     MM("Organisations", c="org", f="organisation", m="summary")(
+                       MM("Import", m="import"),
                        #MM("Message", c="org", f="organisation", args="message"),
                        ),
                     MM("Volunteers", c="hrm", f="human_resource")(
