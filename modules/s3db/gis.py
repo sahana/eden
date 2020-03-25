@@ -364,6 +364,7 @@ class S3LocationModel(S3Model):
                        context = {"location": "parent",
                                   },
                        deduplicate = self.gis_location_duplicate,
+                       hierarchy = "parent",
                        list_fields = list_fields,
                        list_orderby = "gis_location.name",
                        onaccept = self.gis_location_onaccept,

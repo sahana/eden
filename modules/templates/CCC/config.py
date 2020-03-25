@@ -1881,7 +1881,8 @@ $('.copy-link').click(function(e){
         from gluon import IS_EMAIL, IS_EMPTY_OR, IS_IN_SET, IS_URL
 
         from s3 import S3OptionsFilter, S3Represent, S3SQLCustomForm, \
-                       S3SQLInlineComponent, S3SQLInlineLink, S3TextFilter
+                       S3SQLInlineComponent, S3SQLInlineLink, S3TextFilter#, \
+                       #S3LocationSelector, S3HierarchyWidget
 
         s3db = current.s3db
 
@@ -1941,15 +1942,30 @@ $('.copy-link').click(function(e){
         #f.requires = IS_EMPTY_OR(None)
 
         gtable = s3db.gis_location
-        districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
-                                                                                         gtable.name,
-                                                                                         cache = s3db.cache)
-        districts = {d.id:d.name for d in districts}
+        #districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
+        #                                                                                 gtable.name,
+        #                                                                                 cache = s3db.cache)
+        #districts = {d.id:d.name for d in districts}
 
-        f = s3db.org_organisation_location.location_id
-        f.represent = S3Represent(lookup = "gis_location")
-        f.requires = IS_EMPTY_OR(IS_IN_SET(districts))
-        f.widget = None
+        #f = s3db.org_organisation_location.location_id
+        #f.represent = S3Represent(lookup = "gis_location")
+        #f.requires = IS_EMPTY_OR(IS_IN_SET(districts))
+        #f.widget = None
+        #f.widget = S3LocationSelector(levels = ("L3", "L4"),
+        #                              required_levels = ("L3",),
+        #                              #show_address = False,
+        #                              show_postcode = False,
+        #                              show_map = False,
+        #                              #points = True,
+        #                              #polygons = True,
+        #                              )
+        #f.represent = S3Represent(lookup = "gis_location")
+        #f.widget = S3HierarchyWidget("gis_location",
+        #                             multiple = False,
+        #                             leafonly = False,
+        #                             bulk_select = True,
+        #                             filter = (gtable.L2 == "Cumbria")
+        #                             )
 
         s3db.configure("org_organisation",
                        crud_form = S3SQLCustomForm((T("Name of Organization"), "name"),
@@ -1957,10 +1973,17 @@ $('.copy-link').click(function(e){
                                                                    field = "organisation_type_id",
                                                                    label = T("Type"),
                                                                    ),
-                                                   S3SQLInlineLink("location",
-                                                                   field = "location_id",
-                                                                   label = T("District"),
-                                                                   ),
+                                                   #S3SQLInlineLink("location",
+                                                   #                field = "location_id",
+                                                   #                label = T("District"),
+                                                   #                #label = T("Locations Served"),
+                                                   #                ),
+                                                   #S3SQLInlineComponent(
+                                                   #     "organisation_location",
+                                                   #     label = T("Locations Served"),
+                                                   #     fields = [("", "location_id")],
+                                                   #     #multiple = False,
+                                                   #     ),
                                                    "phone",
                                                    S3SQLInlineComponent(
                                                         "email",
