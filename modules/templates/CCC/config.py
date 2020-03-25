@@ -1961,6 +1961,7 @@ $('.copy-link').click(function(e){
                                                                    field = "location_id",
                                                                    label = T("District"),
                                                                    ),
+                                                   "phone",
                                                    S3SQLInlineComponent(
                                                         "email",
                                                         name = "email",
@@ -2008,6 +2009,7 @@ $('.copy-link').click(function(e){
                        list_fields = ["name",
                                       (T("Type"), "organisation_organisation_type.organisation_type_id"),
                                       (T("District Served"), "organisation_location.location_id$L3"),
+                                      "phone",
                                       ],
                        filter_widgets = [S3TextFilter(["name",
                                                        "comments",
