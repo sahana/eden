@@ -1941,7 +1941,7 @@ $('.copy-link').click(function(e){
         #f = sm_other.table.value
         #f.requires = IS_EMPTY_OR(None)
 
-        gtable = s3db.gis_location
+        #gtable = s3db.gis_location
         #districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
         #                                                                                 gtable.name,
         #                                                                                 cache = s3db.cache)
@@ -2235,7 +2235,12 @@ $('.copy-link').click(function(e){
 
         # Filtered components
         s3db.add_components("pr_group",
-                            pr_group_tag = ({"name": "volunteers",
+                            pr_group_tag = ({"name": "parish",
+                                             "joinby": "group_id",
+                                             "filterby": {"tag": "parish"},
+                                             "multiple": False,
+                                             },
+                                            {"name": "volunteers",
                                              "joinby": "group_id",
                                              "filterby": {"tag": "volunteers"},
                                              "multiple": False,
@@ -2303,6 +2308,20 @@ $('.copy-link').click(function(e){
 
         s3db.pr_group_location.location_id.represent = S3Represent(lookup = "gis_location")
 
+        list_fields = ["name",
+                       (T("# Volunteers"), "volunteers.value"),
+                       (T("Mode of Transport"), "transport.value"),
+                       #(T("Leaders"), "group_membership.person_id"),
+                       (T("Locations"), "group_location.location_id"),
+                       (T("Parish(es)"), "parish.value"),
+                       (T("Skills"), "group_competency.skill_id"),
+                       (T("Skills Details"), "skill_details.value"),
+                       "comments",
+                       ]
+        if current.auth.permission.format == "xls":
+            list_fields.insert(-2, (T("Email"), "group_membership.person_id$email.value"))
+            list_fields.insert(-2, (T("Phone"), "group_membership.person_id$phone.value"))
+
         s3db.configure("pr_group",
                        crud_form = S3SQLCustomForm("name",
                                                    (T("Approximate Number of Volunteers"), "volunteers.value"),
@@ -2316,6 +2335,7 @@ $('.copy-link').click(function(e){
                                                                    field = "location_id",
                                                                    label = T("Where would you be willing to volunteer?"),
                                                                    ),
+                                                   (T("Parish(es)"), "parish.value"),
                                                    (T("Do you have any faith requirements that you would like help with if you are coming to Support Cumbria?"), "faith_requirements.value"),
                                                    (T("If Yes please outline"), "faith_requirements_details.value"),
                                                    (T("Emergency Contact Name"), "contact_name.value"),
@@ -2323,21 +2343,13 @@ $('.copy-link').click(function(e){
                                                    "comments",
                                                    postprocess = pr_group_postprocess,
                                                    ),
-                       list_fields = ["name",
-                                      (T("# Volunteers"), "volunteers.value"),
-                                      (T("Mode of Transport"), "transport.value"),
-                                      # Not working:
-                                      #(T("Leaders"), "group_membership.person_id"),
-                                      (T("Locations"), "group_location.location_id"),
-                                      (T("Skills"), "group_competency.skill_id"),
-                                      (T("Skills Details"), "skill_details.value"),
-                                      "comments",
-                                      ],
+                       list_fields = list_fields,
                        filter_widgets = [S3TextFilter(["name",
                                                        "group_membership.person_id$first_name",
                                                        "group_membership.person_id$middle_name",
                                                        "group_membership.person_id$last_name",
                                                        "group_location.location_id",
+                                                       "parish.value",
                                                        "group_competency.skill_id",
                                                        "skills_details.value",
                                                        "comments",

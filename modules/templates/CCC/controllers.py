@@ -924,6 +924,10 @@ class register(S3CustomController):
                                 widget = S3MultiSelectWidget(header="",
                                                              selectedList=3),
                                 ),
+                          Field("parish",
+                                label = T("Parish(es)"),
+                                comment = T("Put specific parish)es) here if you want to limit your availability."),
+                                ),
                           Field("faith_requirements", "integer",
                                 label = T("Do you have any faith requirements that you would like help with if you are coming to Support Cumbria?"),
                                 requires = IS_IN_SET({0: T("No"),
@@ -960,6 +964,7 @@ class register(S3CustomController):
                                "mobile",
                                "first_name2",
                                "last_name2",
+                               "skill_id",
                                "where_operate",
                                ]
 
@@ -1149,6 +1154,9 @@ class register(S3CustomController):
                           "password2": str(form_vars.password2),
                           "mobile2": form_vars.mobile2,
                           "home2": form_vars.home2,
+                          "vols": form_vars.vols,
+                          "transport": form_vars.transport,
+                          "parish": form_vars.parish,
                           "skill_id": form_vars.skill_id or [],
                           "skills_details": form_vars.skills_details,
                           "faith_requirements": form_vars.faith_requirements,
@@ -1909,6 +1917,27 @@ def auth_user_register_onaccept(user_id):
         record = {"group_id": group_id,
                   "tag": "skills_details",
                   "value": custom["skills_details"],
+                  }
+        ttable.insert(**record)
+
+        # Parish(es)
+        record = {"group_id": group_id,
+                  "tag": "parish",
+                  "value": custom["parish"],
+                  }
+        ttable.insert(**record)
+
+        # Volunteers
+        record = {"group_id": group_id,
+                  "tag": "volunteers",
+                  "value": custom["vols"],
+                  }
+        ttable.insert(**record)
+
+        # Transport
+        record = {"group_id": group_id,
+                  "tag": "transport",
+                  "value": custom["transport"],
                   }
         ttable.insert(**record)
 
