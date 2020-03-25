@@ -1911,6 +1911,7 @@ def auth_user_register_onaccept(user_id):
         for location_id in custom["where_operate"]:
             ltable.insert(group_id = group_id,
                           location_id = location_id,
+                          realm_entity = realm_entity,
                           )
             # Currently no need to onaccept as none defined
 
@@ -1919,6 +1920,7 @@ def auth_user_register_onaccept(user_id):
         for skill_id in custom["skill_id"]:
             record = {"group_id": group_id,
                       "skill_id": skill_id,
+                      "realm_entity": realm_entity,
                       }
             ctable.insert(**record)
 
