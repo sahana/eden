@@ -12975,7 +12975,7 @@ def project_rheader(r):
             append((T("Organizations"), "organisation"))
         if settings.get_project_community() and not details_tab:
             append((T("Communities"), "location"))
-        elif not mode_task and not details_tab:
+        elif mode_3w and not details_tab:
             append((T("Locations"), "location"))
         if settings.get_project_theme_percentages():
             append((T("Themes"), "theme"))
