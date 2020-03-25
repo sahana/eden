@@ -2177,7 +2177,7 @@ $('.copy-link').click(function(e){
         f.requires = IS_EMPTY_OR(IS_IN_SET(districts))
         f.widget = None
 
-    settings.customise_org_organisation_location_resource = customise_org_organisation_location_resource
+    #settings.customise_org_organisation_location_resource = customise_org_organisation_location_resource
 
     # -------------------------------------------------------------------------
     def pr_group_postprocess(form):
@@ -2229,7 +2229,7 @@ $('.copy-link').click(function(e){
                           SQLFORM
         from s3 import IS_INT_AMOUNT, S3OptionsFilter, S3Represent, \
                        S3SQLCustomForm, S3SQLInlineLink, S3TextFilter, \
-                       S3LocationSelector, s3_phone_requires
+                       s3_phone_requires#, S3LocationSelector
 
         s3db = current.s3db
 
