@@ -1154,6 +1154,7 @@ class register(S3CustomController):
                           "password2": str(form_vars.password2),
                           "mobile2": form_vars.mobile2,
                           "home2": form_vars.home2,
+                          "where_operate": form_vars.where_operate or [],
                           "vols": form_vars.vols,
                           "transport": form_vars.transport,
                           "parish": form_vars.parish,
@@ -1904,6 +1905,14 @@ def auth_user_register_onaccept(user_id):
                                 role = "Volunteer Group Leader",
                                 entity = realm_entity,
                                 )
+
+        # Locations
+        ltable = s3db.pr_group_location
+        for location_id in custom["where_operate"]:
+            ltable.insert(group_id = group_id,
+                          location_id = location_id,
+                          )
+            # Currently no need to onaccept as none defined
 
         # Create Group Skills
         ctable = s3db.pr_group_competency

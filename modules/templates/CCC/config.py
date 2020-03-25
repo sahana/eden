@@ -2229,7 +2229,7 @@ $('.copy-link').click(function(e){
                           SQLFORM
         from s3 import IS_INT_AMOUNT, S3OptionsFilter, S3Represent, \
                        S3SQLCustomForm, S3SQLInlineLink, S3TextFilter, \
-                       s3_phone_requires
+                       S3LocationSelector, s3_phone_requires
 
         s3db = current.s3db
 
@@ -2306,7 +2306,13 @@ $('.copy-link').click(function(e){
         f = contact_number.table.value
         f.requires = s3_phone_requires
 
-        s3db.pr_group_location.location_id.represent = S3Represent(lookup = "gis_location")
+        f = s3db.pr_group_location.location_id
+        f.represent = S3Represent(lookup = "gis_location")
+        #f.widget = S3LocationSelector(levels = ("L3", "L4"),
+        #                                        required_levels = ("L3",),
+        #                                        show_map = False,
+        #                                        show_postcode = False,
+        #                                        )
 
         list_fields = ["name",
                        (T("# Volunteers"), "volunteers.value"),
