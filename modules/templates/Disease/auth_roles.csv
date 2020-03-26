@@ -1,9 +1,6 @@
 uid,role,description,controller,function,table,uacl,oacl,entity,Notes
-ORG_ADMIN,Organisation Administrator,,cr,,,"READ|CREATE|UPDATE|DELETE",,,
-ORG_ADMIN,Organisation Administrator,,event,,,"READ|CREATE|UPDATE|DELETE",,,
 ORG_ADMIN,Organisation Administrator,,hms,,,"READ|CREATE|UPDATE|DELETE",,,
-ORG_ADMIN,Organisation Administrator,,member,,,"READ|CREATE|UPDATE|DELETE",,,
-CR_ADMIN,Shelter Administrator,,cr,,,"READ|CREATE|UPDATE|DELETE",,,
-EVENT_ADMIN,Event Administrator,,event,,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,inv,,,"READ|CREATE|UPDATE|DELETE",,,
 HMS_ADMIN,Hospital Administrator,,hms,,,"READ|CREATE|UPDATE|DELETE",,,
-MEMBER_ADMIN,Members Administrator,,member,,,"READ|CREATE|UPDATE|DELETE",,,
+DISEASE_ADMIN,Disease Administrator,,disease,,,"READ|CREATE|UPDATE|DELETE",,,
+WAREHOUSE_ADMIN,Warehouse Administrator,,inv,,,"READ|CREATE|UPDATE|DELETE",,,

@@ -2,6 +2,8 @@
 
 """ Sahana Eden Disease Tracking Models
 
+    @ToDo Extend to Vector Tracking for Dengue/Malaria
+
     @copyright: 2014-2019 (c) Sahana Software Foundation
     @license: MIT
 
