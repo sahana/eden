@@ -5,37 +5,37 @@
 """
 
 module = request.controller
-resourcename = request.function
+#resourcename = request.function
 
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
-def s3_menu_postp():
-    # @todo: rewrite this for new framework
-    if len(request.args) > 0 and request.args[0].isdigit():
-        newreq = dict(from_record="hms_hospital.%s" % request.args[0],
-                      from_fields="hospital_id$id")
-        #selreq = {"req.hospital_id":request.args[0]}
-    else:
-        newreq = dict()
-    selreq = {"req.hospital_id__ne":"NONE"}
-    menu_selected = []
-    hospital_id = s3base.s3_get_last_record_id("hms_hospital")
-    if hospital_id:
-        hospital = s3db.hms_hospital
-        query = (hospital.id == hospital_id)
-        record = db(query).select(hospital.id,
-                                  hospital.name,
-                                  limitby=(0, 1)).first()
-        if record:
-            name = record.name
-            menu_selected.append(["%s: %s" % (T("Hospital"), name), False,
-                                 URL(f="hospital",
-                                     args=[record.id])])
-    if menu_selected:
-        menu_selected = [T("Open recent"), True, None, menu_selected]
-        response.menu_options.append(menu_selected)
+#def s3_menu_postp():
+#    # @todo: rewrite this for new framework
+#    if len(request.args) > 0 and request.args[0].isdigit():
+#        newreq = dict(from_record="hms_hospital.%s" % request.args[0],
+#                      from_fields="hospital_id$id")
+#        #selreq = {"req.hospital_id":request.args[0]}
+#    else:
+#        newreq = dict()
+#    selreq = {"req.hospital_id__ne":"NONE"}
+#    menu_selected = []
+#    hospital_id = s3base.s3_get_last_record_id("hms_hospital")
+#    if hospital_id:
+#        hospital = s3db.hms_hospital
+#        query = (hospital.id == hospital_id)
+#        record = db(query).select(hospital.id,
+#                                  hospital.name,
+#                                  limitby=(0, 1)).first()
+#        if record:
+#            name = record.name
+#            menu_selected.append(["%s: %s" % (T("Hospital"), name), False,
+#                                 URL(f="hospital",
+#                                     args=[record.id])])
+#    if menu_selected:
+#        menu_selected = [T("Open recent"), True, None, menu_selected]
+#        response.menu_options.append(menu_selected)
 
 # -----------------------------------------------------------------------------
 def index():
@@ -81,22 +81,23 @@ def hospital():
 
         if r.interactive:
             if r.component:
-                if r.component.name == "inv_item" or \
-                   r.component.name == "recv" or \
-                   r.component.name == "send":
+                cname = r.component_name
+                if cname == "inv_item" or \
+                   cname == "recv" or \
+                   cname == "send":
                     # Filter out items which are already in this inventory
                     s3db.inv_prep(r)
 
-                elif r.component.name == "human_resource":
+                elif cname == "human_resource":
                     s3db.org_site_staff_config(r)
 
-                elif r.component.name == "req":
+                elif cname == "req":
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
                         s3db.req_create_form_mods()
 
-                elif r.component.name == "status":
+                elif cname == "status":
                     table = db.hms_status
                     table.facility_status.comment = DIV(_class="tooltip",
                                                         _title="%s|%s" % (T("Facility Status"),
@@ -138,7 +139,7 @@ def hospital():
                                                       _title="%s|%s" % (T("Road Conditions"),
                                                                         T("Describe the condition of the roads from/to the facility.")))
 
-                elif r.component.name == "bed_capacity":
+                elif cname == "bed_capacity":
                     table = db.hms_bed_capacity
                     table.bed_type.comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Bed Type"),
@@ -152,7 +153,7 @@ def hospital():
                     table.beds_add24.comment = DIV(_class="tooltip",
                                                    _title="%s|%s" % (T("Additional Beds / 24hrs"),
                                                                      T("Number of additional beds of that type expected to become available in this unit within the next 24 hours.")))
-                elif r.component.name == "activity":
+                elif cname == "activity":
                     table = db.hms_activity
                     table.date.comment = DIV(_class="tooltip",
                                              _title="%s|%s" % (T("Date & Time"),
@@ -171,19 +172,19 @@ def hospital():
                                                  _title="%s|%s" % (T("Deaths/24hrs"),
                                                                    T("Number of deaths during the past 24 hours.")))
 
-                elif r.component.name == "contact":
+                elif cname == "contact":
                     table = db.hms_contact
                     table.title.comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("Title"),
                                                                 T("The Role this person plays within this hospital.")))
 
-                elif r.component.name == "image":
+                elif cname == "image":
                     table = s3db.doc_image
                     table.location_id.readable = table.location_id.writable = False
                     table.organisation_id.readable = table.organisation_id.writable = False
                     table.person_id.readable = table.person_id.writable = False
 
-                elif r.component.name == "ctc":
+                elif cname == "ctc":
                     table = db.hms_ctc
                     table.ctc.comment = DIV(_class="tooltip",
                                             _title="%s|%s" % (T("Cholera Treatment Center"),
@@ -253,7 +254,7 @@ def hospital():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader=s3db.hms_hospital_rheader)
+    output = s3_rest_controller(rheader = s3db.hms_hospital_rheader)
     return output
 
 # -----------------------------------------------------------------------------

@@ -5089,7 +5089,8 @@ def gis_location_filter(r):
                            gtable.name,
                            gtable.level,
                            gtable.path,
-                           limitby=(0, 1)).first()
+                           limitby = (0, 1)
+                           ).first()
     if row and row.level:
         resource = r.resource
         if resource.name == "organisation":
@@ -5101,7 +5102,8 @@ def gis_location_filter(r):
                 query = (ttable.tag == "ISO2") & \
                         (ttable.location_id == row.id)
                 tag = db(query).select(ttable.value,
-                                       limitby=(0, 1)).first()
+                                       limitby = (0, 1)
+                                       ).first()
                 code = tag.value
             location_filter = (FS(selector) == code)
         elif resource.name == "project":

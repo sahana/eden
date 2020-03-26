@@ -366,18 +366,22 @@ class HospitalDataModel(S3Model):
         single = dict(joinby="hospital_id", multiple=False)
         multiple = "hospital_id"
         add_components(tablename,
-                       hms_status=single,
-                       hms_contact=multiple,
-                       hms_bed_capacity=multiple,
-                       hms_services=single,
-                       hms_resources=multiple,
+                       hms_status = single,
+                       hms_contact = multiple,
+                       hms_bed_capacity = multiple,
+                       hms_services = single,
+                       hms_resources = multiple,
                        )
 
         # Optional components
         if settings.get_hms_track_ctc():
-            add_components(tablename, hms_ctc=single)
+            add_components(tablename,
+                           hms_ctc = single,
+                           )
         if settings.get_hms_activity_reports():
-            add_components(tablename, hms_activity=multiple)
+            add_components(tablename,
+                           hms_activity = multiple,
+                           )
 
         # Custom Method to Assign HRs
         self.set_method("hms", "hospital",

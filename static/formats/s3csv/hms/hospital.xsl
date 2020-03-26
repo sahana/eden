@@ -42,6 +42,8 @@
     <xsl:include href="../../xml/commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
 
+    <xsl:variable name="LocationPrefix" select="'Location:'"/>
+
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <!--<xsl:key name="hospital_type" match="row" use="col[@field='Type']"/>-->
@@ -127,7 +129,7 @@
             <!-- Link to Location -->
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$HospitalName"/>
+                    <xsl:value-of select="concat($LocationPrefix, $HospitalName)"/>
                 </xsl:attribute>
             </reference>
 
@@ -542,7 +544,7 @@
         <!-- Hospital Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$HospitalName"/>
+                <xsl:value-of select="concat($LocationPrefix, $HospitalName)"/>
             </xsl:attribute>
             <xsl:choose>
                 <xsl:when test="$l4!=''">

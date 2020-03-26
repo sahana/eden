@@ -290,7 +290,7 @@ def config(settings):
             43: T("Holding Center"),
             44: T("Transit Center"),
             #98: T("Other"),
-            #99: T("Unknown"),
+            99: T("Unknown"),
         }
 
         hms_facility_status_opts = {
@@ -341,7 +341,8 @@ def config(settings):
             query = (ptable.deleted == False) & \
                     (ptable.name == "Cases")
             row = current.db(query).select(ptable.parameter_id,
-                                           limitby = (0, 1)).first()
+                                           limitby = (0, 1)
+                                           ).first()
             if row:
                 return row.parameter_id
             else:
@@ -371,7 +372,8 @@ def config(settings):
             query = (ptable.deleted == False) & \
                     (ptable.name == "Population Total")
             row = current.db(query).select(ptable.parameter_id,
-                                           limitby = (0, 1)).first()
+                                           limitby = (0, 1)
+                                           ).first()
             if row:
                 return row.parameter_id
             else:
