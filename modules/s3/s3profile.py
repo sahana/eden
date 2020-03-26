@@ -804,12 +804,12 @@ class S3Profile(S3CRUD):
         if icon:
             icon = ICON(icon)
 
-        context = widget_get("context")
-        tablename = widget_get("tablename")
+        context = widget_get("context", None)
+        tablename = widget_get("tablename", None)
         resource, context = self._resolve_context(r, tablename, context)
 
         # Widget filter option
-        widget_filter = widget_get("filter")
+        widget_filter = widget_get("filter", None)
         if widget_filter:
             resource.add_filter(widget_filter)
 
@@ -824,7 +824,7 @@ class S3Profile(S3CRUD):
         else:
             readonly = not current.auth.s3_has_permission("create", tablename)
 
-        sqlform = widget.get("sqlform")
+        sqlform = widget.get("sqlform", None)
         if not sqlform:
             sqlform = resource.get_config("crud_form")
         if not sqlform:

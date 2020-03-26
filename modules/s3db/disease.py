@@ -178,9 +178,9 @@ class DiseaseDataModel(S3Model):
             msg_list_empty = T("No Symptom Information currently available"))
 
         # Pass names back to global scope (s3.*)
-        return dict(disease_disease_id = disease_id,
-                    disease_symptom_id = symptom_id,
-                    )
+        return {"disease_disease_id": disease_id,
+                "disease_symptom_id": symptom_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -191,9 +191,9 @@ class DiseaseDataModel(S3Model):
                                 readable = False,
                                 writable = False)
 
-        return dict(disease_disease_id = lambda **attr: dummy("disease_id"),
-                    disease_symptom_id = lambda **attr: dummy("symptom_id"),
-                    )
+        return {"disease_disease_id": lambda **attr: dummy("disease_id"),
+                "disease_symptom_id": lambda **attr: dummy("symptom_id"),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -563,7 +563,8 @@ class CaseTrackingModel(S3Model):
         # =====================================================================
 
         # Pass names back to global scope (s3.*)
-        return dict(disease_case_id = case_id)
+        return {"disease_case_id": case_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -574,8 +575,8 @@ class CaseTrackingModel(S3Model):
                                 readable = False,
                                 writable = False)
 
-        return dict(disease_case_id = lambda **attr: dummy("case_id"),
-                    )
+        return {"disease_case_id": lambda **attr: dummy("case_id"),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -989,7 +990,8 @@ class ContactTracingModel(S3Model):
         if "case_id" not in formvars:
             etable = s3db.disease_exposure
             row = db(etable.id == record_id).select(etable.case_id,
-                                                    limitby = (0, 1)).first()
+                                                    limitby = (0, 1)
+                                                    ).first()
             if not row:
                 return
             case_id = row.case_id
@@ -1021,7 +1023,8 @@ def disease_propagate_case_status(case_id):
                             ctable.symptom_debut,
                             ctable.diagnosis_status,
                             ctable.diagnosis_date,
-                            limitby = (0, 1)).first()
+                            limitby = (0, 1)
+                            ).first()
     if case is None:
         return
     disease_id = case.disease_id
@@ -1036,7 +1039,8 @@ def disease_propagate_case_status(case_id):
                 (mtable.deleted != True)
         monitoring = db(query).select(mtable.date,
                                       orderby = "disease_case_monitoring.date desc",
-                                      limitby = (0, 1)).first()
+                                      limitby = (0, 1)
+                                      ).first()
         if monitoring:
             symptom_debut = monitoring.date
     if not symptom_debut and case.illness_status in risk_status:
@@ -1056,7 +1060,8 @@ def disease_propagate_case_status(case_id):
             (dtable.deleted != True)
     disease = db(query).select(dtable.trace_period,
                                dtable.watch_period,
-                               limitby = (0, 1)).first()
+                               limitby = (0, 1)
+                               ).first()
     if not disease:
         return
     trace_period = disease.trace_period
@@ -1092,7 +1097,8 @@ def disease_create_case(disease_id, person_id, monitoring_level=None):
 
     case = current.db(query).select(ctable.id,
                                     ctable.monitoring_level,
-                                    limitby = (0, 1)).first()
+                                    limitby = (0, 1)
+                                    ).first()
     if case:
         case_id = case.id
         if monitoring_level is not None:
@@ -1125,7 +1131,8 @@ def disease_upgrade_monitoring(case_id, level, case=None):
                 (ctable.deleted != True)
 
         case = current.db(query).select(ctable.id,
-                                        limitby = (0, 1)).first()
+                                        limitby = (0, 1)
+                                        ).first()
     elif case.monitoring_level not in previous_levels:
         return
     if case:
@@ -1161,8 +1168,8 @@ class DiseaseStatsModel(S3Model):
 
         location_id = self.gis_location_id
 
-        stats_parameter_represent = S3Represent(lookup="stats_parameter",
-                                                translate=True)
+        stats_parameter_represent = S3Represent(lookup = "stats_parameter",
+                                                translate = True)
 
         # ---------------------------------------------------------------------
         # Disease Statistic Parameter
@@ -1376,11 +1383,10 @@ class DiseaseStatsModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(
-            disease_stats_rebuild_all_aggregates = self.disease_stats_rebuild_all_aggregates,
-            disease_stats_update_aggregates = self.disease_stats_update_aggregates,
-            disease_stats_update_location_aggregates = self.disease_stats_update_location_aggregates,
-            )
+        return {"disease_stats_rebuild_all_aggregates": self.disease_stats_rebuild_all_aggregates,
+                "disease_stats_update_aggregates": self.disease_stats_update_aggregates,
+                "disease_stats_update_location_aggregates": self.disease_stats_update_location_aggregates,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod

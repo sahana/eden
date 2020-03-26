@@ -1214,17 +1214,17 @@ def indicator():
                      },
                 ]
 
-            data_widget = dict(label = "Data",
-                               label_create = "Add Data",
-                               type = "datatable",
-                               actions = dt_row_actions("indicator_data"),
-                               tablename = "project_indicator_data",
-                               filter = FS("indicator_id") == record.id,
-                               create_controller = "project",
-                               create_function = "indicator",
-                               create_component = "indicator_data",
-                               #icon = "book",
-                               )
+            data_widget = {"label": "Data",
+                           "label_create": "Add Data",
+                           "type": "datatable",
+                           "actions": dt_row_actions("indicator_data"),
+                           "tablename": "project_indicator_data",
+                           "filter": FS("indicator_id") == record.id,
+                           "create_controller": "project",
+                           "create_function": "indicator",
+                           "create_component": "indicator_data",
+                           #"icon": "book",
+                           }
             profile_widgets = [data_widget,
                                ]
             s3db.configure("project_indicator",

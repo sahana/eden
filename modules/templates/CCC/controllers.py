@@ -7,8 +7,8 @@ from collections import OrderedDict
 
 from gluon import *
 from gluon.storage import Storage
-from s3 import ICON, IS_ONE_OF, S3CustomController, S3Method, S3MultiSelectWidget, \
-               S3Profile, S3SQLCustomForm, \
+from s3 import FS, ICON, IS_ONE_OF, S3CustomController, S3Method, \
+               S3MultiSelectWidget, S3Profile, S3SQLCustomForm, \
                s3_avatar_represent, \
                s3_mark_required, s3_phone_requires, s3_str, s3_truncate
 
@@ -350,6 +350,7 @@ class personAdditional(S3Method):
                     #"icon": ,
                     "tablename": tablename,
                     "sqlform": form,
+                    "filter": FS("id") == r.id,
                     }
 
             profile_widgets= [form,
