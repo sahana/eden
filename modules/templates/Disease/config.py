@@ -7,22 +7,17 @@ from gluon.storage import Storage
 
 def config(settings):
     """
-        Template settings: 'Skeleton' designed to be copied to quickly create
-                           custom templates
-
-        All settings which are to configure a specific template are located
-        here. Deployers should ideally not need to edit any other files outside
-        of their template folder.
+        Disease Tracking
     """
 
     T = current.T
 
-    #settings.base.system_name = T("Sahana Skeleton")
+    settings.base.system_name = T("Sahana Disease Tracking")
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
-    settings.base.prepopulate += ("skeleton",)
-    #settings.base.prepopulate_demo += ("skeleton/Demo",)
+    settings.base.prepopulate += ("Disease",)
+    #settings.base.prepopulate_demo += ("Disease/Demo",)
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "skeleton"
@@ -33,7 +28,7 @@ def config(settings):
     # Should users be allowed to register themselves?
     #settings.security.self_registration = False
     # Do new users need to verify their email address?
-    #settings.auth.registration_requires_verification = True
+    settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
     #settings.auth.registration_requires_approval = True
     #settings.auth.registration_requests_organisation = True
@@ -56,45 +51,6 @@ def config(settings):
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
 
-    # L10n settings
-    # Languages used in the deployment (used for Language Toolbar, GIS Locations, etc)
-    # http://www.loc.gov/standards/iso639-2/php/code_list.php
-    #settings.L10n.languages = OrderedDict([
-    #    ("ar", "Arabic"),
-    #    ("bs", "Bosnian"),
-    #    #("dv", "Divehi"), # Maldives
-    #    ("en", "English"),
-    #    ("fr", "French"),
-    #    ("de", "German"),
-    #    ("el", "Greek"),
-    #    ("es", "Spanish"),
-    #    #("id", "Bahasa Indonesia"),
-    #    ("it", "Italian"),
-    #    ("ja", "Japanese"),
-    #    ("km", "Khmer"), # Cambodia
-    #    ("ko", "Korean"),
-    #    #("lo", "Lao"),
-    #    #("mg", "Malagasy"),
-    #    ("mn", "Mongolian"),
-    #    #("ms", "Malaysian"),
-    #    ("my", "Burmese"), # Myanmar
-    #    ("ne", "Nepali"),
-    #    ("prs", "Dari"), # Afghan Persian
-    #    ("ps", "Pashto"), # Afghanistan, Pakistan
-    #    ("pt", "Portuguese"),
-    #    ("pt-br", "Portuguese (Brazil)"),
-    #    ("ru", "Russian"),
-    #    ("tet", "Tetum"),
-    #    #("si", "Sinhala"), # Sri Lanka
-    #    #("ta", "Tamil"), # India, Sri Lanka
-    #    ("th", "Thai"),
-    #    ("tl", "Tagalog"), # Philippines
-    #    ("tr", "Turkish"),
-    #    ("ur", "Urdu"), # Pakistan
-    #    ("vi", "Vietnamese"),
-    #    ("zh-cn", "Chinese (Simplified)"), # Mainland China
-    #    ("zh-tw", "Chinese (Taiwan)"),
-    #])
     # Default language for Language Toolbar (& GIS Locations in future)
     #settings.L10n.default_language = "en"
     # Uncomment to Hide the language toolbar
@@ -130,8 +86,8 @@ def config(settings):
     # 6: Apply Controller, Function, Table ACLs and Entity Realm
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
-    #
-    #settings.security.policy = 7 # Organisation-ACLs
+
+    settings.security.policy = 7 # Organisation-ACLs with Hierarchy
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -198,30 +154,66 @@ def config(settings):
             restricted = True,
             module_type = 1
         )),
-        # HRM is required for access to default realm permissions
-        #("hrm", Storage(
-        #    name_nice = T("Staff"),
-        #    #description = "Human Resources Management",
-        #    restricted = True,
-        #    module_type = 2,
-        #)),
-        #("vol", Storage(
-        #    name_nice = T("Volunteers"),
-        #    #description = "Human Resources Management",
-        #    restricted = True,
-        #    module_type = 2,
-        #)),
         ("cms", Storage(
           name_nice = T("Content Management"),
           #description = "Content Management System",
           restricted = True,
           module_type = 10,
         )),
-        #("doc", Storage(
-        #    name_nice = T("Documents"),
-        #    #description = "A library of digital resources, such as photos, documents and reports",
+        ("doc", Storage(
+            name_nice = T("Documents"),
+            #description = "A library of digital resources, such as photos, documents and reports",
+            restricted = True,
+            module_type = 10,
+        )),
+        ("hms", Storage(
+            name_nice = T("Hospitals"),
+            #description = "Helps to monitor status of hospitals",
+            restricted = True,
+            module_type = 2,
+        )),
+        ("disease", Storage(
+            name_nice = T("Disease Tracking"),
+            #description = "Helps to monitor status of cases",
+            restricted = True,
+            module_type = 1,
+        )),
+        ("stats", Storage(
+            name_nice = T("Statistics"),
+            #description = "Manages statistics",
+            restricted = True,
+            module_type = None,
+        )),
+        # HRM is required for access to default realm permissions
+        ("hrm", Storage(
+            name_nice = T("Staff"),
+            #description = "Human Resources Management",
+            restricted = True,
+            module_type = 10,
+        )),
+        ("supply", Storage(
+            name_nice = T("Supply Chain Management"),
+            #description = "Used within Inventory Management, Request Management and Asset Management",
+            restricted = True,
+            module_type = None, # Not displayed
+        )),
+        ("inv", Storage(
+            name_nice = T("Warehouses"),
+            #description = "Receiving and Sending Items",
+            restricted = True,
+            module_type = 10,
+        )),
+        ("req", Storage(
+            name_nice = T("Requests"),
+            #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+            restricted = True,
+            module_type = 3,
+        )),
+        #("vol", Storage(
+        #    name_nice = T("Volunteers"),
+        #    #description = "Human Resources Management",
         #    restricted = True,
-        #    module_type = 10,
+        #    module_type = 2,
         #)),
         #("msg", Storage(
         #    name_nice = T("Messaging"),
@@ -229,18 +221,6 @@ def config(settings):
         #    restricted = True,
         #    # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
         #    module_type = None,
-        #)),
-        #("supply", Storage(
-        #    name_nice = T("Supply Chain Management"),
-        #    #description = "Used within Inventory Management, Request Management and Asset Management",
-        #    restricted = True,
-        #    module_type = None, # Not displayed
-        #)),
-        #("inv", Storage(
-        #    name_nice = T("Warehouses"),
-        #    #description = "Receiving and Sending Items",
-        #    restricted = True,
-        #    module_type = 4
         #)),
         #("asset", Storage(
         #    name_nice = T("Assets"),
@@ -255,12 +235,6 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10,
         #)),
-        #("req", Storage(
-        #    name_nice = T("Requests"),
-        #    #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
         #("project", Storage(
         #    name_nice = T("Projects"),
         #    #description = "Tracking of Projects, Activities and Tasks",
@@ -270,12 +244,6 @@ def config(settings):
         #("cr", Storage(
         #    name_nice = T("Shelters"),
         #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
-        #    restricted = True,
-        #    module_type = 10
-        #)),
-        #("hms", Storage(
-        #    name_nice = T("Hospitals"),
-        #    #description = "Helps to monitor status of hospitals",
         #    restricted = True,
         #    module_type = 10
         #)),
@@ -296,12 +264,128 @@ def config(settings):
         #   restricted = True,
         #   module_type = 10,
         #)),
-        #("stats", Storage(
-        #    name_nice = T("Statistics"),
-        #    #description = "Manages statistics",
-        #    restricted = True,
-        #    module_type = None,
-        #)),
     ])
+
+    # -----------------------------------------------------------------------------
+    def customise_hms_hospital_resource(r, tablename):
+
+        if r.representation == "geojson":
+            # Don't represent the facility_status as numbers are smaller to xmit
+            current.s3db.hms_status.facility_status.represent = None
+            return
+
+        # Limit options to just those used & relabel them for context
+        hms_facility_type_opts = {
+            1: T("Hospital"),
+            #2: T("Field Hospital"),
+            #3: T("Specialized Hospital"),
+            #11: T("Health center"),
+            #12: T("Health center with beds"),
+            #13: T("Health center without beds"),
+            #21: T("Dispensary"),
+            #31: T("Long-term care"),
+            #41: T("Emergency Treatment Centre"),
+            41: T("ETC"),
+            42: T("Triage"),
+            43: T("Holding Center"),
+            44: T("Transit Center"),
+            #98: T("Other"),
+            #99: T("Unknown"),
+        }
+
+        hms_facility_status_opts = {
+            #1: T("Normal"),
+            1: T("Functioning"),
+            #2: T("Compromised"),
+            #3: T("Evacuating"),
+            4: T("Closed"),
+            5: T("Pending"),
+            #99: T("No Response")
+        }
+
+        from gluon import IS_EMPTY_OR, IS_IN_SET
+
+        s3db = current.s3db
+        NONE = current.messages["NONE"]
+
+        field = s3db.hms_hospital.facility_type
+        field.represent = lambda opt: hms_facility_type_opts.get(opt, NONE)
+        field.requires = IS_EMPTY_OR(IS_IN_SET(hms_facility_type_opts))
+
+        field = s3db.hms_status.facility_status
+        field.represent = lambda opt: hms_facility_status_opts.get(opt, NONE)
+        field.requires = IS_EMPTY_OR(IS_IN_SET(hms_facility_status_opts))
+
+    settings.customise_hms_hospital_resource = customise_hms_hospital_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_disease_stats_data_resource(r, tablename):
+
+        s3db = current.s3db
+        # Load model & set defaults
+        table = s3db.disease_stats_data
+
+        # Add a TimePlot tab to summary page
+        summary = settings.get_ui_summary()
+        settings.ui.summary = list(summary) + [{"name": "timeplot",
+                                                "label": "Progression",
+                                                "widgets": [{"method": "timeplot",
+                                                             "ajax_init": True,
+                                                             }
+                                                            ],
+                                                }]
+
+        # Default parameter filter
+        def default_parameter_filter(selector, tablename=None):
+            ptable = s3db.stats_parameter
+            query = (ptable.deleted == False) & \
+                    (ptable.name == "Cases")
+            row = current.db(query).select(ptable.parameter_id,
+                                           limitby = (0, 1)).first()
+            if row:
+                return row.parameter_id
+            else:
+                return None
+
+        # Set filter defaults
+        resource = r.resource
+        filter_widgets = resource.get_config("filter_widgets", [])
+        for filter_widget in filter_widgets:
+            if filter_widget.field == "parameter_id":
+                filter_widget.opts.default = default_parameter_filter
+            elif filter_widget.field == "location_id$level":
+                filter_widget.opts.default = "L2"
+
+    settings.customise_disease_stats_data_resource = customise_disease_stats_data_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_stats_demographic_data_resource(r, tablename):
+
+        s3db = current.s3db
+        # Load model & set defaults
+        table = s3db.stats_demographic_data
+
+        # Default parameter filter
+        def default_parameter_filter(selector, tablename=None):
+            ptable = s3db.stats_parameter
+            query = (ptable.deleted == False) & \
+                    (ptable.name == "Population Total")
+            row = current.db(query).select(ptable.parameter_id,
+                                           limitby = (0, 1)).first()
+            if row:
+                return row.parameter_id
+            else:
+                return None
+
+        # Set filter defaults
+        resource = r.resource
+        filter_widgets = resource.get_config("filter_widgets", [])
+        for filter_widget in filter_widgets:
+            if filter_widget.field == "parameter_id":
+                filter_widget.opts.default = default_parameter_filter
+            elif filter_widget.field == "location_id$level":
+                filter_widget.opts.default = "L2"
+
+    settings.customise_stats_demographic_data_resource = customise_stats_demographic_data_resource
 
 # END =========================================================================

@@ -11,14 +11,14 @@
 
 # Needs to be run in the web2py environment:
 # cd web2py
-# python web2py.py -S eden -M -R applications/eden/modules/templates/Disease/ebola.cases.update.py
+# python web2py.py -S eden -M -R applications/eden/modules/templates/Disease/Ebola/ebola.cases.update.py
 import sys
 
 from time import gmtime, strftime
 todays_date = strftime("%Y-%m-%d", gmtime())
 
 # Options which changed for other data sources
-SOURCE_URL = "http://data.hdx.rwlabs.org/storage/f/2014-11-14T13%3A55%3A58.796Z/data-ebola-public.xlsx" # Linked from https://data.hdx.rwlabs.org/dataset/rowca-ebola-cases Note timestamp changes daily so no auto-update possible :/
+SOURCE_URL = "https://data.humdata.org/dataset/f326cf9d-8e37-437d-9b85-5ea3d36e3d39/resource/9b68ab69-e0b3-4ff5-b2d8-90bf446acd52/download/data-ebola-public.xlsx" # Linked from https://data.humdata.org/dataset/rowca-ebola-cases
 #SOURCE_URL = "http://eden.sahanafoundation.org/downloads/Data%20Ebola%20(Public).xlsx" # For use when site is down (gives a 404 at times, perhaps when file is being updated)
 SOURCE_SHEET = "ROWCA Ebola All Sec Review"
 OUTPUT_CSV = "ebola_cases_%s.csv" % todays_date
@@ -54,13 +54,14 @@ location_names = {# GN
 # - Make script more widely usable?: other resources (e.g. Hospitals)
 
 import string
-import urllib2
 import xlrd
+
+from s3compat import urlopen, urlparse
 
 # Open the file from the remote server
 # @todo write the remote file to a temp file and then pass to load_workbook
 sys.stderr.write("Downloading data...\n")
-u = urllib2.urlopen(SOURCE_URL)
+u = urlopen(SOURCE_URL)
 wb = xlrd.open_workbook(file_contents=u.read())
 ws = wb.sheet_by_name(SOURCE_SHEET)
 
@@ -258,36 +259,34 @@ for d in statistics:
 sys.stderr.write("Writing out in Sahana format...\n")
 import csv
 import os
-from urlparse import urlparse
-from s3 import s3_unicode
-
-new_file = open(OUTPUT_CSV, "wb")
-new_csv = csv.writer(new_file, delimiter=",", quotechar='"')
-# Header row
-new_csv.writerow(["Statistic", "Value", "Country", "L1", "L2", "L3", "Date", "Source", "Source Organisation", "Source URL"])
-
 split = os.path.split
-def write_details_to_csv(csv_file, statistic, data):
-    cnt = 0
-    writerow = csv_file.writerow
-    for (location, details) in data.items():
-        loc = location_list[location]
-        for key in sorted(details.keys()):
-            row = details[key]
-            source = row[2]
-            source_url = ""
-            url = urlparse(source)
-            if url[0] != "":
-                source_url = source
-                (head, tail) = split(url[2])
-                source = tail.replace("%20", " ")
-            cnt += 1
-            writerow([statistic, row[0], loc[0], loc[1], loc[2], loc[3], key, s3_unicode(source).encode("utf-8"), row[1], source_url])
 
-for s in statistics:
-    write_details_to_csv(new_csv, s, statistics[s])
+from s3 import s3_str
 
-new_file.close()
+with open(OUTPUT_CSV, "w", newline="") as new_file:
+    new_csv = csv.writer(new_file, delimiter=",", quotechar='"')
+    # Header row
+    new_csv.writerow(["Statistic", "Value", "Country", "L1", "L2", "L3", "Date", "Source", "Source Organisation", "Source URL"])
+
+    def write_details_to_csv(csv_file, statistic, data):
+        cnt = 0
+        writerow = csv_file.writerow
+        for (location, details) in data.items():
+            loc = location_list[location]
+            for key in sorted(details.keys()):
+                row = details[key]
+                source = row[2]
+                source_url = ""
+                url = urlparse.urlparse(source)
+                if url[0] != "":
+                    source_url = source
+                    (head, tail) = split(url[2])
+                    source = tail.replace("%20", " ")
+                cnt += 1
+                writerow([statistic, row[0], loc[0], loc[1], loc[2], loc[3], key, s3_str(source), row[1], source_url])
+
+    for s in statistics:
+        write_details_to_csv(new_csv, s, statistics[s])
 
 # @ToDo: Diff to just more recent data
 # Open the existing prepop data file
@@ -300,7 +299,7 @@ sys.stderr.write("Importing data...\n")
 auth.override = True
 stylesheet = os.path.join(request.folder, "static", "formats", "s3csv", "disease", "stats_data.xsl")
 resource = s3db.resource("disease_stats_data")
-File = open(OUTPUT_CSV, "r")
+File = open(OUTPUT_CSV, "rb")
 resource.import_xml(File, format="csv", stylesheet=stylesheet)
 db.commit()
 
