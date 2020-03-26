@@ -8122,7 +8122,7 @@ class CheckboxesWidgetS3(OptionsWidget):
 
         totals = len(options)
         mods = totals % cols
-        rows = totals / cols
+        rows = int(totals / cols)
         if mods:
             rows += 1
 
