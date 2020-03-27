@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 def config(settings):
     """
-        Settings for Ebola data for the Disease template.
+        Settings for Ebola Demo for the Disease template.
 
         Normally configured as:
         settings.base.template = ("locations.GN", "locations.LR", "locations.ML", "locations.NG", "locations.SL", "locations.SN", "Disease", "Disease.Ebola")
@@ -19,6 +19,12 @@ def config(settings):
 
     # PrePopulate data
     settings.base.prepopulate.append("Disease/Ebola")
+
+    # Do new users need to be approved by an administrator prior to being able to login?
+    settings.auth.registration_requires_approval = False
+    # Always notify the approver of a new (verified) user, even if the user is automatically approved
+    settings.auth.always_notify_approver = False
+    settings.security.policy = 1 # Simple Policy
 
     settings.L10n.languages = OrderedDict([
         ("en", "English"),

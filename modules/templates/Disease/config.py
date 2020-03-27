@@ -30,11 +30,13 @@ def config(settings):
     # Do new users need to verify their email address?
     settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
-    #settings.auth.registration_requires_approval = True
-    #settings.auth.registration_requests_organisation = True
+    settings.auth.registration_requires_approval = True
     # Required for access to default realm permissions
     #settings.auth.registration_link_user_to = ["staff"]
     #settings.auth.registration_link_user_to_default = ["staff"]
+
+    settings.auth.registration_requests_organisation = True
+    settings.auth.registration_requests_site = True
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
@@ -88,6 +90,32 @@ def config(settings):
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 
     settings.security.policy = 7 # Organisation-ACLs with Hierarchy
+
+    def rgims_realm_entity(table, row):
+        """
+            Assign a Realm Entity to records
+        """
+
+        tablename = table._tablename
+        if tablename not in ("inv_recv", "inv_send"):
+            # Normal lookup
+            return 0
+
+        # For these tables we need to assign the site_id's realm not organisation_id's
+        db = current.db
+        stable = db.org_site
+        record = db(stable.site_id == row.site_id).select(stable.realm_entity,
+                                                          limitby=(0, 1)
+                                                          ).first()
+        if record:
+            return record.realm_entity
+
+        # Normal lookup
+        return 0
+
+    settings.auth.realm_entity = rgims_realm_entity
+
+    settings.req.req_type = ["Stock"]
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

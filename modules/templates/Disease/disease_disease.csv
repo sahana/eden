@@ -1,2 +1,3 @@
 Name,Short Name,Acronym,ICD10,Description,Trace Period,Watch Period,Comments
 Coronavirus Disease,COVID-19,COVID-19,U07.1,Respiratory disease caused by the SARS-CoV-2 virus,14,16,"ICD-10 code not yet available (U07.1 to be implemented in the U.S. from 1 April 2020, use additional codes for pneumonia, ARDS and other manifestations)"
+Ebola Virus Disease,Ebola Fever,EVD,"A98.4",,3,21,
