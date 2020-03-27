@@ -48,8 +48,8 @@ from s3layouts import S3PopupLink
 
 # Monitoring upgrades {new_level:previous_levels}
 MONITORING_UPGRADE = {"OBSERVATION": ("NONE",
-                                     "FOLLOW-UP",
-                                     ),
+                                      "FOLLOW-UP",
+                                      ),
                       "DIAGNOSTICS": ("NONE",
                                       "OBSERVATION",
                                       "FOLLOW-UP",
@@ -189,12 +189,8 @@ class DiseaseDataModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return {"disease_disease_id": lambda **attr: dummy("disease_id"),
-                "disease_symptom_id": lambda **attr: dummy("symptom_id"),
+        return {"disease_disease_id": S3ReusableField.dummy("disease_id"),
+                "disease_symptom_id": S3ReusableField.dummy("symptom_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -234,7 +230,6 @@ class DiseaseDataModel(S3Model):
         if duplicate:
             item.id = duplicate
             item.method = item.METHOD.UPDATE
-        return
 
 # =============================================================================
 class CaseTrackingModel(S3Model):
@@ -573,11 +568,7 @@ class CaseTrackingModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return {"disease_case_id": lambda **attr: dummy("case_id"),
+        return {"disease_case_id": S3ReusableField.dummy("case_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -624,7 +615,6 @@ class CaseTrackingModel(S3Model):
             link = A(record.case_number,
                      _href=URL(f="case", args=[record.id]))
             form.errors.person_id = XML("%s: %s" % (error, link))
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -659,7 +649,6 @@ class CaseTrackingModel(S3Model):
             item.data.person_id = duplicate.person_id
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -675,7 +664,6 @@ class CaseTrackingModel(S3Model):
             return
 
         disease_propagate_case_status(record_id)
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -718,7 +706,6 @@ class CaseTrackingModel(S3Model):
             db(ctable.id == case_id).update(illness_status = row.illness_status)
             # Propagate case status to contacts
             disease_propagate_case_status(case_id)
-        return
 
 # =============================================================================
 class disease_CaseRepresent(S3Represent):
@@ -891,7 +878,8 @@ class ContactTracingModel(S3Model):
         # =====================================================================
         # Protection
         #
-        protection_level = {"NONE": T("Unknown"),
+        protection_level = {"UNKNOWN": T("Unknown"),
+                            "NONE": T("No Protection"),
                             "PARTIAL": T("Partial"),
                             "FULL": T("Full"),
                             }
@@ -921,20 +909,34 @@ class ContactTracingModel(S3Model):
         #
         tablename = "disease_exposure"
         define_table(tablename,
+
+                     # The known case to which the person was exposed:
                      case_id(),
+
+                     # The tracing record matching the exposure
+                     # - filled when the exposure is registered through
+                     #   contact tracing workflow
+                     # - @todo: restrospective lookup?
                      tracing_id(),
+
+                     # The person exposed
                      self.pr_person_id(empty = False,
                                        widget = S3AddPersonWidget(controller="pr"),
                                        ),
+
+                     # Date and time of the (first) exposure to this case
                      s3_datetime(),
+
                      #self.gis_location_id(),
+
+                     # Exposure details:
                      Field("exposure_type",
                            default = "UNKNOWN",
                            represent = exposure_type_represent,
                            requires = IS_IN_SET(exposure_type, zero=None),
                            ),
                      Field("protection_level",
-                           default = "NONE",
+                           default = "UNKNOWN",
                            represent = protection_level_represent,
                            requires = IS_IN_SET(protection_level, zero=None),
                            ),
@@ -1001,7 +1003,6 @@ class ContactTracingModel(S3Model):
             case_id = formvars.case_id
 
         disease_propagate_case_status(case_id)
-        return
 
 # =============================================================================
 def disease_propagate_case_status(case_id):
@@ -1084,7 +1085,6 @@ def disease_propagate_case_status(case_id):
                             exposure.person_id,
                             monitoring_level = "OBSERVATION",
                             )
-    return
 
 # =============================================================================
 def disease_create_case(disease_id, person_id, monitoring_level=None):
@@ -1122,7 +1122,7 @@ def disease_upgrade_monitoring(case_id, level, case=None):
     """
 
     if level not in MONITORING_UPGRADE:
-        return False
+        return
     else:
         previous_levels = MONITORING_UPGRADE[level]
 
@@ -1137,9 +1137,9 @@ def disease_upgrade_monitoring(case_id, level, case=None):
                                         ).first()
     elif case.monitoring_level not in previous_levels:
         return
+
     if case:
         case.update_record(monitoring_level = level)
-    return True
 
 # =============================================================================
 class DiseaseStatsModel(S3Model):
@@ -1710,10 +1710,9 @@ class DiseaseStatsModel(S3Model):
                 values_sum = 0
 
             # Add or update the aggregated values in the database
-
-            attr = dict(agg_type = 2, # Location
-                        sum = values_sum,
-                        )
+            attr = {"agg_type": 2, # Location
+                    "sum": values_sum,
+                    }
 
             # Do we already have a record?
             if date in exists:

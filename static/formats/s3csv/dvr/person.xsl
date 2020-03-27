@@ -928,7 +928,7 @@
                     </xsl:otherwise>
                 </xsl:choose>
                 <data field="name"><xsl:value-of select="$l4"/></data>
-                <data field="level"><xsl:text>L4</xsl:text></data>
+                <data field="level"><xsl:text>L5</xsl:text></data>
             </resource>
         </xsl:if>
 
