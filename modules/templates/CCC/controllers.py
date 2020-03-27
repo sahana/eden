@@ -820,7 +820,7 @@ class register(S3CustomController):
                          P("If you are registering as an individual volunteer please use ",
                            A("Register as a Volunteer", _href=URL(args="register", vars={})),
                            ),
-                         P("Families with children under 18 should register here to ensure you are tasked together."),
+                         #P("Families with children under 18 should register here to ensure you are tasked together."),
                          )
 
             # Instantiate Consent Tracker
@@ -977,10 +977,10 @@ class register(S3CustomController):
                            A("Volunteer Group", _href=URL(args="register", vars={"vol_group": 1})),
                            ".",
                            ),
-                         P("Families with children under 18 should register as a ",
-                           A("Volunteer Group", _href=URL(args="register", vars={"vol_group": 1})),
-                           " to ensure you are tasked together.",
-                           ),
+                         #P("Families with children under 18 should register as a ",
+                         #  A("Volunteer Group", _href=URL(args="register", vars={"vol_group": 1})),
+                         #  " to ensure you are tasked together.",
+                         #  ),
                          )
 
             # Form Fields

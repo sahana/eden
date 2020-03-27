@@ -320,19 +320,19 @@ class S3ProjectModel(S3Model):
             msg_list_empty = T("No Projects currently registered"))
 
         # Filter widgets
-        filter_widgets = project_project_filters(org_label=org_label)
+        filter_widgets = project_project_filters(org_label = org_label)
 
         # Resource Configuration
         if settings.get_project_theme_percentages():
             create_next = URL(c="project", f="project",
-                              args=["[id]", "theme"])
+                              args = ["[id]", "theme"])
         elif mode_task:
             if settings.get_project_milestones():
                 create_next = URL(c="project", f="project",
-                                  args=["[id]", "milestone"])
+                                  args = ["[id]", "milestone"])
             else:
                 create_next = URL(c="project", f="project",
-                                  args=["[id]", "task"])
+                                  args = ["[id]", "task"])
         else:
             # Default
             create_next = None

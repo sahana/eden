@@ -259,36 +259,51 @@ body.rtl #poweredby {
 }
 
 @media only screen {
-  /* line 205, ../scss/theme/_page.scss */
+  /* line 206, ../scss/theme/_page.scss */
   .padc {
     padding: 2px 5px 6px;
   }
+
+  /* line 209, ../scss/theme/_page.scss */
+  .padcvs {
+    padding: 2px 6px 15px;
+  }
 }
 @media only screen and (min-width: 40.0625em) {
-  /* line 211, ../scss/theme/_page.scss */
+  /* line 214, ../scss/theme/_page.scss */
   .padc {
     padding: 5px 10px 12px;
   }
+
+  /* line 217, ../scss/theme/_page.scss */
+  .padcvs {
+    padding: 5px 12px 30px;
+  }
 }
 @media only screen and (min-width: 64.0625em) {
-  /* line 217, ../scss/theme/_page.scss */
+  /* line 222, ../scss/theme/_page.scss */
   .padc {
     padding: 10px 20px 25px;
   }
+
+  /* line 225, ../scss/theme/_page.scss */
+  .padcvs {
+    padding: 10px 25px 75px;
+  }
 }
-/* line 223, ../scss/theme/_page.scss */
+/* line 231, ../scss/theme/_page.scss */
 .sub-nav.about-menu {
   color: #999;
   text-align: left;
   margin-left: 0;
   margin-right: 0;
 }
-/* line 225, ../scss/theme/_page.scss */
+/* line 233, ../scss/theme/_page.scss */
 .sub-nav.about-menu a {
   color: #999;
 }
 
-/* line 233, ../scss/theme/_page.scss */
+/* line 241, ../scss/theme/_page.scss */
 body.rtl .about-menu {
   text-align: right;
 }
@@ -1334,129 +1349,140 @@ h4.profile-sub-header {
 }
 
 /* line 35, ../../default/scss/theme/_widgets.scss */
+.ui-widget-header.ui-slider-range {
+  background: #cccccc;
+}
+
+/* line 38, ../../default/scss/theme/_widgets.scss */
 .ui-state-active,
 .ui-widget-content .ui-state-active,
 .ui-widget-header .ui-state-active {
   border-color: #ADA6A0;
 }
 
-/* line 41, ../../default/scss/theme/_widgets.scss */
+/* line 43, ../../default/scss/theme/_widgets.scss */
+.ui-widget-content .ui-state-active.ui-slider-handle {
+  background: #007fff;
+  border: 1px solid #003eff;
+}
+
+/* line 48, ../../default/scss/theme/_widgets.scss */
 .ui-multiselect-header span.ui-icon {
   margin-top: 4px;
 }
 
-/* line 45, ../../default/scss/theme/_widgets.scss */
+/* line 52, ../../default/scss/theme/_widgets.scss */
 .ui-multiselect-checkboxes li label input {
   margin-left: 0.2rem;
   margin-right: 0.3rem;
 }
 
-/* line 49, ../../default/scss/theme/_widgets.scss */
+/* line 56, ../../default/scss/theme/_widgets.scss */
 .ui-widget {
   font-family: Arial, "Helvetica Neue", Helvetica, Roboto, sans-serif;
 }
 
 /* List-Add Button */
-/* line 54, ../../default/scss/theme/_widgets.scss */
+/* line 61, ../../default/scss/theme/_widgets.scss */
 #list-btn-add {
   float: right;
   margin-right: 0.35rem;
 }
 
 /* Summary tabs */
-/* line 60, ../../default/scss/theme/_widgets.scss */
+/* line 67, ../../default/scss/theme/_widgets.scss */
 .ui-tabs .ui-tabs-panel {
   padding: 0.5em;
 }
 
-/* line 63, ../../default/scss/theme/_widgets.scss */
+/* line 70, ../../default/scss/theme/_widgets.scss */
 #summary-tabs {
   margin-top: 10px;
 }
-/* line 65, ../../default/scss/theme/_widgets.scss */
+/* line 72, ../../default/scss/theme/_widgets.scss */
 #summary-tabs.ui-widget-content {
   background: none;
   border: none;
 }
 
-/* line 71, ../../default/scss/theme/_widgets.scss */
+/* line 78, ../../default/scss/theme/_widgets.scss */
 #summary-tab-headers .ui-tabs-nav {
   border: none;
   margin: 0 10px;
 }
-/* line 75, ../../default/scss/theme/_widgets.scss */
+/* line 82, ../../default/scss/theme/_widgets.scss */
 #summary-tab-headers a {
   border-color: #CCC;
 }
-/* line 78, ../../default/scss/theme/_widgets.scss */
+/* line 85, ../../default/scss/theme/_widgets.scss */
 #summary-tab-headers .ui-tabs-active a {
   border-bottom: 1px solid white;
 }
-/* line 81, ../../default/scss/theme/_widgets.scss */
+/* line 88, ../../default/scss/theme/_widgets.scss */
 #summary-tab-headers li {
   margin-right: 5px;
   box-shadow: none;
 }
 
-/* line 88, ../../default/scss/theme/_widgets.scss */
+/* line 95, ../../default/scss/theme/_widgets.scss */
 #summary-sections .x-panel-body {
   border: none;
   border-radius: 4px;
 }
 
 /* Date picker */
-/* line 95, ../../default/scss/theme/_widgets.scss */
+/* line 102, ../../default/scss/theme/_widgets.scss */
 input.date.hasDatepicker {
   display: inline-block;
 }
 
-/* line 98, ../../default/scss/theme/_widgets.scss */
+/* line 105, ../../default/scss/theme/_widgets.scss */
 .ui-datepicker-trigger {
   background-color: transparent;
   background-image: url("../../img/bootstrap/calendar.gif");
   margin-left: 10px;
 }
 
-/* line 103, ../../default/scss/theme/_widgets.scss */
+/* line 110, ../../default/scss/theme/_widgets.scss */
 .ui-datepicker.ui-widget {
   z-index: 1000 !important;
 }
 
 /* Range filter widgets */
-/* line 108, ../../default/scss/theme/_widgets.scss */
+/* line 115, ../../default/scss/theme/_widgets.scss */
 .range-filter-label label {
   font-size: 1.0em;
 }
 
-/* line 112, ../../default/scss/theme/_widgets.scss */
+/* line 119, ../../default/scss/theme/_widgets.scss */
 .range-filter-widget input.date-filter-input {
   width: auto;
   margin-right: 2px;
 }
-/* line 116, ../../default/scss/theme/_widgets.scss */
+/* line 123, ../../default/scss/theme/_widgets.scss */
 .range-filter-widget button.date-clear-btn {
   font-size: 0.85em;
   padding: 0.325em;
   margin-top: 0.5em;
 }
-/* line 121, ../../default/scss/theme/_widgets.scss */
+/* line 128, ../../default/scss/theme/_widgets.scss */
 .range-filter-widget .postfix.calendar-clear-btn {
   margin-left: -2px;
 }
 
-/* line 125, ../../default/scss/theme/_widgets.scss */
+/* line 132, ../../default/scss/theme/_widgets.scss */
 .btn.date-clear-btn {
   font-size: 0.85em;
   padding: 0.325em;
   margin-top: 0.5em;
 }
 
-/* line 130, ../../default/scss/theme/_widgets.scss */
+/* line 137, ../../default/scss/theme/_widgets.scss */
 .calendar-widget-container {
   white-space: nowrap;
 }
 
-/* line 133, ../../default/scss/theme/_widgets.scss */
+/* line 140, ../../default/scss/theme/_widgets.scss */
 .postfix.calendar-clear-btn {
   cursor: pointer;
   display: inline-block;
@@ -1464,54 +1490,54 @@ input.date.hasDatepicker {
   width: 1.2rem;
   vertical-align: top;
 }
-/* line 135, ../../default/scss/theme/_widgets.scss */
+/* line 142, ../../default/scss/theme/_widgets.scss */
 .postfix.calendar-clear-btn .fa {
   color: #B0B0B0;
 }
 
 /* GroupedOptions widget */
-/* line 145, ../../default/scss/theme/_widgets.scss */
+/* line 152, ../../default/scss/theme/_widgets.scss */
 .s3-groupedopts-label {
   float: none;
   margin-bottom: 0.3rem;
 }
 
-/* line 149, ../../default/scss/theme/_widgets.scss */
+/* line 156, ../../default/scss/theme/_widgets.scss */
 .s3-groupedopts-widget table {
   margin-left: 0;
   margin-bottom: 0.5rem;
 }
 
-/* line 153, ../../default/scss/theme/_widgets.scss */
+/* line 160, ../../default/scss/theme/_widgets.scss */
 table.s3-groupedopts-widget {
   /*     border: 0; TODO make configurable */
   margin-bottom: 0;
 }
-/* line 154, ../../default/scss/theme/_widgets.scss */
+/* line 161, ../../default/scss/theme/_widgets.scss */
 table.s3-groupedopts-widget td {
   white-space: nowrap;
 }
-/* line 156, ../../default/scss/theme/_widgets.scss */
+/* line 163, ../../default/scss/theme/_widgets.scss */
 table.s3-groupedopts-widget td input {
   vertical-align: text-top;
 }
-/* line 159, ../../default/scss/theme/_widgets.scss */
+/* line 166, ../../default/scss/theme/_widgets.scss */
 table.s3-groupedopts-widget td label {
   white-space: pre-wrap;
 }
 
-/* line 167, ../../default/scss/theme/_widgets.scss */
+/* line 174, ../../default/scss/theme/_widgets.scss */
 div.s3-groupedopts-widget .s3-groupedopts-item {
   display: inline-block;
   padding-top: 0.15rem;
 }
-/* line 171, ../../default/scss/theme/_widgets.scss */
+/* line 178, ../../default/scss/theme/_widgets.scss */
 div.s3-groupedopts-widget input.s3-groupedopts-option {
   margin-top: 0;
 }
 
 /* ImageCropWidget */
-/* line 177, ../../default/scss/theme/_widgets.scss */
+/* line 184, ../../default/scss/theme/_widgets.scss */
 .imagecrop-btn {
   font-size: 1em;
   margin-left: 0.2em;
@@ -1519,36 +1545,36 @@ div.s3-groupedopts-widget input.s3-groupedopts-option {
 }
 
 /* pr_Contacts widgets */
-/* line 184, ../../default/scss/theme/_widgets.scss */
+/* line 191, ../../default/scss/theme/_widgets.scss */
 .pr-contacts-wrapper h3 {
   margin-top: 0.5rem;
   padding-bottom: 0 !important;
 }
 
-/* line 188, ../../default/scss/theme/_widgets.scss */
+/* line 195, ../../default/scss/theme/_widgets.scss */
 .pr-contact-actions {
   margin-bottom: 0.5rem;
 }
 
-/* line 191, ../../default/scss/theme/_widgets.scss */
+/* line 198, ../../default/scss/theme/_widgets.scss */
 .pr-contact,
 .pr-emergency-contact {
   padding: 0.5rem;
 }
 
-/* line 195, ../../default/scss/theme/_widgets.scss */
+/* line 202, ../../default/scss/theme/_widgets.scss */
 .pr-contact-priority,
 .pr-contact-details {
   display: inline-block;
 }
 
-/* line 199, ../../default/scss/theme/_widgets.scss */
+/* line 206, ../../default/scss/theme/_widgets.scss */
 .pr-contact-subtitle {
   font-size: 0.8rem;
   font-style: italic;
 }
 
-/* line 203, ../../default/scss/theme/_widgets.scss */
+/* line 210, ../../default/scss/theme/_widgets.scss */
 .pr-contact-priority {
   border: thin solid #2ba6cb;
   border-radius: 2px;
@@ -1559,7 +1585,7 @@ div.s3-groupedopts-widget input.s3-groupedopts-option {
   padding: 0 0.25rem 0.125rem;
   vertical-align: top;
 }
-/* line 212, ../../default/scss/theme/_widgets.scss */
+/* line 219, ../../default/scss/theme/_widgets.scss */
 .pr-contact-priority input[type=submit] {
   color: black;
   line-height: 1.2rem;
@@ -1567,38 +1593,38 @@ div.s3-groupedopts-widget input.s3-groupedopts-option {
 }
 
 /* Checkboxes Widget */
-/* line 220, ../../default/scss/theme/_widgets.scss */
+/* line 227, ../../default/scss/theme/_widgets.scss */
 .controls .checkboxes-widget-s3 {
   display: inline-flex;
 }
 
 /* Comment feeds */
-/* line 225, ../../default/scss/theme/_widgets.scss */
+/* line 232, ../../default/scss/theme/_widgets.scss */
 .comment-box {
   background: none repeat scroll 0 0 #f5f5f5;
 }
 
 /* Text representation */
-/* line 230, ../../default/scss/theme/_widgets.scss */
+/* line 237, ../../default/scss/theme/_widgets.scss */
 .text-body {
   white-space: pre-wrap;
 }
 
 /* Iframe Map (Location Represent links) TODO move into page or forms? */
-/* line 235, ../../default/scss/theme/_widgets.scss */
+/* line 242, ../../default/scss/theme/_widgets.scss */
 #close-iframe-map {
   padding: 7px;
   margin-top: 5px;
 }
 
 /* Truncated Texts */
-/* line 241, ../../default/scss/theme/_widgets.scss */
+/* line 248, ../../default/scss/theme/_widgets.scss */
 .s3-truncate-more,
 .s3-truncate-less {
   font-style: italic;
 }
 
-/* line 245, ../../default/scss/theme/_widgets.scss */
+/* line 252, ../../default/scss/theme/_widgets.scss */
 .s3-truncate-more:before,
 .s3-truncate-less:before {
   font-style: italic;
@@ -1606,12 +1632,12 @@ div.s3-groupedopts-widget input.s3-groupedopts-option {
 }
 
 /* AddPersonWidget */
-/* line 252, ../../default/scss/theme/_widgets.scss */
+/* line 259, ../../default/scss/theme/_widgets.scss */
 .box_bottom {
   clear: left;
 }
 
-/* line 255, ../../default/scss/theme/_widgets.scss */
+/* line 262, ../../default/scss/theme/_widgets.scss */
 .ui-menu-item .pe-label {
   font-size: 0.7rem;
   color: #A0A0A0;
@@ -1619,151 +1645,151 @@ div.s3-groupedopts-widget input.s3-groupedopts-option {
 }
 
 /* Anonymize-Widget */
-/* line 262, ../../default/scss/theme/_widgets.scss */
+/* line 269, ../../default/scss/theme/_widgets.scss */
 form.anonymize-form,
 .anonymize-success {
   padding: 1rem;
 }
 
-/* line 266, ../../default/scss/theme/_widgets.scss */
+/* line 273, ../../default/scss/theme/_widgets.scss */
 .anonymize-select,
 .anonymize-confirm {
   margin-left: 1rem;
 }
 
-/* line 270, ../../default/scss/theme/_widgets.scss */
+/* line 277, ../../default/scss/theme/_widgets.scss */
 .anonymize-buttons {
   margin-top: 1rem;
 }
 
-/* line 273, ../../default/scss/theme/_widgets.scss */
+/* line 280, ../../default/scss/theme/_widgets.scss */
 .anonymize-btn {
   background-color: #a3182d;
 }
-/* line 275, ../../default/scss/theme/_widgets.scss */
+/* line 282, ../../default/scss/theme/_widgets.scss */
 .anonymize-btn:hover {
   background-color: #821324;
 }
 
-/* line 279, ../../default/scss/theme/_widgets.scss */
+/* line 286, ../../default/scss/theme/_widgets.scss */
 .s3-anonymize {
   display: inline-block;
   margin: 0.2rem;
 }
 
 /* Role Manager */
-/* line 286, ../../default/scss/theme/_widgets.scss */
+/* line 293, ../../default/scss/theme/_widgets.scss */
 .rm-form .controls {
   width: 100%;
 }
-/* line 289, ../../default/scss/theme/_widgets.scss */
+/* line 296, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .action-lnk,
 .rm-form .rm-rules .action-lnk {
   display: inline-block;
   color: #902283;
   font-style: normal;
 }
-/* line 295, ../../default/scss/theme/_widgets.scss */
+/* line 302, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-toggle-all {
   margin-top: 0.2rem;
   margin-bottom: 0.5rem;
 }
-/* line 299, ../../default/scss/theme/_widgets.scss */
+/* line 306, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign {
   width: 80%;
   border-collapse: separate;
   border-spacing: 0;
 }
-/* line 303, ../../default/scss/theme/_widgets.scss */
+/* line 310, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign th {
   min-width: 10rem;
 }
-/* line 306, ../../default/scss/theme/_widgets.scss */
+/* line 313, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign th:first-child {
   width: 25%;
 }
-/* line 309, ../../default/scss/theme/_widgets.scss */
+/* line 316, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign td {
   padding: 0.5rem;
 }
-/* line 312, ../../default/scss/theme/_widgets.scss */
+/* line 319, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign tfoot td {
   border-top: 1px solid #C0C0C0;
 }
-/* line 315, ../../default/scss/theme/_widgets.scss */
+/* line 322, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-item-name,
 .rm-form .rm-assign .rm-item-title {
   display: block;
 }
-/* line 319, ../../default/scss/theme/_widgets.scss */
+/* line 326, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-item-title {
   font-size: 0.8rem;
   font-style: italic;
   color: #A0A0A0;
 }
-/* line 325, ../../default/scss/theme/_widgets.scss */
+/* line 332, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-duplicate td {
   border-top: 1px solid red;
   border-bottom: 1px solid red;
 }
-/* line 328, ../../default/scss/theme/_widgets.scss */
+/* line 335, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 1px solid red;
 }
-/* line 331, ../../default/scss/theme/_widgets.scss */
+/* line 338, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 1px solid red;
 }
-/* line 337, ../../default/scss/theme/_widgets.scss */
+/* line 344, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules {
   width: 100%;
 }
-/* line 339, ../../default/scss/theme/_widgets.scss */
+/* line 346, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header {
   cursor: pointer;
   background-color: #F0F0F0;
 }
-/* line 342, ../../default/scss/theme/_widgets.scss */
+/* line 349, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0.3rem;
   display: inline-block;
 }
-/* line 346, ../../default/scss/theme/_widgets.scss */
+/* line 353, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header .rm-module-toggle {
   width: 0.5rem;
 }
-/* line 349, ../../default/scss/theme/_widgets.scss */
+/* line 356, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header .rm-module-prefix {
   width: 6.5rem;
 }
-/* line 352, ../../default/scss/theme/_widgets.scss */
+/* line 359, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-module-header .rm-module-numrules {
   font-weight: normal;
 }
-/* line 356, ../../default/scss/theme/_widgets.scss */
+/* line 363, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules.hasrules .rm-module-header {
   background-color: #D0D0D0;
 }
-/* line 360, ../../default/scss/theme/_widgets.scss */
+/* line 367, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules th, .rm-form .rm-module-rules td {
   padding: 0.5rem;
 }
-/* line 364, ../../default/scss/theme/_widgets.scss */
+/* line 371, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-default-rule td,
 .rm-form .rm-module-rules .rm-default-permissions td {
   font-style: italic;
   color: #a0a0a0;
 }
-/* line 369, ../../default/scss/theme/_widgets.scss */
+/* line 376, ../../default/scss/theme/_widgets.scss */
 .rm-form .rm-module-rules .rm-rule-target {
   width: 20%;
 }
-/* line 373, ../../default/scss/theme/_widgets.scss */
+/* line 380, ../../default/scss/theme/_widgets.scss */
 .rm-form input.rm-invalid {
   background-color: #FFA0A0;
 }
 
-/* line 377, ../../default/scss/theme/_widgets.scss */
+/* line 384, ../../default/scss/theme/_widgets.scss */
 .rm-fixed,
 .rm-hint {
   display: block;
@@ -1773,39 +1799,39 @@ form.anonymize-form,
 }
 
 /* Organizer */
-/* line 387, ../../default/scss/theme/_widgets.scss */
+/* line 394, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-popup label {
   font-size: 0.7rem;
   font-weight: bold;
 }
-/* line 391, ../../default/scss/theme/_widgets.scss */
+/* line 398, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-popup p {
   font-size: 0.8rem;
   font-weight: normal;
   margin-bottom: 0.3rem;
 }
-/* line 396, ../../default/scss/theme/_widgets.scss */
+/* line 403, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-popup .action-btn {
   margin-left: 0;
   margin-right: 0.3rem;
 }
 
-/* line 402, ../../default/scss/theme/_widgets.scss */
+/* line 409, ../../default/scss/theme/_widgets.scss */
 .s3-organizer-create .action-btn {
   display: block;
 }
 
 /* Consent Widget */
-/* line 408, ../../default/scss/theme/_widgets.scss */
+/* line 415, ../../default/scss/theme/_widgets.scss */
 .consent-widget {
   border: 1px solid #E0E0E0;
   padding: 0.5rem 1rem;
 }
-/* line 411, ../../default/scss/theme/_widgets.scss */
+/* line 418, ../../default/scss/theme/_widgets.scss */
 .consent-widget .consent-option {
   margin-top: 0.3rem;
 }
-/* line 414, ../../default/scss/theme/_widgets.scss */
+/* line 421, ../../default/scss/theme/_widgets.scss */
 .consent-widget .consent-explanation {
   white-space: pre-wrap;
   padding: 0.3rem 2rem;
@@ -1813,20 +1839,20 @@ form.anonymize-form,
   font-style: italic;
   color: #7F7F7F;
 }
-/* line 421, ../../default/scss/theme/_widgets.scss */
+/* line 428, ../../default/scss/theme/_widgets.scss */
 .consent-widget .consent-title {
   font-weight: bold;
 }
-/* line 424, ../../default/scss/theme/_widgets.scss */
+/* line 431, ../../default/scss/theme/_widgets.scss */
 .consent-widget .consent-checkbox {
   vertical-align: bottom;
   margin-right: 0.5rem;
 }
-/* line 428, ../../default/scss/theme/_widgets.scss */
+/* line 435, ../../default/scss/theme/_widgets.scss */
 .consent-widget .req {
   padding: 0 0.2rem;
 }
-/* line 431, ../../default/scss/theme/_widgets.scss */
+/* line 438, ../../default/scss/theme/_widgets.scss */
 .consent-widget .req_key {
   font-size: 0.7rem;
   font-weight: normal;
@@ -1835,7 +1861,7 @@ form.anonymize-form,
 }
 
 /* Priority Representation */
-/* line 440, ../../default/scss/theme/_widgets.scss */
+/* line 447, ../../default/scss/theme/_widgets.scss */
 .prio {
   padding: 0 4px;
   border: 1px solid black;
@@ -1844,68 +1870,68 @@ form.anonymize-form,
   font-weight: normal;
 }
 
-/* line 447, ../../default/scss/theme/_widgets.scss */
+/* line 454, ../../default/scss/theme/_widgets.scss */
 .prio-red {
   color: white;
   background-color: #d10000;
 }
 
-/* line 451, ../../default/scss/theme/_widgets.scss */
+/* line 458, ../../default/scss/theme/_widgets.scss */
 .prio-blue {
   color: white;
   background-color: #10427b;
 }
 
-/* line 455, ../../default/scss/theme/_widgets.scss */
+/* line 462, ../../default/scss/theme/_widgets.scss */
 .prio-lightblue {
   background-color: #b7ddff;
 }
 
-/* line 458, ../../default/scss/theme/_widgets.scss */
+/* line 465, ../../default/scss/theme/_widgets.scss */
 .prio-grey {
   background-color: silver;
 }
 
-/* line 465, ../../default/scss/theme/_widgets.scss */
+/* line 472, ../../default/scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header .ui-multiselect-filter {
   direction: rtl;
   float: right;
   margin-right: 3px;
   margin-left: 10px;
 }
-/* line 471, ../../default/scss/theme/_widgets.scss */
+/* line 478, ../../default/scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header ul li {
   float: right;
   padding: 0 3px 0 10px;
 }
-/* line 475, ../../default/scss/theme/_widgets.scss */
+/* line 482, ../../default/scss/theme/_widgets.scss */
 body.rtl .ui-multiselect-header li.ui-multiselect-close {
   float: left;
   text-align: left;
   padding-left: 0;
 }
-/* line 482, ../../default/scss/theme/_widgets.scss */
+/* line 489, ../../default/scss/theme/_widgets.scss */
 body.rtl .range-filter-widget input.date-filter-input {
   margin-right: 0;
   margin-left: 2px;
 }
-/* line 487, ../../default/scss/theme/_widgets.scss */
+/* line 494, ../../default/scss/theme/_widgets.scss */
 body.rtl #list-btn-add {
   float: left;
   margin-right: 0;
   margin-left: 0.35rem;
 }
-/* line 493, ../../default/scss/theme/_widgets.scss */
+/* line 500, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-module-rules .rm-module-header div {
   margin-right: 0;
   margin-left: 0.3rem;
 }
-/* line 499, ../../default/scss/theme/_widgets.scss */
+/* line 506, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
   border-left: 0;
   border-right: 1px solid red;
 }
-/* line 503, ../../default/scss/theme/_widgets.scss */
+/* line 510, ../../default/scss/theme/_widgets.scss */
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;

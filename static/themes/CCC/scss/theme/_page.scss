@@ -201,20 +201,29 @@ body.rtl {
 .medium5 {
     width: 20%;
 }
-// Carlisle logo includes no padding of it's own, so add in via CSS to stop it standing out from the rest so much
+// Carlisle & CVS logos include no padding of it's own, so add in via CSS to stop it standing out from the rest so much
 @media #{$small-up} {
     .padc {
         padding: 2px 5px 6px;
+    }
+    .padcvs {
+        padding: 2px 6px 15px;
     }
 }
 @media #{$medium-up} {
     .padc {
         padding: 5px 10px 12px;
     }
+    .padcvs {
+        padding: 5px 12px 30px;
+    }
 }
 @media #{$large-up} {
     .padc {
         padding: 10px 20px 25px;
+    }
+    .padcvs {
+        padding: 10px 25px 75px;
     }
 }
 
