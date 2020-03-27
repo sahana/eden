@@ -34,6 +34,10 @@
     <xsl:include href="../../xml/commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
 
+    <xsl:variable name="LocationPrefix" select="'Location:'"/>
+
+    <!-- ****************************************************************** -->
+    <!-- Indexes for faster processing -->
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
 
     <!-- ****************************************************************** -->
@@ -63,7 +67,7 @@
             <!-- Link to Location -->
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$AirportName"/>
+                    <xsl:value-of select="concat($LocationPrefix, $AirportName)"/>
                 </xsl:attribute>
             </reference>
             <!-- Link to Organisation -->
@@ -237,10 +241,10 @@
             </resource>
         </xsl:if>
 
-        <!-- Office Location -->
+        <!-- Airport Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$AirportName"/>
+                <xsl:value-of select="concat($LocationPrefix, $AirportName)"/>
             </xsl:attribute>
             <xsl:choose>
                 <xsl:when test="$l3!=''">

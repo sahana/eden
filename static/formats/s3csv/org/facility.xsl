@@ -46,6 +46,7 @@
     <xsl:include href="../../xml/countries.xsl"/>
 
     <xsl:variable name="FacilityTypePrefix" select="'FacilityType:'"/>
+    <xsl:variable name="LocationPrefix" select="'Location:'"/>
 
     <!-- ****************************************************************** -->
     <!-- Lookup column names -->
@@ -127,8 +128,7 @@
     <xsl:template match="row">
 
         <!-- Create the variables -->
-        <!-- Facility Name field is max length 64 -->
-        <xsl:variable name="FacilityName" select="substring(col[@field='Name']/text(),1,64)"/>
+        <xsl:variable name="FacilityName" select="col[@field='Name']/text()"/>
         <xsl:variable name="OrgName">
             <xsl:call-template name="GetColumnValue">
                 <xsl:with-param name="colhdrs" select="$Organisation"/>
@@ -140,7 +140,7 @@
             <!-- Link to Location -->
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$FacilityName"/>
+                    <xsl:value-of select="concat($LocationPrefix, $FacilityName)"/>
                 </xsl:attribute>
             </reference>
 
@@ -217,7 +217,8 @@
             </xsl:if>
 
             <!-- Facility data -->
-            <data field="name"><xsl:value-of select="$FacilityName"/></data>
+            <!-- Facility Name field is max length 64 -->
+            <data field="name"><xsl:value-of select="substring($FacilityName,1,64)"/></data>
             <xsl:if test="col[@field='Code']!=''">
                 <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
             </xsl:if>
@@ -611,8 +612,7 @@
         <!-- Facility Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
-                <!-- Match the name length limit in the main record -->
-                <xsl:value-of select="substring($FacilityName,1,64)"/>
+                <xsl:value-of select="concat($LocationPrefix, $FacilityName)"/>
             </xsl:attribute>
             <xsl:choose>
                 <xsl:when test="$l4!=''">

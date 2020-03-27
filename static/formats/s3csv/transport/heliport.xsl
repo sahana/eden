@@ -26,6 +26,10 @@
     <xsl:include href="../../xml/commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
 
+    <xsl:variable name="LocationPrefix" select="'Location:'"/>
+
+    <!-- ****************************************************************** -->
+    <!-- Indexes for faster processing -->
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
 
     <!-- ****************************************************************** -->
@@ -45,16 +49,16 @@
 
         <!-- Create the variables -->
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="OfficeName" select="col[@field='Name']/text()"/>
+        <xsl:variable name="HeliportName" select="col[@field='Name']/text()"/>
 
         <resource name="transport_heliport">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$OfficeName"/>
+                <xsl:value-of select="$HeliportName"/>
             </xsl:attribute>
             <!-- Link to Location -->
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$OfficeName"/>
+                    <xsl:value-of select="concat($LocationPrefix, $HeliportName)"/>
                 </xsl:attribute>
             </reference>
             <!-- Link to Organisation -->
@@ -65,7 +69,7 @@
             </reference>
 
             <!-- Facility data -->
-            <data field="name"><xsl:value-of select="$OfficeName"/></data>
+            <data field="name"><xsl:value-of select="$HeliportName"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>
 
@@ -90,7 +94,7 @@
 
     <xsl:template name="Locations">
 
-        <xsl:variable name="OfficeName" select="col[@field='Name']/text()"/>
+        <xsl:variable name="HeliportName" select="col[@field='Name']/text()"/>
         <xsl:variable name="Building" select="col[@field='Building']/text()"/>
         <xsl:variable name="l0" select="col[@field='Country']/text()"/>
         <xsl:variable name="l1" select="col[@field='L1']/text()"/>
@@ -196,10 +200,10 @@
             </resource>
         </xsl:if>
 
-        <!-- Office Location -->
+        <!-- Heliport Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$OfficeName"/>
+                <xsl:value-of select="concat($LocationPrefix, $HeliportName)"/>
             </xsl:attribute>
             <xsl:choose>
                 <xsl:when test="$l3!=''">
@@ -236,7 +240,7 @@
                     <data field="name"><xsl:value-of select="$Building"/></data>
                 </xsl:when>
                 <xsl:otherwise>
-                    <data field="name"><xsl:value-of select="$OfficeName"/></data>
+                    <data field="name"><xsl:value-of select="$HeliportName"/></data>
                 </xsl:otherwise>
             </xsl:choose>
             <data field="addr_street"><xsl:value-of select="col[@field='Address']"/></data>
