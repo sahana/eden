@@ -2483,15 +2483,17 @@ class S3CRUD(S3Method):
             authorised = self._permitted(method="create")
             if authorised:
                 if ADD_BTN in custom_crud_buttons:
-                    btn = crud_button(custom=custom_crud_buttons[ADD_BTN])
+                    btn = crud_button(custom = custom_crud_buttons[ADD_BTN])
                 else:
                     label = crud_string(tablename, "label_create")
-                    _href = url(method="create",
-                                representation=representation)
-                    btn = crud_button(label=label,
-                                      icon="add",
-                                      _href=_href,
-                                      _id="add-btn")
+                    _href = url(method = "create",
+                                representation = representation
+                                )
+                    btn = crud_button(label = label,
+                                      icon = "add",
+                                      _href = _href,
+                                      _id = "add-btn"
+                                      )
                 output[ADD_BTN] = btn
 
         # List button
@@ -2499,17 +2501,19 @@ class S3CRUD(S3Method):
             LIST_BTN = "list_btn"
             if not r.component or r.component.multiple:
                 if LIST_BTN in custom_crud_buttons:
-                    btn = crud_button(custom=custom_crud_buttons[LIST_BTN])
+                    btn = crud_button(custom = custom_crud_buttons[LIST_BTN])
                 else:
                     label = crud_string(tablename, "label_list_button")
-                    _href = url(method="",
-                                id=r.id if r.component else 0,
-                                vars=remove_filters(r.get_vars),
-                                representation=representation)
-                    btn = crud_button(label=label,
-                                      icon="list",
-                                      _href=_href,
-                                      _id="list-btn")
+                    _href = url(method = "",
+                                id = r.id if r.component else 0,
+                                vars = remove_filters(r.get_vars),
+                                representation = representation
+                                )
+                    btn = crud_button(label = label,
+                                      icon = "list",
+                                      _href = _href,
+                                      _id = "list-btn"
+                                      )
                 output[LIST_BTN] = btn
 
         # Summary button
@@ -2520,14 +2524,15 @@ class S3CRUD(S3Method):
                     btn = crud_button(custom=custom_crud_buttons[SUMMARY_BTN])
                 else:
                     label = crud_string(tablename, "label_list_button")
-                    _href = url(method="summary",
-                                id=0,
-                                vars=remove_filters(r.get_vars),
-                                representation=representation)
-                    btn = crud_button(label=label,
-                                      icon="list",
-                                      _href=_href,
-                                      _id="summary-btn")
+                    _href = url(method = "summary",
+                                id = 0,
+                                vars = remove_filters(r.get_vars),
+                                representation = representation
+                                )
+                    btn = crud_button(label = label,
+                                      icon = "list",
+                                      _href = _href,
+                                      _id = "summary-btn")
                 output[SUMMARY_BTN] = btn
 
         if not record_id:
@@ -2539,15 +2544,17 @@ class S3CRUD(S3Method):
             authorised = self._permitted(method="update")
             if authorised:
                 if EDIT_BTN in custom_crud_buttons:
-                    btn = crud_button(custom=custom_crud_buttons[EDIT_BTN])
+                    btn = crud_button(custom = custom_crud_buttons[EDIT_BTN])
                 else:
                     label = current.messages.UPDATE
-                    _href = url(method="update",
-                                representation=representation)
-                    btn = crud_button(label=label,
-                                      icon="edit",
-                                      _href=_href,
-                                      _id="edit-btn")
+                    _href = url(method = "update",
+                                representation = representation
+                                )
+                    btn = crud_button(label = label,
+                                      icon = "edit",
+                                      _href = _href,
+                                      _id = "edit-btn"
+                                      )
                 output[EDIT_BTN] = btn
 
         # Delete button
@@ -2556,16 +2563,18 @@ class S3CRUD(S3Method):
             authorised = self._permitted(method="delete")
             if authorised:
                 if DELETE_BTN in custom_crud_buttons:
-                    btn = crud_button(custom=custom_crud_buttons[DELETE_BTN])
+                    btn = crud_button(custom = custom_crud_buttons[DELETE_BTN])
                 else:
                     label = crud_string(tablename, "label_delete_button")
-                    _href = url(method="delete",
-                                representation=representation)
-                    btn = crud_button(label=label,
-                                      icon="delete",
-                                      _href=_href,
-                                      _id="delete-btn",
-                                      _class="delete-btn")
+                    _href = url(method = "delete",
+                                representation = representation
+                                )
+                    btn = crud_button(label = label,
+                                      icon = "delete",
+                                      _href = _href,
+                                      _id = "delete-btn",
+                                      _class = "delete-btn"
+                                      )
                 output[DELETE_BTN] = btn
 
         return output

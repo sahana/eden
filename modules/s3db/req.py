@@ -512,8 +512,8 @@ class RequestModel(S3Model):
             #              "req_id$name",
             #              "organisation_id$name"
             #              ],
-            #             label = T("Search")
-            #             comment=T("Search for a commitment by Committer name, Request ID, Site or Organization."),
+            #             label = T("Search"),
+            #             comment = T("Search for a Request by Committer name, Request ID, Site or Organization."),
             #             ),
             S3OptionsFilter("fulfil_status",
                             # Better to default (easier to customise/consistency)

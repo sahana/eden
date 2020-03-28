@@ -201,7 +201,7 @@ def req_controller(template = False):
     def prep(r):
 
         table = r.table
-        s3.req_prep(r)
+        s3db.req_prep(r)
 
         #if len(settings.get_req_req_type()) == 1:
         #    # Remove type from list_fields
@@ -726,10 +726,10 @@ $.filterOptionsS3({
                             type = form_vars.type
                             if type == "1":
                                 # Stock: Open Tab for Items
-                                r.next = URL(args=[form_vars.id, "req_item"])
+                                r.next = URL(args = [form_vars.id, "req_item"])
                             elif type == "3":
                                 # People: Open tab for Skills
-                                r.next = URL(args=[form_vars.id, "req_skill"])
+                                r.next = URL(args = [form_vars.id, "req_skill"])
                     else:
                         s3_action_buttons(r, deletable =False)
                         # Add delete button for those records which are not completed
@@ -878,10 +878,10 @@ $.filterOptionsS3({
                     req_type = form_vars.type
                     if req_type == "1":
                         # Stock: Open Tab for Items
-                        r.next = URL(args=[form_vars.id, "req_item"])
+                        r.next = URL(args = [form_vars.id, "req_item"])
                     elif req_type == "3":
                         # People: Open tab for Skills
-                        r.next = URL(args=[form_vars.id, "req_skill"])
+                        r.next = URL(args = [form_vars.id, "req_skill"])
 
         return output
     s3.postp = postp

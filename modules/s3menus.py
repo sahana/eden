@@ -1957,13 +1957,18 @@ class S3OptionsMenu(object):
         else:
             create_menu = M("Create", m="create")
 
+        if settings.get_req_summary():
+            method = "summary"
+        else:
+            method = None
+
         recurring = lambda i: settings.get_req_recurring()
         use_commit = lambda i: settings.get_req_use_commit()
         req_items = lambda i: "Stock" in types
         req_skills = lambda i: "People" in types
 
         return M(c="req")(
-                    M("Requests", f="req")(
+                    M("Requests", f="req", m=method)(
                         create_menu,
                         M("List Recurring Requests", f="req_template", check=recurring),
                         M("Map", m="map"),

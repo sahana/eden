@@ -97,6 +97,7 @@ def config(settings):
     settings.security.policy = 5 # Table-ACLs
 
     settings.req.req_type = ["Stock"]
+    settings.req.summary = True
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -260,5 +261,172 @@ def config(settings):
         #    module_type = None,
         #)),
     ])
+
+    # -----------------------------------------------------------------------------
+    def customise_req_req_resource(r, tablename):
+
+        from gluon import IS_EMPTY_OR, IS_IN_SET, SPAN
+        from s3 import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3Represent, S3TextFilter
+
+        s3db = current.s3db
+
+        req_status_opts = {
+            0:  SPAN(T("None"),
+                     _class = "req_status_none",
+                     ),
+            1:  SPAN(T("Partial"),
+                     _class = "req_status_partial",
+                     ),
+            2:  SPAN(T("Complete"),
+                     _class = "req_status_complete",
+                     ),
+        }
+
+        f = s3db.req_req.req_status
+        f.readable = f.writable = True
+        f.represent = S3Represent(options = req_status_opts)
+        f.requires = IS_EMPTY_OR(IS_IN_SET(req_status_opts))
+
+        f = s3db.req_req.security_req
+        f.readable = f.writable = True
+        f.label = T("Needs Financing?")
+
+        filter_widgets = [
+            S3TextFilter([#"committer_id$first_name",
+                          #"committer_id$middle_name",
+                          #"committer_id$last_name",
+                          "req_item.item_id",
+                          "site_id$name",
+                          "comments",
+                          #"req_id$name",
+                          #"organisation_id$name"
+                          ],
+                         label = T("Search"),
+                         #comment = T("Search for a commitment by Committer name, Request ID, Site or Organization."),
+                         comment = T("Search for a request by Item, Site or Comments"),
+                         ),
+            S3LocationFilter("site_id$location_id",
+                             levels = ("L1", "L2"),
+                             ),
+            S3OptionsFilter("req_item.item_id",
+                            ),
+            S3OptionsFilter("req_status",
+                            cols = 3,
+                            ),
+            S3OptionsFilter("commit_status",
+                            cols = 3,
+                            hidden = True,
+                            ),
+            S3OptionsFilter("transit_status",
+                            cols = 3,
+                            hidden = True,
+                            ),
+            S3OptionsFilter("fulfil_status",
+                            cols = 3,
+                            hidden = True,
+                            ),
+            S3OptionsFilter("site_id",
+                            hidden = True,
+                            ),
+            S3OptionsFilter("created_by",
+                            label = T("Logged By"),
+                            hidden = True,
+                            ),
+            S3DateFilter("date",
+                         # Better to default (easier to customise/consistency)
+                         #label = T("Date Requested"),
+                         hide_time = True,
+                         input_labels = {"ge": "From", "le": "To"},
+                         comment = T("Search for requests made between these dates."),
+                         hidden = True,
+                         ),
+            #S3DateFilter("date_required",
+            #             # Better to default (easier to customise/consistency)
+            #             #label = T("Date Needed By"),
+            #             hide_time = True,
+            #             input_labels = {"ge": "From", "le": "To"},
+            #             comment = T("Search for requests required between these dates."),
+            #             hidden = True,
+            #             ),
+            ]
+
+        list_fields = ["date",
+                       "site_id",
+                       "req_status",
+                       "req_item.item_id",
+                       "security_req",
+                       ]
+
+        s3db.configure("req_req",
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_req_req_resource = customise_req_req_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_req_req_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if not r.component:
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent
+
+                s3.crud.submit_button = T("Save")
+
+                s3db = current.s3db
+
+                # Dropdown not Autocomplete
+                itable = s3db.req_req_item
+                itable.item_id.widget = None
+                jquery_ready = s3.jquery_ready
+                jquery_ready.append('''
+$.filterOptionsS3({
+ 'trigger':{'alias':'req_item','name':'item_id'},
+ 'target':{'alias':'req_item','name':'item_pack_id'},
+ 'scope':'row',
+ 'lookupPrefix':'supply',
+ 'lookupResource':'item_pack',
+ 'msgNoRecords':i18n.no_packs,
+ 'fncPrep':S3.supply.fncPrepItem,
+ 'fncRepresent':S3.supply.fncRepresentItem
+})''')
+
+                crud_form = S3SQLCustomForm("site_id",
+                                            "requester_id",
+                                            "date",
+                                            S3SQLInlineComponent(
+                                                "req_item",
+                                                label = T("Items"),
+                                                fields = ["item_id",
+                                                          "item_pack_id",
+                                                          "quantity",
+                                                          "comments"
+                                                          ]
+                                                ),
+                                            "security_req",
+                                            "req_status",
+                                            "comments",
+                                            )
+
+                s3db.configure("req_req",
+                               crud_form = crud_form,
+                               )
+
+            return result
+        s3.prep = prep
+
+        return attr
+
+    settings.customise_req_req_controller = customise_req_req_controller
 
 # END =========================================================================

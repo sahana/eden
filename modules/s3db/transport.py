@@ -162,10 +162,10 @@ class S3TransportModel(S3Model):
                            writable = False,
                            ),
                      # Other codes can be added as tags if-required, but these 2 are so common that they are worth putting directly in the table
-                     Field("icao", length=4,
+                     Field("icao", length=7,
                            label = T("ICAO"),
                            requires = IS_EMPTY_OR(
-                                    [IS_LENGTH(4),
+                                    [IS_LENGTH(7),
                                      IS_NOT_IN_DB(db, "transport_airport.icao")
                                      ]),
                            ),

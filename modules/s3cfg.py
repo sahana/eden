@@ -5628,6 +5628,10 @@ class S3Config(Storage):
         """ Whether People Quantities should be manually editable """
         return self.req.get("skill_quantities_writable", False)
 
+    def get_req_summary(self):
+        # Whether to use Summary page for Requests
+        return self.req.get("summary", False)
+
     def get_req_pack_values(self):
         """
             Do we show pack values in Requests?
