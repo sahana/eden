@@ -47,6 +47,7 @@ class S3MainMenu(default.S3MainMenu):
                        MM("Airports", c="transport", f="airport", m="summary"),
                        MM("Facilities", c="org", f="facility", m="summary"),
                        MM("Fire Stations", c="fire", f="station", m="summary"),
+                       MM("Hospitals", c="hms", f="hospital", m="summary"),
                        MM("Offices", c="org", f="office", m="summary"),
                        MM("Warehouses", c="inv", f="warehouse", m="summary"),
                        ),
