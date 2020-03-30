@@ -2178,7 +2178,10 @@ class dc_TargetXLS(S3Method):
                         # likert
                         scale = question["scale"]
                         raw_answer = row.get(question["field"])
-                        answer = likert_options[scale][raw_answer]
+                        if raw_answer is None:
+                            answer = None
+                        else:                        
+                            answer = likert_options[scale][raw_answer]
                     else:
                         answer = row.get(question["field"])
                     if answer is not None:
