@@ -2105,7 +2105,8 @@ class dc_TargetXLS(S3Method):
                 qappend(question)
 
             # Add sheet
-            sheet = book.add_sheet(template_name)
+            # Can't have a / in the sheet_name, so replace any with a space
+            sheet = book.add_sheet(template_name.replace("/", " "))
 
             # Set column Widths
             col_index = 0
@@ -2196,7 +2197,7 @@ class dc_TargetXLS(S3Method):
         output.seek(0)
 
         # Response headers
-        filename = "%s.xls" % title
+        filename = "%s.xls" % title.replace("/", " ")
         response = current.response
         from gluon.contenttype import contenttype
         response.headers["Content-Type"] = contenttype(".xls")
