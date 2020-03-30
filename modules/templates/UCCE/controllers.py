@@ -250,23 +250,23 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
         if status == 1:
             # Draft
             responses = DIV("Draft")
-            #export_btn = ""
+            export_btn = ""
             preview_btn = ""
             report_btn = ""
             switch = ""
         else:
             responses = db(rtable.target_id == target_id).count()
             responses = DIV(T("%(count)s Responses") % {"count": responses})
-            #export_btn = A(ICON("upload"),
-            #               SPAN("export",
-            #                    _class = "show-for-sr",
-            #                    ),
-            #               _href=URL(c="dc", f="template",
-            #                         args=[template_id, "export_l10n.xls"],
-            #                         ),
-            #               _title=T("Export"),
-            #               _class="no-link",
-            #               )
+            export_btn = A(ICON("survey-export"),
+                           SPAN("export",
+                                _class = "show-for-sr",
+                                ),
+                           _href=URL(c="dc", f="target",
+                                     args=["%s.xls" % target_id],
+                                     ),
+                           _title=T("Export"),
+                           _class="no-link",
+                           )
             preview_btn = A(ICON("eye"),
                             SPAN("preview",
                                  _class = "show-for-sr",
@@ -323,8 +323,8 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                     # Copy button disabled until implemented
                     #DIV(edit_btn, copy_btn, delete_btn),
                     DIV(edit_btn, delete_btn),
-                    #DIV(preview_btn, export_btn, report_btn),
-                    DIV(preview_btn, report_btn),
+                    #DIV(preview_btn, report_btn),
+                    DIV(preview_btn, export_btn, report_btn),
                     switch,
                     _class = "project-survey-card medium-2 columns",
                     ))
@@ -383,16 +383,27 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                      SPAN("copy",
                           _class = "show-for-sr",
                          ),
-                     _href=URL(c="project", f="project",
-                               args = [record_id, "copy"],
-                               vars = {"refresh": list_id}
-                               ),
+                     _href = URL(c="project", f="project",
+                                 args = [record_id, "copy"],
+                                 vars = {"refresh": list_id}
+                                 ),
                      _title = T("Copy"),
                      )
     else:
         copy_btn = ""
 
-    toolbar = DIV(edit_btn,
+    xls_btn = A(ICON("export"),
+                SPAN("export",
+                     _class = "show-for-sr",
+                    ),
+                _href = URL(c="project", f="project",
+                            args = ["%s.xls" % record_id],
+                            ),
+                _title = T("Export"),
+                )
+
+    toolbar = DIV(xls_btn,
+                  edit_btn,
                   # Copy button disabled until implemented
                   #copy_btn,
                   delete_btn,
@@ -1735,47 +1746,7 @@ class dc_TargetReport(S3Method):
         T = current.T # Not fully-used as no full requirement for this in UCCE yet
         translate = data["translate"]
 
-        likert_options = {1: ["Very appropriate",
-                              "Somewhat appropriate",
-                              "Neither appropriate nor inappropriate",
-                              "Somewhat inappropriate",
-                              "Very inappropriate",
-                              ],
-                          2: ["Extremely confident",
-                              "Very confident",
-                              "Moderately confident",
-                              "Slightly confident",
-                              "Not confident at all",
-                              ],
-                          3: ["Always",
-                              "Often",
-                              "Occasionally",
-                              "Rarely",
-                              "Never",
-                              ],
-                          4: ["Extremely safe",
-                              "Very safe",
-                              "Moderately safe",
-                              "Slightly safe",
-                              "Not safe at all",
-                              ],
-                          5: ["Very satisfied",
-                              "Somewhat satisfied",
-                              "Neither satisfied nor dissatisfied",
-                              "Somewhat dissatisfied",
-                              "Very dissatisfied",
-                              ],
-                          6: ["smiley-1",
-                              "smiley-2",
-                              "smiley-3",
-                              "smiley-4",
-                              "smiley-6",
-                              ],
-                          7: ["smiley-3",
-                              "smiley-4",
-                              "smiley-5",
-                              ],
-                          }
+        likert_options = current.deployment_settings.get_dc_likert_options()
 
         questions_div = DIV()
 
@@ -2574,7 +2545,7 @@ class dc_TemplateEditor(S3Method):
                                   languages_dropdown,
                                   _class = "row",
                                   ),
-                              DIV(DIV(A(LABEL(ICON("download"),
+                              DIV(DIV(A(LABEL(ICON("survey-export"),
                                               T("Download survey .xls"),
                                               ),
                                         _href = URL(c="dc", f="template",

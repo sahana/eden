@@ -50,6 +50,9 @@
 .ucce-error:before {
   content: "\f10b";
 }
+.ucce-export:before {
+  content: "\f130";
+}
 .ucce-minus:before {
   content: "\f10c";
 }

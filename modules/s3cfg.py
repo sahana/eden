@@ -3490,6 +3490,52 @@ class S3Config(Storage):
         """
         return self.dc.get("unique_question_names_per_template", False)
 
+    def get_dc_likert_options(self):
+        """
+            Likert Scales & Options
+        """
+        return self.dc.get("likert_options", {1: ["Very appropriate",
+                                                  "Somewhat appropriate",
+                                                  "Neither appropriate nor inappropriate",
+                                                  "Somewhat inappropriate",
+                                                  "Very inappropriate",
+                                                  ],
+                                              2: ["Extremely confident",
+                                                  "Very confident",
+                                                  "Moderately confident",
+                                                  "Slightly confident",
+                                                  "Not confident at all",
+                                                  ],
+                                              3: ["Always",
+                                                  "Often",
+                                                  "Occasionally",
+                                                  "Rarely",
+                                                  "Never",
+                                                  ],
+                                              4: ["Extremely safe",
+                                                  "Very safe",
+                                                  "Moderately safe",
+                                                  "Slightly safe",
+                                                  "Not safe at all",
+                                                  ],
+                                              5: ["Very satisfied",
+                                                  "Somewhat satisfied",
+                                                  "Neither satisfied nor dissatisfied",
+                                                  "Somewhat dissatisfied",
+                                                  "Very dissatisfied",
+                                                  ],
+                                              6: ["smiley-1",
+                                                  "smiley-2",
+                                                  "smiley-3",
+                                                  "smiley-4",
+                                                  "smiley-6",
+                                                  ],
+                                              7: ["smiley-3",
+                                                  "smiley-4",
+                                                  "smiley-5",
+                                                  ],
+                                              })
+
     # -------------------------------------------------------------------------
     # Deployments
     #

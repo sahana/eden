@@ -79,6 +79,48 @@ def config(settings):
     # Pass to controllers.py (not a real deployment_setting)
     settings.L10n.survey_languages = l10n_options
 
+    settings.dc.likert_options = {1: ["Very appropriate",
+                                      "Somewhat appropriate",
+                                      "Neither appropriate nor inappropriate",
+                                      "Somewhat inappropriate",
+                                      "Very inappropriate",
+                                      ],
+                                  2: ["Extremely confident",
+                                      "Very confident",
+                                      "Moderately confident",
+                                      "Slightly confident",
+                                      "Not confident at all",
+                                      ],
+                                  3: ["Always",
+                                      "Often",
+                                      "Occasionally",
+                                      "Rarely",
+                                      "Never",
+                                      ],
+                                  4: ["Extremely safe",
+                                      "Very safe",
+                                      "Moderately safe",
+                                      "Slightly safe",
+                                      "Not safe at all",
+                                      ],
+                                  5: ["Very satisfied",
+                                      "Somewhat satisfied",
+                                      "Neither satisfied nor dissatisfied",
+                                      "Somewhat dissatisfied",
+                                      "Very dissatisfied",
+                                      ],
+                                  6: ["smiley-1",
+                                      "smiley-2",
+                                      "smiley-3",
+                                      "smiley-4",
+                                      "smiley-6",
+                                      ],
+                                  7: ["smiley-3",
+                                      "smiley-4",
+                                      "smiley-5",
+                                      ],
+                                  }
+
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
@@ -192,8 +234,8 @@ def config(settings):
         "comment-alt": "ucce-textbox",
         "copy": "ucce-duplicate",
         "delete": "ucce-delete",
-        "download": "ucce-survey-export",
         "edit": "ucce-edit",
+        "export": "ucce-export",
         "eye": "ucce-survey-preview",
         "file-text-alt": "ucce-guides",
         "folder-alt": "ucce-projects",
@@ -209,6 +251,7 @@ def config(settings):
         "survey-copy": "ucce-survey-duplicate",
         "survey-delete": "ucce-survey-delete",
         "survey-edit": "ucce-survey-edit",
+        "survey-export": "ucce-survey-export",
         "tasks": "ucce-likert-scale",
         "upload": "ucce-survey-import",
     }
@@ -1145,13 +1188,20 @@ def config(settings):
             else:
                 result = True
 
-            if r.component_name == "target":
+            if r.id and not r.component and r.representation == "xls":
+                # Custom XLS Exporter to include all Responses.
+                r.set_handler("read", s3db.dc_TargetXLS(),
+                              http = ("GET", "POST"),
+                              representation = "xls"
+                              )
+            elif r.component_name == "target":
                 ltable = s3db.project_l10n
                 l10n = current.db(ltable.project_id == r.id).select(ltable.language,
                                                                     limitby = (0,1)
                                                                     ).first()
                 if l10n:
                     s3db.dc_target_l10n.language.default = l10n.language
+            
             elif r.method == "datalist":
                 # Over-ride list_fields set in default prep
                 s3db.configure("project_project",

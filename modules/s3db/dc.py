@@ -1890,6 +1890,10 @@ class dc_TargetXLS(S3Method):
             import xlwt
         except ImportError:
             r.error(503, S3XLS.ERROR.XLWT_ERROR)
+        try:
+            from xlrd.xldate import xldate_from_datetime_tuple
+        except ImportError:
+            r.error(503, S3XLS.ERROR.XLRD_ERROR)
 
         # Get styles
         COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
@@ -1905,202 +1909,281 @@ class dc_TargetXLS(S3Method):
         T = current.T
         db = current.db
         s3db = current.s3db
+        settings = current.deployment_settings
 
-        record = r.record
-        template_id = record.template_id
-
-        title = record.name
-
-        labels = [s3_unicode(T("Date")),
-                  ]
-        lappend = labels.append
-
-        # Get the Template
-        ttable = s3db.dc_template
-        template = db(ttable.id == template_id).select(ttable.layout,
-                                                       ttable.table_id,
-                                                       limitby = (0, 1)
-                                                       ).first()
-        layout = template.layout
-        table_id = template.table_id
-
-        # Language
-        language = current.session.s3.language
-        if language == "en":
-            translate = False
+        if r.name == "project":
+            record = r.record
+            title = record.name
+            ttable = s3db.dc_target
+            ltable = s3db.project_project_target
+            query = (ltable.project_id == r.id) & \
+                    (ltable.target_id == r.id)
+            targets = db(query).select(ttable.template_id)
+            templates = [t.template_id for t in targets]
+        elif r.name == "target":
+            record = r.record
+            title = record.name
+            templates = [record.template_id]
         else:
-            ltable = s3db.dc_template_l10n
-            query = (ltable.template_id == template_id) & \
-                    (ltable.language == language)
-            translation = db(query).select(ltable.id,
-                                           limitby = (0, 1)
-                                           ).first()
-            if translation:
-                translate = True
-            else:
-                translate = False
+            r.error(404, current.ERROR.BAD_RESOURCE)
 
-        # Dynamic Table
-        s3_table = s3db.s3_table
-        table_row = db(s3_table.id == table_id).select(s3_table.name,
-                                                       limitby = (0, 1)
-                                                       ).first()
-        dtablename = table_row.name
-        dtable = s3db.table(dtablename)
+        likert_options = settings.get_dc_likert_options()
 
-        # Because in UCCE, 1 Target == 1 Template, we can simply pull back all rows in the table,
-        # not just those linked to relevant response_ids
-        query = (dtable.deleted == False)
-        answers = db(query).select()
-
-        # Questions
-        # - in order
-        # - NB we want these in layout order, but JSON.Stringify has converted
-        #      the integer positions to strings, so we need to sort with key=int
-        qtable = s3db.dc_question
-        question_ids = []
-        qappend = question_ids.append
-        for position in sorted(layout.keys(), key=int):
-            question_id = layout[str(position)].get("id")
-            if question_id:
-                qappend(question_id)
-
-        fields = [qtable.id,
-                  qtable.name,
-                  qtable.field_id,
-                  qtable.field_type,
-                  qtable.options,
-                  qtable.settings,
-                  #qtable.file,
-                  ]
-        if translate:
-            qltable = s3db.dc_question_l10n
-            fields += [qltable.name_l10n,
-                       qltable.options_l10n,
-                       ]
-            left = qltable.on((qltable.question_id == qtable.id) & \
-                              (qltable.language == language))
-        else:
-            left = None
-        questions = db(qtable.id.belongs(question_ids)).select(*fields,
-                                                               left = left,
-                                                               )
-        if translate:
-            questions_dict = {}
-            for q in questions:
-                questions_dict[q["dc_question.id"]] = {"name": q["dc_question.name"],
-                                                       "field_id": q["dc_question.field_id"],
-                                                       "field_type": q["dc_question.field_type"],
-                                                       "options": q["dc_question.options"],
-                                                       "settings": q["dc_question.settings"],
-                                                       #"file": q["dc_question.file"],
-                                                       "name_l10n": q["dc_question_l10n.name_l10n"],
-                                                       "options_l10n": q["dc_question_l10n.options_l10n"],
-                                                       }
-        else:
-            questions_dict = questions.as_dict()
-
-        # Fields
-        # Note that we want 'Other' fields too, so don't want to do this as a join with questions
-        ftable = s3db.s3_field
-        fields = db(ftable.table_id == table_id).select(ftable.id,
-                                                        ftable.name,
-                                                        ).as_dict()
-
-        questions = []
-        qappend = questions.append
-        for question_id in question_ids:
-            question_row = questions_dict.get(question_id)
-            field_type = question_row["field_type"]
-            dfieldname = fields[question_row["field_id"]]["name"]
-            if translate:
-                question_name = question_row["name_l10n"]
-                if not question_name:
-                    # No translation available for this question
-                    question_name = question_row["name"]
-            else:
-                question_name = question_row["name"]
-            lappend(question_name)
-            question = {"id": question_id,
-                        "name": question_name,
-                        "field_type": field_type,
-                        "field": dfieldname,
-                        }
-            otherfieldname = None
-            if field_type == 6:
-                # multichoice
-                question["options"] = question_row["options"] or []
-                if translate:
-                    question["options_l10n"] = question_row["options_l10n"] or None
-                settings = question_row["settings"] or {}
-                other_id = settings.get("other_id")
-                if other_id:
-                    otherfieldname = fields[other_id]["name"]
-                    others = []
-                    oappend = others.append
-                question["multiple"] = settings.get("multiple")
-            elif field_type == 12:
-                # likert
-                settings = question_row["settings"] or {}
-                question["scale"] = settings.get("scale")
-                if translate:
-                    question["options_l10n"] = question_row["options_l10n"] or None
-            elif field_type == 13:
-                # heatmap
-                #question["file"] = question_row["file"]
-                question["options"] = question_row["options"] or []
-                if translate:
-                    question["options_l10n"] = question_row["options_l10n"] or None
-            responses = []
-            rappend = responses.append
-            for row in answers:
-                answer = row.get(dfieldname)
-                if answer is not None:
-                    rappend(answer)
-                if otherfieldname:
-                    other = row.get(otherfieldname)
-                    if other is not None:
-                        oappend(other)
+        # Export Date
+        datetime_format = S3XLS.dt_format_translate(settings.get_L10n_datetime_format())
+        export_datetime = r.now
+        date_tuple = (export_datetime.year,
+                      export_datetime.month,
+                      export_datetime.day,
+                      export_datetime.hour,
+                      export_datetime.minute,
+                      export_datetime.second)
+        export_date_value = xldate_from_datetime_tuple(date_tuple, 0)
+        export_label = s3_unicode("%s:" % T("Date Exported"))
+        date_label = s3_unicode(T("Date Entered"))
 
         # Create the workbook
         book = xlwt.Workbook(encoding = "utf-8")
 
-        # Add sheet
-        sheet = book.add_sheet(s3_unicode(T("Report")))
+        ttable = s3db.dc_template
+        s3_table = s3db.s3_table
+        ftable = s3db.s3_field
 
-        # Set column Widths
-        col_index = 0
-        column_widths = []
-        for label in labels:
-            width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
-            width = min(width, 65535) # USHRT_MAX
-            column_widths.append(width)
-            sheet.col(col_index).width = width
-            col_index += 1
+        language = current.session.s3.language
+        if language == "en":
+            check_translation = False
+        else:
+            check_translation = True
+            ltable = s3db.dc_template_l10n
+            qltable = s3db.dc_question_l10n
 
-        # 1st row => Survey Title
-        current_row = sheet.row(0)
-        current_row.height = 500
-        current_row.write(0, title, large_header_style)
+        for template_id in templates:
 
-        # 2nd row => Export date/time
-        current_row = sheet.row(1)
-        current_row.write(0, "%s:" % T("Date Exported"), notes_style)
-        current_row.write(1, r.now, notes_style)
-        # Fix the size of the last column to display the date
-        #if 16 * COL_WIDTH_MULTIPLIER > width:
-        #    sheet.col(col_index).width = 16 * COL_WIDTH_MULTIPLIER
+            # Get the Template
+            template = db(ttable.id == template_id).select(ttable.name,
+                                                           ttable.layout,
+                                                           ttable.table_id,
+                                                           limitby = (0, 1)
+                                                           ).first()
+            layout = template.layout
+            if layout is None:
+                # Skip
+                continue
 
-        # 3rd row => Column Headers
-        current_row = sheet.row(2)
-        header_style = styles["header"]
-        HORZ_CENTER = header_style.alignment.HORZ_CENTER
-        header_style.alignment.horz = HORZ_CENTER
-        header_style.pattern.pattern = NO_PATTERN
-        col_index = 0
-        for label in labels:
-            current_row.write(col_index, label, header_style)
-            col_index += 1
+            table_id = template.table_id
+            template_name = template.name
+
+            labels = [date_label,
+                      ]
+            lappend = labels.append
+
+            # Language
+            if check_translation:
+                query = (ltable.template_id == template_id) & \
+                        (ltable.language == language)
+                translation = db(query).select(ltable.id,
+                                               limitby = (0, 1)
+                                               ).first()
+                if translation:
+                    translate = True
+                else:
+                    translate = False
+
+            # Dynamic Table
+            table_row = db(s3_table.id == table_id).select(s3_table.name,
+                                                           limitby = (0, 1)
+                                                           ).first()
+            dtablename = table_row.name
+            dtable = s3db.table(dtablename)
+
+            # Because in UCCE, 1 Target == 1 Template, we can simply pull back all rows in the table,
+            # not just those linked to relevant response_ids
+            query = (dtable.deleted == False)
+            answers = db(query).select()
+
+            # Questions
+            # - in order
+            # - NB we want these in layout order, but JSON.Stringify has converted
+            #      the integer positions to strings, so we need to sort with key=int
+            qtable = s3db.dc_question
+            question_ids = []
+            qappend = question_ids.append
+            for position in sorted(layout.keys(), key=int):
+                question_id = layout[str(position)].get("id")
+                if question_id:
+                    qappend(question_id)
+
+            fields = [qtable.id,
+                      qtable.name,
+                      qtable.field_id,
+                      qtable.field_type,
+                      qtable.options,
+                      qtable.settings,
+                      #qtable.file,
+                      ]
+            if translate:
+                fields += [qltable.name_l10n,
+                           qltable.options_l10n,
+                           ]
+                left = qltable.on((qltable.question_id == qtable.id) & \
+                                  (qltable.language == language))
+            else:
+                left = None
+            questions = db(qtable.id.belongs(question_ids)).select(*fields,
+                                                                   left = left,
+                                                                   )
+            if translate:
+                questions_dict = {}
+                for q in questions:
+                    questions_dict[q["dc_question.id"]] = {"name": q["dc_question.name"],
+                                                           "field_id": q["dc_question.field_id"],
+                                                           "field_type": q["dc_question.field_type"],
+                                                           "options": q["dc_question.options"],
+                                                           "settings": q["dc_question.settings"],
+                                                           #"file": q["dc_question.file"],
+                                                           "name_l10n": q["dc_question_l10n.name_l10n"],
+                                                           "options_l10n": q["dc_question_l10n.options_l10n"],
+                                                           }
+            else:
+                questions_dict = questions.as_dict()
+
+            # Fields
+            # Note that we want 'Other' fields too, so don't want to do this as a join with questions
+            fields = db(ftable.table_id == table_id).select(ftable.id,
+                                                            ftable.name,
+                                                            ).as_dict()
+
+            questions = []
+            qappend = questions.append
+            for question_id in question_ids:
+                question_row = questions_dict.get(question_id)
+                field_type = question_row["field_type"]
+                if field_type == 13:
+                    # Skip HeatMaps
+                    continue
+                dfieldname = fields[question_row["field_id"]]["name"]
+                if translate:
+                    question_name = question_row["name_l10n"]
+                    if not question_name:
+                        # No translation available for this question
+                        question_name = question_row["name"]
+                else:
+                    question_name = question_row["name"]
+                lappend(question_name)
+                question = {"id": question_id,
+                            "name": question_name,
+                            "field_type": field_type,
+                            "field": dfieldname,
+                            }
+                #otherfieldname = None
+                if field_type == 6:
+                    # multichoice
+                    question["options"] = question_row["options"] or []
+                    if translate:
+                        question["options_l10n"] = question_row["options_l10n"] or None
+                    settings = question_row["settings"] or {}
+                    other_id = settings.get("other_id")
+                    if other_id:
+                        otherfieldname = fields[other_id]["name"]
+                        #others = []
+                        #oappend = others.append
+                        question["otherfieldname"] = otherfieldname
+                    question["multiple"] = settings.get("multiple")
+                elif field_type == 12:
+                    # likert
+                    settings = question_row["settings"] or {}
+                    question["scale"] = settings.get("scale")
+                    if translate:
+                        question["options_l10n"] = question_row["options_l10n"] or None
+                #elif field_type == 13:
+                #    # heatmap
+                #    #question["file"] = question_row["file"]
+                #    question["options"] = question_row["options"] or []
+                #    if translate:
+                #        question["options_l10n"] = question_row["options_l10n"] or None
+
+                qappend(question)
+
+            # Add sheet
+            sheet = book.add_sheet(template_name)
+
+            # Set column Widths
+            col_index = 0
+            column_widths = []
+            for label in labels:
+                if col_index == 0:
+                    label_length = max(len(label), len(export_label))
+                    width = max(label_length * COL_WIDTH_MULTIPLIER, 2000)
+                elif col_index == 1:
+                    label_length = max(len(label), len(S3DateTime.datetime_represent(export_datetime)))
+                    width = max(label_length * COL_WIDTH_MULTIPLIER, 2000)
+                else:
+                    width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
+                width = min(width, 65535) # USHRT_MAX
+                column_widths.append(width)
+                sheet.col(col_index).width = width
+                col_index += 1
+
+            # 1st row => Survey Title
+            current_row = sheet.row(0)
+            current_row.height = 500
+            current_row.write(0, title, large_header_style)
+
+            # 2nd row => Export date/time
+            current_row = sheet.row(1)
+            current_row.write(0, export_label, notes_style)
+            current_row.write(1, export_date_value, notes_style)
+            # Fix the size of the last column to display the date
+            #if 16 * COL_WIDTH_MULTIPLIER > width:
+            #    sheet.col(col_index).width = 16 * COL_WIDTH_MULTIPLIER
+
+            # 3rd row => Column Headers
+            current_row = sheet.row(2)
+            header_style = styles["header"]
+            HORZ_CENTER = header_style.alignment.HORZ_CENTER
+            header_style.alignment.horz = HORZ_CENTER
+            header_style.pattern.pattern = NO_PATTERN
+            col_index = 0
+            for label in labels:
+                current_row.write(col_index, label, header_style)
+                col_index += 1
+
+            # Data: Responses
+            odd_style = styles["odd"]
+            even_style = styles["even"]
+            row_index = 3
+            for row in answers:
+                if row_index % 2 == 0:
+                    style = even_style
+                else:
+                    style = odd_style
+                current_row = sheet.row(row_index)
+                style.num_format_str = datetime_format
+                current_row.write(0, row["created_on"], style)
+                style.num_format_str = "0" # Suitable for Integers
+                col_index = 1
+                for question in questions:
+                    field_type = question["field_type"]
+                    if field_type == 6:
+                        # multichoice
+                        otherfieldname = question.get("otherfieldname")
+                        if otherfieldname:
+                            answer = row.get(otherfieldname)
+                        else:
+                            answer = row.get(question["field"])
+                            # @ToDo
+                            #if translate:
+                    elif field_type == 12:
+                        # likert
+                        scale = question["scale"]
+                        raw_answer = row.get(question["field"])
+                        answer = likert_options[scale][raw_answer]
+                    else:
+                        answer = row.get(question["field"])
+                    if answer is not None:
+                        current_row.write(col_index, answer, style)
+                    col_index += 1
+                row_index += 1
 
         # Export to File
         output = BytesIO()
