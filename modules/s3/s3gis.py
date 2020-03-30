@@ -1349,6 +1349,7 @@ class GIS(object):
                             (ctable.uuid == "SITE_DEFAULT")
                     rows = db(query).select(*fields,
                                             left = left,
+                                            # @ToDo: This gives the wrong result in Postgres if the specified config is pe_type=None
                                             orderby = ctable.pe_type,
                                             limitby = (0, 2)
                                             )

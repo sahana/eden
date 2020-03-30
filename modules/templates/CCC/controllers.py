@@ -243,6 +243,11 @@ class personAdditional(S3Method):
                                                   "filterby": {"tag": "convictions"},
                                                   "multiple": False,
                                                   },
+                                                 {"name": "dbs",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "dbs"},
+                                                  "multiple": False,
+                                                  },
                                                  {"name": "significant_physical",
                                                   "joinby": "person_id",
                                                   "filterby": {"tag": "significant_physical"},
@@ -298,6 +303,15 @@ class personAdditional(S3Method):
                             SQLFORM.widgets.radio.widget(f, v,
                                                          style="divs")
 
+            dbs = components_get("dbs")
+            f = dbs.table.value
+            f.requires = IS_IN_SET({"0": T("No"),
+                                    "1": T("Yes"),
+                                    })
+            f.widget = lambda f, v: \
+                            SQLFORM.widgets.radio.widget(f, v,
+                                                         style="divs")
+
             significant_physical = components_get("significant_physical")
             f = significant_physical.table.value
             f.requires = IS_IN_SET({"0": T("No"),
@@ -338,6 +352,7 @@ class personAdditional(S3Method):
                                    (T("That require some physical activity and may involve being outdoors (e.g. door knocking)"), "some_physical.value"),
                                    (T("That require little physical activity and are based indoors (e.g. preparing refreshments)"), "little_physical.value"),
                                    (T("If you wish, you can give us some further information on any fitness, medical or mobility issues that might limit the kind of activities you are able to volunteer for; this will help us to suggest suitable opportunities for you"), "health_details.value"),
+                                   (T("Are you DBS checked?"), "dbs.value"),
                                    (T("Do you have any unspent convictions?"), "convictions.value"),
                                    (T("Please indicate Faith support you can offer"), "faith_support.value"),
                                    (T("What help and support can you give those from other Faiths?"), "faith_support_other.value"),
@@ -536,6 +551,16 @@ class register(S3CustomController):
                           Field("emergency_contact_relationship",
                                 label = T("Relationship"),
                                 requires = IS_NOT_EMPTY(),
+                                ),
+                          Field("dbs", "integer",
+                                label = T("Are you DBS checked?"),
+                                #comment = T("Please tick 'Yes' if you have any convictions that are not yet spent under the Rehabilitation of Offenders Act 1974. The term 'convictions' is used to refer to any sentence or disposal issued by a court. If all your convictions are spent, you can tick 'No'. If you're not sure if your convictions are unspent or spent, you can use a tool available at www.disclosurecalculator.org.uk and read guidance at hub.unlock.org.uk/roa"),
+                                requires = IS_IN_SET({0: T("No"),
+                                                      1: T("Yes"),
+                                                      }),
+                                widget = lambda f, v: \
+                                    SQLFORM.widgets.radio.widget(f, v,
+                                                                 style="divs"),
                                 ),
                           Field("convictions", "integer",
                                 label = T("Do you have any unspent convictions?"),
@@ -1061,12 +1086,12 @@ class register(S3CustomController):
             form[0].insert(16, DIV("Many of the opportunities available following an incident require volunteers to be fit and active, may involve working in dirty or dusty environments, and could involve being outdoors - for example, removing damaged furniture and cleaning affected buildings, or lifting, packaging and distributing donated items. Some volunteer roles will be less physically demanding - for example, knocking on doors to check people are OK and gather information, making refreshments and helping with administration. Are you interested in opportunities:",
                                    _class = "subheading",
                                    ))
-            form[0].insert(-6, DIV("Person to be contacted in case of an emergency",
+            form[0].insert(-7, DIV("Person to be contacted in case of an emergency",
                                    _class = "subheading",
                                    ))
-            form[0].insert(-3, DIV(_class = "subheading",
+            form[0].insert(-4, DIV(_class = "subheading",
                                    ))
-            form[0].insert(-2, DIV(_class = "subheading",
+            form[0].insert(-3, DIV(_class = "subheading",
                                    ))
 
         # Inject client-side Validation
@@ -1175,6 +1200,7 @@ class register(S3CustomController):
                           "skills_details": form_vars.skills_details,
                           "where_operate": form_vars.where_operate or [],
                           "convictions": form_vars.convictions,
+                          "dbs": form_vars.dbs,
                           "significant_physical": form_vars.significant_physical,
                           "some_physical": form_vars.some_physical,
                           "little_physical": form_vars.little_physical,
@@ -2043,6 +2069,12 @@ def auth_user_register_onaccept(user_id):
         record = {"person_id": person_id,
                   "tag": "convictions",
                   "value": custom["convictions"],
+                  }
+        ttable.insert(**record)
+
+        record = {"person_id": person_id,
+                  "tag": "dbs",
+                  "value": custom["dbs"],
                   }
         ttable.insert(**record)
 
