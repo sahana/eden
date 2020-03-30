@@ -1486,11 +1486,11 @@ class GIS(object):
 
         if not cache:
             # We had a single row
-            config = row.get("gis_config", row)
+            config = row["gis_config"]
             config_id = config.id
             cache["ids"] = [config_id]
-            projection = row.get("gis_projection", {})
-            marker = row.get("gis_marker", {})
+            projection = row["gis_projection"]
+            marker = row["gis_marker"]
             for key in config:
                 cache[key] = config[key]
             for key in ("epsg", "maxExtent", "proj4js", "units"):
