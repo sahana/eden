@@ -1325,21 +1325,23 @@ class GIS(object):
                   ptable.maxExtent,
                   ptable.units,
                   )
+        # May well not be complete, so Left Join
+        left = (ptable.on(ptable.id == ctable.projection_id),
+                stable.on((stable.config_id == ctable.id) & \
+                          (stable.layer_id == None)),
+                mtable.on(mtable.id == stable.marker_id),
+                )
 
         cache = Storage()
         row = None
         rows = None
         if config_id:
+            # Does config exist?
+            # Should we merge it?
             row = db(ctable.id == config_id).select(ctable.merge,
                                                     limitby= (0, 1)
                                                     ).first()
             if row:
-                # May well not be complete, so Left Join
-                left = (ptable.on(ptable.id == ctable.projection_id),
-                        stable.on((stable.config_id == ctable.id) & \
-                                  (stable.layer_id == None)),
-                        mtable.on(mtable.id == stable.marker_id),
-                        )
                 if row.merge:
                     # Merge this one with the Site Default
                     query = (ctable.id == config_id) | \
@@ -1362,17 +1364,10 @@ class GIS(object):
 
         if config_id == 0:
             # Use site default
-            query = (ctable.uuid == "SITE_DEFAULT")
-            # May well not be complete, so Left Join
-            left = (ptable.on(ptable.id == ctable.projection_id),
-                    stable.on((stable.config_id == ctable.id) & \
-                              (stable.layer_id == None)),
-                    mtable.on(mtable.id == stable.marker_id),
-                    )
-            row = db(query).select(*fields,
-                                   left = left,
-                                   limitby = (0, 1)
-                                   ).first()
+            row = db(ctable.uuid == "SITE_DEFAULT").select(*fields,
+                                                           left = left,
+                                                           limitby = (0, 1)
+                                                           ).first()
             if not row:
                 # No configs found at all
                 _gis.config = cache
@@ -1393,7 +1388,7 @@ class GIS(object):
                         # (Will take lower-priority than Personal)
                         otable = s3db.org_organisation
                         org = db(otable.id == user.organisation_id).select(otable.pe_id,
-                                                                           limitby=(0, 1)
+                                                                           limitby = (0, 1)
                                                                            ).first()
                         try:
                             pes.append(org.pe_id)
@@ -1431,12 +1426,6 @@ class GIS(object):
                         query |= (ctable.pe_id == pes[0])
                     else:
                         query |= (ctable.pe_id.belongs(pes))
-                    # Personal/OU may well not be complete, so Left Join
-                    left = (ptable.on(ptable.id == ctable.projection_id),
-                            stable.on((stable.config_id == ctable.id) & \
-                                      (stable.layer_id == None)),
-                            mtable.on(mtable.id == stable.marker_id),
-                            )
                     # Order by pe_type (defined in gis_config)
                     # @ToDo: Sort orgs from the hierarchy?
                     # (Currently we just have branch > non-branch in pe_type)
@@ -1485,14 +1474,10 @@ class GIS(object):
 
         if not row:
             # No personal config or not logged in. Use site default.
-            query = (ctable.uuid == "SITE_DEFAULT") & \
-                    (mtable.id == stable.marker_id) & \
-                    (stable.config_id == ctable.id) & \
-                    (stable.layer_id == None) & \
-                    (ptable.id == ctable.projection_id)
-            row = db(query).select(*fields,
-                                   limitby = (0, 1)
-                                   ).first()
+            row = db(ctable.uuid == "SITE_DEFAULT").select(*fields,
+                                                           left = left,
+                                                           limitby = (0, 1)
+                                                           ).first()
 
             if not row:
                 # No configs found at all
@@ -1501,11 +1486,11 @@ class GIS(object):
 
         if not cache:
             # We had a single row
-            config = row["gis_config"]
+            config = row.get("gis_config", row)
             config_id = config.id
             cache["ids"] = [config_id]
-            projection = row["gis_projection"]
-            marker = row["gis_marker"]
+            projection = row.get("gis_projection", {})
+            marker = row.get("gis_marker", {})
             for key in config:
                 cache[key] = config[key]
             for key in ("epsg", "maxExtent", "proj4js", "units"):
