@@ -1343,6 +1343,7 @@ class GIS(object):
                                                     ).first()
             if row:
                 if row.merge:
+                    row = None
                     # Merge this one with the Site Default
                     query = (ctable.id == config_id) | \
                             (ctable.uuid == "SITE_DEFAULT")
