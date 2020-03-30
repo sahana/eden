@@ -1731,50 +1731,91 @@ def disease_rheader(r, tabs=None):
         Resource Header for Disease module
     """
 
-    T = current.T
     if r.representation != "html":
         return None
 
-    resourcename = r.name
-
-    if resourcename == "disease":
-
-        tabs = ((T("Basic Details"), None),
-                (T("Symptoms"), "symptom"),
-                (T("Documents"), "document"),
-                )
-
-        rheader_fields = (["name"],
-                          ["code"],
-                          )
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
-
-    elif resourcename == "case":
-
-        tabs = ((T("Basic Details"), None),
-                (T("Exposure"), "exposure"),
-                (T("Monitoring"), "case_monitoring"),
-                (T("Diagnostics"), "case_diagnostics"),
-                (T("Contacts"), "contact"),
-                (T("Tracing"), "tracing"),
-                )
-
-        rheader_fields = (["person_id"],
-                          )
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
-
-    elif resourcename == "tracing":
-
-        tabs = ((T("Basic Details"), None),
-                (T("Contact Persons"), "exposure"),
-                )
-
-        rheader_fields = (["case_id"],
-                          )
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
-
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
     else:
-        rheader = ""
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+
+        T = current.T
+        #settings = current.deployment_settings
+        #record_id = record.id
+
+        if tablename == "disease_disease":
+
+            tabs = ((T("Basic Details"), None),
+                    (T("Symptoms"), "symptom"),
+                    (T("Documents"), "document"),
+                    )
+
+            rheader_fields = (["name"],
+                              ["code"],
+                              )
+            rheader = S3ResourceHeader(rheader_fields, tabs)(r)
+
+        elif tablename == "disease_case":
+
+            tabs = ((T("Basic Details"), None),
+                    (T("Person Data"), "person/"),
+                    (T("Exposure"), "exposure"),
+                    (T("Monitoring"), "case_monitoring"),
+                    (T("Diagnostics"), "case_diagnostics"),
+                    (T("Contacts"), "contact"),
+                    (T("Tracing"), "tracing"),
+                    )
+
+            case = resource.select(["person_id$gender",
+                                    "person_id$date_of_birth",
+                                    ],
+                                    represent = True,
+                                    raw_data = True,
+                                    ).rows
+
+            if not case:
+                # Target record exists, but doesn't match filters
+                return None
+
+            # Extract case data
+            case = case[0]
+            gender = lambda row: case["pr_person.gender"]
+            date_of_birth = lambda row: case["pr_person.date_of_birth"]
+
+            rheader_fields = (["case_number",
+                               "illness_status",
+                               ],
+                              ["person_id",
+                               "diagnosis_status",
+                               ],
+                              [(T("Gender"), gender),
+                               ],
+                              [(T("Date of Birth"), date_of_birth),
+                               ],
+                              )
+            rheader = S3ResourceHeader(rheader_fields, tabs)(r,
+                                                             table = resource.table,
+                                                             record = record,
+                                                             )
+
+        elif tablename == "disease_tracing":
+
+            tabs = ((T("Basic Details"), None),
+                    (T("Contact Persons"), "exposure"),
+                    )
+
+            rheader_fields = (["case_id"],
+                              )
+            rheader = S3ResourceHeader(rheader_fields, tabs)(r)
+
+        else:
+            rheader = None
 
     return rheader
 
