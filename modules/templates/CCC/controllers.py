@@ -2072,11 +2072,13 @@ def auth_user_register_onaccept(user_id):
                   }
         ttable.insert(**record)
 
-        record = {"person_id": person_id,
-                  "tag": "dbs",
-                  "value": custom["dbs"],
-                  }
-        ttable.insert(**record)
+        dbs = custom.get("dbs")
+        if dbs is not None:
+            record = {"person_id": person_id,
+                      "tag": "dbs",
+                      "value": dbs,
+                      }
+            ttable.insert(**record)
 
         record = {"person_id": person_id,
                   "tag": "significant_physical",
