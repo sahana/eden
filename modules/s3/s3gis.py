@@ -1330,24 +1330,37 @@ class GIS(object):
         row = None
         rows = None
         if config_id:
-            # Merge this one with the Site Default
-            query = (ctable.id == config_id) | \
-                    (ctable.uuid == "SITE_DEFAULT")
-            # May well not be complete, so Left Join
-            left = (ptable.on(ptable.id == ctable.projection_id),
-                    stable.on((stable.config_id == ctable.id) & \
-                              (stable.layer_id == None)),
-                    mtable.on(mtable.id == stable.marker_id),
-                    )
-            rows = db(query).select(*fields,
-                                    left=left,
-                                    orderby=ctable.pe_type,
-                                    limitby=(0, 2))
-            if len(rows) == 1:
+            row = db(ctable.id == config_id).select(ctable.merge,
+                                                    limitby= (0, 1)
+                                                    ).first()
+            if row:
+                # May well not be complete, so Left Join
+                left = (ptable.on(ptable.id == ctable.projection_id),
+                        stable.on((stable.config_id == ctable.id) & \
+                                  (stable.layer_id == None)),
+                        mtable.on(mtable.id == stable.marker_id),
+                        )
+                if row.merge:
+                    # Merge this one with the Site Default
+                    query = (ctable.id == config_id) | \
+                            (ctable.uuid == "SITE_DEFAULT")
+                    rows = db(query).select(*fields,
+                                            left = left,
+                                            orderby = ctable.pe_type,
+                                            limitby = (0, 2)
+                                            )
+                else:
+                    # Just use this config
+                    row = db(ctable.id == config_id).select(*fields,
+                                                            left = left,
+                                                            limitby = (0, 1)
+                                                            ).first()
+                    
+            else:
                 # The requested config must be invalid, so just use site default
-                row = rows.first()
+                config_id = 0
 
-        elif config_id == 0:
+        if config_id == 0:
             # Use site default
             query = (ctable.uuid == "SITE_DEFAULT")
             # May well not be complete, so Left Join
@@ -1357,8 +1370,9 @@ class GIS(object):
                     mtable.on(mtable.id == stable.marker_id),
                     )
             row = db(query).select(*fields,
-                                   left=left,
-                                   limitby=(0, 1)).first()
+                                   left = left,
+                                   limitby = (0, 1)
+                                   ).first()
             if not row:
                 # No configs found at all
                 _gis.config = cache
@@ -1402,7 +1416,7 @@ class GIS(object):
                         # (Will take lower-priority than Site/Org/Personal)
                         ogtable = s3db.org_group
                         ogroup = db(ogtable.id == user.org_group_id).select(ogtable.pe_id,
-                                                                            limitby=(0, 1)
+                                                                            limitby = (0, 1)
                                                                             ).first()
                         pes = list(pes)
                         try:
@@ -1427,8 +1441,9 @@ class GIS(object):
                     # @ToDo: Sort orgs from the hierarchy?
                     # (Currently we just have branch > non-branch in pe_type)
                     rows = db(query).select(*fields,
-                                            left=left,
-                                            orderby=ctable.pe_type)
+                                            left = left,
+                                            orderby = ctable.pe_type
+                                            )
                     if len(rows) == 1:
                         row = rows.first()
 
@@ -1476,7 +1491,8 @@ class GIS(object):
                     (stable.layer_id == None) & \
                     (ptable.id == ctable.projection_id)
             row = db(query).select(*fields,
-                                   limitby=(0, 1)).first()
+                                   limitby = (0, 1)
+                                   ).first()
 
             if not row:
                 # No configs found at all
