@@ -2999,6 +2999,7 @@ $('.copy-link').click(function(e){
                                                               "filterby": {"tag": "dbs"},
                                                               "multiple": False,
                                                               },
+                                                             )
                                             )
                         list_fields.append((T("DBS"), "dbs.value"))
                         # Convictions
