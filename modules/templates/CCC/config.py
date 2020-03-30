@@ -2981,6 +2981,29 @@ $('.copy-link').click(function(e){
                                    (T("Mobile Phone"), "phone.value"),
                                    ]
                     if current.auth.permission.format == "xls":
+                        # Address
+                        list_fields += [(T("Address"), "address.location_id$addr_street"),
+                                        (T("Parish"), "address.location_id$L4"),
+                                        (T("District"), "address.location_id$L3"),
+                                        (T("Postcode"), "address.location_id$addr_postcode"),
+                                        ]
+                        # DBS
+                        s3db.add_components("pr_person",
+                                            pr_person_tag = ({"name": "convictions",
+                                                              "joinby": "person_id",
+                                                              "filterby": {"tag": "convictions"},
+                                                              "multiple": False,
+                                                              },
+                                                             {"name": "dbs",
+                                                              "joinby": "person_id",
+                                                              "filterby": {"tag": "dbs"},
+                                                              "multiple": False,
+                                                              },
+                                            )
+                        list_fields.append((T("DBS"), "dbs.value"))
+                        # Convictions
+                        list_fields.append((T("Convictions"), "convictions.value"))
+                        # Registration Date
                         from s3 import S3DateTime
                         s3db.pr_person.created_on.represent = lambda dt: \
                                   S3DateTime.datetime_represent(dt, utc=True)
