@@ -2106,7 +2106,10 @@ class dc_TargetXLS(S3Method):
 
             # Add sheet
             # Can't have a / in the sheet_name, so replace any with a space
-            sheet = book.add_sheet(template_name.replace("/", " "))
+            sheet_name = template_name.replace("/", " ")
+            if len(sheet_name) > 31:
+                sheet_name = sheet_name[:31]
+            sheet = book.add_sheet(sheet_name)
 
             # Set column Widths
             col_index = 0
