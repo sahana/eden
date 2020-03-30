@@ -1911,19 +1911,19 @@ class dc_TargetXLS(S3Method):
         s3db = current.s3db
         settings = current.deployment_settings
 
-        if r.name == "project":
+        if r.name == "target":
+            record = r.record
+            title = record.name
+            templates = [record.template_id]
+        elif r.name == "project":
             record = r.record
             title = record.name
             ttable = s3db.dc_target
             ltable = s3db.project_project_target
             query = (ltable.project_id == r.id) & \
-                    (ltable.target_id == r.id)
+                    (ltable.target_id == ttable.id)
             targets = db(query).select(ttable.template_id)
             templates = [t.template_id for t in targets]
-        elif r.name == "target":
-            record = r.record
-            title = record.name
-            templates = [record.template_id]
         else:
             r.error(404, current.ERROR.BAD_RESOURCE)
 
