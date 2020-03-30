@@ -93,7 +93,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3compat import StringIO, xrange
+from s3compat import BytesIO, xrange
 from s3layouts import S3PopupLink
 
 # Compact JSON encoding
@@ -9357,7 +9357,7 @@ class project_IndicatorSummaryReport(S3Method):
         current_row.write(colspan + 1, status_represent(status), status_style(status))
 
         # Export to File
-        output = StringIO()
+        output = BytesIO()
         try:
             book.save(output)
         except:

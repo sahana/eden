@@ -205,8 +205,8 @@ def kit_export_xls():
         session.error = "xlwt module not available within the running Python - this needs installing for XLS output!"
         redirect(URL(c="kit"))
 
-    from s3compat import StringIO
-    output = StringIO()
+    from s3compat import BytesIO
+    output = BytesIO()
 
     book = xlwt.Workbook()
     # List of Kits
@@ -305,8 +305,8 @@ def kit_export_pdf():
         session.warning = T("No data in this table - cannot create PDF!")
         redirect(URL(r=request))
 
-    from s3compat import StringIO
-    output = StringIO()
+    from s3compat import BytesIO
+    output = BytesIO()
 
     #class MySubReport(SubReport):
     #    def __init__(self, db=None, **kwargs):
@@ -474,8 +474,8 @@ def item_export_pdf():
         session.warning = T("No data in this table - cannot create PDF!")
         redirect(URL(f="item"))
 
-    from s3compat import StringIO
-    output = StringIO()
+    from s3compat import BytesIO
+    output = BytesIO()
 
     class MyReport(Report):
         def __init__(self, queryset=None, T=None):

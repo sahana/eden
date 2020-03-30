@@ -306,7 +306,7 @@ class S3DataTable(object):
              displayrows,
              id,
              draw,
-             stringify=True,
+             stringify = True,
              **attr
              ):
         """
@@ -468,7 +468,8 @@ class S3DataTable(object):
 
         # Construct row of export icons
         # @note: icons appear in reverse order due to float-right
-        icons = SPAN(_class = "list_formats")
+        icons = SPAN(_class = "list_formats",
+                     )
 
         settings = current.deployment_settings
         export_formats = settings.get_ui_export_formats()
@@ -507,7 +508,7 @@ class S3DataTable(object):
                     if fmt == "map":
                         title = T("Show on Map")
                     else:
-                        title = EXPORT % dict(format=fmt.upper())
+                        title = EXPORT % {"format": fmt.upper()}
 
                 # Export format URL
                 if fmt in default_formats:
@@ -524,15 +525,17 @@ class S3DataTable(object):
                                         },
                                 ))
 
-        export_options = DIV(_class="dt-export-options")
+        export_options = DIV(_class = "dt-export-options",
+                             )
 
         # Append the permalink (if any)
         if permalink is not None:
             label = settings.get_ui_label_permalink()
             if label:
                 link = A(T(label),
-                         _href=permalink,
-                         _class="permalink")
+                         _href = permalink,
+                         _class = "permalink",
+                         )
                 export_options.append(link)
                 if len(icons):
                     export_options.append(" | ")
@@ -545,8 +548,8 @@ class S3DataTable(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def defaultActionButtons(resource,
-                             custom_actions=None,
-                             r=None
+                             custom_actions = None,
+                             r = None
                              ):
         """
             Configure default action buttons

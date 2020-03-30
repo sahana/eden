@@ -58,10 +58,12 @@ def template():
             s3db.configure("dc_question",
                            linkto = lambda record_id: \
                                         URL(f="question",
-                                            args=[record_id, "read"]),
+                                            args = [record_id, "read"],
+                                            ),
                            linkto_update = lambda record_id: \
                                             URL(f="question",
-                                                args=[record_id, "update"]),
+                                                args = [record_id, "update"],
+                                                ),
                            )
 
         return True
@@ -111,11 +113,19 @@ def target():
                 s3db.configure("dc_response",
                                linkto = lambda record_id: \
                                             URL(f="respnse",
-                                                args=[record_id, "read"]),
+                                                args = [record_id, "read"],
+                                                ),
                                linkto_update = lambda record_id: \
                                                         URL(f="respnse",
-                                                            args=[record_id, "update"]),
+                                                            args = [record_id, "update"],
+                                                            ),
                                )
+        elif r.id and not r.component and r.representation == "xls":
+            # Custom XLS Exporter to include all Responses.
+            r.set_handler("read", s3db.dc_TargetXLS(),
+                          http = ("GET", "POST"),
+                          representation = "xls"
+                          )
 
         return True
     s3.prep = prep

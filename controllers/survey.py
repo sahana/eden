@@ -454,9 +454,9 @@ def series_export_word(widget_list, lang_dict, title, logo):
     """
 
     import gluon.contrib.pyrtf as pyrtf
-    from s3compat import StringIO
+    from s3compat import BytesIO
 
-    output  = StringIO()
+    output  = BytesIO()
     doc     = pyrtf.Document(default_language=pyrtf.Languages.EnglishUK)
     section = pyrtf.Section()
     ss      = doc.StyleSheet
@@ -513,7 +513,7 @@ def series_export_spreadsheet(matrix, matrix_answers, logo):
         return output
 
     import math
-    from s3compat import StringIO
+    from s3compat import BytesIO
 
     # -------------------------------------------------------------------------
     def wrap_text(sheet, cell, style):
@@ -599,7 +599,7 @@ def series_export_spreadsheet(matrix, matrix_answers, logo):
 
     COL_WIDTH_MULTIPLIER = 240
     book = xlwt.Workbook(encoding="utf-8")
-    output = StringIO()
+    output = BytesIO()
 
     protection = xlwt.Protection()
     protection.cell_locked = 1
@@ -1025,12 +1025,12 @@ def complete():
             Import Assessment Spreadsheet
         """
 
-        from s3compat import StringIO
+        from s3compat import BytesIO
 
         if series_id is None:
             response.error = T("Series details missing")
             return
-        openFile = StringIO()
+        openFile = BytesIO()
         try:
             import xlrd
             from xlwt.Utils import cell_to_rowcol2

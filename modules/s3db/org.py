@@ -83,7 +83,7 @@ import json
 from gluon import *
 
 from ..s3 import *
-from s3compat import StringIO
+from s3compat import BytesIO
 from s3dal import Row
 from s3layouts import S3PopupLink
 
@@ -8395,7 +8395,7 @@ class org_CapacityReport(S3Method):
         sheet1.col(0).width = width
 
         # Create the file
-        output = StringIO()
+        output = BytesIO()
         book.save(output)
 
         # Response headers

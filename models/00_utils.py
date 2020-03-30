@@ -211,8 +211,8 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     set_handler("compose", s3base.S3Compose)
     # @ToDo: Make work in Component Tabs:
     set_handler("copy", lambda r, **attr: \
-                               redirect(URL(args="create",
-                                            vars={"from_record":r.id})))
+                               redirect(URL(args = "create",
+                                            vars = {"from_record":r.id})))
     set_handler("deduplicate", s3base.S3Merge)
     set_handler("filter", s3base.S3Filter)
     set_handler("grouped", s3base.S3GroupedItemsReport)
@@ -235,7 +235,8 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
         from s3.s3pdf import S3PDF
         set_handler("import", S3PDF(),
                     http = ("GET", "POST"),
-                    representation="pdf")
+                    representation = "pdf"
+                    )
 
     # Plugin OrgRoleManager when appropriate
     s3base.S3OrgRoleManager.set_method(r)
@@ -249,7 +250,8 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                   "search",
                   "datatable",
                   "datatable_f",
-                  "summary"):
+                  "summary",
+                  ):
 
         if s3.actions is None:
 
@@ -289,19 +291,19 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
 
             # URL to open the resource
             open_url = r.resource.crud._linkto(r,
-                                               authorised=authorised,
-                                               update=editable,
-                                               native=native)("[id]")
+                                               authorised = authorised,
+                                               update = editable,
+                                               native = native)("[id]")
 
             # Add action buttons for Open/Delete/Copy as appropriate
             s3_action_buttons(r,
-                              deletable=deletable,
-                              copyable=copyable,
-                              editable=editable,
-                              read_url=open_url,
-                              update_url=open_url
+                              deletable = deletable,
+                              copyable = copyable,
+                              editable = editable,
+                              read_url = open_url,
+                              update_url = open_url
                               # To use modals
-                              #update_url="%s.popup?refresh=list" % open_url
+                              #update_url = "%s.popup?refresh=list" % open_url
                               )
 
             # Override Add-button, link to native controller and put
@@ -314,9 +316,15 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                 fkey = "%s.%s" % (name, component.fkey)
                 get_vars_copy = get_vars.copy()
                 get_vars_copy.update({fkey: r.record[component.fkey]})
-                url = URL(prefix, name, args=["create"], vars=get_vars_copy)
-                add_btn = A(label, _href=url, _class="action-btn")
-                output.update(add_btn=add_btn)
+                url = URL(prefix, name,
+                          args = ["create"],
+                          vars = get_vars_copy,
+                          )
+                add_btn = A(label,
+                            _href = url,
+                            _class = "action-btn",
+                            )
+                output.update(add_btn = add_btn)
 
     elif method not in ("import",
                         "review",

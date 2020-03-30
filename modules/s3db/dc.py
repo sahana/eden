@@ -32,6 +32,7 @@
 __all__ = ("DataCollectionTemplateModel",
            "DataCollectionModel",
            #"dc_TargetReport",
+           "dc_TargetXLS",
            "dc_rheader",
            )
 
@@ -39,7 +40,7 @@ from gluon import *
 from gluon.languages import read_dict, write_dict
 
 from ..s3 import *
-from s3compat import xrange
+from s3compat import BytesIO, xrange
 from s3layouts import S3PopupLink
 
 # Compact JSON encoding
@@ -374,7 +375,7 @@ class DataCollectionTemplateModel(S3Model):
                                                            ),
                                       sortby = "name",
                                       #comment = S3PopupLink(f="question",
-                                      #                      tooltip=T("Add a new question"),
+                                      #                      tooltip = T("Add a new question"),
                                       #                      ),
                                       )
 
@@ -1566,6 +1567,9 @@ class dc_TargetReport(S3Method):
             #elif representation == "pdf":
             #    output = self.pdf(r, title, **attr)
             #    return output
+            #elif representation == "xls":
+            #    output = self.xls(r, title, **attr)
+            #    return output
         r.error(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
@@ -1874,6 +1878,249 @@ class dc_TargetReport(S3Method):
         response.headers["Content-disposition"] = disposition
 
         return doc.output.getvalue()
+
+# =============================================================================
+class dc_TargetXLS(S3Method):
+
+    def apply_method(self, r, **attr):
+
+        from s3.codecs.xls import S3XLS
+
+        try:
+            import xlwt
+        except ImportError:
+            r.error(503, S3XLS.ERROR.XLWT_ERROR)
+
+        # Get styles
+        COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
+        styles = S3XLS._styles(use_colour = True,
+                               evenodd = False,
+                               )
+        large_header_style = styles["large_header"]
+        large_header_style.alignment.horz = large_header_style.alignment.HORZ_LEFT
+        NO_PATTERN = large_header_style.pattern.NO_PATTERN
+        large_header_style.pattern.pattern = NO_PATTERN
+        notes_style = styles["notes"]
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+
+        record = r.record
+        template_id = record.template_id
+
+        title = record.name
+
+        labels = [s3_unicode(T("Date")),
+                  ]
+        lappend = labels.append
+
+        # Get the Template
+        ttable = s3db.dc_template
+        template = db(ttable.id == template_id).select(ttable.layout,
+                                                       ttable.table_id,
+                                                       limitby = (0, 1)
+                                                       ).first()
+        layout = template.layout
+        table_id = template.table_id
+
+        # Language
+        language = current.session.s3.language
+        if language == "en":
+            translate = False
+        else:
+            ltable = s3db.dc_template_l10n
+            query = (ltable.template_id == template_id) & \
+                    (ltable.language == language)
+            translation = db(query).select(ltable.id,
+                                           limitby = (0, 1)
+                                           ).first()
+            if translation:
+                translate = True
+            else:
+                translate = False
+
+        # Dynamic Table
+        s3_table = s3db.s3_table
+        table_row = db(s3_table.id == table_id).select(s3_table.name,
+                                                       limitby = (0, 1)
+                                                       ).first()
+        dtablename = table_row.name
+        dtable = s3db.table(dtablename)
+
+        # Because in UCCE, 1 Target == 1 Template, we can simply pull back all rows in the table,
+        # not just those linked to relevant response_ids
+        query = (dtable.deleted == False)
+        answers = db(query).select()
+
+        # Questions
+        # - in order
+        # - NB we want these in layout order, but JSON.Stringify has converted
+        #      the integer positions to strings, so we need to sort with key=int
+        qtable = s3db.dc_question
+        question_ids = []
+        qappend = question_ids.append
+        for position in sorted(layout.keys(), key=int):
+            question_id = layout[str(position)].get("id")
+            if question_id:
+                qappend(question_id)
+
+        fields = [qtable.id,
+                  qtable.name,
+                  qtable.field_id,
+                  qtable.field_type,
+                  qtable.options,
+                  qtable.settings,
+                  #qtable.file,
+                  ]
+        if translate:
+            qltable = s3db.dc_question_l10n
+            fields += [qltable.name_l10n,
+                       qltable.options_l10n,
+                       ]
+            left = qltable.on((qltable.question_id == qtable.id) & \
+                              (qltable.language == language))
+        else:
+            left = None
+        questions = db(qtable.id.belongs(question_ids)).select(*fields,
+                                                               left = left,
+                                                               )
+        if translate:
+            questions_dict = {}
+            for q in questions:
+                questions_dict[q["dc_question.id"]] = {"name": q["dc_question.name"],
+                                                       "field_id": q["dc_question.field_id"],
+                                                       "field_type": q["dc_question.field_type"],
+                                                       "options": q["dc_question.options"],
+                                                       "settings": q["dc_question.settings"],
+                                                       #"file": q["dc_question.file"],
+                                                       "name_l10n": q["dc_question_l10n.name_l10n"],
+                                                       "options_l10n": q["dc_question_l10n.options_l10n"],
+                                                       }
+        else:
+            questions_dict = questions.as_dict()
+
+        # Fields
+        # Note that we want 'Other' fields too, so don't want to do this as a join with questions
+        ftable = s3db.s3_field
+        fields = db(ftable.table_id == table_id).select(ftable.id,
+                                                        ftable.name,
+                                                        ).as_dict()
+
+        questions = []
+        qappend = questions.append
+        for question_id in question_ids:
+            question_row = questions_dict.get(question_id)
+            field_type = question_row["field_type"]
+            dfieldname = fields[question_row["field_id"]]["name"]
+            if translate:
+                question_name = question_row["name_l10n"]
+                if not question_name:
+                    # No translation available for this question
+                    question_name = question_row["name"]
+            else:
+                question_name = question_row["name"]
+            lappend(question_name)
+            question = {"id": question_id,
+                        "name": question_name,
+                        "field_type": field_type,
+                        "field": dfieldname,
+                        }
+            otherfieldname = None
+            if field_type == 6:
+                # multichoice
+                question["options"] = question_row["options"] or []
+                if translate:
+                    question["options_l10n"] = question_row["options_l10n"] or None
+                settings = question_row["settings"] or {}
+                other_id = settings.get("other_id")
+                if other_id:
+                    otherfieldname = fields[other_id]["name"]
+                    others = []
+                    oappend = others.append
+                question["multiple"] = settings.get("multiple")
+            elif field_type == 12:
+                # likert
+                settings = question_row["settings"] or {}
+                question["scale"] = settings.get("scale")
+                if translate:
+                    question["options_l10n"] = question_row["options_l10n"] or None
+            elif field_type == 13:
+                # heatmap
+                #question["file"] = question_row["file"]
+                question["options"] = question_row["options"] or []
+                if translate:
+                    question["options_l10n"] = question_row["options_l10n"] or None
+            responses = []
+            rappend = responses.append
+            for row in answers:
+                answer = row.get(dfieldname)
+                if answer is not None:
+                    rappend(answer)
+                if otherfieldname:
+                    other = row.get(otherfieldname)
+                    if other is not None:
+                        oappend(other)
+
+        # Create the workbook
+        book = xlwt.Workbook(encoding = "utf-8")
+
+        # Add sheet
+        sheet = book.add_sheet(s3_unicode(T("Report")))
+
+        # Set column Widths
+        col_index = 0
+        column_widths = []
+        for label in labels:
+            width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
+            width = min(width, 65535) # USHRT_MAX
+            column_widths.append(width)
+            sheet.col(col_index).width = width
+            col_index += 1
+
+        # 1st row => Survey Title
+        current_row = sheet.row(0)
+        current_row.height = 500
+        current_row.write(0, title, large_header_style)
+
+        # 2nd row => Export date/time
+        current_row = sheet.row(1)
+        current_row.write(0, "%s:" % T("Date Exported"), notes_style)
+        current_row.write(1, r.now, notes_style)
+        # Fix the size of the last column to display the date
+        #if 16 * COL_WIDTH_MULTIPLIER > width:
+        #    sheet.col(col_index).width = 16 * COL_WIDTH_MULTIPLIER
+
+        # 3rd row => Column Headers
+        current_row = sheet.row(2)
+        header_style = styles["header"]
+        HORZ_CENTER = header_style.alignment.HORZ_CENTER
+        header_style.alignment.horz = HORZ_CENTER
+        header_style.pattern.pattern = NO_PATTERN
+        col_index = 0
+        for label in labels:
+            current_row.write(col_index, label, header_style)
+            col_index += 1
+
+        # Export to File
+        output = BytesIO()
+        try:
+            book.save(output)
+        except:
+            import sys
+            error = sys.exc_info()[1]
+            current.log.error(error)
+        output.seek(0)
+
+        # Response headers
+        filename = "%s.xls" % title
+        response = current.response
+        from gluon.contenttype import contenttype
+        response.headers["Content-Type"] = contenttype(".xls")
+        disposition = "attachment; filename=\"%s\"" % filename
+        response.headers["Content-disposition"] = disposition
+
+        return output.read()
 
 # =============================================================================
 def dc_rheader(r, tabs=None):

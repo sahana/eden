@@ -44,8 +44,9 @@ def dc_target_list_layout(list_id, item_id, resource, rfields, record):
     project = record["project_project_target.project_id"]
 
     item = DIV(A(H2(title),
-                 _href=URL(c="dc", f="target",
-                           args=[record_id, "report_custom"]),
+                 _href = URL(c="dc", f="target",
+                             args = [record_id, "report_custom"],
+                             ),
                  ),
                project,
                _class = "card",
@@ -84,14 +85,16 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
             origname = table.file.retrieve(filename)[0]
         except (IOError, TypeError):
             origname = current.messages["NONE"]
-        doc_url = URL(c="default", f="download", args=[filename])
+        doc_url = URL(c="default", f="download",
+                      args = [filename],
+                      )
     else:
         # Should only happen for dummy prepop
         doc_url = ""
         
     button = A(T("Download PDF"),
-               _href=doc_url,
-               _class="button round",
+               _href = doc_url,
+               _class = "button round",
                )
 
     # Toolbar
@@ -101,14 +104,15 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
                      SPAN("edit",
                           _class = "show-for-sr",
                           ),
-                     _href=URL(c="doc", f="document",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": list_id,
-                                     "record": record_id}
-                               ),
-                     _class="s3_modal",
-                     #_title=T("Edit %(type)s") % dict(type=series_title),
-                     _title=T("Edit"),
+                     _href = URL(c="doc", f="document",
+                                 args = [record_id, "update.popup"],
+                                 vars = {"refresh": list_id,
+                                         "record": record_id,
+                                         }
+                                 ),
+                     _class = "s3_modal",
+                     #_title = T("Edit %(type)s") % dict(type=series_title),
+                     _title = T("Edit"),
                      )
     else:
         edit_btn = ""
@@ -117,15 +121,15 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
                        SPAN("delete",
                            _class = "show-for-sr",
                            ),
-                      _class="dl-item-delete",
-                      _title=T("Delete"),
+                      _class = "dl-item-delete",
+                      _title = T("Delete"),
                       )
     else:
         delete_btn = ""
 
     toolbar = DIV(edit_btn,
                   delete_btn,
-                  _class="edit-bar fright",
+                  _class = "edit-bar fright",
                   )
 
     item = DIV(toolbar,
@@ -217,14 +221,15 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                            SPAN("delete",
                                 _class = "show-for-sr",
                                 ),
-                           _href=URL(c="dc", f="target",
-                                     args=[target_id, "delete_confirm.popup"],
-                                     #vars={"refresh": list_id,
-                                     #      "record": record_id}
-                                     ),
-                           #_class="dl-survey-delete",
-                           _class="no-link s3_modal",
-                           _title=T("Delete survey"), # Visible in both popup & popover
+                           _href = URL(c="dc", f="target",
+                                       args = [target_id, "delete_confirm.popup"],
+                                       #vars = {"refresh": list_id,
+                                       #        "record": record_id,
+                                       #        }
+                                       ),
+                           #_class = "dl-survey-delete",
+                           _class = "no-link s3_modal",
+                           _title = T("Delete survey"), # Visible in both popup & popover
                            )
         else:
             delete_btn = ""
@@ -233,12 +238,12 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                          SPAN("copy",
                               _class = "show-for-sr",
                              ),
-                         _href=URL(c="dc", f="target",
-                                   args=[target_id, "copy"],
-                                   vars={"refresh": list_id}
-                                   ),
-                         _title=T("Copy"),
-                         _class="no-link",
+                         _href = URL(c="dc", f="target",
+                                     args = [target_id, "copy"],
+                                     vars = {"refresh": list_id}
+                                     ),
+                         _title = T("Copy"),
+                         _class = "no-link",
                          )
         else:
             copy_btn = ""
@@ -266,53 +271,53 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                             SPAN("preview",
                                  _class = "show-for-sr",
                                  ),
-                            _href=URL(c="dc", f="template",
-                                      args=[template_id, "editor"],
-                                      ),
-                            _title=T("Preview"),
-                            _class="no-link",
+                            _href = URL(c="dc", f="template",
+                                        args = [template_id, "editor"],
+                                        ),
+                            _title = T("Preview"),
+                            _class = "no-link",
                             )
             report_btn = A(ICON("bar-chart"),
                            SPAN("report_custom",
                                 _class = "show-for-sr",
                                 ),
-                           _href=URL(c="dc", f="target",
-                                     args=[target_id, "report_custom"],
-                                     ),
-                           _title=T("Report"),
-                           _class="no-link",
+                           _href = URL(c="dc", f="target",
+                                       args = [target_id, "report_custom"],
+                                       ),
+                           _title = T("Report"),
+                           _class = "no-link",
                            )
             switch_id = "target_status-%s" % target_id
             if status == 2:
-                checkbox = INPUT(_id=switch_id,
-                                 _type="checkbox",
-                                 _checked="checked",
-                                 _class="switch-input",
+                checkbox = INPUT(_id = switch_id,
+                                 _type = "checkbox",
+                                 _checked = "checked",
+                                 _class = "switch-input",
                                  )
             elif status == 3:
-                checkbox = INPUT(_id=switch_id,
-                                 _type="checkbox",
-                                 _class="switch-input",
+                checkbox = INPUT(_id = switch_id,
+                                 _type = "checkbox",
+                                 _class = "switch-input",
                                  )
             switch = DIV(checkbox,
                          # Inner Labels require Foundation 6
                          # https://foundation.zurb.com/sites/docs/switch.html#inner-labels
                          # - have backported the Foundation 6 CSS into style.css instead of using the Foundation 5 SCSS
                          LABEL(SPAN("ON",
-                                    _class="switch-active",
-                                    #_aria-hidden="true",
+                                    _class = "switch-active",
+                                    #_aria-hidden = "true",
                                     ),
                                SPAN("OFF",
-                                    _class="switch-inactive",
-                                    #_aria-hidden="true",
+                                    _class = "switch-inactive",
+                                    #_aria-hidden = "true",
                                     ),
                                _for = switch_id,
-                               _class="switch-paddle rounded",
+                               _class = "switch-paddle rounded",
                                ),
-                         _class="switch",
+                         _class = "switch",
                          )
 
-        bappend(DIV(DIV(_class="card-inner-header"),
+        bappend(DIV(DIV(_class = "card-inner-header"),
                     H2(target.name),
                     responses,
                     # Copy button disabled until implemented
@@ -321,21 +326,21 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                     #DIV(preview_btn, export_btn, report_btn),
                     DIV(preview_btn, report_btn),
                     switch,
-                    _class="project-survey-card medium-2 columns",
+                    _class = "project-survey-card medium-2 columns",
                     ))
 
     if permit("create", ttable):
         # Create Button
         create_btn = A(ICON("plus"),
-                       _href=URL(c="project", f="project",
-                                 args=[record_id, "target", "create"],
-                                 ),
-                       _class="no-link",
+                       _href = URL(c="project", f="project",
+                                   args = [record_id, "target", "create"],
+                                   ),
+                       _class = "no-link",
                        )
         bappend(DIV(create_btn,
                     H2(T("Create new survey")
                        ),
-                    _class="project-survey-card medium-2 columns end",
+                    _class = "project-survey-card medium-2 columns end",
                     ))
 
 
@@ -345,13 +350,14 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                      SPAN("edit",
                           _class = "show-for-sr",
                           ),
-                     _href=URL(c="project", f="project",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": list_id,
-                                     "record": record_id}
-                               ),
-                     _class="s3_modal",
-                     _title=T("Edit"),
+                     _href = URL(c="project", f="project",
+                                 args = [record_id, "update.popup"],
+                                 vars = {"refresh": list_id,
+                                         "record": record_id,
+                                         }
+                                 ),
+                     _class = "s3_modal",
+                     _title = T("Edit"),
                      )
     else:
         edit_btn = ""
@@ -360,14 +366,15 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                        SPAN("delete",
                            _class = "show-for-sr",
                            ),
-                       _href=URL(c="project", f="project",
-                                 args=[record_id, "delete_confirm.popup"],
-                                 #vars={"refresh": list_id,
-                                 #      "record": record_id}
-                                 ),
-                       #_class="dl-item-delete",
-                       _class="s3_modal",
-                       _title=T("Delete project"), # Visible in both popup & popover
+                       _href = URL(c="project", f="project",
+                                   args = [record_id, "delete_confirm.popup"],
+                                   #vars = {"refresh": list_id,
+                                   #        "record": record_id,
+                                   #        }
+                                   ),
+                       #_class = "dl-item-delete",
+                       _class = "s3_modal",
+                       _title = T("Delete project"), # Visible in both popup & popover
                        )
     else:
         delete_btn = ""
@@ -377,10 +384,10 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                           _class = "show-for-sr",
                          ),
                      _href=URL(c="project", f="project",
-                               args=[record_id, "copy"],
-                               vars={"refresh": list_id}
+                               args = [record_id, "copy"],
+                               vars = {"refresh": list_id}
                                ),
-                     _title=T("Copy"),
+                     _title = T("Copy"),
                      )
     else:
         copy_btn = ""
@@ -389,28 +396,29 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
                   # Copy button disabled until implemented
                   #copy_btn,
                   delete_btn,
-                  _class="edit-bar fright",
+                  _class = "edit-bar fright",
                   )
 
     item = DIV(DIV(#ICON(icon),
                    SPAN(" %s" % title,
-                        _class="card-title"),
+                        _class = "card-title",
+                        ),
                    toolbar,
-                   _class="card-header",
+                   _class = "card-header",
                    ),
                DIV(DIV(DIV(body,
-                           _class="media",
+                           _class = "media",
                            ),
-                       _class="media-body",
+                       _class = "media-body",
                        ),
-                   _class="media",
+                   _class = "media",
                    ),
                DIV(SPAN("Master key: %s" % master_key,
                         ),
-                   _class="card-footer",
+                   _class = "card-footer",
                    ),
-               _class="thumbnail project-card",
-               _id=item_id,
+               _class = "thumbnail project-card",
+               _id = item_id,
                )
 
     return item
@@ -939,30 +947,31 @@ class dc_TargetEdit(S3Method):
                     s3.scripts.append("/%s/static/themes/UCCE/js/confirm_popup.min.js" % r.application)
 
                 items = [DIV(P(T("In order to edit it, the survey will be deactivated and all data collected will be deleted.")),
-                             _class="row",
+                             _class = "row",
                              ),
-                         DIV(INPUT(_type="checkbox",
-                                   _id="checkbox1",
+                         DIV(INPUT(_type = "checkbox",
+                                   _id = "checkbox1",
                                    ),
                              LABEL(T("Delete all collected data")),
-                             _class="row",
+                             _class = "row",
                              ),
-                         DIV(INPUT(_type="checkbox",
-                                   _id="checkbox2",
+                         DIV(INPUT(_type = "checkbox",
+                                   _id = "checkbox2",
                                    ),
                              LABEL(T("Deactivate survey")),
-                             _class="row",
+                             _class = "row",
                              ),
                          ]
                 cancel_btn = A(T("Cancel"),
-                               _href="#",
-                               _class="button secondary round",
+                               _href = "#",
+                               _class = "button secondary round",
                                )
                 action_btn = A(T("Edit survey"),
-                               _href=URL(c="dc", f="target",
-                                         args=[r.id, "edit_confirm"]),
-                               _class="button round disabled",
-                               _target="_top",
+                               _href = URL(c="dc", f="target",
+                                           args = [r.id, "edit_confirm"],
+                                           ),
+                               _class = "button round disabled",
+                               _target = "_top",
                                )
 
                 S3CustomController._view(THEME, "confirm_popup.html")
