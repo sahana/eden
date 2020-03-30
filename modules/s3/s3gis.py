@@ -1339,18 +1339,19 @@ class GIS(object):
             # Does config exist?
             # Should we merge it?
             row = db(ctable.id == config_id).select(ctable.merge,
+                                                    ctable.uuid,
                                                     limitby= (0, 1)
                                                     ).first()
             if row:
-                if row.merge:
+                if row.merge and row.uuid != "SITE_DEFAULT":
                     row = None
                     # Merge this one with the Site Default
                     query = (ctable.id == config_id) | \
                             (ctable.uuid == "SITE_DEFAULT")
                     rows = db(query).select(*fields,
                                             left = left,
-                                            # @ToDo: This gives the wrong result in Postgres if the specified config is pe_type=None
-                                            orderby = ctable.pe_type,
+                                            # We want SITE_DEFAULT to be last here (after urn:xxx)
+                                            orderby = ~ctable.uuid,
                                             limitby = (0, 2)
                                             )
                 else:
