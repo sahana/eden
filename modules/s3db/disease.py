@@ -1982,7 +1982,8 @@ def disease_rheader(r, tabs=None):
             if settings.get_disease_treatment():
                 tabs.insert(4, (T("Treatment"), "case_treatment"))
 
-            case = resource.select(["person_id$gender",
+            case = resource.select(["person_id$pe_label",
+                                    "person_id$gender",
                                     "person_id$date_of_birth",
                                     ],
                                     represent = True,
@@ -1998,7 +1999,14 @@ def disease_rheader(r, tabs=None):
             gender = lambda row: case["pr_person.gender"]
             date_of_birth = lambda row: case["pr_person.date_of_birth"]
 
-            rheader_fields = (["case_number",
+            if settings.get_disease_case_id():
+                case_id = (T("ID"), lambda row: case["pr_person.pe_label"])
+            elif settings.get_disease_case_number():
+                case_id = "case_number"
+            else:
+                case_id = None
+
+            rheader_fields = ([case_id,
                                "illness_status",
                                ],
                               ["person_id",
