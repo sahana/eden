@@ -167,6 +167,7 @@ class S3Config(Storage):
         self.database = Storage()
         self.dc = Storage()
         self.deploy = Storage()
+        self.disease = Storage()
         self.doc = Storage()
         self.dvr = Storage()
         self.edu = Storage()
@@ -3600,6 +3601,21 @@ class S3Config(Storage):
             e.g. 'RDRT', 'RIT'
         """
         return self.deploy.get("team_label", "Deployable")
+
+    # -------------------------------------------------------------------------
+    # Disease Tracking and Monitoring
+    #
+    def get_disease_case_number(self):
+        """
+            Use case numbers in disease tracking
+        """
+        return self.disease.get("case_number", False)
+
+    def get_disease_case_id(self):
+        """
+            Use personal ID (pe_label) in disease tracking
+        """
+        return self.disease.get("case_id", True)
 
     # -------------------------------------------------------------------------
     # Doc Options

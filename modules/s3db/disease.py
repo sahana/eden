@@ -248,6 +248,7 @@ class CaseTrackingModel(S3Model):
         T = current.T
         db = current.db
 
+        settings = current.deployment_settings
         crud_strings = current.response.s3.crud_strings
 
         define_table = self.define_table
@@ -296,6 +297,9 @@ class CaseTrackingModel(S3Model):
         # =====================================================================
         # Case
         #
+        use_case_number = settings.get_disease_case_number()
+        use_case_id =  settings.get_disease_case_id()
+
         tablename = "disease_case"
         define_table(tablename,
                      Field("case_number", length=64,
@@ -303,12 +307,16 @@ class CaseTrackingModel(S3Model):
                                 IS_LENGTH(64),
                                 IS_NOT_IN_DB(db, "disease_case.case_number"),
                                 ]),
+                           readable = use_case_number,
+                           writable = use_case_number,
                            ),
                      person_id(empty = False,
                                ondelete = "CASCADE",
-                               widget = S3AddPersonWidget(controller="pr"),
+                               widget = S3AddPersonWidget(controller = "pr",
+                                                          pe_label = use_case_id,
+                                                          ),
                                ),
-                     self.disease_disease_id(),
+                     self.disease_disease_id(comment = None),
                      #s3_date(), # date registered == created_on?
                      self.gis_location_id(),
                      # @todo: add site ID for registering site?
@@ -346,6 +354,7 @@ class CaseTrackingModel(S3Model):
                      s3_date("monitoring_until",
                              label = T("Monitoring required until"),
                              ),
+                     s3_comments(),
                      *s3_meta_fields())
 
         # Reusable Field
@@ -353,9 +362,10 @@ class CaseTrackingModel(S3Model):
         case_id = S3ReusableField("case_id", "reference %s" % tablename,
                                   label = T("Case"),
                                   represent = represent,
-                                  requires = IS_ONE_OF(db, "disease_case.id",
-                                                       represent,
-                                                       ),
+                                  requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                           "disease_case.id",
+                                                           represent,
+                                                           )),
                                   comment = S3PopupLink(f = "case",
                                                         tooltip = T("Add a new case"),
                                                         ),
@@ -376,6 +386,35 @@ class CaseTrackingModel(S3Model):
                                             ),
                        )
 
+        # List fields
+        case_number = "case_number" if use_case_number else None
+        list_fields = ["disease_id",
+                       case_number,
+                       "person_id$pe_label" if use_case_id else None,
+                       "person_id",
+                       "illness_status",
+                       "symptom_debut",
+                       "diagnosis_status",
+                       "diagnosis_date",
+                       "monitoring_level",
+                       "monitoring_until",
+                       ]
+
+        # CRUD form
+        crud_form = S3SQLCustomForm("disease_id",
+                                    case_number,
+                                    "person_id",
+                                    "location_id",
+                                    "illness_status",
+                                    "symptom_debut",
+                                    "diagnosis_status",
+                                    "diagnosis_date",
+                                    "monitoring_level",
+                                    "monitoring_until",
+                                    "comments",
+                                    )
+
+        # Reports
         report_fields = ["disease_id",
                          "location_id",
                          "illness_status",
@@ -393,6 +432,7 @@ class CaseTrackingModel(S3Model):
                                        },
                           }
 
+        # Filters
         filter_widgets = [S3TextFilter(["case_number",
                                         "person_id$first_name",
                                         "person_id$middle_name",
@@ -413,9 +453,11 @@ class CaseTrackingModel(S3Model):
 
         configure(tablename,
                   create_onvalidation = self.case_create_onvalidation,
+                  crud_form = crud_form,
                   deduplicate = self.case_duplicate,
                   delete_next = URL(f="case", args=["summary"]),
                   filter_widgets = filter_widgets,
+                  list_fields = list_fields,
                   onaccept = self.case_onaccept,
                   report_options = report_options,
                   )
@@ -439,7 +481,7 @@ class CaseTrackingModel(S3Model):
         #
         tablename = "disease_case_monitoring"
         define_table(tablename,
-                     case_id(),
+                     case_id(empty=False),
                      s3_datetime(default="now"),
                      Field("illness_status",
                            represent = illness_status_represent,
@@ -514,7 +556,7 @@ class CaseTrackingModel(S3Model):
                         }
         tablename = "disease_case_diagnostics"
         define_table(tablename,
-                     case_id(),
+                     case_id(empty=False),
                      # @todo: make a lookup table in DiseaseDataModel:
                      Field("probe_type"),
                      Field("probe_number", length=64, unique=True,
@@ -820,7 +862,7 @@ class ContactTracingModel(S3Model):
 
         tablename = "disease_tracing"
         define_table(tablename,
-                     case_id(),
+                     case_id(empty=False),
                      s3_datetime("start_date",
                                  label = T("From"),
                                  set_min="#disease_tracing_end_date",
@@ -907,29 +949,31 @@ class ContactTracingModel(S3Model):
         # =====================================================================
         # Exposure: when and how was a person exposed to the disease?
         #
+        use_case_id = current.deployment_settings.get_disease_case_id()
+
         tablename = "disease_exposure"
         define_table(tablename,
-
-                     # The known case to which the person was exposed:
-                     case_id(),
-
-                     # The tracing record matching the exposure
-                     # - filled when the exposure is registered through
-                     #   contact tracing workflow
-                     # - @todo: restrospective lookup?
+                     self.pr_person_id(empty = False,
+                                       widget = S3AddPersonWidget(controller = "pr",
+                                                                  pe_label = use_case_id,
+                                                                  ),
+                                       ),
+                     s3_datetime(comment = DIV(_class="tooltip",
+                                           _title="%s|%s" % (T("Exposure Date/Time"),
+                                                             T("Date and Time when the person has been exposed"),
+                                                             ),
+                                           ),
+                                 ),
+                     case_id(label = T("Case exposed to"),
+                             comment = DIV(_class="tooltip",
+                                           _title="%s|%s" % (T("Case exposed to"),
+                                                             T("The case this person has been exposed to (if known)"),
+                                                             ),
+                                           ),
+                             ),
+                     # Component link:
                      tracing_id(),
 
-                     # The person exposed
-                     self.pr_person_id(empty = False,
-                                       widget = S3AddPersonWidget(controller="pr"),
-                                       ),
-
-                     # Date and time of the (first) exposure to this case
-                     s3_datetime(),
-
-                     #self.gis_location_id(),
-
-                     # Exposure details:
                      Field("exposure_type",
                            default = "UNKNOWN",
                            represent = exposure_type_represent,
@@ -948,7 +992,17 @@ class ContactTracingModel(S3Model):
                      Field("circumstances", "text"),
                      *s3_meta_fields())
 
+        # List fields
+        list_fields = ["person_id",
+                       "date",
+                       "case_id",
+                       "exposure_type",
+                       "protection_level",
+                       "exposure_risk",
+                       ]
+
         self.configure(tablename,
+                       list_fields = list_fields,
                        onaccept = self.exposure_onaccept,
                        )
 

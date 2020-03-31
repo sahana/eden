@@ -12,6 +12,7 @@
 
          Case Number............string.............case number (optional)
 
+         ID.....................string.............personal ID label (optional)
          First Name.............string.............first name
          Last Name..............string.............last name
          Gender|Sex.............string.............gender
@@ -329,7 +330,14 @@
             </xsl:call-template>
         </xsl:variable>
 
+        <xsl:variable name="ID" select="col[@field='ID']"/>
+
         <resource name="pr_person">
+            <xsl:if test="$ID!=''">
+                <data field="pe_label">
+                    <xsl:value-of select="$ID"/>
+                </data>
+            </xsl:if>
             <data field="first_name">
                 <xsl:value-of select="col[@field='First Name']"/>
             </data>

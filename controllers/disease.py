@@ -29,6 +29,11 @@ def case():
     """ Case Tracking Controller """
 
     def prep(r):
+
+        if settings.get_disease_case_id():
+            ptable = s3db.pr_person
+            ptable.pe_label.label = T("ID")
+
         if r.record:
             # Do not allow changing the person ID
             person_id = r.table.person_id
@@ -45,10 +50,25 @@ def case():
                 field.default = diseases.first().id
                 field.writable = False
 
-        if r.component_name == "contact" or \
-           r.component_name == "exposure":
+        component_name = r.component_name
+        if component_name in ("contact", "exposure"):
             field = r.component.table.tracing_id
             field.readable = field.writable = False
+
+        if component_name == "contact":
+            # Adapt CRUD strings to perspective
+            s3.crud_strings["disease_exposure"] = Storage(
+                label_create = T("Add Close Contact"),
+                title_display = T("Close Contact Details"),
+                title_list = T("Close Contacts"),
+                title_update = T("Edit Contact"),
+                label_list_button = T("List Close Contacts"),
+                label_delete_button = T("Delete Contact"),
+                msg_record_created = T("Contact added"),
+                msg_record_modified = T("Contact updated"),
+                msg_record_deleted = T("Contact deleted"),
+                msg_list_empty = T("No Close Contacts currently registered"))
+
 
         return True
     s3.prep = prep
@@ -71,6 +91,8 @@ def person():
 
         resource = r.resource
         table = resource.table
+
+        table.pe_label.label = T("ID")
 
         get_vars = r.get_vars
         if "viewing" in get_vars:
@@ -116,7 +138,7 @@ def person():
                                     filterby = {"field": "contact_method",
                                                 "options": "SMS",
                                                 },
-                                    label = T("Mobile Phone"),
+                                    label = settings.get_ui_label_mobile_phone(),
                                     multiple = False,
                                     name = "phone",
                                     ),
