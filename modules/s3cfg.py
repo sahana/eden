@@ -3617,6 +3617,12 @@ class S3Config(Storage):
         """
         return self.disease.get("case_id", True)
 
+    def get_disease_treatment(self):
+        """
+            Use a treatment notes journal for cases
+        """
+        return self.disease.get("treatment", False)
+
     # -------------------------------------------------------------------------
     # Doc Options
     #

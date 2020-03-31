@@ -2458,6 +2458,7 @@ class S3PivotTable(object):
                   "string": "",
                   "date": datetime.date.min,
                   "datetime": datetime.datetime.min,
+                  "boolean": 1,
                   }
 
         # Sorting key function
@@ -2465,6 +2466,8 @@ class S3PivotTable(object):
             value = item[index][sortby]
             if value is None:
                 return "" if sortby == "text" else minval.get(ftype)
+            elif ftype == "boolean":
+                return -int(value)
             else:
                 return value
 
