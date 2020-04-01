@@ -2030,7 +2030,7 @@ class dc_TargetXLS(S3Method):
             else:
                 left = None
             questions = db(qtable.id.belongs(question_ids)).select(*fields,
-                                                                   left = left,
+                                                                   left = left
                                                                    )
             if translate:
                 questions_dict = {}
