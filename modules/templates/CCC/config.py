@@ -1888,31 +1888,6 @@ $('.copy-link').click(function(e){
 
         # Filtered components
         s3db.add_components("org_organisation",
-                            pr_contact = ({"name": "email",
-                                           "joinby": "pe_id",
-                                           "multiple": False,
-                                           "filterby": {"contact_method": "EMAIL",
-                                                        },
-                                           },
-                                          {"name": "facebook",
-                                           "joinby": "pe_id",
-                                           "multiple": False,
-                                           "filterby": {"contact_method": "FACEBOOK",
-                                                        },
-                                           },
-                                          {"name": "twitter",
-                                           "joinby": "pe_id",
-                                           "multiple": False,
-                                           "filterby": {"contact_method": "TWITTER",
-                                                        },
-                                           },
-                                          {"name": "sm_other",
-                                           "joinby": "pe_id",
-                                           "multiple": False,
-                                           "filterby": {"contact_method": "OTHER",
-                                                        },
-                                           },
-                                          ),
                             org_organisation_tag = ({"name": "sm_other_type",
                                                      "joinby": "organisation_id",
                                                      "multiple": False,
@@ -1921,17 +1896,26 @@ $('.copy-link').click(function(e){
                                                      },
                                                     ),
                             )
+        s3db.add_components("pr_pentity",
+                            pr_contact = ({"name": "sm_other",
+                                           "joinby": "pe_id",
+                                           "multiple": False,
+                                           "filterby": {"contact_method": "OTHER",
+                                                        },
+                                           },
+                                          ),
+                            )
 
         # Individual settings for specific tag components
-        components_get = s3db.resource(tablename).components.get
+        #components_get = s3db.resource(tablename).components.get
 
-        email = components_get("email")
-        f = email.table.value
-        f.requires = IS_EMPTY_OR(IS_EMAIL())
+        #email = components_get("email")
+        #f = email.table.value
+        #f.requires = IS_EMPTY_OR(IS_EMAIL())
 
-        facebook = components_get("facebook")
-        f = facebook.table.value
-        f.requires = IS_EMPTY_OR(IS_URL())
+        #facebook = components_get("facebook")
+        #f = facebook.table.value
+        #f.requires = IS_EMPTY_OR(IS_URL())
 
         #twitter = components_get("twitter")
         #f = twitter.table.value
@@ -2033,6 +2017,7 @@ $('.copy-link').click(function(e){
                                       (T("Type"), "organisation_organisation_type.organisation_type_id"),
                                       (T("District Served"), "organisation_location.location_id$L3"),
                                       "phone",
+                                      (T("Email"), "email.value"),
                                       ],
                        filter_widgets = [S3TextFilter(["name",
                                                        "comments",
