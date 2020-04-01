@@ -2052,7 +2052,7 @@ class S3LocationFilter(S3FilterWidget):
                     (ntable.language == current.session.s3.language)
             nrows = current.db(query).select(gtable.name,
                                              ntable.name_l10n,
-                                             limitby=(0, len(ids)),
+                                             limitby = (0, len(ids)),
                                              )
             for row in nrows:
                 name_l10n[row["gis_location.name"]] = row["gis_location_name.name_l10n"]

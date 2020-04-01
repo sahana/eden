@@ -988,7 +988,8 @@ class S3LocationModel(S3Model):
             if settings.get_L10n_translate_gis_location():
                 search_l10n = True
                 language = current.session.s3.language
-                if language != current.deployment_settings.get_L10n_default_language():
+                #if language != current.deployment_settings.get_L10n_default_language():
+                if language != "en": # Can have a default language for system & yet still want to translate from base English
                     translate = True
                     fields.append("path")
 
@@ -5134,7 +5135,8 @@ class gis_LocationRepresent(S3Represent):
         # Translation uses gis_location_name & not T()
         translate = settings.get_L10n_translate_gis_location()
         language = current.session.s3.language
-        if language == settings.get_L10n_default_language():
+        #if language == settings.get_L10n_default_language():
+        if language == "en": # Can have a default language for system & yet still want to translate from base English
             translate = False
         # Iframe height(Link)
         self.iheight = settings.get_gis_map_selector_height()

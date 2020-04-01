@@ -1377,6 +1377,7 @@ class verify_email(S3CustomController):
                     (mtable.user_id == utable.id) & \
                     (utable.organisation_id == organisation_id)
             approvers = db(query).select(utable.email)
+
         if not approvers:
             # Agencies are approved by ADMIN(s)
             #Others approved by ADMIn if no ORG_ADMIN(s) exist
