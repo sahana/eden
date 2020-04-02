@@ -9,7 +9,7 @@ from gluon import *
 from gluon.storage import Storage
 from s3 import FS, ICON, IS_ONE_OF, S3CustomController, S3Method, \
                S3MultiSelectWidget, S3Profile, S3SQLCustomForm, \
-               s3_avatar_represent, \
+               s3_avatar_represent, s3_comments_widget, \
                s3_mark_required, s3_phone_requires, s3_str, s3_truncate
 
 SEPARATORS = (",", ":")
@@ -440,6 +440,18 @@ class register(S3CustomController):
         for key in districts:
             districts_and_uk[key] = districts[key]
 
+        # Lookup Slots
+        stable = s3db.pr_slot
+        slots = db(stable.deleted == False).select(stable.id,
+                                                   stable.name)
+        slots = {s.id:s.name for s in slots}
+
+        # Lookup Certificates
+        ctable = s3db.hrm_certificate
+        certificates = db(ctable.deleted == False).select(ctable.id,
+                                                          ctable.name)
+        certificates = {c.id:c.name for c in certificates}
+
         # Check Type of Registration
         agency = donor = existing = group = False
 
@@ -492,9 +504,40 @@ class register(S3CustomController):
                           Field("skills_details",
                                 label = T("Please specify details"),
                                 ),
+                          Field("certificates", "list:string",
+                                label = T("Qualifications"),
+                                requires = IS_IN_SET(certificates, multiple=True),
+                                widget = S3MultiSelectWidget(header="",
+                                                             selectedList=3),
+                                ),
+                          Field("experience",
+                                label = T("Skills and Experience"),
+                                widget = lambda f, v: \
+                                    s3_comments_widget(f, v, _placeholder = "e.g. Co-ordination, Event Management, PCV qualified.")
+                                ),
+                          Field("resources",
+                                label = T("Offers of Resources"),
+                                widget = lambda f, v: \
+                                    s3_comments_widget(f, v, _placeholder = "e.g. Minibus.")
+                                ),
                           Field("where_operate", "list:string",
                                 label = T("Where would you be willing to volunteer?"),
                                 requires = IS_IN_SET(districts, multiple=True),
+                                widget = S3MultiSelectWidget(header="",
+                                                             selectedList=3),
+                                ),
+                          Field("travel", "boolean",
+                                label = T("Willing to Travel?"),
+                                requires = IS_IN_SET({0: T("No"),
+                                                      1: T("Yes"),
+                                                      }),
+                                widget = lambda f, v: \
+                                    SQLFORM.widgets.radio.widget(f, v,
+                                                                 style="divs"),
+                                ),
+                          Field("slots", "list:string",
+                                label = T("Times"),
+                                requires = IS_IN_SET(slots, multiple=True),
                                 widget = S3MultiSelectWidget(header="",
                                                              selectedList=3),
                                 ),
@@ -1016,11 +1059,14 @@ class register(S3CustomController):
 
         # Form buttons
         REGISTER = T("Register")
-        buttons = [INPUT(_type="submit", _value=REGISTER),
+        buttons = [INPUT(_type = "submit",
+                         _value = REGISTER,
+                         ),
                    A(T("Login"),
-                     _href=URL(f="user", args="login"),
-                     _id="login-btn",
-                     _class="action-lnk",
+                     _href = URL(f="user",
+                                 args = "login"),
+                     _id = "login-btn",
+                     _class = "action-lnk",
                      ),
                    ]
 
@@ -1082,8 +1128,12 @@ class register(S3CustomController):
             # Volunteer Offer
             form[0].insert(12, DIV(_class = "subheading",
                                    ))
+            # Availability
+            form[0].insert(18, DIV("Availability",
+                                   _class = "subheading",
+                                   ))
             # Health
-            form[0].insert(16, DIV("Many of the opportunities available following an incident require volunteers to be fit and active, may involve working in dirty or dusty environments, and could involve being outdoors - for example, removing damaged furniture and cleaning affected buildings, or lifting, packaging and distributing donated items. Some volunteer roles will be less physically demanding - for example, knocking on doors to check people are OK and gather information, making refreshments and helping with administration. Are you interested in opportunities:",
+            form[0].insert(22, DIV("Many of the opportunities available following an incident require volunteers to be fit and active, may involve working in dirty or dusty environments, and could involve being outdoors - for example, removing damaged furniture and cleaning affected buildings, or lifting, packaging and distributing donated items. Some volunteer roles will be less physically demanding - for example, knocking on doors to check people are OK and gather information, making refreshments and helping with administration. Are you interested in opportunities:",
                                    _class = "subheading",
                                    ))
             form[0].insert(-7, DIV("Person to be contacted in case of an emergency",
@@ -1091,7 +1141,7 @@ class register(S3CustomController):
                                    ))
             form[0].insert(-4, DIV(_class = "subheading",
                                    ))
-            form[0].insert(-3, DIV(_class = "subheading",
+            form[0].insert(-2, DIV(_class = "subheading",
                                    ))
 
         # Inject client-side Validation
@@ -1198,7 +1248,12 @@ class register(S3CustomController):
                           "addr_postcode": form_vars.addr_postcode,
                           "skill_id": form_vars.skill_id or [],
                           "skills_details": form_vars.skills_details,
+                          "certificates": form_vars.certificates or [],
+                          "experience": form_vars.experience,
+                          "resources": form_vars.resources,
                           "where_operate": form_vars.where_operate or [],
+                          "travel": form_vars.travel,
+                          "slots": form_vars.slots or [],
                           "convictions": form_vars.convictions,
                           "dbs": form_vars.dbs,
                           "significant_physical": form_vars.significant_physical,
@@ -2058,11 +2113,48 @@ def auth_user_register_onaccept(user_id):
                   }
         ttable.insert(**record)
 
+        # Qualifications
+        ltable = s3db.hrm_certification
+        certificates = custom.get("certificates", [])
+        for certificate_id in certificates:
+            record = {"person_id": person_id,
+                      "certificate_id": certificate_id,
+                      "owned_by_user": user_id,
+                      }
+            ltable.insert(**record)
+
+        experience = custom.get("experience")
+        if experience is not None:
+            record = {"person_id": person_id,
+                      "tag": "experience",
+                      "value": experience,
+                      }
+            ttable.insert(**record)
+
+        resources = custom.get("resources")
+        if resources is not None:
+            record = {"person_id": person_id,
+                      "tag": "resources",
+                      "value": resources,
+                      }
+            ttable.insert(**record)
+
         # Where Operate
         ltable = s3db.pr_person_location
         for location_id in custom["where_operate"]:
             record = {"person_id": person_id,
                       "location_id": location_id,
+                      "owned_by_user": user_id,
+                      }
+            ltable.insert(**record)
+
+        # Slots
+        ltable = s3db.pr_person_slot
+        slots = custom.get("slots", [])
+        for slot_id in slots:
+            record = {"person_id": person_id,
+                      "slot_id": slot_id,
+                      "owned_by_user": user_id,
                       }
             ltable.insert(**record)
 
@@ -2078,6 +2170,14 @@ def auth_user_register_onaccept(user_id):
             record = {"person_id": person_id,
                       "tag": "dbs",
                       "value": dbs,
+                      }
+            ttable.insert(**record)
+
+        travel = custom.get("travel")
+        if travel is not None:
+            record = {"person_id": person_id,
+                      "tag": "travel",
+                      "value": travel,
                       }
             ttable.insert(**record)
 
