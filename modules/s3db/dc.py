@@ -2169,11 +2169,12 @@ class dc_TargetXLS(S3Method):
                 for question in questions:
                     field_type = question["field_type"]
                     if field_type == 6:
-                        # multichoice
+                        # Multichoice
+                        answer = None
                         otherfieldname = question.get("otherfieldname")
                         if otherfieldname:
                             answer = row.get(otherfieldname)
-                        else:
+                        if answer is None:
                             answer = row.get(question["field"])
                             # @ToDo
                             #if translate:
