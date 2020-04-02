@@ -32,6 +32,7 @@ __all__ = ("S3TranslateModel",)
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
+from s3compat import PY2
 
 # =============================================================================
 class S3TranslateModel(S3Model):
@@ -101,20 +102,24 @@ class S3TranslateModel(S3Model):
 
         import csv
 
-        T = current.T
         try:
             csvfile = form.vars.file.file
         except:
-            form.errors["file"] = T("No file uploaded.")
+            form.errors["file"] = current.T("No file uploaded.")
             return
+
+        if PY2:
+            header = csvfile.read(1024)
+        else:
+            header = csvfile.read(1024).decode("utf-8")
+
         try:
-            dialect = csv.Sniffer().sniff(csvfile.read(1024))
+            dialect = csv.Sniffer().sniff(header)
         except csv.Error:
-            error = T("Error reading file (invalid format?): %(msg)s")
+            error = current.T("Error reading file (invalid format?): %(msg)s")
             import sys
             form.errors["file"] = error % {"msg": sys.exc_info()[1]}
         csvfile.seek(0)
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -126,6 +131,7 @@ class S3TranslateModel(S3Model):
 
         import csv
         import os
+
         from ..s3.s3translate import Strings
 
         form_vars = form.vars
@@ -146,8 +152,6 @@ class S3TranslateModel(S3Model):
 
         # Mark the percentages as dirty
         ptable = current.s3db.translate_percentage
-        current.db(ptable.code == lang_code).update(dirty=True)
-
-        return
+        current.db(ptable.code == lang_code).update(dirty = True)
 
 # END =========================================================================
