@@ -979,7 +979,8 @@ def translate():
 
             langlist = sorted(A.get_langcodes())
 
-            table = TABLE(_class="translation_module_table")
+            table = TABLE(_class = "translation_module_table",
+                          )
             table.append(BR())
 
             # Set number of columns in the form

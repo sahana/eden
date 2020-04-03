@@ -1789,8 +1789,9 @@ class S3Config(Storage):
             fallback if the client timezone or UTC offset can not be
             determined (e.g. user not logged in, or not browser-based)
 
-            * A list of available timezones can be retrieved with:
-
+            * A list of available timezones can be viewed at:
+                https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+              or retrieved with:
               import os, tarfile, dateutil.zoneinfo
               path = os.path.abspath(os.path.dirname(dateutil.zoneinfo.__file__))
               zonesfile = tarfile.TarFile.open(os.path.join(path, 'dateutil-zoneinfo.tar.gz'))

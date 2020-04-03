@@ -2498,8 +2498,9 @@ $('.copy-link').click(function(e){
             # Customisation happens in Prep (to override controller prep)
             return
 
-        from gluon import IS_EMPTY_OR, IS_IN_SET
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+        from gluon import IS_EMPTY_OR, IS_IN_SET, SQLFORM
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink, \
+                       S3TagCheckboxWidget, s3_comments_widget
 
         s3db = current.s3db
 
@@ -2535,6 +2536,21 @@ $('.copy-link').click(function(e){
                                               "filterby": {"tag": "availability"},
                                               "multiple": False,
                                               },
+                                             {"name": "travel",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "travel"},
+                                              "multiple": False,
+                                              },
+                                             {"name": "experience",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "experience"},
+                                              "multiple": False,
+                                              },
+                                             {"name": "resources",
+                                              "joinby": "person_id",
+                                              "filterby": {"tag": "resources"},
+                                              "multiple": False,
+                                              },
                                              ),
                             )
 
@@ -2553,10 +2569,36 @@ $('.copy-link').click(function(e){
         f = delivery.table.value
         f.requires = IS_EMPTY_OR(IS_IN_SET(("Y", "N")))
         f.represent = lambda v: T("yes") if v == "Y" else T("no")
-        from s3 import S3TagCheckboxWidget
         f.widget = S3TagCheckboxWidget(on="Y", off="N")
         f.default = "N"
         f.comment = T("Please indicate if you can deliver the item/s at no cost?")
+
+        travel = components_get("travel")
+        f = travel.table.value
+        f.requires = IS_EMPTY_OR(IS_IN_SET({"0": T("No"),
+                                            "1": T("Yes"),
+                                            }))
+        def travel_represent(value):
+            if value == "1":
+                return T("yes")
+            elif value == "0":
+                return T("no")
+            else:
+                return current.messages["NONE"]
+        f.represent = travel_represent
+        f.widget = lambda f, v: \
+                    SQLFORM.widgets.radio.widget(f, v,
+                                                 style="divs")
+
+        experience = components_get("experience")
+        f = experience.table.value
+        f.widget = lambda f, v: \
+            s3_comments_widget(f, v, _placeholder = "e.g. Co-ordination, Event Management, PCV qualified.")
+
+        resources = components_get("resources")
+        f = resources.table.value
+        f.widget = lambda f, v: \
+            s3_comments_widget(f, v, _placeholder = "e.g. MiniBus.")
 
         get_vars_get = r.get_vars.get
         has_role = current.auth.s3_has_role
@@ -2622,15 +2664,28 @@ $('.copy-link').click(function(e){
                                            label = T("Volunteer Offer"),
                                            ),
                            (T("Skills Details"), "skills_details.value"),
+                           S3SQLInlineLink("certificate",
+                                           field = "certificate_id",
+                                           label = T("Qualifications"),
+                                           ),
+                           (T("Skills and Experience"), "experience.value"),
+                           (T("Offers of Resources"), "resources.value"),
                            S3SQLInlineLink("location",
                                            field = "location_id",
                                            label = T("Where would you be willing to operate?"),
+                                           ),
+                           (T("Willing to Travel?"), "travel.value"),
+                           S3SQLInlineLink("slot",
+                                           field = "slot_id",
+                                           label = T("Times"),
                                            ),
                            "comments",
                            ]
 
         s3db.configure("pr_person",
                        crud_form = S3SQLCustomForm(*crud_fields),
+                       subheadings = {"link_defaultslot": T("Availability"),
+                                      },
                        )
 
     settings.customise_pr_person_resource = customise_pr_person_resource
@@ -2972,6 +3027,14 @@ $('.copy-link').click(function(e){
                                         (T("District"), "address.location_id$L3"),
                                         (T("Postcode"), "address.location_id$addr_postcode"),
                                         ]
+                        # Travel
+                        list_fields.append((T("Willing to Travel"), "travel.value"))
+                        # Qualifications
+                        list_fields.append((T("Qualifications"), "certfication.certificate_id"))
+                        # Skills & Experience
+                        list_fields.append((T("Skills and Experience"), "experience.value"))
+                        # Offers of Resources
+                        list_fields.append((T("Offers of Resources"), "resources.value"))
                         # DBS
                         s3db.add_components("pr_person",
                                             pr_person_tag = ({"name": "convictions",
@@ -2986,6 +3049,17 @@ $('.copy-link').click(function(e){
                                                               },
                                                              )
                                             )
+                        from s3 import S3Represent
+                        yes_no_options = {"0": T("No"),
+                                          "1": T("Yes"),
+                                          }
+                        components_get = s3db.resource("pr_person").components.get
+                        convictions = components_get("convictions")
+                        f = convictions.table.value
+                        f.represent = S3Represent(options = yes_no_options)
+                        dbs = components_get("dbs")
+                        f = dbs.table.value
+                        f.represent = S3Represent(options = yes_no_options)
                         list_fields.append((T("DBS"), "dbs.value"))
                         # Convictions
                         list_fields.append((T("Convictions"), "convictions.value"))
@@ -3001,6 +3075,8 @@ $('.copy-link').click(function(e){
                                                                        "last_name",
                                                                        "comments",
                                                                        "competency.skill_id$name",
+                                                                       "experience.value",
+                                                                       "resources.value",
                                                                        ],
                                                                       #formstyle = text_filter_formstyle,
                                                                       label = "",
@@ -3011,6 +3087,10 @@ $('.copy-link').click(function(e){
                                                                          options = districts,
                                                                          ),
                                                          S3OptionsFilter("competency.skill_id",
+                                                                         label = T("Volunteer Offer"),
+                                                                         ),
+                                                         S3OptionsFilter("certification.certificate_id",
+                                                                         label = T("Qualification"),
                                                                          ),
                                                          ],
                                        )
