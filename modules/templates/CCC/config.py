@@ -243,6 +243,7 @@ def config(settings):
 
     settings.gis.legend = "float"
 
+    settings.hrm.compose_button = False # Confusing as Messaging in CCC normally means project_task
     settings.hrm.event_course_mandatory = False
 
     settings.msg.require_international_phone_numbers = False
@@ -2042,10 +2043,6 @@ $('.copy-link').click(function(e){
 
         s3 = current.response.s3
 
-        #current.s3db.set_method("org", "organisation",
-        #                        method = "message",
-        #                        action = org_organisation_message)
-
         # Custom prep
         standard_prep = s3.prep
         def prep(r):
@@ -2138,6 +2135,7 @@ $('.copy-link').click(function(e){
         s3.postp = postp
 
         if len(current.request.args) == 1:
+            # Add Bulk Messaging option to Summary page
             attr["dtargs"] = {"dt_bulk_actions": [(T("Message"), "message")],
                           }
         attr["rheader"] = ccc_rheader
@@ -2791,6 +2789,7 @@ $('.copy-link').click(function(e){
     def customise_pr_person_controller(**attr):
 
         s3db = current.s3db
+        request = current.request
 
         # Custom Component
         s3db.add_components("pr_person",
@@ -2815,7 +2814,7 @@ $('.copy-link').click(function(e){
                    method = "redirect",
                    action = pr_person_redirect)
 
-        br = current.request.controller == "br"
+        br = request.controller == "br"
 
         s3 = current.response.s3
 
@@ -2954,42 +2953,78 @@ $('.copy-link').click(function(e){
                                               ],
                                )
             else:
-                if r.component_name == "human_resource":
+                # Not BR
+                if r.id:
+                    if r.component_name == "human_resource":
 
-                    s3.crud_strings["hrm_human_resource"] = Storage(
-                        label_create = T("New Affiliation"),
-                        #title_display = T("Affiliation Details"),
-                        #title_list = T("Affiliations"),
-                        title_update = T("Edit Affiliation"),
-                        #title_upload = T("Import Affiliations"),
-                        #label_list_button = T("List Affiliations"),
-                        label_delete_button = T("Delete Affiliation"),
-                        msg_record_created = T("Affiliation added"),
-                        msg_record_modified = T("Affiliation updated"),
-                        msg_record_deleted = T("Affiliation deleted"),
-                        #msg_list_empty = T("No Affiliations currently registered")
-                        )
+                        s3.crud_strings["hrm_human_resource"] = Storage(
+                            label_create = T("New Affiliation"),
+                            #title_display = T("Affiliation Details"),
+                            #title_list = T("Affiliations"),
+                            title_update = T("Edit Affiliation"),
+                            #title_upload = T("Import Affiliations"),
+                            #label_list_button = T("List Affiliations"),
+                            label_delete_button = T("Delete Affiliation"),
+                            msg_record_created = T("Affiliation added"),
+                            msg_record_modified = T("Affiliation updated"),
+                            msg_record_deleted = T("Affiliation deleted"),
+                            #msg_list_empty = T("No Affiliations currently registered")
+                            )
 
-                    s3db.add_custom_callback("hrm_human_resource",
-                                             "onaccept",
-                                             affiliation_create_onaccept,
-                                             method = "create",
-                                             )
+                        s3db.add_custom_callback("hrm_human_resource",
+                                                 "onaccept",
+                                                 affiliation_create_onaccept,
+                                                 method = "create",
+                                                 )
 
-                    # Only needed if multiple=True
-                    #list_fields = ["organisation_id",
-                    #               (T("Role"), "job_title.value"),
-                    #               "comments",
-                    #               ]
-                    #r.component.configure(list_fields = list_fields)
+                        # Only needed if multiple=True
+                        #list_fields = ["organisation_id",
+                        #               (T("Role"), "job_title.value"),
+                        #               "comments",
+                        #               ]
+                        #r.component.configure(list_fields = list_fields)
 
-                elif r.component_name == "group_membership":
-                    r.resource.components._components["group_membership"].configure(listadd = False,
-                                                                                    list_fields = [(T("Name"), "group_id$name"),
-                                                                                                   "group_id$comments",
-                                                                                                   ],
-                                                                                    )
+                    elif r.component_name == "group_membership":
+                        r.resource.components._components["group_membership"].configure(listadd = False,
+                                                                                        list_fields = [(T("Name"), "group_id$name"),
+                                                                                                       "group_id$comments",
+                                                                                                       ],
+                                                                                        )
 
+                elif r.http == "POST":
+                    post_vars = r.post_vars
+                    if "selected" in post_vars:
+                        # Bulk Action 'Message' has been selected
+                        selected = post_vars.selected
+                        if selected:
+                            selected = selected.split(",")
+                        else:
+                            selected = []
+
+                        # Handle exclusion filter
+                        if post_vars.mode == "Exclusive":
+                            if "filterURL" in post_vars:
+                                from s3 import S3URLQuery
+                                filters = S3URLQuery.parse_url(post_vars.filterURL)
+                            else:
+                                filters = None
+                            from s3 import FS
+                            query = ~(FS("id").belongs(selected))
+                            resource = current.s3db.resource("pr_person",
+                                                             filter = query,
+                                                             vars = filters)
+                            rows = resource.select(["id"], as_rows=True)
+                            selected = [str(row.id) for row in rows]
+
+                        # GET URL lengths are limited, so pass 'selected' via session
+                        current.session.s3.ccc_message_person_ids = selected
+                        from gluon import redirect, URL
+                        redirect(URL(c="project", f="task",
+                                     args = "create",
+                                     vars = {"person_ids": 1},
+                                     ))
+
+                # Not BR
                 get_vars_get = r.get_vars.get
                 has_role = current.auth.s3_has_role
                 if get_vars_get("reserves") or \
@@ -3222,8 +3257,14 @@ $('.copy-link').click(function(e){
         s3.postp = postp
 
         # Hide the search box on component tabs, as confusing & not useful
-        attr["dtargs"] = {"dt_searching": False,
-                          }
+        dtargs = {"dt_searching": False,
+                  }
+
+        if len(request.args) is 0:
+            # Add Bulk Messaging to List View
+            dtargs["dt_bulk_actions"] = [(T("Message"), "message")]
+
+        attr["dtargs"] = dtargs
 
         if br:
             # Link to customised download Template
@@ -3264,7 +3305,6 @@ $('.copy-link').click(function(e){
                 * Notify OrgAdmins
         """
 
-        from gluon import URL
         from s3 import s3_fullname
 
         form_vars_get = form.vars.get
@@ -3273,7 +3313,6 @@ $('.copy-link').click(function(e){
         # Lookup the Author details
         db = current.db
         s3db = current.s3db
-        otable = s3db.org_organisation
         ttable = s3db.project_task
         utable = db.auth_user
         query = (ttable.id == task_id) & \
@@ -3292,6 +3331,59 @@ $('.copy-link').click(function(e){
                      fullname,
                      )
 
+        # Check what kind of message this is
+        get_vars_get = current.request.get_vars.get
+
+        person_ids = get_vars_get("person_ids")
+        if person_ids is not None:
+            # Sending to a list of People from the Bulk Action
+
+            # Retrieve list from the session
+            session = current.session
+            person_ids = session.s3.get("ccc_message_person_ids")
+            if person_ids is None:
+                session.warning = current.T("No people selected to send notifications to!")
+            else:
+                # Clear from session
+                del session.s3["ccc_message_person_ids"]
+
+                # Message
+                message = "%s has sent you a Message on %s\n\nSubject: %s\nMessage: %s" % \
+                            (fullname,
+                             system_name,
+                             form_vars_get("name"),
+                             form_vars_get("description") or "",
+                             )
+
+                # Lookup Emails
+                ptable = s3db.pr_person
+                ctable = s3db.pr_contact
+                query = (ptable.id.belongs(person_ids)) & \
+                        (ptable.pe_id == ctable.pe_id) & \
+                        (ctable.contact_method == "EMAIL") & \
+                        (ctable.deleted == False)
+                emails = db(query).select(ctable.value)
+
+                # Send Email to each Person
+                send_email = current.msg.send_email
+                for email in emails:
+                    send_email(to = email.value,
+                               subject = subject,
+                               message = message,
+                               )
+                # Set the Realm Entity
+                organisation_id = user.organisation_id
+                if organisation_id:
+                    otable = s3db.org_organisation
+                    org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                                  limitby = (0, 1)
+                                                                  ).first()
+                    db(ttable.id == task_id).update(realm_entity = org.pe_id)
+
+            return
+
+        from gluon import URL
+
         url = "%s%s" % (settings.get_base_public_url(),
                         URL(c="project", f="task"),
                         )
@@ -3303,7 +3395,6 @@ $('.copy-link').click(function(e){
                      url,
                      )
 
-        get_vars_get = current.request.get_vars.get
         organisation_ids = get_vars_get("o")
         if organisation_ids is not None:
             # Sending to a list of Organisations from the Bulk Action
@@ -3346,6 +3437,7 @@ $('.copy-link').click(function(e){
                 orgs[organisation_id]["task_id"] = task_id
 
             # Set Realm Entities
+            otable = s3db.org_organisation
             # Send email to each OrgAdmin
             send_email = current.msg.send_email
             for organisation_id in orgs:
@@ -3368,89 +3460,91 @@ $('.copy-link').click(function(e){
                                subject = subject,
                                message = this_message,
                                )
+            return
 
-        else:
-            person_item_id = current.request.get_vars.get("person_item_id")
-            if person_item_id:
-                # Sending to a Donor
+        person_item_id = get_vars_get("person_item_id")
+        if person_item_id is not None:
+            # Sending to a Donor
 
-                # Lookup the person_id
-                stable = s3db.supply_person_item
-                person_item = db(stable.id == person_item_id).select(stable.person_id,
-                                                                     limitby = (0, 1)
-                                                                     ).first()
-                try:
-                    person_id = person_item.person_id
-                except AttributeError:
-                    return
+            # Lookup the person_id
+            stable = s3db.supply_person_item
+            person_item = db(stable.id == person_item_id).select(stable.person_id,
+                                                                 limitby = (0, 1)
+                                                                 ).first()
+            try:
+                person_id = person_item.person_id
+            except AttributeError:
+                return
 
-                # Lookup the pe_id
-                ptable = s3db.pr_person
-                person = db(ptable.id == person_id).select(ptable.pe_id,
-                                                           limitby = (0, 1)
-                                                           ).first()
-                try:
-                    pe_id = person.pe_id
-                except AttributeError:
-                    return
+            # Lookup the pe_id
+            ptable = s3db.pr_person
+            person = db(ptable.id == person_id).select(ptable.pe_id,
+                                                       limitby = (0, 1)
+                                                       ).first()
+            try:
+                pe_id = person.pe_id
+            except AttributeError:
+                return
 
-                # Set the Realm Entity
-                db(ttable.id == task_id).update(realm_entity = pe_id)
+            # Set the Realm Entity
+            db(ttable.id == task_id).update(realm_entity = pe_id)
 
-                # Append the task_id to the URL
-                message = "%s/%s" % (message, task_id)
+            # Append the task_id to the URL
+            message = "%s/%s" % (message, task_id)
 
-                # Lookup the Donor's Email
-                ctable = s3db.pr_contact
-                query = (ctable.pe_id == pe_id) & \
-                        (ctable.contact_method == "EMAIL") & \
-                        (ctable.deleted == False)
-                donor = db(query).select(ctable.value,
-                                         limitby = (0, 1)
-                                         ).first()
-                try:
-                    email = donor.value
-                except AttributeError:
-                    return
+            # Lookup the Donor's Email
+            ctable = s3db.pr_contact
+            query = (ctable.pe_id == pe_id) & \
+                    (ctable.contact_method == "EMAIL") & \
+                    (ctable.deleted == False)
+            donor = db(query).select(ctable.value,
+                                     limitby = (0, 1)
+                                     ).first()
+            try:
+                email = donor.value
+            except AttributeError:
+                return
 
-                # Send message
-                current.msg.send_email(to = email,
-                                       subject = subject,
-                                       message = message,
-                                       )
-                
-            else:
-                # Use the Organisation we request or fallback to the User's Organisation
-                organisation_id = get_vars_get("organisation_id", user.organisation_id)
+            # Send message
+            current.msg.send_email(to = email,
+                                   subject = subject,
+                                   message = message,
+                                   )
 
-                # Set the Realm Entity
-                org = db(otable.id == organisation_id).select(otable.pe_id,
-                                                              limitby = (0, 1)
-                                                              ).first()
-                try:
-                    db(ttable.id == task_id).update(realm_entity = org.pe_id)
-                except AttributeError:
-                    pass
+            return
+            
+        # Use the Organisation we request or fallback to the User's Organisation
+        organisation_id = get_vars_get("organisation_id", user.organisation_id)
 
-                # Append the task_id to the URL
-                message = "%s/%s" % (message, task_id)
+        # Set the Realm Entity
+        otable = s3db.org_organisation
+        org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                      limitby = (0, 1)
+                                                      ).first()
+        try:
+            db(ttable.id == task_id).update(realm_entity = org.pe_id)
+        except AttributeError:
+            pass
 
-                # Lookup the ORG_ADMINs
-                gtable = db.auth_group
-                mtable = db.auth_membership
-                query = (gtable.uuid == "ORG_ADMIN") & \
-                        (gtable.id == mtable.group_id) & \
-                        (mtable.user_id == utable.id) & \
-                        (utable.organisation_id == organisation_id)
-                org_admins = db(query).select(utable.email)
+        # Append the task_id to the URL
+        message = "%s/%s" % (message, task_id)
 
-                # Send message to each
-                send_email = current.msg.send_email
-                for admin in org_admins:
-                    send_email(to = admin.email,
-                               subject = subject,
-                               message = message,
-                               )
+        # Lookup the ORG_ADMINs
+        gtable = db.auth_group
+        mtable = db.auth_membership
+        query = (gtable.uuid == "ORG_ADMIN") & \
+                (gtable.id == mtable.group_id) & \
+                (mtable.user_id == utable.id) & \
+                (utable.organisation_id == organisation_id)
+        org_admins = db(query).select(utable.email)
+
+        # Send message to each
+        send_email = current.msg.send_email
+        for admin in org_admins:
+            send_email(to = admin.email,
+                       subject = subject,
+                       message = message,
+                       )
 
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
@@ -3478,6 +3572,7 @@ $('.copy-link').click(function(e){
         table.description.label = T("Message")
         if r.method == "create":
             table.comments.readable = table.comments.writable = False
+            table.description.comment = None
         else:
             has_role = current.auth.s3_has_role
             if has_role("ORG_ADMIN") or \
