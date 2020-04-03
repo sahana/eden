@@ -8248,10 +8248,12 @@ def s3_richtext_widget(field, value):
 
     # Load the scripts
     sappend = s3.scripts.append
-    ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
+    ckeditor = URL(c="static", f="ckeditor",
+                   args = "ckeditor.js")
     sappend(ckeditor)
-    adapter = URL(c="static", f="ckeditor", args=["adapters",
-                                                  "jquery.js"])
+    adapter = URL(c="static", f="ckeditor",
+                  args = ["adapters",
+                          "jquery.js"])
     sappend(adapter)
 
     table = current.s3db.table("doc_ckeditor")
@@ -8271,11 +8273,12 @@ def s3_richtext_widget(field, value):
     js = '''$('#%s').ckeditor(ck_config)''' % widget_id
     s3.jquery_ready.append(js)
 
-    return TEXTAREA(_name=field.name,
-                    _id=widget_id,
-                    _class="richtext %s" % (field.type),
-                    value=value,
-                    requires=field.requires)
+    return TEXTAREA(_name = field.name,
+                    _id = widget_id,
+                    _class = "richtext %s" % (field.type),
+                    value = value,
+                    requires = field.requires,
+                    )
 
 # =============================================================================
 def search_ac(r, **attr):

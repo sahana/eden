@@ -3297,7 +3297,7 @@ $('.copy-link').click(function(e){
     settings.customise_pr_person_location_resource = customise_pr_person_location_resource
 
     # -------------------------------------------------------------------------
-    def project_task_create_onaccept(form):
+    def project_task_postprocess(form):
         """
             When a Task is created:
                 * Duplicate Message if sending to multiple Organisations
@@ -3305,31 +3305,38 @@ $('.copy-link').click(function(e){
                 * Notify OrgAdmins
         """
 
-        from s3 import s3_fullname
+        if form.record:
+            # Update
+            return
 
         form_vars_get = form.vars.get
         task_id = form_vars_get("id")
 
-        # Lookup the Author details
         db = current.db
         s3db = current.s3db
+
+        # Lookup the Task
         ttable = s3db.project_task
-        utable = db.auth_user
-        query = (ttable.id == task_id) & \
-                (ttable.created_by == utable.id)
-        user = db(query).select(utable.first_name,
-                                utable.last_name,
-                                utable.organisation_id,
+        query = (ttable.id == task_id)
+        task = db(query).select(ttable.doc_id,
+                                ttable.created_by,
                                 limitby = (0, 1)
                                 ).first()
-        fullname = s3_fullname(user)
 
-        # Construct Email message
-        system_name = settings.get_system_name_short()
-        subject = "%s: Message sent from %s" % \
-                    (system_name,
-                     fullname,
-                     )
+        # Look for attachments
+        dtable = s3db.doc_document
+        file_field = dtable.file
+        uploadfolder = file_field.uploadfolder
+        query = (dtable.doc_id == task.doc_id)
+        documents = db(query).select(file_field)
+        attachments = []
+        if len(documents):
+            import os
+            from gluon.tools import Mail
+            for d in documents:
+                filename = d.file
+                origname = file_field.retrieve(filename)[0]
+                attachments.append(Mail.Attachment(os.path.join(uploadfolder, filename), filename=origname))
 
         # Check what kind of message this is
         get_vars_get = current.request.get_vars.get
@@ -3347,13 +3354,21 @@ $('.copy-link').click(function(e){
                 # Clear from session
                 del session.s3["ccc_message_person_ids"]
 
-                # Message
-                message = "%s has sent you a Message on %s\n\nSubject: %s\nMessage: %s" % \
-                            (fullname,
-                             system_name,
-                             form_vars_get("name"),
-                             form_vars_get("description") or "",
-                             )
+                # Construct Email message
+                subject = form_vars_get("name")
+                message = form_vars_get("description")
+                if message is None:
+                    message = ""
+                else:
+                    # Convert relative paths to absolute
+                    from lxml import etree, html
+                    parser = etree.HTMLParser()
+                    message = message.strip()
+                    tree = html.fragment_fromstring(message, create_parent=True)
+                    tree.make_links_absolute(settings.get_base_public_url())
+                    message = etree.tostring(tree, pretty_print=False, encoding="utf-8").decode("utf-8")
+                    # Need to add the HTML tags around the HTML so that Mail recognises it as HTML
+                    message = "<html>%s</html>" % message
 
                 # Lookup Emails
                 ptable = s3db.pr_person
@@ -3370,6 +3385,7 @@ $('.copy-link').click(function(e){
                     send_email(to = email.value,
                                subject = subject,
                                message = message,
+                               attachments = attachments,
                                )
                 # Set the Realm Entity
                 # No Realm Entity as should be visible to all ORG_ADMINs & all Agency Group
@@ -3385,9 +3401,29 @@ $('.copy-link').click(function(e){
 
         from gluon import URL
 
+        from s3 import s3_fullname
+
+        # Lookup the Author details
+        utable = db.auth_user
+        query = (utable.id == task.created_by)
+        user = db(query).select(utable.first_name,
+                                utable.last_name,
+                                utable.organisation_id,
+                                limitby = (0, 1)
+                                ).first()
+        fullname = s3_fullname(user)
+
+        # Construct Email message
+        system_name = settings.get_system_name_short()
+        subject = "%s: Message sent from %s" % \
+                    (system_name,
+                     fullname,
+                     )
+
         url = "%s%s" % (settings.get_base_public_url(),
                         URL(c="project", f="task"),
                         )
+
         message = "%s has sent you a Message on %s\n\nSubject: %s\nMessage: %s\n\nYou can view the message here: %s" % \
                     (fullname,
                      system_name,
@@ -3460,6 +3496,7 @@ $('.copy-link').click(function(e){
                     send_email(to = email,
                                subject = subject,
                                message = this_message,
+                               attachments = attachments,
                                )
             return
 
@@ -3510,6 +3547,7 @@ $('.copy-link').click(function(e){
             current.msg.send_email(to = email,
                                    subject = subject,
                                    message = message,
+                                   attachments = attachments,
                                    )
 
             return
@@ -3545,12 +3583,17 @@ $('.copy-link').click(function(e){
             send_email(to = admin.email,
                        subject = subject,
                        message = message,
+                       attachments = attachments,
                        )
 
     # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
 
-        from s3 import S3OptionsFilter, S3SQLCustomForm, S3TextFilter
+        from gluon import XML
+
+        from s3 import S3OptionsFilter, S3TextFilter, \
+                       S3SQLCustomForm, S3SQLInlineComponent, \
+                       s3_richtext_widget
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("New Message"),
@@ -3570,10 +3613,13 @@ $('.copy-link').click(function(e){
 
         table = s3db.project_task
         table.name.label = T("Subject")
-        table.description.label = T("Message")
+        f = table.description
+        f.label = T("Message")
+        f.represent = XML
+        f.widget = s3_richtext_widget
+        f.comment = None
         if r.method == "create":
             table.comments.readable = table.comments.writable = False
-            table.description.comment = None
         else:
             has_role = current.auth.s3_has_role
             if has_role("ORG_ADMIN") or \
@@ -3597,7 +3643,8 @@ $('.copy-link').click(function(e){
 
         s3db.configure("project_task",
                        # Can simply replace the default one
-                       create_onaccept = project_task_create_onaccept,
+                       #create_onaccept = project_task_create_onaccept,
+                       create_onaccept = None,
                        crud_form = S3SQLCustomForm("created_by",
                                                    "created_on",
                                                    "realm_entity",
@@ -3607,6 +3654,13 @@ $('.copy-link').click(function(e){
                                                    #"status",
                                                    #"pe_id",
                                                    "comments",
+                                                   S3SQLInlineComponent(
+                                                        "document",
+                                                        name = "document",
+                                                        label = T("Attachments"),
+                                                        fields = [("", "file")],
+                                                        ),
+                                                   postprocess = project_task_postprocess,
                                                    ),
                        listadd = False,
                        list_fields = [#"priority",
