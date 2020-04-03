@@ -6898,12 +6898,13 @@ class pr_PersonEntityRepresent(S3Represent):
 
     def __init__(self,
                  # Bad default?
-                 show_label=True,
-                 default_label="[No ID Tag]",
-                 show_type=True,
-                 multiple=False,
-                 show_link=False,
-                 linkto=None,
+                 show_label = True,
+                 default_label = "[No ID Tag]",
+                 show_type = True,
+                 multiple = False,
+                 show_link = False,
+                 linkto = None,
+                 none = None,
                  ):
         """
             Constructor
@@ -6919,11 +6920,12 @@ class pr_PersonEntityRepresent(S3Represent):
         self.show_type = show_type
         self.training_event_represent = None
 
-        super(pr_PersonEntityRepresent, self).__init__(lookup="pr_pentity",
-                                                       key="pe_id",
-                                                       multiple=multiple,
-                                                       show_link=show_link,
-                                                       linkto=linkto,
+        super(pr_PersonEntityRepresent, self).__init__(lookup = "pr_pentity",
+                                                       key = "pe_id",
+                                                       multiple = multiple,
+                                                       show_link = show_link,
+                                                       linkto = linkto,
+                                                       none = none,
                                                        )
 
     # -------------------------------------------------------------------------

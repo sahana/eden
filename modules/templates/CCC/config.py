@@ -3372,13 +3372,14 @@ $('.copy-link').click(function(e){
                                message = message,
                                )
                 # Set the Realm Entity
-                organisation_id = user.organisation_id
-                if organisation_id:
-                    otable = s3db.org_organisation
-                    org = db(otable.id == organisation_id).select(otable.pe_id,
-                                                                  limitby = (0, 1)
-                                                                  ).first()
-                    db(ttable.id == task_id).update(realm_entity = org.pe_id)
+                # No Realm Entity as should be visible to all ORG_ADMINs & all Agency Group
+                #organisation_id = user.organisation_id
+                #if organisation_id:
+                #    otable = s3db.org_organisation
+                #    org = db(otable.id == organisation_id).select(otable.pe_id,
+                #                                                  limitby = (0, 1)
+                #                                                  ).first()
+                #    db(ttable.id == task_id).update(realm_entity = org.pe_id)
 
             return
 
@@ -3576,6 +3577,7 @@ $('.copy-link').click(function(e){
         else:
             has_role = current.auth.s3_has_role
             if has_role("ORG_ADMIN") or \
+               has_role("AGENCY") or \
                has_role("DONOR"):
                 table.created_by.readable = True
                 table.created_by.label = T("From")
@@ -3586,7 +3588,9 @@ $('.copy-link').click(function(e){
                 table.realm_entity.readable = True
                 table.realm_entity.label = T("To")
                 table.realm_entity.represent = s3db.pr_PersonEntityRepresent(show_label = False,
-                                                                             show_type = False)
+                                                                             show_type = False,
+                                                                             none = "Reserve(s)",
+                                                                             )
                 table.name.writable = False
                 table.description.writable = False
                 table.description.comment = None
@@ -3642,6 +3646,7 @@ $('.copy-link').click(function(e){
         auth = current.auth
         has_role = auth.s3_has_role
         if has_role("ORG_ADMIN") or \
+           has_role("AGENCY") or \
            has_role("DONOR"):
             READER = True
         else:
