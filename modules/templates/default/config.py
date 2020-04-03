@@ -250,6 +250,7 @@ def config(settings):
         ("de", "German"),
         #("el", "Greek"),
         ("es", "Spanish"),
+        ##("hu", "Hungarian"),
         ##("id", "Bahasa Indonesia"),
         ("it", "Italian"),
         #("ja", "Japanese"),

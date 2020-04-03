@@ -18,6 +18,9 @@ def config(settings):
 
     # L10n (Localization) settings
     settings.L10n.languages["pl"] = "Polish"
+    #settings.L10n.languages["csb"] = "Kashubian" # Pomeranian
+    # Default Language (put this in custom template if-required)
+    #settings.L10n.default_language = "pl"
     # Default timezone for users
     settings.L10n.timezone = "Europe/Warsaw"
     # Default Country Code for telephone numbers
