@@ -742,10 +742,12 @@ class FinSubscriptionModel(S3Model):
                      *s3_meta_fields())
 
         self.configure(tablename,
-                       list_fields = ["pe_id",
+                       list_fields = ["created_on", # TODO replace by explicit start_date
+                                      "pe_id",
                                       "plan_id",
                                       "service_id",
                                       "status",
+                                      "status_date",
                                       ],
                        insertable = False,
                        editable = False,
@@ -760,6 +762,10 @@ class FinSubscriptionModel(S3Model):
                         )
         self.set_method("fin", "subscription",
                         method = "cancel",
+                        action = S3Payments,
+                        )
+        self.set_method("fin", "subscription",
+                        method = "status",
                         action = S3Payments,
                         )
 

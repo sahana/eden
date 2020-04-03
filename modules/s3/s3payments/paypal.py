@@ -624,15 +624,19 @@ class PayPalAdapter(S3PaymentService):
 
         stable = s3db.fin_subscription
         row = db(stable.id == subscription_id).select(stable.refno,
+                                                      stable.status,
+                                                      stable.status_date,
                                                       limitby = (0, 1),
                                                       ).first()
         if not row:
             self.log.error(action, "Subscription not found")
             return None
 
-        # TODO
-        # - if status is not NEW and checked less than a minute ago => return current status
-        # - prevents rate limit excess
+        # Prevent excessive status request rate
+        limit = datetime.datetime.utcnow() - datetime.timedelta(minutes=1)
+        if row.status != "NEW" and \
+           row.status_date and row.status_date > limit:
+            return row.status
 
         status_path = "/v1/billing/subscriptions/%s" % row.refno
         response, status, error = self.http(method = "GET",
@@ -744,17 +748,22 @@ class PayPalAdapter(S3PaymentService):
         # Get the subscription reference number
         stable = s3db.fin_subscription
         row = db(stable.id == subscription_id).select(stable.refno,
+                                                      stable.status,
                                                       limitby = (0, 1),
                                                       ).first()
         if not row:
             self.log.error(action, "Subscription not found")
             return False
+        if row.status == "CANCELLED":
+            self.log.warning(action, "Subscription was already cancelled")
+            return True
 
         path = "/v1/billing/subscriptions/%s/cancel" % row.refno
         status, error = self.http(method = "POST",
                                   path = path,
                                   data = {"reason": "Client requested cancellation"},
                                   auth = "Token",
+                                  decode = "bytes",
                                   )[1:3]
         if error:
             if status == 404:
