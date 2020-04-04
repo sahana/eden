@@ -12207,7 +12207,7 @@ class S3ProjectTaskForumModel(S3Model):
 
         #current.response.s3.crud_strings[tablename] = Storage(
         #    label_create = T("Share Task"), #
-        #    title_display = T(" Shared Task Details"),
+        #    title_display = T("Shared Task Details"),
         #    title_list = T("Shared Tasks"),
         #    title_update = T("Edit Shared Task"),
         #    label_list_button = T("List Shared Tasks"),

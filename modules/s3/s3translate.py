@@ -1113,7 +1113,7 @@ class Strings(object):
             return self.write_xls(Strings, langcode)
         elif filetype == "po":
             # Create pootle file
-            return self.write_po(Strings)
+            return self.write_po(Strings, langcode)
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -1177,25 +1177,30 @@ class Strings(object):
         f.close()
 
     # ---------------------------------------------------------------------
-    def write_po(self, data):
+    def write_po(self, data, langcode):
         """ Returns a ".po" file constructed from given strings """
 
-        from tempfile import NamedTemporaryFile
-        from gluon.contenttype import contenttype
-        from translate.convert.csv2po import main as csv2po
+        try:
+            from translate.convert.csv2po import main as csv2po
+        except ImportError:
+            message = "Need to install Translate Toolkit: pip install translate-toolkit"
+            return current.xml.json_message(False, 500, message=message)
 
-        f = NamedTemporaryFile(delete=False)
-        csvfilename = "%s.csv" % f.name
+        #from tempfile import NamedTemporaryFile
+
+        from gluon.contenttype import contenttype
+
+        #f = NamedTemporaryFile(delete = False)
+        csvfilename = "%s.csv" % langcode
         self.write_csv(csvfilename, data)
 
-        pofilename = "%s.po" % f.name
-        csv2po(['-i', csvfilename, '-o', pofilename])
+        pofilename = "%s.po" % langcode
+        csv2po(["-i", csvfilename, "-o", pofilename]) # "--pot",
 
         h = open(pofilename, "rb")
 
         # Modify headers to return the po file for download
-        filename = "trans.po"
-        disposition = "attachment; filename=\"%s\"" % filename
+        disposition = "attachment; filename=\"%s\"" % pofilename
         response = current.response
         response.headers["Content-Type"] = contenttype(".po")
         response.headers["Content-disposition"] = disposition
@@ -1500,8 +1505,13 @@ class Pootle(object):
         if not ret:
             return
 
+        try:
+            from translate.convert.csv2po import main as csv2po
+        except ImportError:
+            message = "Need to install Translate Toolkit: pip install translate-toolkit"
+            return current.xml.json_message(False, 500, message=message)
+
         from tempfile import NamedTemporaryFile
-        from translate.convert.csv2po import main as csv2po
 
         # returns pystrings if preference was True else returns postrings
         ret = self.merge_strings(ret[0], ret[1], preference)
@@ -1533,7 +1543,7 @@ class Pootle(object):
             S.write_csv(csvfilename, data)
 
             pofilename = "%s.po" % f.name
-            csv2po(['-i', csvfilename, '-o', pofilename])
+            csv2po(["-i", csvfilename, "-o", pofilename])
             self.upload(lang_code, pofilename)
 
             # Clean up extra created files

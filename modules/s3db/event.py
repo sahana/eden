@@ -3471,7 +3471,7 @@ class S3EventForumModel(S3Model):
 
         #current.response.s3.crud_strings[tablename] = Storage(
         #    label_create = T("Share Incident"), # or Event
-        #    title_display = T(" Shared Incident Details"),
+        #    title_display = T("Shared Incident Details"),
         #    title_list = T("Shared Incidents"),
         #    title_update = T("Edit Shared Incident"),
         #    label_list_button = T("List Shared Incidents"),
