@@ -54,7 +54,7 @@ except ImportError:
 from gluon import current, redirect
 from gluon.html import *
 
-from s3compat import HTTPError, PY2, StringIO, urlencode, urllib2, urlopen
+from s3compat import HTTPError, PY2, StringIO, urlencode, urllib2, urlopen, URLError
 #from .s3codec import S3Codec
 from .s3crud import S3CRUD
 from .s3datetime import s3_decode_iso_datetime
@@ -2127,10 +2127,19 @@ class S3Msg(object):
                                  )
         else:
             # We've not polled this feed before
-            d = feedparser.parse(channel.url,
-                                 request_headers = request_headers,
-                                 response_headers = response_headers,
-                                 )
+            try:
+                d = feedparser.parse(channel.url,
+                                     request_headers = request_headers,
+                                     response_headers = response_headers,
+                                     )
+            except URLError:
+                message = sys.exc_info()[1]
+                current.log.debug("Polling Feed %s failed: %s" % (channel.url, message))
+                S3Msg.update_channel_status(channel_id,
+                                            status = "ERROR: %s" % message,
+                                            period = (300, 3600),
+                                            )
+                return
         if d.bozo:
             # Something doesn't seem right
             if PY2:

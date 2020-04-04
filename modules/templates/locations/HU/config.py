@@ -15,8 +15,6 @@ def config(settings):
 
     # Restrict to specific country/countries
     settings.gis.countries.append("HU")
-    # Dosable the Postcode selector in the LocationSelector
-    #settings.gis.postcode_selector = False
 
     # L10n (Localization) settings
     settings.L10n.languages["hu"] = "Hungarian"
