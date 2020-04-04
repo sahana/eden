@@ -1,7 +1,6 @@
 Name,URL,Type
 NOAA,http://wcatwc.arh.noaa.gov/events/xml/PAAQAtom.xml,cms
-PTWC Public Ocean,http://ptwc.weather.gov/feeds/ptwc_rss_pacific.xml,cms
-PTWC Hawaii,http://ptwc.weather.gov/feeds/ptwc_rss_hawaii.xml,cms
+PTWC,http://www.tsunami.gov/events/xml/PHEBAtom.xml,cms
 EPA Air Quality Alerts,http://feeds.enviroflash.info/cap/aggregate.xml,cms
 USA -NWS,http://alerts.weather.gov/cap/us.php?x=0,cms
 PAGASA Public Alerts,http://publicalert.pagasa.dost.gov.ph/feeds/,cap
