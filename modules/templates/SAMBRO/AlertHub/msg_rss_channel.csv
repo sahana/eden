@@ -81,9 +81,7 @@ United States Geological Survey Volcano,https://volcanoes.usgs.gov/hans2/cap/rss
 United States NOAA Earthquake Bulletins,http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.atom,false,cms
 United States NOAA Earthquake Warning Center,https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.atom,false,cms
 United States NOAA National Weather Service,https://alerts.weather.gov/cap/us.php?x=0,false,cap
-United States Pacific Tsunami Warning Center,http://ptwc.weather.gov/feeds/ptwc_rss.xml,false,cms
-United States Pacific Tsunami Warning Center,http://ptwc.weather.gov/feeds/ptwc_rss_hawaii.xml,false,cms
-United States Pacific Tsunami Warning Center,http://ptwc.weather.gov/feeds/ptwc_rss_pacific.xml,false,cms
+United States Pacific Tsunami Warning Center,http://www.tsunami.gov/events/xml/PHEBAtom.xml,false,cms
 United States Environmental Protection Agency,http://feeds.enviroflash.info/cap/aggregate.xml,false,cap
 Uzbekistan Hydrometeorological Service (Uzhydromet),http://meteoalarm.eu/ATOM/UZ.xml,true,cap
 Vanuatu Meteorology and Geo-Hazard Department,https://smartalert.vmgd.gov.vu/capfeed.php,false,cap
