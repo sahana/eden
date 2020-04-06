@@ -3435,7 +3435,8 @@ $('.copy-link').click(function(e){
                         (ptable.pe_id == ctable.pe_id) & \
                         (ctable.contact_method == "EMAIL") & \
                         (ctable.deleted == False)
-                emails = db(query).select(ctable.value)
+                emails = db(query).select(ctable.value,
+                                          distinct = True)
 
                 # Send Email to each Person
                 send_email = current.msg.send_email
@@ -3634,7 +3635,7 @@ $('.copy-link').click(function(e){
                 (mtable.user_id == utable.id) & \
                 (utable.organisation_id == organisation_id)
         org_admins = db(query).select(utable.email)
-
+        
         # Send message to each
         send_email = current.msg.send_email
         for admin in org_admins:
