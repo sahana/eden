@@ -1136,12 +1136,12 @@ class register(S3CustomController):
             form[0].insert(22, DIV("Many of the opportunities available following an incident require volunteers to be fit and active, may involve working in dirty or dusty environments, and could involve being outdoors - for example, removing damaged furniture and cleaning affected buildings, or lifting, packaging and distributing donated items. Some volunteer roles will be less physically demanding - for example, knocking on doors to check people are OK and gather information, making refreshments and helping with administration. Are you interested in opportunities:",
                                    _class = "subheading",
                                    ))
-            form[0].insert(-7, DIV("Person to be contacted in case of an emergency",
+            form[0].insert(-6, DIV("Person to be contacted in case of an emergency",
                                    _class = "subheading",
                                    ))
-            form[0].insert(-4, DIV(_class = "subheading",
+            form[0].insert(-3, DIV(_class = "subheading",
                                    ))
-            form[0].insert(-2, DIV(_class = "subheading",
+            form[0].insert(-1, DIV(_class = "subheading",
                                    ))
 
         # Inject client-side Validation
