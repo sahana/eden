@@ -238,11 +238,11 @@ class personAdditional(S3Method):
 
             # Filtered components
             s3db.add_components(tablename,
-                                pr_person_tag = ({"name": "convictions",
-                                                  "joinby": "person_id",
-                                                  "filterby": {"tag": "convictions"},
-                                                  "multiple": False,
-                                                  },
+                                pr_person_tag = (#{"name": "convictions",
+                                                 # "joinby": "person_id",
+                                                 # "filterby": {"tag": "convictions"},
+                                                 # "multiple": False,
+                                                 # },
                                                  {"name": "dbs",
                                                   "joinby": "person_id",
                                                   "filterby": {"tag": "dbs"},
@@ -294,14 +294,14 @@ class personAdditional(S3Method):
             # Individual settings for specific tag components
             components_get = s3db.resource(tablename).components.get
 
-            convictions = components_get("convictions")
-            f = convictions.table.value
-            f.requires = IS_IN_SET({"0": T("No"),
-                                    "1": T("Yes"),
-                                    })
-            f.widget = lambda f, v: \
-                            SQLFORM.widgets.radio.widget(f, v,
-                                                         style="divs")
+            #convictions = components_get("convictions")
+            #f = convictions.table.value
+            #f.requires = IS_IN_SET({"0": T("No"),
+            #                        "1": T("Yes"),
+            #                        })
+            #f.widget = lambda f, v: \
+            #                SQLFORM.widgets.radio.widget(f, v,
+            #                                             style="divs")
 
             dbs = components_get("dbs")
             f = dbs.table.value
@@ -353,7 +353,7 @@ class personAdditional(S3Method):
                                    (T("That require little physical activity and are based indoors (e.g. preparing refreshments)"), "little_physical.value"),
                                    (T("If you wish, you can give us some further information on any fitness, medical or mobility issues that might limit the kind of activities you are able to volunteer for; this will help us to suggest suitable opportunities for you"), "health_details.value"),
                                    (T("Are you DBS checked?"), "dbs.value"),
-                                   (T("Do you have any unspent convictions?"), "convictions.value"),
+                                   #(T("Do you have any unspent convictions?"), "convictions.value"),
                                    (T("Please indicate Faith support you can offer"), "faith_support.value"),
                                    (T("What help and support can you give those from other Faiths?"), "faith_support_other.value"),
                                    (T("Do you have any faith requirements that you would like help with if you are coming to Support Cumbria?"), "faith_requirements.value"),
@@ -605,16 +605,16 @@ class register(S3CustomController):
                                     SQLFORM.widgets.radio.widget(f, v,
                                                                  style="divs"),
                                 ),
-                          Field("convictions", "integer",
-                                label = T("Do you have any unspent convictions?"),
-                                comment = T("Please tick 'Yes' if you have any convictions that are not yet spent under the Rehabilitation of Offenders Act 1974. The term 'convictions' is used to refer to any sentence or disposal issued by a court. If all your convictions are spent, you can tick 'No'. If you're not sure if your convictions are unspent or spent, you can use a tool available at www.disclosurecalculator.org.uk and read guidance at hub.unlock.org.uk/roa"),
-                                requires = IS_IN_SET({0: T("No"),
-                                                      1: T("Yes"),
-                                                      }),
-                                widget = lambda f, v: \
-                                    SQLFORM.widgets.radio.widget(f, v,
-                                                                 style="divs"),
-                                ),
+                          #Field("convictions", "integer",
+                          #      label = T("Do you have any unspent convictions?"),
+                          #      comment = T("Please tick 'Yes' if you have any convictions that are not yet spent under the Rehabilitation of Offenders Act 1974. The term 'convictions' is used to refer to any sentence or disposal issued by a court. If all your convictions are spent, you can tick 'No'. If you're not sure if your convictions are unspent or spent, you can use a tool available at www.disclosurecalculator.org.uk and read guidance at hub.unlock.org.uk/roa"),
+                          #      requires = IS_IN_SET({0: T("No"),
+                          #                            1: T("Yes"),
+                          #                            }),
+                          #      widget = lambda f, v: \
+                          #          SQLFORM.widgets.radio.widget(f, v,
+                          #                                       style="divs"),
+                          #      ),
                           # Consent (GDPR + FOC)
                           Field("consent",
                                 label = T("Consent"),
@@ -2159,11 +2159,13 @@ def auth_user_register_onaccept(user_id):
             ltable.insert(**record)
 
         # Additional Information
-        record = {"person_id": person_id,
-                  "tag": "convictions",
-                  "value": custom["convictions"],
-                  }
-        ttable.insert(**record)
+        convictions = custom.get("convictions")
+        if convictions is not None:
+            record = {"person_id": person_id,
+                      "tag": "convictions",
+                      "value": convictions,
+                      }
+            ttable.insert(**record)
 
         dbs = custom.get("dbs")
         if dbs is not None:

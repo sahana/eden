@@ -3110,11 +3110,11 @@ $('.copy-link').click(function(e){
                         list_fields.append((T("Offers of Resources"), "resources.value"))
                         # DBS
                         s3db.add_components("pr_person",
-                                            pr_person_tag = ({"name": "convictions",
-                                                              "joinby": "person_id",
-                                                              "filterby": {"tag": "convictions"},
-                                                              "multiple": False,
-                                                              },
+                                            pr_person_tag = (#{"name": "convictions",
+                                                             # "joinby": "person_id",
+                                                             # "filterby": {"tag": "convictions"},
+                                                             # "multiple": False,
+                                                             # },
                                                              {"name": "dbs",
                                                               "joinby": "person_id",
                                                               "filterby": {"tag": "dbs"},
@@ -3127,15 +3127,15 @@ $('.copy-link').click(function(e){
                                           "1": T("Yes"),
                                           }
                         components_get = s3db.resource("pr_person").components.get
-                        convictions = components_get("convictions")
-                        f = convictions.table.value
-                        f.represent = S3Represent(options = yes_no_options)
+                        #convictions = components_get("convictions")
+                        #f = convictions.table.value
+                        #f.represent = S3Represent(options = yes_no_options)
                         dbs = components_get("dbs")
                         f = dbs.table.value
                         f.represent = S3Represent(options = yes_no_options)
                         list_fields.append((T("DBS"), "dbs.value"))
                         # Convictions
-                        list_fields.append((T("Convictions"), "convictions.value"))
+                        #list_fields.append((T("Convictions"), "convictions.value"))
                         # Registration Date
                         from s3 import S3DateTime
                         s3db.pr_person.created_on.represent = lambda dt: \
