@@ -10,6 +10,7 @@ div.subheading {
 }
 #auth_user_convictions div,
 #auth_user_dbs div,
+#auth_user_delivery div,
 #auth_user_faith_requirements div,
 #auth_user_travel div,
 #auth_user_significant_physical div,
@@ -17,6 +18,7 @@ div.subheading {
 #auth_user_little_physical div,
 #pr_person_sub_convictions_value div,
 #pr_person_sub_dbs_value div,
+#pr_person_sub_delivery_value div,
 #pr_person_sub_travel_value div,
 #pr_person_sub_faith_requirements_value div,
 #pr_person_sub_significant_physical_value div,
@@ -26,6 +28,7 @@ div.subheading {
 }
 #auth_user_convictions div:first-child,
 #auth_user_dbs div:first-child,
+#auth_user_delivery div:first-child,
 #auth_user_faith_requirements div:first-child,
 #auth_user_travel div:first-child,
 #auth_user_significant_physical div:first-child,
@@ -33,6 +36,7 @@ div.subheading {
 #auth_user_little_physical div:first-child,
 #pr_person_sub_convictions_value div:first-child,
 #pr_person_sub_dbs_value div:first-child,
+#pr_person_sub_delivery_value div:first-child,
 #pr_person_sub_travel_value div:first-child,
 #pr_person_sub_faith_requirements_value div:first-child,
 #pr_person_sub_significant_physical_value div:first-child,

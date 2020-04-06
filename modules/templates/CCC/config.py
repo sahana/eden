@@ -2954,6 +2954,53 @@ $('.copy-link').click(function(e){
                                )
             else:
                 # Not BR
+                RESERVES = DONOR = MEMBERS = False
+                rfilter = None
+                get_vars_get = r.get_vars.get
+                has_role = current.auth.s3_has_role
+                if get_vars_get("reserves") or \
+                   has_role("RESERVE", include_admin=False):
+
+                    RESERVES = True
+                    # Reserve Volunteers
+                    # Only include Reserves
+                    db = current.db
+                    mtable = db.auth_membership
+                    gtable = db.auth_group
+                    query = (gtable.uuid == "RESERVE") & \
+                            (gtable.id == mtable.group_id)
+                    reserves = db(query).select(mtable.user_id)
+                    reserves = [m.user_id for m in reserves]
+                    from s3 import FS
+                    rfilter = FS("user.id").belongs(reserves)
+
+                elif get_vars_get("donors") or \
+                     has_role("DONOR", include_admin=False):
+
+                    DONOR = True
+                    # Only include Donors
+                    db = current.db
+                    mtable = db.auth_membership
+                    gtable = db.auth_group
+                    query = (gtable.uuid == "DONOR") & \
+                            (gtable.id == mtable.group_id)
+                    donors = db(query).select(mtable.user_id)
+                    donors = [d.user_id for d in donors]
+                    from s3 import FS
+                    rfilter = FS("user.id").belongs(donors)
+
+                elif get_vars_get("groups") or \
+                     has_role("GROUP_ADMIN", include_admin=False):
+                    MEMBERS = True
+                    # Only include Members
+                    mtable = s3db.pr_group_membership
+                    query = (mtable.deleted == False)
+                    members = current.db(query).select(mtable.person_id,
+                                                       distinct = True)
+                    members = [m.person_id for m in members]
+                    from s3 import FS
+                    rfilter = FS("id").belongs(members)
+
                 if r.id:
                     if r.component_name == "human_resource":
 
@@ -3013,6 +3060,9 @@ $('.copy-link').click(function(e){
                             resource = current.s3db.resource("pr_person",
                                                              filter = query,
                                                              vars = filters)
+                            # Add Manual URL Filters
+                            if rfilter:
+                                resource.add_filter(rfilter)
                             rows = resource.select(["id"], as_rows=True)
                             selected = [str(row.id) for row in rows]
 
@@ -3023,24 +3073,12 @@ $('.copy-link').click(function(e){
                                      args = "create",
                                      vars = {"person_ids": 1},
                                      ))
-
-                # Not BR
-                get_vars_get = r.get_vars.get
-                has_role = current.auth.s3_has_role
-                if get_vars_get("reserves") or \
-                   has_role("RESERVE", include_admin=False):
+                    
+                if RESERVES:
                     # Reserve Volunteers
-                    from s3 import FS, S3OptionsFilter, S3TextFilter
+                    # Filter to Reserves
                     resource = r.resource
-                    # Only include Reserves
-                    db = current.db
-                    mtable = db.auth_membership
-                    gtable = db.auth_group
-                    query = (gtable.uuid == "RESERVE") & \
-                            (gtable.id == mtable.group_id)
-                    reserves = db(query).select(mtable.user_id)
-                    reserves = [m.user_id for m in reserves]
-                    resource.add_filter(FS("user.id").belongs(reserves))
+                    resource.add_filter(rfilter)
 
                     gtable = s3db.gis_location
                     districts = current.db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
@@ -3104,6 +3142,7 @@ $('.copy-link').click(function(e){
                                   S3DateTime.datetime_represent(dt, utc=True)
                         list_fields.append((T("Registration Date"), "created_on"))
 
+                    from s3 import S3OptionsFilter, S3TextFilter
                     resource.configure(list_fields = list_fields,
                                        filter_widgets = [S3TextFilter(["first_name",
                                                                        "middle_name",
@@ -3129,6 +3168,7 @@ $('.copy-link').click(function(e){
                                                                          ),
                                                          ],
                                        )
+
                     s3.crud_strings[r.tablename] = Storage(
                         label_create = T("New Reserve Volunteer"),
                         title_display = T("Reserve Volunteer Details"),
@@ -3142,21 +3182,14 @@ $('.copy-link').click(function(e){
                         msg_record_deleted = T("Reserve Volunteer deleted"),
                         msg_list_empty = T("No Reserve Volunteers currently registered")
                         )
-                elif get_vars_get("donors") or \
-                     has_role("DONOR", include_admin=False):
-                    # Donors
-                    from s3 import FS, S3OptionsFilter, S3TextFilter
-                    resource = r.resource
-                    # Only include Donors
-                    db = current.db
-                    mtable = db.auth_membership
-                    gtable = db.auth_group
-                    query = (gtable.uuid == "DONOR") & \
-                            (gtable.id == mtable.group_id)
-                    donors = db(query).select(mtable.user_id)
-                    donors = [d.user_id for d in donors]
-                    resource.add_filter(FS("user.id").belongs(donors))
 
+                elif DONOR:
+                    # Donors
+                    # Filter to Donors
+                    resource = r.resource
+                    resource.add_filter(rfilter)
+
+                    from s3 import S3OptionsFilter, S3TextFilter
                     resource.configure(list_fields = [# @ToDo: Add Organisation freetext
                                                       "first_name",
                                                       "middle_name",
@@ -3180,6 +3213,7 @@ $('.copy-link').click(function(e){
                                                                          ),
                                                          ],
                                        )
+
                     s3.crud_strings[r.tablename] = Storage(
                         label_create = T("New Donor"),
                         title_display = T("Donor Details"),
@@ -3193,9 +3227,12 @@ $('.copy-link').click(function(e){
                         msg_record_deleted = T("Donor deleted"),
                         msg_list_empty = T("No Donors currently registered")
                         )
-                elif get_vars_get("groups") or \
-                     has_role("GROUP_ADMIN", include_admin=False):
+
+                elif MEMBERS:
                     # Group Members
+                    # Filter to Members
+                    r.resource.add_filter(rfilter)
+
                     s3.crud_strings[r.tablename] = Storage(
                         label_create = T("New Member"),
                         title_display = T("Member Details"),
@@ -3209,6 +3246,7 @@ $('.copy-link').click(function(e){
                         msg_record_deleted = T("Member deleted"),
                         msg_list_empty = T("No Members currently registered")
                         )
+
                 else:
                     # Organisation Volunteers
                     # (only used for hrm/person profile)
@@ -3242,10 +3280,12 @@ $('.copy-link').click(function(e){
                     from gluon import URL
                     from s3 import S3CRUD
 
-                    read_url = URL(c="pr", f="person", args=["[id]", "read"],
+                    read_url = URL(c="pr", f="person",
+                                   args = ["[id]", "read"],
                                    vars = r.get_vars)
 
-                    update_url = URL(c="pr", f="person", args=["[id]", "update"],
+                    update_url = URL(c="pr", f="person",
+                                     args = ["[id]", "update"],
                                      vars = r.get_vars)
 
                     S3CRUD.action_buttons(r,
@@ -3260,7 +3300,9 @@ $('.copy-link').click(function(e){
         dtargs = {"dt_searching": False,
                   }
 
-        if len(request.args) is 0:
+        request_args = request.args
+        len_request_args = len(request_args)
+        if len_request_args is 0:
             # Add Bulk Messaging to List View
             dtargs["dt_bulk_actions"] = [(T("Message"), "message")]
 
@@ -3269,6 +3311,22 @@ $('.copy-link').click(function(e){
         if br:
             # Link to customised download Template
             attr["csv_template"] = ("../../themes/CCC/xls", "Affected_People.xlsm")
+        elif len_request_args > 0 and request.get_vars.get("groups"):
+            person_id = request_args[0]
+            mtable = s3db.pr_group_membership
+            group = current.db(mtable.person_id == person_id).select(mtable.group_id,
+                                                                     limitby = (0, 1)
+                                                                     ).first()
+            if group:
+                from gluon import A, URL
+                attr["custom_crud_buttons"] = {"list_btn": A(T("List Members"),
+                                                             _href = URL(c="pr", f="group",
+                                                                         args = [group.group_id, "person"],
+                                                                         ),
+                                                             _id = "list-btn",
+                                                             _class = "action-btn",
+                                                             )
+                                               }
 
         attr["rheader"] = ccc_rheader
 
