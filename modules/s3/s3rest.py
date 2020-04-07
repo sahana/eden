@@ -538,8 +538,8 @@ class S3Request(object):
             if PY2:
                 s = body.read()
             else:
-                # Fix for Py 3.5
-                # Optimisation for Py 3.7
+                # Fix for Py 3.5- (json.load crashes with UTF-8 data)
+                # Minor optimisation for Py 3.6+ (Avoids json.load wrapper function & sniffing the encoding)
                 s = body.read().decode("utf-8")
             try:
                 filters = json.loads(s)

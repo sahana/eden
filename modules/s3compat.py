@@ -28,8 +28,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import sys
 import locale
+import sys
 
 PY2 = sys.version_info[0] == 2
 
