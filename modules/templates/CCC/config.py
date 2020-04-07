@@ -264,45 +264,112 @@ def config(settings):
     # Now using req_need, so unused:
     #settings.req.req_type = ("People",)
 
-    # Now done in project_task_create_onaccept:
     # -------------------------------------------------------------------------
-    #def ccc_realm_entity(table, row):
-    #    """
-    #        Assign a Realm Entity to records
-    #    """
+    def ccc_realm_entity(table, row):
+        """
+            Assign a Realm Entity to records
+        """
 
-    #    if table._tablename in (#"hrm_training_event", # Default is fine
-    #                            "project_task",
-    #                            #"req_need",           # Default is fine
-    #                            ):
-    #        db = current.db
-    #        otable = current.s3db.org_organisation
-    #        organisation_id = current.request.get_vars.get("organisation_id")
-    #        if organisation_id:
-    #            # Use this Org
-    #            query = (otable.id == organisation_id)
-    #        else:
-    #            # Use the Org of the Creator
-    #            new_row = db(table.id == row.id).select(table.created_by,
-    #                                                    limitby = (0, 1),
-    #                                                    ).first()
-    #            user_id = new_row.created_by
+        if table._tablename in (#"hrm_training_event", # Default is fine
+                                #"project_task",       # Now done in project_task_create_onaccept
+                                "pr_person",
+                                #"req_need",           # Default is fine
+                                ):
 
-    #            utable = db.auth_user
-    #            query = (utable.id == user_id) & \
-    #                    (utable.organisation_id == otable.id)
-    #        org = db(query).select(otable.pe_id,
-    #                               limitby = (0, 1),
-    #                               ).first()
-    #        try:
-    #            return org.pe_id
-    #        except AttributeError:
-    #            pass
+            db = current.db
+            s3db = current.s3db
+            person_id = row.id
 
-    #    # Use default rules
-    #    return 0
+            # What kind of Person is this?
+            if current.request.controller == "br":
+                FORUM = "Cases"
+            else:
+                # HR record => Use their Organisation
+                hrtable = s3db.hrm_human_resource
+                query = (hrtable.person_id == person_id) & \
+                        (hrtable.deleted == False)
+                hr = db(query).select(hrtable.organisation_id,
+                                      limitby = (0, 1)
+                                      ).first()
 
-    #settings.auth.realm_entity = ccc_realm_entity
+                if hr:
+                    otable = s3db.org_organisation
+                    org = db(otable.id == hr.organisation_id).select(otable.pe_id,
+                                                                     limitby = (0, 1)
+                                                                     ).first()
+                    try:
+                        return org.pe_id
+                    except AttributeError:
+                        # Use default rules
+                        current.log.error("Cannot set Realm Entity for Person %s: Org not found" % person_id)
+                        return 0
+
+                # Group Membership record => Use their Group
+                mtable = s3db.pr_group_membership
+                query = (mtable.person_id == person_id) & \
+                        (mtable.deleted == False)
+                member = db(query).select(mtable.group_id,
+                                          limitby = (0, 1)
+                                          ).first()
+
+                if member:
+                    gtable = s3db.pr_group
+                    group = db(gtable.id == member.group_id).select(gtable.pe_id,
+                                                                    limitby = (0, 1)
+                                                                    ).first()
+                    try:
+                        return group.pe_id
+                    except AttributeError:
+                        # Use default rules
+                        current.log.error("Cannot set Realm Entity for Person %s: Group not found" % person_id)
+                        return 0
+
+                # Donor or Reserve
+                # Differentiate via User Account
+                ltable = s3db.pr_person_user
+                user = db(ltable.pe_id == row.pe_id).select(ltable.user_id,
+                                                            limitby = (0, 1)
+                                                            ).first()
+                try:
+                    user_id = user.user_id
+                except AttributeError:
+                    # Use default rules
+                    current.log.error("Cannot set Realm Entity for Person %s: No User Account found" % person_id)
+                    return 0
+
+                gtable = db.auth_group
+                mtable = db.auth_membership
+                query = (mtable.user_id == user_id) & \
+                        (mtable.group_id == gtable.id) & \
+                        (gtable.uuid.belongs(("DONOR", "RESERVE")))
+                role = db(query).select(gtable.uuid,
+                                        limitby = (0, 1)
+                                        ).first()
+                try:
+                    role = role.uuid
+                except AttributeError:
+                    # Use default rules
+                    current.log.error("Cannot set Realm Entity for Person %s: No suitable Roles found" % person_id)
+                    return 0
+
+                if role == "DONOR":
+                    FORUM = "Donors"
+                elif role == "RESERVE":
+                    FORUM = "Reserves"
+
+            ftable = s3db.pr_forum
+            forum = db(ftable.name == FORUM).select(ftable.pe_id,
+                                                    limitby = (0, 1)
+                                                    ).first()
+            try:
+                return forum.pe_id
+            except AttributeError:
+                pass
+
+        # Use default rules
+        return 0
+
+    settings.auth.realm_entity = ccc_realm_entity
 
     # -------------------------------------------------------------------------
     def ccc_rheader(r):
@@ -882,8 +949,117 @@ $('.copy-link').click(function(e){
 
     settings.customise_hrm_competency_resource = customise_hrm_competency_resource
 
+    # -----------------------------------------------------------------------------
+    def affiliation_postprocess(form):
+        """
+            If a RESERVE Volunteer is affiliated to an Organisation, update their user/roles accordingly
+        """
+
+        auth = current.auth
+        db = current.db
+        s3db = current.s3db
+        record = form.record
+        human_resource_id = form.vars.get("id")
+
+        # Lookup Organisation
+        hrtable = s3db.hrm_human_resource
+        hr = db(hrtable.id == human_resource_id).select(hrtable.person_id,
+                                                        hrtable.organisation_id,
+                                                        limitby = (0, 1)
+                                                        ).first()
+        person_id = hr.person_id
+
+        # Find User Account
+        ptable = s3db.pr_person
+        putable = s3db.pr_person_user
+        query = (ptable.id == person_id) & \
+                (ptable.pe_id == putable.pe_id)
+        link = db(query).select(putable.user_id,
+                                limitby = (0, 1)
+                                ).first()
+        user_id = link.user_id
+
+        ttable = s3db.hrm_human_resource_tag
+        query = (ttable.human_resource_id == human_resource_id) & \
+                (ttable.tag == "reserve")
+        reserve = db(query).select(ttable.value,
+                                   limitby = (0, 1)
+                                   ).first()
+        reserve = reserve.value
+        if record is None or \
+           reserve != record.sub_reserve_value:
+            if reserve == "0":
+                auth.s3_withdraw_role(user_id, "RESERVE", for_pe=[])
+            elif reserve == "1":
+                ftable = s3db.pr_forum
+                reserves = db(ftable.name == "Reserves").select(ftable.pe_id,
+                                                                limitby = (0, 1)
+                                                                ).first()
+                realm_entity = reserves.pe_id
+                auth.s3_assign_role(user_id, "RESERVE", for_pe=realm_entity)
+
+        organisation_id = hr.organisation_id
+        if record is None or \
+           organisation_id != record.organisation_id:
+            # Update User Account
+            utable = db.auth_user
+            db(utable.id == user_id).update(organisation_id = organisation_id)
+
+            # Update Realm Entity
+            otable = s3db.org_organisation
+            org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                          limitby = (0, 1)
+                                                          ).first()
+            realm_entity = org.pe_id
+
+            auth.set_realm_entity("pr_person", person_id, entity=realm_entity, force_update=True)
+
+            if record is None:
+                # Assign New Role
+                auth.s3_assign_role(user_id, "VOLUNTEER")
+
+    # -------------------------------------------------------------------------
+    def affiliation_ondelete(row):
+        """
+            If a Volunteer is unaffiliated from an Organisation, update their user/roles accordingly
+        """
+
+        auth = current.auth
+        db = current.db
+        s3db = current.s3db
+
+        person_id = row.person_id
+
+        # Find User Account
+        ptable = s3db.pr_person
+        putable = s3db.pr_person_user
+        query = (ptable.id == person_id) & \
+                (ptable.pe_id == putable.pe_id)
+        link = db(query).select(putable.user_id,
+                                limitby = (0, 1)
+                                ).first()
+        user_id = link.user_id
+
+        # Update User Account
+        db(db.auth_user.id == user_id).update(organisation_id = None)
+
+        # Update Roles
+        auth.s3_withdraw_role(user_id, "VOLUNTEER", for_pe=[])
+
+        ftable = s3db.pr_forum
+        reserves = db(ftable.name == "Reserves").select(ftable.pe_id,
+                                                        limitby = (0, 1)
+                                                        ).first()
+        realm_entity = reserves.pe_id
+        auth.s3_assign_role(user_id, "RESERVE", for_pe=realm_entity)
+
+        # Update Realm Entity
+        auth.set_realm_entity("pr_person", person_id, entity=realm_entity, force_update=True)
+    
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
+
+        from gluon import IS_IN_SET, SQLFORM
 
         from s3 import S3OptionsFilter, S3SQLCustomForm, S3TextFilter
         #from s3layouts import S3PopupLink
@@ -891,14 +1067,31 @@ $('.copy-link').click(function(e){
         s3db = current.s3db
 
         # Filtered components
-        s3db.add_components("hrm_human_resource",
+        s3db.add_components(tablename,
                             hrm_human_resource_tag = ({"name": "job_title",
                                                        "joinby": "human_resource_id",
                                                        "filterby": {"tag": "job_title"},
                                                        "multiple": False,
                                                        },
+                                                      {"name": "reserve",
+                                                       "joinby": "human_resource_id",
+                                                       "filterby": {"tag": "reserve"},
+                                                       "multiple": False,
+                                                       },
                                                       ),
                             )
+
+        # Individual settings for specific tag components
+        components_get = s3db.resource(tablename).components.get
+
+        reserve = components_get("reserve")
+        f = reserve.table.value
+        f.requires = IS_IN_SET({"0": T("No"),
+                                "1": T("Yes"),
+                                })
+        f.widget = lambda f, v: \
+                        SQLFORM.widgets.radio.widget(f, v,
+                                                     style="divs")
 
         table = s3db.hrm_human_resource
         # We use job_title tag instead for freetext rather than dropdown
@@ -988,11 +1181,14 @@ $('.copy-link').click(function(e){
         s3db.configure("hrm_human_resource",
                        crud_form = S3SQLCustomForm("organisation_id",
                                                    (T("Role"), "job_title.value"),
+                                                   (T("Visible on the Reserves list?"), "reserve.value"),
                                                    "person_id",
                                                    "comments",
+                                                   postprocess = affiliation_postprocess,
                                                    ),
                        list_fields = list_fields,
                        filter_widgets = filter_widgets,
+                       ondelete = affiliation_ondelete,
                        )
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
@@ -2689,52 +2885,6 @@ $('.copy-link').click(function(e){
     settings.customise_pr_person_resource = customise_pr_person_resource
 
     # -----------------------------------------------------------------------------
-    def affiliation_create_onaccept(form):
-        """
-            If a RESERVE Volunteer is affiliated to an Organisation, update their user/roles accordingly
-        """
-
-        auth = current.auth
-        db = current.db
-        s3db = current.s3db
-        human_resource_id = form.vars.get("id")
-
-        hrtable = s3db.hrm_human_resource
-        hr = db(hrtable.id == human_resource_id).select(hrtable.person_id,
-                                                        hrtable.organisation_id,
-                                                        limitby = (0, 1)
-                                                        ).first()
-
-        ptable = s3db.pr_person
-        putable = s3db.pr_person_user
-        query = (ptable.id == hr.person_id) & \
-                (ptable.pe_id == putable.pe_id)
-        link = db(query).select(putable.user_id,
-                                limitby = (0, 1)
-                                ).first()
-        user_id = link.user_id
-
-        utable = db.auth_user
-        user = db(utable.id == user_id).select(utable.id,
-                                               utable.organisation_id,
-                                               limitby = (0, 1)
-                                               ).first()
-        if not user.organisation_id:
-            user.update_record(organisation_id = hr.organisation_id)
-
-        gtable = db.auth_group
-        mtable = db.auth_membership
-        query = (mtable.user_id == user_id) & \
-                (mtable.group_id == gtable.id)
-        roles = db(query).select(gtable.uuid)
-        roles = [r.uuid for r in roles]
-
-        if "RESERVE" in roles:
-            auth.s3_withdraw_role(user_id, "RESERVE", for_pe=[])
-
-        auth.s3_assign_role(user_id, "VOLUNTEER")
-
-    # -----------------------------------------------------------------------------
     def pr_person_redirect(r, **attr):
         """
             Redirect to the person page with the relevant get_vars active
@@ -3017,12 +3167,6 @@ $('.copy-link').click(function(e){
                             msg_record_deleted = T("Affiliation deleted"),
                             #msg_list_empty = T("No Affiliations currently registered")
                             )
-
-                        s3db.add_custom_callback("hrm_human_resource",
-                                                 "onaccept",
-                                                 affiliation_create_onaccept,
-                                                 method = "create",
-                                                 )
 
                         # Only needed if multiple=True
                         #list_fields = ["organisation_id",

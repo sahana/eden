@@ -1,10 +1,10 @@
 First Name,Last Name,Email,Password,Role,Organisation,Link
 Admin,User,admin@example.com,testing,ADMIN,,staff
-Allerdale,Volunteer,allerdale_vol@example.com,eden,VOLUNTEER,Allerdale Community Organisation,staff
+Allerdale,Volunteer,allerdale_vol@example.com,eden,"VOLUNTEER,RESERVE/pr_forum.name=Reserves",Allerdale Community Organisation,staff
 Allerdale,OrgAdmin,allerdale_admin@example.com,eden,ORG_ADMIN,Allerdale Community Organisation,staff
 Eden,Volunteer,eden_vol@example.com,eden,VOLUNTEER,Eden Community Organisation,staff
-Eden,OrgAdmin,eden_admin@example.com,eden,ORG_ADMIN,Eden Community Organisation,staff
+Eden,OrgAdmin,eden_admin@example.com,eden,"ORG_ADMIN,RESERVE_ADMIN/pr_forum.name=Reserves,DONOR_ADMIN/pr_forum.name=Donors",Eden Community Organisation,staff
 Reserve,Volunteer,reserve@example.com,eden,"RESERVE/pr_forum.name=Reserves",,
 Corporate,Donor,donor@example.com,eden,"DONOR/pr_person.details=Corporate+Donor+donor@example.com",,
 Group,Leader,group@example.com,eden,"GROUP_ADMIN/pr_group.name=Helpers",,
-Police,Liaison,police@example.com,eden,AGENCY,Agency Group,staff
+Police,Liaison,police@example.com,eden,"AGENCY,CASE_ADMIN/pr_forum.name=Cases,DONOR_ADMIN/pr_forum.name=Donors,RESERVE_ADMIN/pr_forum.name=Reserves",Agency Group,staff

@@ -4429,16 +4429,25 @@ class S3BulkImporter(object):
     @staticmethod
     def _lookup_pe(entity):
         """
-            Convert an Organisation Name to a pe_id
+            Convert an Entity to a pe_id
             - helper for import_role
+            - assumes org_organisation.name unless specified
+            - entity needs to exist already
         """
 
-        table = current.s3db.org_organisation
-        org = current.db(table.name == entity).select(table.pe_id,
-                                                      limitby = (0, 1)
-                                                      ).first()
+        if "=" in entity:
+            pe_type, value =  entity.split("=")
+        else:
+            pe_type = "org_organisation.name"
+            value = entity
+        pe_tablename, pe_field =  pe_type.split(".")
+
+        table = current.s3db.table(pe_tablename)
+        record = current.db(table[pe_field] == value).select(table.pe_id,
+                                                             limitby = (0, 1)
+                                                             ).first()
         try:
-            pe_id = org.pe_id
+            pe_id = record.pe_id
         except AttributeError:
             current.log.warning("import_role cannot find pe_id for %s" % entity)
             pe_id = None
