@@ -528,18 +528,20 @@ class S3Request(object):
 
         # Retrieve filters from request body
         if content_type == "application/x-www-form-urlencoded":
-            # Read POST vars (from S3.gis.refreshLayer)
+            # Read POST vars (e.g. from S3.gis.refreshLayer)
             filters = self.post_vars
             decode = None
         elif mode == "ajax" or content_type[:10] != "multipart/":
-            # Read body JSON (from $.searchS3)
+            # Read body JSON (e.g. from $.searchS3)
             body = self.body
             body.seek(0)
             if PY2:
                 s = body.read()
             else:
-                # Fix for Py 3.5- (json.load crashes with UTF-8 data)
-                # Minor optimisation for Py 3.6+ (Avoids json.load wrapper function & sniffing the encoding)
+                # Decode request body (=bytes stream) into a str
+                # - json.load does not accept bytes in Py3 before 3.6
+                # - minor performance advantage by avoiding the need for
+                #   json.loads to detect the encoding
                 s = body.read().decode("utf-8")
             try:
                 filters = json.loads(s)
@@ -549,7 +551,7 @@ class S3Request(object):
                 filters = {}
             decode = None
         else:
-            # Read POST vars JSON (from $.searchDownloadS3)
+            # Read POST vars JSON (e.g. from $.searchDownloadS3)
             filters = self.post_vars
             decode = json.loads
 
