@@ -35,7 +35,7 @@ import datetime
 import json
 import sys
 
-from gluon import current, A, Field, INPUT, SQLFORM
+from gluon import current, redirect, A, Field, INPUT, SQLFORM
 
 from s3compat import PY2, HTTPError, URLError, urlencode, urllib2
 from ..s3datetime import S3DateTime
@@ -59,6 +59,12 @@ class S3Payments(S3Method):
         output = {}
 
         method = r.method
+        if method == "approve":
+            if r.http in ("GET", "POST"):
+                output = self.approve_subscription(r, **attr)
+            else:
+                r.error(405, current.ERROR.BAD_METHOD)
+
         if method == "confirm":
             if r.http == "GET":
                 output = self.confirm_subscription(r, **attr)
@@ -99,12 +105,13 @@ class S3Payments(S3Method):
         record = r.record
         if not record or not record.service_id:
             r.error(405, "Invalid record")
+        onerror = r.url(method="status")
         try:
             adapter = S3PaymentService.adapter(record.service_id)
         except (KeyError, ValueError):
-            r.error(405, "Invalid payment service")
+            r.error(405, "Invalid payment service", next=onerror)
         if not adapter.verify_reference(r):
-            r.error(405, "Invalid reference")
+            r.error(405, "Invalid reference", next=onerror)
 
         T = current.T
 
@@ -149,12 +156,13 @@ class S3Payments(S3Method):
         if not record or not record.service_id:
             r.error(405, "Invalid record")
 
+        onerror = r.url(method="status")
         try:
             adapter = S3PaymentService.adapter(record.service_id)
         except (KeyError, ValueError):
-            r.error(405, "Invalid payment service")
+            r.error(405, "Invalid payment service", next=onerror)
         if not adapter.verify_reference(r):
-            r.error(405, "Invalid reference")
+            r.error(405, "Invalid reference", next=onerror)
 
         output = {"title": T("Cancel subscription")}
 
@@ -224,28 +232,133 @@ class S3Payments(S3Method):
             if adapter.cancel_subscription(record.id):
                 current.response.confirmation = T("Subscription cancelled")
             else:
-                current.response.confirmation = T("Cancellation failed")
+                current.response.error = T("Cancellation failed")
             self.next = r.url(method="status")
 
         current.response.view = self._view(r, "update.html")
         return output
 
     # -------------------------------------------------------------------------
+    def approve_subscription(self, r, **attr):
+        """
+            Approve a pending subscription; as subscriber-action on status page
+        """
+
+        record = r.record
+        if not record or not record.service_id:
+            r.error(405, "Invalid record")
+
+        onerror = r.url(method="status")
+
+        try:
+            adapter = S3PaymentService.adapter(record.service_id)
+        except (KeyError, ValueError):
+            r.error(405, "Invalid payment service", next=onerror)
+        if not adapter.verify_reference(r):
+            r.error(405, "Invalid reference", next=onerror)
+
+        if record.status == "NEW":
+            approval_url = record.approval_url
+            if approval_url:
+                redirect(approval_url)
+            else:
+                r.error(405, "Missing link for approval", next=onerror)
+        else:
+            r.error(405, "Invalid subscription status for approval", next=onerror)
+
+        return {}
+
+    # -------------------------------------------------------------------------
     def subscription_status(self, r, **attr):
         """
-            Default method for subscribers to check the status of their
-            subscription and its fulfillment
+            Default page for the subscriber (!) to view and manage their
+            subscription
 
-            - can (should) be replaced in template by
-              customise_fin_subscription_resource() overriding the "status"
-              method with a custom REST method handler
+            - standard CRUD methods are for the merchant
+            - can be replaced in template to include further fulfillment
+              details / management options: customise_fin_subscription_resource()
+              to override the "status" method with a custom REST method handler
         """
 
-        # TODO implement some useful default behavior
+        T = current.T
+        settings = current.deployment_settings
+
+        record = r.record
+        if not record or not record.service_id:
+            r.error(405, "Invalid record")
+
+        output = {"title": T("Subscription Status")}
+
+        # Subscription/fulfillment details to be shown to the subscriber
+        # TODO show current status
+        formfields = [Field("plan",
+                            label = T("Subscription Plan"),
+                            writable = False,
+                            ),
+                      Field("subscriber",
+                            label = T("Subscriber"),
+                            writable = False,
+                            ),
+                      Field("date",
+                            label = T("Created on"),
+                            writable = False,
+                            ),
+                      ]
+
+        table = r.table
+        data = {"id": "",
+                "plan": table.plan_id.represent(record.plan_id),
+                "subscriber": table.pe_id.represent(record.pe_id),
+                "date": S3DateTime.datetime_represent(record.created_on),
+                }
+
+        # Subscriber actions
+        status = record.status
+        if status == "NEW":
+            buttons = [A(T("Approve"),
+                         _href = r.url(method="approve",
+                                       vars = {"subscription_id": record.refno},
+                                       ),
+                         _class = "action-btn",
+                         ),
+                       ]
+        elif status == "APPROVED":
+            buttons = [A(T("Activate"),
+                         _href = r.url(method="confirm",
+                                       vars = {"subscription_id": record.refno},
+                                       ),
+                         _class = "action-btn",
+                         ),
+                       ]
+        elif status == "ACTIVE":
+            buttons = [A(T("Cancel"),
+                         _href = r.url(method="cancel",
+                                       vars = {"subscription_id": record.refno},
+                                       ),
+                         _class = "action-btn",
+                         ),
+                       ]
+        else:
+            buttons = []
+
+        resourcename = r.resource.name
+
+        # Generate the form and add it to the output
+        formstyle = settings.get_ui_formstyle()
+        form = SQLFORM.factory(record = data,
+                               showid = False,
+                               formstyle = formstyle,
+                               table_name = resourcename,
+                               buttons = buttons,
+                               #hidden = hidden,
+                               #_id = widget_id,
+                               *formfields)
+
+        output["item"] = form
 
         current.response.view = self._view(r, "display.html")
 
-        return {}
+        return output
 
 # =============================================================================
 class S3PaymentLog(object):

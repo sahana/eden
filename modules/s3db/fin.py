@@ -757,6 +757,10 @@ class FinSubscriptionModel(S3Model):
         # Configure payment service callback methods
         from s3.s3payments import S3Payments
         self.set_method("fin", "subscription",
+                        method = "approve",
+                        action = S3Payments,
+                        )
+        self.set_method("fin", "subscription",
                         method = "confirm",
                         action = S3Payments,
                         )
