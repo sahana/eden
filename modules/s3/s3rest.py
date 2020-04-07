@@ -40,7 +40,7 @@ import sys
 from gluon import current, redirect, HTTP, URL
 from gluon.storage import Storage
 
-from s3compat import CLASS_TYPES, StringIO, basestring, urlopen
+from s3compat import PY2, CLASS_TYPES, StringIO, basestring, urlopen
 from .s3datetime import s3_parse_datetime
 from .s3resource import S3Resource
 from .s3utils import s3_get_extension, s3_keep_messages, s3_remove_last_record_id, s3_store_last_record_id, s3_str
@@ -59,17 +59,17 @@ class S3Request(object):
 
     # -------------------------------------------------------------------------
     def __init__(self,
-                 prefix=None,
-                 name=None,
-                 r=None,
-                 c=None,
-                 f=None,
-                 args=None,
-                 vars=None,
-                 extension=None,
-                 get_vars=None,
-                 post_vars=None,
-                 http=None):
+                 prefix = None,
+                 name = None,
+                 r = None,
+                 c = None,
+                 f = None,
+                 args = None,
+                 vars = None,
+                 extension = None,
+                 get_vars = None,
+                 post_vars = None,
+                 http = None):
         """
             Constructor
 
@@ -287,9 +287,9 @@ class S3Request(object):
     # Method handler configuration
     # -------------------------------------------------------------------------
     def set_handler(self, method, handler,
-                    http=None,
-                    representation=None,
-                    transform=False):
+                    http = None,
+                    representation = None,
+                    transform = False):
         """
             Set a method handler for this request
 
@@ -533,10 +533,16 @@ class S3Request(object):
             decode = None
         elif mode == "ajax" or content_type[:10] != "multipart/":
             # Read body JSON (from $.searchS3)
-            s = self.body
-            s.seek(0)
+            body = self.body
+            body.seek(0)
+            if PY2:
+                s = body.read()
+            else:
+                # Fix for Py 3.5
+                # Optimisation for Py 3.7
+                s = body.read().decode("utf-8")
             try:
-                filters = json.load(s)
+                filters = json.loads(s)
             except ValueError:
                 filters = {}
             if not isinstance(filters, dict):

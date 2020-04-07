@@ -2539,7 +2539,7 @@ $('.copy-link').click(function(e){
                                               "filterby": {"tag": "travel"},
                                               "multiple": False,
                                               },
-                                             {"name": "experience",
+                                             {"name": "experiencefree",
                                               "joinby": "person_id",
                                               "filterby": {"tag": "experience"},
                                               "multiple": False,
@@ -2588,8 +2588,8 @@ $('.copy-link').click(function(e){
                     SQLFORM.widgets.radio.widget(f, v,
                                                  style="divs")
 
-        experience = components_get("experience")
-        f = experience.table.value
+        experiencefree = components_get("experiencefree")
+        f = experiencefree.table.value
         f.widget = lambda f, v: \
             s3_comments_widget(f, v, _placeholder = "e.g. Co-ordination, Event Management, PCV qualified.")
 
@@ -2666,7 +2666,7 @@ $('.copy-link').click(function(e){
                                            field = "certificate_id",
                                            label = T("Qualifications"),
                                            ),
-                           (T("Skills and Experience"), "experience.value"),
+                           (T("Skills and Experience"), "experiencefree.value"),
                            (T("Offers of Resources"), "resources.value"),
                            S3SQLInlineLink("location",
                                            field = "location_id",
@@ -3105,7 +3105,7 @@ $('.copy-link').click(function(e){
                         # Qualifications
                         list_fields.append((T("Qualifications"), "certfication.certificate_id"))
                         # Skills & Experience
-                        list_fields.append((T("Skills and Experience"), "experience.value"))
+                        list_fields.append((T("Skills and Experience"), "experiencefree.value"))
                         # Offers of Resources
                         list_fields.append((T("Offers of Resources"), "resources.value"))
                         # DBS
@@ -3149,7 +3149,7 @@ $('.copy-link').click(function(e){
                                                                        "last_name",
                                                                        "comments",
                                                                        "competency.skill_id$name",
-                                                                       "experience.value",
+                                                                       "experiencefree.value",
                                                                        "resources.value",
                                                                        ],
                                                                       #formstyle = text_filter_formstyle,
