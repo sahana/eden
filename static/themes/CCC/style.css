@@ -5,10 +5,11 @@ div.subheading {
     padding-top: 10px !important;
     padding-bottom: 5px;
 }
+/*
 #auth_user_convictions {
     float: left;
 }
-#auth_user_convictions div,
+#auth_user_convictions div,*/
 #auth_user_dbs div,
 #auth_user_delivery div,
 #auth_user_faith_requirements div,
@@ -16,17 +17,19 @@ div.subheading {
 #auth_user_significant_physical div,
 #auth_user_some_physical div,
 #auth_user_little_physical div,
-#pr_person_sub_convictions_value div,
+#auth_user_workplace div,
+/*#pr_person_sub_convictions_value div,*/
 #pr_person_sub_dbs_value div,
 #pr_person_sub_delivery_value div,
 #pr_person_sub_travel_value div,
 #pr_person_sub_faith_requirements_value div,
 #pr_person_sub_significant_physical_value div,
 #pr_person_sub_some_physical_value div,
-#pr_person_sub_little_physical_value div {
+#pr_person_sub_little_physical_value div,
+#pr_person_sub_workplace_value div {
     float: right;
 }
-#auth_user_convictions div:first-child,
+/*#auth_user_convictions div:first-child,*/
 #auth_user_dbs div:first-child,
 #auth_user_delivery div:first-child,
 #auth_user_faith_requirements div:first-child,
@@ -34,18 +37,21 @@ div.subheading {
 #auth_user_significant_physical div:first-child,
 #auth_user_some_physical div:first-child,
 #auth_user_little_physical div:first-child,
-#pr_person_sub_convictions_value div:first-child,
+#auth_user_workplace div:first-child,
+/*#pr_person_sub_convictions_value div:first-child,*/
 #pr_person_sub_dbs_value div:first-child,
 #pr_person_sub_delivery_value div:first-child,
 #pr_person_sub_travel_value div:first-child,
 #pr_person_sub_faith_requirements_value div:first-child,
 #pr_person_sub_significant_physical_value div:first-child,
 #pr_person_sub_some_physical_value div:first-child,
-#pr_person_sub_little_physical_value div:first-child {
+#pr_person_sub_little_physical_value div:first-child,
+#pr_person_sub_workplace_value div:first-child {
     float: left;
 }
+/*
 #auth_user_convictions + div {
     float: right;
-}
+}*/
 
 
