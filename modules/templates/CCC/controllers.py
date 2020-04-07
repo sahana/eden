@@ -288,6 +288,16 @@ class personAdditional(S3Method):
                                                   "filterby": {"tag": "faith_requirements_details"},
                                                   "multiple": False,
                                                   },
+                                                 {"name": "workplace",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "workplace"},
+                                                  "multiple": False,
+                                                  },
+                                                 {"name": "workplace_details",
+                                                  "joinby": "person_id",
+                                                  "filterby": {"tag": "workplace_details"},
+                                                  "multiple": False,
+                                                  },
                                                  ),
                                 )
 
@@ -348,10 +358,22 @@ class personAdditional(S3Method):
                             SQLFORM.widgets.radio.widget(f, v,
                                                          style="divs")
 
+            workplace = components_get("workplace")
+            f = workplace.table.value
+            f.requires = IS_IN_SET({"0": T("No"),
+                                    "1": T("Yes"),
+                                    })
+            f.widget = lambda f, v: \
+                            SQLFORM.widgets.radio.widget(f, v,
+                                                         style="divs")
+
             form = S3SQLCustomForm((T("That require significant physical activity (including lifting and carrying) and may involve being outdoors (e.g. clean up of affected properties)"), "significant_physical.value"),
                                    (T("That require some physical activity and may involve being outdoors (e.g. door knocking)"), "some_physical.value"),
                                    (T("That require little physical activity and are based indoors (e.g. preparing refreshments)"), "little_physical.value"),
                                    (T("If you wish, you can give us some further information on any fitness, medical or mobility issues that might limit the kind of activities you are able to volunteer for; this will help us to suggest suitable opportunities for you"), "health_details.value"),
+                                   (T("Are you volunteering under your workplace volunteering scheme?"), "workplace.value"),
+                                   (T("If yes please name your employer"), "workplace_details.value"),
+                                   (T("Are you DBS checked?"), "dbs.value"),
                                    (T("Are you DBS checked?"), "dbs.value"),
                                    #(T("Do you have any unspent convictions?"), "convictions.value"),
                                    (T("Please indicate Faith support you can offer"), "faith_support.value"),
@@ -595,9 +617,20 @@ class register(S3CustomController):
                                 label = T("Relationship"),
                                 requires = IS_NOT_EMPTY(),
                                 ),
+                          Field("workplace", "integer",
+                                label = T("Are you volunteering under your workplace volunteering scheme?"),
+                                requires = IS_IN_SET({0: T("No"),
+                                                      1: T("Yes"),
+                                                      }),
+                                widget = lambda f, v: \
+                                    SQLFORM.widgets.radio.widget(f, v,
+                                                                 style="divs"),
+                                ),
+                          Field("workplace_details",
+                                label = T("If yes please name your employer"),
+                                ),
                           Field("dbs", "integer",
                                 label = T("Are you DBS checked?"),
-                                #comment = T("Please tick 'Yes' if you have any convictions that are not yet spent under the Rehabilitation of Offenders Act 1974. The term 'convictions' is used to refer to any sentence or disposal issued by a court. If all your convictions are spent, you can tick 'No'. If you're not sure if your convictions are unspent or spent, you can use a tool available at www.disclosurecalculator.org.uk and read guidance at hub.unlock.org.uk/roa"),
                                 requires = IS_IN_SET({0: T("No"),
                                                       1: T("Yes"),
                                                       }),
@@ -1136,8 +1169,10 @@ class register(S3CustomController):
             form[0].insert(22, DIV("Many of the opportunities available following an incident require volunteers to be fit and active, may involve working in dirty or dusty environments, and could involve being outdoors - for example, removing damaged furniture and cleaning affected buildings, or lifting, packaging and distributing donated items. Some volunteer roles will be less physically demanding - for example, knocking on doors to check people are OK and gather information, making refreshments and helping with administration. Are you interested in opportunities:",
                                    _class = "subheading",
                                    ))
-            form[0].insert(-6, DIV("Person to be contacted in case of an emergency",
+            form[0].insert(-8, DIV("Person to be contacted in case of an emergency",
                                    _class = "subheading",
+                                   ))
+            form[0].insert(-5, DIV(_class = "subheading",
                                    ))
             form[0].insert(-3, DIV(_class = "subheading",
                                    ))
@@ -1265,6 +1300,8 @@ class register(S3CustomController):
                           "emergency_contact_name": form_vars.emergency_contact_name,
                           "emergency_contact_number": form_vars.emergency_contact_number,
                           "emergency_contact_relationship": form_vars.emergency_contact_relationship,
+                          "workplace": form_vars.workplace,
+                          "workplace_details": form_vars.workplace_details,
                           }
                 if existing:
                     custom["registration_type"] = "existing"
@@ -2159,13 +2196,13 @@ def auth_user_register_onaccept(user_id):
             ltable.insert(**record)
 
         # Additional Information
-        convictions = custom.get("convictions")
-        if convictions is not None:
-            record = {"person_id": person_id,
-                      "tag": "convictions",
-                      "value": convictions,
-                      }
-            ttable.insert(**record)
+        #convictions = custom.get("convictions")
+        #if convictions is not None:
+        #    record = {"person_id": person_id,
+        #              "tag": "convictions",
+        #              "value": convictions,
+        #              }
+        #    ttable.insert(**record)
 
         dbs = custom.get("dbs")
         if dbs is not None:
@@ -2180,6 +2217,22 @@ def auth_user_register_onaccept(user_id):
             record = {"person_id": person_id,
                       "tag": "travel",
                       "value": travel,
+                      }
+            ttable.insert(**record)
+
+        workplace = custom.get("workplace")
+        if workplace is not None:
+            record = {"person_id": person_id,
+                      "tag": "workplace",
+                      "value": workplace,
+                      }
+            ttable.insert(**record)
+
+        workplace_details = custom.get("workplace_details")
+        if workplace_details is not None:
+            record = {"person_id": person_id,
+                      "tag": "workplace_details",
+                      "value": workplace_details,
                       }
             ttable.insert(**record)
 

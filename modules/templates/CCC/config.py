@@ -3120,21 +3120,37 @@ $('.copy-link').click(function(e){
                                                               "filterby": {"tag": "dbs"},
                                                               "multiple": False,
                                                               },
-                                                             )
+                                                             {"name": "workplace",
+                                                              "joinby": "person_id",
+                                                              "filterby": {"tag": "workplace"},
+                                                              "multiple": False,
+                                                              },
+                                                             {"name": "workplace_details",
+                                                              "joinby": "person_id",
+                                                              "filterby": {"tag": "workplace_details"},
+                                                              "multiple": False,
+                                                              },
+                                                             ),
                                             )
                         from s3 import S3Represent
                         yes_no_options = {"0": T("No"),
                                           "1": T("Yes"),
                                           }
                         components_get = s3db.resource("pr_person").components.get
-                        #convictions = components_get("convictions")
-                        #f = convictions.table.value
-                        #f.represent = S3Represent(options = yes_no_options)
+                        workplace = components_get("workplace")
+                        f = workplace.table.value
+                        f.represent = S3Represent(options = yes_no_options)
+                        list_fields+= [(T("Workplace Volunteering Scheme"), "workplace.value"),
+                                       (T("Employer"), "workplace_details.value"),
+                                       ]
                         dbs = components_get("dbs")
                         f = dbs.table.value
                         f.represent = S3Represent(options = yes_no_options)
                         list_fields.append((T("DBS"), "dbs.value"))
                         # Convictions
+                        #convictions = components_get("convictions")
+                        #f = convictions.table.value
+                        #f.represent = S3Represent(options = yes_no_options)
                         #list_fields.append((T("Convictions"), "convictions.value"))
                         # Registration Date
                         from s3 import S3DateTime
