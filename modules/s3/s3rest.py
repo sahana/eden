@@ -539,7 +539,7 @@ class S3Request(object):
                 s = body.read()
             else:
                 # Decode request body (=bytes stream) into a str
-                # - json.load does not accept bytes in Py3 before 3.6
+                # - json.load/loads do not accept bytes in Py3 before 3.6
                 # - minor performance advantage by avoiding the need for
                 #   json.loads to detect the encoding
                 s = body.read().decode("utf-8")
