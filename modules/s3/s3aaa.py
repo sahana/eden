@@ -3990,7 +3990,7 @@ $.filterOptionsS3({
         role = db(query).select(table.id,
                                 table.uuid,
                                 table.protected,
-                                limitby=(0, 1),
+                                limitby = (0, 1),
                                 ).first()
 
         if role and not role.protected:
@@ -4076,11 +4076,13 @@ $.filterOptionsS3({
         sr = self.get_system_roles()
         unrestrictable = [str(sr.ADMIN),
                           str(sr.ANONYMOUS),
-                          str(sr.AUTHENTICATED)]
+                          str(sr.AUTHENTICATED),
+                          ]
         for group_id in group_ids:
             if group_id not in assigned_groups:
                 membership = {"user_id": user_id,
-                              "group_id": group_id}
+                              "group_id": group_id,
+                              }
                 if for_pe is not None and str(group_id) not in unrestrictable:
                     membership["pe_id"] = for_pe
                 #membership_id = mtable.insert(**membership)

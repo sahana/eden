@@ -362,6 +362,7 @@ class PRPersonEntityModel(S3Model):
                                 ),
                       # Role type
                       Field("role_type", "integer",
+                            default = 1,
                             requires = IS_IN_SET(role_types, zero=None),
                             represent = lambda opt: \
                                 role_types.get(opt, UNKNOWN_OPT),

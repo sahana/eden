@@ -1679,14 +1679,21 @@ def auth_user_register_onaccept(user_id):
                        #entity = realm_entity,
                        )
         ftable = s3db.pr_forum
-        forums = db(ftable.name.belongs(("Donors", "Reserves"))).select(ftable.pe_id,
-                                                                        ftable.name,
-                                                                        limitby = (0, 2)
-                                                                        )
+        forums = db(ftable.name.belongs(("Donors",
+                                         "Groups",
+                                         "Reserves"))).select(ftable.pe_id,
+                                                              ftable.name,
+                                                              limitby = (0, 2)
+                                                              )
         for forum in forums:
             if forum.name == "Donors":
                 add_membership(user_id = user_id,
                                role = "Donors Admin",
+                               entity = forum.pe_id,
+                               )
+            elif forum.name == "Groups":
+                add_membership(user_id = user_id,
+                               role = "Groups Admin",
                                entity = forum.pe_id,
                                )
             elif forum.name == "Reserves":
@@ -1927,6 +1934,18 @@ def auth_user_register_onaccept(user_id):
         s3db.update_super(gtable, group)
         realm_entity = group["pe_id"]
         db(gtable.id == group_id).update(realm_entity = realm_entity)
+
+        # Affiliate with Groups Forum to allow management by AGENCY & ORGADMINs
+        ftable = s3db.pr_forum
+        forum = db(ftable.name == "Groups").select(ftable.pe_id,
+                                                   limitby = (0, 1)
+                                                   ).first()
+        try:
+            master = forum.pe_id
+        except AttributeError:
+            current.log.error("Unable to link Group to Groups Forum: Forum not Found")
+            return
+        s3db.pr_add_affiliation(master, realm_entity, role="Realm Hierarchy")
 
         # Lookup Person
         pe_id = auth.s3_user_pe_id(user_id)
@@ -2170,6 +2189,7 @@ def auth_user_register_onaccept(user_id):
                 ftable = s3db.pr_forum
                 forums = db(ftable.name.belongs(("Cases",
                                                  "Donors",
+                                                 "Groups",
                                                  "Reserves"))).select(ftable.pe_id,
                                                                       ftable.name,
                                                                       )
@@ -2182,6 +2202,11 @@ def auth_user_register_onaccept(user_id):
                     elif forum.name == "Donors":
                         add_membership(user_id = user_id,
                                        role = "Donors Admin",
+                                       entity = forum.pe_id,
+                                       )
+                    elif forum.name == "Groups":
+                        add_membership(user_id = user_id,
+                                       role = "Groups Admin",
                                        entity = forum.pe_id,
                                        )
                     elif forum.name == "Reserves":

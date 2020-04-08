@@ -65,7 +65,7 @@ def config(settings):
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 
-    settings.security.policy = 7 # Organisation-ACLs
+    settings.security.policy = 7 # Entity Realm + Hierarchy
 
     # Consent Tracking
     settings.auth.consent_tracking = True
@@ -284,48 +284,8 @@ def config(settings):
             if current.request.controller == "br":
                 FORUM = "Cases"
             else:
-                # HR record => Use their Organisation
-                hrtable = s3db.hrm_human_resource
-                query = (hrtable.person_id == person_id) & \
-                        (hrtable.deleted == False)
-                hr = db(query).select(hrtable.organisation_id,
-                                      limitby = (0, 1)
-                                      ).first()
-
-                if hr:
-                    otable = s3db.org_organisation
-                    org = db(otable.id == hr.organisation_id).select(otable.pe_id,
-                                                                     limitby = (0, 1)
-                                                                     ).first()
-                    try:
-                        return org.pe_id
-                    except AttributeError:
-                        # Use default rules
-                        current.log.error("Cannot set Realm Entity for Person %s: Org not found" % person_id)
-                        return 0
-
-                # Group Membership record => Use their Group
-                mtable = s3db.pr_group_membership
-                query = (mtable.person_id == person_id) & \
-                        (mtable.deleted == False)
-                member = db(query).select(mtable.group_id,
-                                          limitby = (0, 1)
-                                          ).first()
-
-                if member:
-                    gtable = s3db.pr_group
-                    group = db(gtable.id == member.group_id).select(gtable.pe_id,
-                                                                    limitby = (0, 1)
-                                                                    ).first()
-                    try:
-                        return group.pe_id
-                    except AttributeError:
-                        # Use default rules
-                        current.log.error("Cannot set Realm Entity for Person %s: Group not found" % person_id)
-                        return 0
-
-                # Donor or Reserve
-                # Differentiate via User Account
+                # See if they are a RESERVE or DONOR
+                # - check their User Account
                 ltable = s3db.pr_person_user
                 user = db(ltable.pe_id == row.pe_id).select(ltable.user_id,
                                                             limitby = (0, 1)
@@ -345,17 +305,56 @@ def config(settings):
                 role = db(query).select(gtable.uuid,
                                         limitby = (0, 1)
                                         ).first()
-                try:
+                if role:
                     role = role.uuid
-                except AttributeError:
-                    # Use default rules
-                    current.log.error("Cannot set Realm Entity for Person %s: No suitable Roles found" % person_id)
-                    return 0
+                    if role == "DONOR":
+                        FORUM = "Donors"
+                    elif role == "RESERVE":
+                        FORUM = "Reserves"
+                else:
+                    # HR record => Use their Organisation
+                    hrtable = s3db.hrm_human_resource
+                    query = (hrtable.person_id == person_id) & \
+                            (hrtable.deleted == False)
+                    hr = db(query).select(hrtable.organisation_id,
+                                          limitby = (0, 1)
+                                          ).first()
 
-                if role == "DONOR":
-                    FORUM = "Donors"
-                elif role == "RESERVE":
-                    FORUM = "Reserves"
+                    if hr:
+                        otable = s3db.org_organisation
+                        org = db(otable.id == hr.organisation_id).select(otable.pe_id,
+                                                                         limitby = (0, 1)
+                                                                         ).first()
+                        try:
+                            return org.pe_id
+                        except AttributeError:
+                            # Use default rules
+                            current.log.error("Cannot set Realm Entity for Person %s: Org not found" % person_id)
+                            return 0
+
+                    # Group Membership record => Use their Group
+                    mtable = s3db.pr_group_membership
+                    query = (mtable.person_id == person_id) & \
+                            (mtable.deleted == False)
+                    member = db(query).select(mtable.group_id,
+                                              limitby = (0, 1)
+                                              ).first()
+
+                    if member:
+                        gtable = s3db.pr_group
+                        group = db(gtable.id == member.group_id).select(gtable.pe_id,
+                                                                        limitby = (0, 1)
+                                                                        ).first()
+                        try:
+                            return group.pe_id
+                        except AttributeError:
+                            # Use default rules
+                            current.log.error("Cannot set Realm Entity for Person %s: Group not found" % person_id)
+                            return 0
+
+                    current.log.error("Cannot set Realm Entity for Person %s: No match found" % person_id)
+                    # Use default rules
+                    return 0
 
             ftable = s3db.pr_forum
             forum = db(ftable.name == FORUM).select(ftable.pe_id,
@@ -364,6 +363,8 @@ def config(settings):
             try:
                 return forum.pe_id
             except AttributeError:
+                current.log.error("Cannot find Forum '%s' when trying to set Realm Entity for Person %s" % \
+                    (FORUM, person_id))
                 pass
 
         # Use default rules
@@ -978,6 +979,9 @@ $('.copy-link').click(function(e){
                                 limitby = (0, 1)
                                 ).first()
         user_id = link.user_id
+        organisation_id = hr.organisation_id
+
+        realm_updated = None
 
         ttable = s3db.hrm_human_resource_tag
         query = (ttable.human_resource_id == human_resource_id) & \
@@ -990,6 +994,16 @@ $('.copy-link').click(function(e){
            reserve != record.sub_reserve_value:
             if reserve == "0":
                 auth.s3_withdraw_role(user_id, "RESERVE", for_pe=[])
+
+                # Update Realm Entity
+                otable = s3db.org_organisation
+                org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                              limitby = (0, 1)
+                                                              ).first()
+                realm_entity = org.pe_id
+                auth.set_realm_entity("pr_person", person_id, entity=realm_entity, force_update=True)
+                realm_updated = True
+
             elif reserve == "1":
                 ftable = s3db.pr_forum
                 reserves = db(ftable.name == "Reserves").select(ftable.pe_id,
@@ -998,21 +1012,23 @@ $('.copy-link').click(function(e){
                 realm_entity = reserves.pe_id
                 auth.s3_assign_role(user_id, "RESERVE", for_pe=realm_entity)
 
-        organisation_id = hr.organisation_id
+                # Update Realm Entity
+                auth.set_realm_entity("pr_person", person_id, entity=realm_entity, force_update=True)
+
         if record is None or \
            organisation_id != record.organisation_id:
             # Update User Account
             utable = db.auth_user
             db(utable.id == user_id).update(organisation_id = organisation_id)
 
-            # Update Realm Entity
-            otable = s3db.org_organisation
-            org = db(otable.id == organisation_id).select(otable.pe_id,
-                                                          limitby = (0, 1)
-                                                          ).first()
-            realm_entity = org.pe_id
-
-            auth.set_realm_entity("pr_person", person_id, entity=realm_entity, force_update=True)
+            if reserve == "0" and realm_updated is None:
+                # Update Realm Entity
+                otable = s3db.org_organisation
+                org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                              limitby = (0, 1)
+                                                              ).first()
+                realm_entity = org.pe_id
+                auth.set_realm_entity("pr_person", person_id, entity=realm_entity, force_update=True)
 
             if record is None:
                 # Assign New Role
@@ -2402,6 +2418,41 @@ $('.copy-link').click(function(e){
                         )
 
     # -------------------------------------------------------------------------
+    def pr_group_create_onaccept(form):
+        """
+            Affiliate Group to Groups Forum to allow Management by AGENCY & ORGADMINs
+        """
+
+        current.log.debug("pr_group_create_onaccept")
+
+        db = current.db
+        s3db = current.s3db
+
+        group_id = form.vars.get("id")
+
+        ftable = s3db.pr_forum
+        forum = db(ftable.name == "Groups").select(ftable.pe_id,
+                                                   limitby = (0, 1)
+                                                   ).first()
+        try:
+            master = forum.pe_id
+        except AttributeError:
+            current.log.error("Unable to link Group to Groups Forum: Forum not Found")
+            return
+
+        gtable = s3db.pr_group
+        group = db(gtable.id == group_id).select(gtable.pe_id,
+                                                 limitby = (0, 1)
+                                                 ).first()
+        try:
+            affiliate = group.pe_id
+        except AttributeError:
+            current.log.error("Unable to link Group to Groups Forum: Group not Found")
+            return
+
+        s3db.pr_add_affiliation(master, affiliate, role="Realm Hierarchy")
+
+    # -------------------------------------------------------------------------
     def customise_pr_group_resource(r, tablename):
 
         from gluon import IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_NOT_EMPTY, \
@@ -2508,6 +2559,7 @@ $('.copy-link').click(function(e){
             list_fields.insert(-2, (T("Phone"), "group_membership.person_id$phone.value"))
 
         s3db.configure("pr_group",
+                       create_onaccept = pr_group_create_onaccept,
                        crud_form = S3SQLCustomForm("name",
                                                    (T("Approximate Number of Volunteers"), "volunteers.value"),
                                                    (T("Mode of Transport"), "transport.value"),
@@ -2836,7 +2888,8 @@ $('.copy-link').click(function(e){
 
         elif get_vars_get("groups") or \
              r.function == "group" or \
-             has_role("GROUP_ADMIN", include_admin=False):
+             (has_role("GROUP_ADMIN", include_admin=False) and not \
+              has_role("ORG_ADMIN")):
             # Group Admin
             # Skills are recorded at the Group level
             crud_fields = ["first_name",
@@ -3140,7 +3193,8 @@ $('.copy-link').click(function(e){
                     rfilter = FS("user.id").belongs(donors)
 
                 elif get_vars_get("groups") or \
-                     has_role("GROUP_ADMIN", include_admin=False):
+                     (has_role("GROUP_ADMIN", include_admin=False) and not \
+                      has_role("ORG_ADMIN")):
                     MEMBERS = True
                     # Only include Members
                     mtable = s3db.pr_group_membership
