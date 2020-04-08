@@ -4530,6 +4530,7 @@ class S3BulkImporter(object):
                         # Pass through as-is
                         pass
                     else:
+                        # NB Entity here is *not* hierarchical!
                         try:
                             entity = int(entity)
                         except ValueError:
