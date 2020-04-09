@@ -3314,7 +3314,7 @@ $('.copy-link').click(function(e){
                         # Travel
                         list_fields.append((T("Willing to Travel"), "travel.value"))
                         # Qualifications
-                        list_fields.append((T("Qualifications"), "certfication.certificate_id"))
+                        list_fields.append((T("Qualifications"), "certification.certificate_id"))
                         # Skills & Experience
                         list_fields.append((T("Skills and Experience"), "experiencefree.value"))
                         # Offers of Resources
