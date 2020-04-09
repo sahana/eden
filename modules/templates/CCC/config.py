@@ -528,7 +528,7 @@ $('.copy-link').click(function(e){
                     #(T("Members"), "group_membership"),
                     (T("Members"), "person"),
                     #(T("Locations"), "group_location"),
-                    #(T("Skills"), "competency"),
+                    #(T("Volunteer Offers"), "competency"),
                     ]
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
@@ -568,7 +568,7 @@ $('.copy-link').click(function(e){
                 else:
                     tabs.append((T("Additional Information"), "additional"))
                     # Better on main form using S3SQLInlineLink
-                    #tabs.append((T("Skills"), "competency"))
+                    #tabs.append((T("Volunteer Offers"), "competency"))
                     if has_role("ORG_ADMIN"):
                         tabs.insert(1, (T("Affiliation"), "human_resource"))
 
@@ -600,7 +600,7 @@ $('.copy-link').click(function(e){
                  has_role("AGENCY"))):
                 tabs = [(T("Basic Details"), None),
                         #(T("Items"), "need_item"),
-                        #(T("Skills"), "need_skill"),
+                        #(T("Volunteer Offers"), "need_skill"),
                         (T("Participants"), "need_person"),
                         (T("Invite"), "assign"),
                         ]
@@ -1140,7 +1140,7 @@ $('.copy-link').click(function(e){
         else:
             list_fields = ["person_id",
                            (T("Role"), "job_title.value"),
-                           (T("Skills"), "person_id$competency.skill_id"),
+                           (T("Volunteer Offers"), "person_id$competency.skill_id"),
                            (T("Email"), "email.value"),
                            (T("Mobile Phone"), "phone.value"),
                            ]
@@ -1977,7 +1977,7 @@ $('.copy-link').click(function(e){
                                "human_resource.organisation_id",
                                "group_membership.group_id",
                                (T("Role"), "human_resource.job_title.value"),
-                               (T("Skills"), "competency.skill_id"),
+                               (T("Volunteer Offers"), "competency.skill_id"),
                                ]
 
                 set_method("hrm", "training_event",
@@ -2550,8 +2550,8 @@ $('.copy-link').click(function(e){
                        #(T("Leaders"), "group_membership.person_id"),
                        (T("Locations"), "group_location.location_id"),
                        (T("Parish(es)"), "parish.value"),
-                       (T("Skills"), "group_competency.skill_id"),
-                       (T("Skills Details"), "skill_details.value"),
+                       (T("Volunteer Offers"), "group_competency.skill_id"),
+                       (T("Offers Details"), "skill_details.value"),
                        "comments",
                        ]
         if current.auth.permission.format == "xls":
@@ -2599,7 +2599,7 @@ $('.copy-link').click(function(e){
                                                          label = T("Locations Served"),
                                                          ),
                                          S3OptionsFilter("group_competency.skill_id",
-                                                         label = T("Skill"),
+                                                         label = T("Volunteer Offer"),
                                                          ),
                                          ],
                        )
@@ -2910,7 +2910,7 @@ $('.copy-link').click(function(e){
                                            field = "skill_id",
                                            label = T("Volunteer Offer"),
                                            ),
-                           (T("Skills Details"), "skills_details.value"),
+                           (T("Offer Details"), "skills_details.value"),
                            S3SQLInlineLink("certificate",
                                            field = "certificate_id",
                                            label = T("Qualifications"),
@@ -3177,6 +3177,19 @@ $('.copy-link').click(function(e){
                     from s3 import FS
                     rfilter = FS("user.id").belongs(reserves)
 
+                    # Filtered Component to allow an exclusive filter
+                    stable = s3db.hrm_skill
+                    query = (stable.name.like("NHS%")) & \
+                            (stable.deleted == False)
+                    rows = current.db(query).select(stable.id)
+                    nhs_skill_ids = [row.id for row in rows]
+                    s3db.add_components("pr_person",
+                                        hrm_competency = {"name": "nhs_offer",
+                                                          "joinby": "person_id",
+                                                          "filterby": {"skill_id": nhs_skill_ids},
+                                                          },
+                                        )
+
                 elif get_vars_get("donors") or \
                      has_role("DONOR", include_admin=False):
 
@@ -3287,7 +3300,7 @@ $('.copy-link').click(function(e){
                     list_fields = ["first_name",
                                    "middle_name",
                                    "last_name",
-                                   (T("Skills"), "competency.skill_id"),
+                                   (T("Volunteer Offers"), "competency.skill_id"),
                                    (T("Email"), "email.value"),
                                    (T("Mobile Phone"), "phone.value"),
                                    ]
