@@ -4291,7 +4291,7 @@ $('.copy-link').click(function(e){
             from s3 import s3_parse_datetime
             date = s3_parse_datetime(date, "%Y-%m-%d %H:%M:%S")
 
-        message = "You have been invited to an Opportunity:\n\nTitle: %s\nOrganisation: %s\nStart Date: %s\nDistrict: %s\nStreet Address: %s\nPostcode: %s\nDescription: %s\nContact: %s\nSkill: %s\nAge Restrictions: %s\nPractical Information: %s\nParking Options: %s\nWhat to Bring: %s\n\nYou can respond to the invite here: %s" % \
+        message = "You have been invited to an Opportunity:\n\nTitle: %s\nOrganisation: %s\nStart Date: %s\nDistrict: %s\nStreet Address: %s\nPostcode: %s\nDescription: %s\nContact: %s\nVolunteer Offer: %s\nAge Restrictions: %s\nPractical Information: %s\nParking Options: %s\nWhat to Bring: %s\n\nYou can respond to the invite here: %s" % \
                     (event_name,
                      organisation,
                      ntable.date.represent(date),
@@ -4673,7 +4673,7 @@ $('.copy-link').click(function(e){
                                "human_resource.organisation_id",
                                "group_membership.group_id",
                                (T("Role"), "human_resource.job_title.value"),
-                               (T("Skills"), "competency.skill_id"),
+                               (T("Volunteer Offers"), "competency.skill_id"),
                                ]
 
                 set_method("req", "need",
