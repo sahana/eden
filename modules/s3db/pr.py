@@ -4801,6 +4801,16 @@ class PRAvailabilityModel(S3Model):
                   deduplicate = S3Duplicate(),
                   )
 
+        represent = S3Represent(lookup=tablename, translate=True)
+        date_formula_id = S3ReusableField("date_formula_id", "reference %s" % tablename,
+                                          label = T("Date Formula"),
+                                          ondelete = "CASCADE",
+                                          represent = represent,
+                                          requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "pr_date_formula.id",
+                                                                  represent)),
+                                          )
+
         # ---------------------------------------------------------------------
         # Time Formula
         #
@@ -4826,6 +4836,16 @@ class PRAvailabilityModel(S3Model):
                   deduplicate = S3Duplicate(),
                   )
 
+        represent = S3Represent(lookup=tablename, translate=True)
+        time_formula_id = S3ReusableField("time_formula_id", "reference %s" % tablename,
+                                          label = T("Time Formula"),
+                                          ondelete = "CASCADE",
+                                          represent = represent,
+                                          requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "pr_time_formula.id",
+                                                                  represent)),
+                                          )
+
         # ---------------------------------------------------------------------
         # Slots
         #
@@ -4834,8 +4854,8 @@ class PRAvailabilityModel(S3Model):
                      Field("name",
                            label = T("Name"),
                            ),
-                     Field("date_formula_id", "reference pr_date_formula"),
-                     Field("time_formula_id", "reference pr_time_formula"),
+                     date_formula_id(),
+                     time_formula_id(),
                      *s3_meta_fields())
 
         configure(tablename,
@@ -4845,7 +4865,7 @@ class PRAvailabilityModel(S3Model):
         represent = S3Represent(lookup=tablename, translate=True)
         slot_id = S3ReusableField("slot_id", "reference %s" % tablename,
                                   label = T("Slot"),
-                                  ondelete = "RESTRICT",
+                                  ondelete = "CASCADE",
                                   represent = represent,
                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "pr_slot.id",
@@ -4940,7 +4960,7 @@ class PRAvailabilityModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
-                  deduplicate = S3Duplicate(primary=("availability_id", "slot_id")),
+                  deduplicate = S3Duplicate(primary = ("availability_id", "slot_id")),
                   )
 
         # ---------------------------------------------------------------------
