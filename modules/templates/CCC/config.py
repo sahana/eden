@@ -3181,7 +3181,7 @@ $('.copy-link').click(function(e){
                     stable = s3db.hrm_skill
                     query = (stable.name.like("NHS%")) & \
                             (stable.deleted == False)
-                    rows = current.db(query).select(stable.id)
+                    rows = db(query).select(stable.id)
                     nhs_skill_ids = [row.id for row in rows]
                     s3db.add_components("pr_person",
                                         hrm_competency = {"name": "nhs_offer",
