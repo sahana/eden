@@ -620,6 +620,18 @@ def slot():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def date_formula():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def time_formula():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def tooltip():
     """ Ajax tooltips """
 
