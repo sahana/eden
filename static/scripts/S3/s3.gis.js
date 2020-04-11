@@ -3096,8 +3096,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             },
             {
                 dir: dir,
-                wrapDateLine: true,
                 isBaseLayer: isBaseLayer,
+                singleTile: tiled,
+                wrapDateLine: true,
                 // This is used to Save State
                 s3_layer_id: layer.id,
                 s3_layer_type: 'wms',
@@ -3122,7 +3123,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             wmsLayer.params.BGCOLOR = bgcolor;
         }
         if (tiled) {
-            wmsLayer.params.TILED = true;
+            wmsLayer.params.singleTile = true;
             wmsLayer.params.TILESORIGIN = [map.maxExtent.left, map.maxExtent.bottom];
         }
         if (!isBaseLayer) {

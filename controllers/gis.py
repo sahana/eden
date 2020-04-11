@@ -1674,16 +1674,16 @@ def layer_openstreetmap():
     EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        label_list_button=LIST_LAYERS,
+        label_create = ADD_LAYER,
+        title_display = LAYER_DETAILS,
+        title_list = LAYERS,
+        title_update = EDIT_LAYER,
+        label_list_button = LIST_LAYERS,
         label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED,
+        msg_record_deleted = LAYER_DELETED,
+        msg_list_empty = NO_LAYERS)
 
     # Pre-processor
     def prep(r):
@@ -1731,10 +1731,10 @@ def layer_bing():
     type = "Bing"
     EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_update=EDIT_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED)
+        label_create = ADD_LAYER,
+        title_update = EDIT_LAYER,
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED)
 
     s3db.configure(tablename,
                    deletable = False,
@@ -1788,10 +1788,10 @@ def layer_empty():
     type = "Empty"
     EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_update=EDIT_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED)
+        label_create = ADD_LAYER,
+        title_update = EDIT_LAYER,
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED)
 
     s3db.configure(tablename,
                    deletable = False,
@@ -1836,10 +1836,10 @@ def layer_google():
     type = "Google"
     EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_update=EDIT_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED)
+        label_create = ADD_LAYER,
+        title_update = EDIT_LAYER,
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED)
 
     s3db.configure(tablename,
                    deletable = False,
@@ -1894,16 +1894,16 @@ def layer_mgrs():
     EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        label_list_button=LIST_LAYERS,
+        label_create = ADD_LAYER,
+        title_display = LAYER_DETAILS,
+        title_list = LAYERS,
+        title_update = EDIT_LAYER,
+        label_list_button = LIST_LAYERS,
         label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED,
+        msg_record_deleted = LAYER_DELETED,
+        msg_list_empty = NO_LAYERS)
 
     s3db.configure(tablename,
                    deletable = False,
@@ -1951,16 +1951,16 @@ def layer_arcrest():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        label_list_button=LIST_LAYERS,
+        label_create = ADD_LAYER,
+        title_display = LAYER_DETAILS,
+        title_list = LAYERS,
+        title_update = EDIT_LAYER,
+        label_list_button = LIST_LAYERS,
         label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED,
+        msg_record_deleted = LAYER_DELETED,
+        msg_list_empty = NO_LAYERS)
 
     # Custom Method
     s3db.set_method(module, resourcename,
@@ -2018,16 +2018,16 @@ def layer_geojson():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        label_list_button=LIST_LAYERS,
+        label_create = ADD_LAYER,
+        title_display = LAYER_DETAILS,
+        title_list = LAYERS,
+        title_update = EDIT_LAYER,
+        label_list_button = LIST_LAYERS,
         label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED,
+        msg_record_deleted = LAYER_DELETED,
+        msg_list_empty = NO_LAYERS)
 
     # Pre-processor
     def prep(r):
@@ -2084,16 +2084,16 @@ def layer_georss():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        label_list_button=LIST_LAYERS,
+        label_create = ADD_LAYER,
+        title_display = LAYER_DETAILS,
+        title_list = LAYERS,
+        title_update = EDIT_LAYER,
+        label_list_button = LIST_LAYERS,
         label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED,
+        msg_record_deleted = LAYER_DELETED,
+        msg_list_empty = NO_LAYERS)
 
     # Custom Method
     s3db.set_method(module, resourcename,
@@ -2158,16 +2158,16 @@ def layer_gpx():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        label_list_button=LIST_LAYERS,
+        label_create = ADD_LAYER,
+        title_display = LAYER_DETAILS,
+        title_list = LAYERS,
+        title_update = EDIT_LAYER,
+        label_list_button = LIST_LAYERS,
         label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED,
+        msg_record_deleted = LAYER_DELETED,
+        msg_list_empty = NO_LAYERS)
 
     # Pre-processor
     def prep(r):
@@ -2219,16 +2219,16 @@ def layer_kml():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        label_list_button=LIST_LAYERS,
+        label_create = ADD_LAYER,
+        title_display = LAYER_DETAILS,
+        title_list = LAYERS,
+        title_update = EDIT_LAYER,
+        label_list_button = LIST_LAYERS,
         label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED,
+        msg_record_deleted = LAYER_DELETED,
+        msg_list_empty = NO_LAYERS)
 
     # Custom Method
     #s3db.set_method(module, resourcename,
@@ -2286,16 +2286,16 @@ def layer_openweathermap():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        label_list_button=LIST_LAYERS,
+        label_create = ADD_LAYER,
+        title_display = LAYER_DETAILS,
+        title_list = LAYERS,
+        title_update = EDIT_LAYER,
+        label_list_button = LIST_LAYERS,
         label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED,
+        msg_record_deleted = LAYER_DELETED,
+        msg_list_empty = NO_LAYERS)
 
     # Custom Method
     s3db.set_method(module, resourcename,
@@ -2356,16 +2356,16 @@ def layer_shapefile():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        label_list_button=LIST_LAYERS,
+        label_create = ADD_LAYER,
+        title_display = LAYER_DETAILS,
+        title_list = LAYERS,
+        title_update = EDIT_LAYER,
+        label_list_button = LIST_LAYERS,
         label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED,
+        msg_record_deleted = LAYER_DELETED,
+        msg_list_empty = NO_LAYERS)
 
     # Custom Method
     s3db.set_method(module, resourcename,
@@ -2481,16 +2481,16 @@ def layer_theme():
                 LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
                 NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
                 s3.crud_strings["gis_layer_theme"] = Storage(
-                    label_create=ADD_LAYER,
-                    title_display=LAYER_DETAILS,
-                    title_list=LAYERS,
-                    title_update=EDIT_LAYER,
-                    label_list_button=LIST_LAYERS,
+                    label_create = ADD_LAYER,
+                    title_display = LAYER_DETAILS,
+                    title_list = LAYERS,
+                    title_update = EDIT_LAYER,
+                    label_list_button = LIST_LAYERS,
                     label_delete_button = DELETE_LAYER,
-                    msg_record_created=LAYER_ADDED,
-                    msg_record_modified=LAYER_UPDATED,
-                    msg_record_deleted=LAYER_DELETED,
-                    msg_list_empty=NO_LAYERS)
+                    msg_record_created = LAYER_ADDED,
+                    msg_record_modified = LAYER_UPDATED,
+                    msg_record_deleted = LAYER_DELETED,
+                    msg_list_empty = NO_LAYERS)
         return True
     s3.prep = prep
 
@@ -2552,16 +2552,16 @@ def layer_tms():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        label_list_button=LIST_LAYERS,
+        label_create = ADD_LAYER,
+        title_display = LAYER_DETAILS,
+        title_list = LAYERS,
+        title_update = EDIT_LAYER,
+        label_list_button = LIST_LAYERS,
         label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED,
+        msg_record_deleted = LAYER_DELETED,
+        msg_list_empty = NO_LAYERS)
 
     # Custom Method
     s3db.set_method(module, resourcename,
@@ -2619,16 +2619,16 @@ def layer_wfs():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        label_list_button=LIST_LAYERS,
+        label_create = ADD_LAYER,
+        title_display = LAYER_DETAILS,
+        title_list = LAYERS,
+        title_update = EDIT_LAYER,
+        label_list_button = LIST_LAYERS,
         label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED,
+        msg_record_deleted = LAYER_DELETED,
+        msg_list_empty = NO_LAYERS)
 
     # Pre-processor
     def prep(r):
@@ -2681,16 +2681,16 @@ def layer_wms():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        label_list_button=LIST_LAYERS,
+        label_create = ADD_LAYER,
+        title_display = LAYER_DETAILS,
+        title_list = LAYERS,
+        title_update = EDIT_LAYER,
+        label_list_button = LIST_LAYERS,
         label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED,
+        msg_record_deleted = LAYER_DELETED,
+        msg_list_empty = NO_LAYERS)
 
     # Custom Method
     s3db.set_method(module, resourcename,
@@ -2747,16 +2747,16 @@ def layer_xyz():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        label_list_button=LIST_LAYERS,
+        label_create = ADD_LAYER,
+        title_display = LAYER_DETAILS,
+        title_list = LAYERS,
+        title_update = EDIT_LAYER,
+        label_list_button = LIST_LAYERS,
         label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED,
+        msg_record_deleted = LAYER_DELETED,
+        msg_list_empty = NO_LAYERS)
 
     # Custom Method
     s3db.set_method(module, resourcename,
@@ -2817,16 +2817,16 @@ def layer_js():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        label_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        label_list_button=LIST_LAYERS,
+        label_create = ADD_LAYER,
+        title_display = LAYER_DETAILS,
+        title_list = LAYERS,
+        title_update = EDIT_LAYER,
+        label_list_button = LIST_LAYERS,
         label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
+        msg_record_created = LAYER_ADDED,
+        msg_record_modified = LAYER_UPDATED,
+        msg_record_deleted = LAYER_DELETED,
+        msg_list_empty = NO_LAYERS)
 
     # Pre-processor
     def prep(r):
@@ -2943,7 +2943,9 @@ def feature_query():
 
     if r.representation != "geojson":
         session.error = ERROR.BAD_FORMAT
-        redirect(URL(c="default", f="index", args=None, vars=None))
+        redirect(URL(c="default", f="index",
+                     args = None,
+                     vars = None))
 
     # Execute the request
     output = r()
@@ -3010,7 +3012,7 @@ def poi():
                 # @ToDo: Allow multiple PoI layers
                 ftable = s3db.gis_layer_feature
                 layer = db(ftable.name == "PoIs").select(ftable.layer_id,
-                                                         limitby=(0, 1)
+                                                         limitby = (0, 1)
                                                          ).first()
                 if layer:
                     popup_edit_url = r.url(method = "update",
@@ -3074,7 +3076,7 @@ def display_feature():
                                                   table.lat,
                                                   table.lon,
                                                   table.wkt,
-                                                  limitby=(0, 1)
+                                                  limitby = (0, 1)
                                                   ).first()
 
     if not location:
@@ -3204,13 +3206,12 @@ def display_features():
     # Calculate an appropriate BBox
     bounds = gis.get_bounds(features=features)
 
-    map = gis.show_map(
-        features = [f.wkt for f in features],
-        bbox = bounds,
-        window = True,
-        closable = False,
-        collapsed = True
-    )
+    map = gis.show_map(features = [f.wkt for f in features],
+                       bbox = bounds,
+                       window = True,
+                       closable = False,
+                       collapsed = True
+                       )
 
     return {"map": map}
 
@@ -3392,23 +3393,24 @@ def geocode_manual():
                                 collapsed = True)
 
             # Pass the map back to the main controller
-            vars.update(_map=_map)
+            vars.update(_map = _map)
         return True
     s3.prep = lambda r, vars=vars: prep(r, vars)
 
     s3db.configure(table._tablename,
-                    listadd=False,
-                    list_fields=["id",
-                                 "name",
-                                 "address",
-                                 "parent"
-                                ])
+                   listadd = False,
+                   list_fields = ["id",
+                                  "name",
+                                  "address",
+                                  "parent"
+                                  ],
+                   )
 
     output = s3_rest_controller("gis", "location")
 
     _map = vars.get("_map", None)
     if _map and isinstance(output, dict):
-        output.update(_map=_map)
+        output.update(_map = _map)
 
     return output
 
@@ -3479,7 +3481,7 @@ def maps():
             raise HTTP(501)
 
         # Read the WMC record
-        record = db(table.id == id).select(limitby=(0, 1)).first()
+        record = db(table.id == id).select(limitby = (0, 1)).first()
         # & linked records
         #projection = db(db.gis_projection.id == record.projection).select(limitby=(0, 1)).first()
 
@@ -3566,7 +3568,8 @@ def maps():
                     (ltable.visibility == layer["visibility"]) & \
                     (ltable.opacity == opacity)
             _layer = db(query).select(ltable.id,
-                                      limitby=(0, 1)).first()
+                                      limitby = (0, 1)
+                                      ).first()
             if _layer:
                 # This is an existing layer
                 layers.append(_layer.id)
@@ -3593,16 +3596,16 @@ def maps():
                 except:
                     transparent = None
                 # Add a new record to the gis_wmc_layer table
-                _layer = ltable.insert(source=layer["source"],
-                                       name=name,
-                                       visibility=layer["visibility"],
-                                       opacity=opacity,
-                                       type_=type_,
-                                       title=layer["title"],
-                                       group_=group_,
-                                       fixed=fixed,
-                                       transparent=transparent,
-                                       img_format=format)
+                _layer = ltable.insert(source = layer["source"],
+                                       name = name,
+                                       visibility = layer["visibility"],
+                                       opacity = opacity,
+                                       type_ = type_,
+                                       title = layer["title"],
+                                       group_ = group_,
+                                       fixed = fixed,
+                                       transparent = transparent,
+                                       img_format = format)
                 layers.append(_layer)
 
         # @ToDo: Metadata (no way of editing this yet)
@@ -3650,7 +3653,8 @@ def maps():
                     (ltable.visibility == layer["visibility"]) & \
                     (ltable.opacity == opacity)
             _layer = db(query).select(ltable.id,
-                                      limitby=(0, 1)).first()
+                                      limitby = (0, 1)
+                                      ).first()
             if _layer:
                 # This is an existing layer
                 layers.append(_layer.id)
@@ -3677,22 +3681,25 @@ def maps():
                 except:
                     transparent = None
                 # Add a new record to the gis_wmc_layer table
-                _layer = ltable.insert(source=layer["source"],
-                                       name=name,
-                                       visibility=layer["visibility"],
-                                       opacity=opacity,
-                                       type_=type_,
-                                       title=layer["title"],
-                                       group_=group_,
-                                       fixed=fixed,
-                                       transparent=transparent,
-                                       img_format=format)
+                _layer = ltable.insert(source = layer["source"],
+                                       name = name,
+                                       visibility = layer["visibility"],
+                                       opacity = opacity,
+                                       type_ = type_,
+                                       title = layer["title"],
+                                       group_ = group_,
+                                       fixed = fixed,
+                                       transparent = transparent,
+                                       img_format = format)
                 layers.append(_layer)
 
         # @ToDo: Metadata (no way of editing this yet)
 
         # Update the record in the WMC table
-        db(table.id == id).update(lat=lat, lon=lon, zoom=zoom, layer_id=layers)
+        db(table.id == id).update(lat = lat,
+                                  lon = lon,
+                                  zoom = zoom,
+                                  layer_id = layers)
 
         # Return the ID of the saved record for the Bookmark
         output = json.dumps({"id": id}, separators=SEPARATORS)
@@ -3757,14 +3764,17 @@ def potlatch2():
 # =============================================================================
 def proxy():
     """
-    Based on http://trac.openlayers.org/browser/trunk/openlayers/examples/proxy.cgi
-    This is a blind proxy that we use to get around browser
-    restrictions that prevent the Javascript from loading pages not on the
-    same server as the Javascript. This has several problems: it's less
-    efficient, it might break some sites, and it's a security risk because
-    people can use this proxy to browse the web and possibly do bad stuff
-    with it. It only loads pages via http and https, but it can load any
-    content type. It supports GET and POST requests.
+        Based on http://trac.openlayers.org/browser/trunk/openlayers/examples/proxy.cgi
+        This is a blind proxy that we use to get around browser
+        restrictions that prevent the Javascript from loading pages not on the
+        same server as the Javascript. This has several problems: it's less
+        efficient, it might break some sites, and it's a security risk because
+        people can use this proxy to browse the web and possibly do bad stuff
+        with it. It only loads pages via http and https, but it can load any
+        content type. It supports GET and POST requests.
+
+        NB WFS Requests using this currently don't work with Python 3.x as the core models crashes when trying to read post_vars
+        https://bugs.python.org/issue27777
     """
 
     import socket
