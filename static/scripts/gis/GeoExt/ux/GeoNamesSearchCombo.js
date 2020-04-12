@@ -218,7 +218,7 @@ GeoExt.ux.GeoNamesSearchCombo = Ext.extend(Ext.form.ComboBox, {
      *  Url of the GeoNames service: http://www.GeoNames.org/export/GeoNames-search.html
      */
     //url: 'http://ws.geonames.org/searchJSON?',
-    url: 'http://api.geonames.org/searchJSON?',
+    url: 'https://secure.geonames.org/searchJSON?',
 
     /** private: constructor
      */
