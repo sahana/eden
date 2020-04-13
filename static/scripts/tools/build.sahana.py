@@ -288,7 +288,12 @@ def do_css():
 # =============================================================================
 # JS Building
 #
-def minify_from_cfg(minimize, name, source_dir, cfg_name, out_filename, extra_params=None):
+def minify_from_cfg(minimize,
+                    name,
+                    source_dir,
+                    cfg_name,
+                    out_filename,
+                    extra_params = None):
     """
         Merge+minify JS files from a JS config file (DRY helper for do_js)
     """
@@ -318,33 +323,36 @@ def set_minimize(warnings):
     """ Determine which JS compressor to use """
 
     # Do we have local version of the Closure Compiler available?
-    use_compressor = "jsmin" # Fallback
+    compressor = "jsmin" # Fallback
     try:
         import closure
-        use_compressor = "closure"
+        compressor = "closure"
         info("using local Closure Compiler")
     except Exception as E:
         info("No closure (%s)" % E)
         info("Download from http://dl.google.com/closure-compiler/compiler-latest.zip")
         try:
             import closure_ws
-            use_compressor = "closure_ws"
+            compressor = "closure_ws"
             info("Using Closure via Web Service - limited to files < 1Mb!")
         except ImportError:
             info("No closure_ws")
 
-    if use_compressor == "closure":
+    if compressor == "closure":
         if not warnings:
             closure.extra_params = "--warning_level QUIET"
         minimize = closure.minimize
-    elif use_compressor == "closure_ws":
+    elif compressor == "closure_ws":
         minimize = closure_ws.minimize
-    elif use_compressor == "jsmin":
+    elif compressor == "jsmin":
         minimize = jsmin.jsmin
 
-    return minimize
+    return minimize, compressor
 
-def do_js(minimize, do_gis = False, warnings = True):
+def do_js(minimize,
+          compressor,
+          do_gis = False,
+          warnings = True):
     """ Minifies the JavaScript """
 
     # -------------------------------------------------------------------------
@@ -596,7 +604,7 @@ def do_js(minimize, do_gis = False, warnings = True):
                                     configFilenameGxpFull)
 
         # Compress JS files
-        if use_compressor == "closure":
+        if compressor == "closure":
             # Suppress strict-mode errors
             minimize_ = lambda stream: minimize(stream,
                                                 extra_params = "--strict_mode_input=false",
@@ -605,7 +613,7 @@ def do_js(minimize, do_gis = False, warnings = True):
             minimize_ = minimize
 
         info("Compressing - OpenLayers JS")
-        if use_compressor == "closure_ws":
+        if compressor == "closure_ws":
             # Limited to files < 1Mb!
             minimizedOpenLayers = jsmin.jsmin(mergedOpenLayers)
             #minimizedOpenLayers = jsmin.jsmin("%s\n%s" % (mergedOpenLayers,
@@ -746,7 +754,7 @@ def main(argv):
         warnings = "NOWARN" not in argv
 
         # Determine which JS compressor to use
-        minimize = set_minimize(warnings)
+        minimize, compressor = set_minimize(warnings)
 
         if "template" in argv:
             # Build Template only
@@ -767,9 +775,13 @@ def main(argv):
             # Do All
             # Rebuild GIS JS?
             do_gis = "DOGIS" in argv
-            do_js(minimize=minimize, do_gis=do_gis, warnings=warnings)
+            do_js(minimize = minimize,
+                  compressor = compressor,
+                  do_gis = do_gis,
+                  warnings = warnings)
 
-        do_template(minimize=minimize, warnings=warnings)
+        do_template(minimize = minimize,
+                    warnings = warnings)
         do_css()
 
     info("Done.")

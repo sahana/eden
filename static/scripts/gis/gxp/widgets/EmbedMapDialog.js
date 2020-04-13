@@ -50,13 +50,6 @@ gxp.EmbedMapDialog = Ext.extend(Ext.Container, {
      */
     url: null,
 
-    /** api: property[url]
-     *  ``String`` the url to use as the iframe's src of the embed snippet. Can
-     *  be a url relative to the current href and will be converted to an
-     *  absolute one.
-     */
-    url: null,
-
     /* begin i18n */
     /** api: config[publishMessage] ``String`` i18n */
     publishMessage: "Your map is ready to be published to the web! Simply copy the following HTML to embed the map in your website:",

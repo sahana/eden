@@ -3773,8 +3773,8 @@ def proxy():
         with it. It only loads pages via http and https, but it can load any
         content type. It supports GET and POST requests.
 
-        NB WFS Requests using this currently don't work with Python 3.x as the core models crashes when trying to read post_vars
-        https://bugs.python.org/issue27777
+        NB WFS Requests using this in Python 3.x neeed a patch to Web2Py currently as otherwise the core models crash when trying to read post_vars:
+           https://github.com/web2py/web2py/pull/2309
     """
 
     import socket

@@ -4698,89 +4698,104 @@ S3.gis.yx = [
 
     // WMS
     var addWMSLayer = function(map, layer) {
-        var name = layer.name,
-            url = layer.url;
+        var bgcolor,
+            buffer,
+            dir,
+            isBaseLayer,
+            format,
+            name = layer.name,
+            opacity,
+            queryable,
+            legendURL,
+            singleTile,
+            style,
+            tiled,
+            transparent,
+            url = layer.url,
+            version,
+            visibility,
+            wms_map;
         if (layer.username && layer.password) {
-            var username = layer.username;
-            var password = layer.password;
+            var username = layer.username,
+                password = layer.password;
             url = url.replace('://', '://' + username + ':' + password + '@');
         }
         var layers = layer.layers;
         if (undefined != layer.visibility) {
-            var visibility = layer.visibility;
+            visibility = layer.visibility;
         } else {
-            var visibility = true;
+            visibility = true;
         }
         if (undefined != layer.dir) {
-            var dir = layer.dir;
+            dir = layer.dir;
             if ($.inArray(dir, map.s3.dirs) == -1) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
         } else {
             // Default folder
-            var dir = '';
+            dir = '';
         }
         if (undefined != layer.base) {
-            var isBaseLayer = layer.base;
+            isBaseLayer = layer.base;
         } else {
-            var isBaseLayer = false;
+            isBaseLayer = false;
         }
         if (undefined != layer.transparent) {
-            var transparent = layer.transparent;
+            transparent = layer.transparent;
         } else {
-            var transparent = true;
+            transparent = true;
         }
         if (undefined != layer.format) {
-            var format = layer.format;
+            format = layer.format;
         } else {
-            var format = 'image/png';
+            format = 'image/png';
         }
         if (undefined != layer.version) {
-            var version = layer.version;
+            version = layer.version;
         } else {
-            var version = '1.1.1';
+            version = '1.1.1';
         }
         if (layer.map) {
-            var wms_map = layer.map;
+            wms_map = layer.map;
         } else {
-            var wms_map = '';
+            wms_map = '';
         }
         // Server-side style NOT an internal JSON one
         if (layer.style) {
-            var style = layer.style;
+            style = layer.style;
         } else {
-            var style = '';
+            style = '';
         }
         if (undefined != layer.bgcolor) {
-            var bgcolor = '0x' + layer.bgcolor;
+            bgcolor = '0x' + layer.bgcolor;
         } else {
-            var bgcolor = '';
+            bgcolor = '';
         }
         if (undefined != layer.buffer) {
-            var buffer = layer.buffer;
+            buffer = layer.buffer;
         } else {
-            var buffer = 0;
+            buffer = 0;
         }
         if (undefined != layer.tiled) {
-            var tiled = layer.tiled;
+            tiled = layer.tiled;
         } else {
-            var tiled = false;
+            tiled = false;
         }
         if (undefined != layer.singleTile) {
-            var singleTile = layer.singleTile;
+            singleTile = layer.singleTile;
         } else {
-            var singleTile = false;
+            singleTile = false;
         }
         if (undefined != layer.opacity) {
-            var opacity = layer.opacity;
+            opacity = layer.opacity;
         } else {
-            var opacity = 1;
+            opacity = 1;
         }
         if (undefined != layer.queryable) {
-            var queryable = layer.queryable;
+            queryable = layer.queryable;
         } else {
-            var queryable = 1;
+            queryable = 1;
         }
         var legendTitle = '<div class="gis_layer_legend"><div class="gis_legend_title">' + name + '</div>';
         if (undefined != layer.desc) {
@@ -4788,24 +4803,23 @@ S3.gis.yx = [
         }
         if (map.s3.options.metadata) {
             // Use CMS to display Metadata
+            var label,
+                murl;
             if (undefined != layer.post_id) {
                 // Link to the existing page
                 if (i18n.gis_metadata) {
                     // Read-only view for end-users
-                    var label = i18n.gis_metadata;
-                    var murl = S3.Ap.concat('/cms/page/' + layer.post_id);
+                    label = i18n.gis_metadata;
+                    murl = S3.Ap.concat('/cms/page/' + layer.post_id);
                 } else {
                     // Edit view for Map Admins
-                    var label = i18n.gis_metadata_edit;
-                    var murl = S3.Ap.concat('/cms/post/' + layer.post_id + '/update?layer_id=' + layer.id);
+                    label = i18n.gis_metadata_edit;
+                    murl = S3.Ap.concat('/cms/post/' + layer.post_id + '/update?layer_id=' + layer.id);
                 }
             } else if (i18n.gis_metadata_create) {
                 // Link to create new page
-                var label = i18n.gis_metadata_create;
-                var murl = S3.Ap.concat('/cms/post/create?layer_id=' + layer.id);
-            } else {
-                // Skip
-                var label = '';
+                label = i18n.gis_metadata_create;
+                murl = S3.Ap.concat('/cms/post/create?layer_id=' + layer.id);
             }
             if (label) {
                 source = '<div class="gis_legend_src"><a href="' + murl + '" target="_blank">' + label + '</a></div>';
@@ -4830,9 +4844,9 @@ S3.gis.yx = [
         }
         legendTitle += '</div>';
         if (undefined != layer.legendURL) {
-            var legendURL = layer.legendURL;
+            legendURL = layer.legendURL;
         } else{
-            var legendURL;
+            legendURL;
         }
 
         var wmsLayer = new OpenLayers.Layer.WMS(
@@ -4869,7 +4883,6 @@ S3.gis.yx = [
             wmsLayer.params.BGCOLOR = bgcolor;
         }
         if (tiled) {
-            wmsLayer.params.singleTile = true;
             wmsLayer.params.TILESORIGIN = [map.maxExtent.left, map.maxExtent.bottom];
         }
         if (!isBaseLayer) {

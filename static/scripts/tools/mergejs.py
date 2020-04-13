@@ -204,7 +204,7 @@ def run (sourceDirectory, outputFilename = None, configFile = None):
         print("Resolution pass %s... " % resolution_pass)
         resolution_pass += 1
 
-        for filepath, info in files.items():
+        for filepath, info in list(files.items()):
             for path in info.requires:
                 if path not in files:
                     complete = False
