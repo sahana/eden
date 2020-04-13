@@ -4042,56 +4042,64 @@ S3.gis.yx = [
 
     // GPX
     var addGPXLayer = function(map, layer) {
-        var name = layer.name;
-        var url = layer.url;
-        var marker = layer.marker;
-        var marker_url = marker_url_path + marker.i;
-        var marker_height = marker.h;
-        var marker_width = marker.w;
+        var cluster_distance,
+            cluster_threshold,
+            dir,
+            marker = layer.marker,
+            name = layer.name,
+            opacity,
+            routes,
+            tracks,
+            url = layer.url,
+            visibility,
+            waypoints;
+        var marker_height = marker.h,
+            marker_url = marker_url_path + marker.i,
+            marker_width = marker.w;
         if (undefined != layer.waypoints) {
-            var waypoints = layer.waypoints;
+            waypoints = layer.waypoints;
         } else {
-            var waypoints = true;
+            waypoints = true;
         }
         if (undefined != layer.tracks) {
-            var tracks = layer.tracks;
+            tracks = layer.tracks;
         } else {
-            var tracks = true;
+            tracks = true;
         }
         if (undefined != layer.routes) {
-            var routes = layer.routes;
+            routes = layer.routes;
         } else {
-            var routes = true;
+            routes = true;
         }
         if (undefined != layer.visibility) {
-            var visibility = layer.visibility;
+            visibility = layer.visibility;
         } else {
-            var visibility = true;
+            visibility = true;
         }
         if (undefined != layer.dir) {
-            var dir = layer.dir;
+            dir = layer.dir;
             if ($.inArray(dir, map.s3.dirs) == -1) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
         } else {
             // Default folder
-            var dir = '';
+            dir = '';
         }
         if (undefined != layer.opacity) {
-            var opacity = layer.opacity;
+            opacity = layer.opacity;
         } else {
-            var opacity = 1;
+            opacity = 1;
         }
         if (undefined != layer.cluster_distance) {
-            var cluster_distance = layer.cluster_distance;
+            cluster_distance = layer.cluster_distance;
         } else {
-            var cluster_distance = cluster_distance_default;
+            cluster_distance = cluster_distance_default;
         }
         if (undefined != layer.cluster_threshold) {
-            var cluster_threshold = layer.cluster_threshold;
+            cluster_threshold = layer.cluster_threshold;
         } else {
-            var cluster_threshold = cluster_threshold_default;
+            cluster_threshold = cluster_threshold_default;
         }
 
         // Needs to be uniquely instantiated
@@ -4153,49 +4161,56 @@ S3.gis.yx = [
 
     // KML
     var addKMLLayer = function(map, layer) {
-        var s3 = map.s3;
-        var name = layer.name;
-        var url = layer.url;
+        var body,
+            cluster_distance,
+            cluster_threshold,
+            dir,
+            name = layer.name,
+            refresh,
+            s3 = map.s3,
+            title,
+            url = layer.url,
+            visibility;
         if (undefined != layer.title) {
-            var title = layer.title;
+            title = layer.title;
         } else {
-            var title = 'name';
+            title = 'name';
         }
         if (undefined != layer.body) {
-            var body = layer.body;
+            body = layer.body;
         } else {
-            var body = 'description';
+            body = 'description';
         }
         if (undefined != layer.refresh) {
-            var refresh = layer.refresh;
+            refresh = layer.refresh;
         } else {
-            var refresh = 900; // seconds (so 15 mins)
+            refresh = 900; // seconds (so 15 mins)
         }
         if (undefined != layer.visibility) {
-            var visibility = layer.visibility;
+            visibility = layer.visibility;
         } else {
             // Default to visible
-            var visibility = true;
+            visibility = true;
         }
         if (undefined != layer.dir) {
-            var dir = layer.dir;
+            dir = layer.dir;
             if ($.inArray(dir, s3.dirs) == -1) {
                 // Add this folder to the list of folders
                 s3.dirs.push(dir);
             }
         } else {
             // Default folder
-            var dir = '';
+            dir = '';
         }
         if (undefined != layer.cluster_distance) {
-            var cluster_distance = layer.cluster_distance;
+            cluster_distance = layer.cluster_distance;
         } else {
-            var cluster_distance = cluster_distance_default;
+            cluster_distance = cluster_distance_default;
         }
         if (undefined != layer.cluster_threshold) {
-            var cluster_threshold = layer.cluster_threshold;
+            cluster_threshold = layer.cluster_threshold;
         } else {
-            var cluster_threshold = cluster_threshold_default;
+            cluster_threshold = cluster_threshold_default;
         }
 
         // Styling: Base
@@ -4279,8 +4294,12 @@ S3.gis.yx = [
 
     // OpenStreetMap
     var addOSMLayer = function(map, layer) {
-        var name = layer.name;
-        var url = [layer.url1];
+        var dir,
+            isBaseLayer,
+            name = layer.name,
+            numZoomLevels,
+            url = [layer.url1],
+            visibility;
         if (undefined != layer.url2) {
             url.push(layer.url2);
         }
@@ -4288,30 +4307,30 @@ S3.gis.yx = [
             url.push(layer.url3);
         }
         if (undefined != layer.visibility) {
-            var visibility = layer.visibility;
+            visibility = layer.visibility;
         } else {
             // Default to visible
-            var visibility = true;
+            visibility = true;
         }
         if (undefined != layer.dir) {
-            var dir = layer.dir;
+            dir = layer.dir;
             if ($.inArray(dir, map.s3.dirs) == -1) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
         } else {
             // Default folder
-            var dir = '';
+            dir = '';
         }
         if (undefined != layer.base) {
-            var isBaseLayer = layer.base;
+            isBaseLayer = layer.base;
         } else {
-            var isBaseLayer = true;
+            isBaseLayer = true;
         }
         if (undefined != layer.zoomLevels) {
-            var numZoomLevels = layer.zoomLevels;
+            numZoomLevels = layer.zoomLevels;
         } else {
-            var numZoomLevels = 19;
+            numZoomLevels = 19;
         }
 
         var osmLayer = new OpenLayers.Layer.TMS(
@@ -4345,9 +4364,9 @@ S3.gis.yx = [
     // Supports OpenStreetMap TMS Layers
     var osm_getTileURL = function(bounds) {
         var res = this.map.getResolution();
-        var x = Math.round((bounds.left - this.maxExtent.left) / (res * this.tileSize.w));
-        var y = Math.round((this.maxExtent.top - bounds.top) / (res * this.tileSize.h));
-        var z = this.map.getZoom();
+        var x = Math.round((bounds.left - this.maxExtent.left) / (res * this.tileSize.w)),
+            y = Math.round((this.maxExtent.top - bounds.top) / (res * this.tileSize.h)),
+            z = this.map.getZoom();
         var limit = Math.pow(2, z);
         if (y < 0 || y >= limit) {
             return OpenLayers.Util.getImagesLocation() + '404.png';
@@ -4364,8 +4383,8 @@ S3.gis.yx = [
 
     // OpenWeatherMap
     var addOWMLayers = function(map) {
-        var owm = map.s3.options.OWM;
-        var layer;
+        var layer
+            owm = map.s3.options.OWM;
         if (owm.station) {
             layer = new OpenLayers.Layer.Vector.OWMStations(
                 owm.station.name,
@@ -4408,8 +4427,11 @@ S3.gis.yx = [
 
     // TMS
     var addTMSLayer = function(map, layer) {
-        var name = layer.name;
-        var url = [layer.url];
+        var dir,
+            format,
+            name = layer.name,
+            numZoomLevels,
+            url = [layer.url];
         if (undefined != layer.url2) {
             url.push(layer.url2);
         }
@@ -4418,24 +4440,24 @@ S3.gis.yx = [
         }
         var layername = layer.layername;
         if (undefined != layer.zoomLevels) {
-            var numZoomLevels = layer.zoomLevels;
+            numZoomLevels = layer.zoomLevels;
         } else {
-            var numZoomLevels = 19;
+            numZoomLevels = 19;
         }
         if (undefined != layer.dir) {
-            var dir = layer.dir;
+            dir = layer.dir;
             if ($.inArray(dir, map.s3.dirs) == -1) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
         } else {
             // Default folder
-            var dir = '';
+            dir = '';
         }
         if (undefined != layer.format) {
-            var format = layer.format;
+            format = layer.format;
         } else {
-            var format = 'png';
+            format = 'png';
         }
 
         var tmsLayer = new OpenLayers.Layer.TMS(
@@ -4848,8 +4870,6 @@ S3.gis.yx = [
         legendTitle += '</div>';
         if (undefined != layer.legendURL) {
             legendURL = layer.legendURL;
-        } else{
-            legendURL;
         }
 
         var wmsLayer = new OpenLayers.Layer.WMS(
@@ -4915,8 +4935,11 @@ S3.gis.yx = [
 
     // XYZ
     var addXYZLayer = function(map, layer) {
-        var name = layer.name;
-        var url = [layer.url];
+        var dir,
+            format,
+            name = layer.name,
+            numZoomLevels,
+            url = [layer.url];
         if (undefined != layer.url2) {
             url.push(layer.url2);
         }
@@ -4925,24 +4948,24 @@ S3.gis.yx = [
         }
         var layername = layer.layername;
         if (undefined != layer.zoomLevels) {
-            var numZoomLevels = layer.zoomLevels;
+            numZoomLevels = layer.zoomLevels;
         } else {
-            var numZoomLevels = 19;
+            numZoomLevels = 19;
         }
         if (undefined != layer.dir) {
-            var dir = layer.dir;
+            dir = layer.dir;
             if ($.inArray(dir, map.s3.dirs) == -1) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
         } else {
             // Default folder
-            var dir = '';
+            dir = '';
         }
         if (undefined != layer.format) {
-            var format = layer.format;
+            format = layer.format;
         } else {
-            var format = 'png';
+            format = 'png';
         }
 
         var xyzLayer = new OpenLayers.Layer.XYZ(
