@@ -10,7 +10,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3.s3rest import S3Request
-from s3compat import StringIO
+from s3compat import BytesIO
 
 from unit_tests import run_suite
 
@@ -121,7 +121,7 @@ class POSTFilterTests(unittest.TestCase):
 
         # Test with valid filter expression JSON
         jsonstr = '''{"service_organisation.service_id__belongs":"1","~.example__lt":1,"~.other__like":[1,2],"~.name__like":"*Liquiçá*"}'''
-        request._body = StringIO(jsonstr)
+        request._body = BytesIO(jsonstr.encode("utf-8"))
         r = S3Request(prefix = "org",
                       name = "organisation",
                       http = "POST",
@@ -151,7 +151,7 @@ class POSTFilterTests(unittest.TestCase):
         assertEqual(get_vars.get("test"), "retained")
 
         # Test without $search
-        request._body = StringIO('{"service_organisation.service_id__belongs":"1"}')
+        request._body = BytesIO(b'{"service_organisation.service_id__belongs":"1"}')
         r = S3Request(prefix = "org",
                       name = "organisation",
                       http = "POST",
@@ -172,7 +172,7 @@ class POSTFilterTests(unittest.TestCase):
         assertEqual(get_vars.get("test"), "retained")
 
         # Test with valid JSON but invalid filter expression
-        request._body = StringIO('[1,2,3]')
+        request._body = BytesIO(b'[1,2,3]')
         r = S3Request(prefix = "org",
                       name = "organisation",
                       http = "POST",
@@ -193,7 +193,7 @@ class POSTFilterTests(unittest.TestCase):
         assertEqual(get_vars.get("test"), "retained")
 
         # Test with empty body
-        request._body = StringIO('')
+        request._body = BytesIO(b'')
         r = S3Request(prefix = "org",
                       name = "organisation",
                       http = "POST",
