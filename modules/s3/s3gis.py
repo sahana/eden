@@ -7018,10 +7018,10 @@ class MAP(DIV):
 
         layer_types = []
         lappend = layer_types.append
-        layers = db(query).select(join=join,
-                                  left=left,
-                                  limitby=limitby,
-                                  orderby=orderby,
+        layers = db(query).select(join = join,
+                                  left = left,
+                                  limitby = limitby,
+                                  orderby = orderby,
                                   *fields)
         if not layers:
             # Use Site Default base layer
@@ -7272,7 +7272,8 @@ class MAP2(DIV):
                            "_style": "height:%ipx;width:100%%" % height,
                            }
         # @ToDo: Add HTML Controls (Toolbar, LayerTree, etc)
-        self.components = [DIV(_class="s3-gis-tooltip"),
+        self.components = [DIV(_class = "s3-gis-tooltip",
+                               ),
                            ]
 
         # Load CSS now as too late in xml()
@@ -7514,10 +7515,10 @@ class MAP2(DIV):
 
         layer_types = []
         lappend = layer_types.append
-        layers = db(query).select(join=join,
-                                  left=left,
-                                  limitby=limitby,
-                                  orderby=orderby,
+        layers = db(query).select(join = join,
+                                  left = left,
+                                  limitby = limitby,
+                                  orderby = orderby,
                                   *fields)
         if not layers:
             # Use Site Default base layer
@@ -7528,7 +7529,8 @@ class MAP2(DIV):
                     (ltable.base == True) & \
                     (ltable.enabled == True)
             layers = db(query).select(*fields,
-                                      limitby=(0, 1))
+                                      limitby = (0, 1)
+                                      )
             if not layers:
                 # Just show EmptyLayer
                 layer_types = [LayerEmpty]
@@ -7612,7 +7614,7 @@ class MAP2(DIV):
             auth = current.auth
 
             if auth.s3_has_permission("create", "gis_hierarchy"):
-                error_message = DIV(_class="mapError")
+                error_message = DIV(_class = "mapError")
                 # Deliberately not T() to save unneccessary load on translators
                 error_message.append("Map cannot display without GIS config!")
                 error_message.append(XML(" (You can can create one "))
@@ -9259,6 +9261,7 @@ class LayerWMS(Layer):
                     "style": (self.style, (None, "")),
                     "bgcolor": (self.bgcolor, (None, "")),
                     "tiled": (self.tiled, (False,)),
+                    "singleTile": (self.single_tile, (False,)),
                     "legendURL": (legend_url, (None, "")),
                     "queryable": (self.queryable, (False,)),
                     "desc": (self.description, (None, "")),
@@ -9454,8 +9457,9 @@ class Projection(object):
             table = s3db.gis_projection
             query = (table.id == projection_id)
             projection = current.db(query).select(table.epsg,
-                                                  limitby=(0, 1),
-                                                  cache=s3db.cache).first()
+                                                  limitby = (0, 1),
+                                                  cache = s3db.cache
+                                                  ).first()
         else:
             # Default projection
             config = GIS.get_config()
@@ -9470,9 +9474,9 @@ class Style(object):
     """
 
     def __init__(self,
-                 style_id=None,
-                 layer_id=None,
-                 aggregate=None):
+                 style_id = None,
+                 layer_id = None,
+                 aggregate = None):
 
         db = current.db
         s3db = current.s3db
@@ -9546,7 +9550,7 @@ class Style(object):
                 ftable = s3db.gis_layer_feature
                 layer = db(ftable.layer_id == layer_id).select(ftable.controller,
                                                                ftable.function,
-                                                               limitby=(0, 1)
+                                                               limitby = (0, 1)
                                                                ).first()
                 if layer:
                     style.url_format = "%s/{id}.plain" % \

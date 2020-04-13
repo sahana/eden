@@ -1614,6 +1614,9 @@ class S3GISConfigModel(S3Model):
         - Site config
         - Personal config
         - OU config (Organisation &/or Team)
+
+        @ToDo: Make this be able to import/export OWS Context:
+               http://www.owscontext.org
     """
 
     names = ("gis_config",
@@ -3924,17 +3927,15 @@ class S3MapModel(S3Model):
                                                               T("Note that when using geowebcache, this can be set in the GWC config."))),
                            ),
                      # https://stackoverflow.com/questions/2883122/openlayers-layers-tiled-vs-single-tile
-                     # @ToDo: Make this configurable
-                     # Currently we enable this for all tiled requests
-                     #Field("single_tile", "boolean",
-                     #      default = False,
-                     #      label = T("Single Tile"),
-                     #      represent = s3_yes_no_represent,
-                     #      comment = DIV(_class="tooltip",
-                     #                    _title="%s|%s|%s" % (T("Single Tile"),
-                     #                                         T("Render 1 big tile instead of lots of smaller tiles."),
-                     #                                         )),
-                     #      ),
+                     Field("single_tile", "boolean",
+                           default = False,
+                           label = T("Single Tile"),
+                           represent = s3_yes_no_represent,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Single Tile"),
+                                                           T("Render 1 big tile instead of lots of smaller tiles."),
+                                                           )),
+                           ),
                      Field("buffer", "integer",
                            default = 0,
                            label = T("Buffer"),
