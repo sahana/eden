@@ -124,7 +124,7 @@ class HospitalDataModel(S3Model):
             14: T("Operating Rooms"),
             15: T("Cholera Treatment"),
             16: T("Ebola Treatment"),
-            17: T("Respirator"), # e.g. COVID-19
+            17: T("Respirator"),
             99: T("Other")
         } #: Bed Type Options
 
@@ -1311,14 +1311,8 @@ def hms_hospital_rheader(r, tabs=None):
                        permit("create", "hrm_human_resource_site"):
                         tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
 
-                try:
-                    tabs = tabs + s3db.req_tabs(r, match=False)
-                except:
-                    pass
-                try:
-                    tabs = tabs + s3db.inv_tabs(r)
-                except:
-                    pass
+                tabs.extend(s3db.req_tabs(r, match=False))
+                tabs.extend(s3db.inv_tabs(r))
 
                 tabs.append((T("User Roles"), "roles"))
 
