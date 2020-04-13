@@ -26,6 +26,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
  *
  * Copied from:
  * https://github.com/geopython/OWSLib/blob/master/owslib/crs.py
+ *
+ * @ToDo: Introspect server side using code like this:
+ * https://git.osgeo.org/gitea/GDI-RP/MapSkinner/src/branch/pre_master/service/helper/epsg_api.py
  */
 S3.gis.yx = [
     4326,

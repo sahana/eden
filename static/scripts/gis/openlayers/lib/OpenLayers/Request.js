@@ -341,9 +341,12 @@ OpenLayers.Util.extend(OpenLayers.Request, {
         if(!("CONTENT-TYPE" in OpenLayers.Util.upperCaseObject(config.headers))) {
             config.headers["Content-Type"] = "application/xml";
         }
-        config.headers["Content-Type"] = "application/xml";
-        // Add a Content Disposition to work around this Python bug: https://bugs.python.org/issue27777
-        // Without this the gis/proxy fails as core models crash when trying to read post_vars: https://github.com/web2py/web2py/issues/2262
+        /*
+         * S3: Add a Content Disposition to work around this Python bug:
+         *     https://bugs.python.org/issue27777
+         *     Without this the gis/proxy fails as core models crash when trying to read post_vars:
+         *     https://github.com/web2py/web2py/issues/2262
+         */
         config.headers["Content-Disposition"] = 'attachment; filename="openlayers.xml"';
         return OpenLayers.Request.issue(config);
     },
