@@ -259,6 +259,7 @@ def config(settings):
         ##("lo", "Lao"),
         ##("lt", "Lithuanian"),
         ##("mg", "Malagasy"),
+        ##("mk", "Macedonian"),
         ("mn", "Mongolian"),
         ##("ms", "Malaysian"),
         ("my", "Burmese"), # Myanmar

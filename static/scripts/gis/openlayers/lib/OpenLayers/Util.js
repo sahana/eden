@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2013 by OpenLayers Contributors (see authors.txt for
+/* Copyright (c) 2006-2015 by OpenLayers Contributors (see authors.txt for
  * full list of contributors). Published under the 2-clause BSD license.
  * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
@@ -70,8 +70,10 @@ OpenLayers.Util.isElement = function(o) {
  * Returns:
  * {Boolean} true if the object is an array.
  */
-OpenLayers.Util.isArray = function(a) {
-    return (Object.prototype.toString.call(a) === '[object Array]');
+OpenLayers.Util.isArray = function(arg) {
+    // S3: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray#Polyfill
+    //return (Object.prototype.toString.call(a) === '[object Array]');
+    return Object.prototype.toString.call(arg) === '[object Array]';
 };
 
 /** 
@@ -89,7 +91,7 @@ OpenLayers.Util.isArray = function(a) {
 OpenLayers.Util.removeItem = function(array, item) {
     for(var i = array.length - 1; i >= 0; i--) {
         if(array[i] == item) {
-            array.splice(i,1);
+            array.splice(i, 1);
             //break;more than once??
         }
     }
@@ -109,7 +111,9 @@ OpenLayers.Util.removeItem = function(array, item) {
  *           If not found, returns -1.
  */
 OpenLayers.Util.indexOf = function(array, obj) {
-    // use the build-in function if available.
+    // S3: Just use the built-in function as commonplace now
+    return array.indexOf(obj);
+    /* use the built-in function if available.
     if (typeof array.indexOf == "function") {
         return array.indexOf(obj);
     } else {
@@ -119,7 +123,7 @@ OpenLayers.Util.indexOf = function(array, obj) {
             }
         }
         return -1;   
-    }
+    } */
 };
 
 
@@ -471,7 +475,7 @@ OpenLayers.Util.applyDefaults = function (to, from) {
     to = to || {};
     /*
      * FF/Windows < 2.0.0.13 reports "Illegal operation on WrappedNative
-     * prototype object" when calling hawOwnProperty if the source object is an
+     * prototype object" when calling hasOwnProperty if the source object is an
      * instance of window.Event.
      */
     var fromIsEvt = typeof window.Event == "function"
@@ -508,7 +512,7 @@ OpenLayers.Util.applyDefaults = function (to, from) {
  *          http parameter notation. 
  *          (ex. <i>"key1=value1&key2=value2&key3=value3"</i>)
  *          If a parameter is actually a list, that parameter will then
- *          be set to a comma-seperated list of values (foo,bar) instead
+ *          be set to a comma-separated list of values (foo,bar) instead
  *          of being URL escaped (foo%3Abar). 
  */
 OpenLayers.Util.getParameterString = function(params) {
@@ -1256,7 +1260,7 @@ OpenLayers.Util.pagePosition =  function(forElement) {
 
 /**
  * Function: getViewportElement
- * Returns die viewport element of the document. The viewport element is
+ * Returns the viewport element of the document. The viewport element is
  * usually document.documentElement, except in IE,where it is either
  * document.body or document.documentElement, depending on the document's
  * compatibility mode (see
@@ -1266,6 +1270,7 @@ OpenLayers.Util.pagePosition =  function(forElement) {
  * {DOMElement}
  */
 OpenLayers.Util.getViewportElement = function() {
+    /* S3: We no longer need to support IE and want to avoid the arguments.callee which Closure objects to
     var viewportElement = arguments.callee.viewportElement;
     if (viewportElement == undefined) {
         viewportElement = (OpenLayers.BROWSER_NAME == "msie" &&
@@ -1274,6 +1279,8 @@ OpenLayers.Util.getViewportElement = function() {
         arguments.callee.viewportElement = viewportElement;
     }
     return viewportElement;
+    */
+    return document.documentElement;
 };
 
 /** 
