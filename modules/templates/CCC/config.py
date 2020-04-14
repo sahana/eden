@@ -3369,7 +3369,7 @@ $('.copy-link').click(function(e){
                                   S3DateTime.datetime_represent(dt, utc=True)
                         list_fields.append((T("Registration Date"), "created_on"))
 
-                    from s3 import S3OptionsFilter, S3TextFilter
+                    from s3 import S3EmptyFilter, S3OptionsFilter, S3TextFilter
                     resource.configure(list_fields = list_fields,
                                        filter_widgets = [S3TextFilter(["first_name",
                                                                        "middle_name",
@@ -3393,6 +3393,9 @@ $('.copy-link').click(function(e){
                                                          S3OptionsFilter("certification.certificate_id",
                                                                          label = T("Qualification"),
                                                                          ),
+                                                         S3EmptyFilter("nhs_offer.id",
+                                                                       label = T("No NHS Offer"),
+                                                                       ),
                                                          ],
                                        )
 

@@ -40,6 +40,7 @@ __all__ = ("S3FilterWidget",
            "S3SliderFilter",
            "S3TextFilter",
            "S3NotEmptyFilter",
+           "S3EmptyFilter",
            "S3FilterForm",
            "S3Filter",
            "S3FilterString",
@@ -144,10 +145,11 @@ class S3FilterWidget(object):
 
         if type(variable) is list:
             variable = "&".join(variable)
-        return INPUT(_type="hidden",
-                     _id="%s-data" % self.attr["_id"],
-                     _class="filter-widget-data %s-data" % self._class,
-                     _value=variable)
+        return INPUT(_type = "hidden",
+                     _id = "%s-data" % self.attr["_id"],
+                     _class = "filter-widget-data %s-data" % self._class,
+                     _value = variable,
+                     )
 
     # -------------------------------------------------------------------------
     # Helper methods
@@ -500,10 +502,11 @@ class S3RangeFilter(S3FilterWidget):
 
         for o, v in zip(operators, variables):
             elements.append(
-                INPUT(_type="hidden",
-                      _id="%s-%s-data" % (widget_id, o),
-                      _class="filter-widget-data %s-data" % self._class,
-                      _value=v))
+                INPUT(_type = "hidden",
+                      _id = "%s-%s-data" % (widget_id, o),
+                      _class = "filter-widget-data %s-data" % self._class,
+                      _value = v,
+                      ))
 
         return elements
 
@@ -835,7 +838,8 @@ class S3DateFilter(S3RangeFilter):
                 INPUT(_type = "hidden",
                       _id = "%s-%s-data" % (_id, operator),
                       _class = "filter-widget-data %s-data" % self._class,
-                      _value = variable))
+                      _value = variablen
+                      ))
 
         return elements
 
@@ -1558,15 +1562,15 @@ class S3LocationFilter(S3FilterWidget):
                                         header = header_opt,
                                         selectedList = opts.get("selectedList", 3),
                                         noneSelectedText = T("Select %(location)s") % \
-                                                             dict(location=levels[level]["label"]))
+                                                             {"location": levels[level]["label"]})
                 if first:
                     # Visible Multiselect Widget added to the page
                     attr["_class"] = _class
                     options = levels[level]["options"]
-                    dummy_field = Storage(name=name,
-                                          type=ftype,
-                                          requires=IS_IN_SET(options,
-                                                             multiple=True))
+                    dummy_field = Storage(name = name,
+                                          type = ftype,
+                                          requires = IS_IN_SET(options,
+                                                               multiple=True))
                     widget = w(dummy_field, _values, **attr)
                     first = False
                 else:
@@ -1579,10 +1583,10 @@ class S3LocationFilter(S3FilterWidget):
                     jquery_ready = s3.jquery_ready
                     # Build the widget with the MultiSelect activation script
                     s3.jquery_ready = []
-                    dummy_field = Storage(name=name,
-                                          type=ftype,
-                                          requires=IS_IN_SET([],
-                                                             multiple=True))
+                    dummy_field = Storage(name = name,
+                                          type = ftype,
+                                          requires = IS_IN_SET([],
+                                                               multiple=True))
                     widget = w(dummy_field, _values, **attr)
                     # Extract the MultiSelect activation script
                     script = s3.jquery_ready[0]
@@ -1613,10 +1617,11 @@ class S3LocationFilter(S3FilterWidget):
         oappend = output.append
         i = 0
         for level in self.levels:
-            widget = INPUT(_type="hidden",
-                           _id="%s-%s-data" % (self.attr["_id"], level),
-                           _class="filter-widget-data %s-data" % self._class,
-                           _value=variable[i])
+            widget = INPUT(_type = "hidden",
+                           _id = "%s-%s-data" % (self.attr["_id"], level),
+                           _class = "filter-widget-data %s-data" % self._class,
+                           _value = variable[i],
+                           )
             oappend(widget)
             i += 1
 
@@ -2000,10 +2005,10 @@ class S3LocationFilter(S3FilterWidget):
                 # Filter out old Locations
                 # @ToDo: Allow override
                 resource2.add_filter(gtable.end_date == None)
-                _rows = resource2.select(fields=fields,
-                                         limit=None,
-                                         virtual=False,
-                                         as_rows=True)
+                _rows = resource2.select(fields = fields,
+                                         limit = None,
+                                         virtual = False,
+                                         as_rows = True)
                 if rows2:
                     rows2 &= _rows
                 else:
@@ -2244,7 +2249,7 @@ class S3MapFilter(S3FilterWidget):
                                     height = opts_get("height", settings.get_gis_map_height()),
                                     width = opts_get("width", settings.get_gis_map_width()),
                                     collapsed = True,
-                                    callback='''S3.search.s3map('%s')''' % map_id,
+                                    callback = '''S3.search.s3map('%s')''' % map_id,
                                     feature_resources = feature_resources,
                                     toolbar = toolbar,
                                     add_polygon = True,
@@ -2413,15 +2418,16 @@ class S3OptionsFilter(S3FilterWidget):
         attr["_class"] = " ".join(set(classes)) if classes else None
 
         # Render the widget
-        dummy_field = Storage(name=name,
-                              type=ftype,
-                              requires=IS_IN_SET(options, multiple=True))
+        dummy_field = Storage(name = name,
+                              type = ftype,
+                              requires = IS_IN_SET(options, multiple=True),
+                              )
         widget = w(dummy_field, values, **attr)
 
         return TAG[""](any_all,
                        widget,
                        SPAN(noopt,
-                            _class="no-options-available%s" % hide_noopt,
+                            _class = "no-options-available%s" % hide_noopt,
                             ),
                        )
 
@@ -2957,6 +2963,39 @@ class S3NotEmptyFilter(S3FilterWidget):
         attr["_class"] = _class
         attr["_type"] = "checkbox"
         attr["value"] = True if "None" in values else False
+
+        return INPUT(**attr)
+
+# =============================================================================
+class S3EmptyFilter(S3FilterWidget):
+    """
+        Filter to check for No Component records of a type
+        - e.g. Filter out all those people who have a certain qualification already
+        - use with a Custom Filtered Component "custom.id"
+    """
+
+    _class = "value-filter"
+
+    operator = "eq"
+
+    # -------------------------------------------------------------------------
+    def widget(self, resource, values):
+        """
+            Render this widget as HTML helper object(s)
+
+            @param resource: the resource
+            @param values: the search values from the URL query
+        """
+
+        attr = self.attr
+        _class = self._class
+        if "_class" in attr and attr["_class"]:
+            _class = "%s %s" % (attr["_class"], _class)
+        else:
+            _class = _class
+        attr["_class"] = _class
+        attr["_type"] = "checkbox"
+        attr["value"] = True if None in values else False
 
         return INPUT(**attr)
 

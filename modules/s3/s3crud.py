@@ -1554,7 +1554,7 @@ class S3CRUD(S3Method):
             dtargs["dt_permalink"] = r.url()
             datatable = dt.html(totalrows,
                                 displayrows,
-                                id=list_id,
+                                id = list_id,
                                 **dtargs)
 
             # View + data
