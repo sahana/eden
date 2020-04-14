@@ -838,7 +838,7 @@ class S3DateFilter(S3RangeFilter):
                 INPUT(_type = "hidden",
                       _id = "%s-%s-data" % (_id, operator),
                       _class = "filter-widget-data %s-data" % self._class,
-                      _value = variablen
+                      _value = variable,
                       ))
 
         return elements
