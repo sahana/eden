@@ -856,6 +856,11 @@ class TranslateReadFiles(object):
                             "stats_demographic_id",
                             )
 
+        # List of fields which have an S3ReusableField defined but we
+        # know we don't wish to translate
+        never_translate = ("gis_location_id",
+                           )
+
         # Use bulk importer class to parse tasks.cfg in template folder
         bi = S3BulkImporter()
         S = Strings()
@@ -879,6 +884,8 @@ class TranslateReadFiles(object):
                 if fieldname in always_translate:
                     translate = True
                     represent = Storage(fields = ["name"])
+                elif fieldname in never_translate:
+                    continue
                 elif hasattr(s3db, fieldname) is False:
                     continue
                 else:
