@@ -1192,10 +1192,12 @@ def translate():
             if form.accepts(request.vars, session):
                 # Retrieve strings from the uploaded file
                 from s3.s3translate import TranslateReadFiles
-                f = request.vars.upload.file
+                f = open(user_file, "rb")
+                user_data = request.vars.upload.file.read().decode("utf-8").splitlines()
+                f.close()
                 strings = []
                 R = TranslateReadFiles()
-                for line in f:
+                for line in user_data:
                     strings.append(line)
                 # Update the file containing user strings
                 R.merge_user_strings_file(strings)
