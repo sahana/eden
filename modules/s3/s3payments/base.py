@@ -915,6 +915,61 @@ class S3PaymentService(object):
         return row.name if row else None
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def get_end_date(plan_id, start_date, cycles=None):
+        """
+            Compute the end-date for a subscription
+
+            @param plan_id: the subscription plan ID
+            @param start_date: the start date of the subscription
+            @param cycles: the total number of billing cycles
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        end_date = delta = None
+
+        ptable = s3db.fin_subscription_plan
+        query = (ptable.id == plan_id) & \
+                (ptable.deleted == False)
+        row = db(query).select(ptable.interval_count,
+                               ptable.interval_unit,
+                               ptable.fixed,
+                               ptable.total_cycles,
+                               limitby = (0, 1),
+                               ).first()
+
+        if start_date and row:
+
+            if cycles is None and row.fixed:
+                cycles = row.total_cycles
+
+            if cycles:
+
+                intervals = row.interval_count
+                if intervals is None:
+                    intervals = 0
+                total_intervals = intervals * cycles
+
+                if total_intervals:
+                    from dateutil.relativedelta import relativedelta
+                    unit = row.interval_unit
+                    if unit == "DAY":
+                        delta = relativedelta(days=total_intervals)
+                    elif unit == "WEEK":
+                        delta = relativedelta(weeks=total_intervals)
+                    elif unit == "MONTH":
+                        delta = relativedelta(months=total_intervals)
+                    elif unit == "YEAR":
+                        delta = relativedelta(years=total_intervals)
+
+                if delta:
+                    end_date = start_date + delta
+
+        return end_date
+
+    # -------------------------------------------------------------------------
     # Factory Method
     # -------------------------------------------------------------------------
     @staticmethod
