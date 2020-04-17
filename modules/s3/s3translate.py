@@ -733,10 +733,10 @@ class TranslateReadFiles(object):
 
         html_js_file = open(filename, "rb")
         try:
-            html_js = html_js_file.read().decode("utf-8")
+            html_js = html_js_file.read().decode("utf-8").splitlines()
         except UnicodeDecodeError:
             try:
-                html_js = html_js_file.read().decode("latin-1")
+                html_js = html_js_file.read().decode("latin-1").splitlines()
             except UnicodeDecodeError:
                 current.log.warning("%s is not in either UTF-8 or LATIN-1 encoding" % filename)
                 return []
@@ -781,10 +781,9 @@ class TranslateReadFiles(object):
 
         if os.path.exists(user_file):
             f = open(user_file, "rb")
-            user_data = f.read().decode("utf-8")
+            user_data = f.read().decode("utf-8").splitlines()
             f.close()
             for line in user_data:
-                line = line.replace("\n", "").replace("\r", "")
                 strings.append((COMMENT, line))
 
         return strings
@@ -805,7 +804,7 @@ class TranslateReadFiles(object):
 
         if os.path.exists(user_file):
             f = open(user_file, "rb")
-            user_data = f.read().decode("utf-8")
+            user_data = f.read().decode("utf-8").splitlines()
             f.close()
             for line in user_data:
                 oappend(line)
@@ -815,6 +814,7 @@ class TranslateReadFiles(object):
         for s in newstrings:
             if s not in oldstrings:
                 f.write(s)
+                f.write('\n')
 
         f.close()
 
