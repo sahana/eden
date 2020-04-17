@@ -1683,7 +1683,7 @@ def auth_user_register_onaccept(user_id):
                                          "Groups",
                                          "Reserves"))).select(ftable.pe_id,
                                                               ftable.name,
-                                                              limitby = (0, 2)
+                                                              limitby = (0, 3)
                                                               )
         for forum in forums:
             if forum.name == "Donors":
