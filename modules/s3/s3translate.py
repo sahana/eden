@@ -813,8 +813,7 @@ class TranslateReadFiles(object):
         f = open(user_file, "a")
         for s in newstrings:
             if s not in oldstrings:
-                f.write(s)
-                f.write('\n')
+                f.write("%s\n" % s)
 
         f.close()
 
