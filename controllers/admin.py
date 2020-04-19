@@ -1189,26 +1189,28 @@ def translate():
 
         elif opt == "4":
             # Add strings manually
-            if form.accepts(request.vars, session):
-                # Retrieve strings from the uploaded file
-                from s3.s3translate import TranslateReadFiles
-                f = open(user_file, "rb")
-                user_data = request.vars.upload.file.read().decode("utf-8").splitlines()
-                f.close()
-                strings = []
-                R = TranslateReadFiles()
-                for line in user_data:
-                    strings.append(line)
-                # Update the file containing user strings
-                R.merge_user_strings_file(strings)
-                response.confirmation = T("File uploaded")
-
             div = DIV(T("Upload a text file containing new-line separated strings:"),
                       INPUT(_type="file", _name="upload"),
                       BR(),
                       INPUT(_type="submit", _value=T("Upload")),
                       )
             form.append(div)
+
+            if form.accepts(request.vars, session):
+
+                # Retrieve strings from the uploaded file
+                strings = []
+                uploaded_file = request.vars.upload.file
+                lines = uploaded_file.read().decode("utf-8").splitlines()
+                for line in lines:
+                    strings.append(line)
+
+                # Update the file containing user strings
+                from s3.s3translate import TranslateReadFiles
+                TranslateReadFiles.merge_user_strings_file(strings)
+
+                response.confirmation = T("File uploaded")
+
             output["form"] = form
 
         return output
