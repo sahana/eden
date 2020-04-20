@@ -1945,15 +1945,24 @@ $.filterOptionsS3({
     def inv_track_item_total_value(row):
         """ Total value of a track item """
 
+        # Default
+        total = current.messages["NONE"]
+
         if hasattr(row, "inv_track_item"):
             row = row.inv_track_item
         try:
-            v = row.quantity * row.pack_value
+            if row.quantity and row.pack_value:
+                total = row.quantity * row.pack_value
+            else:
+                # Item lacks quantity, or value per pack, or both
+                # => default
+                pass
         except AttributeError:
-            # Not available
-            return current.messages["NONE"]
+            # Columns needed to compute total not available
+            # => default
+            pass
 
-        return v
+        return total
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3927,7 +3936,8 @@ def inv_send_rheader(r):
                 address = s3db.gis_LocationRepresent(address_only=True)(site.location_id)
             else:
                 address = current.messages["NONE"]
-            rData = TABLE(TR(TD(T(current.deployment_settings.get_inv_send_form_name().upper()),
+            shipment_details = TABLE(
+                          TR(TD(T(current.deployment_settings.get_inv_send_form_name().upper()),
                                 _colspan=2, _class="pdf_title"),
                              TD(logo, _colspan=2),
                              ),
@@ -4090,12 +4100,11 @@ def inv_send_rheader(r):
             #       msg = T("One item is attached to this shipment")
             #    elif cnt > 1:
             #        msg = T("%s items are attached to this shipment") % cnt
-            #    rData.append(TR(TH(action, _colspan=2),
-            #                    TD(msg)))
-                rData.append(TR(TH(action, _colspan=2)))
+            #    shipment_details.append(TR(TH(action, _colspan=2), TD(msg)))
+                shipment_details.append(TR(TH(action, _colspan=2)))
 
             s3.rfooter = rfooter
-            rheader = DIV(rData,
+            rheader = DIV(shipment_details,
                           rheader_tabs,
                           #rSubdata
                           )
@@ -4185,7 +4194,8 @@ def inv_recv_rheader(r):
             except AttributeError:
                 org_id = None
             logo = s3db.org_organisation_logo(org_id)
-            rData = TABLE(TR(TD(T(current.deployment_settings.get_inv_recv_form_name()),
+            shipment_details = TABLE(
+                          TR(TD(T(current.deployment_settings.get_inv_recv_form_name()),
                                 _colspan=2, _class="pdf_title"),
                              TD(logo, _colspan=2),
                              ),
@@ -4270,13 +4280,10 @@ def inv_recv_rheader(r):
                 msg = T("This shipment contains one line item")
             elif cnt > 1:
                 msg = T("This shipment contains %s items") % cnt
-            rData.append(TR(TH(action,
-                               _colspan=2),
-                            TD(msg)
-                            ))
+            shipment_details.append(TR(TH(action, _colspan=2), TD(msg)))
 
             current.response.s3.rfooter = rfooter
-            rheader = DIV(rData,
+            rheader = DIV(shipment_details,
                           rheader_tabs,
                           )
             return rheader
@@ -4741,11 +4748,9 @@ def inv_item_total_weight(row):
         query = (itable.id == inv_item.id) & \
                 (itable.item_id == stable.id)
         supply_item = current.db(query).select(stable.weight,
-                                                limitby=(0, 1)).first()
-        if not supply_item:
-            return
-        else:
-            weight = supply_item.weight
+                                               limitby = (0, 1),
+                                               ).first()
+        weight = supply_item.weight if supply_item else None
 
     if weight is None:
         return current.messages["NONE"]
@@ -4779,11 +4784,9 @@ def inv_item_total_volume(row):
         query = (itable.id == inv_item.id) & \
                 (itable.item_id == stable.id)
         supply_item = current.db(query).select(stable.volume,
-                                               limitby=(0, 1)).first()
-        if not supply_item:
-            return
-        else:
-            volume = supply_item.volume
+                                               limitby = (0, 1),
+                                               ).first()
+        volume = supply_item.volume if supply_item else None
 
     if volume is None:
         return current.messages["NONE"]
