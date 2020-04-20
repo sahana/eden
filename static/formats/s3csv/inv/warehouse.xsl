@@ -32,6 +32,8 @@
     <xsl:output method="xml"/>
     <xsl:include href="../../xml/commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
+
+    <xsl:variable name="LocationPrefix" select="'Location:'"/>
     
     <!-- ****************************************************************** -->
     <!-- Lookup column names -->
@@ -209,7 +211,7 @@
             <!-- Link to Location -->
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$WarehouseName"/>
+                    <xsl:value-of select="concat($LocationPrefix, $WarehouseName)"/>
                 </xsl:attribute>
             </reference>
 
@@ -716,7 +718,7 @@
         <!-- Warehouse Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$Name"/>
+                <xsl:value-of select="concat($LocationPrefix, $Name)"/>
             </xsl:attribute>
             <xsl:choose>
                 <xsl:when test="$l5!=''">
