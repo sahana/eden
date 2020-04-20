@@ -3081,6 +3081,7 @@ class S3ImportJob():
             xml = current.xml
             UUID = xml.UID
             TUID = xml.ATTRIBUTE.tuid
+            NAME = xml.ATTRIBUTE.name
 
             elements = root.xpath(".//%s" % xml.TAG.resource)
             self._uidmap = uidmap = {UUID: {},
@@ -3089,12 +3090,13 @@ class S3ImportJob():
             uuidmap = uidmap[UUID]
             tuidmap = uidmap[TUID]
             for element in elements:
+                name = element.get(NAME)
                 r_uuid = element.get(UUID)
                 if r_uuid and r_uuid not in uuidmap:
-                    uuidmap[r_uuid] = element
+                    uuidmap[(name, r_uuid)] = element
                 r_tuid = element.get(TUID)
                 if r_tuid and r_tuid not in tuidmap:
-                    tuidmap[r_tuid] = element
+                    tuidmap[(name, r_tuid)] = element
 
         return uidmap
 
@@ -3491,7 +3493,7 @@ class S3ImportJob():
                         entry = directory.get((tablename, attr, uid))
 
                     if not entry:
-                        e = uidmap[attr].get(uid) if uidmap else None
+                        e = uidmap[attr].get((tablename, uid)) if uidmap else None
                         if e is not None:
                             # Element in the source => append to relements
                             relements.append(e)

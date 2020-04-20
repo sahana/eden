@@ -42,7 +42,7 @@ def index():
                     else:
                         break
                 if country:
-                    templates.remove("locations.%s" % country)
+                    templates = [t for t in templates if t != "locations.%s" % country]
             deployment_id = s3db.setup_deployment.insert(# @ToDo: Read from .git
                                                          #repo_url = ,
                                                          country = country,

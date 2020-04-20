@@ -1059,6 +1059,130 @@ class ObjectReferencesImportTests(unittest.TestCase):
         self.assertEqual(obj["referenced_id"], record_id)
 
 # =============================================================================
+class UIDCollisionHandlingTests(unittest.TestCase):
+    """ Tests for imports with UID collisions """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        db = current.db
+
+        # Define tables for test
+        db.define_table("tuid_type_1",
+                        Field("name"),
+                        *s3_meta_fields())
+        db.define_table("tuid_type_2",
+                        Field("name"),
+                        *s3_meta_fields())
+        db.define_table("tuid_master",
+                        Field("name"),
+                        Field("type1_id", "reference tuid_type_1"),
+                        Field("type2_id", "reference tuid_type_2"),
+                        *s3_meta_fields())
+
+    @classmethod
+    def tearDownClass(cls):
+
+        db = current.db
+
+        db.tuid_master.drop()
+        db.tuid_type_1.drop()
+        db.tuid_type_2.drop()
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        current.auth.override = True
+
+        xmlstr = """
+<s3xml>
+    <resource name="tuid_type_1" tuid="TESTUID1">
+        <data field="name">Test 1-a</data>
+    </resource>
+    <resource name="tuid_type_1" tuid="TESTUID2">
+        <data field="name">Test 1-b</data>
+    </resource>
+    <resource name="tuid_type_1" tuid="TESTUID3">
+        <data field="name">Test 1-c</data>
+    </resource>
+    <resource name="tuid_type_2" tuid="TESTUID1">
+        <data field="name">Test 2-a</data>
+    </resource>
+    <resource name="tuid_type_2" tuid="TESTUID3">
+        <data field="name">Test 2-c</data>
+    </resource>
+    <resource name="tuid_master">
+        <reference field="type1_id" resource="tuid_type_1" tuid="TESTUID1"/>
+        <reference field="type2_id" resource="tuid_type_2" tuid="TESTUID1"/>
+    </resource>
+    <resource name="tuid_master">
+        <reference field="type1_id" resource="tuid_type_1" tuid="TESTUID2"/>
+        <reference field="type2_id" resource="tuid_type_2" tuid="TESTUID3"/>
+    </resource>
+    <resource name="tuid_master">
+        <reference field="type1_id" resource="tuid_type_1" tuid="TESTUID3"/>
+        <reference field="type2_id" resource="tuid_type_2" tuid="TESTUID1"/>
+    </resource>
+    <resource name="tuid_master" uuid="TUIDMASTER">
+        <reference field="type1_id" resource="tuid_type_1" tuid="TESTUID3"/>
+        <reference field="type2_id" resource="tuid_type_2" tuid="TESTUID3"/>
+    </resource>
+
+</s3xml>"""
+
+        tree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        # Import the data
+        current.s3db.resource("tuid_master").import_xml(tree)
+
+    def tearDown(self):
+
+        current.auth.override = False
+
+    # -------------------------------------------------------------------------
+    def testCrossTypeTUIDCollision(self):
+        """ Cross-type colliding TUIDs should be mapped correctly """
+
+        db = current.db
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+
+        # Get the record ID of tuid_type_1 with name="Test 1-c"
+        ttable = db.tuid_type_1
+        query = (ttable.name == "Test 1-c")
+        row = db(query).select(ttable.id, limitby=(0, 1)).first()
+        assertNotEqual(row, None)
+        type1_id = row.id
+
+        # Get the record ID of tuid_type_2 with name="Test 2-c"
+        ttable = db.tuid_type_2
+        query = (ttable.name == "Test 2-c")
+        row = db(query).select(ttable.id, limitby=(0, 1)).first()
+        assertNotEqual(row, None)
+        type2_id = row.id
+
+        if type1_id != type2_id:
+            # Verify that the references have been resolved into
+            # the correct record IDs (NB this check is partially
+            # redundant because the import would already fail if
+            # the resolution did not work properly)
+
+            # Get TUID master
+            mtable = db.tuid_master
+            query = (mtable.uuid == "TUIDMASTER")
+            row = db(query).select(mtable.type1_id,
+                                   mtable.type2_id,
+                                   limitby = (0, 1),
+                                   ).first()
+            assertNotEqual(row, None)
+
+            # Verify that IDs are correct
+            assertEqual(row.type1_id, type1_id)
+            assertEqual(row.type2_id, type2_id)
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
@@ -1071,6 +1195,7 @@ if __name__ == "__main__":
         MtimeImportTests,
         ObjectReferencesTests,
         ObjectReferencesImportTests,
+        UIDCollisionHandlingTests,
         )
 
 # END ========================================================================
