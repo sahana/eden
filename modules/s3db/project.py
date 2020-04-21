@@ -4910,6 +4910,9 @@ class S3ProjectPlanningModel(S3Model):
 
         configure(tablename,
                   create_onaccept = self.project_indicator_create_onaccept,
+                  #deduplicate = S3Duplicate(primary = ("name",),
+                  #                          secondary = ("project_id",),
+                  #                          ),
                   deduplicate = self.project_indicator_deduplicate,
                   list_fields = list_fields,
                   onaccept = self.project_indicator_onaccept,
@@ -6373,7 +6376,7 @@ class S3ProjectPlanningModel(S3Model):
 
         # Update Statuses
         row = db(table.id == record_id).select(table.project_id,
-                                               limitby=(0, 1)
+                                               limitby = (0, 1)
                                                ).first()
         try:
             project_id = row.project_id
@@ -6385,7 +6388,10 @@ class S3ProjectPlanningModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def project_indicator_deduplicate(item):
-        """ Import item de-duplication """
+        """
+            Import item de-duplication
+            - not using S3Duplicate() so that can reuse Template Indicators acorss Projects
+        """
 
         data = item.data
         name = data.get("name")
@@ -6398,7 +6404,8 @@ class S3ProjectPlanningModel(S3Model):
                           (table.project_id == None))
 
             duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+                                                 limitby = (0, 1)
+                                                 ).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -8450,8 +8457,8 @@ class project_SummaryReport(S3Method):
                                          btable.value, # Beneficiaries Reached
                                          )
         if beneficiaries:
-            ben_represent = S3Represent(lookup="stats_parameter",
-                                        translate=True,
+            ben_represent = S3Represent(lookup = "stats_parameter",
+                                        translate = True,
                                         )
             benef_types = ben_represent.bulk(list({row.parameter_id for row in beneficiaries}))
             # Sum per Type
@@ -8499,7 +8506,7 @@ class project_SummaryReport(S3Method):
         nappend = narrative_rows.append
 
         nappend(TR(TD(T("Locations"),
-                      _colspan=2,
+                      _colspan = 2,
                       ),
                    ))
         for l in locations:
@@ -8508,7 +8515,7 @@ class project_SummaryReport(S3Method):
                        ))
 
         nappend(TR(TD(T("Donors"),
-                      _colspan=2,
+                      _colspan = 2,
                       ),
                    ))
         for d in donors:
@@ -8534,7 +8541,7 @@ class project_SummaryReport(S3Method):
                            )
 
         nappend(TR(TD(T("Beneficiaries Reached"),
-                      _colspan=2,
+                      _colspan = 2,
                       ),
                    ))
         for b in beneficiaries:
@@ -8543,7 +8550,7 @@ class project_SummaryReport(S3Method):
                        ))
 
         nappend(TR(TD(T("Partner Organizations"),
-                      _colspan=2,
+                      _colspan = 2,
                       ),
                    ))
         for p in partners:
@@ -8555,7 +8562,7 @@ class project_SummaryReport(S3Method):
 
         if status_from_activities:
             status_table = TABLE(TR(TD(T("Current Status of Project"),
-                                       _rowspan=2,
+                                       _rowspan = 2,
                                        ),
                                     TD(T("Actual")),
                                     TD(T("Planned")),
@@ -8567,7 +8574,7 @@ class project_SummaryReport(S3Method):
                                  )
         else:
             status_table = TABLE(TR(TD(T("Current Status of Project"),
-                                       _rowspan=2,
+                                       _rowspan = 2,
                                        ),
                                     TD(T("Current")),
                                     TD(T("Overall")),
@@ -8585,7 +8592,7 @@ class project_SummaryReport(S3Method):
                         ),
                      TD(project_status_represent(goal["actual_progress"] if status_from_activities else goal["current_status"])),
                      TD(project_status_represent(goal["planned_progress"] if status_from_activities else goal["overall_status"])),
-                     _class="project_goal",
+                     _class = "project_goal",
                      )
             sappend(row)
             outcomes = goal["outcomes"]
@@ -8595,7 +8602,7 @@ class project_SummaryReport(S3Method):
                             ),
                          TD(project_status_represent(outcome["actual_progress"] if status_from_activities else outcome["current_status"])),
                          TD(project_status_represent(outcome["planned_progress"] if status_from_activities else outcome["overall_status"])),
-                         _class="project_outcome",
+                         _class = "project_outcome",
                          )
                 sappend(row)
                 outputs = outcome["outputs"]
@@ -8605,7 +8612,7 @@ class project_SummaryReport(S3Method):
                                 ),
                              TD(project_status_represent(output["actual_progress"] if status_from_activities else output["current_status"])),
                              TD(project_status_represent(output["planned_progress"] if status_from_activities else output["overall_status"])),
-                             _class="project_output",
+                             _class = "project_output",
                              )
                     sappend(row)
                     indicators = output["indicators"]
@@ -8615,7 +8622,7 @@ class project_SummaryReport(S3Method):
                                     ),
                                  TD(project_status_represent(indicator["actual_progress"] if status_from_activities else indicator["current_status"])),
                                  TD(project_status_represent(indicator["planned_progress"] if status_from_activities else indicator["overall_status"])),
-                                 _class="project_indicator",
+                                 _class = "project_indicator",
                                  )
                         sappend(row)
                         if status_from_activities:
@@ -8626,7 +8633,7 @@ class project_SummaryReport(S3Method):
                                             ),
                                          TD(project_status_represent(activity["actual_progress"])),
                                          TD(project_status_represent(activity["planned_progress"])),
-                                         _class="project_activity",
+                                         _class = "project_activity",
                                          )
                                 sappend(row)
 
@@ -13024,7 +13031,8 @@ def project_rheader(r):
         #    rheader_fields.append(["budget.total_budget"])
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
-        if indicators:
+        if indicators and settings.get_project_goals():
+            # and settings.get_project_outcomes() and settings.get_project_ouputs() is True
             rfooter = DIV(A(ICON("print"),
                             " ",
                             T("Project Summary Report"),

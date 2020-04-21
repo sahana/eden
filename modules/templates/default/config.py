@@ -1226,6 +1226,10 @@ def config(settings):
     #settings.project.hazards = True
     # Uncomment this to enable Indicators in projects
     settings.project.indicators = True
+    # Uncomment this to enable Goals in projects
+    #settings.project.goals = True
+    #settings.project.outcomes = True
+    #settings.project.outputs = True
     # Uncomment this to enable Milestones in projects
     settings.project.milestones = True
     # Uncomment this to use Projects for Activities & Tasks
